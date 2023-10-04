@@ -50,11 +50,13 @@ Transforms single patient data into a single-row vector and batch patient data i
 
 To install pat2vec, you can clone this repo:
 
-## Usage
+## Usage:
 
--Set paths
--Configure options
--Run all
+- Set paths
+
+- Configure options
+
+- Run all
 
 
 ## Contributing
