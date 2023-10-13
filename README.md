@@ -39,6 +39,19 @@ Transforms single patient data to time interval feature vectors. Ready to be fil
 - Tqdm
 - Colorama
 
+regex==2023.10.3
+eland==8.10.1
+elasticsearch==8.10.0
+tqdm==4.66.1
+matplotlib==3.8.0
+paramiko==3.3.1
+pandas==2.1.1
+numpy==1.23.5
+scipy==1.9.3
+medcat==1.9.3
+fitter==1.6.0
+seaborn==0.13.0
+
 ## Features:
 
 - Single patient
