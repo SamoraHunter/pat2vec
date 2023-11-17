@@ -17,6 +17,13 @@ def get_current_pat_annotations_mrc_cs(current_pat_client_id_code, target_date_r
     
     batch_mode = config_obj.batch_mode
     
+    remote_dump = config_obj.remote_dump
+    
+    hostname = config_obj.hostname
+    
+    username = config_obj.username
+    
+    password = config_obj.password
     
     
     
