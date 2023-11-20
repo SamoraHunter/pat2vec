@@ -1,12 +1,14 @@
+
+import numpy as np
 import pandas as pd
 
 from util.methods_get import (filter_dataframe_by_timestamp,
                               get_start_end_year_month)
 
 
-def get_core_02(current_pat_client_id_code, target_date_range, pat_batch, config_obj=None, cohort_searcher_with_terms_and_search=None):
+def get_hosp_site(current_pat_client_id_code, target_date_range, pat_batch, batch_mode=False, config_obj=None, cohort_searcher_with_terms_and_search=None):
     """
-    Retrieves CORE_SpO2 features for a given patient within a specified date range.
+    Retrieves CORE_HospitalSite features for a given patient within a specified date range.
 
     Parameters:
     - current_pat_client_id_code (str): The client ID code of the patient.
@@ -16,12 +18,12 @@ def get_core_02(current_pat_client_id_code, target_date_range, pat_batch, config
     - cohort_searcher_with_terms_and_search (callable, optional): The function for cohort searching. Defaults to None.
 
     Returns:
-    - pd.DataFrame: A DataFrame containing CORE_SpO2 features for the specified patient.
+    - pd.DataFrame: A DataFrame containing CORE_HospitalSite features for the specified patient.
     """
     batch_mode = config_obj.batch_mode
     
     start_year, start_month, end_year, end_month, start_day, end_day = get_start_end_year_month(target_date_range)
-    search_term = 'CORE_SpO2'
+    search_term = 'CORE_HospitalSite'
 
     if batch_mode:
         current_pat_raw = filter_dataframe_by_timestamp(pat_batch, start_year, start_month, end_year, end_month, start_day, end_day, 'observationdocument_recordeddtm')
@@ -35,20 +37,23 @@ def get_core_02(current_pat_client_id_code, target_date_range, pat_batch, config
         )
 
     if len(current_pat_raw) == 0:
-        features_data = pd.DataFrame(data={'client_idcode': [current_pat_client_id_code]})
+        features = pd.DataFrame(data={'client_idcode': [current_pat_client_id_code]})
     else:
         features_data = current_pat_raw[current_pat_raw['obscatalogmasteritem_displayname'] == search_term].copy()
         features_data.dropna(inplace=True)
 
-    term = 'core_sp_o2'.lower()
-    features = pd.DataFrame(data={'client_idcode': [current_pat_client_id_code]})
+        term = 'hosp_site'.lower()
+        features = pd.DataFrame(data={'client_idcode': [current_pat_client_id_code]})
 
-    if not features_data.empty:
-        unique_terms = features_data['observation_valuetext_analysed'].dropna().unique()
+        if not features_data.empty:
+            value_array = features_data['observation_valuetext_analysed'].dropna()
 
-        for unique_term in unique_terms:
-            cleaned_term = unique_term.replace("-", "_").replace("%", "pct")
-            features[cleaned_term] = 1
+            features[f'{term}_dh'] = value_array.str.contains("DH").astype(int)
+            features[f'{term}_ph'] = value_array.str.contains("PRUH").astype(int)
+        else:
+            features[f'{term}_dh'] = np.nan
+            features[f'{term}_ph'] = np.nan
 
     return features
+
 
