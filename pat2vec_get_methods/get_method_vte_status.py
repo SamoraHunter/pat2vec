@@ -6,7 +6,7 @@ from util.methods_get import (filter_dataframe_by_timestamp,
                               get_start_end_year_month)
 
 
-def get_vte_status(current_pat_client_id_code, target_date_range, pat_batch, batch_mode=False, cohort_searcher_with_terms_and_search=None):
+def get_vte_status(current_pat_client_id_code, target_date_range, pat_batch, config_obj=None, cohort_searcher_with_terms_and_search=None):
     """
     Retrieves CORE_VTE_STATUS features for a given patient within a specified date range.
 
@@ -20,6 +20,9 @@ def get_vte_status(current_pat_client_id_code, target_date_range, pat_batch, bat
     Returns:
     - pd.DataFrame: A DataFrame containing CORE_VTE_STATUS features for the specified patient.
     """
+    batch_mode = config_obj.batch_mode
+    
+    
     start_year, start_month, end_year, end_month, start_day, end_day = get_start_end_year_month(target_date_range)
     search_term = 'CORE_VTE_STATUS'
 
@@ -65,4 +68,6 @@ def get_vte_status(current_pat_client_id_code, target_date_range, pat_batch, bat
             features[f'{term}_n'] = np.nan
 
     return features
+
+
 
