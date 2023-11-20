@@ -1,5 +1,6 @@
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
+
 
 class config_class:
     def __init__(self,
@@ -90,4 +91,15 @@ class config_class:
         
         
         
+        months = [x for x in range(1,4)]
+        years = [x for x in range(2023, 2024)]
+        days = [x for x in range(1,32)]
+        import itertools
+        combinations = list(itertools.product(years, months, days))
+        len(combinations)
+        
+        
+        
+        
+            
         
