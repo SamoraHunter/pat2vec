@@ -4,7 +4,7 @@ import traceback
 import pandas as pd
 
 from util.methods_get import (enum_target_date_vector, list_dir_wrapper,
-                              update_pbar)
+                              update_pbar, write_remote)
 
 
 def main(current_pat_client_id_code, target_date_range, config_obj = None, main_options = None ):
@@ -26,7 +26,7 @@ def main(current_pat_client_id_code, target_date_range, config_obj = None, main_
         
         start_time = time.time()
         
-        write_remote
+        
         
         
         
