@@ -16,6 +16,9 @@ import pandas as pd
 #from tqdm import trange
 from colorama import Back, Fore, Style
 from IPython.utils import io
+from tqdm import trange
+from pat2vec_get_methods.current_pat_annotations_to_file import get_current_pat_annotations_batch_to_file, get_current_pat_annotations_mct_batch_to_file
+from patvec_get_batch_methods.main import get_pat_batch_bloods, get_pat_batch_bmi, get_pat_batch_demo, get_pat_batch_diagnostics, get_pat_batch_drugs, get_pat_batch_epr_docs, get_pat_batch_mct_docs, get_pat_batch_news, get_pat_batch_obs
 
 from util.methods_get import list_dir_wrapper, update_pbar
 
@@ -65,12 +68,11 @@ def convert_date(date_string):
 
 import os
 import subprocess
+import time
 from datetime import datetime
 from io import StringIO
 
 from dateutil.relativedelta import relativedelta
-
-import time
 
 
 class main:
@@ -299,7 +301,17 @@ class main:
         self.stripped_list = [x.replace(".csv","") for x in list_dir_wrapper(self.current_pat_lines_path, self.sftp_client)]
         
 
-    
+
+        random.seed()
+        random.shuffle(self.all_patient_list)
+
+        skipped_counter = 0
+        self.t = trange(len(self.all_patient_list), desc='Bar desc', leave=True, colour="GREEN", position=0, total=len(self.all_patient_list))
+        
+        
+        
+        
+        
     #------------------------------------begin main----------------------------------       
     
             
@@ -309,7 +321,190 @@ class main:
     
             
 
-    
+    def pat_maker(self, i):
+        #global skipped_counter
+        #global stripped_list
+        
+        skipped_counter = self.config_obj.skipped_counter
+        stripped_list = self.config_obj.stripped_list
+        all_patient_list = self.config_obj.all_patient_list
+        skipped_counter = self.config_obj.skipped_counter
+        
+        remote_dump = self.config_obj.remote_dump
+        hostname = self.config_obj.hostname
+        username = self.config_obj.username
+        password = self.config_obj.password
+        annot_first = self.config_obj.annot_first
+        
+        stripped_list_start = self.stripped_list_start
+        
+        combinations = self.combinations
+        
+        
+        
+        
+        
+        
+        current_pat_client_id_code = all_patient_list[i]
+        
+        p_bar_entry = current_pat_client_id_code
+        
+        start_time = time.time()
+        
+        update_pbar(p_bar_entry, start_time, 0, f'Pat_maker called on {i}...')
+        
+        #time.sleep(random.randint(1, 50))
+        #i, sftp_obj = i[0], i[1]
+        if(remote_dump):
+            ssh_client = paramiko.SSHClient()
+            ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+            ssh_client.connect(hostname=hostname, username=username, password=password, timeout=60)
+
+            sftp_obj = ssh_client.open_sftp()
+        else:
+            sftp_obj = None
+            
+        
+        
+        
+        
+
+        
+        #get_pat batches
+        
+        stripped_list = stripped_list_start.copy()
+        
+        
+        if(current_pat_client_id_code not in stripped_list_start):
+            
+            update_pbar(p_bar_entry, start_time, 0, 'Getting batches...')
+        
+        
+            search_term = None # inside function
+            batch_epr = get_pat_batch_epr_docs(current_pat_client_id_code, search_term)
+
+
+            search_term = None # inside function
+            batch_mct = get_pat_batch_mct_docs(current_pat_client_id_code, search_term)
+
+            if(annot_first == False):
+
+                search_term = 'CORE_SmokingStatus'
+
+                batch_smoking = get_pat_batch_obs(current_pat_client_id_code, search_term)
+
+
+                search_term = 'CORE_SpO2'
+
+                batch_core_02 = get_pat_batch_obs(current_pat_client_id_code, search_term)
+
+
+                search_term = 'CORE_BedNumber3'
+
+                batch_bednumber = get_pat_batch_obs(current_pat_client_id_code, search_term)
+
+
+                search_term = 'CORE_VTE_STATUS'
+
+                batch_vte = get_pat_batch_obs(current_pat_client_id_code, search_term)
+
+
+                search_term = 'CORE_HospitalSite'
+
+                batch_hospsite = get_pat_batch_obs(current_pat_client_id_code, search_term)
+
+
+                search_term = 'CORE_RESUS_STATUS'
+
+                batch_resus = get_pat_batch_obs(current_pat_client_id_code, search_term)
+
+
+                search_term = None # inside function
+                batch_news = get_pat_batch_news(current_pat_client_id_code, search_term)
+
+
+                search_term = None # inside function
+                batch_bmi = get_pat_batch_bmi(current_pat_client_id_code, search_term)
+
+
+                search_term = None # inside function
+                batch_diagnostics = get_pat_batch_diagnostics(current_pat_client_id_code, search_term)
+
+                search_term = None # inside function
+                batch_drugs = get_pat_batch_drugs(current_pat_client_id_code, search_term)
+
+
+
+
+                search_term = None # inside function
+                batch_demo = get_pat_batch_demo(current_pat_client_id_code, search_term)
+
+                search_term = None # inside function
+                batch_bloods =  get_pat_batch_bloods(current_pat_client_id_code, search_term)
+
+            update_pbar(p_bar_entry, start_time, 0, f'Done batches in {time.time()-start_time}')
+
+
+            run_on_pat = False
+
+            only_check_last = True
+
+            last_check = all_patient_list[i] not in stripped_list
+
+            skip_check = last_check
+
+            for j in range(0, len(combinations)):
+                try:
+                    if(only_check_last):
+                        run_on_pat = last_check
+                    else:
+                        run_on_pat = all_patient_list[i]  not in stripped_list
+
+
+                    if(run_on_pat):   
+                        if(annot_first):
+
+                            get_current_pat_annotations_batch_to_file(all_patient_list[i], combinations[j], batch_epr, sftp_obj, skip_check=skip_check)
+
+                            get_current_pat_annotations_mct_batch_to_file(all_patient_list[i], combinations[j], batch_mct, sftp_obj, skip_check=skip_check)
+
+                        else:
+                            main_batch(all_patient_list[i],
+                            combinations[j],
+                            batch_demo = batch_demo,
+                            batch_smoking = batch_smoking,
+                            batch_core_02 = batch_core_02,
+                            batch_bednumber = batch_bednumber,
+                            batch_vte = batch_vte,
+                            batch_hospsite = batch_hospsite,
+                            batch_resus = batch_resus,
+                            batch_news = batch_news,
+                            batch_bmi = batch_bmi,
+                            batch_diagnostics = batch_diagnostics,
+                            batch_epr = batch_epr,
+                            batch_mct = batch_mct,
+                            batch_bloods = batch_bloods,
+                            batch_drugs = batch_drugs,
+                            sftp_obj = sftp_obj
+
+                            )
+
+                except Exception as e:
+                    print(e)
+                    print(f"Exception in patmaker on {all_patient_list[i], combinations[j]}")
+                    print(traceback.format_exc())
+            if(remote_dump):
+                sftp_obj.close()
+                ssh_client.close()
+        else:
+            if(multi_process == False):
+                skipped_counter = skipped_counter + 1
+                update_pbar(str(i), start_time, 0, f'Skipped {i}')
+            else:
+                with skipped_counter.get_lock():
+                    skipped_counter.value += 1
+                update_pbar(str(i), start_time, 0, f'Skipped {i}')
+            
     
 
 

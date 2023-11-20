@@ -505,3 +505,7 @@ def write_remote(path, csv_file, sftp_obj=None, config_obj = None):
     if(share_sftp == False):
         sftp_obj.close()
         sftp_obj.close()
+        
+        
+
+

@@ -1,21 +1,21 @@
 
+
 import pickle
 
-from util.methods_get import dump_results, exist_check, filter_dataframe_by_timestamp, get_start_end_year_month, update_pbar
-
-import paramiko
-
 import numpy as np
-
+import paramiko
 from IPython.utils import io
 
+from util.methods_get import (dump_results, exist_check,
+                              filter_dataframe_by_timestamp,
+                              get_start_end_year_month, update_pbar)
 
-def get_current_pat_annotations_mrc_cs(current_pat_client_id_code, target_date_range, pat_batch, sftp_obj=None, config_obj = None, t=None, cohort_searcher_with_terms_and_search =None, cat=None):
-    
+
+def get_current_pat_annotations(current_pat_client_id_code, target_date_range, pat_batch, sftp_obj=None, config_obj = None, t=None, cohort_searcher_with_terms_and_search =None, cat=None):
     
     start_time = config_obj.start_time
     
-    pre_annotation_path_mrc = config_obj.pre_annotation_path_mrc
+    pre_annotation_path = config_obj.pre_annotation_path
     
     batch_mode = config_obj.batch_mode
     
@@ -31,32 +31,37 @@ def get_current_pat_annotations_mrc_cs(current_pat_client_id_code, target_date_r
     
     negated_presence_annotations = config_obj.negated_presence_annotations
     
-    current_annot_file_path = pre_annotation_path_mrc  + current_pat_client_id_code + "/" + current_pat_client_id_code  +"_"+str(target_date_range)
+    store_annot = config_obj.store_annot
+    
+#     current_annotation_file_path = pre_annotation_path + current_pat_client_id_code+"_"+str(target_date_range)
+    
+    current_annotation_file_path = pre_annotation_path + current_pat_client_id_code + "/" +  current_pat_client_id_code+"_"+str(target_date_range)
     
     
-    file_exists = exist_check(current_annot_file_path, sftp_obj)
+    file_exists = exist_check(current_annotation_file_path, sftp_obj)
     
-    if(file_exists==False):
+    if(file_exists == False):
     
         start_year, start_month, end_year, end_month, start_day, end_day = get_start_end_year_month(target_date_range)
-
         
         if(batch_mode):
-            current_pat_docs = filter_dataframe_by_timestamp(pat_batch, start_year, start_month, end_year, end_month, start_day, end_day, 'observationdocument_recordeddtm')
+            current_pat_docs = filter_dataframe_by_timestamp(pat_batch, start_year, start_month, end_year, end_month, start_day, end_day, 'updatetime')
 
         else:
-        
-            current_pat_docs = cohort_searcher_with_terms_and_search(index_name="observations", 
-                                                                       fields_list="""observation_guid client_idcode	obscatalogmasteritem_displayname	observation_valuetext_analysed	observationdocument_recordeddtm clientvisit_visitidcode""".split(),
-                                                                       term_name="client_idcode.keyword", 
-                                                                       entered_list=[current_pat_client_id_code], 
-                                                                       search_string="obscatalogmasteritem_displayname:(\"AoMRC_ClinicalSummary_FT\") AND " + f'observationdocument_recordeddtm:[{start_year}-{start_month}-{start_day} TO {end_year}-{end_month}-{end_day}]')
+
+            current_pat_docs = cohort_searcher_with_terms_and_search(index_name="epr_documents", 
+                                                                  fields_list = """client_idcode document_guid	document_description	body_analysed updatetime clientvisit_visitidcode""".split(),
+                                                                  term_name = "client_idcode.keyword", 
+                                                                  entered_list = [current_pat_client_id_code],
+                                                                search_string = f'updatetime:[{start_year}-{start_month}-{start_day} TO {end_year}-{end_month}-{end_day}] ')
 
 
         n_docs_to_annotate = len(current_pat_docs)
-        update_pbar(current_pat_client_id_code+"_"+str(target_date_range), start_time, 5, 'annotations_mrc', n_docs_to_annotate = n_docs_to_annotate, t=t, config_obj = config_obj, skipped_counter = None)
+        update_pbar(current_pat_client_id_code+"_"+str(target_date_range), start_time, 5, 'annotations', n_docs_to_annotate = n_docs_to_annotate)
+
     else:
-        n_docs_to_annotate = "Reading preannotated mrc..."
+        n_docs_to_annotate = "Reading preannotated..."
+        
         
     annotation_map = {'True':1,
                      'Presence':1 ,
@@ -70,18 +75,16 @@ def get_current_pat_annotations_mrc_cs(current_pat_client_id_code, target_date_r
     #remove filter from cdb?
     #print("getting annotations")
     
-#     file_exists = exists(pre_annotation_path_mrc + current_pat_client_id_code)
+#     file_exists = exists(pre_annotation_path + current_pat_client_id_code)
     
     
     if(file_exists==False):
         with io.capture_output() as captured:
-            pats_anno_annotations = cat.get_entities_multi_texts(current_pat_docs['observation_valuetext_analysed'].dropna());#, n_process=1
-            
-            dump_results(pats_anno_annotations, current_annot_file_path, sftp_obj)
-                
-#                 with open(pre_annotation_path_mrc + current_pat_client_id_code, 'wb') as f:
-#                     pickle.dump(pats_anno_annotations, f)
-                    
+            pats_anno_annotations = cat.get_entities_multi_texts(current_pat_docs['body_analysed'].dropna());#, n_process=1
+        if(store_annot):
+            dump_results(pats_anno_annotations, current_annotation_file_path, sftp_obj)
+    
+    
     else:
         if(remote_dump):
             if(share_sftp == False):
@@ -92,22 +95,21 @@ def get_current_pat_annotations_mrc_cs(current_pat_client_id_code, target_date_r
                 sftp_client = ssh_client.open_sftp()
                 sftp_obj = sftp_client
             
-            
-            with sftp_obj.open(current_annot_file_path, 'r') as file:
-    
+
+            with sftp_obj.open(current_annotation_file_path, 'r') as file:
+
                 pats_anno_annotations = pickle.load(file)
-        
+            
             if(share_sftp == False):
                 sftp_obj.close()
                 sftp_obj.close()
             
-        
         else:
-            with open(current_annot_file_path, 'rb') as f:
-                pats_anno_annotations = pickle.load(f)                
-                    
+
+            with open(current_annotation_file_path, 'rb') as f:
+                pats_anno_annotations = pickle.load(f)
+   
     n_docs_to_annotate = len(pats_anno_annotations)
-    
     
     #print(f"Annotated {current_pat_client_id_code}")
     #length of chars in documents summed
@@ -116,7 +118,7 @@ def get_current_pat_annotations_mrc_cs(current_pat_client_id_code, target_date_r
     #Lots of mentions of something could indicate severity etc
 
     #pats_anno_annotations = cat.get_entities(current_pat_docs['body_analysed'])
-    update_pbar(current_pat_client_id_code+"_"+str(target_date_range), start_time, 5, 'annotations_mrc', n_docs_to_annotate = n_docs_to_annotate)
+    update_pbar(current_pat_client_id_code+"_"+str(target_date_range), start_time, 5, 'annotations', n_docs_to_annotate = n_docs_to_annotate)
 
 
     sum_count = 0
@@ -188,12 +190,12 @@ def get_current_pat_annotations_mrc_cs(current_pat_client_id_code, target_date_r
 
     cui_list_pretty_names_count_list = []
     for i in range(0, len(cui_list_pretty_names)):
-            cui_list_pretty_names_count_list.append(cui_list_pretty_names[i] +"_count_mrc_cs")
-            cui_list_pretty_names_count_list.append(cui_list_pretty_names[i] +"_count_subject_present_mrc_cs")
+            cui_list_pretty_names_count_list.append(cui_list_pretty_names[i] +"_count")
+            cui_list_pretty_names_count_list.append(cui_list_pretty_names[i] +"_count_subject_present")
             
             if(negated_presence_annotations):
-                cui_list_pretty_names_count_list.append(cui_list_pretty_names[i] +"_count_subject_not_present_mrc_cs")
-                cui_list_pretty_names_count_list.append(cui_list_pretty_names[i] +"_count_relative_not_present_mrc_cs")
+                cui_list_pretty_names_count_list.append(cui_list_pretty_names[i] +"_count_subject_not_present")
+                cui_list_pretty_names_count_list.append(cui_list_pretty_names[i] +"_count_relative_not_present")
 
 
     all_columns_to_append =   cui_list_pretty_names_count_list
@@ -214,7 +216,7 @@ def get_current_pat_annotations_mrc_cs(current_pat_client_id_code, target_date_r
     df_pat = df_pat[['client_idcode']].copy()
     df_pat_target = df_pat.copy(deep=True)
     #print("Reindexing df_pat_target")
-    df_pat_target = df_pat_target.reindex(list(df_pat_target.columns) + all_columns_to_append, axis=1)
+    df_pat_target = df_pat_target.reindex(list(df_pat_target.columns) +all_columns_to_append, axis=1)
 
 
 
@@ -261,7 +263,7 @@ def get_current_pat_annotations_mrc_cs(current_pat_client_id_code, target_date_r
                 current_col_name = annotations['entities'][annotation_keys[j]].get('pretty_name')
                 current_col_meta = annotations['entities'][annotation_keys[j]].get('meta_anns')
 
-                df_pat_target.at[i, current_col_name+"_count_mrc_cs"] = df_pat_target.loc[i][current_col_name+"_count_mrc_cs"] + 1
+                df_pat_target.at[i, current_col_name+"_count"] = df_pat_target.loc[i][current_col_name+"_count"] + 1
 
                 if(current_col_meta is not None):
                     
@@ -270,20 +272,25 @@ def get_current_pat_annotations_mrc_cs(current_pat_client_id_code, target_date_r
                        current_col_meta['Presence']['confidence']> confidence_threshold_presence and
                        current_col_meta['Subject/Experiencer']['confidence']> confidence_threshold_presence and
                        annotations['entities'][annotation_keys[j]]['acc'] >confidence_threshold_concept_accuracy):
-
-                            df_pat_target.at[i, current_col_name+"_count_subject_present_mrc_cs"] = df_pat_target.loc[i][current_col_name+"_count_subject_present_mrc_cs"] + 1
+                     
+                            df_pat_target.at[i, current_col_name+"_count_subject_present"] = df_pat_target.loc[i][current_col_name+"_count_subject_present"] + 1
                     
+                    
+                    
+                
+                
+                
                     elif(current_col_meta['Presence']['value']=='True' and 
                        current_col_meta['Subject/Experiencer']['value']=='Relative' and 
                        current_col_meta['Presence']['confidence']> confidence_threshold_presence and
                        current_col_meta['Subject/Experiencer']['confidence']> confidence_threshold_presence and
                        annotations['entities'][annotation_keys[j]]['acc'] >confidence_threshold_concept_accuracy):
-                            if(current_col_name+"_count_relative_present_mrc_cs" in df_pat_target.columns):
+                            if(current_col_name+"_count_relative_present" in df_pat_target.columns):
                                 
-                                df_pat_target.at[i, current_col_name+"_count_relative_present_mrc_cs"] = df_pat_target.loc[i][current_col_name+"_count_relative_present_mrc_cs"] + 1
+                                df_pat_target.at[i, current_col_name+"_count_relative_present"] = df_pat_target.loc[i][current_col_name+"_count_relative_present"] + 1
                     
                             else:
-                                df_pat_target[current_col_name+"_count_relative_present_mrc_cs"] = 1
+                                df_pat_target[current_col_name+"_count_relative_present"] = 1
                                 
                     if(negated_presence_annotations):
                         
@@ -295,7 +302,7 @@ def get_current_pat_annotations_mrc_cs(current_pat_client_id_code, target_date_r
                                current_col_meta['Subject/Experiencer']['confidence']> confidence_threshold_presence and
                                annotations['entities'][annotation_keys[j]]['acc'] >confidence_threshold_concept_accuracy):
 
-                                    df_pat_target.at[i, current_col_name+"_count_subject_not_present_mrc_cs"] = df_pat_target.loc[i][current_col_name+"_count_subject_not_present_mrc_cs"] + 1
+                                    df_pat_target.at[i, current_col_name+"_count_subject_not_present"] = df_pat_target.loc[i][current_col_name+"_count_subject_not_present"] + 1
 
 
                             elif(current_col_meta['Presence']['value']=='True' and 
@@ -303,12 +310,13 @@ def get_current_pat_annotations_mrc_cs(current_pat_client_id_code, target_date_r
                                current_col_meta['Presence']['confidence']> confidence_threshold_presence and
                                current_col_meta['Subject/Experiencer']['confidence']> confidence_threshold_presence and
                                annotations['entities'][annotation_keys[j]]['acc'] >confidence_threshold_concept_accuracy):
-                                    if(current_col_name+"_count_relative_not_present_mrc_cs" in df_pat_target.columns):
+                                    if(current_col_name+"_count_relative_not_present" in df_pat_target.columns):
 
-                                        df_pat_target.at[i, current_col_name+"_count_relative_not_present_mrc_cs"] = df_pat_target.loc[i][current_col_name+"_count_relative_not_present_mrc_cs"] + 1
+                                        df_pat_target.at[i, current_col_name+"_count_relative_not_present"] = df_pat_target.loc[i][current_col_name+"_count_relative_not_present"] + 1
 
                                     else:
-                                        df_pat_target[current_col_name+"_count_relative_not_present_mrc_cs"] = 1
+                                        df_pat_target[current_col_name+"_count_relative_not_present"] = 1
+                        
                                 
                                 
                     else:
@@ -350,7 +358,7 @@ def get_current_pat_annotations_mrc_cs(current_pat_client_id_code, target_date_r
 
             else:
                 pass
-    update_pbar(current_pat_client_id_code+"_"+str(target_date_range), start_time, 5, 'annotations_mrc', n_docs_to_annotate = n_docs_to_annotate)
+    update_pbar(current_pat_client_id_code+"_"+str(target_date_range), start_time, 5, 'annotations', n_docs_to_annotate = n_docs_to_annotate)
     #df_pat_target.drop("n", axis=1, inplace=True)
 
     #df_pat_target.to_csv(entry_file_name)
