@@ -1,14 +1,16 @@
 
 import pickle
 
-from _data.gloabl_files.pat2vec.util.methods_get import exist_check, filter_dataframe_by_timestamp, get_start_end_year_month
+from util.methods_get import dump_results, exist_check, filter_dataframe_by_timestamp, get_start_end_year_month, update_pbar
 
 import paramiko
 
+import numpy as np
+
+from IPython.utils import io
 
 
-
-def get_current_pat_annotations_mrc_cs(current_pat_client_id_code, target_date_range, pat_batch, sftp_obj=None, config_obj = None):
+def get_current_pat_annotations_mrc_cs(current_pat_client_id_code, target_date_range, pat_batch, sftp_obj=None, config_obj = None, t=None, cohort_searcher_with_terms_and_search =None, cat=None):
     
     
     start_time = config_obj.start_time
@@ -25,9 +27,9 @@ def get_current_pat_annotations_mrc_cs(current_pat_client_id_code, target_date_r
     
     password = config_obj.password
     
+    share_sftp = config_obj.share_sftp
     
-    
-
+    negated_presence_annotations = config_obj.negated_presence_annotations
     
     current_annot_file_path = pre_annotation_path_mrc  + current_pat_client_id_code + "/" + current_pat_client_id_code  +"_"+str(target_date_range)
     
@@ -52,9 +54,10 @@ def get_current_pat_annotations_mrc_cs(current_pat_client_id_code, target_date_r
 
 
         n_docs_to_annotate = len(current_pat_docs)
-        update_pbar(current_pat_client_id_code+"_"+str(target_date_range), start_time, 5, 'annotations_mrc', n_docs_to_annotate = n_docs_to_annotate)
+        update_pbar(current_pat_client_id_code+"_"+str(target_date_range), start_time, 5, 'annotations_mrc', n_docs_to_annotate = n_docs_to_annotate, t=t, config_obj = config_obj, skipped_counter = None)
     else:
         n_docs_to_annotate = "Reading preannotated mrc..."
+        
     annotation_map = {'True':1,
                      'Presence':1 ,
                      'Recent': 1,

@@ -1,22 +1,24 @@
 
 
-from os.path import exists
-import pandas as pd
-import numpy as np
 import csv
-from csv import writer
-import warnings
 import multiprocessing
-from multiprocessing import Pool
+import os
 #import tqdm
 import re
-import sys  
+import sys
+import warnings
+from csv import writer
+from multiprocessing import Pool
+from os.path import exists
+
 import numpy as np
-import os, sys
+import pandas as pd
+#from tqdm import trange
+from colorama import Back, Fore, Style
 from IPython.utils import io
 
-#from tqdm import trange
-from colorama import Fore, Back, Style
+from util.methods_get import list_dir_wrapper, update_pbar
+
 color_bars = [Fore.RED,
     Fore.GREEN,
     Fore.BLUE,
@@ -25,23 +27,20 @@ color_bars = [Fore.RED,
     Fore.CYAN,
     Fore.WHITE]
 
-import os
-from pathlib import Path
-import paramiko
-from os.path import exists
-import random
-from datetime import datetime, timedelta, timezone
 #nb_full_path = os.path.join(os.getcwd(), nb_name)
 import datetime as dt
 import logging
-
-from medcat.cat import CAT
+import os
+import random
+from datetime import datetime, timedelta, timezone
+from os.path import exists
+from pathlib import Path
 
 import config_pat2vec
-
-from cogstack_v8_lite import * # wrap with option and put behind boolean check, no wildcard in function. 
+import paramiko
+from cogstack_v8_lite import *  # wrap with option and put behind boolean check, no wildcard in function.
 from credentials import *
-
+from medcat.cat import CAT
 
 #stuff paths for portability
 sys.path.insert(0,'/home/aliencat/samora/gloabl_files')
@@ -50,15 +49,15 @@ sys.path.insert(0,'/home/jovyan/work/gloabl_files')
 sys.path.insert(0, '/home/cogstack/samora/_data/gloabl_files')
 
 
+import pickle
+import traceback
+from datetime import datetime
 from pathlib import Path
 
 from COGStats import *
 from scipy import stats
-import pickle
 
 
-import traceback
-from datetime import datetime
 def convert_date(date_string):
     date_string = date_string.split("T")[0]
     date_object = datetime.strptime(date_string, "%Y-%m-%d")
@@ -66,12 +65,12 @@ def convert_date(date_string):
 
 import os
 import subprocess
+from datetime import datetime
 from io import StringIO
 
-from datetime import datetime
 from dateutil.relativedelta import relativedelta
 
-
+import time
 
 
 class main:
@@ -222,12 +221,6 @@ class main:
 
         random.shuffle(self.all_patient_list)
         
-        
-
-
-
-
-
 
         print(f"remote_dump {self.remote_dump}")
         print(self.pre_annotation_path)
@@ -239,211 +232,86 @@ class main:
 
             pre_path = f'/mnt/hdd1/samora/{self.proj_name}/'
 
-    
-
-
-    
-
-    
-
-        # Set the hostname, username, and password for the remote machine
-        
-        if(not self.aliencat or self.dgx):
-            hostname = '%HOSTIPADDRESS%'
+            # Set the hostname, username, and password for the remote machine
             
-        if(self.aliencat and not self.dgx):
-            hostname = 'localhost'
-        
-        username = '%USERNAME%'
-        password = '%PASSWORD%'
-
-        # Create an SSH client and connect to the remote machine
-        ssh_client = paramiko.SSHClient()
-        ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        ssh_client.connect(hostname=hostname, username=username, password=password)
-
-        sftp_client = ssh_client.open_sftp()
-
-        if(self.remote_dump):
-            try:
-                sftp_client.chdir(pre_path)  # Test if remote_path exists
-            except IOError:
-                sftp_client.mkdir(pre_path)  # Create remote_path
-
-
-
-        pre_annotation_path = f"{pre_path}{self.pre_annotation_path}"
-        pre_annotation_path_mrc = f"{pre_path}{self.pre_annotation_path_mrc}"
-        current_pat_line_path = f"{pre_path}{self.current_pat_line_path}"
-        current_pat_lines_path = current_pat_line_path
-        
-        
-        if(self.remote_dump==False):
-            Path(self.current_pat_annot_path).mkdir(parents=True, exist_ok=True)
-            Path(pre_annotation_path_mrc).mkdir(parents=True, exist_ok=True)
-
-        else:
-            try:
-                sftp_client.chdir(pre_annotation_path)  # Test if remote_path exists
-            except IOError:
-                sftp_client.mkdir(pre_annotation_path)  # Create remote_path
-
-            try:
-                sftp_client.chdir(pre_annotation_path_mrc)  # Test if remote_path exists
-            except IOError:
-                sftp_client.mkdir(pre_annotation_path_mrc)  # Create remote_path
+            if(not self.aliencat or self.dgx):
+                hostname = '%HOSTIPADDRESS%'
                 
-            try:
-                sftp_client.chdir(current_pat_line_path)  # Test if remote_path exists
-            except IOError:
-                sftp_client.mkdir(current_pat_line_path)  # Create remote_path
+            if(self.aliencat and not self.dgx):
+                hostname = 'localhost'
+            
+            username = '%USERNAME%'
+            password = '%PASSWORD%'
+
+            # Create an SSH client and connect to the remote machine
+            ssh_client = paramiko.SSHClient()
+            ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+            ssh_client.connect(hostname=hostname, username=username, password=password)
+
+            sftp_client = ssh_client.open_sftp()
+
+            if(self.remote_dump):
+                try:
+                    sftp_client.chdir(pre_path)  # Test if remote_path exists
+                except IOError:
+                    sftp_client.mkdir(pre_path)  # Create remote_path
+
+
+
+            pre_annotation_path = f"{pre_path}{self.pre_annotation_path}"
+            pre_annotation_path_mrc = f"{pre_path}{self.pre_annotation_path_mrc}"
+            current_pat_line_path = f"{pre_path}{self.current_pat_line_path}"
+            current_pat_lines_path = current_pat_line_path
+            
+            
+            if(self.remote_dump==False):
+                Path(self.current_pat_annot_path).mkdir(parents=True, exist_ok=True)
+                Path(pre_annotation_path_mrc).mkdir(parents=True, exist_ok=True)
+
+            else:
+                try:
+                    sftp_client.chdir(pre_annotation_path)  # Test if remote_path exists
+                except IOError:
+                    sftp_client.mkdir(pre_annotation_path)  # Create remote_path
+
+                try:
+                    sftp_client.chdir(pre_annotation_path_mrc)  # Test if remote_path exists
+                except IOError:
+                    sftp_client.mkdir(pre_annotation_path_mrc)  # Create remote_path
+                    
+                try:
+                    sftp_client.chdir(current_pat_line_path)  # Test if remote_path exists
+                except IOError:
+                    sftp_client.mkdir(current_pat_line_path)  # Create remote_path
         else:
             sftp_client = None
             
             
             
-            
-            
-            
-            
-    
-    
-            
-            
-            
-    def sftp_exists(self, path, sftp_obj=None):
-        try:
-            if(self.share_sftp == False):
-                ssh_client = paramiko.SSHClient()
-                ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-                ssh_client.connect(hostname=hostname, username=username, password=password)
-
-                sftp_obj = ssh_client.open_sftp()
-            
-            sftp_obj.stat(path)
-            
-            if(self.share_sftp == False):
-                sftp_obj.close()
-                sftp_obj.close()
-            return True
-        except FileNotFoundError:
-            return False
-
-
-
-    def generate_date_list(start_date, years, months, days):
-    
-        end_date = start_date + relativedelta(years=years, months=months, days=days)
         
-        date_list = []
-        current_date = start_date
+        self.stripped_list_start = [x.replace(".csv","") for x in list_dir_wrapper(self.current_pat_lines_path, self.sftp_client)]
         
-        while current_date <= end_date:
-            date_list.append((current_date.year, current_date.month, current_date.day))
-            current_date += timedelta(days=1)
         
-        return date_list
+        print(len(self.stripped_list_start))
 
-
-
-
-
-
-    def dump_results(self, file_data, path, sftp_obj=None):
-        if(self.remote_dump):
-            if(self.share_sftp == False):
-                ssh_client = paramiko.SSHClient()
-                ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-                ssh_client.connect(hostname=hostname, username=username, password=password)
-
-                sftp_client = ssh_client.open_sftp()
-                sftp_obj = sftp_client
-            
-            
-            with sftp_obj.open(path, 'w') as file:
-        
-                pickle.dump(file_data, file)
-            if(self.share_sftp == False):
-                sftp_obj.close()
-                sftp_obj.close()
-            
-        else:
-            with open(path, 'wb') as f:
-                pickle.dump(file_data, f)
-
-
-
-
-
-
-
-
-
-    def list_dir_wrapper(self, path, sftp_obj=None):
-        #global sftp_client
-        if(self.remote_dump):
-            if(self.share_sftp == False):
-                ssh_client = paramiko.SSHClient()
-                ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-                ssh_client.connect(hostname=hostname, username=username, password=password)
-
-                sftp_client = ssh_client.open_sftp()
-                sftp_obj = sftp_client
-            elif(sftp_obj ==None):
-                sftp_obj = sftp_client
                 
-            res = sftp_obj.listdir(path)
-            
-            
-            return res
-            
-        else:
-            
-            return os.listdir(path)
-
-
-
-
-
-    def exist_check(self, path, sftp_obj=None):
-        if(self.remote_dump):
-            return self.sftp_exists(path, sftp_obj)
-        else:
-            return exists(path)
-
-
-    def get_free_gpu():
-        ## move to cogstats?
-        gpu_stats = subprocess.check_output(["nvidia-smi", "--format=csv", "--query-gpu=memory.used,memory.free"])
-        gpu_df = pd.read_csv(StringIO(gpu_stats.decode('utf-8')),
-                            names=['memory.used', 'memory.free'],
-                            skiprows=1)
-        print('GPU usage:\n{}'.format(gpu_df))
-        gpu_df['memory.free'] = gpu_df['memory.free'].map(lambda x: x.rstrip(' [MiB]'))
-        idx = gpu_df['memory.free'].astype(int).idxmax()
-        print('Returning GPU{} with {} free MiB'.format(idx, gpu_df.iloc[idx]['memory.free']))
-        return int(idx), gpu_df.iloc[idx]['memory.free']
-
-
-
-
-
-
-
-    def method1(self):
+                
+        self.stripped_list = [x.replace(".csv","") for x in list_dir_wrapper(self.current_pat_lines_path, self.sftp_client)]
         
-        self.logger.debug("This is a debug message from your_method.")
-        self.logger.warning("This is a warning message from your_method.")
 
-        # Code for method1
-        pass
+    
+    #------------------------------------begin main----------------------------------       
+    
+            
 
-    def method2(self):
-        # Code for method2
-        pass
+        
+        
+    
+            
 
-    def __str__(self):
-        return f"MyClass instance with parameters: {self.parameter1}, {self.parameter2}"
+    
+    
+
 
 
 
