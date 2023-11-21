@@ -1,8 +1,6 @@
 from datetime import datetime
 from pathlib import Path
 
-import pandas as pd
-
 
 class config_class:
     def __init__(self,
@@ -102,22 +100,6 @@ class config_class:
         
         
         
-        self.slow_execution_threshold_low  = 10
-        self.slow_execution_threshold_high = 30
-        self.slow_execution_threshold_extreme = 60
         
-        
-        
-        
-        priority_list_bool = False
-
-        if(priority_list_bool):
-            #add logic to prioritise pats from list.
-            
-            df_old_done = pd.read_csv('/data/AS/Samora/HFE/HFE/v18/current_pat_lines_parts/current_pat_lines__part_0_merged.csv',usecols=['client_idcode', 'Hemochromatosis (disorder)_count_subject_present'])
-            
-            priority_list = df_old_done[df_old_done['Hemochromatosis (disorder)_count_subject_present']>0]['client_idcode'].to_list()
-            
-            all_patient_list = priority_list #+ all_patient_list
             
         

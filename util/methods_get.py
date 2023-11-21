@@ -15,12 +15,6 @@ import paramiko
 from colorama import Back, Fore, Style
 from dateutil.relativedelta import relativedelta
 
-
-from datetime import datetime
-
-import paramiko
-from tqdm import tqdm
-
 color_bars = [Fore.RED,
     Fore.GREEN,
     Fore.BLUE,
@@ -62,14 +56,6 @@ def list_dir_wrapper(path, sftp_obj=None, config_obj=None):
         else:
             
             return os.listdir(path)
-        
-        
-        
-
-def convert_date(date_string):
-    date_string = date_string.split("T")[0]
-    date_object = datetime.strptime(date_string, "%Y-%m-%d")
-    return date_object
 
 
 
@@ -523,76 +509,3 @@ def write_remote(path, csv_file, sftp_obj=None, config_obj = None):
         
 
 
-
-
-
-
-def filter_stripped_list(stripped_list, config_obj=None):
-    
-    strip_list = config_obj.strip_list
-    remote_dump = config_obj.remote_dump
-    hostname = config_obj.hostname
-    username = config_obj.username
-    password = config_obj.password
-    current_pat_lines_path = config_obj.current_pat_lines_path
-    n_pat_lines = config_obj.n_pat_lines
-    
-    
-    if strip_list:
-        #stripped_list_start_copy = stripped_list.copy()
-        container_list = []
-
-        if remote_dump:
-            ssh_client = paramiko.SSHClient()
-            ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-            ssh_client.connect(hostname=hostname, username=username, password=password)
-
-            sftp_client = ssh_client.open_sftp()
-
-            for i in range(len(stripped_list)):
-                try:
-                    if len(sftp_client.listdir(current_pat_lines_path + stripped_list[i])) >= n_pat_lines:
-                        container_list.append(stripped_list[i])
-                except:
-                    pass
-        else:
-            for i in tqdm(range(len(stripped_list))):
-                if len(list_dir_wrapper(current_pat_lines_path + stripped_list[i])) >= n_pat_lines:
-                    container_list.append(stripped_list[i])
-
-        stripped_list_start = container_list.copy()
-        stripped_list = container_list.copy()
-        
-        if remote_dump:
-            sftp_client.close()
-            ssh_client.close()
-    else:
-        stripped_list = []
-        stripped_list_start = []
-
-    return stripped_list, stripped_list_start
-
-# Example usage:
-# stripped_list, stripped_list_start = filter_stripped_list(your_stripped_list, strip_list=True, remote_dump=True, hostname="your_host", username="your_username", password="your_password", current_pat_lines_path="your_path", n_pat_lines=your_n)
-
-
-
-def create_folders(config_obj=None):
-    pre_annotation_path = config_obj.pre_annotation_path
-    pre_annotation_path_mrc = config_obj.pre_annotation_path_mrc
-    current_pat_line_path = config_obj.current_pat_line_path
-    all_patient_list = config_obj.all_patient_list
-
-    for i in tqdm(range(len(all_patient_list))):
-        for path in [pre_annotation_path, pre_annotation_path_mrc, current_pat_line_path]:
-            folder_path = os.path.join(path, str(all_patient_list[i]))
-
-            if not os.path.exists(folder_path):
-                os.makedirs(folder_path)
-
-
-
-def convert_date(date_string):
-    date_string = date_string.split("T")[0]
-    date_object = datetime.strptime(date_string, "%Y-%m-%d")
-    return date_object

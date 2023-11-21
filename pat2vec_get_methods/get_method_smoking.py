@@ -55,4 +55,3 @@ def get_smoking(current_pat_client_id_code, target_date_range, pat_batch, config
         features[f'{term}_non'] = np.nan
 
     return features
-
