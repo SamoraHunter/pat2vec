@@ -12,6 +12,7 @@ sys.path.insert(0,'/home/aliencat/samora/gloabl_files')
 sys.path.insert(0,'/data/AS/Samora/gloabl_files')
 sys.path.insert(0,'/home/jovyan/work/gloabl_files')
 sys.path.insert(0, '/home/cogstack/samora/_data/gloabl_files')
+sys.path.insert(0, '/home/cogstack/samora/_data/gloabl_files/pat2vec')
 import random
 import warnings
 from csv import writer
@@ -38,8 +39,8 @@ from patvec_get_batch_methods.main import (get_pat_batch_bloods,
                                            get_pat_batch_mct_docs,
                                            get_pat_batch_news,
                                            get_pat_batch_obs)
-from util.methods_get import (filter_stripped_list, generate_date_list,
-                              list_dir_wrapper, update_pbar)
+from util import config_pat2vec
+from util.methods_get import generate_date_list, list_dir_wrapper, update_pbar
 
 color_bars = [Fore.RED,
     Fore.GREEN,
@@ -63,7 +64,6 @@ from io import StringIO
 from os.path import exists
 from pathlib import Path
 
-import config_pat2vec
 import paramiko
 from cogstack_v8_lite import *  # wrap with option and put behind boolean check, no wildcard in function.
 from COGStats import *
@@ -72,14 +72,16 @@ from dateutil.relativedelta import relativedelta
 from medcat.cat import CAT
 from scipy import stats
 
+from util.config_pat2vec import config_class
+
 
 class main:
-    def __init__(self, parameter1, parameter2, aliencat=False, dgx=False, dhcap=False, dhcap02=True,
+    def __init__(self, aliencat=False, dgx=False, dhcap=False, dhcap02=True,
              batch_mode=True, remote_dump=False, negated_presence_annotations=False,
              store_annot=True, share_sftp=True, multi_process=True, annot_first=False,
-             strip_list=True, cogstack=True, verbosity = 0, config = None, use_filter=False,
+             strip_list=True, cogstack=True, verbosity = 0, use_filter=False,
              json_filter_path = None, random_seed_val=42, treatment_client_id_list = None,
-             hostname =None):
+             hostname =None, config_obj = None):
 
 
         # Additional parameters
@@ -99,21 +101,22 @@ class main:
         self.random_seed_val = random_seed_val
         self.treatment_client_id_list = treatment_client_id_list
         self.hostname = hostname
+        self.config_obj = config_obj
         
         
-        if(config==None):
+        if(config_obj==None):
             self.config_obj = config_pat2vec.config_class()
             
         
         
     
         #config parameters
-        self.suffix = config.suffix
-        self.treatment_doc_filename = config.treatment_doc_filename
-        self.treatment_control_ratio_n = config.treatment_control_ratio_n
-        self.pre_annotation_path = config.pre_annotation_path
-        self.pre_annotation_path_mrc = config.pre_annotation_path_mrc
-        self.proj_name = config.proj_name
+        self.suffix = config_obj.suffix
+        self.treatment_doc_filename = config_obj.treatment_doc_filename
+        self.treatment_control_ratio_n = config_obj.treatment_control_ratio_n
+        self.pre_annotation_path = config_obj.pre_annotation_path
+        self.pre_annotation_path_mrc = config_obj.pre_annotation_path_mrc
+        self.proj_name = config_obj.proj_name
 
         
 
