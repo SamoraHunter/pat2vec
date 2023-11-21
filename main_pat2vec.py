@@ -76,35 +76,36 @@ from util.config_pat2vec import config_class
 
 
 class main:
-    def __init__(self, aliencat=False, dgx=False, dhcap=False, dhcap02=True,
-             batch_mode=True, remote_dump=False, negated_presence_annotations=False,
-             store_annot=True, share_sftp=True, multi_process=True, annot_first=False,
-             strip_list=True, cogstack=True, verbosity = 0, use_filter=False,
+    def __init__(self, cogstack=True, verbosity = 0, use_filter=False,
              json_filter_path = None, random_seed_val=42, treatment_client_id_list = None,
-             hostname =None, config_obj = None):
+             hostname =None, config_obj = None, ):
 
+
+    
 
         # Additional parameters
-        self.aliencat = aliencat
-        self.dgx = dgx
-        self.dhcap = dhcap
-        self.dhcap02 = dhcap02
-        self.batch_mode = batch_mode
-        self.remote_dump = remote_dump
-        self.negated_presence_annotations = negated_presence_annotations
-        self.store_annot = store_annot
-        self.share_sftp = share_sftp
-        self.multi_process = multi_process
-        self.annot_first = annot_first
-        self.strip_list = strip_list
-        self.verbosity = verbosity
-        self.random_seed_val = random_seed_val
-        self.treatment_client_id_list = treatment_client_id_list
-        self.hostname = hostname
+        self.aliencat = config_obj.aliencat
+        self.dgx = config_obj.dgx
+        self.dhcap = config_obj.dhcap
+        self.dhcap02 = config_obj.dhcap02
+        self.batch_mode = config_obj.batch_mode
+        self.remote_dump = config_obj.remote_dump
+        self.negated_presence_annotations = config_obj.negated_presence_annotations
+        self.store_annot = config_obj.store_annot
+        self.share_sftp = config_obj.share_sftp
+        self.multi_process = config_obj.multi_process
+        self.annot_first = config_obj.annot_first
+        self.strip_list = config_obj.strip_list
+        self.verbosity = config_obj.verbosity
+        self.random_seed_val = config_obj.random_seed_val
+        #self.treatment_client_id_list = config_obj.treatment_client_id_list
+        self.hostname = config_obj.hostname
+
         self.config_obj = config_obj
         
         
-        if(config_obj==None):
+        if(self.config_obj==None):
+            print("Init default config on config_pat2vec")
             self.config_obj = config_pat2vec.config_class()
             
         
@@ -117,6 +118,7 @@ class main:
         self.pre_annotation_path = config_obj.pre_annotation_path
         self.pre_annotation_path_mrc = config_obj.pre_annotation_path_mrc
         self.proj_name = config_obj.proj_name
+        self.gpu_mem_threshold = config_obj.gpu_mem_threshold
 
         
 
@@ -129,7 +131,7 @@ class main:
         self.logger = logging.getLogger(__name__)
 
         # Create a handler that writes log messages to a file with a timestamp
-        log_file = f"{log_folder}/logfile_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
+        log_file = f"{log_folder}/logfile_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
         file_handler = logging.FileHandler(log_file)
 
         # Create a formatter to include timestamp in the log messages
@@ -174,8 +176,11 @@ class main:
         if not(self.dhcap) and not (self.dhcap02):
 
             gpu_index,free_mem  = self.get_free_gpu()
+            
+        else:
+            gpu_index,free_mem = -1, self.gpu_mem_threshold -1
 
-        if(int(free_mem)>4000):
+        if(int(free_mem)>self.gpu_mem_threshold):
             os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu_index)
             print(f"Setting gpu with {free_mem} free")
         else:

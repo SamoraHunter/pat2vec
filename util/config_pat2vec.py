@@ -15,6 +15,24 @@ class config_class:
                  years = 0,
                  months = 0, 
                  days = 1,
+                 aliencat = False,
+                 dgx = False, 
+                 dhcap = False,
+                 dhcap02 = True,
+                 batch_mode = True,
+                 store_annot = False,
+                 share_sftp = True,
+                 multi_process = False,
+                 annot_first = False,
+                 strip_list = True,
+                 verbosity = 3,
+                 random_seed_val = 42,
+                 hostname = None,
+                 username= None,
+                 password=None,
+                 gpu_mem_threshold = 4000
+                 
+                 
                  ):
         
         
@@ -26,6 +44,26 @@ class config_class:
         
         self.proj_name = proj_name
         self.main_options = main_options
+        
+        
+        self.aliencat = aliencat
+        self.dgx = dgx
+        self.dhcap = dhcap
+        self.dhcap02 = dhcap02
+        self.batch_mode = batch_mode
+        self.remote_dump = remote_dump
+        
+        self.store_annot = store_annot
+        self.share_sftp = share_sftp
+        self.multi_process = multi_process
+        self.annot_first = annot_first
+        self.strip_list = strip_list
+        self.verbosity = verbosity
+        self.random_seed_val = random_seed_val
+        self.hostname = hostname
+        self.username = username
+        self.password = password
+        self.gpu_mem_threshold = gpu_mem_threshold
 
         
         if(self.main_options == None):
@@ -44,8 +82,11 @@ class config_class:
                 
                 'annotations':True,
                 'annotations_mrc': True,
+                'negated_presence_annotations':False
                 
                }
+            
+        self.negated_presence_annotations = self.main_options.get('negated_presence_annotations')
 
 
 
@@ -97,6 +138,28 @@ class config_class:
         import itertools
         combinations = list(itertools.product(years, months, days))
         len(combinations)
+        
+        
+        
+        
+        self.slow_execution_threshold_low  = 10
+        self.slow_execution_threshold_high = 30
+        self.slow_execution_threshold_extreme = 60
+        
+        
+        
+        
+        priority_list_bool = False
+
+        if(priority_list_bool):
+            #add logic to prioritise pats from list.
+            
+            df_old_done = pd.read_csv('/data/AS/Samora/HFE/HFE/v18/current_pat_lines_parts/current_pat_lines__part_0_merged.csv',usecols=['client_idcode', 'Hemochromatosis (disorder)_count_subject_present'])
+            
+            priority_list = df_old_done[df_old_done['Hemochromatosis (disorder)_count_subject_present']>0]['client_idcode'].to_list()
+            
+            all_patient_list = priority_list #+ all_patient_list
+            
         
         
         
