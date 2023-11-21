@@ -56,9 +56,9 @@ class config_class:
             # pre_path = f'/home/cogstack/samora/_data/clinical_coding/{proj_name}/'
             pre_path = f'{current_path_dir}{proj_name}/'
             
-            pre_annotation_path = pre_path + pre_annotation_path
+            pre_annotation_path = pre_path + self.pre_annotation_path
             
-            pre_annotation_path_mrc = pre_path + pre_annotation_path_mrc
+            pre_annotation_path_mrc = pre_path + self.pre_annotation_path_mrc
             
             Path(pre_annotation_path).mkdir(parents=True, exist_ok=True)
             Path(pre_annotation_path_mrc).mkdir(parents=True, exist_ok=True)
