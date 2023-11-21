@@ -6,6 +6,11 @@ import os
 #import tqdm
 import re
 import sys
+#stuff paths for portability
+sys.path.insert(0,'/home/aliencat/samora/gloabl_files')
+sys.path.insert(0,'/data/AS/Samora/gloabl_files')
+sys.path.insert(0,'/home/jovyan/work/gloabl_files')
+sys.path.insert(0, '/home/cogstack/samora/_data/gloabl_files')
 import warnings
 from csv import writer
 from multiprocessing import Pool
@@ -18,9 +23,13 @@ from colorama import Back, Fore, Style
 from IPython.utils import io
 from tqdm import trange
 from pat2vec_get_methods.current_pat_annotations_to_file import get_current_pat_annotations_batch_to_file, get_current_pat_annotations_mct_batch_to_file
+from pat2vec_main_methods.main_batch import main_batch
 from patvec_get_batch_methods.main import get_pat_batch_bloods, get_pat_batch_bmi, get_pat_batch_demo, get_pat_batch_diagnostics, get_pat_batch_drugs, get_pat_batch_epr_docs, get_pat_batch_mct_docs, get_pat_batch_news, get_pat_batch_obs
 
-from util.methods_get import list_dir_wrapper, update_pbar
+from util.methods_get import filter_stripped_list, generate_date_list, list_dir_wrapper, update_pbar
+
+import random
+from tqdm import trange
 
 color_bars = [Fore.RED,
     Fore.GREEN,
@@ -45,11 +54,7 @@ from cogstack_v8_lite import *  # wrap with option and put behind boolean check,
 from credentials import *
 from medcat.cat import CAT
 
-#stuff paths for portability
-sys.path.insert(0,'/home/aliencat/samora/gloabl_files')
-sys.path.insert(0,'/data/AS/Samora/gloabl_files')
-sys.path.insert(0,'/home/jovyan/work/gloabl_files')
-sys.path.insert(0, '/home/cogstack/samora/_data/gloabl_files')
+
 
 
 import pickle
@@ -60,11 +65,6 @@ from pathlib import Path
 from COGStats import *
 from scipy import stats
 
-
-def convert_date(date_string):
-    date_string = date_string.split("T")[0]
-    date_object = datetime.strptime(date_string, "%Y-%m-%d")
-    return date_object
 
 import os
 import subprocess
@@ -102,8 +102,9 @@ class main:
         self.treatment_client_id_list = treatment_client_id_list
         self.hostname = hostname
         
+        
         if(config==None):
-            config = config_pat2vec.config_class()
+            self.config_obj = config_pat2vec.config_class()
             
         
         
@@ -310,6 +311,30 @@ class main:
         
         
         
+        if(self.aliencat):
+            cat = CAT.load_model_pack('/home/aliencat/samora/HFE/HFE/medcat_models/medcat_model_pack_316666b47dfaac07.zip')
+            
+        elif(self.dgx):
+            cat = CAT.load_model_pack('/data/AS/Samora/HFE/HFE/v18/' + 'medcat_models/20230328_trained_model_hfe_redone/medcat_model_pack_316666b47dfaac07');
+            
+        elif(self.dhcap):
+            cat = CAT.load_model_pack('/home/jovyan/work/' + 'medcat_models/medcat_model_pack_316666b47dfaac07.zip');
+            
+        elif(self.dhcap02):
+            
+            cat = CAT.load_model_pack('/home/cogstack/samora/_data/' +  'medcat_models/medcat_model_pack_316666b47dfaac07.zip');
+        
+        
+        self.stripped_list = [x.replace(".csv","") for x in list_dir_wrapper(current_pat_lines_path, sftp_client)]
+        
+        
+        self.stripped_list = filter_stripped_list(self.stripped_list)
+        
+        
+        date_list = generate_date_list(self.config_obj.start_date,self.config_obj.years, self.config_obj.months, self.config_obj.days)
+        
+        for date in date_list[0:5]:
+            print(date)
         
         
     #------------------------------------begin main----------------------------------       
@@ -339,6 +364,8 @@ class main:
         stripped_list_start = self.stripped_list_start
         
         combinations = self.combinations
+        
+        multi_process = self.config_obj.multi_process
         
         
         
@@ -510,4 +537,6 @@ class main:
 
 
 
+
     
+
