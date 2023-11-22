@@ -7,6 +7,8 @@ import os
 import re
 import sys
 
+from pat2vec_pat_list.get_patient_treatment_list import get_all_patients_list
+
 #stuff paths for portability
 sys.path.insert(0,'/home/aliencat/samora/gloabl_files')
 sys.path.insert(0,'/data/AS/Samora/gloabl_files')
@@ -98,7 +100,7 @@ class main:
         self.strip_list = config_obj.strip_list
         self.verbosity = config_obj.verbosity
         self.random_seed_val = config_obj.random_seed_val
-        self.treatment_client_id_list = config_obj.treatment_client_id_list
+        #self.treatment_client_id_list = config_obj.treatment_client_id_list
         self.hostname = config_obj.hostname
 
         self.config_obj = config_obj
@@ -121,6 +123,8 @@ class main:
         self.gpu_mem_threshold = config_obj.gpu_mem_threshold
 
         
+
+        self.treatment_client_id_list = get_all_patients_list(config_obj)
 
         
         # Create a folder for logs if it doesn't exist
