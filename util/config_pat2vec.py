@@ -47,7 +47,12 @@ class config_class:
                  testing=False,
                  use_controls = False,
                  medcat = False,
-                 
+                 global_start_year=None,
+                 global_start_month=None,
+                 global_end_year=None,
+                 global_end_month=None,
+                 skip_additional_listdir = False,
+                 start_time = None,
                  
                  ):
         
@@ -87,6 +92,9 @@ class config_class:
         self.skipped_counter = None
         
         self.medcat = medcat
+        
+        if(start_time ==None):
+            self.start_time = datetime.now()
 
         
         if(self.main_options == None):
@@ -202,7 +210,64 @@ class config_class:
 
             
         
-        
+        if(self.remote_dump):
+
+
+            pre_path = f'/mnt/hdd1/samora/{self.proj_name}/'
+
+            # Set the hostname, username, and password for the remote machine
+            
+            if(not self.aliencat or self.dgx):
+                self.hostname = '%HOSTIPADDRESS%'
+                
+            if(self.aliencat and not self.dgx):
+                self.hostname = 'localhost'
+            
+            username = '%USERNAME%'
+            password = '%PASSWORD%'
+
+            # Create an SSH client and connect to the remote machine
+            self.ssh_client = paramiko.SSHClient()
+            self.ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+            self.ssh_client.connect(hostname=self.hostname, username=self.username, password=self.password)
+
+            self.sftp_client = ssh_client.open_sftp()
+
+            if(self.remote_dump):
+                try:
+                    sftp_client.chdir(pre_path)  # Test if remote_path exists
+                except IOError:
+                    sftp_client.mkdir(pre_path)  # Create remote_path
+
+
+
+            pre_annotation_path = f"{pre_path}{self.pre_annotation_path}"
+            pre_annotation_path_mrc = f"{pre_path}{self.pre_annotation_path_mrc}"
+            current_pat_line_path = f"{pre_path}{self.current_pat_line_path}"
+            current_pat_lines_path = current_pat_line_path
+            
+            
+            if(self.remote_dump==False):
+                Path(self.current_pat_annot_path).mkdir(parents=True, exist_ok=True)
+                Path(pre_annotation_path_mrc).mkdir(parents=True, exist_ok=True)
+
+            else:
+                try:
+                    sftp_client.chdir(pre_annotation_path)  # Test if remote_path exists
+                except IOError:
+                    sftp_client.mkdir(pre_annotation_path)  # Create remote_path
+
+                try:
+                    sftp_client.chdir(pre_annotation_path_mrc)  # Test if remote_path exists
+                except IOError:
+                    sftp_client.mkdir(pre_annotation_path_mrc)  # Create remote_path
+                    
+                try:
+                    sftp_client.chdir(current_pat_line_path)  # Test if remote_path exists
+                except IOError:
+                    sftp_client.mkdir(current_pat_line_path)  # Create remote_path
+        else:
+            self.sftp_client = None
         
         
         self.date_list = generate_date_list(self.start_date,self.years, self.months, self.days)
@@ -221,3 +286,20 @@ class config_class:
         'dhcap02': '/home/cogstack/samora/_data/medcat_models/medcat_model_pack_316666b47dfaac07.zip'
         
         }
+        
+        if(global_start_year == None):
+            self.global_start_year, self.global_start_month, self.global_end_year, self.global_end_month = '1995', '01', '2023', '11' 
+        else:
+            
+            self.global_start_year = global_start_year
+            self.global_start_month = global_start_month
+            self.global_end_year = global_end_year
+            self.global_end_month = global_end_month
+        if(self.verbosity>1):
+            print("Debug message: global_start_year =", self.global_start_year)
+            print("Debug message: global_start_month =", self.global_start_month)
+            print("Debug message: global_end_year =", self.global_end_year)
+            print("Debug message: global_end_month =", self.global_end_month)
+
+
+        self.skip_additional_listdir = skip_additional_listdir

@@ -23,27 +23,33 @@ def main_batch(current_pat_client_id_code,
                batch_mct = None,
                batch_bloods = None,
                batch_drugs = None,
-            
-              sftp_obj = None, 
-              config_obj=None):
+
+              config_obj=None,
+              stripped_list_start = None,
+              ):
     
     
     #global skipped_counter
-    global start_time
+    #global start_time
+    
+    
     start_time = time.time()
     
     
     skipped_counter = config_obj.skipped_counter
-    stripped_list_start = config_obj.stripped_list_start
+    #stripped_list_start = config_obj.stripped_list_start
     n_pat_lines = config_obj.n_pat_lines
     skip_additional_listdir = config_obj.skip_additional_listdir
     current_pat_line_path = config_obj.current_pat_line_path
     current_pat_lines_path = config_obj.current_pat_lines_path
-    write_remote = config_obj.write_remote
+    #write_remote = config_obj.write_remote
     remote_dump = config_obj.remote_dump
     sftp_client = config_obj.sftp_client
+    sftp_obj = config_obj.sftp_obj
     multi_process = config_obj.multi_process
     main_options = config_obj.main_options
+    
+    start_time = config_obj.start_time
     
     
     
@@ -58,7 +64,7 @@ def main_batch(current_pat_client_id_code,
             stripped_list = stripped_list_start
         else:
             
-            if(len(list_dir_wrapper(current_pat_lines_path + current_pat_client_id_code, sftp_obj)) >=n_pat_lines):
+            if(len(list_dir_wrapper(current_pat_lines_path + current_pat_client_id_code, config_obj)) >=n_pat_lines):
                 already_done = True
                 stripped_list_start.append(current_pat_client_id_code)
             stripped_list = stripped_list_start.copy()

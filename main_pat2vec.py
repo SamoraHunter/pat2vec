@@ -129,11 +129,19 @@ class main:
 
         self.all_patient_list = get_all_patients_list(config_obj)
         
+        create_folders(all_patient_list, config_obj)
+        
         
         self.current_pat_line_path = config_obj.current_pat_line_path
         self.current_pat_lines_path = config_obj.current_pat_lines_path
         self.sftp_client = config_obj.sftp_obj
 
+        if(cogstack==True):
+            if(self.config_obj.verbosity > 0):
+                print("Init cohort_searcher_with_terms_and_search function")
+            self.cohort_searcher_with_terms_and_search = cohort_searcher_with_terms_and_search
+        else:
+            self.cohort_searcher_with_terms_and_search = None
         
         # Create a folder for logs if it doesn't exist
         log_folder = "logs"
@@ -210,64 +218,7 @@ class main:
             print(self.pre_annotation_path_mrc)
             print(self.current_pat_line_path)
 
-        if(self.remote_dump):
 
-
-            pre_path = f'/mnt/hdd1/samora/{self.proj_name}/'
-
-            # Set the hostname, username, and password for the remote machine
-            
-            if(not self.aliencat or self.dgx):
-                hostname = '%HOSTIPADDRESS%'
-                
-            if(self.aliencat and not self.dgx):
-                hostname = 'localhost'
-            
-            username = '%USERNAME%'
-            password = '%PASSWORD%'
-
-            # Create an SSH client and connect to the remote machine
-            ssh_client = paramiko.SSHClient()
-            ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-            ssh_client.connect(hostname=hostname, username=username, password=password)
-
-            sftp_client = ssh_client.open_sftp()
-
-            if(self.remote_dump):
-                try:
-                    sftp_client.chdir(pre_path)  # Test if remote_path exists
-                except IOError:
-                    sftp_client.mkdir(pre_path)  # Create remote_path
-
-
-
-            pre_annotation_path = f"{pre_path}{self.pre_annotation_path}"
-            pre_annotation_path_mrc = f"{pre_path}{self.pre_annotation_path_mrc}"
-            current_pat_line_path = f"{pre_path}{self.current_pat_line_path}"
-            current_pat_lines_path = current_pat_line_path
-            
-            
-            if(self.remote_dump==False):
-                Path(self.current_pat_annot_path).mkdir(parents=True, exist_ok=True)
-                Path(pre_annotation_path_mrc).mkdir(parents=True, exist_ok=True)
-
-            else:
-                try:
-                    sftp_client.chdir(pre_annotation_path)  # Test if remote_path exists
-                except IOError:
-                    sftp_client.mkdir(pre_annotation_path)  # Create remote_path
-
-                try:
-                    sftp_client.chdir(pre_annotation_path_mrc)  # Test if remote_path exists
-                except IOError:
-                    sftp_client.mkdir(pre_annotation_path_mrc)  # Create remote_path
-                    
-                try:
-                    sftp_client.chdir(current_pat_line_path)  # Test if remote_path exists
-                except IOError:
-                    sftp_client.mkdir(current_pat_line_path)  # Create remote_path
-        else:
-            sftp_client = None
             
             
             
@@ -358,6 +309,7 @@ class main:
         
         
         
+        #get_pat_batch_epr_docs(current_pat_client_id_code, search_term, config_obj=None, cohort_searcher_with_terms_and_search=None):
 
         
         #get_pat batches
@@ -371,66 +323,66 @@ class main:
         
         
             search_term = None # inside function
-            batch_epr = get_pat_batch_epr_docs(current_pat_client_id_code, search_term)
+            batch_epr = get_pat_batch_epr_docs(current_pat_client_id_code=current_pat_client_id_code,
+                                   search_term=search_term,
+                                   config_obj=self.config_obj,
+                                   cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search)
 
+            search_term = None  # inside function
+            batch_mct = get_pat_batch_mct_docs(current_pat_client_id_code, search_term, config_obj=self.config_obj,
+                                            cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search)
 
-            search_term = None # inside function
-            batch_mct = get_pat_batch_mct_docs(current_pat_client_id_code, search_term)
-
-            if(annot_first == False):
+            if not annot_first:
 
                 search_term = 'CORE_SmokingStatus'
-
-                batch_smoking = get_pat_batch_obs(current_pat_client_id_code, search_term)
-
+                batch_smoking = get_pat_batch_obs(current_pat_client_id_code, search_term, config_obj=self.config_obj,
+                                                cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search)
 
                 search_term = 'CORE_SpO2'
-
-                batch_core_02 = get_pat_batch_obs(current_pat_client_id_code, search_term)
-
+                batch_core_02 = get_pat_batch_obs(current_pat_client_id_code, search_term, config_obj=self.config_obj,
+                                                cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search)
 
                 search_term = 'CORE_BedNumber3'
-
-                batch_bednumber = get_pat_batch_obs(current_pat_client_id_code, search_term)
-
+                batch_bednumber = get_pat_batch_obs(current_pat_client_id_code, search_term, config_obj=self.config_obj,
+                                                cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search)
 
                 search_term = 'CORE_VTE_STATUS'
-
-                batch_vte = get_pat_batch_obs(current_pat_client_id_code, search_term)
-
+                batch_vte = get_pat_batch_obs(current_pat_client_id_code, search_term, config_obj=self.config_obj,
+                                            cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search)
 
                 search_term = 'CORE_HospitalSite'
-
-                batch_hospsite = get_pat_batch_obs(current_pat_client_id_code, search_term)
-
+                batch_hospsite = get_pat_batch_obs(current_pat_client_id_code, search_term, config_obj=self.config_obj,
+                                                cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search)
 
                 search_term = 'CORE_RESUS_STATUS'
+                batch_resus = get_pat_batch_obs(current_pat_client_id_code, search_term, config_obj=self.config_obj,
+                                                cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search)
 
-                batch_resus = get_pat_batch_obs(current_pat_client_id_code, search_term)
+                search_term = None  # inside function
+                batch_news = get_pat_batch_news(current_pat_client_id_code, search_term, config_obj=self.config_obj,
+                                                cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search)
 
+                search_term = None  # inside function
+                batch_bmi = get_pat_batch_bmi(current_pat_client_id_code, search_term, config_obj=self.config_obj,
+                                            cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search)
 
-                search_term = None # inside function
-                batch_news = get_pat_batch_news(current_pat_client_id_code, search_term)
+                search_term = None  # inside function
+                batch_diagnostics = get_pat_batch_diagnostics(current_pat_client_id_code, search_term,
+                                                            config_obj=self.config_obj,
+                                                            cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search)
 
+                search_term = None  # inside function
+                batch_drugs = get_pat_batch_drugs(current_pat_client_id_code, search_term, config_obj=self.config_obj,
+                                                cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search)
 
-                search_term = None # inside function
-                batch_bmi = get_pat_batch_bmi(current_pat_client_id_code, search_term)
+                search_term = None  # inside function
+                batch_demo = get_pat_batch_demo(current_pat_client_id_code, search_term, config_obj=self.config_obj,
+                                                cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search)
 
+                search_term = None  # inside function
+                batch_bloods = get_pat_batch_bloods(current_pat_client_id_code, search_term, config_obj=self.config_obj,
+                                                    cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search)
 
-                search_term = None # inside function
-                batch_diagnostics = get_pat_batch_diagnostics(current_pat_client_id_code, search_term)
-
-                search_term = None # inside function
-                batch_drugs = get_pat_batch_drugs(current_pat_client_id_code, search_term)
-
-
-
-
-                search_term = None # inside function
-                batch_demo = get_pat_batch_demo(current_pat_client_id_code, search_term)
-
-                search_term = None # inside function
-                batch_bloods =  get_pat_batch_bloods(current_pat_client_id_code, search_term)
 
             update_pbar(p_bar_entry, start_time, 0, f'Done batches in {time.time()-start_time}', self.t, self.config_obj, skipped_counter)
 
@@ -475,8 +427,8 @@ class main:
                             batch_mct = batch_mct,
                             batch_bloods = batch_bloods,
                             batch_drugs = batch_drugs,
-                            sftp_obj = sftp_obj
-
+                            config_obj = self.config_obj,
+                            stripped_list_start = stripped_list_start
                             )
 
                 except Exception as e:
@@ -484,7 +436,7 @@ class main:
                     print(f"Exception in patmaker on {all_patient_list[i], date_list[j]}")
                     print(traceback.format_exc())
             if(remote_dump):
-                sftp_obj.close()
+                self.sftp_obj.close()
                 self.config_obj.ssh_client.close()
         else:
             if(multi_process == False):
