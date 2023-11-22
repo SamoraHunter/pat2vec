@@ -5,6 +5,16 @@ import time
 import traceback
 
 from util.methods_get import enum_target_date_vector, list_dir_wrapper, update_pbar
+
+from patvec_get_batch_methods.main import (get_pat_batch_bloods,
+                                           get_pat_batch_bmi,
+                                           get_pat_batch_demo,
+                                           get_pat_batch_diagnostics,
+                                           get_pat_batch_drugs,
+                                           get_pat_batch_epr_docs,
+                                           get_pat_batch_mct_docs,
+                                           get_pat_batch_news,
+                                           get_pat_batch_obs)
  
  
 def main_batch(current_pat_client_id_code,
@@ -26,6 +36,7 @@ def main_batch(current_pat_client_id_code,
 
               config_obj=None,
               stripped_list_start = None,
+              t = None,
               ):
     
     
@@ -80,85 +91,85 @@ def main_batch(current_pat_client_id_code,
                 
                 p_bar_entry = current_pat_client_id_code + "_" + str(target_date_range)
 
-                update_pbar(p_bar_entry, start_time, 0, 'demo')
+                update_pbar(p_bar_entry, start_time, 0, 'demo', t, config_obj)
 
-                if(main_options.get('demo')):
+                if main_options.get('demo'):
                     current_pat_demo = get_demo(current_pat_client_id_code, target_date_range, batch_demo)
                     patient_vector.append(current_pat_demo)
 
-                update_pbar(p_bar_entry, start_time, 1, 'bmi')
+                update_pbar(p_bar_entry, start_time, 1, 'bmi', t, config_obj)
 
-                if(main_options.get('bmi')):
+                if main_options.get('bmi'):
                     bmi_features = get_bmi_features(current_pat_client_id_code, target_date_range, batch_bmi)
                     patient_vector.append(bmi_features)
 
+                update_pbar(p_bar_entry, start_time, 2, 'bloods', t, config_obj)
 
-                update_pbar(p_bar_entry, start_time, 2, 'bloods')
-
-                if(main_options.get('bloods')):
+                if main_options.get('bloods'):
                     current_pat_bloods = get_current_pat_bloods(current_pat_client_id_code, target_date_range, batch_bloods)
                     patient_vector.append(current_pat_bloods)
 
-                update_pbar(p_bar_entry, start_time, 3, 'drugs')
+                update_pbar(p_bar_entry, start_time, 3, 'drugs', t, config_obj)
 
-                if(main_options.get('drugs')):
+                if main_options.get('drugs'):
                     current_pat_drugs = get_current_pat_drugs(current_pat_client_id_code, target_date_range, batch_drugs)
                     patient_vector.append(current_pat_drugs)
 
-                update_pbar(p_bar_entry, start_time, 4, 'diagnostics')
+                update_pbar(p_bar_entry, start_time, 4, 'diagnostics', t, config_obj)
 
-                if(main_options.get('diagnostics')):
+                if main_options.get('diagnostics'):
                     current_pat_diagnostics = get_current_pat_diagnostics(current_pat_client_id_code, target_date_range, batch_diagnostics)
                     patient_vector.append(current_pat_diagnostics)
 
-
-                if(main_options.get('annotations')):
+                if main_options.get('annotations'):
                     df_pat_target = get_current_pat_annotations(current_pat_client_id_code, target_date_range, batch_epr, sftp_obj)
                     patient_vector.append(df_pat_target)
-                    
-                if(main_options.get('annotations_mrc')):
+
+                if main_options.get('annotations_mrc'):
                     df_pat_target = get_current_pat_annotations_mrc_cs(current_pat_client_id_code, target_date_range, batch_mct, sftp_obj)
                     patient_vector.append(df_pat_target)
-                
-                update_pbar(p_bar_entry, start_time, 1, 'core_02')
-                
-                if(main_options.get('core_02')):
+
+                update_pbar(p_bar_entry, start_time, 1, 'core_02', t, config_obj)
+
+                if main_options.get('core_02'):
                     df_pat_target = get_core_02(current_pat_client_id_code, target_date_range, batch_core_02)
                     patient_vector.append(df_pat_target)
-                    
-                update_pbar(p_bar_entry, start_time, 2, 'bed')
-                    
-                if(main_options.get('bed')):
+
+                update_pbar(p_bar_entry, start_time, 2, 'bed', t, config_obj)
+
+                if main_options.get('bed'):
                     df_pat_target = get_bed(current_pat_client_id_code, target_date_range, batch_bednumber)
                     patient_vector.append(df_pat_target)
-                    
-                update_pbar(p_bar_entry, start_time, 3, 'vte_status')
-                    
-                if(main_options.get('vte_status')):
+
+                update_pbar(p_bar_entry, start_time, 3, 'vte_status', t, config_obj)
+
+                if main_options.get('vte_status'):
                     df_pat_target = get_vte_status(current_pat_client_id_code, target_date_range, batch_vte)
                     patient_vector.append(df_pat_target)
-                    
-                update_pbar(p_bar_entry, start_time, 4, 'hosp_site')    
-                    
-                if(main_options.get('hosp_site')):
+
+                update_pbar(p_bar_entry, start_time, 4, 'hosp_site', t, config_obj)
+
+                if main_options.get('hosp_site'):
                     df_pat_target = get_hosp_site(current_pat_client_id_code, target_date_range, batch_hospsite)
                     patient_vector.append(df_pat_target)
-                    
-                update_pbar(p_bar_entry, start_time, 1, 'core_resus')     
-                    
-                if(main_options.get('core_resus')):
+
+                update_pbar(p_bar_entry, start_time, 1, 'core_resus', t, config_obj)
+
+                if main_options.get('core_resus'):
                     df_pat_target = get_core_resus(current_pat_client_id_code, target_date_range, batch_resus)
                     patient_vector.append(df_pat_target)
-                    
-                update_pbar(p_bar_entry, start_time, 2, 'news')      
-                    
-                if(main_options.get('news')):
+
+                update_pbar(p_bar_entry, start_time, 2, 'news', t, config_obj)
+
+                if main_options.get('news'):
                     df_pat_target = get_news(current_pat_client_id_code, target_date_range, batch_news)
                     patient_vector.append(df_pat_target)
-                    
-                update_pbar(p_bar_entry, start_time, 2, 'concatenating')
-                
+
+                update_pbar(p_bar_entry, start_time, 2, 'concatenating', t, config_obj)
+
                 target_date_vector = enum_target_date_vector(target_date_range, current_pat_client_id_code)
+                
+                
                 
                     
                 patient_vector.append(target_date_vector)

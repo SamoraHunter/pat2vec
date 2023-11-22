@@ -2,7 +2,7 @@ from datetime import datetime
 from pathlib import Path
 import pandas as pd
 import paramiko
-
+from datetime import datetime, timedelta
 
 import sys
 #stuff paths for portability
@@ -173,9 +173,9 @@ class config_class:
         
         
         
-        self.slow_execution_threshold_low  = 10
-        self.slow_execution_threshold_high = 30
-        self.slow_execution_threshold_extreme = 60
+        self.slow_execution_threshold_low = timedelta(seconds=10)
+        self.slow_execution_threshold_high = timedelta(seconds=30)
+        self.slow_execution_threshold_extreme = timedelta(seconds=60)
         
         
         

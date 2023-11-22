@@ -23,7 +23,7 @@ color_bars = [Fore.RED,
     Fore.CYAN,
     Fore.WHITE]
 
-def list_dir_wrapper(path, sftp_obj=None, config_obj=None):
+def list_dir_wrapper(path, config_obj=None):
         
         hostname = config_obj.hostname
         
@@ -34,6 +34,8 @@ def list_dir_wrapper(path, sftp_obj=None, config_obj=None):
         remote_dump = config_obj.remote_dump
         
         share_sftp = config_obj.share_sftp
+        
+        sftp_obj = config_obj.sftp_obj
         
         
         #global sftp_client
@@ -234,11 +236,17 @@ def update_pbar(current_pat_client_id_code, start_time, stage_int, stage_str, t,
     #global skipped_counter
     #colour_val = color_bars[stage_int] + stage_str
     
+    start_time = config_obj.start_time
+    print("start time debug", start_time)
     
     multi_process = config_obj.multi_process
     slow_execution_threshold_low = config_obj.slow_execution_threshold_low
     slow_execution_threshold_high = config_obj.slow_execution_threshold_high
     slow_execution_threshold_extreme = config_obj.slow_execution_threshold_extreme
+    
+    # print(type(slow_execution_threshold_low), slow_execution_threshold_low)
+    # print(type(start_time), start_time)
+    # print(type(time.time()), time.time())
     
     colour_val = Fore.GREEN +  Style.BRIGHT + stage_str
     
@@ -250,17 +258,17 @@ def update_pbar(current_pat_client_id_code, start_time, stage_int, stage_str, t,
         counter_disp = skipped_counter
     
     t.set_description(f"s: {counter_disp} | {current_pat_client_id_code} | task: {colour_val} | {n_docs_to_annotate}" )
-    if((time.time() - start_time)>slow_execution_threshold_low):
+    if((datetime.now() - start_time)>slow_execution_threshold_low):
         t.colour = Fore.YELLOW
         colour_val = Fore.YELLOW + stage_str
         t.set_description(f"s: {counter_disp} | {current_pat_client_id_code} | task: {colour_val} | {n_docs_to_annotate}" )
         
-    elif((time.time() - start_time)>slow_execution_threshold_high):
+    elif((datetime.now() - start_time)>slow_execution_threshold_high):
         t.colour = Fore.RED +  Style.BRIGHT
         colour_val = Fore.RED +  Style.BRIGHT + stage_str
         t.set_description(f"s: {counter_disp} | {current_pat_client_id_code} | task: {colour_val} | {n_docs_to_annotate}" )
         
-    elif((time.time() - start_time)>slow_execution_threshold_extreme):
+    elif((datetime.now() - start_time)>slow_execution_threshold_extreme):
         t.colour = Fore.RED +  Style.DIM
         colour_val = Fore.RED +  Style.DIM + stage_str
         t.set_description(f"s: {counter_disp} | {current_pat_client_id_code} | task: {colour_val} | {n_docs_to_annotate}" )
@@ -404,34 +412,34 @@ def dump_results(self, file_data, path, sftp_obj=None, config_obj=None):
 
 
 
-def list_dir_wrapper(self, path, sftp_obj=None, config_obj = None):
+# def list_dir_wrapper(self, path, sftp_obj=None, config_obj = None):
     
-    hostname = config_obj.hostname
+#     hostname = config_obj.hostname
     
-    username = config_obj.username
+#     username = config_obj.username
     
-    password = config_obj.password
+#     password = config_obj.password
     
-    #global sftp_client
-    if(self.remote_dump):
-        if(self.share_sftp == False):
-            ssh_client = paramiko.SSHClient()
-            ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-            ssh_client.connect(hostname=hostname, username=username, password=password)
+#     #global sftp_client
+#     if(self.remote_dump):
+#         if(self.share_sftp == False):
+#             ssh_client = paramiko.SSHClient()
+#             ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+#             ssh_client.connect(hostname=hostname, username=username, password=password)
 
-            sftp_client = ssh_client.open_sftp()
-            sftp_obj = sftp_client
-        elif(sftp_obj ==None):
-            sftp_obj = sftp_client
+#             sftp_client = ssh_client.open_sftp()
+#             sftp_obj = sftp_client
+#         elif(sftp_obj ==None):
+#             sftp_obj = sftp_client
             
-        res = sftp_obj.listdir(path)
+#         res = sftp_obj.listdir(path)
         
         
-        return res
+#         return res
         
-    else:
+#     else:
         
-        return os.listdir(path)
+#         return os.listdir(path)
 
 
 
@@ -746,53 +754,53 @@ def dump_results(file_data, path, sftp_obj=None, config_obj=None):
                 
                 
 
-def update_pbar(current_pat_client_id_code, start_time, stage_int, stage_str, t, config_obj, skipped_counter=None, **n_docs_to_annotate):
-    #global colour_val
-    #global t
-    #global skipped_counter
+# def update_pbar(current_pat_client_id_code, start_time, stage_int, stage_str, t, config_obj, skipped_counter=None, **n_docs_to_annotate):
+#     #global colour_val
+#     #global t
+#     #global skipped_counter
     
-    #global skipped_counter
-    #colour_val = color_bars[stage_int] + stage_str
+#     #global skipped_counter
+#     #colour_val = color_bars[stage_int] + stage_str
     
     
-    multi_process = config_obj.multi_process
-    slow_execution_threshold_low = config_obj.slow_execution_threshold_low
-    slow_execution_threshold_high = config_obj.slow_execution_threshold_high
-    slow_execution_threshold_extreme = config_obj.slow_execution_threshold_extreme
+#     multi_process = config_obj.multi_process
+#     slow_execution_threshold_low = config_obj.slow_execution_threshold_low
+#     slow_execution_threshold_high = config_obj.slow_execution_threshold_high
+#     slow_execution_threshold_extreme = config_obj.slow_execution_threshold_extreme
     
-    colour_val = Fore.GREEN +  Style.BRIGHT + stage_str
+#     colour_val = Fore.GREEN +  Style.BRIGHT + stage_str
     
-    if(multi_process):
+#     if(multi_process):
         
-        counter_disp = skipped_counter.value
+#         counter_disp = skipped_counter.value
     
-    else:
-        counter_disp = skipped_counter
+#     else:
+#         counter_disp = skipped_counter
     
-    t.set_description(f"s: {counter_disp} | {current_pat_client_id_code} | task: {colour_val} | {n_docs_to_annotate}" )
-    if((time.time() - start_time)>slow_execution_threshold_low):
-        t.colour = Fore.YELLOW
-        colour_val = Fore.YELLOW + stage_str
-        t.set_description(f"s: {counter_disp} | {current_pat_client_id_code} | task: {colour_val} | {n_docs_to_annotate}" )
+#     t.set_description(f"s: {counter_disp} | {current_pat_client_id_code} | task: {colour_val} | {n_docs_to_annotate}" )
+#     if((time.time() - start_time)>slow_execution_threshold_low):
+#         t.colour = Fore.YELLOW
+#         colour_val = Fore.YELLOW + stage_str
+#         t.set_description(f"s: {counter_disp} | {current_pat_client_id_code} | task: {colour_val} | {n_docs_to_annotate}" )
         
-    elif((time.time() - start_time)>slow_execution_threshold_high):
-        t.colour = Fore.RED +  Style.BRIGHT
-        colour_val = Fore.RED +  Style.BRIGHT + stage_str
-        t.set_description(f"s: {counter_disp} | {current_pat_client_id_code} | task: {colour_val} | {n_docs_to_annotate}" )
+#     elif((time.time() - start_time)>slow_execution_threshold_high):
+#         t.colour = Fore.RED +  Style.BRIGHT
+#         colour_val = Fore.RED +  Style.BRIGHT + stage_str
+#         t.set_description(f"s: {counter_disp} | {current_pat_client_id_code} | task: {colour_val} | {n_docs_to_annotate}" )
         
-    elif((time.time() - start_time)>slow_execution_threshold_extreme):
-        t.colour = Fore.RED +  Style.DIM
-        colour_val = Fore.RED +  Style.DIM + stage_str
-        t.set_description(f"s: {counter_disp} | {current_pat_client_id_code} | task: {colour_val} | {n_docs_to_annotate}" )
+#     elif((time.time() - start_time)>slow_execution_threshold_extreme):
+#         t.colour = Fore.RED +  Style.DIM
+#         colour_val = Fore.RED +  Style.DIM + stage_str
+#         t.set_description(f"s: {counter_disp} | {current_pat_client_id_code} | task: {colour_val} | {n_docs_to_annotate}" )
         
-    else:
-        t.colour =  Fore.GREEN +  Style.DIM
-        colour_val = Fore.GREEN +  Style.DIM + stage_str
-        t.set_description(f"s: {counter_disp} | {current_pat_client_id_code} | task: {colour_val} | {n_docs_to_annotate}" )
+#     else:
+#         t.colour =  Fore.GREEN +  Style.DIM
+#         colour_val = Fore.GREEN +  Style.DIM + stage_str
+#         t.set_description(f"s: {counter_disp} | {current_pat_client_id_code} | task: {colour_val} | {n_docs_to_annotate}" )
         
         
 
-    t.refresh()
+#     t.refresh()
     
     
     
@@ -1068,8 +1076,10 @@ def filter_stripped_list(stripped_list, config_obj=None):
                 except:
                     pass
         else:
+            if(config_obj.verbosity>0):
+                print("Stripping list...")
             for i in tqdm(range(len(stripped_list))):
-                if len(list_dir_wrapper(current_pat_lines_path + stripped_list[i])) >= n_pat_lines:
+                if len(list_dir_wrapper(current_pat_lines_path + stripped_list[i], config_obj=config_obj)) >= n_pat_lines:
                     container_list.append(stripped_list[i])
 
         stripped_list_start = container_list.copy()
@@ -1089,19 +1099,42 @@ def filter_stripped_list(stripped_list, config_obj=None):
 
 
 
-def create_folders(config_obj=None):
+# def create_folders(all_patient_list, config_obj=None):
+#     pre_annotation_path = config_obj.pre_annotation_path
+#     pre_annotation_path_mrc = config_obj.pre_annotation_path_mrc
+#     current_pat_line_path = config_obj.current_pat_line_path
+#     #all_patient_list = config_obj.all_patient_list
+
+#     for i in tqdm(range(len(all_patient_list))):
+#         for path in [pre_annotation_path, pre_annotation_path_mrc, current_pat_line_path]:
+#             folder_path = os.path.join(path, str(all_patient_list[i]))
+
+#             if not os.path.exists(folder_path):
+#                 os.makedirs(folder_path)
+def create_folders(all_patient_list, config_obj=None):
+    """
+    Create folders for each patient in the specified paths.
+
+    Parameters:
+    - all_patient_list (list): List of patient IDs.
+    - config_obj (object): Configuration object containing paths and verbosity level.
+
+    Returns:
+    None
+    """
     pre_annotation_path = config_obj.pre_annotation_path
     pre_annotation_path_mrc = config_obj.pre_annotation_path_mrc
     current_pat_line_path = config_obj.current_pat_line_path
-    all_patient_list = config_obj.all_patient_list
 
-    for i in tqdm(range(len(all_patient_list))):
+    for patient_id in all_patient_list:
         for path in [pre_annotation_path, pre_annotation_path_mrc, current_pat_line_path]:
-            folder_path = os.path.join(path, str(all_patient_list[i]))
+            folder_path = os.path.join(path, str(patient_id))
 
             if not os.path.exists(folder_path):
                 os.makedirs(folder_path)
-
+    if config_obj.verbosity > 0:
+                print(f"Folders created: {current_pat_line_path}...") 
+                    
 
 
 def convert_date(date_string):

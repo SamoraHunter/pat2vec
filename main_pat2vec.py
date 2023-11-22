@@ -43,7 +43,7 @@ from patvec_get_batch_methods.main import (get_pat_batch_bloods,
                                            get_pat_batch_news,
                                            get_pat_batch_obs)
 from util import config_pat2vec
-from util.methods_get import filter_stripped_list, generate_date_list, list_dir_wrapper, update_pbar
+from util.methods_get import filter_stripped_list, generate_date_list, list_dir_wrapper, update_pbar, create_folders
 from util.methods_get_medcat import get_cat
 
 
@@ -81,7 +81,7 @@ from scipy import stats
 
 
 class main:
-    def __init__(self, cogstack=True, verbosity = 0, use_filter=False,
+    def __init__(self, cogstack=True,  use_filter=False,
              json_filter_path = None, random_seed_val=42,
              hostname =None, config_obj = None, ):
 
@@ -109,6 +109,8 @@ class main:
         self.config_obj = config_obj
         
         
+        
+        
         if(self.config_obj==None):
             print("Init default config on config_pat2vec")
             self.config_obj = config_pat2vec.config_class()
@@ -127,9 +129,9 @@ class main:
 
         
 
-        self.all_patient_list = get_all_patients_list(config_obj)
+        self.all_patient_list = get_all_patients_list(self.config_obj)
         
-        create_folders(all_patient_list, config_obj)
+        create_folders(self.all_patient_list, self.config_obj)
         
         
         self.current_pat_line_path = config_obj.current_pat_line_path
@@ -212,7 +214,7 @@ class main:
 
         random.shuffle(self.all_patient_list)
         
-        if(self.verbosity > 0):
+        if(self.config_obj.verbosity > 0):
             print(f"remote_dump {self.remote_dump}")
             print(self.pre_annotation_path)
             print(self.pre_annotation_path_mrc)
@@ -226,7 +228,8 @@ class main:
         self.stripped_list_start = [x.replace(".csv","") for x in list_dir_wrapper(path = self.current_pat_lines_path,  config_obj=config_obj)]
         
         
-        print(len(self.stripped_list_start))
+        print(f"Length of stripped_list_start: {len(self.stripped_list_start)}") if self.config_obj.verbosity > 0 else None
+
 
                 
                 
@@ -249,7 +252,7 @@ class main:
         self.stripped_list = [x.replace(".csv","") for x in list_dir_wrapper(path = self.current_pat_lines_path, config_obj=config_obj)]
         
         
-        self.stripped_list = filter_stripped_list(self.stripped_list, config_obj = self.config_obj)
+        self.stripped_list, self.stripped_list_start = filter_stripped_list(self.stripped_list, config_obj = self.config_obj)
         
         
         self.date_list = config_obj.date_list
@@ -265,9 +268,200 @@ class main:
     
             
 
+    # def pat_maker(self, i):
+    #     #global skipped_counter
+    #     #global stripped_list
+        
+    #     skipped_counter = self.config_obj.skipped_counter
+    #     stripped_list = self.stripped_list
+    #     all_patient_list = self.all_patient_list
+    #     skipped_counter = self.config_obj.skipped_counter
+        
+    #     remote_dump = self.config_obj.remote_dump
+    #     hostname = self.config_obj.hostname
+    #     username = self.config_obj.username
+    #     password = self.config_obj.password
+    #     annot_first = self.config_obj.annot_first
+        
+    #     stripped_list_start = self.stripped_list_start
+        
+    #     date_list = self.date_list
+        
+    #     multi_process = self.config_obj.multi_process
+        
+    #     if(skipped_counter==None):
+    #         skipped_counter = 0
+        
+        
+        
+        
+    #     current_pat_client_id_code = all_patient_list[i]
+        
+    #     p_bar_entry = current_pat_client_id_code
+        
+    #     start_time = time.time()
+    #     #update_pbar(current_pat_client_id_code, start_time, stage_int, stage_str, t, config_obj, skipped_counter=None, **n_docs_to_annotate)
+    #     update_pbar(p_bar_entry, start_time, 0, f'Pat_maker called on {i}...', self.t, self.config_obj, skipped_counter)
+        
+    #     #time.sleep(random.randint(1, 50))
+    #     #i, sftp_obj = i[0], i[1]
+        
+            
+            
+    #     sftp_obj = self.config_obj.sftp_obj
+        
+        
+        
+        
+    #     #get_pat_batch_epr_docs(current_pat_client_id_code, search_term, config_obj=None, cohort_searcher_with_terms_and_search=None):
+
+        
+    #     #get_pat batches
+        
+    #     stripped_list = stripped_list_start.copy()
+        
+        
+    #     if(current_pat_client_id_code not in stripped_list_start):
+            
+    #         update_pbar(p_bar_entry, start_time, 0, 'Getting batches...', self.t, self.config_obj, skipped_counter)
+        
+        
+    #         search_term = None # inside function
+    #         batch_epr = get_pat_batch_epr_docs(current_pat_client_id_code=current_pat_client_id_code,
+    #                                search_term=search_term,
+    #                                config_obj=self.config_obj,
+    #                                cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search)
+
+    #         search_term = None  # inside function
+    #         batch_mct = get_pat_batch_mct_docs(current_pat_client_id_code, search_term, config_obj=self.config_obj,
+    #                                         cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search)
+
+    #         if not annot_first:
+
+    #             search_term = 'CORE_SmokingStatus'
+    #             batch_smoking = get_pat_batch_obs(current_pat_client_id_code, search_term, config_obj=self.config_obj,
+    #                                             cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search)
+
+    #             search_term = 'CORE_SpO2'
+    #             batch_core_02 = get_pat_batch_obs(current_pat_client_id_code, search_term, config_obj=self.config_obj,
+    #                                             cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search)
+
+    #             search_term = 'CORE_BedNumber3'
+    #             batch_bednumber = get_pat_batch_obs(current_pat_client_id_code, search_term, config_obj=self.config_obj,
+    #                                             cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search)
+
+    #             search_term = 'CORE_VTE_STATUS'
+    #             batch_vte = get_pat_batch_obs(current_pat_client_id_code, search_term, config_obj=self.config_obj,
+    #                                         cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search)
+
+    #             search_term = 'CORE_HospitalSite'
+    #             batch_hospsite = get_pat_batch_obs(current_pat_client_id_code, search_term, config_obj=self.config_obj,
+    #                                             cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search)
+
+    #             search_term = 'CORE_RESUS_STATUS'
+    #             batch_resus = get_pat_batch_obs(current_pat_client_id_code, search_term, config_obj=self.config_obj,
+    #                                             cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search)
+
+    #             search_term = None  # inside function
+    #             batch_news = get_pat_batch_news(current_pat_client_id_code, search_term, config_obj=self.config_obj,
+    #                                             cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search)
+
+    #             search_term = None  # inside function
+    #             batch_bmi = get_pat_batch_bmi(current_pat_client_id_code, search_term, config_obj=self.config_obj,
+    #                                         cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search)
+
+    #             search_term = None  # inside function
+    #             batch_diagnostics = get_pat_batch_diagnostics(current_pat_client_id_code, search_term,
+    #                                                         config_obj=self.config_obj,
+    #                                                         cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search)
+
+    #             search_term = None  # inside function
+    #             batch_drugs = get_pat_batch_drugs(current_pat_client_id_code, search_term, config_obj=self.config_obj,
+    #                                             cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search)
+
+    #             search_term = None  # inside function
+    #             batch_demo = get_pat_batch_demo(current_pat_client_id_code, search_term, config_obj=self.config_obj,
+    #                                             cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search)
+
+    #             search_term = None  # inside function
+    #             batch_bloods = get_pat_batch_bloods(current_pat_client_id_code, search_term, config_obj=self.config_obj,
+    #                                                 cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search)
+
+
+    #         update_pbar(p_bar_entry, start_time, 0, f'Done batches in {time.time()-start_time}', self.t, self.config_obj, skipped_counter)
+
+
+    #         run_on_pat = False
+
+    #         only_check_last = True
+
+    #         last_check = all_patient_list[i] not in stripped_list
+
+    #         skip_check = last_check
+
+    #         for j in range(0, len(date_list)):
+    #             try:
+    #                 if(only_check_last):
+    #                     run_on_pat = last_check
+    #                 else:
+    #                     run_on_pat = all_patient_list[i]  not in stripped_list
+
+
+    #                 if(run_on_pat):   
+    #                     if(annot_first):
+
+    #                         get_current_pat_annotations_batch_to_file(all_patient_list[i], date_list[j], batch_epr, sftp_obj, skip_check=skip_check)
+
+    #                         get_current_pat_annotations_mct_batch_to_file(all_patient_list[i], date_list[j], batch_mct, sftp_obj, skip_check=skip_check)
+
+    #                     else:
+    #                         main_batch(all_patient_list[i],
+    #                         date_list[j],
+    #                         batch_demo = batch_demo,
+    #                         batch_smoking = batch_smoking,
+    #                         batch_core_02 = batch_core_02,
+    #                         batch_bednumber = batch_bednumber,
+    #                         batch_vte = batch_vte,
+    #                         batch_hospsite = batch_hospsite,
+    #                         batch_resus = batch_resus,
+    #                         batch_news = batch_news,
+    #                         batch_bmi = batch_bmi,
+    #                         batch_diagnostics = batch_diagnostics,
+    #                         batch_epr = batch_epr,
+    #                         batch_mct = batch_mct,
+    #                         batch_bloods = batch_bloods,
+    #                         batch_drugs = batch_drugs,
+    #                         config_obj = self.config_obj,
+    #                         stripped_list_start = stripped_list_start
+    #                         )
+
+    #             except Exception as e:
+    #                 print(e)
+    #                 print(f"Exception in patmaker on {all_patient_list[i], date_list[j]}")
+    #                 print(traceback.format_exc())
+    #         if(remote_dump):
+    #             self.sftp_obj.close()
+    #             self.config_obj.ssh_client.close()
+    #     else:
+    #         if(multi_process == False):
+    #             skipped_counter = skipped_counter + 1
+    #             update_pbar(str(i), start_time, 0, f'Skipped {i}', self.t, self.config_obj, skipped_counter)
+    #         else:
+    #             with skipped_counter.get_lock():
+    #                 skipped_counter.value += 1
+    #             update_pbar(str(i), start_time, 0, f'Skipped {i}', self.t, self.config_obj, skipped_counter)
+            
+    
+
+
+
+
+
+
     def pat_maker(self, i):
-        #global skipped_counter
-        #global stripped_list
+        if self.config_obj.verbosity > 0:
+            print(f"Processing patient {i} at {self.all_patient_list[i]}...")
+
         
         skipped_counter = self.config_obj.skipped_counter
         stripped_list = self.stripped_list
@@ -286,47 +480,42 @@ class main:
         
         multi_process = self.config_obj.multi_process
         
-        
-        
-        
-        
-        
+        if(skipped_counter==None):
+            skipped_counter = 0
+
         current_pat_client_id_code = all_patient_list[i]
         
         p_bar_entry = current_pat_client_id_code
         
         start_time = time.time()
-        #update_pbar(current_pat_client_id_code, start_time, stage_int, stage_str, t, config_obj, skipped_counter=None, **n_docs_to_annotate)
+        
         update_pbar(p_bar_entry, start_time, 0, f'Pat_maker called on {i}...', self.t, self.config_obj, skipped_counter)
         
-        #time.sleep(random.randint(1, 50))
-        #i, sftp_obj = i[0], i[1]
-        
-            
-            
         sftp_obj = self.config_obj.sftp_obj
-        
-        
-        
-        
-        #get_pat_batch_epr_docs(current_pat_client_id_code, search_term, config_obj=None, cohort_searcher_with_terms_and_search=None):
 
-        
         #get_pat batches
         
         stripped_list = stripped_list_start.copy()
         
-        
-        if(current_pat_client_id_code not in stripped_list_start):
+        if self.config_obj.verbosity >= 4:
+            print("stripped_list_start")
+            print(stripped_list_start)
+  
+            
+            
+        if current_pat_client_id_code not in stripped_list_start:
+            if self.config_obj.verbosity > 0:
+                print(f"Getting batches for patient {i}...")
+
             
             update_pbar(p_bar_entry, start_time, 0, 'Getting batches...', self.t, self.config_obj, skipped_counter)
-        
-        
+    
+    
             search_term = None # inside function
             batch_epr = get_pat_batch_epr_docs(current_pat_client_id_code=current_pat_client_id_code,
-                                   search_term=search_term,
-                                   config_obj=self.config_obj,
-                                   cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search)
+                                search_term=search_term,
+                                config_obj=self.config_obj,
+                                cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search)
 
             search_term = None  # inside function
             batch_mct = get_pat_batch_mct_docs(current_pat_client_id_code, search_term, config_obj=self.config_obj,
@@ -387,23 +576,24 @@ class main:
             update_pbar(p_bar_entry, start_time, 0, f'Done batches in {time.time()-start_time}', self.t, self.config_obj, skipped_counter)
 
 
+            if self.config_obj.verbosity > 0:
+                print(f'Done batches in {time.time() - start_time}')
+
             run_on_pat = False
-
             only_check_last = True
-
             last_check = all_patient_list[i] not in stripped_list
-
             skip_check = last_check
 
             for j in range(0, len(date_list)):
                 try:
-                    if(only_check_last):
+                    if only_check_last:
                         run_on_pat = last_check
                     else:
-                        run_on_pat = all_patient_list[i]  not in stripped_list
-
+                        run_on_pat = all_patient_list[i] not in stripped_list
 
                     if(run_on_pat):   
+                        if self.config_obj.verbosity > 1:
+                            print(f"Processing date {date_list[j]} for patient {i}...")
                         if(annot_first):
 
                             get_current_pat_annotations_batch_to_file(all_patient_list[i], date_list[j], batch_epr, sftp_obj, skip_check=skip_check)
@@ -428,30 +618,35 @@ class main:
                             batch_bloods = batch_bloods,
                             batch_drugs = batch_drugs,
                             config_obj = self.config_obj,
-                            stripped_list_start = stripped_list_start
+                            stripped_list_start = stripped_list_start,
+                            t = self.t
+                            
                             )
+                        
+                        
 
                 except Exception as e:
                     print(e)
                     print(f"Exception in patmaker on {all_patient_list[i], date_list[j]}")
                     print(traceback.format_exc())
-            if(remote_dump):
+
+            if remote_dump:
                 self.sftp_obj.close()
                 self.config_obj.ssh_client.close()
         else:
-            if(multi_process == False):
+            if self.config_obj.verbosity >= 4:
+                print(f'patient {i} in stripped_list_start')
+                      
+            if multi_process is False:
                 skipped_counter = skipped_counter + 1
-                update_pbar(str(i), start_time, 0, f'Skipped {i}', self.t, self.config_obj, skipped_counter)
+                if self.config_obj.verbosity > 0:
+                    print(f'Skipped {i}')
             else:
                 with skipped_counter.get_lock():
                     skipped_counter.value += 1
-                update_pbar(str(i), start_time, 0, f'Skipped {i}', self.t, self.config_obj, skipped_counter)
-            
-    
+                if self.config_obj.verbosity > 0:
+                    print(f'Skipped {i}')
 
 
 
-
-
-    
 
