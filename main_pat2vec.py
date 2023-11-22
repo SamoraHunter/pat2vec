@@ -77,7 +77,7 @@ from util.config_pat2vec import config_class
 
 class main:
     def __init__(self, cogstack=True, verbosity = 0, use_filter=False,
-             json_filter_path = None, random_seed_val=42, treatment_client_id_list = None,
+             json_filter_path = None, random_seed_val=42,
              hostname =None, config_obj = None, ):
 
 
@@ -98,7 +98,7 @@ class main:
         self.strip_list = config_obj.strip_list
         self.verbosity = config_obj.verbosity
         self.random_seed_val = config_obj.random_seed_val
-        #self.treatment_client_id_list = config_obj.treatment_client_id_list
+        self.treatment_client_id_list = config_obj.treatment_client_id_list
         self.hostname = config_obj.hostname
 
         self.config_obj = config_obj
