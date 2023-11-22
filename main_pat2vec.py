@@ -1,20 +1,21 @@
 
-
-import csv
-import multiprocessing
-import os
-#import tqdm
-import re
 import sys
-
-from pat2vec_pat_list.get_patient_treatment_list import get_all_patients_list
-
 #stuff paths for portability
 sys.path.insert(0,'/home/aliencat/samora/gloabl_files')
 sys.path.insert(0,'/data/AS/Samora/gloabl_files')
 sys.path.insert(0,'/home/jovyan/work/gloabl_files')
 sys.path.insert(0, '/home/cogstack/samora/_data/gloabl_files')
 sys.path.insert(0, '/home/cogstack/samora/_data/gloabl_files/pat2vec')
+import csv
+import multiprocessing
+import os
+#import tqdm
+import re
+
+
+from pat2vec_pat_list.get_patient_treatment_list import get_all_patients_list
+
+
 import random
 import warnings
 from csv import writer

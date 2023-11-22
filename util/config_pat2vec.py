@@ -1,5 +1,6 @@
 from datetime import datetime
 from pathlib import Path
+import pandas as pd
 
 
 class config_class:
@@ -30,7 +31,9 @@ class config_class:
                  hostname = None,
                  username= None,
                  password=None,
-                 gpu_mem_threshold = 4000
+                 gpu_mem_threshold = 4000,
+                 testing=False,
+                 use_controls = False,
                  
                  
                  ):
@@ -64,6 +67,9 @@ class config_class:
         self.username = username
         self.password = password
         self.gpu_mem_threshold = gpu_mem_threshold
+        
+        self.testing = testing
+        self.use_controls = use_controls
 
         
         if(self.main_options == None):
@@ -163,6 +169,8 @@ class config_class:
         
         
         
+        if(self.testing):
+            self.treatment_doc_filename = '/home/cogstack/samora/_data/pat2vec_tests/' + treatment_doc_filename
         
             
         
