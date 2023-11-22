@@ -42,8 +42,10 @@ from patvec_get_batch_methods.main import (get_pat_batch_bloods,
                                            get_pat_batch_mct_docs,
                                            get_pat_batch_news,
                                            get_pat_batch_obs)
-from util import config_pat2vec, methods_get_medcat
+from util import config_pat2vec
 from util.methods_get import filter_stripped_list, generate_date_list, list_dir_wrapper, update_pbar
+from util.methods_get_medcat import get_cat
+
 
 color_bars = [Fore.RED,
     Fore.GREEN,
@@ -277,7 +279,8 @@ class main:
 
                 
                 
-        self.stripped_list = [x.replace(".csv","") for x in list_dir_wrapper(path = self.current_pat_lines_path, config_obj=config_obj)]
+        
+        stripped_list = [x.replace(".csv","") for x in list_dir_wrapper(path = self.current_pat_lines_path, config_obj=config_obj)]
         
 
 
@@ -316,8 +319,8 @@ class main:
         #global stripped_list
         
         skipped_counter = self.config_obj.skipped_counter
-        stripped_list = self.config_obj.stripped_list
-        all_patient_list = self.config_obj.all_patient_list
+        stripped_list = self.stripped_list
+        all_patient_list = self.all_patient_list
         skipped_counter = self.config_obj.skipped_counter
         
         remote_dump = self.config_obj.remote_dump
@@ -328,7 +331,7 @@ class main:
         
         stripped_list_start = self.stripped_list_start
         
-        combinations = self.combinations
+        date_list = self.date_list
         
         multi_process = self.config_obj.multi_process
         
@@ -342,8 +345,8 @@ class main:
         p_bar_entry = current_pat_client_id_code
         
         start_time = time.time()
-        
-        update_pbar(p_bar_entry, start_time, 0, f'Pat_maker called on {i}...')
+        #update_pbar(current_pat_client_id_code, start_time, stage_int, stage_str, t, config_obj, skipped_counter=None, **n_docs_to_annotate)
+        update_pbar(p_bar_entry, start_time, 0, f'Pat_maker called on {i}...', self.t, self.config_obj, skipped_counter)
         
         #time.sleep(random.randint(1, 50))
         #i, sftp_obj = i[0], i[1]
@@ -364,7 +367,7 @@ class main:
         
         if(current_pat_client_id_code not in stripped_list_start):
             
-            update_pbar(p_bar_entry, start_time, 0, 'Getting batches...')
+            update_pbar(p_bar_entry, start_time, 0, 'Getting batches...', self.t, self.config_obj, skipped_counter)
         
         
             search_term = None # inside function
@@ -429,7 +432,7 @@ class main:
                 search_term = None # inside function
                 batch_bloods =  get_pat_batch_bloods(current_pat_client_id_code, search_term)
 
-            update_pbar(p_bar_entry, start_time, 0, f'Done batches in {time.time()-start_time}')
+            update_pbar(p_bar_entry, start_time, 0, f'Done batches in {time.time()-start_time}', self.t, self.config_obj, skipped_counter)
 
 
             run_on_pat = False
@@ -440,7 +443,7 @@ class main:
 
             skip_check = last_check
 
-            for j in range(0, len(combinations)):
+            for j in range(0, len(date_list)):
                 try:
                     if(only_check_last):
                         run_on_pat = last_check
@@ -451,13 +454,13 @@ class main:
                     if(run_on_pat):   
                         if(annot_first):
 
-                            get_current_pat_annotations_batch_to_file(all_patient_list[i], combinations[j], batch_epr, sftp_obj, skip_check=skip_check)
+                            get_current_pat_annotations_batch_to_file(all_patient_list[i], date_list[j], batch_epr, sftp_obj, skip_check=skip_check)
 
-                            get_current_pat_annotations_mct_batch_to_file(all_patient_list[i], combinations[j], batch_mct, sftp_obj, skip_check=skip_check)
+                            get_current_pat_annotations_mct_batch_to_file(all_patient_list[i], date_list[j], batch_mct, sftp_obj, skip_check=skip_check)
 
                         else:
                             main_batch(all_patient_list[i],
-                            combinations[j],
+                            date_list[j],
                             batch_demo = batch_demo,
                             batch_smoking = batch_smoking,
                             batch_core_02 = batch_core_02,
@@ -478,7 +481,7 @@ class main:
 
                 except Exception as e:
                     print(e)
-                    print(f"Exception in patmaker on {all_patient_list[i], combinations[j]}")
+                    print(f"Exception in patmaker on {all_patient_list[i], date_list[j]}")
                     print(traceback.format_exc())
             if(remote_dump):
                 sftp_obj.close()
@@ -486,11 +489,11 @@ class main:
         else:
             if(multi_process == False):
                 skipped_counter = skipped_counter + 1
-                update_pbar(str(i), start_time, 0, f'Skipped {i}')
+                update_pbar(str(i), start_time, 0, f'Skipped {i}', self.t, self.config_obj, skipped_counter)
             else:
                 with skipped_counter.get_lock():
                     skipped_counter.value += 1
-                update_pbar(str(i), start_time, 0, f'Skipped {i}')
+                update_pbar(str(i), start_time, 0, f'Skipped {i}', self.t, self.config_obj, skipped_counter)
             
     
 

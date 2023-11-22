@@ -5,6 +5,8 @@ def get_cat(config_obj):
     model_path = None
     
     if(config_obj.medcat):
+        
+        from medcat.cat import CAT
 
         if config_obj.aliencat:
             model_path = '/home/aliencat/samora/HFE/HFE/medcat_models/medcat_model_pack_316666b47dfaac07.zip'

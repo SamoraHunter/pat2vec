@@ -15,8 +15,12 @@ def extract_treatment_id_list_from_docs(config_obj):
     - list: A list of unique client IDs from the treatment document.
     """
     
+    
+    
     # Extract the treatment document filename from the configuration object
     treatment_doc_filename = config_obj.treatment_doc_filename
+    
+    
     
     # Read the treatment document into a pandas DataFrame
     docs = pd.read_csv(treatment_doc_filename)

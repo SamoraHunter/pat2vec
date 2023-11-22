@@ -46,6 +46,7 @@ class config_class:
                  gpu_mem_threshold = 4000,
                  testing=False,
                  use_controls = False,
+                 medcat = False,
                  
                  
                  ):
@@ -84,6 +85,8 @@ class config_class:
         self.use_controls = use_controls
         
         self.skipped_counter = None
+        
+        self.medcat = medcat
 
         
         if(self.main_options == None):
@@ -210,4 +213,11 @@ class config_class:
                 
         self.n_pat_lines = len(self.date_list)
         
+        self.model_paths = {
+            
+        'aliencat': '/home/aliencat/samora/HFE/HFE/medcat_models/medcat_model_pack_316666b47dfaac07.zip',
+        'dgx': '/data/AS/Samora/HFE/HFE/v18/medcat_models/20230328_trained_model_hfe_redone/medcat_model_pack_316666b47dfaac07',
+        'dhcap': '/home/jovyan/work/medcat_models/medcat_model_pack_316666b47dfaac07.zip',
+        'dhcap02': '/home/cogstack/samora/_data/medcat_models/medcat_model_pack_316666b47dfaac07.zip'
         
+        }
