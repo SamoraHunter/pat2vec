@@ -43,7 +43,7 @@ from patvec_get_batch_methods.main import (get_pat_batch_bloods,
                                            get_pat_batch_news,
                                            get_pat_batch_obs)
 from util import config_pat2vec
-from util.methods_get import generate_date_list, list_dir_wrapper, update_pbar
+from util.methods_get import filter_stripped_list, generate_date_list, list_dir_wrapper, update_pbar
 
 color_bars = [Fore.RED,
     Fore.GREEN,
@@ -75,7 +75,7 @@ from dateutil.relativedelta import relativedelta
 from medcat.cat import CAT
 from scipy import stats
 
-from util.config_pat2vec import config_class
+#from util.config_pat2vec import config_class
 
 
 class main:
@@ -126,6 +126,11 @@ class main:
         
 
         self.treatment_client_id_list = get_all_patients_list(config_obj)
+        
+        
+        self.current_pat_line_path = config_obj.current_pat_line_path
+        self.current_pat_lines_path = config_obj.current_pat_lines_path
+        self.sftp_client = config_obj.sftp_obj
 
         
         # Create a folder for logs if it doesn't exist
@@ -303,14 +308,14 @@ class main:
             
             
         
-        self.stripped_list_start = [x.replace(".csv","") for x in list_dir_wrapper(self.current_pat_lines_path, self.sftp_client)]
+        self.stripped_list_start = [x.replace(".csv","") for x in list_dir_wrapper(path = self.current_pat_lines_path,  config_obj=config_obj)]
         
         
         print(len(self.stripped_list_start))
 
                 
                 
-        self.stripped_list = [x.replace(".csv","") for x in list_dir_wrapper(self.current_pat_lines_path, self.sftp_client)]
+        self.stripped_list = [x.replace(".csv","") for x in list_dir_wrapper(path = self.current_pat_lines_path, config_obj=config_obj)]
         
 
 
@@ -336,10 +341,10 @@ class main:
             cat = CAT.load_model_pack('/home/cogstack/samora/_data/' +  'medcat_models/medcat_model_pack_316666b47dfaac07.zip');
         
         
-        self.stripped_list = [x.replace(".csv","") for x in list_dir_wrapper(current_pat_lines_path, sftp_client)]
+        self.stripped_list = [x.replace(".csv","") for x in list_dir_wrapper(path = self.current_pat_lines_path, config_obj=config_obj)]
         
         
-        self.stripped_list = filter_stripped_list(self.stripped_list)
+        self.stripped_list = filter_stripped_list(self.stripped_list, config_obj = self.config_obj)
         
         
         date_list = generate_date_list(self.config_obj.start_date,self.config_obj.years, self.config_obj.months, self.config_obj.days)
@@ -393,15 +398,10 @@ class main:
         
         #time.sleep(random.randint(1, 50))
         #i, sftp_obj = i[0], i[1]
-        if(remote_dump):
-            ssh_client = paramiko.SSHClient()
-            ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-            ssh_client.connect(hostname=hostname, username=username, password=password, timeout=60)
-
-            sftp_obj = ssh_client.open_sftp()
-        else:
-            sftp_obj = None
+        
             
+            
+        sftp_obj = self.config_obj.sftp_obj
         
         
         

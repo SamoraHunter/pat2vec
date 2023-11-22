@@ -924,7 +924,7 @@ def dump_results(self, file_data, path, sftp_obj=None, config_obj=None):
 
 
 
-def list_dir_wrapper(self, path, sftp_obj=None, config_obj = None):
+def list_dir_wrapper(path, config_obj = None):
     
     hostname = config_obj.hostname
     
@@ -932,9 +932,15 @@ def list_dir_wrapper(self, path, sftp_obj=None, config_obj = None):
     
     password = config_obj.password
     
+    sftp_obj = config_obj.sftp_obj
+    
+    remote_dump = config_obj.remote_dump
+    
+    share_sftp = config_obj.share_sftp
+    
     #global sftp_client
-    if(self.remote_dump):
-        if(self.share_sftp == False):
+    if(remote_dump):
+        if(share_sftp == False):
             ssh_client = paramiko.SSHClient()
             ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
             ssh_client.connect(hostname=hostname, username=username, password=password)

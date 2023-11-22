@@ -1,6 +1,7 @@
 from datetime import datetime
 from pathlib import Path
 import pandas as pd
+import paramiko
 
 
 class config_class:
@@ -172,5 +173,20 @@ class config_class:
         if(self.testing):
             self.treatment_doc_filename = '/home/cogstack/samora/_data/pat2vec_tests/' + treatment_doc_filename
         
+        if(self.remote_dump == False):
+            self.sftp_obj = None
             
+        else:
+                      
+            ssh_client = paramiko.SSHClient()
+            ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+            ssh_client.connect(hostname=hostname, username=username, password=password, timeout=60)
+
+            self.sftp_obj = ssh_client.open_sftp()
+
+            
+        
+        
+        
+        
         
