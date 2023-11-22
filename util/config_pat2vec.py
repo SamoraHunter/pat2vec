@@ -4,6 +4,17 @@ import pandas as pd
 import paramiko
 
 
+import sys
+#stuff paths for portability
+sys.path.insert(0,'/home/aliencat/samora/gloabl_files')
+sys.path.insert(0,'/data/AS/Samora/gloabl_files')
+sys.path.insert(0,'/home/jovyan/work/gloabl_files')
+sys.path.insert(0, '/home/cogstack/samora/_data/gloabl_files')
+sys.path.insert(0, '/home/cogstack/samora/_data/gloabl_files/pat2vec')
+
+from util.methods_get import generate_date_list
+
+
 class config_class:
     def __init__(self,
                  remote_dump=False,
@@ -71,6 +82,8 @@ class config_class:
         
         self.testing = testing
         self.use_controls = use_controls
+        
+        self.skipped_counter = None
 
         
         if(self.main_options == None):
@@ -178,15 +191,23 @@ class config_class:
             
         else:
                       
-            ssh_client = paramiko.SSHClient()
-            ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-            ssh_client.connect(hostname=hostname, username=username, password=password, timeout=60)
+            self.ssh_client = paramiko.SSHClient()
+            self.ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+            self.ssh_client.connect(hostname=hostname, username=username, password=password, timeout=60)
 
-            self.sftp_obj = ssh_client.open_sftp()
+            self.sftp_obj = self.ssh_client.open_sftp()
 
             
         
         
         
+        
+        self.date_list = generate_date_list(self.start_date,self.years, self.months, self.days)
+        
+        if(self.verbosity>0):
+            for date in self.date_list[0:5]:
+                print(date)
+                
+        self.n_pat_lines = len(self.date_list)
         
         

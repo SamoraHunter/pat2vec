@@ -42,7 +42,7 @@ from patvec_get_batch_methods.main import (get_pat_batch_bloods,
                                            get_pat_batch_mct_docs,
                                            get_pat_batch_news,
                                            get_pat_batch_obs)
-from util import config_pat2vec
+from util import config_pat2vec, methods_get_medcat
 from util.methods_get import filter_stripped_list, generate_date_list, list_dir_wrapper, update_pbar
 
 color_bars = [Fore.RED,
@@ -125,7 +125,7 @@ class main:
 
         
 
-        self.treatment_client_id_list = get_all_patients_list(config_obj)
+        self.all_patient_list = get_all_patients_list(config_obj)
         
         
         self.current_pat_line_path = config_obj.current_pat_line_path
@@ -199,52 +199,14 @@ class main:
 
 
 
-    
-    
-
-
-        random.seed(self.random_seed_val)
-        use_controls = False
-        if(use_controls):
-            # Get control docs default 1:1
-
-            all_idcodes = pd.read_csv('all_client_idcodes_epr_unique.csv')['client_idcode']
-
-            
-            print(len(all_idcodes), len(self.treatment_client_id_list))
-
-            full_control_client_id_list = list(set(all_idcodes) - set(self.treatment_client_id_list))
-            
-            full_control_client_id_list.sort() # ensure sort for repeatability
-
-            len(full_control_client_id_list) - len(all_idcodes)
-
-            n_treatments = len(self.treatment_client_id_list) * self.treatment_control_ratio_n
-            print(f"{n_treatments} selected as controls") #Soft control selection, many treatments will be false positives
-            treatment_control_sample = pd.Series(full_control_client_id_list).sample(n_treatments, random_state=42)
-
-            treatment_control_sample
-
-            self.all_patient_list_control = list(treatment_control_sample.values)
-            
-            with open('control_list.pkl', 'wb') as f:
-                pickle.dump(self.all_patient_list_control, f)
-                
-            print(self.all_patient_list_control[0:10])
-            
-            
-
-        self.all_patient_list = list(self.treatment_client_id_list)
-
-
 
         random.shuffle(self.all_patient_list)
         
-
-        print(f"remote_dump {self.remote_dump}")
-        print(self.pre_annotation_path)
-        print(self.pre_annotation_path_mrc)
-        print(self.current_pat_line_path)
+        if(self.verbosity > 0):
+            print(f"remote_dump {self.remote_dump}")
+            print(self.pre_annotation_path)
+            print(self.pre_annotation_path_mrc)
+            print(self.current_pat_line_path)
 
         if(self.remote_dump):
 
@@ -326,19 +288,8 @@ class main:
         self.t = trange(len(self.all_patient_list), desc='Bar desc', leave=True, colour="GREEN", position=0, total=len(self.all_patient_list))
         
         
+        self.cat = get_cat(config_obj)
         
-        if(self.aliencat):
-            cat = CAT.load_model_pack('/home/aliencat/samora/HFE/HFE/medcat_models/medcat_model_pack_316666b47dfaac07.zip')
-            
-        elif(self.dgx):
-            cat = CAT.load_model_pack('/data/AS/Samora/HFE/HFE/v18/' + 'medcat_models/20230328_trained_model_hfe_redone/medcat_model_pack_316666b47dfaac07');
-            
-        elif(self.dhcap):
-            cat = CAT.load_model_pack('/home/jovyan/work/' + 'medcat_models/medcat_model_pack_316666b47dfaac07.zip');
-            
-        elif(self.dhcap02):
-            
-            cat = CAT.load_model_pack('/home/cogstack/samora/_data/' +  'medcat_models/medcat_model_pack_316666b47dfaac07.zip');
         
         
         self.stripped_list = [x.replace(".csv","") for x in list_dir_wrapper(path = self.current_pat_lines_path, config_obj=config_obj)]
@@ -347,11 +298,9 @@ class main:
         self.stripped_list = filter_stripped_list(self.stripped_list, config_obj = self.config_obj)
         
         
-        date_list = generate_date_list(self.config_obj.start_date,self.config_obj.years, self.config_obj.months, self.config_obj.days)
+        self.date_list = config_obj.date_list
         
-        for date in date_list[0:5]:
-            print(date)
-        
+        self.n_pat_lines = config_obj.n_pat_lines
         
     #------------------------------------begin main----------------------------------       
     
@@ -533,7 +482,7 @@ class main:
                     print(traceback.format_exc())
             if(remote_dump):
                 sftp_obj.close()
-                ssh_client.close()
+                self.config_obj.ssh_client.close()
         else:
             if(multi_process == False):
                 skipped_counter = skipped_counter + 1
