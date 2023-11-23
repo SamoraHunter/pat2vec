@@ -631,6 +631,7 @@ class main:
                     print(e)
                     print(f"Exception in patmaker on {all_patient_list[i], date_list[j]}")
                     print(traceback.format_exc())
+                    raise
 
             if remote_dump:
                 self.sftp_obj.close()

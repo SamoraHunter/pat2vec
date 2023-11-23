@@ -89,6 +89,7 @@ def main_batch(current_pat_client_id_code,
     already_done = False
     
     
+    
     done_list = []
     if(current_pat_client_id_code not in stripped_list_start):
         
@@ -170,49 +171,56 @@ def main_batch(current_pat_client_id_code,
                 update_pbar(p_bar_entry, start_time, 1, 'core_02', t, config_obj)
 
                 if main_options.get('core_02'):
-                    df_pat_target = get_core_02(current_pat_client_id_code, target_date_range, batch_core_02, config_obj)
+                    df_pat_target = get_core_02(current_pat_client_id_code, target_date_range, batch_core_02, config_obj,
+                                                                       cohort_searcher_with_terms_and_search = cohort_searcher_with_terms_and_search)
                     patient_vector.append(df_pat_target)
 
                 update_pbar(p_bar_entry, start_time, 2, 'bed', t, config_obj)
 
                 if main_options.get('bed'):
-                    df_pat_target = get_bed(current_pat_client_id_code, target_date_range, batch_bednumber, config_obj)
+                    df_pat_target = get_bed(current_pat_client_id_code, target_date_range, batch_bednumber, config_obj,
+                                                                       cohort_searcher_with_terms_and_search = cohort_searcher_with_terms_and_search)
                     patient_vector.append(df_pat_target)
 
                 update_pbar(p_bar_entry, start_time, 3, 'vte_status', t, config_obj)
 
                 if main_options.get('vte_status'):
-                    df_pat_target = get_vte_status(current_pat_client_id_code, target_date_range, batch_vte, config_obj)
+                    df_pat_target = get_vte_status(current_pat_client_id_code, target_date_range, batch_vte, config_obj,
+                                                                       cohort_searcher_with_terms_and_search = cohort_searcher_with_terms_and_search)
                     patient_vector.append(df_pat_target)
 
                 update_pbar(p_bar_entry, start_time, 4, 'hosp_site', t, config_obj)
 
                 if main_options.get('hosp_site'):
-                    df_pat_target = get_hosp_site(current_pat_client_id_code, target_date_range, batch_hospsite, config_obj)
+                    df_pat_target = get_hosp_site(current_pat_client_id_code, target_date_range, batch_hospsite, config_obj = config_obj,
+                                                                       cohort_searcher_with_terms_and_search = cohort_searcher_with_terms_and_search)
                     patient_vector.append(df_pat_target)
 
                 update_pbar(p_bar_entry, start_time, 1, 'core_resus', t, config_obj)
 
                 if main_options.get('core_resus'):
-                    df_pat_target = get_core_resus(current_pat_client_id_code, target_date_range, batch_resus, config_obj)
+                    df_pat_target = get_core_resus(current_pat_client_id_code, target_date_range, batch_resus, config_obj,
+                                                                       cohort_searcher_with_terms_and_search = cohort_searcher_with_terms_and_search)
                     patient_vector.append(df_pat_target)
 
                 update_pbar(p_bar_entry, start_time, 2, 'news', t, config_obj)
 
                 if main_options.get('news'):
-                    df_pat_target = get_news(current_pat_client_id_code, target_date_range, batch_news, config_obj)
+                    df_pat_target = get_news(current_pat_client_id_code, target_date_range, batch_news, config_obj,
+                                                                       cohort_searcher_with_terms_and_search = cohort_searcher_with_terms_and_search)
                     patient_vector.append(df_pat_target)
                 
                 update_pbar(p_bar_entry, start_time, 2, 'smoking', t, config_obj)
 
                 if main_options.get('smoking'):
-                    df_pat_target = get_smoking(current_pat_client_id_code, target_date_range, batch_smoking, config_obj)
+                    df_pat_target = get_smoking(current_pat_client_id_code, target_date_range, batch_smoking, config_obj,
+                                                                       cohort_searcher_with_terms_and_search = cohort_searcher_with_terms_and_search)
                     patient_vector.append(df_pat_target)
                     
 
                 update_pbar(p_bar_entry, start_time, 2, 'concatenating', t, config_obj)
 
-                target_date_vector = enum_target_date_vector(target_date_range, current_pat_client_id_code)
+                target_date_vector = enum_target_date_vector(target_date_range, current_pat_client_id_code, config_obj = config_obj)
                 
                 
                 
@@ -228,7 +236,7 @@ def main_batch(current_pat_client_id_code,
                 
                 
                                 
-                update_pbar(p_bar_entry, start_time, 2, 'saving...')
+                update_pbar(p_bar_entry, start_time, 2, 'saving...', t , config_obj)
                 
                 output_path = current_pat_line_path  + current_pat_client_id_code + "/" +str(current_pat_client_id_code) + "_" + str(target_date_range)+".csv"
                 
@@ -248,9 +256,9 @@ def main_batch(current_pat_client_id_code,
                         
                 #display(type(pat_concatted))
                 try:
-                    update_pbar(p_bar_entry, start_time, 2, f'Done {len(pat_concatted.columns)} cols in {int(time.time() - start_time)}s, {int((len(pat_concatted.columns)+1)/int(time.time() - start_time)+1)} p/s')
+                    update_pbar(p_bar_entry, start_time, 2, f'Done {len(pat_concatted.columns)} cols in {int(time.time() - start_time)}s, {int((len(pat_concatted.columns)+1)/int(time.time() - start_time)+1)} p/s', t , config_obj)
                 except:
-                    update_pbar(p_bar_entry, start_time, 2, f'Columns n={len(pat_concatted.columns)}')
+                    update_pbar(p_bar_entry, start_time, 2, f'Columns n={len(pat_concatted.columns)}', t , config_obj)
                     pass
                 
                 #display(pat_concatted)
@@ -268,6 +276,7 @@ def main_batch(current_pat_client_id_code,
                 template = "An exception of type {0} occurred. Arguments:\n{1!r}"
                 message = template.format(type(e).__name__, e.args)
                 print(message)
+                raise
     
         else:
             if(multi_process == False):

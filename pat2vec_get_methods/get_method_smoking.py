@@ -36,21 +36,36 @@ def get_smoking(current_pat_client_id_code, target_date_range, pat_batch, config
             search_string=f"obscatalogmasteritem_displayname:(\"{search_term}\") AND observationdocument_recordeddtm:[{start_year}-{start_month}-{start_day} TO {end_year}-{end_month}-{end_day}]"
         )
 
-    # Creating the features DataFrame
-    if len(current_pat_raw) == 0:
-        features_data = pd.DataFrame(data={'client_idcode': [current_pat_client_id_code]})
-    else:
-        features_data = current_pat_raw[current_pat_raw['obscatalogmasteritem_displayname'].isin([search_term])].copy().dropna()
+    if(len(current_pat_raw)==0):
+
+        features = pd.DataFrame(data = [current_pat_client_id_code], columns=['client_idcode'])
+
+
+    features_data = current_pat_raw[current_pat_raw['obscatalogmasteritem_displayname']==search_term].copy()
+
+    #screen and purge dud values
+    #features_data =  features_data[(features_data['observation_valuetext_analysed'].astype(float)<20)& (features_data['observation_valuetext_analysed'].astype(float)>-20)].copy()
+    features_data.dropna(inplace=True)
+
+    #-----------------------------------------------------------------
+
+    features_data = current_pat_raw[current_pat_raw['obscatalogmasteritem_displayname']==search_term].copy()
+    #features_data =  features_data[(features_data['observation_valuetext_analysed'].astype(float)<20)& (features_data['observation_valuetext_analysed'].astype(float)>-20)].copy()
+    #features_data.dropna(inplace=True)    
+
 
     term = 'smoking_status'.lower()
-    features = pd.DataFrame(data={'client_idcode': [current_pat_client_id_code]})
 
-    # Populating the features DataFrame based on smoking status
-    if not features_data.empty:
+    if(len(features_data) > 0):
+        features = pd.DataFrame(data = [current_pat_client_id_code] , columns =['client_idcode']).copy()
+
         value_array = features_data['observation_valuetext_analysed'].dropna()
+
         features[f'{term}_current'] = value_array.str.contains("Current Smoker").astype(int)
         features[f'{term}_non'] = value_array.str.contains("Non-Smoker").astype(int)
+
     else:
+        features = pd.DataFrame(data = [current_pat_client_id_code] , columns =['client_idcode']).copy()
         features[f'{term}_current'] = np.nan
         features[f'{term}_non'] = np.nan
 

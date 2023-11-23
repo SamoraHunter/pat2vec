@@ -32,20 +32,35 @@ def get_core_resus(current_pat_client_id_code, target_date_range, pat_batch, bat
             search_string="obscatalogmasteritem_displayname:(\"CORE_RESUS_STATUS\") AND " + f'observationdocument_recordeddtm:[{start_year}-{start_month}-{start_day} TO {end_year}-{end_month}-{end_day}]'
         )
 
-    if len(current_pat_raw) == 0:
-        features = pd.DataFrame(data={'client_idcode': [current_pat_client_id_code]})
+    if(len(current_pat_raw)==0):
+
+        features = pd.DataFrame(data = [current_pat_client_id_code], columns=['client_idcode'])
+
+
+    features_data = current_pat_raw[current_pat_raw['obscatalogmasteritem_displayname']=='CORE_RESUS_STATUS'].copy()
+
+    #screen and purge dud values
+    #features_data =  features_data[(features_data['observation_valuetext_analysed'].astype(float)<20)& (features_data['observation_valuetext_analysed'].astype(float)>-20)].copy()
+    #features_data.dropna(inplace=True)
+
+    #-----------------------------------------------------------------
+
+    #features_data = current_pat_raw[current_pat_raw['obscatalogmasteritem_displayname']=='CORE_RESUS_STATUS'].copy()
+    #features_data =  features_data[(features_data['observation_valuetext_analysed'].astype(float)<20)& (features_data['observation_valuetext_analysed'].astype(float)>-20)].copy()
+    #features_data.dropna(inplace=True)    
+
+    term = 'CORE_RESUS_STATUS'.lower()
+
+    if(len(features_data) > 0):
+        features = pd.DataFrame(data = [current_pat_client_id_code] , columns =['client_idcode']).copy()
+        features[f'{term}_For cardiopulmonary resuscitation'] = len(features_data[features_data['observation_valuetext_analysed'] == 'For cardiopulmonary resuscitation'])
+        features[f'{term}_Not for cardiopulmonary resuscitation'] = len(features_data[features_data['observation_valuetext_analysed'] == 'Not for cardiopulmonary resuscitation'])
     else:
-        features_data = current_pat_raw[current_pat_raw['obscatalogmasteritem_displayname'] == 'CORE_RESUS_STATUS'].copy()
+        features = pd.DataFrame(data = [current_pat_client_id_code] , columns =['client_idcode']).copy()
+        features[f'{term}_For cardiopulmonary resuscitation'] = len(features_data[features_data['observation_valuetext_analysed'] == 'For cardiopulmonary resuscitation'])
+        features[f'{term}_Not for cardiopulmonary resuscitation'] = len(features_data[features_data['observation_valuetext_analysed'] == 'Not for cardiopulmonary resuscitation'])
 
-        term = 'core_resus_status'.lower()
-        features = pd.DataFrame(data={'client_idcode': [current_pat_client_id_code]})
 
-        if not features_data.empty:
-            features[f'{term}_For_cardiopulmonary_resuscitation'] = len(features_data[features_data['observation_valuetext_analysed'] == 'For cardiopulmonary resuscitation'])
-            features[f'{term}_Not_for_cardiopulmonary_resuscitation'] = len(features_data[features_data['observation_valuetext_analysed'] == 'Not for cardiopulmonary resuscitation'])
-        else:
-            features[f'{term}_For_cardiopulmonary_resuscitation'] = 0
-            features[f'{term}_Not_for_cardiopulmonary_resuscitation'] = 0
 
     return features
 

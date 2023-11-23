@@ -143,7 +143,7 @@ def main_multi(arg_list):
                     
                 update_pbar(p_bar_entry, start_time, 2, 'concatenating', t=t, config_obj=config_obj)
                 
-                target_date_vector = enum_target_date_vector(target_date_range, current_pat_client_id_code)
+                target_date_vector = enum_target_date_vector(target_date_range, current_pat_client_id_code, config_obj = config_obj)
                 
                     
                 patient_vector.append(target_date_vector)

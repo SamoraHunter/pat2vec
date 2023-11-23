@@ -76,23 +76,23 @@ def get_start_end_year_month(target_date_range, n=1):
         end_date.day
     )
 
-def get_empty_date_vector(config_object):
+# def get_empty_date_vector(config_object):
 
-    #start date. Other days are for duration of time window
+#     #start date. Other days are for duration of time window
     
-    start_date = config_object.start_date
+#     start_date = config_object.start_date
     
     
     
-    years = config_object.years
-    months = config_object.months
-    days = config_object.days
+#     years = config_object.years
+#     months = config_object.months
+#     days = config_object.days
     
-    combinations = generate_date_list(start_date, years, months, days)
+#     combinations = generate_date_list(start_date, years, months, days)
     
-    combinations = [str(item) + '_' + 'date_time_stamp' for item in combinations]
+#     combinations = [str(item) + '_' + 'date_time_stamp' for item in combinations]
     
-    return pd.DataFrame(data=0.0, index=np.arange(1), columns = combinations).astype(float) #untested float cast
+#     return pd.DataFrame(data=0.0, index=np.arange(1), columns = combinations).astype(float) #untested float cast
 
 
 
@@ -110,9 +110,9 @@ def convert_timestamp_to_tuple(timestamp):
 
 
 
-def enum_target_date_vector(target_date_range, current_pat_client_id_code):
+def enum_target_date_vector(target_date_range, current_pat_client_id_code, config_obj):
     
-    empty_date_vector = get_empty_date_vector()
+    empty_date_vector = get_empty_date_vector(config_obj=config_obj)
     
     empty_date_vector.at[0,str(target_date_range)+"_date_time_stamp"] = 1
     
@@ -262,7 +262,7 @@ def get_demographics3_batch(patlist, target_date_range, pat_batch, config_obj = 
     
     batch_mode = config_obj.batch_mode
     
-    patlist = config_obj.patlist #is present?
+    #patlist = config_obj.patlist #is present?
 
     
     start_year, start_month, end_year, end_month, start_day, end_day = get_start_end_year_month(target_date_range)
@@ -498,17 +498,17 @@ def get_start_end_year_month(target_date_range, n=1):
         end_date.day
     )
 
-def get_empty_date_vector(config_object):
+def get_empty_date_vector(config_obj):
 
     #start date. Other days are for duration of time window
     
-    start_date = config_object.start_date
+    start_date = config_obj.start_date
     
     
     
-    years = config_object.years
-    months = config_object.months
-    days = config_object.days
+    years = config_obj.years
+    months = config_obj.months
+    days = config_obj.days
     
     combinations = generate_date_list(start_date, years, months, days)
     
@@ -521,52 +521,52 @@ def get_empty_date_vector(config_object):
 
     
 
-def get_demographics3_batch(patlist, target_date_range, pat_batch, config_obj = None, cohort_searcher_with_terms_and_search=None):
+# def get_demographics3_batch(patlist, target_date_range, pat_batch, config_obj = None, cohort_searcher_with_terms_and_search=None):
     
-    batch_mode = config_obj.batch_mode
+#     batch_mode = config_obj.batch_mode
     
-    #patlist = config_obj.patlist #is present?
+#     #patlist = config_obj.patlist #is present?
 
     
-    start_year, start_month, end_year, end_month, start_day, end_day = get_start_end_year_month(target_date_range)
+#     start_year, start_month, end_year, end_month, start_day, end_day = get_start_end_year_month(target_date_range)
     
     
-    if(batch_mode):
+#     if(batch_mode):
         
-        demo = filter_dataframe_by_timestamp(pat_batch, start_year, start_month, end_year, end_month, start_day, end_day, 'updatetime')
+#         demo = filter_dataframe_by_timestamp(pat_batch, start_year, start_month, end_year, end_month, start_day, end_day, 'updatetime')
 
         
         
-    else:
-        demo = cohort_searcher_with_terms_and_search(index_name="epr_documents", 
-                                            fields_list=["client_idcode", "client_firstname", "client_lastname", "client_dob", "client_gendercode", "client_racecode", "client_deceaseddtm", "updatetime"], 
-                                            term_name="client_idcode.keyword", 
-                                            entered_list=patlist,
-                                            search_string= f'updatetime:[{start_year}-{start_month}-{start_day} TO {end_year}-{end_month}-{end_day}] '
-                                                )
+#     else:
+#         demo = cohort_searcher_with_terms_and_search(index_name="epr_documents", 
+#                                             fields_list=["client_idcode", "client_firstname", "client_lastname", "client_dob", "client_gendercode", "client_racecode", "client_deceaseddtm", "updatetime"], 
+#                                             term_name="client_idcode.keyword", 
+#                                             entered_list=patlist,
+#                                             search_string= f'updatetime:[{start_year}-{start_month}-{start_day} TO {end_year}-{end_month}-{end_day}] '
+#                                                 )
     
     
-    demo["updatetime"] = pd.to_datetime(demo["updatetime"], utc=True)
-    demo = demo.sort_values(["client_idcode", "updatetime"]) #.drop_duplicates(subset = ["client_idcode"], keep = "last", inplace = True)
+#     demo["updatetime"] = pd.to_datetime(demo["updatetime"], utc=True)
+#     demo = demo.sort_values(["client_idcode", "updatetime"]) #.drop_duplicates(subset = ["client_idcode"], keep = "last", inplace = True)
     
-    #if more than one in the range return the nearest the end of the period
-    if(len(demo)> 1):
-        try:
-            #print("case1")
-            return demo.tail(1)
-            #return demo.iloc[-1].to_frame()
-        except Exception as e:
-            print(e)
+#     #if more than one in the range return the nearest the end of the period
+#     if(len(demo)> 1):
+#         try:
+#             #print("case1")
+#             return demo.tail(1)
+#             #return demo.iloc[-1].to_frame()
+#         except Exception as e:
+#             print(e)
             
-    #if only one return it        
-    elif len(demo)==1:
-        return demo
+#     #if only one return it        
+#     elif len(demo)==1:
+#         return demo
     
-    #otherwise return only the client id
-    else:
-        demo = pd.DataFrame(data=None, columns=None)
-        demo['client_idcode'] = patlist
-        return demo
+#     #otherwise return only the client id
+#     else:
+#         demo = pd.DataFrame(data=None, columns=None)
+#         demo['client_idcode'] = patlist
+#         return demo
         
         
         
