@@ -8,7 +8,11 @@ from util.methods_get import (dump_results, exist_check,
                               get_start_end_year_month, update_pbar)
 
 
-def get_current_pat_annotations_to_file(current_pat_client_id_code, target_date_range, config_obj = None, cohort_searcher_with_terms_and_search=None, cat=None ):
+def get_current_pat_annotations_to_file(current_pat_client_id_code, target_date_range, config_obj = None, cohort_searcher_with_terms_and_search=None, cat=None, t=None ):
+    
+    if config_obj is None:
+        raise ValueError("config_obj cannot be None. Please provide a valid configuration. get_current_pat_annotations_to_file")
+
     
     pre_annotation_path = config_obj.pre_annotation_path
     
@@ -17,7 +21,7 @@ def get_current_pat_annotations_to_file(current_pat_client_id_code, target_date_
     
     start_time = time.time()
     
-    file_exists = exist_check(pre_annotation_path + current_pat_client_id_code+"_"+str(target_date_range))
+    file_exists = exist_check(pre_annotation_path + current_pat_client_id_code+"_"+str(target_date_range), config_obj = config_obj)
     
     if(file_exists == False):
     
@@ -32,7 +36,8 @@ def get_current_pat_annotations_to_file(current_pat_client_id_code, target_date_
 
 
         n_docs_to_annotate = len(current_pat_docs)
-        update_pbar(current_pat_client_id_code+"_"+str(target_date_range), start_time, 5, 'annotations', n_docs_to_annotate = n_docs_to_annotate)
+        update_pbar(current_pat_client_id_code+"_"+str(target_date_range), start_time, 5, 'annotations', n_docs_to_annotate = n_docs_to_annotate,
+                    t=t, config_obj=config_obj)
 
     annotation_map = {'True':1,
                      'Presence':1 ,
@@ -53,12 +58,12 @@ def get_current_pat_annotations_to_file(current_pat_client_id_code, target_date_
         with io.capture_output() as captured:
             pats_anno_annotations = cat.get_entities_multi_texts(current_pat_docs['body_analysed'].dropna());#, n_process=1
         if(store_annot):
-            dump_results(pats_anno_annotations, pre_annotation_path + current_pat_client_id_code+"_"+str(target_date_range))
+            dump_results(pats_anno_annotations, pre_annotation_path + current_pat_client_id_code+"_"+str(target_date_range), config_obj =config_obj)
     
     
 
 
-def get_current_pat_annotations_mct_batch_to_file(current_pat_client_id_code, target_date_range, pat_doc_batch, sftp_obj = None, skip_check=False, config_obj =None, cat=None):
+def get_current_pat_annotations_mct_batch_to_file(current_pat_client_id_code, target_date_range, pat_doc_batch, skip_check=False, config_obj =None, cat=None, t=None):
     
     store_annot = config_obj.store_annot
     
@@ -71,7 +76,7 @@ def get_current_pat_annotations_mct_batch_to_file(current_pat_client_id_code, ta
     if(skip_check):
         file_exists = False
     else:
-        file_exists = exist_check(current_annot_file_path, sftp_obj)
+        file_exists = exist_check(current_annot_file_path, config_obj = config_obj)
 
     if(file_exists == False):
     
@@ -83,18 +88,19 @@ def get_current_pat_annotations_mct_batch_to_file(current_pat_client_id_code, ta
 
 
         n_docs_to_annotate = len(current_pat_docs)
-        update_pbar(current_pat_client_id_code+"_"+str(target_date_range), start_time, 5, 'annotations_mct', n_docs_to_annotate = n_docs_to_annotate)
+        update_pbar(current_pat_client_id_code+"_"+str(target_date_range), start_time, 5, 'annotations_mct', n_docs_to_annotate = n_docs_to_annotate,
+                    t=t, config_obj=config_obj)
 
     
     if(file_exists==False):
         with io.capture_output() as captured:
             pats_anno_annotations = cat.get_entities_multi_texts(current_pat_docs['observation_valuetext_analysed'].dropna());#, n_process=1
         if(store_annot):
-            dump_results(pats_anno_annotations, current_annot_file_path, sftp_obj)
+            dump_results(pats_anno_annotations, current_annot_file_path, config_obj=config_obj)
 
 
 
-def get_current_pat_annotations_batch_to_file(current_pat_client_id_code, target_date_range, pat_doc_batch, sftp_obj=None, skip_check=False, config_obj=None, cat=None):
+def get_current_pat_annotations_batch_to_file(current_pat_client_id_code, target_date_range, pat_doc_batch, sftp_obj=None, skip_check=False, config_obj=None, cat=None, t=None):
     
     store_annot = config_obj.store_annot
     
@@ -108,7 +114,7 @@ def get_current_pat_annotations_batch_to_file(current_pat_client_id_code, target
     if(skip_check):
         file_exists = False
     else:
-        file_exists = exist_check(current_annotation_file_path, sftp_obj)
+        file_exists = exist_check(current_annotation_file_path, config_obj = config_obj)
     
     
     
@@ -120,7 +126,8 @@ def get_current_pat_annotations_batch_to_file(current_pat_client_id_code, target
 
 
         n_docs_to_annotate = len(current_pat_docs)
-        update_pbar(current_pat_client_id_code+"_"+str(target_date_range), start_time, 5, 'annotations', n_docs_to_annotate = n_docs_to_annotate)
+        update_pbar(current_pat_client_id_code+"_"+str(target_date_range), start_time, 5, 'annotations', n_docs_to_annotate = n_docs_to_annotate,
+                    t=t, config_obj=config_obj)
 
     annotation_map = {'True':1,
                      'Presence':1 ,
@@ -141,7 +148,7 @@ def get_current_pat_annotations_batch_to_file(current_pat_client_id_code, target
         with io.capture_output() as captured:
             pats_anno_annotations = cat.get_entities_multi_texts(current_pat_docs['body_analysed'].dropna());#, n_process=1
         if(store_annot):
-            dump_results(pats_anno_annotations, current_annotation_file_path, sftp_obj)
+            dump_results(pats_anno_annotations, current_annotation_file_path,  config_obj=config_obj)
     
     
     

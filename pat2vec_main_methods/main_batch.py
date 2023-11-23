@@ -4,17 +4,25 @@ import time
 
 import traceback
 
-from util.methods_get import enum_target_date_vector, list_dir_wrapper, update_pbar
+import pandas as pd
+from pat2vec_get_methods.get_method_bed import get_bed
+from pat2vec_get_methods.get_method_bloods import get_current_pat_bloods
+from pat2vec_get_methods.get_method_bmi import get_bmi_features
+from pat2vec_get_methods.get_method_core02 import get_core_02
+from pat2vec_get_methods.get_method_core_resus import get_core_resus
+from pat2vec_get_methods.get_method_current_pat_annotations_mrc_cs import get_current_pat_annotations_mrc_cs
+from pat2vec_get_methods.get_method_demographics import get_demo
+#from pat2vec_get_methods.get_method_demo import get_demographics3
+from pat2vec_get_methods.get_method_diagnostics import get_current_pat_diagnostics
+from pat2vec_get_methods.get_method_drugs import get_current_pat_drugs
+from pat2vec_get_methods.get_method_hosp_site import get_hosp_site
+from pat2vec_get_methods.get_method_news import get_news
+from pat2vec_get_methods.get_method_pat_annotations import get_current_pat_annotations
+from pat2vec_get_methods.get_method_smoking import get_smoking
+from pat2vec_get_methods.get_method_vte_status import get_vte_status
 
-from patvec_get_batch_methods.main import (get_pat_batch_bloods,
-                                           get_pat_batch_bmi,
-                                           get_pat_batch_demo,
-                                           get_pat_batch_diagnostics,
-                                           get_pat_batch_drugs,
-                                           get_pat_batch_epr_docs,
-                                           get_pat_batch_mct_docs,
-                                           get_pat_batch_news,
-                                           get_pat_batch_obs)
+from util.methods_get import enum_target_date_vector, list_dir_wrapper, update_pbar, write_remote
+
  
  
 def main_batch(current_pat_client_id_code,
@@ -37,11 +45,25 @@ def main_batch(current_pat_client_id_code,
               config_obj=None,
               stripped_list_start = None,
               t = None,
+              cohort_searcher_with_terms_and_search=None,
+              cat = None
               ):
     
     
     #global skipped_counter
     #global start_time
+    if config_obj is None:
+        raise ValueError("config_obj cannot be None. Please provide a valid configuration. (main_batch)")
+    
+    if cohort_searcher_with_terms_and_search is None:
+        raise ValueError("cohort_searcher_with_terms_and_search cannot be None. Please provide a valid configuration. (main_batch)")
+
+    if t is None:
+        raise ValueError("t cannot be None. Please provide a valid configuration. (main_batch)")
+    
+    if cat is None:
+        raise ValueError("cat cannot be None. Please provide a valid configuration. (main_batch)")
+    
     
     
     start_time = time.time()
@@ -94,76 +116,99 @@ def main_batch(current_pat_client_id_code,
                 update_pbar(p_bar_entry, start_time, 0, 'demo', t, config_obj)
 
                 if main_options.get('demo'):
-                    current_pat_demo = get_demo(current_pat_client_id_code, target_date_range, batch_demo)
+                    current_pat_demo = get_demo(current_pat_client_id_code, target_date_range, batch_demo, config_obj)
                     patient_vector.append(current_pat_demo)
 
                 update_pbar(p_bar_entry, start_time, 1, 'bmi', t, config_obj)
 
                 if main_options.get('bmi'):
-                    bmi_features = get_bmi_features(current_pat_client_id_code, target_date_range, batch_bmi)
+                    bmi_features = get_bmi_features(current_pat_client_id_code, target_date_range, batch_bmi, config_obj)
                     patient_vector.append(bmi_features)
 
                 update_pbar(p_bar_entry, start_time, 2, 'bloods', t, config_obj)
 
                 if main_options.get('bloods'):
-                    current_pat_bloods = get_current_pat_bloods(current_pat_client_id_code, target_date_range, batch_bloods)
+                    current_pat_bloods = get_current_pat_bloods(current_pat_client_id_code, target_date_range, batch_bloods,config_obj)
                     patient_vector.append(current_pat_bloods)
 
                 update_pbar(p_bar_entry, start_time, 3, 'drugs', t, config_obj)
 
                 if main_options.get('drugs'):
-                    current_pat_drugs = get_current_pat_drugs(current_pat_client_id_code, target_date_range, batch_drugs)
+                    current_pat_drugs = get_current_pat_drugs(current_pat_client_id_code, target_date_range, batch_drugs, config_obj)
                     patient_vector.append(current_pat_drugs)
 
                 update_pbar(p_bar_entry, start_time, 4, 'diagnostics', t, config_obj)
 
                 if main_options.get('diagnostics'):
-                    current_pat_diagnostics = get_current_pat_diagnostics(current_pat_client_id_code, target_date_range, batch_diagnostics)
+                    current_pat_diagnostics = get_current_pat_diagnostics(current_pat_client_id_code, target_date_range, batch_diagnostics, config_obj)
                     patient_vector.append(current_pat_diagnostics)
+                    
+                    
 
                 if main_options.get('annotations'):
-                    df_pat_target = get_current_pat_annotations(current_pat_client_id_code, target_date_range, batch_epr, sftp_obj)
+                    df_pat_target = get_current_pat_annotations(current_pat_client_id_code,
+                                                                target_date_range,
+                                                                batch_epr,
+                                                                config_obj=config_obj,
+                                                                t=t,
+                                                                cohort_searcher_with_terms_and_search = cohort_searcher_with_terms_and_search,
+                                                                cat = cat,
+                                                                
+                                                                )
                     patient_vector.append(df_pat_target)
 
                 if main_options.get('annotations_mrc'):
-                    df_pat_target = get_current_pat_annotations_mrc_cs(current_pat_client_id_code, target_date_range, batch_mct, sftp_obj)
+                    df_pat_target = get_current_pat_annotations_mrc_cs(current_pat_client_id_code, target_date_range,
+                                                                       batch_mct,
+                                                                       config_obj = config_obj,
+                                                                       t=t,
+                                                                       cohort_searcher_with_terms_and_search = cohort_searcher_with_terms_and_search,
+                                                                    cat = cat,
+                                                                       )
                     patient_vector.append(df_pat_target)
 
                 update_pbar(p_bar_entry, start_time, 1, 'core_02', t, config_obj)
 
                 if main_options.get('core_02'):
-                    df_pat_target = get_core_02(current_pat_client_id_code, target_date_range, batch_core_02)
+                    df_pat_target = get_core_02(current_pat_client_id_code, target_date_range, batch_core_02, config_obj)
                     patient_vector.append(df_pat_target)
 
                 update_pbar(p_bar_entry, start_time, 2, 'bed', t, config_obj)
 
                 if main_options.get('bed'):
-                    df_pat_target = get_bed(current_pat_client_id_code, target_date_range, batch_bednumber)
+                    df_pat_target = get_bed(current_pat_client_id_code, target_date_range, batch_bednumber, config_obj)
                     patient_vector.append(df_pat_target)
 
                 update_pbar(p_bar_entry, start_time, 3, 'vte_status', t, config_obj)
 
                 if main_options.get('vte_status'):
-                    df_pat_target = get_vte_status(current_pat_client_id_code, target_date_range, batch_vte)
+                    df_pat_target = get_vte_status(current_pat_client_id_code, target_date_range, batch_vte, config_obj)
                     patient_vector.append(df_pat_target)
 
                 update_pbar(p_bar_entry, start_time, 4, 'hosp_site', t, config_obj)
 
                 if main_options.get('hosp_site'):
-                    df_pat_target = get_hosp_site(current_pat_client_id_code, target_date_range, batch_hospsite)
+                    df_pat_target = get_hosp_site(current_pat_client_id_code, target_date_range, batch_hospsite, config_obj)
                     patient_vector.append(df_pat_target)
 
                 update_pbar(p_bar_entry, start_time, 1, 'core_resus', t, config_obj)
 
                 if main_options.get('core_resus'):
-                    df_pat_target = get_core_resus(current_pat_client_id_code, target_date_range, batch_resus)
+                    df_pat_target = get_core_resus(current_pat_client_id_code, target_date_range, batch_resus, config_obj)
                     patient_vector.append(df_pat_target)
 
                 update_pbar(p_bar_entry, start_time, 2, 'news', t, config_obj)
 
                 if main_options.get('news'):
-                    df_pat_target = get_news(current_pat_client_id_code, target_date_range, batch_news)
+                    df_pat_target = get_news(current_pat_client_id_code, target_date_range, batch_news, config_obj)
                     patient_vector.append(df_pat_target)
+                
+                update_pbar(p_bar_entry, start_time, 2, 'smoking', t, config_obj)
+
+                if main_options.get('smoking'):
+                    df_pat_target = get_smoking(current_pat_client_id_code, target_date_range, batch_smoking, config_obj)
+                    patient_vector.append(df_pat_target)
+                    
 
                 update_pbar(p_bar_entry, start_time, 2, 'concatenating', t, config_obj)
 

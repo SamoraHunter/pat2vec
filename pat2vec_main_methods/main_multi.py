@@ -33,6 +33,8 @@ def main_multi(arg_list):
     
     config_obj = arg_list[3]
     
+    t=arg_list[4]
+    
     current_pat_lines_path = config_obj.current_pat_lines_path
     
     stripped_list_start = config_obj.stripped_list_start
@@ -59,7 +61,7 @@ def main_multi(arg_list):
                 p_bar_entry = current_pat_client_id_code + "_" + str(target_date_range)
                 #
 
-                update_pbar(p_bar_entry, start_time, 0, 'demo')
+                update_pbar(p_bar_entry, start_time, 0, 'demo', t=t, config_obj=config_obj)
 
                 
                 if(main_options.get('demo')):
@@ -67,26 +69,26 @@ def main_multi(arg_list):
                     patient_vector.append(current_pat_demo)
 
 
-                update_pbar(p_bar_entry, start_time, 1, 'bmi')
+                update_pbar(p_bar_entry, start_time, 1, 'bmi', t=t, config_obj=config_obj)
 
                 if(main_options.get('bmi')):
                     bmi_features = get_bmi_features(current_pat_client_id_code, target_date_range)
                     patient_vector.append(bmi_features)
 
 
-                update_pbar(p_bar_entry, start_time, 2, 'bloods')
+                update_pbar(p_bar_entry, start_time, 2, 'bloods', t=t, config_obj=config_obj)
 
                 if(main_options.get('bloods')):
                     current_pat_bloods = get_current_pat_bloods(current_pat_client_id_code, target_date_range)
                     patient_vector.append(current_pat_bloods)
 
-                update_pbar(p_bar_entry, start_time, 3, 'drugs')
+                update_pbar(p_bar_entry, start_time, 3, 'drugs', t=t, config_obj=config_obj)
 
                 if(main_options.get('drugs')):
                     current_pat_drugs = get_current_pat_drugs(current_pat_client_id_code, target_date_range)
                     patient_vector.append(current_pat_drugs)
 
-                update_pbar(p_bar_entry, start_time, 4, 'diagnostics')
+                update_pbar(p_bar_entry, start_time, 4, 'diagnostics', t=t, config_obj=config_obj)
 
                 if(main_options.get('diagnostics')):
                     current_pat_diagnostics = get_current_pat_diagnostics(current_pat_client_id_code, target_date_range)
@@ -103,43 +105,43 @@ def main_multi(arg_list):
                     df_pat_target = get_current_pat_annotations_mrc_cs(current_pat_client_id_code, target_date_range)
                     patient_vector.append(df_pat_target)
                 
-                update_pbar(p_bar_entry, start_time, 1, 'core_02')
+                update_pbar(p_bar_entry, start_time, 1, 'core_02', t=t, config_obj=config_obj)
                 
                 if(main_options.get('core_02')):
                     df_pat_target = get_core_02(current_pat_client_id_code, target_date_range)
                     patient_vector.append(df_pat_target)
                     
-                update_pbar(p_bar_entry, start_time, 2, 'bed')
+                update_pbar(p_bar_entry, start_time, 2, 'bed', t=t, config_obj=config_obj)
                     
                 if(main_options.get('bed')):
                     df_pat_target = get_bed(current_pat_client_id_code, target_date_range)
                     patient_vector.append(df_pat_target)
                     
-                update_pbar(p_bar_entry, start_time, 3, 'vte_status')
+                update_pbar(p_bar_entry, start_time, 3, 'vte_status', t=t, config_obj=config_obj)
                     
                 if(main_options.get('vte_status')):
                     df_pat_target = get_vte_status(current_pat_client_id_code, target_date_range)
                     patient_vector.append(df_pat_target)
                     
-                update_pbar(p_bar_entry, start_time, 4, 'hosp_site')    
+                update_pbar(p_bar_entry, start_time, 4, 'hosp_site', t=t, config_obj=config_obj)    
                     
                 if(main_options.get('hosp_site')):
                     df_pat_target = get_hosp_site(current_pat_client_id_code, target_date_range)
                     patient_vector.append(df_pat_target)
                     
-                update_pbar(p_bar_entry, start_time, 1, 'core_resus')     
+                update_pbar(p_bar_entry, start_time, 1, 'core_resus', t=t, config_obj=config_obj)     
                     
                 if(main_options.get('core_resus')):
                     df_pat_target = get_core_resus(current_pat_client_id_code, target_date_range)
                     patient_vector.append(df_pat_target)
                     
-                update_pbar(p_bar_entry, start_time, 2, 'news')      
+                update_pbar(p_bar_entry, start_time, 2, 'news', t=t, config_obj=config_obj)      
                     
                 if(main_options.get('news')):
                     df_pat_target = get_news(current_pat_client_id_code, target_date_range)
                     patient_vector.append(df_pat_target)
                     
-                update_pbar(p_bar_entry, start_time, 2, 'concatenating')
+                update_pbar(p_bar_entry, start_time, 2, 'concatenating', t=t, config_obj=config_obj)
                 
                 target_date_vector = enum_target_date_vector(target_date_range, current_pat_client_id_code)
                 
@@ -162,7 +164,7 @@ def main_multi(arg_list):
                     with sftp_client.open(current_pat_line_path +str(current_pat_client_id_code) + "_" + str(target_date_range)+".csv", 'w') as file:
                         pat_concatted.to_csv(file)
                 
-                update_pbar(p_bar_entry, start_time, 2, f'Done {len(pat_concatted.columns)} cols in {int(time.time() - start_time)}s, {int(len(pat_concatted.columns)/int(time.time() - start_time))} p/s')
+                update_pbar(p_bar_entry, start_time, 2, f'Done {len(pat_concatted.columns)} cols in {int(time.time() - start_time)}s, {int(len(pat_concatted.columns)/int(time.time() - start_time))} p/s', t=t, config_obj=config_obj)
                 
                 #print(time.time() - start_time, current_pat_client_id_code)
             except RuntimeError as RuntimeError_exception:

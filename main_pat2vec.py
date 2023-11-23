@@ -619,7 +619,9 @@ class main:
                             batch_drugs = batch_drugs,
                             config_obj = self.config_obj,
                             stripped_list_start = stripped_list_start,
-                            t = self.t
+                            t = self.t,
+                            cohort_searcher_with_terms_and_search = self.cohort_searcher_with_terms_and_search,
+                            cat = self.cat
                             
                             )
                         

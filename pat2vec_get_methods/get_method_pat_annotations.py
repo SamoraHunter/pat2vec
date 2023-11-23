@@ -5,13 +5,18 @@ import pickle
 import numpy as np
 import paramiko
 from IPython.utils import io
+import pandas as pd
 
 from util.methods_get import (dump_results, exist_check,
                               filter_dataframe_by_timestamp,
                               get_start_end_year_month, update_pbar)
 
 
-def get_current_pat_annotations(current_pat_client_id_code, target_date_range, pat_batch, sftp_obj=None, config_obj = None, t=None, cohort_searcher_with_terms_and_search =None, cat=None):
+def get_current_pat_annotations(current_pat_client_id_code, target_date_range, pat_batch, config_obj = None, t=None, cohort_searcher_with_terms_and_search =None, cat=None):
+    
+    if config_obj is None:
+        raise ValueError("config_obj cannot be None. Please provide a valid configuration. (get_current_pat_annotations)")
+
     
     start_time = config_obj.start_time
     
@@ -33,12 +38,16 @@ def get_current_pat_annotations(current_pat_client_id_code, target_date_range, p
     
     store_annot = config_obj.store_annot
     
+    sftp_obj = config_obj.sftp_obj
+    
+    
+    
 #     current_annotation_file_path = pre_annotation_path + current_pat_client_id_code+"_"+str(target_date_range)
     
     current_annotation_file_path = pre_annotation_path + current_pat_client_id_code + "/" +  current_pat_client_id_code+"_"+str(target_date_range)
     
     
-    file_exists = exist_check(current_annotation_file_path, sftp_obj)
+    file_exists = exist_check(current_annotation_file_path, config_obj = config_obj)
     
     if(file_exists == False):
     
@@ -57,7 +66,8 @@ def get_current_pat_annotations(current_pat_client_id_code, target_date_range, p
 
 
         n_docs_to_annotate = len(current_pat_docs)
-        update_pbar(current_pat_client_id_code+"_"+str(target_date_range), start_time, 5, 'annotations', n_docs_to_annotate = n_docs_to_annotate)
+        update_pbar(current_pat_client_id_code+"_"+str(target_date_range), start_time, 5, 'annotations', n_docs_to_annotate = n_docs_to_annotate,
+                    t=t, config_obj=config_obj)
 
     else:
         n_docs_to_annotate = "Reading preannotated..."
@@ -82,7 +92,7 @@ def get_current_pat_annotations(current_pat_client_id_code, target_date_range, p
         with io.capture_output() as captured:
             pats_anno_annotations = cat.get_entities_multi_texts(current_pat_docs['body_analysed'].dropna());#, n_process=1
         if(store_annot):
-            dump_results(pats_anno_annotations, current_annotation_file_path, sftp_obj)
+            dump_results(pats_anno_annotations, current_annotation_file_path, config_obj=config_obj)
     
     
     else:
@@ -118,7 +128,8 @@ def get_current_pat_annotations(current_pat_client_id_code, target_date_range, p
     #Lots of mentions of something could indicate severity etc
 
     #pats_anno_annotations = cat.get_entities(current_pat_docs['body_analysed'])
-    update_pbar(current_pat_client_id_code+"_"+str(target_date_range), start_time, 5, 'annotations', n_docs_to_annotate = n_docs_to_annotate)
+    update_pbar(current_pat_client_id_code+"_"+str(target_date_range), start_time, 5, 'annotations', n_docs_to_annotate = n_docs_to_annotate,
+                t=t, config_obj=config_obj)
 
 
     sum_count = 0
@@ -358,7 +369,8 @@ def get_current_pat_annotations(current_pat_client_id_code, target_date_range, p
 
             else:
                 pass
-    update_pbar(current_pat_client_id_code+"_"+str(target_date_range), start_time, 5, 'annotations', n_docs_to_annotate = n_docs_to_annotate)
+    update_pbar(current_pat_client_id_code+"_"+str(target_date_range), start_time, 5, 'annotations', n_docs_to_annotate = n_docs_to_annotate,
+                t=t, config_obj=config_obj)
     #df_pat_target.drop("n", axis=1, inplace=True)
 
     #df_pat_target.to_csv(entry_file_name)

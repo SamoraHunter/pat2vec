@@ -1,10 +1,10 @@
 import pandas as pd
-from your_module import cohort_searcher_with_terms_and_search  # replace 'your_module' with the actual module name containing cohort_searcher_with_terms_and_search
+#from your_module import cohort_searcher_with_terms_and_search  # replace 'your_module' with the actual module name containing cohort_searcher_with_terms_and_search
 from util.methods_get import get_start_end_year_month  # replace 'your_module' with the actual module name containing get_start_end_year_month
 
 #cogstack object pass?
 
-def get_demographics3(patlist, target_date_range):
+def get_demographics3(patlist, target_date_range, cohort_searcher_with_terms_and_search):
     """
     Get demographics information for a list of patients within a specified date range.
 
@@ -15,6 +15,8 @@ def get_demographics3(patlist, target_date_range):
     Returns:
     - pd.DataFrame: Demographics information for the specified patients.
     """
+    print(type(cohort_searcher_with_terms_and_search))
+    
     start_year, start_month, end_year, end_month, start_day, end_day = get_start_end_year_month(target_date_range)
 
     demo = cohort_searcher_with_terms_and_search(
@@ -45,3 +47,5 @@ def get_demographics3(patlist, target_date_range):
 # date_range_example = "2023-01-01 to 2023-12-31"
 # result = get_demographics3(patlist_example, date_range_example)
 # print(result)
+
+

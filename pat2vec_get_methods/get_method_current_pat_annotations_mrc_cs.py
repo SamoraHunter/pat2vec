@@ -4,6 +4,7 @@ import pickle
 import numpy as np
 import paramiko
 from IPython.utils import io
+import pandas as pd
 
 from util.methods_get import (dump_results, exist_check,
                               filter_dataframe_by_timestamp,
@@ -34,7 +35,7 @@ def get_current_pat_annotations_mrc_cs(current_pat_client_id_code, target_date_r
     current_annot_file_path = pre_annotation_path_mrc  + current_pat_client_id_code + "/" + current_pat_client_id_code  +"_"+str(target_date_range)
     
     
-    file_exists = exist_check(current_annot_file_path, sftp_obj)
+    file_exists = exist_check(current_annot_file_path, config_obj = config_obj)
     
     if(file_exists==False):
     
@@ -77,7 +78,7 @@ def get_current_pat_annotations_mrc_cs(current_pat_client_id_code, target_date_r
         with io.capture_output() as captured:
             pats_anno_annotations = cat.get_entities_multi_texts(current_pat_docs['observation_valuetext_analysed'].dropna());#, n_process=1
             
-            dump_results(pats_anno_annotations, current_annot_file_path, sftp_obj)
+            dump_results(pats_anno_annotations, current_annot_file_path, config_obj=config_obj)
                 
 #                 with open(pre_annotation_path_mrc + current_pat_client_id_code, 'wb') as f:
 #                     pickle.dump(pats_anno_annotations, f)
@@ -116,7 +117,7 @@ def get_current_pat_annotations_mrc_cs(current_pat_client_id_code, target_date_r
     #Lots of mentions of something could indicate severity etc
 
     #pats_anno_annotations = cat.get_entities(current_pat_docs['body_analysed'])
-    update_pbar(current_pat_client_id_code+"_"+str(target_date_range), start_time, 5, 'annotations_mrc', n_docs_to_annotate = n_docs_to_annotate)
+    update_pbar(current_pat_client_id_code+"_"+str(target_date_range), start_time, 5, 'annotations_mrc', n_docs_to_annotate = n_docs_to_annotate, t=t, config_obj=config_obj)
 
 
     sum_count = 0
@@ -350,7 +351,7 @@ def get_current_pat_annotations_mrc_cs(current_pat_client_id_code, target_date_r
 
             else:
                 pass
-    update_pbar(current_pat_client_id_code+"_"+str(target_date_range), start_time, 5, 'annotations_mrc', n_docs_to_annotate = n_docs_to_annotate)
+    update_pbar(current_pat_client_id_code+"_"+str(target_date_range), start_time, 5, 'annotations_mrc', n_docs_to_annotate = n_docs_to_annotate, t=t, config_obj=config_obj)
     #df_pat_target.drop("n", axis=1, inplace=True)
 
     #df_pat_target.to_csv(entry_file_name)
