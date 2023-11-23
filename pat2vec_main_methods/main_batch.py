@@ -248,7 +248,7 @@ def main_batch(current_pat_client_id_code,
                     
                     if(multi_process == True):
                         
-                        write_remote(output_path, pat_concatted, sftp_obj)
+                        write_remote(output_path, pat_concatted, config_obj)
                     else:
                         with sftp_client.open(output_path, 'w') as file:
                             pat_concatted.to_csv(file)

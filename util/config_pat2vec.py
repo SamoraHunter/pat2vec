@@ -89,7 +89,7 @@ class config_class:
         self.testing = testing
         self.use_controls = use_controls
         
-        self.skipped_counter = None
+        self.skipped_counter = 0 #init start
         
         self.medcat = medcat
         

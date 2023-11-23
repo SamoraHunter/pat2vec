@@ -210,7 +210,7 @@ def update_pbar(current_pat_client_id_code, start_time, stage_int, stage_str, t,
     #colour_val = color_bars[stage_int] + stage_str
     
     start_time = config_obj.start_time
-    print("start time debug", start_time)
+    #print("start time debug", start_time)
     
     multi_process = config_obj.multi_process
     slow_execution_threshold_low = config_obj.slow_execution_threshold_low
