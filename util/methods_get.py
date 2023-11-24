@@ -897,7 +897,7 @@ def create_remote_folders(config_obj=None):
         sftp_obj.close()
         ssh_client.close()
 
-def create_folders_annot_csv_wrapper(csv_file_path, config_obj=None):
+def create_folders_annot_csv_wrapper(config_obj=None):
     """
     Create folders locally or remotely and read CSV data based on the configuration.
 
@@ -924,8 +924,7 @@ def create_folders_annot_csv_wrapper(csv_file_path, config_obj=None):
         # Create remote folders
         create_remote_folders(root_path, project_name, config_obj=config_obj)
 
-    # Read CSV data based on the configuration
-    return read_csv_wrapper(csv_file_path, config_obj=config_obj)
+
 
 
 
