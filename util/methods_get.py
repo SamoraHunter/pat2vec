@@ -724,7 +724,7 @@ def __str__(self):
     return f"MyClass instance with parameters: {self.parameter1}, {self.parameter2}"
 
 
-def write_remote(path, csv_file, sftp_obj=None, config_obj = None):
+def write_remote(path, csv_file, config_obj = None):
     
     hostname = config_obj.hostname
     
@@ -733,6 +733,8 @@ def write_remote(path, csv_file, sftp_obj=None, config_obj = None):
     password = config_obj.password
     
     share_sftp = config_obj.share_sftp
+    if(share_sftp):
+        sftp_obj = config_obj.sftp_obj
     
     
     #print("writing remote")
