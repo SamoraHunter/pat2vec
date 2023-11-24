@@ -889,9 +889,19 @@ def create_remote_folders(config_obj=None):
     pat_doc_folder_path = root_path + "/" + project_name + "/pat_docs/"
     pat_doc_annot_vec_folder_path = root_path + "/" + project_name + "/pat_docs_annot_vecs/"
 
-    # Create remote folders
-    sftp_obj.makedirs(pat_doc_folder_path)
-    sftp_obj.makedirs(pat_doc_annot_vec_folder_path)
+    
+    try:
+        # Create the remote directory if it doesn't exist
+        sftp_obj.stat(pat_doc_folder_path)
+    except FileNotFoundError:
+        sftp_obj.mkdir(pat_doc_folder_path)
+        
+    try:
+        # Create the remote directory if it doesn't exist
+        sftp_obj.stat(pat_doc_annot_vec_folder_path)
+    except FileNotFoundError:
+        sftp_obj.mkdir(pat_doc_annot_vec_folder_path)
+    
 
     if not share_sftp:
         sftp_obj.close()
@@ -923,11 +933,6 @@ def create_folders_annot_csv_wrapper(config_obj=None):
     else:
         # Create remote folders
         create_remote_folders(config_obj=config_obj)
-
-
-
-
-
 
 
 
