@@ -53,7 +53,7 @@ class config_class:
                  global_end_month=None,
                  skip_additional_listdir = False,
                  start_time = None,
-                 pre_path = None
+                 root_path = None
                  
                  ):
         
@@ -96,7 +96,7 @@ class config_class:
         
         self.medcat = medcat
         
-        self.pre_path = pre_path
+        self.root_path = root_path
         
         if(start_time ==None):
             self.start_time = datetime.now()
@@ -128,14 +128,14 @@ class config_class:
 
         if(remote_dump==False):
         
-            # pre_path = f'/mnt/hdd1/samora/{proj_name}/'
-            # pre_path = f'/home/jovyan/work/clinical_coding/{proj_name}/'
-            # pre_path = f'/home/cogstack/samora/_data/clinical_coding/{proj_name}/'
-            pre_path = f'{current_path_dir}{proj_name}/'
+            # root_path = f'/mnt/hdd1/samora/{proj_name}/'
+            # root_path = f'/home/jovyan/work/clinical_coding/{proj_name}/'
+            # root_path = f'/home/cogstack/samora/_data/clinical_coding/{proj_name}/'
+            root_path = f'{current_path_dir}{proj_name}/'
             
-            pre_annotation_path = pre_path + self.pre_annotation_path
+            pre_annotation_path = root_path + self.pre_annotation_path
             
-            pre_annotation_path_mrc = pre_path + self.pre_annotation_path_mrc
+            pre_annotation_path_mrc = root_path + self.pre_annotation_path_mrc
             
             Path(pre_annotation_path).mkdir(parents=True, exist_ok=True)
             Path(pre_annotation_path_mrc).mkdir(parents=True, exist_ok=True)
@@ -148,7 +148,7 @@ class config_class:
 
         if(remote_dump==False):
             
-            self.current_pat_line_path = pre_path + self.current_pat_line_path
+            self.current_pat_line_path = root_path + self.current_pat_line_path
             
             self.current_pat_lines_path = self.current_pat_line_path
             
@@ -208,13 +208,13 @@ class config_class:
         
         if(self.remote_dump):
 
-            if(self.pre_path == None):
+            if(self.root_path == None):
                 
-                pre_path = f'/mnt/hdd1/samora/{self.proj_name}/'
-                print(f"sftp Pre_path: {pre_path}")
+                root_path = f'/mnt/hdd1/samora/{self.proj_name}/'
+                print(f"sftp root_path: {root_path}")
                 
             else:
-                print(f"sftp Pre_path: {pre_path}")
+                print(f"sftp root_path: {root_path}")
 
             # Set the hostname, username, and password for the remote machine
             
@@ -232,15 +232,15 @@ class config_class:
 
             if(self.remote_dump):
                 try:
-                    self.sftp_client.chdir(pre_path)  # Test if remote_path exists
+                    self.sftp_client.chdir(root_path)  # Test if remote_path exists
                 except IOError:
-                    self.sftp_client.mkdir(pre_path)  # Create remote_path
+                    self.sftp_client.mkdir(root_path)  # Create remote_path
 
 
 
-            pre_annotation_path = f"{pre_path}{self.pre_annotation_path}"
-            pre_annotation_path_mrc = f"{pre_path}{self.pre_annotation_path_mrc}"
-            current_pat_line_path = f"{pre_path}{self.current_pat_line_path}"
+            pre_annotation_path = f"{root_path}{self.pre_annotation_path}"
+            pre_annotation_path_mrc = f"{root_path}{self.pre_annotation_path_mrc}"
+            current_pat_line_path = f"{root_path}{self.current_pat_line_path}"
             current_pat_lines_path = current_pat_line_path
             
             
@@ -248,7 +248,7 @@ class config_class:
                 Path(self.current_pat_annot_path).mkdir(parents=True, exist_ok=True)
                 Path(pre_annotation_path_mrc).mkdir(parents=True, exist_ok=True)
 
-            elif( pre_path == f'/mnt/hdd1/samora/{self.proj_name}/'):
+            elif( root_path == f'/mnt/hdd1/samora/{self.proj_name}/'):
                 
                 
                 try:
