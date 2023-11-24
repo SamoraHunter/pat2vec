@@ -919,10 +919,10 @@ def create_folders_annot_csv_wrapper(config_obj=None):
     # Create folders
     if not config_obj or not config_obj.remote_dump:
         # Create local folders
-        create_local_folders(root_path, project_name)
+        create_local_folders(config_obj=config_obj)
     else:
         # Create remote folders
-        create_remote_folders(root_path, project_name, config_obj=config_obj)
+        create_remote_folders(config_obj=config_obj)
 
 
 
