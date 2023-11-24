@@ -585,8 +585,6 @@ def sftp_exists(path, config_obj=None):
         
         share_sftp = config_obj.share_sftp
         
-        
-        
         try:
             if(share_sftp == False):
                 ssh_client = paramiko.SSHClient()
@@ -649,11 +647,13 @@ def list_dir_wrapper(path, config_obj = None):
 
 
 def exist_check(path, config_obj=None):
+    
+    
     sftp_obj = config_obj.sftp_obj
     remote_dump = config_obj.remote_dump
     
     if(remote_dump):
-        return sftp_exists(path, sftp_obj)
+        return sftp_exists(path, config_obj)
     else:
         return exists(path)
     

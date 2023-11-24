@@ -82,9 +82,11 @@ class config_class:
         self.strip_list = strip_list
         self.verbosity = verbosity
         self.random_seed_val = random_seed_val
+        
         self.hostname = hostname
         self.username = username
         self.password = password
+        
         self.gpu_mem_threshold = gpu_mem_threshold
         
         self.testing = testing
@@ -216,7 +218,7 @@ class config_class:
 
             # Set the hostname, username, and password for the remote machine
             
-            self.hostname = self.hostname
+            hostname = self.hostname
             
             username = self.username
             password = self.password
@@ -246,7 +248,9 @@ class config_class:
                 Path(self.current_pat_annot_path).mkdir(parents=True, exist_ok=True)
                 Path(pre_annotation_path_mrc).mkdir(parents=True, exist_ok=True)
 
-            else:
+            elif( pre_path == f'/mnt/hdd1/samora/{self.proj_name}/'):
+                
+                
                 try:
                     self.sftp_client.chdir(pre_annotation_path)  # Test if remote_path exists
                 except IOError:
