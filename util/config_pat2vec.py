@@ -261,6 +261,10 @@ class config_class:
                     self.sftp_client.chdir(current_pat_line_path)  # Test if remote_path exists
                 except IOError:
                     self.sftp_client.mkdir(current_pat_line_path)  # Create remote_path
+            
+            self.sftp_obj = self.sftp_client        
+                    
+                    
         else:
             self.sftp_client = None
         

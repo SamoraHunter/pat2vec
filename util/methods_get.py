@@ -656,6 +656,39 @@ def exist_check(path, config_obj=None):
         return sftp_exists(path, sftp_obj)
     else:
         return exists(path)
+    
+def check_sftp_connection(self, remote_directory, config_obj):
+    
+    hostname = config_obj.hostname
+    port = config_obj.port
+    username = config_obj.username
+    password = config_obj.password
+    
+    try:
+        # Create an SSH client
+        ssh = paramiko.SSHClient()
+
+        # Automatically add the server's host key
+        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+
+        # Connect to the server
+        ssh.connect(hostname, port, username, password)
+
+        # Open an SFTP session
+        sftp = ssh.open_sftp()
+
+        # Check if the connection is successful by listing the remote directory
+        remote_directory = sftp.listdir()
+        print(f"Connection successful. Remote directory contents: {remote_directory}")
+
+        # Close the SFTP session and the SSH connection
+        sftp.close()
+        ssh.close()
+
+    except Exception as e:
+        print(f"Error: {e}")
+    
+    
 
 def get_free_gpu():
     ## move to cogstats?
