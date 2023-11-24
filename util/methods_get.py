@@ -8,6 +8,7 @@ import time
 from datetime import datetime, timedelta
 from io import StringIO
 from os.path import exists
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -823,6 +824,111 @@ def read_csv_wrapper(path, config_obj=None):
     return df
 
     
+
+
+def create_local_folders(config_obj=None):
+    """
+    Create local folders for patent documents and annotated vectors.
+
+    Parameters:
+    - root_path (str): The root path where the folders should be created.
+    - project_name (str): The name of the project.
+
+    Returns:
+    None
+    """
+    project_name = config_obj.project_name
+    
+    root_path = config_obj.root_path
+    
+    
+    
+    
+    pat_doc_folder_path = root_path + "/" + project_name + "/pat_docs/"
+    Path(pat_doc_folder_path).mkdir(parents=True, exist_ok=True)
+
+    pat_doc_annot_vec_folder_path = root_path + "/" + project_name + "/pat_docs_annot_vecs/"
+    Path(pat_doc_annot_vec_folder_path).mkdir(parents=True, exist_ok=True)
+
+
+def create_remote_folders(config_obj=None):
+    """
+    Create remote folders for patent documents and annotated vectors using SFTP or SSH.
+
+    Parameters:
+    - root_path (str): The root path where the folders should be created remotely.
+    - project_name (str): The name of the project.
+    - config_obj (ConfigObject, optional): An object containing configuration details.
+                                           Should have 'hostname', 'username', 'password',
+                                           'share_sftp', and 'sftp_obj' attributes.
+
+    Returns:
+    None
+    """
+    root_path = config_obj.root_path
+    project_name = config_obj.proj_name
+    
+    
+    if config_obj is None:
+        raise ValueError("Config object cannot be None.")
+
+    hostname = config_obj.hostname
+    username = config_obj.username
+    password = config_obj.password
+    share_sftp = config_obj.share_sftp
+
+    if share_sftp:
+        sftp_obj = config_obj.sftp_obj
+    else:
+        ssh_client = paramiko.SSHClient()
+        ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        ssh_client.connect(hostname=hostname, username=username, password=password)
+        sftp_client = ssh_client.open_sftp()
+        sftp_obj = sftp_client
+
+    pat_doc_folder_path = root_path + "/" + project_name + "/pat_docs/"
+    pat_doc_annot_vec_folder_path = root_path + "/" + project_name + "/pat_docs_annot_vecs/"
+
+    # Create remote folders
+    sftp_obj.makedirs(pat_doc_folder_path)
+    sftp_obj.makedirs(pat_doc_annot_vec_folder_path)
+
+    if not share_sftp:
+        sftp_obj.close()
+        ssh_client.close()
+
+def create_folders_annot_csv_wrapper(csv_file_path, config_obj=None):
+    """
+    Create folders locally or remotely and read CSV data based on the configuration.
+
+    Parameters:
+    - root_path (str): The root path where the folders should be created.
+    - project_name (str): The name of the project.
+    - csv_file_path (str): The path to the CSV file.
+    - config_obj (ConfigObject, optional): An object containing configuration details.
+                                           Should have 'remote_dump', 'hostname', 'username',
+                                           'password', 'share_sftp', and 'sftp_obj' attributes.
+
+    Returns:
+    pd.DataFrame: The DataFrame containing the data read from the CSV file.
+    """
+    root_path = config_obj.root_path
+    project_name = config_obj.proj_name
+    
+    
+    # Create folders
+    if not config_obj or not config_obj.remote_dump:
+        # Create local folders
+        create_local_folders(root_path, project_name)
+    else:
+        # Create remote folders
+        create_remote_folders(root_path, project_name, config_obj=config_obj)
+
+    # Read CSV data based on the configuration
+    return read_csv_wrapper(csv_file_path, config_obj=config_obj)
+
+
+
 
 
 
