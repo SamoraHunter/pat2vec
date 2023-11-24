@@ -378,40 +378,6 @@ def __str__(self):
     return f"MyClass instance with parameters: {self.parameter1}, {self.parameter2}"
 
 
-def write_remote(path, csv_file, config_obj = None):
-    
-    hostname = config_obj.hostname
-    
-    username = config_obj.username
-    
-    password = config_obj.password
-    
-    share_sftp = config_obj.share_sftp
-    
-    sftp_obj = config_obj.sftp_obj 
-    
-    
-    #print("writing remote")
-    if(share_sftp == False):
-        ssh_client = paramiko.SSHClient()
-        ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        ssh_client.connect(hostname=hostname, username=username, password=password)
-
-        sftp_client = ssh_client.open_sftp()
-        sftp_obj = sftp_client
-
-
-    with sftp_obj.open(path, 'w') as file:
-        csv_file.to_csv(file)
-
-    if(share_sftp == False):
-        sftp_obj.close()
-        sftp_obj.close()
-        
-        
-
-
-
 
 import datetime as dt
 import os
@@ -722,41 +688,47 @@ def method2(self):
 
 def __str__(self):
     return f"MyClass instance with parameters: {self.parameter1}, {self.parameter2}"
+        
+        
 
+def write_remote(path, csv_file, config_obj=None):
+    """
+    Write a Pandas DataFrame to a remote file using SFTP or SSH.
 
-def write_remote(path, csv_file, config_obj = None):
-    
+    Parameters:
+    - path (str): The remote path where the file should be written.
+    - csv_file (pd.DataFrame): The DataFrame to be written to the remote file.
+    - config_obj (ConfigObject, optional): An object containing configuration details.
+                                           Should have 'hostname', 'username', 'password',
+                                           'share_sftp', and 'sftp_obj' attributes.
+
+    Returns:
+    None
+    """
+
+    if config_obj is None:
+        raise ValueError("Config object cannot be None.")
+
     hostname = config_obj.hostname
-    
     username = config_obj.username
-    
     password = config_obj.password
-    
     share_sftp = config_obj.share_sftp
-    if(share_sftp):
+
+    if share_sftp:
         sftp_obj = config_obj.sftp_obj
-    
-    
-    #print("writing remote")
-    if(share_sftp == False):
+    else:
         ssh_client = paramiko.SSHClient()
         ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         ssh_client.connect(hostname=hostname, username=username, password=password)
-
         sftp_client = ssh_client.open_sftp()
         sftp_obj = sftp_client
-
 
     with sftp_obj.open(path, 'w') as file:
         csv_file.to_csv(file)
 
-    if(share_sftp == False):
+    if not share_sftp:
         sftp_obj.close()
-        sftp_obj.close()
-        
-        
-
-
+        ssh_client.close()
 
 
 
