@@ -200,6 +200,9 @@ def dump_results(file_data, path, config_obj=None):
                 
                 
                 
+                
+                
+                
 
 def update_pbar(current_pat_client_id_code, start_time, stage_int, stage_str, t, config_obj, skipped_counter=None, **n_docs_to_annotate):
     #global colour_val
@@ -729,6 +732,32 @@ def write_remote(path, csv_file, config_obj=None):
     if not share_sftp:
         sftp_obj.close()
         ssh_client.close()
+
+
+def write_csv_wrapper(path, csv_file_data=None, config_obj=None):
+    """
+    Write CSV data to a file either locally or remotely based on the configuration.
+
+    Parameters:
+    - path (str): The path to the CSV file.
+    - csv_file_data (pd.DataFrame): The DataFrame containing the CSV data.
+    - config_obj (ConfigObject): An object containing configuration settings, including 'remote_dump'.
+
+    Returns:
+    None
+    """
+    remote_dump = config_obj.remote_dump
+
+    if not remote_dump:
+        # Write data locally
+        csv_file_data.to_csv(path, index=False)
+    else:
+        # Write data remotely using a custom function (write_remote)
+        write_remote(path, csv_file_data, config_obj=config_obj)
+            
+        
+    
+    
 
 
 
