@@ -757,6 +757,71 @@ def write_csv_wrapper(path, csv_file_data=None, config_obj=None):
             
         
     
+def read_remote(path, config_obj=None):
+    """
+    Read a remote CSV file using SFTP or SSH and return a Pandas DataFrame.
+
+    Parameters:
+    - path (str): The remote path from where the file should be read.
+    - config_obj (ConfigObject, optional): An object containing configuration details.
+                                           Should have 'hostname', 'username', 'password',
+                                           'share_sftp', and 'sftp_obj' attributes.
+
+    Returns:
+    pd.DataFrame: The DataFrame containing the data read from the remote CSV file.
+    """
+
+    if config_obj is None:
+        raise ValueError("Config object cannot be None.")
+
+    hostname = config_obj.hostname
+    username = config_obj.username
+    password = config_obj.password
+    share_sftp = config_obj.share_sftp
+
+    if share_sftp:
+        sftp_obj = config_obj.sftp_obj
+    else:
+        ssh_client = paramiko.SSHClient()
+        ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        ssh_client.connect(hostname=hostname, username=username, password=password)
+        sftp_client = ssh_client.open_sftp()
+        sftp_obj = sftp_client
+
+    with sftp_obj.open(path, 'r') as file:
+        # Read CSV content into a Pandas DataFrame
+        csv_content = file.read().decode('utf-8')
+        df = pd.read_csv(StringIO(csv_content))
+
+    if not share_sftp:
+        sftp_obj.close()
+        ssh_client.close()
+
+    return df
+
+
+def read_csv_wrapper(path, config_obj=None):
+    """
+    Read CSV data from a file either locally or remotely based on the configuration.
+
+    Parameters:
+    - path (str): The path to the CSV file.
+    - config_obj (ConfigObject): An object containing configuration settings, including 'remote_dump'.
+
+    Returns:
+    pd.DataFrame: The DataFrame containing the data read from the CSV file.
+    """
+    remote_dump = config_obj.remote_dump
+
+    if not remote_dump:
+        # Read data locally
+        df = pd.read_csv(path)
+    else:
+        # Read data remotely using a custom function (read_remote)
+        df = read_remote(path, config_obj=config_obj)
+
+    return df
+
     
 
 
