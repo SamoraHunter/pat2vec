@@ -1,10 +1,10 @@
-from datetime import datetime
+import sys
+from datetime import datetime, timedelta
 from pathlib import Path
+
 import pandas as pd
 import paramiko
-from datetime import datetime, timedelta
 
-import sys
 #stuff paths for portability
 sys.path.insert(0,'/home/aliencat/samora/gloabl_files')
 sys.path.insert(0,'/data/AS/Samora/gloabl_files')
@@ -53,6 +53,7 @@ class config_class:
                  global_end_month=None,
                  skip_additional_listdir = False,
                  start_time = None,
+                 pre_path = None
                  
                  ):
         
@@ -92,6 +93,8 @@ class config_class:
         self.skipped_counter = 0 #init start
         
         self.medcat = medcat
+        
+        self.pre_path = pre_path
         
         if(start_time ==None):
             self.start_time = datetime.now()
@@ -199,45 +202,37 @@ class config_class:
         
         if(self.remote_dump == False):
             self.sftp_obj = None
-            
-        else:
-                      
-            self.ssh_client = paramiko.SSHClient()
-            self.ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-            self.ssh_client.connect(hostname=hostname, username=username, password=password, timeout=60)
-
-            self.sftp_obj = self.ssh_client.open_sftp()
-
-            
+        
         
         if(self.remote_dump):
 
-
-            pre_path = f'/mnt/hdd1/samora/{self.proj_name}/'
+            if(self.pre_path == None):
+                
+                pre_path = f'/mnt/hdd1/samora/{self.proj_name}/'
+                print(f"sftp Pre_path: {pre_path}")
+                
+            else:
+                print(f"sftp Pre_path: {pre_path}")
 
             # Set the hostname, username, and password for the remote machine
             
-            if(not self.aliencat or self.dgx):
-                self.hostname = '%HOSTIPADDRESS%'
-                
-            if(self.aliencat and not self.dgx):
-                self.hostname = 'localhost'
+            self.hostname = self.hostname
             
-            username = '%USERNAME%'
-            password = '%PASSWORD%'
+            username = self.username
+            password = self.password
 
             # Create an SSH client and connect to the remote machine
             self.ssh_client = paramiko.SSHClient()
             self.ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
             self.ssh_client.connect(hostname=self.hostname, username=self.username, password=self.password)
 
-            self.sftp_client = ssh_client.open_sftp()
+            self.sftp_client = self.ssh_client.open_sftp()
 
             if(self.remote_dump):
                 try:
-                    sftp_client.chdir(pre_path)  # Test if remote_path exists
+                    self.sftp_client.chdir(pre_path)  # Test if remote_path exists
                 except IOError:
-                    sftp_client.mkdir(pre_path)  # Create remote_path
+                    self.sftp_client.mkdir(pre_path)  # Create remote_path
 
 
 
@@ -253,19 +248,19 @@ class config_class:
 
             else:
                 try:
-                    sftp_client.chdir(pre_annotation_path)  # Test if remote_path exists
+                    self.sftp_client.chdir(pre_annotation_path)  # Test if remote_path exists
                 except IOError:
-                    sftp_client.mkdir(pre_annotation_path)  # Create remote_path
+                    self.sftp_client.mkdir(pre_annotation_path)  # Create remote_path
 
                 try:
-                    sftp_client.chdir(pre_annotation_path_mrc)  # Test if remote_path exists
+                    self.sftp_client.chdir(pre_annotation_path_mrc)  # Test if remote_path exists
                 except IOError:
-                    sftp_client.mkdir(pre_annotation_path_mrc)  # Create remote_path
+                    self.sftp_client.mkdir(pre_annotation_path_mrc)  # Create remote_path
                     
                 try:
-                    sftp_client.chdir(current_pat_line_path)  # Test if remote_path exists
+                    self.sftp_client.chdir(current_pat_line_path)  # Test if remote_path exists
                 except IOError:
-                    sftp_client.mkdir(current_pat_line_path)  # Create remote_path
+                    self.sftp_client.mkdir(current_pat_line_path)  # Create remote_path
         else:
             self.sftp_client = None
         
