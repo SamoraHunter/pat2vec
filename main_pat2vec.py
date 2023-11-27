@@ -1,5 +1,6 @@
 
 import sys
+
 #stuff paths for portability
 sys.path.insert(0,'/home/aliencat/samora/gloabl_files')
 sys.path.insert(0,'/data/AS/Samora/gloabl_files')
@@ -9,14 +10,9 @@ sys.path.insert(0, '/home/cogstack/samora/_data/gloabl_files/pat2vec')
 import csv
 import multiprocessing
 import os
+import random
 #import tqdm
 import re
-
-
-from pat2vec_pat_list.get_patient_treatment_list import get_all_patients_list
-
-
-import random
 import warnings
 from csv import writer
 from multiprocessing import Pool
@@ -33,6 +29,7 @@ from pat2vec_get_methods.current_pat_annotations_to_file import (
     get_current_pat_annotations_batch_to_file,
     get_current_pat_annotations_mct_batch_to_file)
 from pat2vec_main_methods.main_batch import main_batch
+from pat2vec_pat_list.get_patient_treatment_list import get_all_patients_list
 from patvec_get_batch_methods.main import (get_pat_batch_bloods,
                                            get_pat_batch_bmi,
                                            get_pat_batch_demo,
@@ -43,9 +40,10 @@ from patvec_get_batch_methods.main import (get_pat_batch_bloods,
                                            get_pat_batch_news,
                                            get_pat_batch_obs)
 from util import config_pat2vec
-from util.methods_get import filter_stripped_list, generate_date_list, list_dir_wrapper, update_pbar, create_folders
+from util.methods_get import (create_folders, filter_stripped_list,
+                              generate_date_list, list_dir_wrapper,
+                              update_pbar)
 from util.methods_get_medcat import get_cat
-
 
 color_bars = [Fore.RED,
     Fore.GREEN,
@@ -153,7 +151,7 @@ class main:
         self.logger = logging.getLogger(__name__)
 
         # Create a handler that writes log messages to a file with a timestamp
-        log_file = f"{log_folder}/logfile_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
+        log_file = f"{log_folder}/logfile_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
         file_handler = logging.FileHandler(log_file)
 
         # Create a formatter to include timestamp in the log messages
