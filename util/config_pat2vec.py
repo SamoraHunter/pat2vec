@@ -1,3 +1,4 @@
+import os
 import sys
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -131,24 +132,25 @@ class config_class:
             # root_path = f'/mnt/hdd1/samora/{proj_name}/'
             # root_path = f'/home/jovyan/work/clinical_coding/{proj_name}/'
             # root_path = f'/home/cogstack/samora/_data/clinical_coding/{proj_name}/'
-            root_path = f'{current_path_dir}{proj_name}/'
+            if(self.root_path == None):
+                self.root_path = f'{os.getcwd()}/{self.proj_name}/'
             
-            pre_annotation_path = root_path + self.pre_annotation_path
+            self.pre_annotation_path = self.root_path + self.pre_annotation_path
             
-            pre_annotation_path_mrc = root_path + self.pre_annotation_path_mrc
+            self.pre_annotation_path_mrc = self.root_path + self.pre_annotation_path_mrc
             
-            Path(pre_annotation_path).mkdir(parents=True, exist_ok=True)
-            Path(pre_annotation_path_mrc).mkdir(parents=True, exist_ok=True)
+            Path(self.pre_annotation_path).mkdir(parents=True, exist_ok=True)
+            Path(self.pre_annotation_path_mrc).mkdir(parents=True, exist_ok=True)
 
-            print(pre_annotation_path)
-            print(pre_annotation_path_mrc)
+            print(self.pre_annotation_path)
+            print(self.pre_annotation_path_mrc)
             
             
-        self.current_pat_line_path = f"current_pat_lines_parts{suffix}/"
+        self.current_pat_line_path = f"current_pat_lines_parts{self.suffix}/"
 
         if(remote_dump==False):
             
-            self.current_pat_line_path = root_path + self.current_pat_line_path
+            self.current_pat_line_path = self.root_path + self.current_pat_line_path
             
             self.current_pat_lines_path = self.current_pat_line_path
             
@@ -210,11 +212,11 @@ class config_class:
 
             if(self.root_path == None):
                 
-                root_path = f'/mnt/hdd1/samora/{self.proj_name}/'
-                print(f"sftp root_path: {root_path}")
+                self.root_path = f'/mnt/hdd1/samora/{self.proj_name}/'
+                print(f"sftp root_path: {self.root_path}")
                 
             else:
-                print(f"sftp root_path: {root_path}")
+                print(f"sftp root_path: {self.root_path}")
 
             # Set the hostname, username, and password for the remote machine
             
@@ -232,39 +234,39 @@ class config_class:
 
             if(self.remote_dump):
                 try:
-                    self.sftp_client.chdir(root_path)  # Test if remote_path exists
+                    self.sftp_client.chdir(self.root_path)  # Test if remote_path exists
                 except IOError:
-                    self.sftp_client.mkdir(root_path)  # Create remote_path
+                    self.sftp_client.mkdir(self.root_path)  # Create remote_path
 
 
 
-            pre_annotation_path = f"{root_path}{self.pre_annotation_path}"
-            pre_annotation_path_mrc = f"{root_path}{self.pre_annotation_path_mrc}"
-            current_pat_line_path = f"{root_path}{self.current_pat_line_path}"
-            current_pat_lines_path = current_pat_line_path
+            self.pre_annotation_path = f"{self.root_path}{self.pre_annotation_path}"
+            self.pre_annotation_path_mrc = f"{self.root_path}{self.pre_annotation_path_mrc}"
+            self.current_pat_line_path = f"{self.root_path}{self.current_pat_line_path}"
+            self.current_pat_lines_path = self.current_pat_line_path
             
             
             if(self.remote_dump==False):
                 Path(self.current_pat_annot_path).mkdir(parents=True, exist_ok=True)
-                Path(pre_annotation_path_mrc).mkdir(parents=True, exist_ok=True)
+                Path(self.pre_annotation_path_mrc).mkdir(parents=True, exist_ok=True)
 
             elif( root_path == f'/mnt/hdd1/samora/{self.proj_name}/'):
                 
                 
                 try:
-                    self.sftp_client.chdir(pre_annotation_path)  # Test if remote_path exists
+                    self.sftp_client.chdir(self.pre_annotation_path)  # Test if remote_path exists
                 except IOError:
-                    self.sftp_client.mkdir(pre_annotation_path)  # Create remote_path
+                    self.sftp_client.mkdir(self.pre_annotation_path)  # Create remote_path
 
                 try:
-                    self.sftp_client.chdir(pre_annotation_path_mrc)  # Test if remote_path exists
+                    self.sftp_client.chdir(self.pre_annotation_path_mrc)  # Test if remote_path exists
                 except IOError:
-                    self.sftp_client.mkdir(pre_annotation_path_mrc)  # Create remote_path
+                    self.sftp_client.mkdir(self.pre_annotation_path_mrc)  # Create remote_path
                     
                 try:
-                    self.sftp_client.chdir(current_pat_line_path)  # Test if remote_path exists
+                    self.sftp_client.chdir(self.current_pat_line_path)  # Test if remote_path exists
                 except IOError:
-                    self.sftp_client.mkdir(current_pat_line_path)  # Create remote_path
+                    self.sftp_client.mkdir(self.current_pat_line_path)  # Create remote_path
             
             self.sftp_obj = self.sftp_client        
                     
