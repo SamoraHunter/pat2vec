@@ -1,7 +1,42 @@
-import pandas as pd
-import random
 import pickle
+import random
+import re
 from typing import List
+
+import pandas as pd
+
+# def extract_treatment_id_list_from_docs(config_obj):
+#     """
+#     Retrieves a list of unique client IDs from a treatment document specified in the configuration.
+
+#     Parameters:
+#     - config_obj (object): An object containing configuration parameters.
+#         - treatment_doc_filename (str): The filename of the treatment document (CSV or XLSX format).
+
+#     Returns:
+#     - list: A list of unique client IDs from the treatment document.
+#     """
+    
+#     # Extract the treatment document filename from the configuration object
+#     treatment_doc_filename = config_obj.treatment_doc_filename
+    
+#     # Determine the file format based on the file extension
+#     file_extension = treatment_doc_filename.split('.')[-1].lower()
+    
+#     # Read the treatment document into a pandas DataFrame based on the file format
+#     if file_extension == 'csv':
+#         docs = pd.read_csv(treatment_doc_filename)
+#     elif file_extension in ['xlsx', 'xls']:
+#         docs = pd.read_excel(treatment_doc_filename)
+#     else:
+#         raise ValueError(f"Unsupported file format: {file_extension}. Please provide a CSV or XLSX file.")
+    
+#     # Extract the unique client IDs from the document
+#     treatment_client_id_list = list(docs[config_obj.patient_id_column_name].unique())
+    
+#     return treatment_client_id_list
+
+
 
 def extract_treatment_id_list_from_docs(config_obj):
     """
@@ -9,25 +44,58 @@ def extract_treatment_id_list_from_docs(config_obj):
 
     Parameters:
     - config_obj (object): An object containing configuration parameters.
-        - treatment_doc_filename (str): The filename of the treatment document (CSV format).
+        - treatment_doc_filename (str): The filename of the treatment document (CSV or XLSX format).
+        - patient_id_column_name (str): The column name for patient IDs. If 'auto', use regex to find the most likely column.
 
     Returns:
     - list: A list of unique client IDs from the treatment document.
     """
-    
-    
-    
+
     # Extract the treatment document filename from the configuration object
     treatment_doc_filename = config_obj.treatment_doc_filename
-    
-    
-    
-    # Read the treatment document into a pandas DataFrame
-    docs = pd.read_csv(treatment_doc_filename)
-    
+
+    # Determine the file format based on the file extension
+    file_extension = treatment_doc_filename.split('.')[-1].lower()
+
+    # Read the treatment document into a pandas DataFrame based on the file format
+    if file_extension == 'csv':
+        docs = pd.read_csv(treatment_doc_filename)
+    elif file_extension in ['xlsx', 'xls']:
+        docs = pd.read_excel(treatment_doc_filename)
+    else:
+        raise ValueError(f"Unsupported file format: {file_extension}. Please provide a CSV or XLSX file.")
+
+    # If patient_id_column_name is 'auto', use regex to find the most likely column
+    if config_obj.patient_id_column_name == 'auto':
+        # Define regex patterns for sample IDs
+        sample_id_patterns = ['P\d{6}', 'V\d{6}']
+
+        # Iterate through columns and find the one with the most matches to sample ID patterns
+        best_match_column = None
+        max_matches = 0
+        for column in docs.columns:
+            column_matches = sum(docs[column].astype(str).str.contains('|'.join(sample_id_patterns), na=False))
+            if column_matches > max_matches:
+                max_matches = column_matches
+                best_match_column = column
+
+        if best_match_column is not None:
+            if(config_obj.verbosity > 2):
+                print("best_match_column:", best_match_column)
+            config_obj.patient_id_column_name = best_match_column
+        else:
+            if(config_obj.verbosity > 2):
+                print("best_match_column: None, attempting default client_idcode")
+            config_obj.patient_id_column_name = 'client_idcode'
+            
+            #raise ValueError("Unable to automatically determine patient ID column.")
+
+    #drop the nan in column
+    docs[config_obj.patient_id_column_name].dropna(inplace=True)
+
     # Extract the unique client IDs from the document
-    treatment_client_id_list = list(docs['client_idcode'].unique())
-    
+    treatment_client_id_list = list(docs[config_obj.patient_id_column_name].unique())
+
     return treatment_client_id_list
 
 

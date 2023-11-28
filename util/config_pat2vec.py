@@ -55,7 +55,8 @@ class config_class:
                  skip_additional_listdir = False,
                  start_time = None,
                  root_path = None,
-                 negate_biochem = False
+                 negate_biochem = False,
+                 patient_id_column_name='client_idcode'
                  
                  ):
         
@@ -70,6 +71,7 @@ class config_class:
         self.main_options = main_options
         
         self.negate_biochem = negate_biochem
+        self.patient_id_column_name = patient_id_column_name
         
         
         self.aliencat = aliencat

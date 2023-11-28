@@ -1,5 +1,6 @@
 
 import time
+
 from IPython.display import display
 from IPython.utils import io
 
@@ -18,7 +19,6 @@ def get_current_pat_annotations_to_file(current_pat_client_id_code, target_date_
     
     store_annot = config_obj.store_annot
     
-    
     start_time = time.time()
     
     file_exists = exist_check(pre_annotation_path + current_pat_client_id_code+"_"+str(target_date_range), config_obj = config_obj)
@@ -32,7 +32,6 @@ def get_current_pat_annotations_to_file(current_pat_client_id_code, target_date_
                                                                   term_name = "client_idcode.keyword", 
                                                                   entered_list = [current_pat_client_id_code],
                                                                 search_string = f'updatetime:[{start_year}-{start_month}-{start_day} TO {end_year}-{end_month}-{end_day}] ')
-
 
 
         n_docs_to_annotate = len(current_pat_docs)

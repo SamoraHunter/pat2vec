@@ -502,7 +502,7 @@ class main:
             
             
         if current_pat_client_id_code not in stripped_list_start:
-            if self.config_obj.verbosity > 0:
+            if self.config_obj.verbosity >= 6:
                 print(f"Getting batches for patient {i}...")
 
             
