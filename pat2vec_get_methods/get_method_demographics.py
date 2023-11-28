@@ -1,8 +1,9 @@
-import pandas as pd
-import numpy as np
-import os, sys
-from IPython.display import display
+import os
+import sys
 
+import numpy as np
+import pandas as pd
+from IPython.display import display
 
 sys.path.insert(0,'/home/aliencat/samora/gloabl_files')
 sys.path.insert(0,'/data/AS/Samora/gloabl_files')
@@ -10,10 +11,9 @@ sys.path.insert(0,'/home/jovyan/work/gloabl_files')
 sys.path.insert(0,'/home/cogstack/samora/gloabl_files')
 sys.path.insert(0,'/home/cogstack/samora/_data/gloabl_files')
 from COGStats import *
+from COGStats import EthnicityAbstractor, append_age_at_record_series
 
 from util.methods_get import get_demographics3_batch
-
-
 
 
 def get_demo(current_pat_client_id_code, target_date_range, pat_batch, config_obj=None):
@@ -62,20 +62,6 @@ def get_demo(current_pat_client_id_code, target_date_range, pat_batch, config_ob
                    'Female': 0,
                    'male': 1,
                    'female':0}
-
-
-        #         def is_dead(line):
-        #             try:
-        #                 if(type(line)==str or type(line)==float):
-        #                     return np.isnan(line)
-        #                 else:
-        #                     return line.isnull
-        #             except Exception as e:
-        #                 print(e)
-        #                 print(type(line))
-        #                 print(line)
-        #         def is_dead(line):
-        #             return line.isna()
 
 
         current_pat_demo['male'] = current_pat_demo['client_gendercode'].map(sex_map)

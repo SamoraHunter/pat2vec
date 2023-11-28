@@ -4,6 +4,7 @@ from util.methods_get import get_start_end_year_month  # replace 'your_module' w
 from IPython.display import display
 #cogstack object pass?
 
+
 def get_demographics3(patlist, target_date_range, cohort_searcher_with_terms_and_search):
     """
     Get demographics information for a list of patients within a specified date range.

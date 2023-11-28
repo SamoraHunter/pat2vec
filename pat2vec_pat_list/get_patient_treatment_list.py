@@ -5,38 +5,6 @@ from typing import List
 
 import pandas as pd
 
-# def extract_treatment_id_list_from_docs(config_obj):
-#     """
-#     Retrieves a list of unique client IDs from a treatment document specified in the configuration.
-
-#     Parameters:
-#     - config_obj (object): An object containing configuration parameters.
-#         - treatment_doc_filename (str): The filename of the treatment document (CSV or XLSX format).
-
-#     Returns:
-#     - list: A list of unique client IDs from the treatment document.
-#     """
-    
-#     # Extract the treatment document filename from the configuration object
-#     treatment_doc_filename = config_obj.treatment_doc_filename
-    
-#     # Determine the file format based on the file extension
-#     file_extension = treatment_doc_filename.split('.')[-1].lower()
-    
-#     # Read the treatment document into a pandas DataFrame based on the file format
-#     if file_extension == 'csv':
-#         docs = pd.read_csv(treatment_doc_filename)
-#     elif file_extension in ['xlsx', 'xls']:
-#         docs = pd.read_excel(treatment_doc_filename)
-#     else:
-#         raise ValueError(f"Unsupported file format: {file_extension}. Please provide a CSV or XLSX file.")
-    
-#     # Extract the unique client IDs from the document
-#     treatment_client_id_list = list(docs[config_obj.patient_id_column_name].unique())
-    
-#     return treatment_client_id_list
-
-
 
 def extract_treatment_id_list_from_docs(config_obj):
     """
