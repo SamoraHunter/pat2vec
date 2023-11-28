@@ -1,6 +1,6 @@
 
 import time
-
+from IPython.display import display
 from IPython.utils import io
 
 from util.methods_get import (dump_results, exist_check,

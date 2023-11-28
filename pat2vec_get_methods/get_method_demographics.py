@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import os, sys
+from IPython.display import display
 
 
 sys.path.insert(0,'/home/aliencat/samora/gloabl_files')
@@ -105,6 +106,6 @@ def get_demo(current_pat_client_id_code, target_date_range, pat_batch, config_ob
 
         current_pat_demo['male'] = current_pat_demo['male'].astype(float)
 
-
+        if config_obj.verbosity >= 6: display(current_pat_demo)
 
         return current_pat_demo

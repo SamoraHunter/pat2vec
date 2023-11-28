@@ -1,6 +1,7 @@
 
 import numpy as np
 import pandas as pd
+from IPython.display import display
 
 from util.methods_get import (filter_dataframe_by_timestamp,
                               get_start_end_year_month)
@@ -83,6 +84,9 @@ def get_vte_status(current_pat_client_id_code, target_date_range, pat_batch, con
         features[f'{term}_max'] = np.nan
         features[f'{term}_min'] = np.nan
         features[f'{term}_n'] = np.nan   
+
+    
+    if config_obj.verbosity >= 6: display(features)
 
     return features
 

@@ -3,9 +3,10 @@
 import pickle
 
 import numpy as np
-import paramiko
-from IPython.utils import io
 import pandas as pd
+import paramiko
+from IPython.display import display
+from IPython.utils import io
 
 from util.methods_get import (dump_results, exist_check,
                               filter_dataframe_by_timestamp,
@@ -377,4 +378,7 @@ def get_current_pat_annotations(current_pat_client_id_code, target_date_range, p
     #print(f"Made {entry_counter} entry_counter  entries")
     #print(f"Made {meta_counter} meta_counter entries")
             #print("done")
+    
+    if config_obj.verbosity >= 6: display(df_pat_target)
+            
     return df_pat_target

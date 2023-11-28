@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+from IPython.display import display
 
 from util.methods_get import (filter_dataframe_by_timestamp,
                               get_start_end_year_month)
@@ -101,5 +102,7 @@ def get_bmi_features(current_pat_client_id_code, target_date_range, pat_batch, c
             bmi_features[f'{term}_std'] = np.nan
             bmi_features[f'{term}_max'] = np.nan
             bmi_features[f'{term}_min'] = np.nan
+            
+    if config_obj.verbosity >= 6: display(bmi_features)
 
     return bmi_features

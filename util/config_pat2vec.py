@@ -54,7 +54,8 @@ class config_class:
                  global_end_month=None,
                  skip_additional_listdir = False,
                  start_time = None,
-                 root_path = None
+                 root_path = None,
+                 negate_biochem = False
                  
                  ):
         
@@ -67,6 +68,8 @@ class config_class:
         
         self.proj_name = proj_name
         self.main_options = main_options
+        
+        self.negate_biochem = negate_biochem
         
         
         self.aliencat = aliencat

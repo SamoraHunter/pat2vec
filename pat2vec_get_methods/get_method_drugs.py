@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 import numpy as np
 import pandas as pd
 from scipy import stats
+from IPython.display import display
 
 from util.methods_get import (convert_date, filter_dataframe_by_timestamp,
                               get_start_end_year_month)
@@ -146,6 +147,7 @@ def get_current_pat_drugs(current_pat_client_id_code, target_date_range, pat_bat
             df_unique_filtered.at[i,col_name+"_days-between-first-last-drug"] = agg_val     
 
 
+    if config_obj.verbosity >= 6: display(df_unique_filtered)
 
 
 

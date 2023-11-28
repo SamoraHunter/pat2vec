@@ -1,30 +1,32 @@
  
  
 import time
-
 import traceback
 
 import pandas as pd
+
 from pat2vec_get_methods.get_method_bed import get_bed
 from pat2vec_get_methods.get_method_bloods import get_current_pat_bloods
 from pat2vec_get_methods.get_method_bmi import get_bmi_features
 from pat2vec_get_methods.get_method_core02 import get_core_02
 from pat2vec_get_methods.get_method_core_resus import get_core_resus
-from pat2vec_get_methods.get_method_current_pat_annotations_mrc_cs import get_current_pat_annotations_mrc_cs
+from pat2vec_get_methods.get_method_current_pat_annotations_mrc_cs import \
+    get_current_pat_annotations_mrc_cs
 from pat2vec_get_methods.get_method_demographics import get_demo
 #from pat2vec_get_methods.get_method_demo import get_demographics3
-from pat2vec_get_methods.get_method_diagnostics import get_current_pat_diagnostics
+from pat2vec_get_methods.get_method_diagnostics import \
+    get_current_pat_diagnostics
 from pat2vec_get_methods.get_method_drugs import get_current_pat_drugs
 from pat2vec_get_methods.get_method_hosp_site import get_hosp_site
 from pat2vec_get_methods.get_method_news import get_news
-from pat2vec_get_methods.get_method_pat_annotations import get_current_pat_annotations
+from pat2vec_get_methods.get_method_pat_annotations import \
+    get_current_pat_annotations
 from pat2vec_get_methods.get_method_smoking import get_smoking
 from pat2vec_get_methods.get_method_vte_status import get_vte_status
+from util.methods_get import (enum_target_date_vector, list_dir_wrapper,
+                              update_pbar, write_remote)
 
-from util.methods_get import enum_target_date_vector, list_dir_wrapper, update_pbar, write_remote
 
- 
- 
 def main_batch(current_pat_client_id_code,
                target_date_range,
                batch_demo = None,
@@ -117,31 +119,31 @@ def main_batch(current_pat_client_id_code,
                 update_pbar(p_bar_entry, start_time, 0, 'demo', t, config_obj)
 
                 if main_options.get('demo'):
-                    current_pat_demo = get_demo(current_pat_client_id_code, target_date_range, batch_demo, config_obj)
+                    current_pat_demo = get_demo(current_pat_client_id_code, target_date_range, batch_demo, config_obj=config_obj)
                     patient_vector.append(current_pat_demo)
 
                 update_pbar(p_bar_entry, start_time, 1, 'bmi', t, config_obj)
 
                 if main_options.get('bmi'):
-                    bmi_features = get_bmi_features(current_pat_client_id_code, target_date_range, batch_bmi, config_obj)
+                    bmi_features = get_bmi_features(current_pat_client_id_code, target_date_range, batch_bmi, config_obj=config_obj)
                     patient_vector.append(bmi_features)
 
                 update_pbar(p_bar_entry, start_time, 2, 'bloods', t, config_obj)
 
                 if main_options.get('bloods'):
-                    current_pat_bloods = get_current_pat_bloods(current_pat_client_id_code, target_date_range, batch_bloods,config_obj)
+                    current_pat_bloods = get_current_pat_bloods(current_pat_client_id_code, target_date_range, batch_bloods,config_obj=config_obj)
                     patient_vector.append(current_pat_bloods)
 
                 update_pbar(p_bar_entry, start_time, 3, 'drugs', t, config_obj)
 
                 if main_options.get('drugs'):
-                    current_pat_drugs = get_current_pat_drugs(current_pat_client_id_code, target_date_range, batch_drugs, config_obj)
+                    current_pat_drugs = get_current_pat_drugs(current_pat_client_id_code, target_date_range, batch_drugs, config_obj=config_obj)
                     patient_vector.append(current_pat_drugs)
 
                 update_pbar(p_bar_entry, start_time, 4, 'diagnostics', t, config_obj)
 
                 if main_options.get('diagnostics'):
-                    current_pat_diagnostics = get_current_pat_diagnostics(current_pat_client_id_code, target_date_range, batch_diagnostics, config_obj)
+                    current_pat_diagnostics = get_current_pat_diagnostics(current_pat_client_id_code, target_date_range, batch_diagnostics, config_obj=config_obj)
                     patient_vector.append(current_pat_diagnostics)
                     
                     
@@ -171,21 +173,21 @@ def main_batch(current_pat_client_id_code,
                 update_pbar(p_bar_entry, start_time, 1, 'core_02', t, config_obj)
 
                 if main_options.get('core_02'):
-                    df_pat_target = get_core_02(current_pat_client_id_code, target_date_range, batch_core_02, config_obj,
+                    df_pat_target = get_core_02(current_pat_client_id_code, target_date_range, batch_core_02, config_obj=config_obj,
                                                                        cohort_searcher_with_terms_and_search = cohort_searcher_with_terms_and_search)
                     patient_vector.append(df_pat_target)
 
                 update_pbar(p_bar_entry, start_time, 2, 'bed', t, config_obj)
 
                 if main_options.get('bed'):
-                    df_pat_target = get_bed(current_pat_client_id_code, target_date_range, batch_bednumber, config_obj,
+                    df_pat_target = get_bed(current_pat_client_id_code, target_date_range, batch_bednumber, config_obj=config_obj,
                                                                        cohort_searcher_with_terms_and_search = cohort_searcher_with_terms_and_search)
                     patient_vector.append(df_pat_target)
 
                 update_pbar(p_bar_entry, start_time, 3, 'vte_status', t, config_obj)
 
                 if main_options.get('vte_status'):
-                    df_pat_target = get_vte_status(current_pat_client_id_code, target_date_range, batch_vte, config_obj,
+                    df_pat_target = get_vte_status(current_pat_client_id_code, target_date_range, batch_vte, config_obj=config_obj,
                                                                        cohort_searcher_with_terms_and_search = cohort_searcher_with_terms_and_search)
                     patient_vector.append(df_pat_target)
 
@@ -199,21 +201,21 @@ def main_batch(current_pat_client_id_code,
                 update_pbar(p_bar_entry, start_time, 1, 'core_resus', t, config_obj)
 
                 if main_options.get('core_resus'):
-                    df_pat_target = get_core_resus(current_pat_client_id_code, target_date_range, batch_resus, config_obj,
+                    df_pat_target = get_core_resus(current_pat_client_id_code, target_date_range, batch_resus, config_obj=config_obj,
                                                                        cohort_searcher_with_terms_and_search = cohort_searcher_with_terms_and_search)
                     patient_vector.append(df_pat_target)
 
                 update_pbar(p_bar_entry, start_time, 2, 'news', t, config_obj)
 
                 if main_options.get('news'):
-                    df_pat_target = get_news(current_pat_client_id_code, target_date_range, batch_news, config_obj,
+                    df_pat_target = get_news(current_pat_client_id_code, target_date_range, batch_news, config_obj=config_obj,
                                                                        cohort_searcher_with_terms_and_search = cohort_searcher_with_terms_and_search)
                     patient_vector.append(df_pat_target)
                 
                 update_pbar(p_bar_entry, start_time, 2, 'smoking', t, config_obj)
 
                 if main_options.get('smoking'):
-                    df_pat_target = get_smoking(current_pat_client_id_code, target_date_range, batch_smoking, config_obj,
+                    df_pat_target = get_smoking(current_pat_client_id_code, target_date_range, batch_smoking, config_obj=config_obj,
                                                                        cohort_searcher_with_terms_and_search = cohort_searcher_with_terms_and_search)
                     patient_vector.append(df_pat_target)
                     
@@ -248,7 +250,7 @@ def main_batch(current_pat_client_id_code,
                     
                     if(multi_process == True):
                         
-                        write_remote(output_path, pat_concatted, config_obj)
+                        write_remote(output_path, pat_concatted, config_obj=config_obj)
                     else:
                         with sftp_client.open(output_path, 'w') as file:
                             pat_concatted.to_csv(file)

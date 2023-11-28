@@ -1,7 +1,7 @@
 import pandas as pd
 #from your_module import cohort_searcher_with_terms_and_search  # replace 'your_module' with the actual module name containing cohort_searcher_with_terms_and_search
 from util.methods_get import get_start_end_year_month  # replace 'your_module' with the actual module name containing get_start_end_year_month
-
+from IPython.display import display
 #cogstack object pass?
 
 def get_demographics3(patlist, target_date_range, cohort_searcher_with_terms_and_search):
@@ -40,6 +40,8 @@ def get_demographics3(patlist, target_date_range, cohort_searcher_with_terms_and
     else:
         demo = pd.DataFrame(data=None, columns=None)
         demo['client_idcode'] = patlist
+        
+        
         return demo
 
 # # Example use:

@@ -5,6 +5,7 @@ import numpy as np
 import paramiko
 from IPython.utils import io
 import pandas as pd
+from IPython.display import display
 
 from util.methods_get import (dump_results, exist_check,
                               filter_dataframe_by_timestamp,
@@ -358,4 +359,6 @@ def get_current_pat_annotations_mrc_cs(current_pat_client_id_code, target_date_r
     #print(f"Made {entry_counter} entry_counter  entries")
     #print(f"Made {meta_counter} meta_counter entries")
             #print("done")
+    if config_obj.verbosity >= 6: display(df_pat_target)
+            
     return df_pat_target

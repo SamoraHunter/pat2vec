@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+from IPython.display import display
 
 from util.methods_get import (filter_dataframe_by_timestamp,
                               get_start_end_year_month)
@@ -68,5 +69,7 @@ def get_smoking(current_pat_client_id_code, target_date_range, pat_batch, config
         features = pd.DataFrame(data = [current_pat_client_id_code] , columns =['client_idcode']).copy()
         features[f'{term}_current'] = np.nan
         features[f'{term}_non'] = np.nan
+        
+    if config_obj.verbosity >= 6: display(features)
 
     return features

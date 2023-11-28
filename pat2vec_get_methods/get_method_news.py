@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+from IPython.display import display
 
 from util.methods_get import (filter_dataframe_by_timestamp,
                               get_start_end_year_month)
@@ -411,6 +412,10 @@ def get_news(current_pat_client_id_code, target_date_range, pat_batch, config_ob
         news_features[f'news_{term}_max'] = np.nan
         news_features[f'news_{term}_min'] = np.nan
         news_features[f'news_{term}_n'] = np.nan     
+
+    if(config_obj.verbosity >=6):
+        display(news_features)
+
 
     return news_features
 

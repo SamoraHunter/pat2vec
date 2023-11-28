@@ -1,4 +1,5 @@
 import pandas as pd
+from IPython.display import display
 
 from util.methods_get import (filter_dataframe_by_timestamp,
                               get_start_end_year_month)
@@ -138,5 +139,7 @@ def get_core_02(current_pat_client_id_code, target_date_range, pat_batch, config
 
             features[f'{term.replace("-", "_").replace("%", "pct")}'] = 1
             #features[f'{bed_term}'] = 1
+
+    if config_obj.verbosity >= 6: display(features)
 
     return features

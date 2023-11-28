@@ -1,11 +1,12 @@
 import numpy as np
 import pandas as pd
+from IPython.display import display
 
 from util.methods_get import (filter_dataframe_by_timestamp,
                               get_start_end_year_month)
 
 
-def get_core_resus(current_pat_client_id_code, target_date_range, pat_batch, batch_mode=False, cohort_searcher_with_terms_and_search=None):
+def get_core_resus(current_pat_client_id_code, target_date_range, pat_batch, batch_mode=False, cohort_searcher_with_terms_and_search=None, config_obj = None):
     """
     Retrieves CORE_RESUS_STATUS features for a given patient within a specified date range.
 
@@ -19,6 +20,8 @@ def get_core_resus(current_pat_client_id_code, target_date_range, pat_batch, bat
     Returns:
     - pd.DataFrame: A DataFrame containing CORE_RESUS_STATUS features for the specified patient.
     """
+    batch_mode = config_obj.batch_mode
+    
     start_year, start_month, end_year, end_month, start_day, end_day = get_start_end_year_month(target_date_range)
 
     if batch_mode:
@@ -60,8 +63,11 @@ def get_core_resus(current_pat_client_id_code, target_date_range, pat_batch, bat
         features[f'{term}_For cardiopulmonary resuscitation'] = len(features_data[features_data['observation_valuetext_analysed'] == 'For cardiopulmonary resuscitation'])
         features[f'{term}_Not for cardiopulmonary resuscitation'] = len(features_data[features_data['observation_valuetext_analysed'] == 'Not for cardiopulmonary resuscitation'])
 
-
+    if config_obj.verbosity >= 6: display(features)
 
     return features
+
+
+#add negation bool in config, add negation dict for main opts
 
 

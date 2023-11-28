@@ -1,6 +1,6 @@
 
 
-
+from IPython.display import display
 import pandas as pd
 
 from util.methods_get import (filter_dataframe_by_timestamp,

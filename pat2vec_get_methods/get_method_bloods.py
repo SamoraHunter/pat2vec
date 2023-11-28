@@ -2,12 +2,14 @@ from datetime import datetime, timezone
 
 import numpy as np
 import pandas as pd
+from IPython.display import display
+from scipy import stats
 
 from util.methods_get import (filter_dataframe_by_timestamp,
                               get_start_end_year_month)
 
 
-def get_current_pat_bloods(current_pat_client_id_code, target_date_range, pat_batch, batch_mode=False, cohort_searcher_with_terms_and_search=None):
+def get_current_pat_bloods(current_pat_client_id_code, target_date_range, pat_batch, batch_mode=False, cohort_searcher_with_terms_and_search=None, config_obj=None):
     """
     Retrieves blood test data for a given patient within a specified date range.
 
@@ -21,6 +23,9 @@ def get_current_pat_bloods(current_pat_client_id_code, target_date_range, pat_ba
     Returns:
     - pd.DataFrame: A DataFrame containing blood test data for the specified patient.
     """
+    
+    batch_mode = config_obj.batch_mode
+    
     start_year, start_month, end_year, end_month, start_day, end_day = get_start_end_year_month(target_date_range)
 
     if batch_mode:
@@ -215,4 +220,7 @@ def get_current_pat_bloods(current_pat_client_id_code, target_date_range, pat_ba
 
 
             #current_pat_bloods = df_unique_filtered
+            
+    if config_obj.verbosity >= 6: display(df_unique_filtered)
+    
     return df_unique_filtered
