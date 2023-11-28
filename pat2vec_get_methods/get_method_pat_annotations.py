@@ -1,5 +1,6 @@
 
 
+import os
 import pickle
 
 import numpy as np
@@ -11,6 +12,101 @@ from IPython.utils import io
 from util.methods_get import (dump_results, exist_check,
                               filter_dataframe_by_timestamp,
                               get_start_end_year_month, update_pbar)
+
+#function to put docs into folders with day space and guid as name
+#additionally to annot docs in folders and write to same structure for annot folder with guid as name
+#now get current pat annotations will parse this structure to build windowed vectors for the target date
+
+
+
+# def get_current_pat_docs(current_pat_client_id_code, target_date_range, pat_batch, config_obj = None, t=None, cohort_searcher_with_terms_and_search =None, cat=None):
+
+#     batch_mode = config_obj.batch_mode
+    
+#     start_year, start_month, end_year, end_month, start_day, end_day = get_start_end_year_month(target_date_range)
+
+#     if(batch_mode):
+        
+#         current_pat_docs = filter_dataframe_by_timestamp(pat_batch, start_year, start_month, end_year, end_month, start_day, end_day, 'updatetime')
+
+#     else:
+
+#         current_pat_docs = cohort_searcher_with_terms_and_search(index_name="epr_documents", 
+#                                                                 fields_list = """client_idcode document_guid	document_description	body_analysed updatetime clientvisit_visitidcode""".split(),
+#                                                                 term_name = "client_idcode.keyword", 
+#                                                                 entered_list = [current_pat_client_id_code],
+#                                                             search_string = f'updatetime:[{start_year}-{start_month}-{start_day} TO {end_year}-{end_month}-{end_day}] ')
+        
+    
+#     return current_pat_docs
+
+
+def get_current_pat_docs(current_pat_client_id_code, target_date_range, pat_batch, config_obj=None, cohort_searcher_with_terms_and_search =None):
+    """
+    Retrieve current patient documents based on the provided parameters.
+
+    Args:
+        current_pat_client_id_code (str): The client ID code of the current patient.
+        target_date_range (str): The target date range for document retrieval.
+        pat_batch (pd.DataFrame): DataFrame containing patient documents.
+        config_obj (Config, optional): Configuration object. Defaults to None.
+
+    Returns:
+        pd.DataFrame: Current patient documents based on the specified criteria.
+    """
+    
+    batch_mode = config_obj.batch_mode if config_obj else False
+    
+    start_year, start_month, end_year, end_month, start_day, end_day = get_start_end_year_month(target_date_range)
+
+    if batch_mode:
+        current_pat_docs = filter_dataframe_by_timestamp(pat_batch, start_year, start_month, end_year, end_month, start_day, end_day, 'updatetime')
+    else:
+        current_pat_docs = cohort_searcher_with_terms_and_search(
+            index_name="epr_documents",
+            fields_list=["client_idcode", "document_guid", "document_description", "body_analysed", "updatetime", "clientvisit_visitidcode"],
+            term_name="client_idcode.keyword",
+            entered_list=[current_pat_client_id_code],
+            search_string=f'updatetime:[{start_year}-{start_month}-{start_day} TO {end_year}-{end_month}-{end_day}]'
+        )
+    
+    return current_pat_docs
+
+
+
+def filter_and_save_documents(pat_batch, target_date_range, client_idcode, config_obj = None):
+    
+    if(config_obj.verbosity>6):
+        print(filter_and_save_documents)
+        display(pat_batch)
+    
+    pre_document_day_path = config_obj.pre_document_day_path
+    
+    # Convert target_date_range to a datetime object
+    target_date = pd.Timestamp(*target_date_range)
+    
+    # Filter the dataframe based on the target_date
+    filtered_dataframe = pat_batch[pat_batch['updatetime'].dt.date == target_date.date()]
+    
+    # Create the directory path
+    output_directory = os.path.join(pre_document_day_path, f"{client_idcode}/", f"{target_date.year}_{target_date.month}_{target_date.day}/")
+    
+    # Create the directory if it doesn't exist
+    os.makedirs(output_directory, exist_ok=True)
+    
+    # Iterate over rows and save each row to a separate CSV file
+    for index, row in filtered_dataframe.iterrows():
+        document_guid = row['document_guid']
+        filename = os.path.join(output_directory, f"{document_guid}.csv")
+        row.to_csv(filename, index=False)
+
+
+# filter_and_save_data(df, (2023, 1, 1), '/path/to/output/', 'client123')
+
+
+
+
+
 
 
 def get_current_pat_annotations(current_pat_client_id_code, target_date_range, pat_batch, config_obj = None, t=None, cohort_searcher_with_terms_and_search =None, cat=None):
@@ -41,36 +137,32 @@ def get_current_pat_annotations(current_pat_client_id_code, target_date_range, p
     
     sftp_obj = config_obj.sftp_obj
     
+    pre_document_annotation_day_path = config_obj.pre_document_annotation_day_path
     
-    
-#     current_annotation_file_path = pre_annotation_path + current_pat_client_id_code+"_"+str(target_date_range)
     
     current_annotation_file_path = pre_annotation_path + current_pat_client_id_code + "/" +  current_pat_client_id_code+"_"+str(target_date_range)
     
+    current_annotation_file_path = pre_document_annotation_day_path + current_pat_client_id_code + '/' 
+    
+    break
     
     file_exists = exist_check(current_annotation_file_path, config_obj = config_obj)
     
+    
     if(file_exists == False):
     
-        start_year, start_month, end_year, end_month, start_day, end_day = get_start_end_year_month(target_date_range)
+        current_pat_docs = get_current_pat_docs(current_pat_client_id_code, target_date_range, pat_batch, config_obj=config_obj, cohort_searcher_with_terms_and_search = cohort_searcher_with_terms_and_search)
+
+        filter_and_save_documents(pat_batch = pat_batch, target_date_range = target_date_range, client_idcode = current_pat_client_id_code, config_obj = config_obj)
         
-        if(batch_mode):
-            current_pat_docs = filter_dataframe_by_timestamp(pat_batch, start_year, start_month, end_year, end_month, start_day, end_day, 'updatetime')
-
-        else:
-
-            current_pat_docs = cohort_searcher_with_terms_and_search(index_name="epr_documents", 
-                                                                  fields_list = """client_idcode document_guid	document_description	body_analysed updatetime clientvisit_visitidcode""".split(),
-                                                                  term_name = "client_idcode.keyword", 
-                                                                  entered_list = [current_pat_client_id_code],
-                                                                search_string = f'updatetime:[{start_year}-{start_month}-{start_day} TO {end_year}-{end_month}-{end_day}] ')
-
 
         n_docs_to_annotate = len(current_pat_docs)
+        
         update_pbar(current_pat_client_id_code+"_"+str(target_date_range), start_time, 5, 'annotations', n_docs_to_annotate = n_docs_to_annotate,
                     t=t, config_obj=config_obj)
 
     else:
+        
         n_docs_to_annotate = "Reading preannotated..."
         
         
@@ -83,10 +175,6 @@ def get_current_pat_annotations(current_pat_client_id_code, target_date_range, p
                      'Hypothetical':0,
                      'Patient': 1}
 
-    #remove filter from cdb?
-    #print("getting annotations")
-    
-#     file_exists = exists(pre_annotation_path + current_pat_client_id_code)
     
     
     if(file_exists==False):

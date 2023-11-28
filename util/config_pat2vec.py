@@ -67,6 +67,10 @@ class config_class:
         self.pre_annotation_path = f'current_pat_annots_parts{self.suffix}/'
         self.pre_annotation_path_mrc = f'current_pat_annots_mrc_parts{self.suffix}/'
         
+        self.pre_document_day_path = f'current_pat_documents{self.suffix}/'
+        self.pre_document_annotation_day_path = f'current_pat_documents_annotations{self.suffix}/'
+        
+        
         self.proj_name = proj_name
         self.main_options = main_options
         
@@ -144,11 +148,23 @@ class config_class:
             
             self.pre_annotation_path_mrc = self.root_path + self.pre_annotation_path_mrc
             
+            self.pre_document_day_path = self.root_path + self.pre_document_day_path
+            
+            self.pre_document_annotation_day_path = self.root_path + self.pre_document_annotation_day_path
+            
+            
+            
             Path(self.pre_annotation_path).mkdir(parents=True, exist_ok=True)
             Path(self.pre_annotation_path_mrc).mkdir(parents=True, exist_ok=True)
+            Path(self.pre_document_day_path).mkdir(parents=True, exist_ok=True)
+            Path(self.pre_document_annotation_day_path).mkdir(parents=True, exist_ok=True)
+            
+            
 
             print(self.pre_annotation_path)
             print(self.pre_annotation_path_mrc)
+            print(self.pre_document_day_path)
+            print(self.pre_document_annotation_day_path)
             
             
         self.current_pat_line_path = f"current_pat_lines_parts{self.suffix}/"
