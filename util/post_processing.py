@@ -88,7 +88,7 @@ def process_csv_files(input_dir, output_file):
     - The merged CSV file will have a header row with unique column names derived from all input files.
     - The function uses the 'tqdm' library to display a progress bar while merging files.
     """
-    print("proc debug")
+    #print("proc debug")
     
     # Initialize a dictionary to store column names
     column_names_dict = {}
@@ -118,7 +118,7 @@ def process_csv_files(input_dir, output_file):
         new_output_file = output_file
 
     # Write the merged CSV file with dynamic column names
-    with open(new_output_file, 'w', newline='') as output_csv:
+    with open(output_file, 'w', newline='') as output_csv:
         writer = csv.writer(output_csv)
 
         # Write the header with unique column names
