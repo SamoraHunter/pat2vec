@@ -100,7 +100,7 @@ def main_batch(current_pat_client_id_code,
             stripped_list = stripped_list_start
         else:
             
-            if(len(list_dir_wrapper(current_pat_lines_path + current_pat_client_id_code, config_obj)) >=n_pat_lines):
+            if(len(list_dir_wrapper(current_pat_lines_path + str(current_pat_client_id_code), config_obj)) >=n_pat_lines):
                 already_done = True
                 stripped_list_start.append(current_pat_client_id_code)
             stripped_list = stripped_list_start.copy()
@@ -146,8 +146,6 @@ def main_batch(current_pat_client_id_code,
                     current_pat_diagnostics = get_current_pat_diagnostics(current_pat_client_id_code, target_date_range, batch_diagnostics, config_obj=config_obj)
                     patient_vector.append(current_pat_diagnostics)
                     
-                    
-
                 if main_options.get('annotations'):
                     df_pat_target = get_current_pat_annotations(current_pat_client_id_code,
                                                                 target_date_range,
@@ -223,10 +221,7 @@ def main_batch(current_pat_client_id_code,
                 update_pbar(p_bar_entry, start_time, 2, 'concatenating', t, config_obj)
 
                 target_date_vector = enum_target_date_vector(target_date_range, current_pat_client_id_code, config_obj = config_obj)
-                
-                
-                
-                    
+                                             
                 patient_vector.append(target_date_vector)
                 
 
@@ -235,9 +230,7 @@ def main_batch(current_pat_client_id_code,
                 pat_concatted.drop('client_idcode', axis=1, inplace=True)
 
                 pat_concatted.insert(0, 'client_idcode', current_pat_client_id_code)
-                
-                
-                                
+                                            
                 update_pbar(p_bar_entry, start_time, 2, 'saving...', t , config_obj)
                 
                 output_path = current_pat_line_path  + current_pat_client_id_code + "/" +str(current_pat_client_id_code) + "_" + str(target_date_range)+".csv"

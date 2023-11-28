@@ -10,8 +10,9 @@ sys.path.insert(0,'/data/AS/Samora/gloabl_files')
 sys.path.insert(0,'/home/jovyan/work/gloabl_files')
 sys.path.insert(0,'/home/cogstack/samora/gloabl_files')
 sys.path.insert(0,'/home/cogstack/samora/_data/gloabl_files')
+from cogstack_v8_lite import append_age_at_record_series
 from COGStats import *
-from COGStats import EthnicityAbstractor, append_age_at_record_series
+from COGStats import EthnicityAbstractor
 
 from util.methods_get import get_demographics3_batch
 

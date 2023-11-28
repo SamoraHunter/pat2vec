@@ -57,7 +57,7 @@ def get_smoking(current_pat_client_id_code, target_date_range, pat_batch, config
 
     term = 'smoking_status'.lower()
 
-    if(len(features_data) > 0):
+    if(len(features_data['observation_valuetext_analysed'].dropna()) > 0):
         features = pd.DataFrame(data = [current_pat_client_id_code] , columns =['client_idcode']).copy()
 
         value_array = features_data['observation_valuetext_analysed'].dropna()
