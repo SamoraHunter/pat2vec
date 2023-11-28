@@ -3,8 +3,8 @@ from datetime import datetime, timezone
 
 import numpy as np
 import pandas as pd
-from scipy import stats
 from IPython.display import display
+from scipy import stats
 
 from util.methods_get import (convert_date, filter_dataframe_by_timestamp,
                               get_start_end_year_month)
@@ -141,6 +141,21 @@ def get_current_pat_diagnostics(current_pat_client_id_code, target_date_range, p
             agg_val = delta.days
 
             df_unique_filtered.at[i,col_name+"_days-between-first-last-diagnostic"] = agg_val     
+
+
+    try:
+        df_unique_filtered.drop('datetime', axis=1, inplace=True)
+        
+    except Exception as e:
+        print(e)
+        pass
+    
+    try:
+        df_unique_filtered.drop('index', axis=1, inplace=True)
+        
+    except Exception as e:
+        print(e)
+        pass
 
 
     if config_obj.verbosity >= 6: display(df_unique_filtered)

@@ -58,10 +58,14 @@ def get_core_resus(current_pat_client_id_code, target_date_range, pat_batch, bat
         features = pd.DataFrame(data = [current_pat_client_id_code] , columns =['client_idcode']).copy()
         features[f'{term}_For cardiopulmonary resuscitation'] = len(features_data[features_data['observation_valuetext_analysed'] == 'For cardiopulmonary resuscitation'])
         features[f'{term}_Not for cardiopulmonary resuscitation'] = len(features_data[features_data['observation_valuetext_analysed'] == 'Not for cardiopulmonary resuscitation'])
-    else:
+    elif(config_obj.negate_biochem):
         features = pd.DataFrame(data = [current_pat_client_id_code] , columns =['client_idcode']).copy()
         features[f'{term}_For cardiopulmonary resuscitation'] = len(features_data[features_data['observation_valuetext_analysed'] == 'For cardiopulmonary resuscitation'])
         features[f'{term}_Not for cardiopulmonary resuscitation'] = len(features_data[features_data['observation_valuetext_analysed'] == 'Not for cardiopulmonary resuscitation'])
+    else:
+        features = pd.DataFrame(data = [current_pat_client_id_code] , columns =['client_idcode']).copy()
+        pass
+
 
     if config_obj.verbosity >= 6: display(features)
 

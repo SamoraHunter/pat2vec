@@ -60,13 +60,10 @@ def get_vte_status(current_pat_client_id_code, target_date_range, pat_batch, con
     if(len(features_data) > 0):
         features = pd.DataFrame(data = [current_pat_client_id_code] , columns =['client_idcode']).copy()
 
-
-
         di = {'High risk of VTE High risk of bleeding':1,
               'High risk of VTE Low risk of bleeding':0}
 
         value_array = features_data['observation_valuetext_analysed'].map(di)
-
 
         value_array = value_array.astype(float)
 
@@ -76,7 +73,9 @@ def get_vte_status(current_pat_client_id_code, target_date_range, pat_batch, con
         features[f'{term}_max'] = max(value_array)
         features[f'{term}_min'] = min(value_array)
         features[f'{term}_n'] = value_array.shape[0]
-    else:
+        
+    elif (config_obj.negate_biochem):
+        
         features = pd.DataFrame(data = [current_pat_client_id_code] , columns =['client_idcode']).copy()
         features[f'{term}_mean'] = np.nan
         features[f'{term}_median'] = np.nan
@@ -85,6 +84,9 @@ def get_vte_status(current_pat_client_id_code, target_date_range, pat_batch, con
         features[f'{term}_min'] = np.nan
         features[f'{term}_n'] = np.nan   
 
+    
+    else:
+        features = pd.DataFrame(data = [current_pat_client_id_code] , columns =['client_idcode']).copy()
     
     if config_obj.verbosity >= 6: display(features)
 

@@ -57,7 +57,8 @@ def get_bmi_features(current_pat_client_id_code, target_date_range, pat_batch, c
             bmi_features[f'{term}_extreme'] = int(bool(value_array.median() > 30))
             bmi_features[f'{term}_max'] = max(value_array)
             bmi_features[f'{term}_min'] = min(value_array)
-        else:
+            
+        elif(config_obj.negate_biochem):
             bmi_features[f'{term}_mean'] = np.nan
             bmi_features[f'{term}_median'] = np.nan
             bmi_features[f'{term}_std'] = np.nan
@@ -66,6 +67,8 @@ def get_bmi_features(current_pat_client_id_code, target_date_range, pat_batch, c
             bmi_features[f'{term}_extreme'] = np.nan
             bmi_features[f'{term}_max'] = np.nan
             bmi_features[f'{term}_min'] = np.nan
+        else:
+            pass
 
         # Get height features
         height_sample = current_pat_raw_bmi[current_pat_raw_bmi['obscatalogmasteritem_displayname'] == 'OBS Height']
@@ -78,10 +81,14 @@ def get_bmi_features(current_pat_client_id_code, target_date_range, pat_batch, c
             bmi_features[f'{term}_mean'] = value_array.mean()
             bmi_features[f'{term}_median'] = value_array.median()
             bmi_features[f'{term}_std'] = value_array.std()
-        else:
+            
+        elif(config_obj.negate_biochem):
             bmi_features[f'{term}_mean'] = np.nan
             bmi_features[f'{term}_median'] = np.nan
             bmi_features[f'{term}_std'] = np.nan
+            
+        else:
+            pass
 
         # Get weight features
         weight_sample = current_pat_raw_bmi[current_pat_raw_bmi['obscatalogmasteritem_displayname'] == 'OBS Weight']
@@ -96,12 +103,17 @@ def get_bmi_features(current_pat_client_id_code, target_date_range, pat_batch, c
             bmi_features[f'{term}_std'] = value_array.std()
             bmi_features[f'{term}_max'] = max(value_array)
             bmi_features[f'{term}_min'] = min(value_array)
-        else:
+            
+        elif(config_obj.negate_biochem):
+            
             bmi_features[f'{term}_mean'] = np.nan
             bmi_features[f'{term}_median'] = np.nan
             bmi_features[f'{term}_std'] = np.nan
             bmi_features[f'{term}_max'] = np.nan
             bmi_features[f'{term}_min'] = np.nan
+            
+        else:
+            pass
             
     if config_obj.verbosity >= 6: display(bmi_features)
 

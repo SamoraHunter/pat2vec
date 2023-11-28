@@ -65,10 +65,16 @@ def get_smoking(current_pat_client_id_code, target_date_range, pat_batch, config
         features[f'{term}_current'] = value_array.str.contains("Current Smoker").astype(int)
         features[f'{term}_non'] = value_array.str.contains("Non-Smoker").astype(int)
 
-    else:
+    
+
+    elif(config_obj.negate_biochem):
         features = pd.DataFrame(data = [current_pat_client_id_code] , columns =['client_idcode']).copy()
         features[f'{term}_current'] = np.nan
         features[f'{term}_non'] = np.nan
+    else:
+        features = pd.DataFrame(data = [current_pat_client_id_code] , columns =['client_idcode']).copy()
+        pass
+        
         
     if config_obj.verbosity >= 6: display(features)
 

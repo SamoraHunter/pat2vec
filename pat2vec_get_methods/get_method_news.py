@@ -42,13 +42,15 @@ def get_news(current_pat_client_id_code, target_date_range, pat_batch, config_ob
         news_features['news_score_max'] = max(value_array)
         news_features['news_score_min'] = min(value_array)
         news_features['news_score_n'] = value_array.shape[0]
-    else:
+    elif(config_obj.negate_biochem):
         news_features['news_score_mean'] = np.nan
         news_features['news_score_median'] = np.nan
         news_features['news_score_std'] = np.nan
         news_features['news_score_max'] = np.nan
         news_features['news_score_min'] = np.nan
         news_features['news_score_n'] = np.nan
+    else:
+        pass
 
     #-----------------------------------------------------------------
     news_features_data = current_pat_raw_news[current_pat_raw_news['obscatalogmasteritem_displayname']=='NEWS_Systolic_BP'].copy()
@@ -64,7 +66,7 @@ def get_news(current_pat_client_id_code, target_date_range, pat_batch, config_ob
         news_features['news_systolic_bp_max'] = max(value_array)
         news_features['news_systolic_bp_min'] = min(value_array)
         news_features['news_systolic_bp_n'] = value_array.shape[0]
-    else:
+    elif(config_obj.negate_biochem):
         
         news_features['news_systolic_bp_mean'] = np.nan
         news_features['news_systolic_bp_median'] = np.nan
@@ -72,6 +74,8 @@ def get_news(current_pat_client_id_code, target_date_range, pat_batch, config_ob
         news_features['news_systolic_bp_max'] = np.nan
         news_features['news_systolic_bp_min'] = np.nan
         news_features['news_systolic_bp_n'] = np.nan
+    else:
+        pass
 
     #-----------------------------------------------------------------
     news_features_data = current_pat_raw_news[current_pat_raw_news['obscatalogmasteritem_displayname']=='NEWS_Diastolic_BP'].copy()
@@ -87,13 +91,15 @@ def get_news(current_pat_client_id_code, target_date_range, pat_batch, config_ob
         news_features['news_diastolic_bp_max'] = max(value_array)
         news_features['news_diastolic_bp_min'] = min(value_array)
         news_features['news_diastolic_bp_n'] = value_array.shape[0]
-    else:
+    elif(config_obj.negate_biochem):
         news_features['news_diastolic_bp_mean'] = np.nan
         news_features['news_diastolic_bp_median'] = np.nan
         news_features['news_diastolic_bp_std'] = np.nan
         news_features['news_diastolic_bp_max'] = np.nan
         news_features['news_diastolic_bp_min'] = np.nan
         news_features['news_diastolic_bp_n'] = np.nan    
+    else:
+        pass
 
     #-----------------------------------------------------------------
     news_features_data = current_pat_raw_news[current_pat_raw_news['obscatalogmasteritem_displayname']=='NEWS_Respiration_Rate'].copy()
@@ -109,14 +115,15 @@ def get_news(current_pat_client_id_code, target_date_range, pat_batch, config_ob
         news_features['news_respiration_rate_max'] = max(value_array)
         news_features['news_respiration_rate_min'] = min(value_array)
         news_features['news_respiration_rate_n'] = value_array.shape[0]
-    else:
+    elif(config_obj.negate_biochem):
         news_features['news_respiration_rate_mean'] = np.nan
         news_features['news_respiration_rate_median'] = np.nan
         news_features['news_respiration_rate_std'] = np.nan
         news_features['news_respiration_rate_max'] = np.nan
         news_features['news_respiration_rate_min'] = np.nan
         news_features['news_respiration_rate_n'] = np.nan    
-
+    else:
+        pass
 
     #-----------------------------------------------------------------
 
@@ -133,13 +140,15 @@ def get_news(current_pat_client_id_code, target_date_range, pat_batch, config_ob
         news_features['news_heart_rate_max'] = max(value_array)
         news_features['news_heart_rate_min'] = min(value_array)
         news_features['news_heart_rate_n'] = value_array.shape[0]
-    else:
+    elif(config_obj.negate_biochem):
         news_features['news_heart_rate_mean'] = np.nan
         news_features['news_heart_rate_median'] = np.nan
         news_features['news_heart_rate_std'] = np.nan
         news_features['news_heart_rate_max'] = np.nan
         news_features['news_heart_rate_min'] = np.nan
         news_features['news_heart_rate_n'] = np.nan    
+    else:
+        pass
 
     #-----------------------------------------------------------------
 
@@ -156,13 +165,15 @@ def get_news(current_pat_client_id_code, target_date_range, pat_batch, config_ob
         news_features['news_oxygen_saturation_max'] = max(value_array)
         news_features['news_oxygen_saturation_min'] = min(value_array)
         news_features['news_oxygen_saturation_n'] = value_array.shape[0]
-    else:
+    elif(config_obj.negate_biochem):
         news_features['news_oxygen_saturation_mean'] = np.nan
         news_features['news_oxygen_saturation_median'] = np.nan
         news_features['news_oxygen_saturation_std'] = np.nan
         news_features['news_oxygen_saturation_max'] = np.nan
         news_features['news_oxygen_saturation_min'] = np.nan
         news_features['news_oxygen_saturation_n'] = np.nan    
+    else:
+        pass
 
     #-----------------------------------------------------------------
 
@@ -179,13 +190,15 @@ def get_news(current_pat_client_id_code, target_date_range, pat_batch, config_ob
         news_features['news_temperature_max'] = max(value_array)
         news_features['news_temperature_min'] = min(value_array)
         news_features['news_temperature_n'] = value_array.shape[0]
-    else:
+    elif(config_obj.negate_biochem):
         news_features['news_temperature_mean'] = np.nan
         news_features['news_temperature_median'] = np.nan
         news_features['news_temperature_std'] = np.nan
         news_features['news_temperature_max'] = np.nan
         news_features['news_temperature_min'] = np.nan
         news_features['news_temperature_n'] = np.nan    
+    else:
+        pass
 
     #-----------------------------------------------------------------
 
@@ -204,13 +217,15 @@ def get_news(current_pat_client_id_code, target_date_range, pat_batch, config_ob
         news_features['news_avpu_max'] = max(value_array)
         news_features['news_avpu_min'] = min(value_array)
         news_features['news_avpu_n'] = value_array.shape[0]
-    else:
+    elif(config_obj.negate_biochem):
         news_features['news_avpu_mean'] = np.nan
         news_features['news_avpu_median'] = np.nan
         news_features['news_avpu_std'] = np.nan
         news_features['news_avpu_max'] = np.nan
         news_features['news_avpu_min'] = np.nan
         news_features['news_avpu_n'] = np.nan    
+    else:
+        pass
 
     #-----------------------------------------------------------------
 
@@ -229,13 +244,16 @@ def get_news(current_pat_client_id_code, target_date_range, pat_batch, config_ob
         news_features[f'news_{term}_max'] = max(value_array)
         news_features[f'news_{term}_min'] = min(value_array)
         news_features[f'news_{term}_n'] = value_array.shape[0]
-    else:
+        
+    elif(config_obj.negate_biochem):
         news_features[f'news_{term}_mean'] = np.nan
         news_features[f'news_{term}_median'] = np.nan
         news_features[f'news_{term}_std'] = np.nan
         news_features[f'news_{term}_max'] = np.nan
         news_features[f'news_{term}_min'] = np.nan
-        news_features[f'news_{term}_n'] = np.nan    
+        news_features[f'news_{term}_n'] = np.nan 
+    else:
+        pass  
 
     #-----------------------------------------------------------------
 
@@ -254,13 +272,17 @@ def get_news(current_pat_client_id_code, target_date_range, pat_batch, config_ob
         news_features[f'news_{term}_max'] = max(value_array)
         news_features[f'news_{term}_min'] = min(value_array)
         news_features[f'news_{term}_n'] = value_array.shape[0]
-    else:
+        
+    elif(config_obj.negate_biochem):
         news_features[f'news_{term}_mean'] = np.nan
         news_features[f'news_{term}_median'] = np.nan
         news_features[f'news_{term}_std'] = np.nan
         news_features[f'news_{term}_max'] = np.nan
         news_features[f'news_{term}_min'] = np.nan
-        news_features[f'news_{term}_n'] = np.nan  
+        news_features[f'news_{term}_n'] = np.nan 
+        
+    else:
+        pass 
 
     #-----------------------------------------------------------------
 
@@ -279,13 +301,16 @@ def get_news(current_pat_client_id_code, target_date_range, pat_batch, config_ob
         news_features[f'news_{term}_max'] = max(value_array)
         news_features[f'news_{term}_min'] = min(value_array)
         news_features[f'news_{term}_n'] = value_array.shape[0]
-    else:
+        
+    elif(config_obj.negate_biochem):
         news_features[f'news_{term}_mean'] = np.nan
         news_features[f'news_{term}_median'] = np.nan
         news_features[f'news_{term}_std'] = np.nan
         news_features[f'news_{term}_max'] = np.nan
         news_features[f'news_{term}_min'] = np.nan
-        news_features[f'news_{term}_n'] = np.nan  
+        news_features[f'news_{term}_n'] = np.nan 
+    else:
+        pass 
 
     #-----------------------------------------------------------------
 
@@ -304,13 +329,17 @@ def get_news(current_pat_client_id_code, target_date_range, pat_batch, config_ob
         news_features[f'news_{term}_max'] = max(value_array)
         news_features[f'news_{term}_min'] = min(value_array)
         news_features[f'news_{term}_n'] = value_array.shape[0]
-    else:
+        
+    elif(config_obj.negate_biochem):
         news_features[f'news_{term}_mean'] = np.nan
         news_features[f'news_{term}_median'] = np.nan
         news_features[f'news_{term}_std'] = np.nan
         news_features[f'news_{term}_max'] = np.nan
         news_features[f'news_{term}_min'] = np.nan
-        news_features[f'news_{term}_n'] = np.nan      
+        news_features[f'news_{term}_n'] = np.nan 
+        
+    else:
+        pass      
 
     #-----------------------------------------------------------------
 
@@ -329,13 +358,15 @@ def get_news(current_pat_client_id_code, target_date_range, pat_batch, config_ob
         news_features[f'news_{term}_max'] = max(value_array)
         news_features[f'news_{term}_min'] = min(value_array)
         news_features[f'news_{term}_n'] = value_array.shape[0]
-    else:
+    elif(config_obj.negate_biochem):
         news_features[f'news_{term}_mean'] = np.nan
         news_features[f'news_{term}_median'] = np.nan
         news_features[f'news_{term}_std'] = np.nan
         news_features[f'news_{term}_max'] = np.nan
         news_features[f'news_{term}_min'] = np.nan
-        news_features[f'news_{term}_n'] = np.nan    
+        news_features[f'news_{term}_n'] = np.nan 
+    else:
+        pass    
 
     #-----------------------------------------------------------------
 
@@ -354,38 +385,41 @@ def get_news(current_pat_client_id_code, target_date_range, pat_batch, config_ob
         news_features[f'news_{term}_max'] = max(value_array)
         news_features[f'news_{term}_min'] = min(value_array)
         news_features[f'news_{term}_n'] = value_array.shape[0]
-    else:
+        
+    elif(config_obj.negate_biochem):
         news_features[f'news_{term}_mean'] = np.nan
         news_features[f'news_{term}_median'] = np.nan
         news_features[f'news_{term}_std'] = np.nan
         news_features[f'news_{term}_max'] = np.nan
         news_features[f'news_{term}_min'] = np.nan
-        news_features[f'news_{term}_n'] = np.nan  
+        news_features[f'news_{term}_n'] = np.nan 
+    else:
+        pass
 
     #-----------------------------------------------------------------
 
-    news_features_data = current_pat_raw_news[current_pat_raw_news['obscatalogmasteritem_displayname']=='NEWS Oxygen Delivery'].copy()
-    #news_features_data =  news_features_data[(news_features_data['observation_valuetext_analysed'].astype(float)<20)& (news_features_data['observation_valuetext_analysed'].astype(float)>-20)].copy()
-    news_features_data.dropna(subset=['observation_valuetext_analysed'],inplace=True)     
+    # news_features_data = current_pat_raw_news[current_pat_raw_news['obscatalogmasteritem_displayname']=='NEWS Oxygen Delivery'].copy()
+    # #news_features_data =  news_features_data[(news_features_data['observation_valuetext_analysed'].astype(float)<20)& (news_features_data['observation_valuetext_analysed'].astype(float)>-20)].copy()
+    # news_features_data.dropna(subset=['observation_valuetext_analysed'],inplace=True)     
 
-    term = 'oxygen_delivery'.lower()
+    # term = 'oxygen_delivery'.lower()
 
-    if(len(news_features_data) > 0):
-        #news_features = pd.DataFrame(data = [current_pat_client_id_code] , columns =['client_idcode']).copy()
-        value_array = news_features_data['observation_valuetext_analysed'].dropna().astype(float)
-        news_features[f'news_{term}_mean'] = value_array.mean()
-        news_features[f'news_{term}_median'] = value_array.median()
-        news_features[f'news_{term}_std'] = value_array.std()
-        news_features[f'news_{term}_max'] = max(value_array)
-        news_features[f'news_{term}_min'] = min(value_array)
-        news_features[f'news_{term}_n'] = value_array.shape[0]
-    else:
-        news_features[f'news_{term}_mean'] = np.nan
-        news_features[f'news_{term}_median'] = np.nan
-        news_features[f'news_{term}_std'] = np.nan
-        news_features[f'news_{term}_max'] = np.nan
-        news_features[f'news_{term}_min'] = np.nan
-        news_features[f'news_{term}_n'] = np.nan      
+    # if(len(news_features_data) > 0):
+    #     #news_features = pd.DataFrame(data = [current_pat_client_id_code] , columns =['client_idcode']).copy()
+    #     value_array = news_features_data['observation_valuetext_analysed'].dropna().astype(float)
+    #     news_features[f'news_{term}_mean'] = value_array.mean()
+    #     news_features[f'news_{term}_median'] = value_array.median()
+    #     news_features[f'news_{term}_std'] = value_array.std()
+    #     news_features[f'news_{term}_max'] = max(value_array)
+    #     news_features[f'news_{term}_min'] = min(value_array)
+    #     news_features[f'news_{term}_n'] = value_array.shape[0]
+    # else:
+    #     news_features[f'news_{term}_mean'] = np.nan
+    #     news_features[f'news_{term}_median'] = np.nan
+    #     news_features[f'news_{term}_std'] = np.nan
+    #     news_features[f'news_{term}_max'] = np.nan
+    #     news_features[f'news_{term}_min'] = np.nan
+    #     news_features[f'news_{term}_n'] = np.nan      
 
 
     #-----------------------------------------------------------------
@@ -405,16 +439,22 @@ def get_news(current_pat_client_id_code, target_date_range, pat_batch, config_ob
         news_features[f'news_{term}_max'] = max(value_array)
         news_features[f'news_{term}_min'] = min(value_array)
         news_features[f'news_{term}_n'] = value_array.shape[0]
-    else:
+    elif(config_obj.negate_biochem):
         news_features[f'news_{term}_mean'] = np.nan
         news_features[f'news_{term}_median'] = np.nan
         news_features[f'news_{term}_std'] = np.nan
         news_features[f'news_{term}_max'] = np.nan
         news_features[f'news_{term}_min'] = np.nan
-        news_features[f'news_{term}_n'] = np.nan     
+        news_features[f'news_{term}_n'] = np.nan   
+        
+        
+    else:
+        pass
 
     if(config_obj.verbosity >=6):
         display(news_features)
+
+
 
 
     return news_features

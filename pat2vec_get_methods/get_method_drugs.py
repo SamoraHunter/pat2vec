@@ -3,12 +3,11 @@ from datetime import datetime, timezone
 
 import numpy as np
 import pandas as pd
-from scipy import stats
 from IPython.display import display
+from scipy import stats
 
 from util.methods_get import (convert_date, filter_dataframe_by_timestamp,
                               get_start_end_year_month)
-
 
 
 def get_current_pat_drugs(current_pat_client_id_code, target_date_range, pat_batch, config_obj=None, cohort_searcher_with_terms_and_search=None):
@@ -44,19 +43,13 @@ def get_current_pat_drugs(current_pat_client_id_code, target_date_range, pat_bat
 
     current_pat_diagnostics = drugs.copy()
 
-    
-
     if(batch_mode):
         current_pat_diagnostics['datetime'] = current_pat_diagnostics['order_entered'].copy()
         
     else:
         current_pat_diagnostics['datetime'] = pd.Series(current_pat_diagnostics['order_entered']).dropna().apply(convert_date)
     
-    
-    
-    
-    
-
+   
     order_name_list = list(current_pat_diagnostics['order_name'].unique())
 
     order_name_df_dict = {elem: current_pat_diagnostics[current_pat_diagnostics.order_name == elem] for elem in order_name_list}
@@ -90,10 +83,10 @@ def get_current_pat_drugs(current_pat_client_id_code, target_date_range, pat_bat
     df_unique = df_unique.reindex(comb_cols, axis=1)  
 
     df_unique = df_unique.copy()
+    
     df_unique.drop(['_index', '_id', '_score', 'order_guid', 'order_name',
            'order_summaryline', 'order_holdreasontext', 'order_entered',
            'clientvisit_visitidcode'], inplace=True, axis=1)
-
 
     if(batch_mode):
         
@@ -133,7 +126,6 @@ def get_current_pat_drugs(current_pat_client_id_code, target_date_range, pat_bat
 
         if(df_len>=2):
 
-
             #days_between earliest and last
 
             earliest = filtered_df.sort_values(by='datetime').iloc[-1]['datetime']
@@ -147,9 +139,23 @@ def get_current_pat_drugs(current_pat_client_id_code, target_date_range, pat_bat
             df_unique_filtered.at[i,col_name+"_days-between-first-last-drug"] = agg_val     
 
 
+    
+
+    try:
+        df_unique_filtered.drop('datetime', axis=1, inplace=True)
+        
+    except Exception as e:
+        print(e)
+        pass
+    
+    try:
+        df_unique_filtered.drop('index', axis=1, inplace=True)
+        
+    except Exception as e:
+        print(e)
+        pass
+    
     if config_obj.verbosity >= 6: display(df_unique_filtered)
-
-
 
 
     return df_unique_filtered

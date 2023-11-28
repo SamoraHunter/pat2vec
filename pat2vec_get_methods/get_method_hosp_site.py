@@ -68,10 +68,13 @@ def get_hosp_site(current_pat_client_id_code, target_date_range, pat_batch, conf
         features[f'{term}_dh'] = value_array.str.contains("DH").astype(int)
         features[f'{term}_ph'] = value_array.str.contains("PRUH").astype(int)
 
-    else:
+    elif(config_obj.negate_biochem):
         features = pd.DataFrame(data = [current_pat_client_id_code] , columns =['client_idcode']).copy()
         features[f'{term}_dh'] = np.nan
         features[f'{term}_ph'] = np.nan
+    else:
+        features = pd.DataFrame(data = [current_pat_client_id_code] , columns =['client_idcode']).copy()
+        pass
 
     if config_obj.verbosity >= 6: display(features)
 
