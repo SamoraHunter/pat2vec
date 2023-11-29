@@ -58,7 +58,8 @@ class config_class:
                  negate_biochem = False,
                  patient_id_column_name='client_idcode',
                  overwrite_stored_pat_docs = False,
-                 store_pat_batch_docs = True
+                 store_pat_batch_docs = True,
+                 annot_filter_options = None
                  
                  ):
         
@@ -114,7 +115,7 @@ class config_class:
         
         self.overwrite_stored_pat_docs = overwrite_stored_pat_docs
         
-        
+        self.annot_filter_options = annot_filter_options
         
         if(start_time ==None):
             self.start_time = datetime.now()
@@ -139,6 +140,19 @@ class config_class:
                 'negated_presence_annotations':False
                 
                }
+            
+        if(self.annot_filter_options ==None):
+            filter_arguments = {
+                'Confidence': 0.8,
+                'Accuracy': 0.8,
+                'types': ['qualifier value', 'procedure', 'substance', 'finding', 'environment', 'disorder', 'observable entity'],
+                'Time_Value': ['Recent', 'Past'],  # Specify the values you want to include in a list
+                'Time_Confidence': 0.8,  # Specify the confidence threshold as a float
+                'Presence_Value': ['True'],  # Specify the values you want to include in a list
+                'Presence_Confidence': 0.8,  # Specify the confidence threshold as a float
+                'Subject_Value': ['Patient'],  # Specify the values you want to include in a list
+                'Subject_Confidence': 0.8  # Specify the confidence threshold as a float
+            }
             
         self.negated_presence_annotations = self.main_options.get('negated_presence_annotations')
 

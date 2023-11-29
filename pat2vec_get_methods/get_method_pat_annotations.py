@@ -49,6 +49,8 @@ def get_current_pat_annotations(current_pat_client_id_code, target_date_range, p
     
     pre_document_batch_path = config_obj.pre_document_batch_path
     
+    pre_document_annotation_batch_path = config_obj.pre_document_annotation_batch_path
+    
     
     current_annotation_file_path = pre_annotation_path + current_pat_client_id_code + "/" +  current_pat_client_id_code+"_"+str(target_date_range)
     
@@ -74,7 +76,14 @@ def get_current_pat_annotations(current_pat_client_id_code, target_date_range, p
     
         #annotate_pat_batch_documents(current_pat_client_id_code, target_date_range, pat_batch, config_obj=config_obj, t=None, cat=cat)
 
-        pass
+        current_pat_batch_annot_path = os.path.join(pre_document_annotation_batch_path, current_pat_client_id_code + ".csv")
+    
+
+        pat_document_annot_batch = pd.read_csv(pre_document_annotation_batch_path)
+
+        #pass
+        
+        #apply filter at pat batch dump level
         
     else:
         
