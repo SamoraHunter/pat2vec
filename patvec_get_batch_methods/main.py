@@ -1,3 +1,8 @@
+import os
+
+from util.methods_get import exist_check
+
+
 def get_pat_batch_obs(current_pat_client_id_code, search_term, config_obj=None, cohort_searcher_with_terms_and_search=None):
     """
     Retrieve batch observations for a patient based on the given parameters.
@@ -271,24 +276,47 @@ def get_pat_batch_epr_docs(current_pat_client_id_code, search_term, config_obj=N
     if config_obj is None or not all(hasattr(config_obj, attr) for attr in ['global_start_year', 'global_start_month', 'global_end_year', 'global_end_month']):
         raise ValueError("Invalid or missing configuration object.")
 
+
+    overwrite_stored_pat_docs = config_obj.overwrite_stored_pat_docs
+    store_pat_batch_docs = config_obj.store_pat_batch_docs
+    
+    
+    batch_epr_target_path = os.path.join(config_obj.pre_document_batch_path, str(current_pat_client_id_code) + ".csv")
+
+    if(config_obj.verbosity >=6):
+        print("batch_epr_target_path", batch_epr_target_path)
+
     global_start_year = config_obj.global_start_year
     global_start_month = config_obj.global_start_month
     global_end_year = config_obj.global_end_year
     global_end_month = config_obj.global_end_month
 
+
+
     try:
-        batch_target = cohort_searcher_with_terms_and_search(
-            index_name="epr_documents",
-            fields_list="""client_idcode document_guid document_description body_analysed updatetime clientvisit_visitidcode""".split(),
-            term_name="client_idcode.keyword",
-            entered_list=[current_pat_client_id_code],
-            search_string=f'updatetime:[{global_start_year}-{global_start_month} TO {global_end_year}-{global_end_month}]'
-        )
+        
+        if(overwrite_stored_pat_docs or exist_check(batch_epr_target_path, config_obj) is False):
+        
+            batch_target = cohort_searcher_with_terms_and_search(
+                index_name="epr_documents",
+                fields_list="""client_idcode document_guid document_description body_analysed updatetime clientvisit_visitidcode""".split(),
+                term_name="client_idcode.keyword",
+                entered_list=[current_pat_client_id_code],
+                search_string=f'updatetime:[{global_start_year}-{global_start_month} TO {global_end_year}-{global_end_month}]'
+            )
+            
+            
+            if(config_obj.store_pat_batch_docs or overwrite_stored_pat_docs):
+                batch_target.to_csv(batch_epr_target_path)
+            
+        
+        
         return batch_target
     except Exception as e:
         ""
         print(f"Error retrieving batch EPR documents: {e}")
-        return []
+        raise UnboundLocalError("Error retrieving batch EPR documents.")
+        #return []
 
 
 

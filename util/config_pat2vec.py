@@ -56,7 +56,9 @@ class config_class:
                  start_time = None,
                  root_path = None,
                  negate_biochem = False,
-                 patient_id_column_name='client_idcode'
+                 patient_id_column_name='client_idcode',
+                 overwrite_stored_pat_docs = False,
+                 store_pat_batch_docs = True
                  
                  ):
         
@@ -67,9 +69,11 @@ class config_class:
         self.pre_annotation_path = f'current_pat_annots_parts{self.suffix}/'
         self.pre_annotation_path_mrc = f'current_pat_annots_mrc_parts{self.suffix}/'
         
-        self.pre_document_day_path = f'current_pat_documents{self.suffix}/'
-        self.pre_document_annotation_day_path = f'current_pat_documents_annotations{self.suffix}/'
+        #self.pre_document_day_path = f'current_pat_documents{self.suffix}/'
+        self.pre_document_annotation_batch_path = f'current_pat_documents_annotations_batches{self.suffix}/'
+        self.pre_document_batch_path = f"current_pat_document_batches{self.suffix}/"
         
+        self.store_pat_batch_docs = store_pat_batch_docs
         
         self.proj_name = proj_name
         self.main_options = main_options
@@ -107,6 +111,10 @@ class config_class:
         self.medcat = medcat
         
         self.root_path = root_path
+        
+        self.overwrite_stored_pat_docs = overwrite_stored_pat_docs
+        
+        
         
         if(start_time ==None):
             self.start_time = datetime.now()
@@ -148,23 +156,33 @@ class config_class:
             
             self.pre_annotation_path_mrc = self.root_path + self.pre_annotation_path_mrc
             
-            self.pre_document_day_path = self.root_path + self.pre_document_day_path
+            #self.pre_document_day_path = self.root_path + self.pre_document_day_path
             
-            self.pre_document_annotation_day_path = self.root_path + self.pre_document_annotation_day_path
+            #self.pre_document_annotation_day_path = self.root_path + self.pre_document_annotation_day_path
             
+            self.pre_document_batch_path = self.root_path + self.pre_document_batch_path 
             
+            self.pre_document_annotation_batch_path = self.root_path + self.pre_document_annotation_batch_path
+            
+            self.output_folder = 'outputs'
+            
+            self.output_folder = os.path.join(self.root_path, self.output_folder)
             
             Path(self.pre_annotation_path).mkdir(parents=True, exist_ok=True)
             Path(self.pre_annotation_path_mrc).mkdir(parents=True, exist_ok=True)
-            Path(self.pre_document_day_path).mkdir(parents=True, exist_ok=True)
-            Path(self.pre_document_annotation_day_path).mkdir(parents=True, exist_ok=True)
+            Path(self.output_folder)
+            #Path(self.pre_document_day_path).mkdir(parents=True, exist_ok=True)
+            Path(self.pre_document_annotation_batch_path).mkdir(parents=True, exist_ok=True)
+            Path(self.pre_document_batch_path).mkdir(parents=True, exist_ok=True)
             
             
 
             print(self.pre_annotation_path)
             print(self.pre_annotation_path_mrc)
-            print(self.pre_document_day_path)
-            print(self.pre_document_annotation_day_path)
+            #print(self.pre_document_day_path)
+            print(self.pre_document_annotation_batch_path)
+            print(self.pre_document_batch_path)
+            print(self.output_folder)
             
             
         self.current_pat_line_path = f"current_pat_lines_parts{self.suffix}/"

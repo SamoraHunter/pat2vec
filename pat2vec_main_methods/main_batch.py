@@ -66,6 +66,9 @@ def main_batch(current_pat_client_id_code,
     if cat is None:
         raise ValueError("cat cannot be None. Please provide a valid configuration. (main_batch)")
     
+    if type(current_pat_client_id_code) is not str:
+        raise ValueError("current_pat_client_id_code cannot be other than str. Please provide a valid configuration. (main_batch)")
+    
     
     
     start_time = time.time()
