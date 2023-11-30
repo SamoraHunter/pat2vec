@@ -7,7 +7,7 @@ import pandas as pd
 import paramiko
 from IPython.display import display
 from IPython.utils import io
-from util.methods_annotation import check_pat_document_annotation_complete, get_pat_document_annotation_batch
+from util.methods_annotation import check_pat_document_annotation_complete, filter_annot_dataframe, get_pat_document_annotation_batch
 
 from util.methods_get import (dump_results, exist_check,
                               filter_dataframe_by_timestamp,
@@ -81,6 +81,13 @@ def get_current_pat_annotations(current_pat_client_id_code, target_date_range, p
 
         pat_document_annot_batch = pd.read_csv(pre_document_annotation_batch_path)
 
+        #filter for config args
+        pat_document_annot_batch = filter_annot_dataframe(dataframe = pat_document_annot_batch, config_obj = config_obj)
+        
+        #filter for datetime stamp
+        
+        
+        
         #pass
         
         #apply filter at pat batch dump level

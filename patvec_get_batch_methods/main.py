@@ -1,5 +1,8 @@
 import os
 
+import pandas as pd
+from gloabl_files.pat2vec.util.methods_annotation import get_pat_document_annotation_batch
+
 from util.methods_get import exist_check
 
 
@@ -306,6 +309,8 @@ def get_pat_batch_epr_docs(current_pat_client_id_code, search_term, config_obj=N
             )
             
             
+            
+            
             if(config_obj.store_pat_batch_docs or overwrite_stored_pat_docs):
                 batch_target.to_csv(batch_epr_target_path)
             
@@ -319,6 +324,19 @@ def get_pat_batch_epr_docs(current_pat_client_id_code, search_term, config_obj=N
         #return []
 
 
+def get_pat_batch_epr_docs_annotations(current_pat_client_id_code, config_obj = None):
+    
+    batch_epr_target_path = os.path.join(config_obj.pre_document_batch_path, str(current_pat_client_id_code) + ".csv")
+    
+    cat = config_obj.cat
+    
+    t = config_obj.t
+    
+    pat_batch = pd.read_csv(batch_epr_target_path)
+    
+    batch_target = get_pat_document_annotation_batch(current_pat_client_idcode = current_pat_client_id_code, pat_batch=pat_batch, cat=cat, config_obj=config_obj, t=t)
+
+    return batch_target
 
 def get_pat_batch_mct_docs(current_pat_client_id_code, search_term, config_obj=None, cohort_searcher_with_terms_and_search=None):
     """

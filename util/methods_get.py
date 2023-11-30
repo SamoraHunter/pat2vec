@@ -145,7 +145,7 @@ def generate_date_list(start_date, years, months, days):
 def filter_dataframe_by_timestamp(df, start_year, start_month, end_year, end_month, start_day, end_day, timestamp_string):
         # Convert timestamp column to datetime format
     df[timestamp_string] = pd.to_datetime(df[timestamp_string], utc=True)
-
+    
 
     #imputed from elastic. Mirror:
     #start_day = 1
