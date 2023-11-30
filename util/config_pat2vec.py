@@ -118,12 +118,17 @@ class config_class:
         
         self.annot_filter_options = annot_filter_options
         
+        self.start_time = start_time
+        
         if(start_time ==None):
             self.start_time = datetime.now()
 
         
         if(self.main_options == None):
-            self.main_options = {'demo':False,
+            if(self.verbosity >= 1):
+                print('default main_options set!')
+            
+            self.main_options = {'demo':True,
                 'bmi':False,
                 'bloods':False,
                 'drugs':False,
@@ -136,11 +141,13 @@ class config_class:
                 'core_resus':False,
                 'news':False,
                 
-                'annotations':True,
-                'annotations_mrc': True,
+                'annotations':False,
+                'annotations_mrc': False,
                 'negated_presence_annotations':False
                 
                }
+            if(self.verbosity >= 1):
+                print(self.main_options)
             
         if(self.annot_filter_options ==None):
             self.filter_arguments = {
@@ -158,22 +165,14 @@ class config_class:
         self.negated_presence_annotations = self.main_options.get('negated_presence_annotations')
 
 
-
         if(remote_dump==False):
         
-            # root_path = f'/mnt/hdd1/samora/{proj_name}/'
-            # root_path = f'/home/jovyan/work/clinical_coding/{proj_name}/'
-            # root_path = f'/home/cogstack/samora/_data/clinical_coding/{proj_name}/'
             if(self.root_path == None):
                 self.root_path = f'{os.getcwd()}/{self.proj_name}/'
             
             self.pre_annotation_path = self.root_path + self.pre_annotation_path
             
             self.pre_annotation_path_mrc = self.root_path + self.pre_annotation_path_mrc
-            
-            #self.pre_document_day_path = self.root_path + self.pre_document_day_path
-            
-            #self.pre_document_annotation_day_path = self.root_path + self.pre_document_annotation_day_path
             
             self.pre_document_batch_path = self.root_path + self.pre_document_batch_path 
             
@@ -188,16 +187,13 @@ class config_class:
             Path(self.pre_annotation_path).mkdir(parents=True, exist_ok=True)
             Path(self.pre_annotation_path_mrc).mkdir(parents=True, exist_ok=True)
             Path(self.output_folder).mkdir(parents=True, exist_ok=True)
-            #Path(self.pre_document_day_path).mkdir(parents=True, exist_ok=True)
             Path(self.pre_document_annotation_batch_path).mkdir(parents=True, exist_ok=True)
             Path(self.pre_document_batch_path).mkdir(parents=True, exist_ok=True)
             Path(self.pre_document_batch_path_mct).mkdir(parents=True, exist_ok=True)
             
             
-
             print(self.pre_annotation_path)
             print(self.pre_annotation_path_mrc)
-            #print(self.pre_document_day_path)
             print(self.pre_document_annotation_batch_path)
             print(self.pre_document_batch_path)
             print(self.pre_document_batch_path_mct)
@@ -216,18 +212,12 @@ class config_class:
             Path(self.current_pat_line_path).mkdir(parents=True, exist_ok=True)
         
 
-
         print(self.current_pat_line_path)
-        
         
         self.start_date = start_date
         self.years = years
         self.months = months
         self.days = days
-        
-        
-        
-        
         
         months = [x for x in range(1,4)]
         years = [x for x in range(2023, 2024)]
@@ -236,15 +226,9 @@ class config_class:
         combinations = list(itertools.product(years, months, days))
         len(combinations)
         
-        
-        
-        
         self.slow_execution_threshold_low = timedelta(seconds=10)
         self.slow_execution_threshold_high = timedelta(seconds=30)
         self.slow_execution_threshold_extreme = timedelta(seconds=60)
-        
-        
-        
         
         priority_list_bool = False
 
@@ -359,7 +343,9 @@ class config_class:
             self.global_start_month = global_start_month
             self.global_end_year = global_end_year
             self.global_end_month = global_end_month
+            
         if(self.verbosity>1):
+            
             print("Debug message: global_start_year =", self.global_start_year)
             print("Debug message: global_start_month =", self.global_start_month)
             print("Debug message: global_end_year =", self.global_end_year)

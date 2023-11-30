@@ -295,10 +295,11 @@ def get_pat_batch_epr_docs(current_pat_client_id_code, search_term, config_obj=N
     global_end_month = config_obj.global_end_month
 
 
+    existence_check = exist_check(batch_epr_target_path, config_obj)
 
     try:
         
-        if(overwrite_stored_pat_docs or exist_check(batch_epr_target_path, config_obj) is False):
+        if(overwrite_stored_pat_docs or existence_check is False):
         
             batch_target = cohort_searcher_with_terms_and_search(
                 index_name="epr_documents",
@@ -315,6 +316,8 @@ def get_pat_batch_epr_docs(current_pat_client_id_code, search_term, config_obj=N
                 batch_target.to_csv(batch_epr_target_path)
             
         
+        else:
+            batch_target = pd.read_csv(batch_epr_target_path)
         
         return batch_target
     except Exception as e:
@@ -383,8 +386,11 @@ def get_pat_batch_mct_docs(current_pat_client_id_code, search_term, config_obj=N
     
     batch_epr_target_path_mct = os.path.join(config_obj.pre_document_batch_path_mct, str(current_pat_client_id_code) + ".csv")
 
+
+    existence_check = exist_check(batch_epr_target_path_mct, config_obj)
+    
     try:
-        if(overwrite_stored_pat_docs or exist_check(batch_epr_target_path_mct, config_obj) is False):
+        if(overwrite_stored_pat_docs or existence_check is False):
         
             batch_target = cohort_searcher_with_terms_and_search(
                 index_name="observations",
@@ -399,6 +405,8 @@ def get_pat_batch_mct_docs(current_pat_client_id_code, search_term, config_obj=N
             
             if(config_obj.store_pat_batch_docs or overwrite_stored_pat_docs):
                 batch_target.to_csv(batch_epr_target_path_mct)
+        else:
+            batch_target = pd.read_csv(batch_epr_target_path_mct)
             
             
         return batch_target
