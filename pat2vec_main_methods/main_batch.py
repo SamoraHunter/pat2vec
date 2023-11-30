@@ -44,6 +44,7 @@ def main_batch(current_pat_client_id_code,
                batch_bloods = None,
                batch_drugs = None,
                batch_epr_docs_annotations = None,
+               batch_epr_docs_annotations_mct = None,
 
               config_obj=None,
               stripped_list_start = None,
@@ -166,8 +167,8 @@ def main_batch(current_pat_client_id_code,
 
                 if main_options.get('annotations_mrc'):
                     df_pat_target = get_current_pat_annotations_mrc_cs(current_pat_client_id_code, target_date_range,
-                                                                       batch_mct,
-                                                                       
+                                                                       #batch_mct,
+                                                                       batch_epr_docs_annotations = batch_epr_docs_annotations_mct,
                                                                        config_obj = config_obj,
                                                                        t=t,
                                                                        cohort_searcher_with_terms_and_search = cohort_searcher_with_terms_and_search,

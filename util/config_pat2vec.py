@@ -73,6 +73,7 @@ class config_class:
         #self.pre_document_day_path = f'current_pat_documents{self.suffix}/'
         self.pre_document_annotation_batch_path = f'current_pat_documents_annotations_batches{self.suffix}/'
         self.pre_document_batch_path = f"current_pat_document_batches{self.suffix}/"
+        self.pre_document_batch_path_mct = f"pre_document_batch_path_mct{self.suffix}/"
         
         self.store_pat_batch_docs = store_pat_batch_docs
         
@@ -142,7 +143,7 @@ class config_class:
                }
             
         if(self.annot_filter_options ==None):
-            filter_arguments = {
+            self.filter_arguments = {
                 'Confidence': 0.8,
                 'Accuracy': 0.8,
                 'types': ['qualifier value', 'procedure', 'substance', 'finding', 'environment', 'disorder', 'observable entity'],
@@ -176,6 +177,8 @@ class config_class:
             
             self.pre_document_batch_path = self.root_path + self.pre_document_batch_path 
             
+            self.pre_document_batch_path_mct = self.root_path + self.pre_document_batch_path_mct 
+            
             self.pre_document_annotation_batch_path = self.root_path + self.pre_document_annotation_batch_path
             
             self.output_folder = 'outputs'
@@ -184,10 +187,11 @@ class config_class:
             
             Path(self.pre_annotation_path).mkdir(parents=True, exist_ok=True)
             Path(self.pre_annotation_path_mrc).mkdir(parents=True, exist_ok=True)
-            Path(self.output_folder)
+            Path(self.output_folder).mkdir(parents=True, exist_ok=True)
             #Path(self.pre_document_day_path).mkdir(parents=True, exist_ok=True)
             Path(self.pre_document_annotation_batch_path).mkdir(parents=True, exist_ok=True)
             Path(self.pre_document_batch_path).mkdir(parents=True, exist_ok=True)
+            Path(self.pre_document_batch_path_mct).mkdir(parents=True, exist_ok=True)
             
             
 
@@ -196,7 +200,9 @@ class config_class:
             #print(self.pre_document_day_path)
             print(self.pre_document_annotation_batch_path)
             print(self.pre_document_batch_path)
+            print(self.pre_document_batch_path_mct)
             print(self.output_folder)
+            
             
             
         self.current_pat_line_path = f"current_pat_lines_parts{self.suffix}/"

@@ -1,7 +1,7 @@
 import os
 
 import pandas as pd
-from util.methods_annotation import get_pat_document_annotation_batch
+from util.methods_annotation import get_pat_document_annotation_batch, get_pat_document_annotation_batch_mct
 
 from util.methods_get import exist_check
 
@@ -324,17 +324,33 @@ def get_pat_batch_epr_docs(current_pat_client_id_code, search_term, config_obj=N
         #return []
 
 
-def get_pat_batch_epr_docs_annotations(current_pat_client_id_code, config_obj = None):
+def get_pat_batch_epr_docs_annotations(current_pat_client_id_code, config_obj = None, cat=None, t=None):
     
     batch_epr_target_path = os.path.join(config_obj.pre_document_batch_path, str(current_pat_client_id_code) + ".csv")
     
-    cat = config_obj.cat
+    #cat = config_obj.cat
     
-    t = config_obj.t
+    #t = config_obj.t
     
     pat_batch = pd.read_csv(batch_epr_target_path)
     
     batch_target = get_pat_document_annotation_batch(current_pat_client_idcode = current_pat_client_id_code, pat_batch=pat_batch, cat=cat, config_obj=config_obj, t=t)
+
+    return batch_target
+
+
+
+def get_pat_batch_mct_docs_annotations(current_pat_client_id_code, config_obj = None, cat=None, t=None):
+    
+    batch_epr_target_path_mct = os.path.join(config_obj.pre_document_batch_path_mct, str(current_pat_client_id_code) + ".csv")
+    
+    #cat = config_obj.cat
+    
+    #t = config_obj.t
+    
+    pat_batch = pd.read_csv(batch_epr_target_path_mct)
+    
+    batch_target = get_pat_document_annotation_batch_mct(current_pat_client_idcode = current_pat_client_id_code, pat_batch=pat_batch, cat=cat, config_obj=config_obj, t=t)
 
     return batch_target
 
@@ -361,18 +377,30 @@ def get_pat_batch_mct_docs(current_pat_client_id_code, search_term, config_obj=N
     global_start_month = config_obj.global_start_month
     global_end_year = config_obj.global_end_year
     global_end_month = config_obj.global_end_month
+    
+    overwrite_stored_pat_docs = config_obj.overwrite_stored_pat_docs
+    store_pat_batch_docs = config_obj.store_pat_batch_docs
+    
+    batch_epr_target_path_mct = os.path.join(config_obj.pre_document_batch_path_mct, str(current_pat_client_id_code) + ".csv")
 
     try:
-        batch_target = cohort_searcher_with_terms_and_search(
-            index_name="observations",
-            fields_list="""observation_guid client_idcode obscatalogmasteritem_displayname
-                            observation_valuetext_analysed observationdocument_recordeddtm 
-                            clientvisit_visitidcode""".split(),
-            term_name="client_idcode.keyword",
-            entered_list=[current_pat_client_id_code],
-            search_string=f'obscatalogmasteritem_displayname:("AoMRC_ClinicalSummary_FT") AND '
-                          f'observationdocument_recordeddtm:[{global_start_year}-{global_start_month} TO {global_end_year}-{global_end_month}]'
-        )
+        if(overwrite_stored_pat_docs or exist_check(batch_epr_target_path_mct, config_obj) is False):
+        
+            batch_target = cohort_searcher_with_terms_and_search(
+                index_name="observations",
+                fields_list="""observation_guid client_idcode obscatalogmasteritem_displayname
+                                observation_valuetext_analysed observationdocument_recordeddtm 
+                                clientvisit_visitidcode""".split(),
+                term_name="client_idcode.keyword",
+                entered_list=[current_pat_client_id_code],
+                search_string=f'obscatalogmasteritem_displayname:("AoMRC_ClinicalSummary_FT") AND '
+                            f'observationdocument_recordeddtm:[{global_start_year}-{global_start_month} TO {global_end_year}-{global_end_month}]'
+            )
+            
+            if(config_obj.store_pat_batch_docs or overwrite_stored_pat_docs):
+                batch_target.to_csv(batch_epr_target_path_mct)
+            
+            
         return batch_target
     except Exception as e:
         ""

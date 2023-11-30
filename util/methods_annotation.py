@@ -50,9 +50,17 @@ def get_pat_document_annotation_batch(current_pat_client_idcode, pat_batch, cat=
     multi_annots_to_df(current_pat_client_idcode, pat_batch, multi_annots, config_obj = config_obj, t=t)
     
     
+def get_pat_document_annotation_batch_mct(current_pat_client_idcode, pat_batch, cat=None, config_obj=None, t=None):
+    
+    
+    multi_annots = annot_pat_batch_docs(current_pat_client_idcode, pat_batch, cat=cat, config_obj=config_obj, t=t, text_column='observation_valuetext_analysed')
+    
+    
+    multi_annots_to_df(current_pat_client_idcode, pat_batch, multi_annots, config_obj = config_obj, t=t, text_column='observation_valuetext_analysed', time_column='observationdocument_recordeddtm')
+    
     
 
-def annot_pat_batch_docs(current_pat_client_idcode, pat_batch, cat=None, config_obj=None, t=None):
+def annot_pat_batch_docs(current_pat_client_idcode, pat_batch, cat=None, config_obj=None, t=None, text_column='body_analysed'):
     
     start_time = config_obj.start_time
     
@@ -62,12 +70,12 @@ def annot_pat_batch_docs(current_pat_client_idcode, pat_batch, cat=None, config_
                 n_docs_to_annotate = n_docs_to_annotate,
                 t=t, config_obj=config_obj)
     
-    multi_annots = cat.get_entities_multi_texts(pat_batch['body_analysed'])
+    multi_annots = cat.get_entities_multi_texts(pat_batch[text_column])
     
     return multi_annots
     
     
-def multi_annots_to_df(current_pat_client_idcode, pat_batch, multi_annots, config_obj = None, t=None):
+def multi_annots_to_df(current_pat_client_idcode, pat_batch, multi_annots, config_obj = None, t=None, text_column='body_analysed',time_column='updatetime'):
     
     n_docs_to_annotate = len(pat_batch)
     
@@ -98,7 +106,9 @@ def multi_annots_to_df(current_pat_client_idcode, pat_batch, multi_annots, confi
 
         doc_to_annot_df = json_to_dataframe(json_data = multi_annots[i],
                                                             doc = pat_batch.iloc[i],
-                                                            current_pat_client_id_code = current_pat_client_idcode)
+                                                            current_pat_client_id_code = current_pat_client_idcode,
+                                                            text_column=text_column,
+                                                            time_column=time_column)
 
         doc_to_annot_df.to_csv(temp_file_path, mode='a', header=False, index=False)
 
@@ -109,7 +119,7 @@ def multi_annots_to_df(current_pat_client_idcode, pat_batch, multi_annots, confi
 
 
 
-def json_to_dataframe(json_data, doc,current_pat_client_id_code, full_doc=False, window=300):
+def json_to_dataframe(json_data, doc,current_pat_client_id_code, full_doc=False, window=300, text_column='body_analysed', time_column='updatetime'):
     # Extract data from the JSON
     #doc to be passed as pandas series
 
@@ -141,7 +151,7 @@ def json_to_dataframe(json_data, doc,current_pat_client_id_code, full_doc=False,
         # Parse meta annotations
         parsed_meta_anns = parse_meta_anns(meta_anns)
         
-        mapped_annot_doc_entity = doc['body_analysed']
+        mapped_annot_doc_entity = doc[text_column]
         
         document_len = len(mapped_annot_doc_entity)
         
@@ -153,7 +163,7 @@ def json_to_dataframe(json_data, doc,current_pat_client_id_code, full_doc=False,
         
         text_sample = mapped_annot_doc_entity[virtual_start:virtual_end]
         
-        updatetime = doc['updatetime']
+        updatetime = doc[time_column]
         
         document_guid_value = doc['document_guid']
         
@@ -167,7 +177,7 @@ def json_to_dataframe(json_data, doc,current_pat_client_id_code, full_doc=False,
     
         # Define DataFrame columns and create the DataFrame
         # Define DataFrame columns and create the DataFrame
-        columns = ['client_idcode','updatetime','pretty_name', 'cui', 'type_ids', 'types', 'source_value', 'detected_name', 'acc', 'context_similarity',
+        columns = ['client_idcode',time_column,'pretty_name', 'cui', 'type_ids', 'types', 'source_value', 'detected_name', 'acc', 'context_similarity',
                    'start', 'end', 'icd10', 'ontologies', 'snomed', 'id',
                    'Time_Value', 'Time_Confidence', 'Presence_Value', 'Presence_Confidence',
                    'Subject_Value', 'Subject_Confidence', 'text_sample', 'full_doc', 'document_guid']

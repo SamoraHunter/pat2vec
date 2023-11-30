@@ -4,6 +4,11 @@ from datetime import datetime
 
 from tqdm import tqdm
 
+def count_files(path):
+    count = 0
+    for root, dirs, files in os.walk(path):
+        count += len(files)
+    return count
 
 def process_csv_files(input_dir, output_file):
     """
@@ -28,7 +33,10 @@ def process_csv_files(input_dir, output_file):
     - The merged CSV file will have a header row with unique column names derived from all input files.
     - The function uses the 'tqdm' library to display a progress bar while merging files.
     """
-    #print("proc debug")
+    
+    
+    print(f"Processing input directory '{input_dir}'. The directory contains {len(os.listdir(input_dir))} patient directories, and a total of {count_files(input_dir)} date vectors. Results will be written to '{output_file}'.")
+
     
     # Initialize a dictionary to store column names
     column_names_dict = {}
