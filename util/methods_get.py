@@ -206,24 +206,16 @@ def dump_results(file_data, path, config_obj=None):
                 
 
 def update_pbar(current_pat_client_id_code, start_time, stage_int, stage_str, t, config_obj, skipped_counter=None, **n_docs_to_annotate):
-    #global colour_val
-    #global t
-    #global skipped_counter
-    
-    #global skipped_counter
-    #colour_val = color_bars[stage_int] + stage_str
     
     start_time = config_obj.start_time
-    #print("start time debug", start_time)
+
     
     multi_process = config_obj.multi_process
     slow_execution_threshold_low = config_obj.slow_execution_threshold_low
     slow_execution_threshold_high = config_obj.slow_execution_threshold_high
     slow_execution_threshold_extreme = config_obj.slow_execution_threshold_extreme
     
-    # print(type(slow_execution_threshold_low), slow_execution_threshold_low)
-    # print(type(start_time), start_time)
-    # print(type(time.time()), time.time())
+  
     
     colour_val = Fore.GREEN +  Style.BRIGHT + stage_str
     

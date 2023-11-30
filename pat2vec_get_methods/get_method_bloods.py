@@ -62,8 +62,6 @@ def get_current_pat_bloods(current_pat_client_id_code, target_date_range, pat_ba
 
     filtered_column_list = filtered_list
 
-    #print("Building obs_columns_set_columns_for_df")
-
     obs_columns_set_columns_for_df = []
     for i in range(0, len(obs_columns_set)):
         obs_columns_set_columns_for_df.append(obs_columns_set[i]+"_mean")
@@ -114,7 +112,7 @@ def get_current_pat_bloods(current_pat_client_id_code, target_date_range, pat_ba
         filtered_column_values = filtered_df.basicobs_value_numeric.astype(float)._get_numeric_data()
 
         df_len = len(filtered_df)
-        #print(f"df_len {df_len}")
+   
         if(df_len>=1):
                 #Mean assurance*
                 agg_val = float(filtered_column_values.values[0])

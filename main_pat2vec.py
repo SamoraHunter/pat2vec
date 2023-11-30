@@ -260,7 +260,7 @@ class main:
     #------------------------------------begin main----------------------------------       
 
     def pat_maker(self, i):
-        if self.config_obj.verbosity > 0:
+        if self.config_obj.verbosity > 3:
             print(f"Processing patient {i} at {self.all_patient_list[i]}...")
 
         
@@ -382,7 +382,7 @@ class main:
             batch_epr_docs_annotations_mct = get_pat_batch_mct_docs_annotations(current_pat_client_id_code, config_obj=self.config_obj, cat=self.cat, t=self.t)
 
             
-            if self.config_obj.verbosity > 0:
+            if self.config_obj.verbosity > 3:
                 print(f'Done batches in {time.time() - start_time}')
 
             run_on_pat = False
