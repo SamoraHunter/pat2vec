@@ -43,6 +43,7 @@ def main_batch(current_pat_client_id_code,
                batch_mct = None,
                batch_bloods = None,
                batch_drugs = None,
+               batch_epr_docs_annotations = None,
 
               config_obj=None,
               stripped_list_start = None,
@@ -66,9 +67,10 @@ def main_batch(current_pat_client_id_code,
     if cat is None:
         raise ValueError("cat cannot be None. Please provide a valid configuration. (main_batch)")
     
-    if type(current_pat_client_id_code) is not str:
-        raise ValueError("current_pat_client_id_code cannot be other than str. Please provide a valid configuration. (main_batch)")
+    # if type(current_pat_client_id_code) is not str and type(current_pat_client_id_code) is not int:
+    #     raise ValueError("current_pat_client_id_code cannot be other than str. Please provide a valid configuration. (main_batch)")
     
+    current_pat_client_id_code = str(current_pat_client_id_code)
     
     
     start_time = time.time()
@@ -152,7 +154,8 @@ def main_batch(current_pat_client_id_code,
                 if main_options.get('annotations'):
                     df_pat_target = get_current_pat_annotations(current_pat_client_id_code,
                                                                 target_date_range,
-                                                                batch_epr,
+                                                                #batch_epr,
+                                                                batch_epr_docs_annotations =batch_epr_docs_annotations,
                                                                 config_obj=config_obj,
                                                                 t=t,
                                                                 cohort_searcher_with_terms_and_search = cohort_searcher_with_terms_and_search,
@@ -164,6 +167,7 @@ def main_batch(current_pat_client_id_code,
                 if main_options.get('annotations_mrc'):
                     df_pat_target = get_current_pat_annotations_mrc_cs(current_pat_client_id_code, target_date_range,
                                                                        batch_mct,
+                                                                       
                                                                        config_obj = config_obj,
                                                                        t=t,
                                                                        cohort_searcher_with_terms_and_search = cohort_searcher_with_terms_and_search,

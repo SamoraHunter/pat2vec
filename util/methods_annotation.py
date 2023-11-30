@@ -200,3 +200,72 @@ def json_to_dataframe(json_data, doc,current_pat_client_id_code, full_doc=False,
     return super_df
 
 
+def filter_annot_dataframe(dataframe, filter_args):
+    """
+    Filter a DataFrame based on specified filter arguments.
+
+    Parameters:
+    - dataframe: pandas DataFrame
+    - filter_args: dict
+        A dictionary containing filter arguments.
+
+    Returns:
+    - pandas DataFrame
+        The filtered DataFrame.
+    """
+    # Initialize a boolean mask with True values for all rows
+    mask = pd.Series(True, index=dataframe.index)
+
+    # Apply filters based on the provided arguments
+    for column, value in filter_args.items():
+        if column in dataframe.columns:
+            # Special case for 'types' column
+            if column == 'types':
+                mask &= dataframe[column].apply(lambda x: any(item.lower() in x for item in value))
+            elif column in ['Time_Value', 'Presence_Value', 'Subject_Value']:
+                # Include rows where the column is in the specified list of values
+                mask &= dataframe[column].isin(value) if isinstance(value, list) else (dataframe[column] == value)
+            elif column in ['Time_Confidence', 'Presence_Confidence', 'Subject_Confidence']:
+                # Include rows where the column is greater than or equal to the specified confidence threshold
+                mask &= dataframe[column] >= value
+            else:
+                mask &= dataframe[column] >= value
+
+    # Return the filtered DataFrame
+    return dataframe[mask]
+
+
+def calculate_pretty_name_count_features(df_copy, suffix = "epr"):
+    
+    if(len(df_copy)>0):
+    
+        additional_features = {
+        'count': ('pretty_name', 'count'),
+        # Add more features as needed
+        }
+        
+        # Group by 'pretty_name' and apply the additional features
+        result_vector = df_copy.groupby('pretty_name').size().reset_index(name='count')
+
+        # Create a one-dimensional vector (single-row DataFrame)
+        result_vector = result_vector.set_index('pretty_name').T.rename(columns={'count': f'pretty_name_count_{suffix}'})
+
+        # Add additional features
+        for feature_name, (column, function) in additional_features.items():
+            result_vector[feature_name] = df_copy.groupby('pretty_name')[column].agg(function)
+        
+        result_vector.reset_index(drop=True, inplace=True)
+        # Remove the 'pretty_name' column from the result
+        #result_vector = result_vector.drop('pretty_name', axis=1, errors='ignore')
+        result_vector = result_vector.drop('count', axis=1, errors='ignore')
+
+        # Convert all values to float
+        result_vector = result_vector.astype(float)
+        
+        col_names = result_vector.columns#[1:]
+        
+        result_vector = pd.DataFrame(result_vector.values, columns=col_names)
+    else:
+        result_vector = None
+
+    return result_vector

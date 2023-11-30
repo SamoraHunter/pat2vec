@@ -1,7 +1,7 @@
 import os
 
 import pandas as pd
-from gloabl_files.pat2vec.util.methods_annotation import get_pat_document_annotation_batch
+from util.methods_annotation import get_pat_document_annotation_batch
 
 from util.methods_get import exist_check
 
