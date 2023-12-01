@@ -212,8 +212,8 @@ class main:
 
 
 
-
-        random.shuffle(self.all_patient_list)
+        if(config_obj.shuffle_pat_list == True):
+            random.shuffle(self.all_patient_list)
         
         if(self.config_obj.verbosity > 0):
             print(f"remote_dump {self.remote_dump}")
@@ -443,9 +443,9 @@ class main:
                 batch_epr_docs_annotations =  empty_return
 
             if self.config_obj.main_options.get('annotations_mrc', True):
-                print("self.config_obj.main_options.get('annotations_mrc', True):")
+                #print("self.config_obj.main_options.get('annotations_mrc', True):")
                 batch_epr_docs_annotations_mct = get_pat_batch_mct_docs_annotations(current_pat_client_id_code, config_obj=self.config_obj, cat=self.cat, t=self.t)
-                display(batch_epr_docs_annotations_mct)
+                #display(batch_epr_docs_annotations_mct)
                 
                 if(type(batch_epr_docs_annotations_mct) == None):
                     if self.config_obj.verbosity > 2:

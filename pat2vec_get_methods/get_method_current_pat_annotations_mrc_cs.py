@@ -34,7 +34,7 @@ def get_current_pat_annotations_mrc_cs(current_pat_client_id_code, target_date_r
     
     start_year, start_month, end_year, end_month, start_day, end_day = get_start_end_year_month(target_date_range)
     
-    display(batch_epr_docs_annotations)
+    #display(batch_epr_docs_annotations)
     
     if(batch_epr_docs_annotations is not None):
     

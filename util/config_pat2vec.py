@@ -59,7 +59,8 @@ class config_class:
                  patient_id_column_name='client_idcode',
                  overwrite_stored_pat_docs = False,
                  store_pat_batch_docs = True,
-                 annot_filter_options = None
+                 annot_filter_options = None,
+                 shuffle_pat_list = False
                  
                  ):
         
