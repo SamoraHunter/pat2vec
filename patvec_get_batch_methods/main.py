@@ -1,8 +1,9 @@
 import os
 
 import pandas as pd
-from util.methods_annotation import get_pat_document_annotation_batch, get_pat_document_annotation_batch_mct
 
+from util.methods_annotation import (get_pat_document_annotation_batch,
+                                     get_pat_document_annotation_batch_mct)
 from util.methods_get import exist_check
 
 
@@ -331,6 +332,7 @@ def get_pat_batch_epr_docs_annotations(current_pat_client_id_code, config_obj = 
     
     batch_epr_target_path = os.path.join(config_obj.pre_document_batch_path, str(current_pat_client_id_code) + ".csv")
     
+    print(batch_epr_target_path)
     #cat = config_obj.cat
     
     #t = config_obj.t

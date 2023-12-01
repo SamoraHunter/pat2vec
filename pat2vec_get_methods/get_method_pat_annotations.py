@@ -8,8 +8,11 @@ import pandas as pd
 import paramiko
 from IPython.display import display
 from IPython.utils import io
-from util.methods_annotation import calculate_pretty_name_count_features, check_pat_document_annotation_complete, filter_annot_dataframe, get_pat_document_annotation_batch
 
+from util.methods_annotation import (calculate_pretty_name_count_features,
+                                     check_pat_document_annotation_complete,
+                                     filter_annot_dataframe,
+                                     get_pat_document_annotation_batch)
 from util.methods_get import (dump_results, exist_check,
                               filter_dataframe_by_timestamp,
                               get_start_end_year_month, update_pbar)
@@ -43,6 +46,10 @@ def get_current_pat_annotations(current_pat_client_id_code, target_date_range, b
         if(len(filtered_batch_epr_docs_annotations)>0):
         
             df_pat_target = calculate_pretty_name_count_features(filtered_batch_epr_docs_annotations)
+            
+        else:
+            if config_obj.verbosity >= 6: print("len(filtered_batch_epr_docs_annotations)>0", len(filtered_batch_epr_docs_annotations)>0)
+            df_pat_target = pd.DataFrame(data = [current_pat_client_id_code], columns=['client_idcode'])
         
     else:
         df_pat_target = pd.DataFrame(data = [current_pat_client_id_code], columns=['client_idcode'])

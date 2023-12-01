@@ -1,20 +1,4 @@
 
-import pickle
-
-import numpy as np
-import paramiko
-from IPython.utils import io
-import pandas as pd
-from IPython.display import display
-
-from util.methods_get import (dump_results, exist_check,
-                              filter_dataframe_by_timestamp,
-                              get_start_end_year_month, update_pbar)
-
-
-
-
-
 import os
 import pickle
 import time
@@ -24,8 +8,11 @@ import pandas as pd
 import paramiko
 from IPython.display import display
 from IPython.utils import io
-from util.methods_annotation import calculate_pretty_name_count_features, check_pat_document_annotation_complete, filter_annot_dataframe, get_pat_document_annotation_batch
 
+from util.methods_annotation import (calculate_pretty_name_count_features,
+                                     check_pat_document_annotation_complete,
+                                     filter_annot_dataframe,
+                                     get_pat_document_annotation_batch)
 from util.methods_get import (dump_results, exist_check,
                               filter_dataframe_by_timestamp,
                               get_start_end_year_month, update_pbar)
@@ -47,6 +34,8 @@ def get_current_pat_annotations_mrc_cs(current_pat_client_id_code, target_date_r
     
     start_year, start_month, end_year, end_month, start_day, end_day = get_start_end_year_month(target_date_range)
     
+    display(batch_epr_docs_annotations)
+    
     if(batch_epr_docs_annotations is not None):
     
         filtered_batch_epr_docs_annotations = filter_dataframe_by_timestamp(batch_epr_docs_annotations, 
@@ -59,6 +48,9 @@ def get_current_pat_annotations_mrc_cs(current_pat_client_id_code, target_date_r
         if(len(filtered_batch_epr_docs_annotations)>0):
         
             df_pat_target = calculate_pretty_name_count_features(filtered_batch_epr_docs_annotations)
+        else:
+            if config_obj.verbosity >= 6: print("len(filtered_batch_epr_docs_annotations)>0", len(filtered_batch_epr_docs_annotations)>0)
+            df_pat_target = pd.DataFrame(data = [current_pat_client_id_code], columns=['client_idcode'])
         
     else:
         df_pat_target = pd.DataFrame(data = [current_pat_client_id_code], columns=['client_idcode'])

@@ -72,8 +72,9 @@ class config_class:
         
         #self.pre_document_day_path = f'current_pat_documents{self.suffix}/'
         self.pre_document_annotation_batch_path = f'current_pat_documents_annotations_batches{self.suffix}/'
+        self.pre_document_annotation_batch_path_mct = f'current_pat_documents_annotations_batches_mct{self.suffix}/'
         self.pre_document_batch_path = f"current_pat_document_batches{self.suffix}/"
-        self.pre_document_batch_path_mct = f"pre_document_batch_path_mct{self.suffix}/"
+        self.pre_document_batch_path_mct = f"current_pat_document_batches_mct{self.suffix}/"
         
         self.store_pat_batch_docs = store_pat_batch_docs
         
@@ -174,11 +175,17 @@ class config_class:
             
             self.pre_annotation_path_mrc = self.root_path + self.pre_annotation_path_mrc
             
+            #Make document batch paths for epr and mct
+            
             self.pre_document_batch_path = self.root_path + self.pre_document_batch_path 
             
             self.pre_document_batch_path_mct = self.root_path + self.pre_document_batch_path_mct 
             
+            #Make annotation batch paths for epr and mct
+            
             self.pre_document_annotation_batch_path = self.root_path + self.pre_document_annotation_batch_path
+            
+            self.pre_document_annotation_batch_path_mct = self.root_path + self.pre_document_annotation_batch_path_mct
             
             self.output_folder = 'outputs'
             
@@ -186,17 +193,26 @@ class config_class:
             
             Path(self.pre_annotation_path).mkdir(parents=True, exist_ok=True)
             Path(self.pre_annotation_path_mrc).mkdir(parents=True, exist_ok=True)
+            
             Path(self.output_folder).mkdir(parents=True, exist_ok=True)
-            Path(self.pre_document_annotation_batch_path).mkdir(parents=True, exist_ok=True)
+            
             Path(self.pre_document_batch_path).mkdir(parents=True, exist_ok=True)
             Path(self.pre_document_batch_path_mct).mkdir(parents=True, exist_ok=True)
+            
+            Path(self.pre_document_annotation_batch_path).mkdir(parents=True, exist_ok=True)
+            Path(self.pre_document_annotation_batch_path_mct).mkdir(parents=True, exist_ok=True)
+            
             
             
             print(self.pre_annotation_path)
             print(self.pre_annotation_path_mrc)
-            print(self.pre_document_annotation_batch_path)
+            
             print(self.pre_document_batch_path)
             print(self.pre_document_batch_path_mct)
+            
+            print(self.pre_document_annotation_batch_path)
+            print(self.pre_document_annotation_batch_path_mct)
+            
             print(self.output_folder)
             
             

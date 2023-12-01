@@ -22,6 +22,7 @@ import numpy as np
 import pandas as pd
 #from tqdm import trange
 from colorama import Back, Fore, Style
+from IPython.display import display
 from IPython.utils import io
 from tqdm import trange
 
@@ -35,8 +36,10 @@ from patvec_get_batch_methods.main import (get_pat_batch_bloods,
                                            get_pat_batch_demo,
                                            get_pat_batch_diagnostics,
                                            get_pat_batch_drugs,
-                                           get_pat_batch_epr_docs, get_pat_batch_epr_docs_annotations,
-                                           get_pat_batch_mct_docs, get_pat_batch_mct_docs_annotations,
+                                           get_pat_batch_epr_docs,
+                                           get_pat_batch_epr_docs_annotations,
+                                           get_pat_batch_mct_docs,
+                                           get_pat_batch_mct_docs_annotations,
                                            get_pat_batch_news,
                                            get_pat_batch_obs)
 from util import config_pat2vec
@@ -290,6 +293,9 @@ class main:
         
         start_time = time.time()
         
+        print("pat maker called: opts: ", self.config_obj.main_options)
+        
+        
         update_pbar(p_bar_entry, start_time, 0, f'Pat_maker called on {i}...', self.t, self.config_obj, skipped_counter)
         
         sftp_obj = self.config_obj.sftp_obj
@@ -426,15 +432,28 @@ class main:
 
 
             if self.config_obj.main_options.get('annotations', True):
+                #print("patmaker","get_pat_batch_epr_docs_annotations")
                 batch_epr_docs_annotations = get_pat_batch_epr_docs_annotations(current_pat_client_id_code, config_obj=self.config_obj, cat=self.cat, t=self.t)
-
+                
+                if(type(batch_epr_docs_annotations) == None):
+                    if self.config_obj.verbosity > 2:
+                        print(f'batch_epr_docs_annotations empty')
+                    batch_epr_docs_annotations =  empty_return
             else:
-                    return empty_return
+                batch_epr_docs_annotations =  empty_return
 
             if self.config_obj.main_options.get('annotations_mrc', True):
+                print("self.config_obj.main_options.get('annotations_mrc', True):")
                 batch_epr_docs_annotations_mct = get_pat_batch_mct_docs_annotations(current_pat_client_id_code, config_obj=self.config_obj, cat=self.cat, t=self.t)
+                display(batch_epr_docs_annotations_mct)
+                
+                if(type(batch_epr_docs_annotations_mct) == None):
+                    if self.config_obj.verbosity > 2:
+                        print(f'batch_epr_docs_annotations_mct empty')
+                
+                
             else:
-                    return empty_return
+                batch_epr_docs_annotations_mct =  empty_return
 
 
             update_pbar(p_bar_entry, start_time, 0, f'Done batches in {time.time()-start_time}', self.t, self.config_obj, skipped_counter)
@@ -458,6 +477,9 @@ class main:
                 print("Drugs:", len(batch_drugs))
                 print("Demo:", len(batch_demo))
                 print("Bloods:", len(batch_bloods))
+                print("EPR annotations:", len(batch_epr_docs_annotations))
+                print("EPR annotations mct:", len(batch_epr_docs_annotations_mct))
+                
             
             if self.config_obj.verbosity > 3:
                 print(f'Done batches in {time.time() - start_time}')
@@ -516,7 +538,7 @@ class main:
                     print(e)
                     print(f"Exception in patmaker on {all_patient_list[i], date_list[j]}")
                     print(traceback.format_exc())
-                    raise
+                    raise e
 
             if remote_dump:
                 self.sftp_obj.close()

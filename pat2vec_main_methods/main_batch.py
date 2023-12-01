@@ -266,6 +266,7 @@ def main_batch(current_pat_client_id_code,
                 
                 #display(pat_concatted)
                 #print(time.time() - start_time, current_pat_client_id_code)
+                print("Reached end main batch")
             except RuntimeError as RuntimeError_exception:
                 print("Caught runtime error... is torch?")
                 print(RuntimeError)

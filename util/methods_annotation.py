@@ -1,10 +1,12 @@
 
-import numpy as np
-import pandas as pd
 import os
-from util.methods_get import exist_check, update_pbar 
 import shutil
 
+import numpy as np
+import pandas as pd
+from IPython.display import display
+
+from util.methods_get import exist_check, update_pbar
 
 
 def check_pat_document_annotation_complete(current_pat_client_id_code, config_obj=None):
@@ -46,17 +48,45 @@ def get_pat_document_annotation_batch(current_pat_client_idcode, pat_batch, cat=
     
     multi_annots = annot_pat_batch_docs(current_pat_client_idcode, pat_batch, cat=cat, config_obj=config_obj, t=t)
     
-    
+    #create the file in its dir
     multi_annots_to_df(current_pat_client_idcode, pat_batch, multi_annots, config_obj = config_obj, t=t)
+    
+    #read_newly created file:
+    pre_document_annotation_batch_path = config_obj.pre_document_annotation_batch_path
+    
+    
+    current_pat_document_annotation_batch_path = os.path.join(pre_document_annotation_batch_path, current_pat_client_idcode + ".csv")
+    
+    pat_document_annotation_batch = pd.read_csv(current_pat_document_annotation_batch_path)
+    
+    return pat_document_annotation_batch
     
     
 def get_pat_document_annotation_batch_mct(current_pat_client_idcode, pat_batch, cat=None, config_obj=None, t=None):
     
+    #print('get_pat_document_annotation_batch_mct')
     
-    multi_annots = annot_pat_batch_docs(current_pat_client_idcode, pat_batch, cat=cat, config_obj=config_obj, t=t, text_column='observation_valuetext_analysed')
+    #display(pat_batch)
+    
+    #get the annotations for the pat documents
+    multi_annots = annot_pat_batch_docs(current_pat_client_idcode=current_pat_client_idcode, pat_batch=pat_batch, cat=cat, config_obj=config_obj, t=t, text_column='observation_valuetext_analysed')
+    
+    #display(multi_annots)
+    
+    #creaet the file in its dir
+    multi_annots_to_df_mct(current_pat_client_idcode, pat_batch, multi_annots, config_obj = config_obj, t=t, text_column='observation_valuetext_analysed', time_column='observationdocument_recordeddtm', guid_column='observation_guid')
+    
+    #read_newly created file:
+    pre_document_annotation_batch_path_mct = config_obj.pre_document_annotation_batch_path_mct
     
     
-    multi_annots_to_df(current_pat_client_idcode, pat_batch, multi_annots, config_obj = config_obj, t=t, text_column='observation_valuetext_analysed', time_column='observationdocument_recordeddtm')
+    current_pat_document_annotation_batch_path = os.path.join(pre_document_annotation_batch_path_mct, current_pat_client_idcode + ".csv")
+    
+    pat_document_annotation_batch = pd.read_csv(current_pat_document_annotation_batch_path)
+    
+    return pat_document_annotation_batch
+    
+    
     
     
 
@@ -75,13 +105,19 @@ def annot_pat_batch_docs(current_pat_client_idcode, pat_batch, cat=None, config_
     return multi_annots
     
     
-def multi_annots_to_df(current_pat_client_idcode, pat_batch, multi_annots, config_obj = None, t=None, text_column='body_analysed',time_column='updatetime'):
+def multi_annots_to_df(current_pat_client_idcode, 
+                       pat_batch, multi_annots, 
+                       config_obj = None, t=None,
+                       text_column='body_analysed',
+                       time_column='updatetime', 
+                       guid_column='document_guid'):
     
     n_docs_to_annotate = len(pat_batch)
     
     start_time = config_obj.start_time
     
     pre_document_annotation_batch_path = config_obj.pre_document_annotation_batch_path
+    
     
     current_pat_document_annotation_batch_path = os.path.join(pre_document_annotation_batch_path, current_pat_client_idcode + ".csv")
     
@@ -91,12 +127,12 @@ def multi_annots_to_df(current_pat_client_idcode, pat_batch, multi_annots, confi
     
     temp_file_path = 'temp_annot_file.csv'
     
-    col_list = [ 'client_idcode', 'updatetime', 'pretty_name', 'cui',
+    col_list = [ 'client_idcode', time_column, 'pretty_name', 'cui',
        'type_ids', 'types', 'source_value', 'detected_name', 'acc',
        'context_similarity', 'start', 'end', 'icd10', 'ontologies', 'snomed',
        'id', 'Time_Value', 'Time_Confidence', 'Presence_Value',
        'Presence_Confidence', 'Subject_Value', 'Subject_Confidence',
-       'text_sample', 'full_doc', 'document_guid']
+       'text_sample', 'full_doc', guid_column]
     
     pd.DataFrame(None, columns=col_list).to_csv(temp_file_path)
     
@@ -108,7 +144,66 @@ def multi_annots_to_df(current_pat_client_idcode, pat_batch, multi_annots, confi
                                                             doc = pat_batch.iloc[i],
                                                             current_pat_client_id_code = current_pat_client_idcode,
                                                             text_column=text_column,
-                                                            time_column=time_column)
+                                                            time_column=time_column,
+                                                            guid_column = guid_column)
+
+        doc_to_annot_df.to_csv(temp_file_path, mode='a', header=False, index=False)
+
+    
+    
+    
+    shutil.copy(temp_file_path, current_pat_document_annotation_batch_path)
+    
+    
+    
+def multi_annots_to_df_mct(current_pat_client_idcode,
+                           pat_batch, multi_annots,
+                           config_obj = None,
+                           t=None,
+                           text_column='observation_valuetext_analysed',
+                           time_column='observationdocument_recordeddtm',
+                           guid_column='observation_guid'):
+    
+    
+    
+    #print("multi_annots_to_df_mct")
+    #print(text_column, time_column, guid_column)
+   # display(pat_batch)
+    #display(multi_annots)
+    n_docs_to_annotate = len(pat_batch)
+    
+    start_time = config_obj.start_time
+    
+    pre_document_annotation_batch_path = config_obj.pre_document_annotation_batch_path_mct
+    
+    
+    current_pat_document_annotation_batch_path = os.path.join(pre_document_annotation_batch_path, current_pat_client_idcode + ".csv")
+    
+    update_pbar(current_pat_client_idcode, start_time, 5, 'multi_annots_to_df',
+                n_docs_to_annotate = n_docs_to_annotate,
+                t=t, config_obj=config_obj)
+    
+    temp_file_path = 'temp_annot_file.csv'
+    
+    col_list = [ 'client_idcode', time_column, 'pretty_name', 'cui',
+       'type_ids', 'types', 'source_value', 'detected_name', 'acc',
+       'context_similarity', 'start', 'end', 'icd10', 'ontologies', 'snomed',
+       'id', 'Time_Value', 'Time_Confidence', 'Presence_Value',
+       'Presence_Confidence', 'Subject_Value', 'Subject_Confidence',
+       'text_sample', 'full_doc', guid_column]
+    
+    pd.DataFrame(None, columns=col_list).to_csv(temp_file_path)
+    
+    for i in range(0, len(pat_batch)):
+
+        #current_pat_client_id_code = docs.iloc[0]['client_idcode']
+
+        doc_to_annot_df = json_to_dataframe(json_data = multi_annots[i],
+                                                            doc = pat_batch.iloc[i],
+                                                            current_pat_client_id_code = current_pat_client_idcode,
+                                                            text_column=text_column,
+                                                            time_column=time_column,
+                                                            guid_column = guid_column)
 
         doc_to_annot_df.to_csv(temp_file_path, mode='a', header=False, index=False)
 
@@ -119,9 +214,10 @@ def multi_annots_to_df(current_pat_client_idcode, pat_batch, multi_annots, confi
 
 
 
-def json_to_dataframe(json_data, doc,current_pat_client_id_code, full_doc=False, window=300, text_column='body_analysed', time_column='updatetime'):
+def json_to_dataframe(json_data, doc,current_pat_client_id_code, full_doc=False, window=300, text_column='body_analysed', time_column='updatetime', guid_column = 'document_guid'):
     # Extract data from the JSON
     #doc to be passed as pandas series
+    #observation_guid
 
     done=False
     
@@ -165,7 +261,7 @@ def json_to_dataframe(json_data, doc,current_pat_client_id_code, full_doc=False,
         
         updatetime = doc[time_column]
         
-        document_guid_value = doc['document_guid']
+        document_guid_value = doc[guid_column]
         
         full_doc_value = np.nan
         
@@ -180,7 +276,7 @@ def json_to_dataframe(json_data, doc,current_pat_client_id_code, full_doc=False,
         columns = ['client_idcode',time_column,'pretty_name', 'cui', 'type_ids', 'types', 'source_value', 'detected_name', 'acc', 'context_similarity',
                    'start', 'end', 'icd10', 'ontologies', 'snomed', 'id',
                    'Time_Value', 'Time_Confidence', 'Presence_Value', 'Presence_Confidence',
-                   'Subject_Value', 'Subject_Confidence', 'text_sample', 'full_doc', 'document_guid']
+                   'Subject_Value', 'Subject_Confidence', 'text_sample', 'full_doc', guid_column]
 
         data = [[current_pat_client_id_code, updatetime,
                 pretty_name, cui, type_ids, types, source_value, detected_name, acc, context_similarity, start, end,
