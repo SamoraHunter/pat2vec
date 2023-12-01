@@ -1,6 +1,7 @@
 import os
 
 import pandas as pd
+from IPython.display import display
 
 from util.methods_annotation import (get_pat_document_annotation_batch,
                                      get_pat_document_annotation_batch_mct)
@@ -287,13 +288,19 @@ def get_pat_batch_epr_docs(current_pat_client_id_code, search_term, config_obj=N
     
     batch_epr_target_path = os.path.join(config_obj.pre_document_batch_path, str(current_pat_client_id_code) + ".csv")
 
-    if(config_obj.verbosity >=6):
-        print("batch_epr_target_path", batch_epr_target_path)
+
 
     global_start_year = config_obj.global_start_year
     global_start_month = config_obj.global_start_month
     global_end_year = config_obj.global_end_year
     global_end_month = config_obj.global_end_month
+    
+    if config_obj.verbosity >= 6:
+        print("batch_epr_target_path:", batch_epr_target_path)
+        print("global_start_year:", global_start_year)
+        print("global_start_month:", global_start_month)
+        print("global_end_year:", global_end_year)
+        print("global_end_month:", global_end_month)
 
 
     existence_check = exist_check(batch_epr_target_path, config_obj)
@@ -301,6 +308,7 @@ def get_pat_batch_epr_docs(current_pat_client_id_code, search_term, config_obj=N
     try:
         
         if(overwrite_stored_pat_docs or existence_check is False):
+            
         
             batch_target = cohort_searcher_with_terms_and_search(
                 index_name="epr_documents",
@@ -310,7 +318,7 @@ def get_pat_batch_epr_docs(current_pat_client_id_code, search_term, config_obj=N
                 search_string=f'updatetime:[{global_start_year}-{global_start_month} TO {global_end_year}-{global_end_month}]'
             )
             
-            
+            #display(batch_target)
             
             
             if(config_obj.store_pat_batch_docs or overwrite_stored_pat_docs):

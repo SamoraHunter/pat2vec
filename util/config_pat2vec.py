@@ -358,10 +358,10 @@ class config_class:
             self.global_start_year, self.global_start_month, self.global_end_year, self.global_end_month = '1995', '01', '2023', '11' 
         else:
             
-            self.global_start_year = global_start_year
-            self.global_start_month = global_start_month
-            self.global_end_year = global_end_year
-            self.global_end_month = global_end_month
+            self.global_start_year = str(global_start_year).zfill(4)
+            self.global_start_month = str(global_start_month).zfill(2)
+            self.global_end_year = str(global_end_year).zfill(4)
+            self.global_end_month = str(global_end_month).zfill(2)
             
         if(self.verbosity>1):
             
