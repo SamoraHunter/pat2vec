@@ -293,7 +293,8 @@ class main:
         
         start_time = time.time()
         
-        print("pat maker called: opts: ", self.config_obj.main_options)
+        if self.config_obj.verbosity >= 4:
+            print("pat maker called: opts: ", self.config_obj.main_options)
         
         
         update_pbar(p_bar_entry, start_time, 0, f'Pat_maker called on {i}...', self.t, self.config_obj, skipped_counter)
