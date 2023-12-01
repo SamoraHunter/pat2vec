@@ -5,6 +5,7 @@ from pathlib import Path
 
 import pandas as pd
 import paramiko
+from dateutil.relativedelta import relativedelta
 
 #stuff paths for portability
 sys.path.insert(0,'/home/aliencat/samora/gloabl_files')
@@ -233,17 +234,50 @@ class config_class:
 
         print(self.current_pat_line_path)
         
+        
+        print(f"Setting start_date to: {start_date}")
         self.start_date = start_date
+
+
+        print(f"Setting years to: {years}")
         self.years = years
+
+        print(f"Setting months to: {months}")
         self.months = months
+
+        print(f"Setting days to: {days}")
         self.days = days
         
-        months = [x for x in range(1,4)]
-        years = [x for x in range(2023, 2024)]
-        days = [x for x in range(1,32)]
-        import itertools
-        combinations = list(itertools.product(years, months, days))
-        len(combinations)
+        m = 1
+        
+
+        #self.start_date = datetime.strptime(start_date, "%Y-%m-%d")
+        self.time_delta = relativedelta(days=days, weeks=0, months=months, years=years)
+        
+        #timedelta()
+
+        def calculate_interval(start_date, time_delta, m=1):
+            #adjust for time interval width
+            end_date = start_date + time_delta
+            interval_days = (end_date - start_date).days
+
+            n_intervals = interval_days // m
+            return n_intervals
+
+        
+        result = calculate_interval(start_date = self.start_date, time_delta=self.time_delta,m=m)
+
+        print(f"Number of {m}-day intervals between {start_date} and the calculated end date: {result}")
+        
+        
+        
+        
+        # months = [x for x in range(1,4)]
+        # years = [x for x in range(2023, 2024)]
+        # days = [x for x in range(1,32)]
+        # import itertools
+        # combinations = list(itertools.product(years, months, days))
+        # len(combinations)
         
         self.slow_execution_threshold_low = timedelta(seconds=10)
         self.slow_execution_threshold_high = timedelta(seconds=30)
