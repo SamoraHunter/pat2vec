@@ -122,6 +122,8 @@ class config_class:
         
         self.start_time = start_time
         
+        self.shuffle_pat_list = shuffle_pat_list
+        
         if(start_time ==None):
             self.start_time = datetime.now()
 

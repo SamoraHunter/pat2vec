@@ -211,7 +211,7 @@ class main:
             os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
 
-
+        random.seed(self.config_obj.random_seed_val)
         if(config_obj.shuffle_pat_list == True):
             random.shuffle(self.all_patient_list)
         
@@ -239,8 +239,8 @@ class main:
         
 
 
-        random.seed()
-        random.shuffle(self.all_patient_list)
+        
+        #random.shuffle(self.all_patient_list)
 
         skipped_counter = 0
         self.t = trange(len(self.all_patient_list), desc='Bar desc', leave=True, colour="GREEN", position=0, total=len(self.all_patient_list))
