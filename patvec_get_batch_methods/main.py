@@ -340,7 +340,7 @@ def get_pat_batch_epr_docs_annotations(current_pat_client_id_code, config_obj = 
     
     batch_epr_target_path = os.path.join(config_obj.pre_document_batch_path, str(current_pat_client_id_code) + ".csv")
     
-    print(batch_epr_target_path)
+    #print(batch_epr_target_path)
     #cat = config_obj.cat
     
     #t = config_obj.t
