@@ -312,6 +312,11 @@ class main:
             
             self.config_obj.start_date = current_pat_start_date
             
+            self.config_obj.global_start_year = str(self.config_obj.global_start_year).zfill(4)
+            self.config_obj.global_start_month = str(self.config_obj.global_start_month).zfill(2)
+            self.config_obj.global_end_year = str(self.config_obj.global_end_year).zfill(4)
+            self.config_obj.global_end_month = str(self.config_obj.global_end_month).zfill(2)
+            
             self.config_obj.date_list = generate_date_list(self.config_obj.start_date,
                                                            self.config_obj.years,
                                                            self.config_obj.months,

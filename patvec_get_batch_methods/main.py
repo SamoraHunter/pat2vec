@@ -295,12 +295,25 @@ def get_pat_batch_epr_docs(current_pat_client_id_code, search_term, config_obj=N
     global_end_year = config_obj.global_end_year
     global_end_month = config_obj.global_end_month
     
+    
+    global_start_year = str(global_start_year).zfill(4)
+    global_start_month = str(global_start_month).zfill(2)
+    global_end_year = str(global_end_year).zfill(4)
+    global_end_month = str(global_end_month).zfill(2)
+    
     if config_obj.verbosity >= 6:
         print("batch_epr_target_path:", batch_epr_target_path)
         print("global_start_year:", global_start_year)
         print("global_start_month:", global_start_month)
         print("global_end_year:", global_end_year)
         print("global_end_month:", global_end_month)
+
+    # print("batch_epr_target_path:", batch_epr_target_path)
+    # print("global_start_year:", global_start_year)
+    # print("global_start_month:", global_start_month)
+    # print("global_end_year:", global_end_year)
+    # print("global_end_month:", global_end_month)
+    #zfill
 
 
     existence_check = exist_check(batch_epr_target_path, config_obj)
