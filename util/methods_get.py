@@ -16,6 +16,10 @@ import paramiko
 from colorama import Back, Fore, Style
 from dateutil.relativedelta import relativedelta
 
+from datetime import timedelta
+from dateutil.parser import parse
+
+
 color_bars = [Fore.RED,
     Fore.GREEN,
     Fore.BLUE,
@@ -1026,3 +1030,62 @@ def convert_date(date_string):
     return date_object
 
 
+def add_offset_column(dataframe, start_column_name, offset_column_name, time_offset):
+    """
+    Adds a new column with the offset from the start time to the provided DataFrame.
+
+    Parameters:
+    - dataframe: pandas DataFrame
+    - start_column_name: str, the name of the column with the starting datetime
+    - offset_column_name: str, the name of the new column to be created with the offset
+    - time_offset: timedelta, the time period offset to be added to the start time
+
+    Returns:
+    - None (modifies the input DataFrame in place)
+    """
+    # Attempt to parse datetime using dateutil.parser.parse
+    try:
+        dataframe[start_column_name + "_converted"] = dataframe[start_column_name].apply(lambda x: parse(x, fuzzy=True))
+    except ValueError:
+        # Fallback to specified format if parsing fails
+        dataframe[start_column_name + "_converted"] = pd.to_datetime(dataframe[start_column_name], format='%m/%d/%y %H.%M.%S', errors='coerce')
+
+    # Ensure the start column is now in datetime format
+    if not pd.api.types.is_datetime64_any_dtype(dataframe[start_column_name + "_converted"]):
+        raise ValueError(f"Column '{start_column_name}_converted' does not exist or cannot be converted to datetime format.")
+
+    # Calculate the offset and create the new column
+    dataframe[offset_column_name] = dataframe[start_column_name + "_converted"] + time_offset
+
+    return dataframe
+
+#add_offset_column(df, 'ADMISSION_DTTM', offset_column_name, time_offset)
+
+def build_patient_dict(dataframe, patient_id_column, start_column, end_column):
+    """
+    Builds a dictionary with patient_id as key and (start, end) as values.
+
+    Parameters:
+    - dataframe: pandas DataFrame
+    - patient_id_column: str, the name of the column containing patient IDs
+    - start_column: str, the name of the column containing start datetime
+    - end_column: str, the name of the column containing end datetime
+
+    Returns:
+    - patient_dict: dict, a dictionary with patient_id as key and (start, end) as values
+    """
+    patient_dict = {}
+
+    for index, row in dataframe.iterrows():
+        patient_id = row[patient_id_column]
+        start_time = row[start_column]
+        end_time = row[end_column]
+
+        # Check if start and end times are valid datetime objects
+        if pd.notnull(start_time) and pd.notnull(end_time):
+            # Add the patient_id and corresponding start and end times to the dictionary
+            patient_dict[patient_id] = (start_time, end_time)
+
+    return patient_dict
+
+    #patient_dict = build_patient_dict(df, 'PATIENT_ID', 'ADMISSION_DTTM_converted', 'ADMISSION_DTTM_offset')

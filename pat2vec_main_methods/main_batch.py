@@ -122,37 +122,43 @@ def main_batch(current_pat_client_id_code,
                 
                 p_bar_entry = current_pat_client_id_code + "_" + str(target_date_range)
 
-                update_pbar(p_bar_entry, start_time, 0, 'demo', t, config_obj)
+                
 
                 if main_options.get('demo'):
+                    update_pbar(p_bar_entry, start_time, 0, 'demo', t, config_obj)
                     current_pat_demo = get_demo(current_pat_client_id_code, target_date_range, batch_demo, config_obj=config_obj)
                     patient_vector.append(current_pat_demo)
 
-                update_pbar(p_bar_entry, start_time, 1, 'bmi', t, config_obj)
+                
 
                 if main_options.get('bmi'):
+                    update_pbar(p_bar_entry, start_time, 1, 'bmi', t, config_obj)
                     bmi_features = get_bmi_features(current_pat_client_id_code, target_date_range, batch_bmi, config_obj=config_obj)
                     patient_vector.append(bmi_features)
 
-                update_pbar(p_bar_entry, start_time, 2, 'bloods', t, config_obj)
+                
 
                 if main_options.get('bloods'):
+                    update_pbar(p_bar_entry, start_time, 2, 'bloods', t, config_obj)
                     current_pat_bloods = get_current_pat_bloods(current_pat_client_id_code, target_date_range, batch_bloods,config_obj=config_obj)
                     patient_vector.append(current_pat_bloods)
 
-                update_pbar(p_bar_entry, start_time, 3, 'drugs', t, config_obj)
+                
 
                 if main_options.get('drugs'):
+                    update_pbar(p_bar_entry, start_time, 3, 'drugs', t, config_obj)
                     current_pat_drugs = get_current_pat_drugs(current_pat_client_id_code, target_date_range, batch_drugs, config_obj=config_obj)
                     patient_vector.append(current_pat_drugs)
 
-                update_pbar(p_bar_entry, start_time, 4, 'diagnostics', t, config_obj)
+                
 
                 if main_options.get('diagnostics'):
+                    update_pbar(p_bar_entry, start_time, 4, 'diagnostics', t, config_obj)
                     current_pat_diagnostics = get_current_pat_diagnostics(current_pat_client_id_code, target_date_range, batch_diagnostics, config_obj=config_obj)
                     patient_vector.append(current_pat_diagnostics)
                     
                 if main_options.get('annotations'):
+                    update_pbar(p_bar_entry, start_time, 4, 'annotations_epr', t, config_obj)
                     df_pat_target = get_current_pat_annotations(current_pat_client_id_code,
                                                                 target_date_range,
                                                                 #batch_epr,
@@ -166,6 +172,7 @@ def main_batch(current_pat_client_id_code,
                     patient_vector.append(df_pat_target)
 
                 if main_options.get('annotations_mrc'):
+                    update_pbar(p_bar_entry, start_time, 4, 'annotations_mrc', t, config_obj)
                     df_pat_target = get_current_pat_annotations_mrc_cs(current_pat_client_id_code, target_date_range,
                                                                        #batch_mct,
                                                                        batch_epr_docs_annotations = batch_epr_docs_annotations_mct,
@@ -176,51 +183,58 @@ def main_batch(current_pat_client_id_code,
                                                                        )
                     patient_vector.append(df_pat_target)
 
-                update_pbar(p_bar_entry, start_time, 1, 'core_02', t, config_obj)
+                
 
                 if main_options.get('core_02'):
+                    update_pbar(p_bar_entry, start_time, 1, 'core_02', t, config_obj)
                     df_pat_target = get_core_02(current_pat_client_id_code, target_date_range, batch_core_02, config_obj=config_obj,
                                                                        cohort_searcher_with_terms_and_search = cohort_searcher_with_terms_and_search)
                     patient_vector.append(df_pat_target)
 
-                update_pbar(p_bar_entry, start_time, 2, 'bed', t, config_obj)
+                
 
                 if main_options.get('bed'):
+                    update_pbar(p_bar_entry, start_time, 2, 'bed', t, config_obj)
                     df_pat_target = get_bed(current_pat_client_id_code, target_date_range, batch_bednumber, config_obj=config_obj,
                                                                        cohort_searcher_with_terms_and_search = cohort_searcher_with_terms_and_search)
                     patient_vector.append(df_pat_target)
 
-                update_pbar(p_bar_entry, start_time, 3, 'vte_status', t, config_obj)
+                
 
                 if main_options.get('vte_status'):
+                    update_pbar(p_bar_entry, start_time, 3, 'vte_status', t, config_obj)
                     df_pat_target = get_vte_status(current_pat_client_id_code, target_date_range, batch_vte, config_obj=config_obj,
                                                                        cohort_searcher_with_terms_and_search = cohort_searcher_with_terms_and_search)
                     patient_vector.append(df_pat_target)
 
-                update_pbar(p_bar_entry, start_time, 4, 'hosp_site', t, config_obj)
+                
 
                 if main_options.get('hosp_site'):
+                    update_pbar(p_bar_entry, start_time, 4, 'hosp_site', t, config_obj)
                     df_pat_target = get_hosp_site(current_pat_client_id_code, target_date_range, batch_hospsite, config_obj = config_obj,
                                                                        cohort_searcher_with_terms_and_search = cohort_searcher_with_terms_and_search)
                     patient_vector.append(df_pat_target)
 
-                update_pbar(p_bar_entry, start_time, 1, 'core_resus', t, config_obj)
+                
 
                 if main_options.get('core_resus'):
+                    update_pbar(p_bar_entry, start_time, 1, 'core_resus', t, config_obj)
                     df_pat_target = get_core_resus(current_pat_client_id_code, target_date_range, batch_resus, config_obj=config_obj,
                                                                        cohort_searcher_with_terms_and_search = cohort_searcher_with_terms_and_search)
                     patient_vector.append(df_pat_target)
 
-                update_pbar(p_bar_entry, start_time, 2, 'news', t, config_obj)
+                
 
                 if main_options.get('news'):
+                    update_pbar(p_bar_entry, start_time, 2, 'news', t, config_obj)
                     df_pat_target = get_news(current_pat_client_id_code, target_date_range, batch_news, config_obj=config_obj,
                                                                        cohort_searcher_with_terms_and_search = cohort_searcher_with_terms_and_search)
                     patient_vector.append(df_pat_target)
                 
-                update_pbar(p_bar_entry, start_time, 2, 'smoking', t, config_obj)
+                
 
                 if main_options.get('smoking'):
+                    update_pbar(p_bar_entry, start_time, 2, 'smoking', t, config_obj)
                     df_pat_target = get_smoking(current_pat_client_id_code, target_date_range, batch_smoking, config_obj=config_obj,
                                                                        cohort_searcher_with_terms_and_search = cohort_searcher_with_terms_and_search)
                     patient_vector.append(df_pat_target)
@@ -266,7 +280,8 @@ def main_batch(current_pat_client_id_code,
                 
                 #display(pat_concatted)
                 #print(time.time() - start_time, current_pat_client_id_code)
-                print("Reached end main batch")
+                if(config_obj.verbosity >=3):
+                    print("Reached end main batch")
             except RuntimeError as RuntimeError_exception:
                 print("Caught runtime error... is torch?")
                 print(RuntimeError)

@@ -218,92 +218,117 @@ def json_to_dataframe(json_data, doc,current_pat_client_id_code, full_doc=False,
     # Extract data from the JSON
     #doc to be passed as pandas series
     #observation_guid
+    if any(json_data.values()):
+        done=False
+        
+        df_parts = []
 
-    done=False
-    
-    df_parts = []
-
-    keys = list(json_data['entities'].keys())
-
-    for i in range(0, len(keys)):
-    
-        entities_data = json_data['entities'][keys[i]]
-        pretty_name = entities_data['pretty_name']
-        cui = entities_data['cui']
-        type_ids = entities_data['type_ids']
-        types = entities_data['types']
-        source_value = entities_data['source_value']
-        detected_name = entities_data['detected_name']
-        acc = entities_data['acc']
-        context_similarity = entities_data['context_similarity']
-        start = entities_data['start']
-        end = entities_data['end']
-        icd10 = entities_data['icd10']
-        ontologies = entities_data['ontologies']
-        snomed = entities_data['snomed']
-        id = entities_data['id']
-        meta_anns = entities_data['meta_anns']
+        keys = list(json_data['entities'].keys())
         
-        # Parse meta annotations
-        parsed_meta_anns = parse_meta_anns(meta_anns)
-        
-        mapped_annot_doc_entity = doc[text_column]
-        
-        document_len = len(mapped_annot_doc_entity)
-        
-        document_len = len(mapped_annot_doc_entity)
-        
-        virtual_start = max(0, start-window)
-                
-        virtual_end = min(document_len, end+window)
-        
-        text_sample = mapped_annot_doc_entity[virtual_start:virtual_end]
-        
-        updatetime = doc[time_column]
-        
-        document_guid_value = doc[guid_column]
-        
-        full_doc_value = np.nan
-        
-        if(full_doc and not done):
-            full_doc_value = mapped_annot_doc_entity
-            done = True
-        else:
-            full_doc_value = np.nan
-    
-        # Define DataFrame columns and create the DataFrame
-        # Define DataFrame columns and create the DataFrame
         columns = ['client_idcode',time_column,'pretty_name', 'cui', 'type_ids', 'types', 'source_value', 'detected_name', 'acc', 'context_similarity',
-                   'start', 'end', 'icd10', 'ontologies', 'snomed', 'id',
-                   'Time_Value', 'Time_Confidence', 'Presence_Value', 'Presence_Confidence',
-                   'Subject_Value', 'Subject_Confidence', 'text_sample', 'full_doc', guid_column]
+                    'start', 'end', 'icd10', 'ontologies', 'snomed', 'id',
+                    'Time_Value', 'Time_Confidence', 'Presence_Value', 'Presence_Confidence',
+                    'Subject_Value', 'Subject_Confidence', 'text_sample', 'full_doc', guid_column]
+        
+        empty_df = pd.DataFrame(data=None, columns=columns)
 
-        data = [[current_pat_client_id_code, updatetime,
-                pretty_name, cui, type_ids, types, source_value, detected_name, acc, context_similarity, start, end,
-                 icd10, ontologies, snomed, id,
-                 parsed_meta_anns['Time_Value'], parsed_meta_anns['Time_Confidence'],
-                 parsed_meta_anns['Presence_Value'], parsed_meta_anns['Presence_Confidence'],
-                 parsed_meta_anns['Subject_Value'], parsed_meta_anns['Subject_Confidence'],
-                text_sample, full_doc_value, document_guid_value]]
+        for i in range(0, len(keys)):
+        
+            entities_data = json_data['entities'][keys[i]]
+            pretty_name = entities_data['pretty_name']
+            cui = entities_data['cui']
+            type_ids = entities_data['type_ids']
+            types = entities_data['types']
+            source_value = entities_data['source_value']
+            detected_name = entities_data['detected_name']
+            acc = entities_data['acc']
+            context_similarity = entities_data['context_similarity']
+            start = entities_data['start']
+            end = entities_data['end']
+            icd10 = entities_data['icd10']
+            ontologies = entities_data['ontologies']
+            snomed = entities_data['snomed']
+            id = entities_data['id']
+            meta_anns = entities_data['meta_anns']
+            
+            # Parse meta annotations
+            parsed_meta_anns = parse_meta_anns(meta_anns)
+            
+            mapped_annot_doc_entity = doc[text_column]
+            
+            document_len = len(mapped_annot_doc_entity)
+            
+            document_len = len(mapped_annot_doc_entity)
+            
+            virtual_start = max(0, start-window)
+                    
+            virtual_end = min(document_len, end+window)
+            
+            text_sample = mapped_annot_doc_entity[virtual_start:virtual_end]
+            
+            updatetime = doc[time_column]
+            
+            document_guid_value = doc[guid_column]
+            
+            full_doc_value = np.nan
+            
+            if(full_doc and not done):
+                full_doc_value = mapped_annot_doc_entity
+                done = True
+            else:
+                full_doc_value = np.nan
+        
+            # Define DataFrame columns and create the DataFrame
+            # Define DataFrame columns and create the DataFrame
+            
 
-        df = pd.DataFrame(data, columns=columns)
+            data = [[current_pat_client_id_code, updatetime,
+                    pretty_name, cui, type_ids, types, source_value, detected_name, acc, context_similarity, start, end,
+                    icd10, ontologies, snomed, id,
+                    parsed_meta_anns['Time_Value'], parsed_meta_anns['Time_Confidence'],
+                    parsed_meta_anns['Presence_Value'], parsed_meta_anns['Presence_Confidence'],
+                    parsed_meta_anns['Subject_Value'], parsed_meta_anns['Subject_Confidence'],
+                    text_sample, full_doc_value, document_guid_value]]
 
-        #df.insert(0, 'client_idcode', current_pat_client_id_code)
+            df = pd.DataFrame(data, columns=columns)
 
-        #df.insert(0, 'updatetime', update_time)
-    
+            #df.insert(0, 'client_idcode', current_pat_client_id_code)
 
-        #df['text_sample'] = doc[start-window:end+window]
-    
+            #df.insert(0, 'updatetime', update_time)
+        
+
+            #df['text_sample'] = doc[start-window:end+window]
+        
+            
+            
+            df_parts.append(df)
+
+        #print("len(df_parts)", len(df_parts))
+        try:
+            
+            super_df = pd.concat(df_parts)
+            super_df.reset_index(inplace=True)
+            return super_df
         
         
-        df_parts.append(df)
-
-    super_df = pd.concat(df_parts)
+        except Exception as e:
+            print(e)
+            print("json_date", json_data)
+            print(type(json_data))
+            print(len(json_data))
+            raise e
+        
+    else:
+        columns = ['client_idcode',time_column,'pretty_name', 'cui', 'type_ids', 'types', 'source_value', 'detected_name', 'acc', 'context_similarity',
+                    'start', 'end', 'icd10', 'ontologies', 'snomed', 'id',
+                    'Time_Value', 'Time_Confidence', 'Presence_Value', 'Presence_Confidence',
+                    'Subject_Value', 'Subject_Confidence', 'text_sample', 'full_doc', guid_column]
+        
+        empty_df = pd.DataFrame(data=None, columns=columns)
+        return empty_df
     
-    super_df.reset_index(inplace=True)
     
-    return super_df
+    
 
 
 def filter_annot_dataframe(dataframe, filter_args):

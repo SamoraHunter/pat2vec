@@ -397,6 +397,19 @@ class config_class:
             self.global_end_year = str(global_end_year).zfill(4)
             self.global_end_month = str(global_end_month).zfill(2)
             
+            
+        def update_global_start_date(self, start_date):
+            
+            # Compare and update individual elements of global start date if necessary
+            if start_date.year > int(self.global_start_year):
+                self.global_start_year = str(start_date.year)
+            if start_date.month > int(self.global_start_month):
+                self.global_start_month = str(start_date.month)
+
+            print("Warning: Updated global start date as start date later than global start date.")
+            
+        update_global_start_date(self, self.start_date)
+            
         if(self.verbosity>1):
             
             print("Debug message: global_start_year =", self.global_start_year)
@@ -406,3 +419,5 @@ class config_class:
 
 
         self.skip_additional_listdir = skip_additional_listdir
+        
+        
