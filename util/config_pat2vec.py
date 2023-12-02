@@ -6,6 +6,7 @@ from pathlib import Path
 import pandas as pd
 import paramiko
 from dateutil.relativedelta import relativedelta
+from IPython.display import display
 
 #stuff paths for portability
 sys.path.insert(0,'/home/aliencat/samora/gloabl_files')
@@ -14,7 +15,7 @@ sys.path.insert(0,'/home/jovyan/work/gloabl_files')
 sys.path.insert(0, '/home/cogstack/samora/_data/gloabl_files')
 sys.path.insert(0, '/home/cogstack/samora/_data/gloabl_files/pat2vec')
 
-from util.methods_get import generate_date_list
+from util.methods_get import add_offset_column, build_patient_dict, generate_date_list
 
 
 class config_class:
@@ -61,7 +62,11 @@ class config_class:
                  overwrite_stored_pat_docs = False,
                  store_pat_batch_docs = True,
                  annot_filter_options = None,
-                 shuffle_pat_list = False
+                 shuffle_pat_list = False,
+                 individual_patient_window = False,
+                 individual_patient_window_df = None,
+                 individual_patient_window_start_column_name = None,
+                 individual_patient_id_column_name = None,
                  
                  ):
         
@@ -124,6 +129,14 @@ class config_class:
         self.start_time = start_time
         
         self.shuffle_pat_list = shuffle_pat_list
+        
+        self.individual_patient_window = individual_patient_window
+        
+        self.individual_patient_window_df = individual_patient_window_df
+        
+        self.individual_patient_window_start_column_name = individual_patient_window_start_column_name
+        
+        self.individual_patient_id_column_name = individual_patient_id_column_name
         
         if(start_time ==None):
             self.start_time = datetime.now()
@@ -409,6 +422,38 @@ class config_class:
             print("Warning: Updated global start date as start date later than global start date.")
             
         update_global_start_date(self, self.start_date)
+            
+            
+        if(self.individual_patient_window):
+            print("individual_patient_window set!")
+            
+            start_column_name = self.individual_patient_window_start_column_name 
+            offset_column_name = start_column_name + "_offset"
+            
+            #time_offset = timedelta(days=days, weeks=0, months=months, years=years)
+            
+            #from dateutil.relativedelta import relativedelta
+
+            # Your code with relativedelta
+            #time_offset = timedelta(days=days) + relativedelta(months=months, years=years)
+            time_offset = relativedelta(days=days, months=months, years=years)
+
+            
+            #print(start_column_name, self.individual_patient_window_start_column_name ,offset_column_name,time_offset )
+
+            #display(self.individual_patient_window_df)
+
+            self.individual_patient_window_df = add_offset_column(self.individual_patient_window_df,
+                                                                  start_column_name, offset_column_name, time_offset)
+            
+            #display(self.individual_patient_window_df)
+            
+            self.patient_dict = build_patient_dict(dataframe = self.individual_patient_window_df,
+                                                   patient_id_column = self.individual_patient_id_column_name,
+                                                   start_column = f"{start_column_name}_converted", 
+                                                   end_column = f'{start_column_name}_offset')
+            
+            #display(self.patient_dict)
             
         if(self.verbosity>1):
             

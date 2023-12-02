@@ -284,12 +284,43 @@ class main:
         
         multi_process = self.config_obj.multi_process
         
+        
+        
+            
+        
+        
         if(skipped_counter==None):
             skipped_counter = 0
 
         current_pat_client_id_code = str(all_patient_list[i])
         
         p_bar_entry = current_pat_client_id_code
+        
+        if(self.config_obj.individual_patient_window):
+            
+            current_pat_start_date = self.config_obj.patient_dict.get(current_pat_client_id_code)[0]
+            
+            current_pat_end_date = self.config_obj.patient_dict.get(current_pat_client_id_code)[1]
+            
+            print("setting ipw", current_pat_start_date, current_pat_end_date)
+            
+            self.config_obj.global_start_month = current_pat_start_date.month
+            
+            self.config_obj.global_start_year = current_pat_start_date.year
+            
+            self.config_obj.global_end_month = current_pat_end_date.month
+            
+            self.config_obj.global_end_year = current_pat_end_date.year
+            
+            self.config_obj.start_date = current_pat_start_date
+            
+            self.config_obj.date_list = generate_date_list(self.config_obj.start_date,
+                                                           self.config_obj.years,
+                                                           self.config_obj.months,
+                                                           self.config_obj.days
+                                                           )
+            print("ipw, datelist", current_pat_client_id_code)
+            print(self.config_obj.date_list)
         
         start_time = time.time()
         

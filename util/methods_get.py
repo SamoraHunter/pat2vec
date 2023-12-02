@@ -1038,7 +1038,7 @@ def add_offset_column(dataframe, start_column_name, offset_column_name, time_off
     - dataframe: pandas DataFrame
     - start_column_name: str, the name of the column with the starting datetime
     - offset_column_name: str, the name of the new column to be created with the offset
-    - time_offset: timedelta, the time period offset to be added to the start time
+    - time_offset: relativedelta, the time period offset to be added to the start time
 
     Returns:
     - None (modifies the input DataFrame in place)
@@ -1054,8 +1054,15 @@ def add_offset_column(dataframe, start_column_name, offset_column_name, time_off
     if not pd.api.types.is_datetime64_any_dtype(dataframe[start_column_name + "_converted"]):
         raise ValueError(f"Column '{start_column_name}_converted' does not exist or cannot be converted to datetime format.")
 
-    # Calculate the offset and create the new column
-    dataframe[offset_column_name] = dataframe[start_column_name + "_converted"] + time_offset
+    # Define a function to apply the offset individually to each element
+    def apply_offset(dt):
+        if pd.notna(dt):
+            return dt + time_offset
+        else:
+            return dt
+
+    # Apply the offset function to create the new column
+    dataframe[offset_column_name] = dataframe[start_column_name + "_converted"].apply(apply_offset)
 
     return dataframe
 
