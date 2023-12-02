@@ -64,14 +64,11 @@ def get_pat_document_annotation_batch(current_pat_client_idcode, pat_batch, cat=
     
 def get_pat_document_annotation_batch_mct(current_pat_client_idcode, pat_batch, cat=None, config_obj=None, t=None):
     
-    #print('get_pat_document_annotation_batch_mct')
-    
-    #display(pat_batch)
     
     #get the annotations for the pat documents
     multi_annots = annot_pat_batch_docs(current_pat_client_idcode=current_pat_client_idcode, pat_batch=pat_batch, cat=cat, config_obj=config_obj, t=t, text_column='observation_valuetext_analysed')
     
-    #display(multi_annots)
+ 
     
     #creaet the file in its dir
     multi_annots_to_df_mct(current_pat_client_idcode, pat_batch, multi_annots, config_obj = config_obj, t=t, text_column='observation_valuetext_analysed', time_column='observationdocument_recordeddtm', guid_column='observation_guid')
@@ -166,10 +163,6 @@ def multi_annots_to_df_mct(current_pat_client_idcode,
     
     
     
-    #print("multi_annots_to_df_mct")
-    #print(text_column, time_column, guid_column)
-   # display(pat_batch)
-    #display(multi_annots)
     n_docs_to_annotate = len(pat_batch)
     
     start_time = config_obj.start_time
@@ -278,7 +271,7 @@ def json_to_dataframe(json_data, doc,current_pat_client_id_code, full_doc=False,
             else:
                 full_doc_value = np.nan
         
-            # Define DataFrame columns and create the DataFrame
+
             # Define DataFrame columns and create the DataFrame
             
 
@@ -292,18 +285,13 @@ def json_to_dataframe(json_data, doc,current_pat_client_id_code, full_doc=False,
 
             df = pd.DataFrame(data, columns=columns)
 
-            #df.insert(0, 'client_idcode', current_pat_client_id_code)
 
-            #df.insert(0, 'updatetime', update_time)
-        
-
-            #df['text_sample'] = doc[start-window:end+window]
         
             
             
             df_parts.append(df)
 
-        #print("len(df_parts)", len(df_parts))
+     
         try:
             
             super_df = pd.concat(df_parts)

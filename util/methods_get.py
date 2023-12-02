@@ -1053,7 +1053,7 @@ def add_offset_column(dataframe, start_column_name, offset_column_name, time_off
     
     #print(dataframe[start_column_name])
 
-    print(dataframe[start_column_name].dtype)
+    #print(dataframe[start_column_name].dtype)
 
     #attempt to fix human time stamp inconsistencies:
     dataframe[start_column_name] = pd.to_datetime(dataframe[start_column_name].astype(str), infer_datetime_format=True, format='%y/%m/%d %H.%M.%S')

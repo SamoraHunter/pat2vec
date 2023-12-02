@@ -271,15 +271,14 @@ def main_batch(current_pat_client_id_code,
                             pat_concatted.to_csv(file)
                         
                         
-                #display(type(pat_concatted))
+          
                 try:
                     update_pbar(p_bar_entry, start_time, 2, f'Done {len(pat_concatted.columns)} cols in {int(time.time() - start_time)}s, {int((len(pat_concatted.columns)+1)/int(time.time() - start_time)+1)} p/s', t , config_obj)
                 except:
                     update_pbar(p_bar_entry, start_time, 2, f'Columns n={len(pat_concatted.columns)}', t , config_obj)
                     pass
                 
-                #display(pat_concatted)
-                #print(time.time() - start_time, current_pat_client_id_code)
+ 
                 if(config_obj.verbosity >=3):
                     print("Reached end main batch")
             except RuntimeError as RuntimeError_exception:

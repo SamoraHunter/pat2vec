@@ -297,13 +297,11 @@ class main:
         p_bar_entry = current_pat_client_id_code
         
         if(self.config_obj.individual_patient_window):
+       
+            current_pat_start_date = self.config_obj.patient_dict.get(all_patient_list[i])[0]
             
-            current_pat_start_date = self.config_obj.patient_dict.get(current_pat_client_id_code)[0]
-            
-            current_pat_end_date = self.config_obj.patient_dict.get(current_pat_client_id_code)[1]
-            
-            print("setting ipw", current_pat_start_date, current_pat_end_date)
-            
+            current_pat_end_date = self.config_obj.patient_dict.get(all_patient_list[i])[1]
+          
             self.config_obj.global_start_month = current_pat_start_date.month
             
             self.config_obj.global_start_year = current_pat_start_date.year
@@ -319,8 +317,9 @@ class main:
                                                            self.config_obj.months,
                                                            self.config_obj.days
                                                            )
-            print("ipw, datelist", current_pat_client_id_code)
-            print(self.config_obj.date_list)
+            if self.config_obj.verbosity >= 4:
+                print("ipw, datelist", current_pat_client_id_code)
+                print(self.config_obj.date_list[0:5])
         
         start_time = time.time()
         
@@ -464,7 +463,7 @@ class main:
 
 
             if self.config_obj.main_options.get('annotations', True):
-                #print("patmaker","get_pat_batch_epr_docs_annotations")
+        
                 batch_epr_docs_annotations = get_pat_batch_epr_docs_annotations(current_pat_client_id_code, config_obj=self.config_obj, cat=self.cat, t=self.t)
                 
                 if(type(batch_epr_docs_annotations) == None):
@@ -475,9 +474,9 @@ class main:
                 batch_epr_docs_annotations =  empty_return
 
             if self.config_obj.main_options.get('annotations_mrc', True):
-                #print("self.config_obj.main_options.get('annotations_mrc', True):")
+           
                 batch_epr_docs_annotations_mct = get_pat_batch_mct_docs_annotations(current_pat_client_id_code, config_obj=self.config_obj, cat=self.cat, t=self.t)
-                #display(batch_epr_docs_annotations_mct)
+        
                 
                 if(type(batch_epr_docs_annotations_mct) == None):
                     if self.config_obj.verbosity > 2:
