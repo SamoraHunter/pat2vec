@@ -119,6 +119,8 @@ def get_all_patients_list(config_obj):
     
     all_patient_list = patient_ids.copy()
     
+    all_patient_list = pd.Series(all_patient_list).dropna().to_list()
+    
     if config_obj.use_controls:
         
         control_ids = generate_control_list(treatment_client_id_list=patient_ids,
