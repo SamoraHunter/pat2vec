@@ -91,13 +91,15 @@ def annot_pat_batch_docs(current_pat_client_idcode, pat_batch, cat=None, config_
     
     start_time = config_obj.start_time
     
+    
+    
     n_docs_to_annotate = len(pat_batch)
     
     update_pbar(current_pat_client_idcode, start_time, 5, 'annot_pat_batch_docs_get_entities_multi_texts',
                 n_docs_to_annotate = n_docs_to_annotate,
                 t=t, config_obj=config_obj)
     
-    pat_batch.dropna(subset=text_column, inplace=True)
+    
     
     multi_annots = cat.get_entities_multi_texts(pat_batch[text_column])
     
@@ -111,11 +113,13 @@ def multi_annots_to_df(current_pat_client_idcode,
                        time_column='updatetime', 
                        guid_column='document_guid'):
     
+    
     n_docs_to_annotate = len(pat_batch)
     
     start_time = config_obj.start_time
     
     pre_document_annotation_batch_path = config_obj.pre_document_annotation_batch_path
+    
     
     
     current_pat_document_annotation_batch_path = os.path.join(pre_document_annotation_batch_path, current_pat_client_idcode + ".csv")
@@ -172,6 +176,7 @@ def multi_annots_to_df_mct(current_pat_client_idcode,
     pre_document_annotation_batch_path = config_obj.pre_document_annotation_batch_path_mct
     
     
+    
     current_pat_document_annotation_batch_path = os.path.join(pre_document_annotation_batch_path, current_pat_client_idcode + ".csv")
     
     update_pbar(current_pat_client_idcode, start_time, 5, 'multi_annots_to_df',
@@ -180,7 +185,7 @@ def multi_annots_to_df_mct(current_pat_client_idcode,
     
     temp_file_path = 'temp_annot_file.csv'
     
-    col_list = [ 'client_idcode', time_column, 'pretty_name', 'cui',
+    col_list = ['client_idcode', time_column, 'pretty_name', 'cui',
        'type_ids', 'types', 'source_value', 'detected_name', 'acc',
        'context_similarity', 'start', 'end', 'icd10', 'ontologies', 'snomed',
        'id', 'Time_Value', 'Time_Confidence', 'Presence_Value',

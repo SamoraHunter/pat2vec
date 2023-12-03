@@ -335,6 +335,8 @@ def get_pat_batch_epr_docs(current_pat_client_id_code, search_term, config_obj=N
             
             
             if(config_obj.store_pat_batch_docs or overwrite_stored_pat_docs):
+                batch_target.dropna(subset='body_analysed', inplace=True)
+                
                 batch_target.to_csv(batch_epr_target_path)
             
         
@@ -427,6 +429,7 @@ def get_pat_batch_mct_docs(current_pat_client_id_code, search_term, config_obj=N
             )
             
             if(config_obj.store_pat_batch_docs or overwrite_stored_pat_docs):
+                batch_target.dropna(subset='body_analysed', inplace=True)
                 batch_target.to_csv(batch_epr_target_path_mct)
         else:
             batch_target = pd.read_csv(batch_epr_target_path_mct)
