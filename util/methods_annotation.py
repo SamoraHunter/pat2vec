@@ -97,6 +97,8 @@ def annot_pat_batch_docs(current_pat_client_idcode, pat_batch, cat=None, config_
                 n_docs_to_annotate = n_docs_to_annotate,
                 t=t, config_obj=config_obj)
     
+    pat_batch.dropna(subset=text_column, inplace=True)
+    
     multi_annots = cat.get_entities_multi_texts(pat_batch[text_column])
     
     return multi_annots
