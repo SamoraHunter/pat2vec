@@ -256,7 +256,7 @@ class main:
         self.stripped_list, self.stripped_list_start = filter_stripped_list(self.stripped_list, config_obj = self.config_obj)
         
         
-        self.date_list = config_obj.date_list
+        #self.date_list = config_obj.date_list
         
         self.n_pat_lines = config_obj.n_pat_lines
         
@@ -280,7 +280,7 @@ class main:
         
         stripped_list_start = self.stripped_list_start
         
-        date_list = self.date_list
+        date_list = self.config_obj.date_list
         
         multi_process = self.config_obj.multi_process
         
