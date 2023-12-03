@@ -47,7 +47,7 @@ def get_current_pat_annotations_mrc_cs(current_pat_client_id_code, target_date_r
     
         if(len(filtered_batch_epr_docs_annotations)>0):
         
-            df_pat_target = calculate_pretty_name_count_features(filtered_batch_epr_docs_annotations)
+            df_pat_target = calculate_pretty_name_count_features(filtered_batch_epr_docs_annotations, suffix='mct')
         else:
             if config_obj.verbosity >= 6: print("len(filtered_batch_epr_docs_annotations)>0", len(filtered_batch_epr_docs_annotations)>0)
             df_pat_target = pd.DataFrame(data = [current_pat_client_id_code], columns=['client_idcode'])

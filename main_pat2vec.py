@@ -284,11 +284,6 @@ class main:
         
         multi_process = self.config_obj.multi_process
         
-        
-        
-            
-        
-        
         if(skipped_counter==None):
             skipped_counter = 0
 
@@ -317,11 +312,21 @@ class main:
             self.config_obj.global_end_year = str(self.config_obj.global_end_year).zfill(4)
             self.config_obj.global_end_month = str(self.config_obj.global_end_month).zfill(2)
             
+            if self.config_obj.verbosity >= 4:
+                print("ipw dates:")
+                self.config_obj.global_start_year = str(self.config_obj.global_start_year).zfill(4)
+                self.config_obj.global_start_month = str(self.config_obj.global_start_month).zfill(2)
+                self.config_obj.global_end_year = str(self.config_obj.global_end_year).zfill(4)
+                self.config_obj.global_end_month = str(self.config_obj.global_end_month).zfill(2)
+            
             self.config_obj.date_list = generate_date_list(self.config_obj.start_date,
                                                            self.config_obj.years,
                                                            self.config_obj.months,
                                                            self.config_obj.days
                                                            )
+                    
+            self.n_pat_lines = len(self.config_obj.date_list)
+            
             if self.config_obj.verbosity >= 4:
                 print("ipw, datelist", current_pat_client_id_code)
                 print(self.config_obj.date_list[0:5])
@@ -330,7 +335,6 @@ class main:
         
         if self.config_obj.verbosity >= 4:
             print("pat maker called: opts: ", self.config_obj.main_options)
-        
         
         update_pbar(p_bar_entry, start_time, 0, f'Pat_maker called on {i}...', self.t, self.config_obj, skipped_counter)
         
@@ -344,13 +348,10 @@ class main:
             print("stripped_list_start")
             print(stripped_list_start)
   
-            
-            
         if current_pat_client_id_code not in stripped_list_start:
             if self.config_obj.verbosity >= 6:
                 print(f"Getting batches for patient {i}...")
 
-            
             update_pbar(p_bar_entry, start_time, 0, 'Getting batches...', self.t, self.config_obj, skipped_counter)
     
             empty_return = pd.DataFrame()

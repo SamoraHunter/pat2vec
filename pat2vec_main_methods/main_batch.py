@@ -92,11 +92,7 @@ def main_batch(current_pat_client_id_code,
     
     start_time = config_obj.start_time
     
-    
-    
     already_done = False
-    
-    
     
     done_list = []
     if(current_pat_client_id_code not in stripped_list_start):
@@ -106,7 +102,7 @@ def main_batch(current_pat_client_id_code,
             stripped_list = stripped_list_start
         else:
             
-            if(len(list_dir_wrapper(current_pat_lines_path + str(current_pat_client_id_code), config_obj)) >=n_pat_lines):
+            if(len(list_dir_wrapper(current_pat_lines_path + str(current_pat_client_id_code), config_obj)) >= n_pat_lines):
                 already_done = True
                 stripped_list_start.append(current_pat_client_id_code)
             stripped_list = stripped_list_start.copy()
@@ -169,6 +165,7 @@ def main_batch(current_pat_client_id_code,
                                                                 cat = cat,
                                                                 
                                                                 )
+                    
                     patient_vector.append(df_pat_target)
 
                 if main_options.get('annotations_mrc'):
@@ -279,7 +276,7 @@ def main_batch(current_pat_client_id_code,
                     pass
                 
  
-                if(config_obj.verbosity >=3):
+                if(config_obj.verbosity >=9):
                     print("Reached end main batch")
             except RuntimeError as RuntimeError_exception:
                 print("Caught runtime error... is torch?")

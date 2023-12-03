@@ -453,6 +453,10 @@ class config_class:
                                                    start_column = f"{start_column_name}_converted", 
                                                    end_column = f'{start_column_name}_offset')
             
+            
+            
+            
+            
             #display(self.patient_dict)
             
         if(self.verbosity>1):
