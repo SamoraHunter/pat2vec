@@ -1,9 +1,17 @@
 import csv
 import os
+import sys
 from datetime import datetime
 
 import pandas as pd
 from tqdm import tqdm
+
+sys.path.insert(0,'/home/aliencat/samora/gloabl_files')
+sys.path.insert(0,'/data/AS/Samora/gloabl_files')
+sys.path.insert(0,'/home/jovyan/work/gloabl_files')
+sys.path.insert(0,'/home/cogstack/samora/_data/gloabl_files')
+
+
 
 
 def count_files(path):
@@ -11,166 +19,6 @@ def count_files(path):
     for root, dirs, files in os.walk(path):
         count += len(files)
     return count
-
-# def process_csv_files(input_dir, output_file):
-#     """
-#     Merge multiple CSV files from a given directory into a single CSV file.
-
-#     Parameters:
-#     - input_dir (str): The path to the directory containing CSV files to be merged.
-#     - output_file (str): The path to the output CSV file where the merged data will be stored.
-
-#     The function recursively searches for CSV files in the specified input directory,
-#     extracts column names from each file, and writes a merged CSV file with dynamic column names.
-
-#     Returns:
-#     None
-
-#     Example:
-#     ```python
-#     process_csv_files('/path/to/csv_files', '/path/to/merged_output.csv')
-#     ```
-
-#     Note:
-#     - The merged CSV file will have a header row with unique column names derived from all input files.
-#     - The function uses the 'tqdm' library to display a progress bar while merging files.
-#     """
-    
-    
-#     print(f"Processing input directory '{input_dir}'. The directory contains {len(os.listdir(input_dir))} patient directories, and a total of {count_files(input_dir)} date vectors. Results will be written to '{output_file}'.")
-
-    
-#     # Initialize a dictionary to store column names
-#     column_names_dict = {}
-
-#     # Recursively get all CSV files in the input directory
-#     for root, _, files in os.walk(input_dir):
-#         for csv_file in [f for f in files if f.endswith('.csv')]:
-#             file_path = os.path.join(root, csv_file)
-
-#             # Read the first row to get the column names
-#             with open(file_path, 'r') as file:
-#                 reader = csv.reader(file)
-#                 columns = next(reader)
-
-#             # Store the column names in the dictionary with file path as key
-#             column_names_dict[file_path] = columns
-
-#     # Check if the output file already exists
-#     if os.path.exists(output_file):
-#         # If it exists, append datetime stamp and "overwritten" to the filename
-#         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-#         base_name, extension = os.path.splitext(output_file)
-#         new_output_file = f"{base_name}_{timestamp}_overwritten{extension}"
-#         print(f"Warning: Output file already exists. Renaming to {new_output_file}")
-#         os.rename(output_file, new_output_file)
-#     else:
-#         new_output_file = output_file
-
-#     # Write the merged CSV file with dynamic column names
-#     with open(output_file, 'w', newline='') as output_csv:
-#         writer = csv.writer(output_csv)
-
-#         # Write the header with unique column names
-#         unique_columns = set(column for columns in column_names_dict.values() for column in columns)
-#         writer.writerow(unique_columns)
-
-#         # Iterate over each CSV file
-#         for file_path, columns in tqdm(column_names_dict.items(), desc=f"Merging CSV files {file_path.rsplit('/', 1)[1]}", unit="file"):
-#             # Read the CSV file and write to the merged file
-#             with open(file_path, 'r') as file:
-#                 reader = csv.reader(file)
-#                 next(reader)  # Skip the header row
-#                 for row in reader:
-#                     writer.writerow(row)
-
-
-
-
-# def process_csv_files(root_directory, output_csv_path):
-#     """
-#     Concatenate multiple CSV files with potentially different columns from a given directory
-#     and save the result to a new CSV file.
-
-#     Parameters:
-#     - root_directory (str): The root directory containing the CSV files.
-#     - output_csv_path (str): The path to the output CSV file.
-
-#     Returns:
-#     None
-#     """
-#     # Initialize a set to store unique column names
-#     unique_columns = set()
-
-#     # Count the total number of files to track progress
-#     total_files = sum([len(files) for _, _, files in os.walk(root_directory)])
-
-#     # Initialize tqdm to track progress
-#     progress_bar = tqdm(total=total_files, desc="Processing Files")
-
-#     # Loop through all subdirectories and files
-#     for subdir, dirs, files in os.walk(root_directory):
-#         for file in files:
-#             # Check if the file is a CSV file
-#             if file.endswith(".csv"):
-#                 file_path = os.path.join(subdir, file)
-
-#                 with open(file_path, 'r') as csv_file:
-#                     # Use csv.reader to read the CSV file
-#                     csv_reader = csv.reader(csv_file)
-
-#                     # Read the header
-#                     header = next(csv_reader, None)
-
-#                     # Add unique column names to the set
-#                     if header:
-#                         unique_columns.update(header)
-
-#                 # Update the progress bar
-#                 progress_bar.update(1)
-
-#     # Close the progress bar for processing files
-#     progress_bar.close()
-
-#     # Write the concatenated rows to a new CSV file
-#     with open(output_csv_path, 'w', newline='') as output_csv:
-#         csv_writer = csv.writer(output_csv)
-
-#         # Write the header with unique column names
-#         csv_writer.writerow(sorted(unique_columns))
-
-#         # Reset the progress bar for writing rows
-#         progress_bar.reset(total=total_files)
-#         progress_bar.set_description("Writing Rows")
-
-#         # Loop through all files again to write rows with standardized columns
-#         for subdir, dirs, files in os.walk(root_directory):
-#             for file in files:
-#                 if file.endswith(".csv"):
-#                     file_path = os.path.join(subdir, file)
-
-#                     with open(file_path, 'r') as csv_file:
-#                         csv_reader = csv.reader(csv_file)
-#                         next(csv_reader)  # Skip the header
-
-#                         # Write rows with standardized columns
-#                         for row in csv_reader:
-#                             # Create a dictionary to map each column to its value
-#                             row_dict = {column: '' for column in sorted(unique_columns)}
-#                             row_dict.update(zip(sorted(row), row))
-
-#                             # Write the row with standardized columns
-#                             csv_writer.writerow([row_dict[column] for column in sorted(unique_columns)])
-
-#                     # Update the progress bar
-#                     progress_bar.update(1)
-
-#     # Close the progress bar for writing rows
-#     progress_bar.close()
-
-#     print(f'Concatenated CSV saved to: {output_csv_path}')
-
-
 
 
 
@@ -305,3 +153,122 @@ def extract_datetime_to_column(df):
     print(df['extracted_datetime_stamp'].value_counts())
 
     return df
+
+def filter_annot_dataframe2(dataframe, filter_args):
+    """
+    Filter a DataFrame based on specified filter arguments.
+
+    Parameters:
+    - dataframe: pandas DataFrame
+    - filter_args: dict
+        A dictionary containing filter arguments.
+
+    Returns:
+    - pandas DataFrame
+        The filtered DataFrame.
+    """
+    # Initialize a boolean mask with True values for all rows
+    mask = pd.Series(True, index=dataframe.index)
+
+    # Apply filters based on the provided arguments
+    for column, value in filter_args.items():
+        if column in dataframe.columns:
+            # Special case for 'types' column
+            if column == 'types':
+                mask &= dataframe[column].apply(lambda x: any(item.lower() in x for item in value))
+            elif column in ['Time_Value', 'Presence_Value', 'Subject_Value']:
+                # Include rows where the column is in the specified list of values
+                mask &= dataframe[column].isin(value) if isinstance(value, list) else (dataframe[column] == value)
+            elif column in ['Time_Confidence', 'Presence_Confidence', 'Subject_Confidence']:
+                # Include rows where the column is greater than or equal to the specified confidence threshold
+                mask &= dataframe[column] >= value
+            elif column in ['acc']:
+                # Include rows where the column is greater than or equal to the specified confidence threshold
+                mask &= dataframe[column] >= value
+            else:
+                mask &= dataframe[column] >= value
+
+    # Return the filtered DataFrame
+    return dataframe[mask]
+
+# def produce_filtered_annotation_dataframe(cui_filter = False, meta_annot_filter = False, pat_list = None, config_obj = None, filter_custom_args =None, cui_code_list=None):
+    
+#     if(meta_annot_filter):
+#         if(filter_custom_args ==None):
+#             print("using config obj filter arguments..")
+#             filter_args = config_obj.filter_arguments
+#         else:
+#             filter_args = filter_custom_args
+    
+#     results = []
+    
+#     if(pat_list ==None):
+#         print("using all patient list", len(config_obj.all_patient_list))
+#         pat_list = config_obj.all_patient_list
+        
+#         for i in tqdm(range(0, len(pat_list))):
+            
+#             current_pat_client_idcode = pat_list[i]
+            
+#             current_pat_annot_batch_path = config_obj.pre_document_annotation_batch_path + current_pat_client_idcode
+            
+#             current_pat_annot_batch = pd.read_csv(current_pat_annot_batch_path)
+            
+#             if(meta_annot_filter):
+                
+#                 current_pat_annot_batch = filter_annot_dataframe2(current_pat_annot_batch, filter_args)
+            
+            
+#             if(cui_filter):
+#                 current_pat_annot_batch = current_pat_annot_batch[current_pat_annot_batch['cui'].isin(cui_code_list)]
+                
+                
+#     return current_pat_annot_batch
+
+
+
+def produce_filtered_annotation_dataframe(cui_filter=False, meta_annot_filter=False, pat_list=None, config_obj=None, filter_custom_args=None, cui_code_list=None):
+    """
+    Filter annotation dataframe based on specified criteria.
+
+    Parameters:
+    - cui_filter (bool): Whether to filter by CUI codes.
+    - meta_annot_filter (bool): Whether to apply meta annotation filtering.
+    - pat_list (list): List of patient identifiers.
+    - config_obj (ConfigObject): Configuration object containing necessary parameters.
+    - filter_custom_args (dict): Custom filter arguments.
+    - cui_code_list (list): List of CUI codes for filtering.
+
+    Returns:
+    - pd.DataFrame: Filtered annotation dataframe.
+    """
+
+    if meta_annot_filter:
+        if filter_custom_args is None:
+            print("Using config obj filter arguments..")
+            filter_args = config_obj.filter_arguments
+        else:
+            filter_args = filter_custom_args
+
+    results = []
+
+    if pat_list is None:
+        print("Using all patient list", len(config_obj.all_patient_list))
+        pat_list = config_obj.all_patient_list
+
+    for i in tqdm(range(len(pat_list))):
+        current_pat_client_idcode = str(pat_list[i])
+        current_pat_annot_batch_path = config_obj.pre_document_annotation_batch_path + current_pat_client_idcode + ".csv"
+        current_pat_annot_batch = pd.read_csv(current_pat_annot_batch_path)
+
+        if meta_annot_filter:
+            current_pat_annot_batch = filter_annot_dataframe2(current_pat_annot_batch, filter_args)
+
+        if cui_filter:
+            current_pat_annot_batch = current_pat_annot_batch[current_pat_annot_batch['cui'].isin(cui_code_list)]
+
+        results.append(current_pat_annot_batch)
+        
+    super_result = pd.concat(results)
+
+    return super_result

@@ -354,6 +354,10 @@ def filter_annot_dataframe(dataframe, filter_args):
             elif column in ['Time_Confidence', 'Presence_Confidence', 'Subject_Confidence']:
                 # Include rows where the column is greater than or equal to the specified confidence threshold
                 mask &= dataframe[column] >= value
+            elif column in ['acc']:
+                # Include rows where the column is greater than or equal to the specified confidence threshold
+                mask &= dataframe[column] >= value
+                
             else:
                 mask &= dataframe[column] >= value
 
@@ -395,3 +399,6 @@ def calculate_pretty_name_count_features(df_copy, suffix = "epr"):
         result_vector = None
 
     return result_vector
+
+
+
