@@ -6,6 +6,14 @@ from typing import List
 import pandas as pd
 
 
+import sys
+#stuff paths for portability
+sys.path.insert(0,'/home/aliencat/samora/gloabl_files')
+sys.path.insert(0,'/data/AS/Samora/gloabl_files')
+sys.path.insert(0,'/home/jovyan/work/gloabl_files')
+sys.path.insert(0, '/home/cogstack/samora/_data/gloabl_files')
+sys.path.insert(0, '/home/cogstack/samora/_data/gloabl_files/pat2vec')
+
 def extract_treatment_id_list_from_docs(config_obj):
     """
     Retrieves a list of unique client IDs from a treatment document specified in the configuration.
@@ -68,7 +76,7 @@ def extract_treatment_id_list_from_docs(config_obj):
 
 
 
-def generate_control_list(treatment_client_id_list: List[str], treatment_control_ratio_n: int, control_list_path: str, verbosity: int = 0) -> None:
+def generate_control_list(treatment_client_id_list: List[str], treatment_control_ratio_n: int, control_list_path: str = 'control_list.pkl', verbosity: int = 0) -> None:
     """
     Generate a list of control patients for a given list of treatment patients.
 
@@ -84,7 +92,7 @@ def generate_control_list(treatment_client_id_list: List[str], treatment_control
     random.seed(42)
 
     # Get control docs default 1:1
-    all_idcodes = pd.read_csv('all_client_idcodes_epr_unique.csv')['client_idcode']
+    all_idcodes = pd.read_csv('/home/cogstack/samora/_data/gloabl_files/all_client_idcodes_epr_unique.csv')['client_idcode']
 
     full_control_client_id_list = list(set(all_idcodes) - set(treatment_client_id_list))
     full_control_client_id_list.sort()  # ensure sort for repeatability
@@ -93,7 +101,7 @@ def generate_control_list(treatment_client_id_list: List[str], treatment_control
     if verbosity > 0:
         print(f"{n_treatments} selected as controls")  # Soft control selection, many treatments will be false positives
 
-    treatment_control_sample = pd.DataFrame(full_control_client_id_list).sample(n_treatments, random_state=42)['client_idcode']
+    treatment_control_sample = pd.DataFrame(full_control_client_id_list).sample(n_treatments, random_state=42)[0]
     all_patient_list_control = list(treatment_control_sample.values)
 
     with open(control_list_path, 'wb') as f:
