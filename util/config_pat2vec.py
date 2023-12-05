@@ -137,8 +137,10 @@ class config_class:
         self.individual_patient_id_column_name = individual_patient_id_column_name
 
         self.control_list_path = 'control_path.pkl'
-
-        if (start_time == None):
+        
+        self.dropna_doc_timestamps = dropna_doc_timestamps
+        
+        if(start_time ==None):
             self.start_time = datetime.now()
 
         if (self.main_options == None):
