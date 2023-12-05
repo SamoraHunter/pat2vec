@@ -12,14 +12,11 @@ sys.path.insert(0,'/home/jovyan/work/gloabl_files')
 sys.path.insert(0,'/home/cogstack/samora/_data/gloabl_files')
 
 
-
-
 def count_files(path):
     count = 0
     for root, dirs, files in os.walk(path):
         count += len(files)
     return count
-
 
 
 def process_csv_files(input_path, out_folder='outputs', output_filename_suffix='concatenated_output',  part_size=336, sample_size = None):
@@ -227,51 +224,51 @@ def filter_annot_dataframe2(dataframe, filter_args):
 
 
 
-def produce_filtered_annotation_dataframe(cui_filter=False, meta_annot_filter=False, pat_list=None, config_obj=None, filter_custom_args=None, cui_code_list=None):
-    """
-    Filter annotation dataframe based on specified criteria.
+# def produce_filtered_annotation_dataframe(cui_filter=False, meta_annot_filter=False, pat_list=None, config_obj=None, filter_custom_args=None, cui_code_list=None):
+#     """
+#     Filter annotation dataframe based on specified criteria.
 
-    Parameters:
-    - cui_filter (bool): Whether to filter by CUI codes.
-    - meta_annot_filter (bool): Whether to apply meta annotation filtering.
-    - pat_list (list): List of patient identifiers.
-    - config_obj (ConfigObject): Configuration object containing necessary parameters.
-    - filter_custom_args (dict): Custom filter arguments.
-    - cui_code_list (list): List of CUI codes for filtering.
+#     Parameters:
+#     - cui_filter (bool): Whether to filter by CUI codes.
+#     - meta_annot_filter (bool): Whether to apply meta annotation filtering.
+#     - pat_list (list): List of patient identifiers.
+#     - config_obj (ConfigObject): Configuration object containing necessary parameters.
+#     - filter_custom_args (dict): Custom filter arguments.
+#     - cui_code_list (list): List of CUI codes for filtering.
 
-    Returns:
-    - pd.DataFrame: Filtered annotation dataframe.
-    """
+#     Returns:
+#     - pd.DataFrame: Filtered annotation dataframe.
+#     """
 
-    if meta_annot_filter:
-        if filter_custom_args is None:
-            print("Using config obj filter arguments..")
-            filter_args = config_obj.filter_arguments
-        else:
-            filter_args = filter_custom_args
+#     if meta_annot_filter:
+#         if filter_custom_args is None:
+#             print("Using config obj filter arguments..")
+#             filter_args = config_obj.filter_arguments
+#         else:
+#             filter_args = filter_custom_args
 
-    results = []
+#     results = []
 
-    if pat_list is None:
-        print("Using all patient list", len(config_obj.all_patient_list))
-        pat_list = config_obj.all_patient_list
+#     if pat_list is None:
+#         print("Using all patient list", len(config_obj.all_patient_list))
+#         pat_list = config_obj.all_patient_list
 
-    for i in tqdm(range(len(pat_list))):
-        current_pat_client_idcode = str(pat_list[i])
-        current_pat_annot_batch_path = config_obj.pre_document_annotation_batch_path + current_pat_client_idcode + ".csv"
-        current_pat_annot_batch = pd.read_csv(current_pat_annot_batch_path)
+#     for i in tqdm(range(len(pat_list))):
+#         current_pat_client_idcode = str(pat_list[i])
+#         current_pat_annot_batch_path = config_obj.pre_document_annotation_batch_path + current_pat_client_idcode + ".csv"
+#         current_pat_annot_batch = pd.read_csv(current_pat_annot_batch_path)
 
-        if meta_annot_filter:
-            current_pat_annot_batch = filter_annot_dataframe2(current_pat_annot_batch, filter_args)
+#         if meta_annot_filter:
+#             current_pat_annot_batch = filter_annot_dataframe2(current_pat_annot_batch, filter_args)
 
-        if cui_filter:
-            current_pat_annot_batch = current_pat_annot_batch[current_pat_annot_batch['cui'].isin(cui_code_list)]
+#         if cui_filter:
+#             current_pat_annot_batch = current_pat_annot_batch[current_pat_annot_batch['cui'].isin(cui_code_list)]
 
-        results.append(current_pat_annot_batch)
+#         results.append(current_pat_annot_batch)
         
-    super_result = pd.concat(results)
+#     super_result = pd.concat(results)
 
-    return super_result
+#     return super_result
 
 
 def produce_filtered_annotation_dataframe(cui_filter=False, meta_annot_filter=False, pat_list=None, config_obj=None, filter_custom_args=None, cui_code_list=None, mct=False):
