@@ -66,63 +66,9 @@ class config_class:
                  individual_patient_window_df=None,
                  individual_patient_window_start_column_name=None,
                  individual_patient_id_column_name=None,
+                 dropna_doc_timestamps=True
 
                  ):
-        """
-This module defines a configuration class for a data processing pipeline. It includes parameters for file paths, project settings, and various processing options.
-
-Attributes:
-    remote_dump (bool): Indicates whether the data should be dumped remotely.
-    suffix (str): Suffix for file paths.
-    treatment_doc_filename (str): Filename for treatment documents.
-    treatment_control_ratio_n (int): Ratio of treatment to control samples.
-    proj_name (str): Project name. Patient data pre processing batches are stored here.
-    current_path_dir (str): Current path directory.
-    main_options (dict): Dictionary of main processing options. This is a dict of data source:boolean for retrieval and inclusion in output vectors.
-    start_date (datetime): Start date for processing. When should the search begin, example (2022, 1, 1). 
-    years (int): Number of years for processing. How long should the search window be? 
-    months (int): Number of months for processing. ..
-    days (int): Number of days for processing. ...
-    aliencat (bool): Flag for Aliencat processing. Set an env bool and check the paths it sets for medcat model and remote dumping etc.
-    dgx (bool): Flag for DGX processing.
-    dhcap (bool): Flag for DHCAP processing.
-    dhcap02 (bool): Flag for DHCAP02 processing.
-    batch_mode (bool): Flag for batch processing. Working mode. 
-    store_annot (bool): Flag for storing annotations. deprecated.
-    share_sftp (bool): Flag for sharing via SFTP. deprecated.
-    multi_process (bool): Flag for multi-processing. deprecated.
-    annot_first (bool): Flag for annotation priority. deprecated.
-    strip_list (bool): Flag for stripping list. Check for already completed batches of pat vectors to skip in main run. Useful for starting and stopping.
-    verbosity (int): Verbosity level.
-    random_seed_val (int): Random seed value.
-    hostname (str): Remote host name.
-    username (str): Remote username.
-    password (str): Remote password.
-    gpu_mem_threshold (int): GPU memory threshold.
-    testing (bool): Flag for testing mode.
-    use_controls (bool): Flag for using control samples.
-    medcat (bool): Flag for MedCat processing.
-    global_start_year (int): Global start year for processing range.
-    global_start_month (int): Global start month for processing range.
-    global_end_year (int): Global end year for processing range.
-    global_end_month (int): Global end month for processing range.
-    skip_additional_listdir (bool): Flag for skipping additional list directories.
-    start_time (datetime): Start time of the processing.
-    root_path (str): Root path for storing processed data.
-    negate_biochem (bool): Flag for negating biochemistry.
-    patient_id_column_name (str): Column name for patient ID.
-    overwrite_stored_pat_docs (bool): Flag for overwriting stored patient documents.
-    store_pat_batch_docs (bool): Flag for storing patient batch documents.
-    annot_filter_options (dict): Annotation filter options.
-    shuffle_pat_list (bool): Flag for shuffling patient list.
-    individual_patient_window (bool): Flag for individual patient window processing.
-    individual_patient_window_df (pd.DataFrame): DataFrame for individual patient window.
-    individual_patient_window_start_column_name (str): Column name for individual patient window start.
-    individual_patient_id_column_name (str): Column name for individual patient ID.
-
-Methods:
-    update_global_start_date: Updates the global start date based on the provided start date.
-"""
 
         self.suffix = suffix
         self.treatment_doc_filename = treatment_doc_filename

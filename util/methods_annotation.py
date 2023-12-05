@@ -150,6 +150,20 @@ def multi_annots_to_df(current_pat_client_idcode,
                                                             time_column=time_column,
                                                             guid_column = guid_column)
 
+        #drop nan rows
+        #Check for NaN values in any column of the specified list
+        col_list_drop_nan = ['client_idcode', time_column, ]
+        
+        if(config_obj.verbosity >= 3):
+            print('multi_annots_to_df', len(doc_to_annot_df))
+        rows_with_nan = doc_to_annot_df[doc_to_annot_df[col_list_drop_nan].isna().any(axis=1)]
+
+        # Drop rows with NaN values
+        doc_to_annot_df = doc_to_annot_df.drop(rows_with_nan.index).copy()
+        if(config_obj.verbosity >= 3):
+            print('multi_annots_to_df', len(doc_to_annot_df))
+
+
         doc_to_annot_df.to_csv(temp_file_path, mode='a', header=False, index=False)
 
     
@@ -204,6 +218,20 @@ def multi_annots_to_df_mct(current_pat_client_idcode,
                                                             text_column=text_column,
                                                             time_column=time_column,
                                                             guid_column = guid_column)
+
+        #drop nan rows
+        # Check for NaN values in any column of the specified list
+        col_list_drop_nan = ['client_idcode', time_column, ]
+        
+        if(config_obj.verbosity >= 3):
+            print('multi_annots_to_df', len(doc_to_annot_df))
+        rows_with_nan = doc_to_annot_df[doc_to_annot_df[col_list_drop_nan].isna().any(axis=1)]
+
+        # Drop rows with NaN values
+        doc_to_annot_df = doc_to_annot_df.drop(rows_with_nan.index).copy()
+        if(config_obj.verbosity >= 3):
+            print('multi_annots_to_df', len(doc_to_annot_df))
+
 
         doc_to_annot_df.to_csv(temp_file_path, mode='a', header=False, index=False)
 
@@ -314,7 +342,7 @@ def json_to_dataframe(json_data, doc,current_pat_client_id_code, full_doc=False,
             raise e
         
     else:
-        columns = ['client_idcode',time_column,'pretty_name', 'cui', 'type_ids', 'types', 'source_value', 'detected_name', 'acc', 'context_similarity',
+        columns = ['client_idcode', time_column,'pretty_name', 'cui', 'type_ids', 'types', 'source_value', 'detected_name', 'acc', 'context_similarity',
                     'start', 'end', 'icd10', 'ontologies', 'snomed', 'id',
                     'Time_Value', 'Time_Confidence', 'Presence_Value', 'Presence_Confidence',
                     'Subject_Value', 'Subject_Confidence', 'text_sample', 'full_doc', guid_column]

@@ -525,6 +525,33 @@ class main:
             only_check_last = True
             last_check = all_patient_list[i] not in stripped_list
             skip_check = last_check
+            
+            if(self.config_obj.dropna_doc_timestamps):
+                #clean epr and mct:
+                
+                timestamp_string = 'updatetime'
+                batch_epr[timestamp_string] = pd.to_datetime(batch_epr[timestamp_string], errors='coerce')
+                batch_epr.dropna(subset=[timestamp_string], inplace=True)
+                
+                timestamp_string = 'observationdocument_recordeddtm'
+                batch_mct[timestamp_string] = pd.to_datetime(batch_mct[timestamp_string], errors='coerce')
+                batch_mct.dropna(subset=[timestamp_string], inplace=True)
+                
+                timestamp_string = 'updatetime'
+                batch_epr_docs_annotations[timestamp_string] = pd.to_datetime(batch_epr_docs_annotations[timestamp_string], errors='coerce')
+                batch_epr_docs_annotations.dropna(subset=[timestamp_string], inplace=True)
+                
+                timestamp_string = 'observationdocument_recordeddtm'
+                batch_epr_docs_annotations_mct[timestamp_string] = pd.to_datetime(batch_epr_docs_annotations_mct[timestamp_string], errors='coerce')
+                batch_epr_docs_annotations_mct.dropna(subset=[timestamp_string], inplace=True)
+                
+                if self.config_obj.verbosity > 3:
+                    print("post batch timestamp na drop:")
+                    print("EPR:", len(batch_epr))
+                    print("MCT:", len(batch_mct))
+                    print("EPR annotations:", len(batch_epr_docs_annotations))
+                    print("EPR annotations mct:", len(batch_epr_docs_annotations_mct))
+            
 
             for j in range(0, len(date_list)):
                 try:

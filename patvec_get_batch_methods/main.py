@@ -335,7 +335,26 @@ def get_pat_batch_epr_docs(current_pat_client_id_code, search_term, config_obj=N
             
             
             if(config_obj.store_pat_batch_docs or overwrite_stored_pat_docs):
-                batch_target.dropna(subset='body_analysed', inplace=True)
+                #batch_target.dropna(subset='body_analysed', inplace=True)
+                
+                if(config_obj.verbosity >= 3):
+                    print('get_epr_docs_predropna', len(batch_target))
+                
+                col_list_drop_nan = ['body_analysed', 'updatetime', 'client_idcode']
+                
+                rows_with_nan = batch_target[batch_target[col_list_drop_nan].isna().any(axis=1)]
+
+                # Drop rows with NaN values
+                batch_target = batch_target.drop(rows_with_nan.index).copy()
+                
+                if(config_obj.verbosity >= 3):
+                    print('get_epr_docs_postdropna', len(batch_target))
+                    
+                #handle non datetime obs recorded    
+                batch_target['updatetime'] = pd.to_datetime(batch_target['updatetime'], errors='coerce')
+                batch_target.dropna(subset=['updatetime'], inplace=True)
+                if(config_obj.verbosity >= 3):
+                    print('get_epr_mct_docs_postdropna on dt col', len(batch_target))
                 
                 batch_target.to_csv(batch_epr_target_path)
             
@@ -429,7 +448,25 @@ def get_pat_batch_mct_docs(current_pat_client_id_code, search_term, config_obj=N
             )
             
             if(config_obj.store_pat_batch_docs or overwrite_stored_pat_docs):
-                batch_target.dropna(subset='observation_valuetext_analysed', inplace=True)
+                #batch_target.dropna(subset='observation_valuetext_analysed', inplace=True)
+                if(config_obj.verbosity >= 3):
+                    print('get_epr_mct_docs_predropna', len(batch_target))
+                col_list_drop_nan = ['observation_valuetext_analysed', 'observationdocument_recordeddtm', 'client_idcode' ]
+                
+                rows_with_nan = batch_target[batch_target[col_list_drop_nan].isna().any(axis=1)]
+
+                # Drop rows with NaN values
+                batch_target = batch_target.drop(rows_with_nan.index).copy()
+                
+                if(config_obj.verbosity >= 3):
+                    print('get_epr_mct_docs_postdropna', len(batch_target))
+                    
+                #handle non datetime obs recorded    
+                batch_target['observationdocument_recordeddtm'] = pd.to_datetime(batch_target['observationdocument_recordeddtm'], errors='coerce')
+                batch_target.dropna(subset=['observationdocument_recordeddtm'], inplace=True)
+                if(config_obj.verbosity >= 3):
+                    print('get_epr_mct_docs_postdropna on dt col', len(batch_target))
+                
                 batch_target.to_csv(batch_epr_target_path_mct)
         else:
             batch_target = pd.read_csv(batch_epr_target_path_mct)
