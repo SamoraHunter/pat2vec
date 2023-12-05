@@ -1,4 +1,4 @@
-from util.methods_get import add_offset_column, build_patient_dict, generate_date_list
+
 import os
 import sys
 from datetime import datetime, timedelta
@@ -15,6 +15,8 @@ sys.path.insert(0, '/data/AS/Samora/gloabl_files')
 sys.path.insert(0, '/home/jovyan/work/gloabl_files')
 sys.path.insert(0, '/home/cogstack/samora/_data/gloabl_files')
 sys.path.insert(0, '/home/cogstack/samora/_data/gloabl_files/pat2vec')
+
+from util.methods_get import add_offset_column, build_patient_dict, generate_date_list
 
 
 class config_class:

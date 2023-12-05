@@ -350,11 +350,11 @@ def get_pat_batch_epr_docs(current_pat_client_id_code, search_term, config_obj=N
                 if(config_obj.verbosity >= 3):
                     print('get_epr_docs_postdropna', len(batch_target))
                     
-                #handle non datetime obs recorded    
-                batch_target['updatetime'] = pd.to_datetime(batch_target['updatetime'], errors='coerce')
-                batch_target.dropna(subset=['updatetime'], inplace=True)
-                if(config_obj.verbosity >= 3):
-                    print('get_epr_mct_docs_postdropna on dt col', len(batch_target))
+                # #handle non datetime obs recorded    
+                # batch_target['updatetime'] = pd.to_datetime(batch_target['updatetime'], errors='coerce')
+                # batch_target.dropna(subset=['updatetime'], inplace=True)
+                # if(config_obj.verbosity >= 3):
+                #     print('get_epr_mct_docs_postdropna on dt col', len(batch_target))
                 
                 batch_target.to_csv(batch_epr_target_path)
             
@@ -461,11 +461,11 @@ def get_pat_batch_mct_docs(current_pat_client_id_code, search_term, config_obj=N
                 if(config_obj.verbosity >= 3):
                     print('get_epr_mct_docs_postdropna', len(batch_target))
                     
-                #handle non datetime obs recorded    
-                batch_target['observationdocument_recordeddtm'] = pd.to_datetime(batch_target['observationdocument_recordeddtm'], errors='coerce')
-                batch_target.dropna(subset=['observationdocument_recordeddtm'], inplace=True)
-                if(config_obj.verbosity >= 3):
-                    print('get_epr_mct_docs_postdropna on dt col', len(batch_target))
+                # #handle non datetime obs recorded    
+                # batch_target['observationdocument_recordeddtm'] = pd.to_datetime(batch_target['observationdocument_recordeddtm'], errors='coerce')
+                # batch_target.dropna(subset=['observationdocument_recordeddtm'], inplace=True)
+                # if(config_obj.verbosity >= 3):
+                #     print('get_epr_mct_docs_postdropna on dt col', len(batch_target))
                 
                 batch_target.to_csv(batch_epr_target_path_mct)
         else:

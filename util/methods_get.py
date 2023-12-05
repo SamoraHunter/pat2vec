@@ -150,9 +150,9 @@ def generate_date_list(start_date, years, months, days):
 def filter_dataframe_by_timestamp(df, start_year, start_month, end_year, end_month, start_day, end_day, timestamp_string, dropna=False):
         # Convert timestamp column to datetime format
     
-    if(dropna):
-        df[timestamp_string] = pd.to_datetime(df[timestamp_string], errors='coerce')
-        df.dropna(subset=[timestamp_string], inplace=True)
+    # if(dropna):
+    #     df[timestamp_string] = pd.to_datetime(df[timestamp_string], errors='coerce')
+    #     df.dropna(subset=[timestamp_string], inplace=True)
         
     df[timestamp_string] = pd.to_datetime(df[timestamp_string], utc=True)
     

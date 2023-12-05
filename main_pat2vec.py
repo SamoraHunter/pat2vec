@@ -530,19 +530,19 @@ class main:
                 #clean epr and mct:
                 
                 timestamp_string = 'updatetime'
-                batch_epr[timestamp_string] = pd.to_datetime(batch_epr[timestamp_string], errors='coerce')
+                batch_epr[timestamp_string] = pd.to_datetime(batch_epr[timestamp_string], errors='coerce', utc=True)
                 batch_epr.dropna(subset=[timestamp_string], inplace=True)
                 
                 timestamp_string = 'observationdocument_recordeddtm'
-                batch_mct[timestamp_string] = pd.to_datetime(batch_mct[timestamp_string], errors='coerce')
+                batch_mct[timestamp_string] = pd.to_datetime(batch_mct[timestamp_string], errors='coerce', utc=True)
                 batch_mct.dropna(subset=[timestamp_string], inplace=True)
                 
                 timestamp_string = 'updatetime'
-                batch_epr_docs_annotations[timestamp_string] = pd.to_datetime(batch_epr_docs_annotations[timestamp_string], errors='coerce')
+                batch_epr_docs_annotations[timestamp_string] = pd.to_datetime(batch_epr_docs_annotations[timestamp_string], errors='coerce', utc=True)
                 batch_epr_docs_annotations.dropna(subset=[timestamp_string], inplace=True)
                 
                 timestamp_string = 'observationdocument_recordeddtm'
-                batch_epr_docs_annotations_mct[timestamp_string] = pd.to_datetime(batch_epr_docs_annotations_mct[timestamp_string], errors='coerce')
+                batch_epr_docs_annotations_mct[timestamp_string] = pd.to_datetime(batch_epr_docs_annotations_mct[timestamp_string], errors='coerce', utc=True)
                 batch_epr_docs_annotations_mct.dropna(subset=[timestamp_string], inplace=True)
                 
                 if self.config_obj.verbosity > 3:
