@@ -43,7 +43,8 @@ def get_current_pat_annotations_mrc_cs(current_pat_client_id_code, target_date_r
                                                                             start_month,
                                                                             end_year, 
                                                                             end_month,
-                                                                            start_day, end_day, 'observationdocument_recordeddtm')
+                                                                            start_day, end_day, 'observationdocument_recordeddtm',
+                                                                            dropna=True)
     
         if(len(filtered_batch_epr_docs_annotations)>0):
         

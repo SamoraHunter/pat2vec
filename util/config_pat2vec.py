@@ -67,6 +67,7 @@ class config_class:
                  individual_patient_window_df = None,
                  individual_patient_window_start_column_name = None,
                  individual_patient_id_column_name = None,
+                 dropna_doc_timestamps = True
                  
                  ):
         
@@ -139,6 +140,8 @@ class config_class:
         self.individual_patient_id_column_name = individual_patient_id_column_name
         
         self.control_list_path = 'control_path.pkl'
+        
+        self.dropna_doc_timestamps
         
         if(start_time ==None):
             self.start_time = datetime.now()

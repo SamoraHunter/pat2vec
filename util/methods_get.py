@@ -18,6 +18,7 @@ from dateutil.relativedelta import relativedelta
 
 from datetime import timedelta
 from dateutil.parser import parse
+from IPython.display import display
 
 
 color_bars = [Fore.RED,
@@ -146,9 +147,18 @@ def generate_date_list(start_date, years, months, days):
 
         
         
-def filter_dataframe_by_timestamp(df, start_year, start_month, end_year, end_month, start_day, end_day, timestamp_string):
+def filter_dataframe_by_timestamp(df, start_year, start_month, end_year, end_month, start_day, end_day, timestamp_string, dropna=False):
         # Convert timestamp column to datetime format
+    
+    if(dropna):
+        df[timestamp_string] = pd.to_datetime(df[timestamp_string], errors='coerce')
+        df.dropna(subset=[timestamp_string], inplace=True)
+        
     df[timestamp_string] = pd.to_datetime(df[timestamp_string], utc=True)
+    
+    
+    
+    #df[timestamp_string] = pd.to_datetime(df[timestamp_string])
     
 
     #imputed from elastic. Mirror:
@@ -161,12 +171,16 @@ def filter_dataframe_by_timestamp(df, start_year, start_month, end_year, end_mon
 
     # Filter based on year and month ranges
     try:
-        filtered_df = df[(df[timestamp_string] >= str(datetime(start_year, int(start_month), start_day, hour, minute, second))) & 
-                         (df[timestamp_string] <= str(datetime(end_year, int(end_month), end_day, hour, minute, second)))
+        filtered_df = df[(df[timestamp_string] >= str(datetime(start_year, int(start_month), int(start_day), hour, minute, second))) & 
+                         (df[timestamp_string] <= str(datetime(end_year, int(end_month), int(end_day), hour, minute, second)))
                         ]
     except Exception as e:
+        print("error in filter_dataframe_by_timestamp")
         print(e)
-        filtered_df = df[df[timestamp_string] =="2323"]
+        display(df)
+        print(start_year, start_month, end_year, end_month, start_day, end_day, timestamp_string)
+        raise e
+        #filtered_df = df[df[timestamp_string] =="2323"]
 
     return filtered_df
 

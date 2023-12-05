@@ -41,7 +41,7 @@ def get_current_pat_annotations(current_pat_client_id_code, target_date_range, b
                                                                             start_month,
                                                                             end_year, 
                                                                             end_month,
-                                                                            start_day, end_day, 'updatetime')
+                                                                            start_day, end_day, 'updatetime', dropna=True)
     
         if(len(filtered_batch_epr_docs_annotations)>0):
         
