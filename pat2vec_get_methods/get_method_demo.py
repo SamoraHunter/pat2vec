@@ -1,8 +1,9 @@
 import pandas as pd
-#from your_module import cohort_searcher_with_terms_and_search  # replace 'your_module' with the actual module name containing cohort_searcher_with_terms_and_search
-from util.methods_get import get_start_end_year_month  # replace 'your_module' with the actual module name containing get_start_end_year_month
+# from your_module import cohort_searcher_with_terms_and_search  # replace 'your_module' with the actual module name containing cohort_searcher_with_terms_and_search
+# replace 'your_module' with the actual module name containing get_start_end_year_month
+from util.methods_get import get_start_end_year_month
 from IPython.display import display
-#cogstack object pass?
+# cogstack object pass?
 
 
 def get_demographics3(patlist, target_date_range, cohort_searcher_with_terms_and_search):
@@ -11,18 +12,20 @@ def get_demographics3(patlist, target_date_range, cohort_searcher_with_terms_and
 
     Parameters:
     - patlist (list): List of patient IDs.
-    - target_date_range (str): Date range in the format "YYYY-MM-DD to YYYY-MM-DD".
+    - target_date_range (str): Date range in the format "(YYYY,MM,DD)".
 
     Returns:
     - pd.DataFrame: Demographics information for the specified patients.
     """
     print(type(cohort_searcher_with_terms_and_search))
-    
-    start_year, start_month, end_year, end_month, start_day, end_day = get_start_end_year_month(target_date_range)
+
+    start_year, start_month, end_year, end_month, start_day, end_day = get_start_end_year_month(
+        target_date_range)
 
     demo = cohort_searcher_with_terms_and_search(
         index_name="epr_documents",
-        fields_list=["client_idcode", "client_firstname", "client_lastname", "client_dob", "client_gendercode", "client_racecode", "client_deceaseddtm", "updatetime"],
+        fields_list=["client_idcode", "client_firstname", "client_lastname", "client_dob",
+                     "client_gendercode", "client_racecode", "client_deceaseddtm", "updatetime"],
         term_name="client_idcode.keyword",
         entered_list=patlist,
         search_string=f'updatetime:[{start_year}-{start_month}-{start_day} TO {end_year}-{end_month}-{end_day}]'
@@ -41,8 +44,7 @@ def get_demographics3(patlist, target_date_range, cohort_searcher_with_terms_and
     else:
         demo = pd.DataFrame(data=None, columns=None)
         demo['client_idcode'] = patlist
-        
-        
+
         return demo
 
 # # Example use:
@@ -50,5 +52,3 @@ def get_demographics3(patlist, target_date_range, cohort_searcher_with_terms_and
 # date_range_example = "2023-01-01 to 2023-12-31"
 # result = get_demographics3(patlist_example, date_range_example)
 # print(result)
-
-
