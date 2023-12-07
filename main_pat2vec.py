@@ -529,21 +529,46 @@ class main:
             if(self.config_obj.dropna_doc_timestamps):
                 #clean epr and mct:
                 
-                timestamp_string = 'updatetime'
-                batch_epr[timestamp_string] = pd.to_datetime(batch_epr[timestamp_string], errors='coerce', utc=True)
-                batch_epr.dropna(subset=[timestamp_string], inplace=True)
+                target_column_string = 'updatetime'
+                batch_epr[target_column_string] = pd.to_datetime(batch_epr[target_column_string], errors='coerce', utc=True)
+                batch_epr.dropna(subset=[target_column_string], inplace=True)
+                batch_epr.dropna(subset=[ 'body_analysed'], inplace=True)
+                batch_epr = batch_epr[batch_epr['body_analysed'].apply(lambda x: isinstance(x, str))]
                 
-                timestamp_string = 'observationdocument_recordeddtm'
-                batch_mct[timestamp_string] = pd.to_datetime(batch_mct[timestamp_string], errors='coerce', utc=True)
-                batch_mct.dropna(subset=[timestamp_string], inplace=True)
+                target_column_string = 'observationdocument_recordeddtm'
+                batch_mct[target_column_string] = pd.to_datetime(batch_mct[target_column_string], errors='coerce', utc=True)
+                batch_mct.dropna(subset=[target_column_string], inplace=True)
+                batch_mct.dropna(subset=['observation_valuetext_analysed'], inplace=True)
+                batch_mct = batch_mct[batch_mct['observation_valuetext_analysed'].apply(lambda x: isinstance(x, str))]
                 
-                timestamp_string = 'updatetime'
-                batch_epr_docs_annotations[timestamp_string] = pd.to_datetime(batch_epr_docs_annotations[timestamp_string], errors='coerce', utc=True)
-                batch_epr_docs_annotations.dropna(subset=[timestamp_string], inplace=True)
+                target_column_string = 'updatetime'
+                batch_epr_docs_annotations[target_column_string] = pd.to_datetime(batch_epr_docs_annotations[target_column_string], errors='coerce', utc=True)
+                batch_epr_docs_annotations.dropna(subset=[target_column_string], inplace=True)
+                #batch_epr_docs_annotations.dropna(subset=['body_analysed'], inplace=True)
                 
-                timestamp_string = 'observationdocument_recordeddtm'
-                batch_epr_docs_annotations_mct[timestamp_string] = pd.to_datetime(batch_epr_docs_annotations_mct[timestamp_string], errors='coerce', utc=True)
-                batch_epr_docs_annotations_mct.dropna(subset=[timestamp_string], inplace=True)
+                target_column_string = 'observationdocument_recordeddtm'
+                batch_epr_docs_annotations_mct[target_column_string] = pd.to_datetime(batch_epr_docs_annotations_mct[target_column_string], errors='coerce', utc=True)
+                batch_epr_docs_annotations_mct.dropna(subset=[target_column_string], inplace=True)
+                #batch_epr_docs_annotations_mct.dropna(subset=['observation_valuetext_analysed'], inplace=True)
+                
+
+                
+                
+                # target_column_string = 'body_analysed'
+                # batch_epr[target_column_string] = pd.to_datetime(batch_epr[target_column_string], errors='coerce', utc=True)
+                # batch_epr.dropna(subset=[target_column_string], inplace=True)
+                
+                # target_column_string = 'observation_valuetext_analysed'
+                # batch_mct[target_column_string] = pd.to_datetime(batch_mct[target_column_string], errors='coerce', utc=True)
+                # batch_mct.dropna(subset=[target_column_string], inplace=True)
+                
+                # target_column_string = 'body_analysed'
+                # batch_epr_docs_annotations[target_column_string] = pd.to_datetime(batch_epr_docs_annotations[target_column_string], errors='coerce', utc=True)
+                # batch_epr_docs_annotations.dropna(subset=[target_column_string], inplace=True)
+                
+                # target_column_string = 'observation_valuetext_analysed'
+                # batch_epr_docs_annotations_mct[target_column_string] = pd.to_datetime(batch_epr_docs_annotations_mct[target_column_string], errors='coerce', utc=True)
+                # batch_epr_docs_annotations_mct.dropna(subset=[target_column_string], inplace=True)
                 
                 if self.config_obj.verbosity > 3:
                     print("post batch timestamp na drop:")

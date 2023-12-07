@@ -343,3 +343,22 @@ def extract_types_from_csv(directory):
                 all_types.update(types_column.unique())
 
     return list(all_types)
+
+
+
+
+def remove_file_from_paths(current_pat_idcode: str, project_name='new_project' ) -> None:
+    #project_name = 'new_project'
+    #current_pat_idcode = 'D886526'
+    pat_file_paths = [
+        f"{project_name}/current_pat_document_batches/",
+        f"{project_name}/current_pat_document_batches_mct/",
+        f"{project_name}/current_pat_documents_annotations_batches/",
+        f"{project_name}/current_pat_documents_annotations_batches_mct/"
+    ]
+    for path in pat_file_paths:
+        try:
+            os.remove(path + current_pat_idcode + ".csv")
+            print(path + current_pat_idcode + ".csv", "successfully removed")
+        except:
+            print(path + current_pat_idcode + ".csv", "not found")

@@ -101,7 +101,7 @@ def annot_pat_batch_docs(current_pat_client_idcode, pat_batch, cat=None, config_
     
     
     
-    multi_annots = cat.get_entities_multi_texts(pat_batch[text_column])
+    multi_annots = cat.get_entities_multi_texts(pat_batch[text_column].dropna())
     
     return multi_annots
     
@@ -146,8 +146,8 @@ def multi_annots_to_df(current_pat_client_idcode,
         doc_to_annot_df = json_to_dataframe(json_data = multi_annots[i],
                                                             doc = pat_batch.iloc[i],
                                                             current_pat_client_id_code = current_pat_client_idcode,
-                                                            text_column=text_column,
-                                                            time_column=time_column,
+                                                            text_column = text_column,
+                                                            time_column = time_column,
                                                             guid_column = guid_column)
 
         #drop nan rows

@@ -381,6 +381,8 @@ def get_pat_batch_epr_docs_annotations(current_pat_client_id_code, config_obj = 
     
     pat_batch = pd.read_csv(batch_epr_target_path)
     
+    pat_batch.dropna(subset=['body_analysed'], axis=0, inplace=True)
+    
     batch_target = get_pat_document_annotation_batch(current_pat_client_idcode = current_pat_client_id_code, pat_batch=pat_batch, cat=cat, config_obj=config_obj, t=t)
 
     return batch_target
