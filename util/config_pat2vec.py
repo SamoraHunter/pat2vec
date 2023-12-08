@@ -1,4 +1,5 @@
 
+from util.methods_get import add_offset_column, build_patient_dict, generate_date_list
 import os
 import sys
 from datetime import datetime, timedelta
@@ -15,8 +16,6 @@ sys.path.insert(0, '/data/AS/Samora/gloabl_files')
 sys.path.insert(0, '/home/jovyan/work/gloabl_files')
 sys.path.insert(0, '/home/cogstack/samora/_data/gloabl_files')
 sys.path.insert(0, '/home/cogstack/samora/_data/gloabl_files/pat2vec')
-
-from util.methods_get import add_offset_column, build_patient_dict, generate_date_list
 
 
 class config_class:
@@ -68,7 +67,8 @@ class config_class:
                  individual_patient_window_df=None,
                  individual_patient_window_start_column_name=None,
                  individual_patient_id_column_name=None,
-                 dropna_doc_timestamps=True
+                 dropna_doc_timestamps=True,
+
 
                  ):
 
@@ -139,10 +139,10 @@ class config_class:
         self.individual_patient_id_column_name = individual_patient_id_column_name
 
         self.control_list_path = 'control_path.pkl'
-        
+
         self.dropna_doc_timestamps = dropna_doc_timestamps
-        
-        if(start_time ==None):
+
+        if (start_time == None):
             self.start_time = datetime.now()
 
         if (self.main_options == None):
@@ -316,8 +316,12 @@ class config_class:
             all_patient_list = priority_list  # + all_patient_list
 
         if (self.testing):
-            self.treatment_doc_filename = '/home/cogstack/samora/_data/pat2vec_tests/' + \
-                treatment_doc_filename
+            # self.treatment_doc_filename = '/home/cogstack/samora/_data/pat2vec_tests/' + \
+            #     treatment_doc_filename
+            # self.treatment_doc_filename = 'test_files/' + \
+            #     treatment_doc_filename
+
+            self.treatment_doc_filename = fr'{os.getcwd()}\test_files\treatment_docs.csv'
 
         if (self.remote_dump == False):
             self.sftp_obj = None

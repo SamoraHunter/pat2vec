@@ -30,6 +30,10 @@ backups/
 
 util/cohort_searcher_dummy.ipynb
 
+util/new_project/
+
+util/medcat_models/*
+
 ####### git template for python projects: ########
 
 # Byte-compiled / optimized / DLL files
