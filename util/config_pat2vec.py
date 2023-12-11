@@ -70,6 +70,7 @@ class config_class:
                  individual_patient_id_column_name=None,
                  dropna_doc_timestamps=True,
                  time_window_interval_delta = relativedelta(days=1),
+                 feature_engineering_arg_dict = None
 
 
                  ):
@@ -189,6 +190,17 @@ class config_class:
                 'Subject_Value': ['Patient'],
                 'Subject_Confidence': 0.8  # Specify the confidence threshold as a float
             }
+
+        if(feature_engineering_arg_dict == None):
+            self.feature_engineering_arg_dict = {
+                'drugs':{'_num-drug-order': True,
+                        '_days-since-last-drug-order': True,
+                        '_days-between-first-last-drug': True}
+                
+            }
+        else:
+            self.feature_engineering_arg_dict = feature_engineering_arg_dict
+            
 
         self.negated_presence_annotations = self.main_options.get(
             'negated_presence_annotations')

@@ -27,6 +27,8 @@ def get_current_pat_drugs(current_pat_client_id_code, target_date_range, pat_bat
     
     batch_mode = config_obj.batch_mode
     
+    drugs_arg_dict = config_obj.feature_engineering_arg_dict.get('drugs')
+    
     start_year, start_month, end_year, end_month, start_day, end_day = get_start_end_year_month(target_date_range, config_obj = config_obj)
 
     # Drugs
@@ -72,9 +74,14 @@ def get_current_pat_drugs(current_pat_client_id_code, target_date_range, pat_bat
 
     obs_columns_set_columns_for_df = []
     for i in range(0, len(obs_columns_set)):
-        obs_columns_set_columns_for_df.append(obs_columns_set[i]+"_num-drug-order")
-        obs_columns_set_columns_for_df.append(obs_columns_set[i]+"_days-since-last-drug-order")
-        obs_columns_set_columns_for_df.append(obs_columns_set[i]+"_days-between-first-last-drug")
+        if(drugs_arg_dict.get('_num-drug-order')):
+            obs_columns_set_columns_for_df.append(obs_columns_set[i]+"_num-drug-order")
+            
+        if(drugs_arg_dict.get("_days-since-last-drug-order")):
+            obs_columns_set_columns_for_df.append(obs_columns_set[i]+"_days-since-last-drug-order")
+            
+        if(drugs_arg_dict.get("_days-between-first-last-drug")):
+            obs_columns_set_columns_for_df.append(obs_columns_set[i]+"_days-between-first-last-drug")
 
     orig_columns = list(df_unique.columns)
 
@@ -107,36 +114,40 @@ def get_current_pat_drugs(current_pat_client_id_code, target_date_range, pat_bat
         filtered_df = order_name_df_dict.get(col_name)
 
         df_len = len(filtered_df)
+        
+        
         if(df_len>=1):
             #n tests
 
             agg_val = len(filtered_df)
-
-            df_unique_filtered.at[i,col_name+"_num-drug-order"] = agg_val
-
-            #days-since-last-test
-            date_object = filtered_df.sort_values(by='datetime').iloc[-1]['datetime']
-
-            delta = today - date_object
-
-            agg_val = delta.days
-
-            df_unique_filtered.at[i,col_name+"_days-since-last-drug-order"] = agg_val
+            if(drugs_arg_dict.get('_num-drug-order')):
+                df_unique_filtered.at[i,col_name+"_num-drug-order"] = agg_val
 
 
-        if(df_len>=2):
+            if(drugs_arg_dict.get("_days-since-last-drug-order")):
+                #days-since-last-test
+                date_object = filtered_df.sort_values(by='datetime').iloc[-1]['datetime']
 
-            #days_between earliest and last
+                delta = today - date_object
 
-            earliest = filtered_df.sort_values(by='datetime').iloc[-1]['datetime']
+                agg_val = delta.days
 
-            oldest = filtered_df.sort_values(by='datetime').iloc[-1]['datetime']
+                df_unique_filtered.at[i,col_name+"_days-since-last-drug-order"] = agg_val
 
-            delta = earliest - oldest
+        if(drugs_arg_dict.get("_days-between-first-last-drug")):
+            if(df_len>=2):
 
-            agg_val = delta.days
+                #days_between earliest and last
 
-            df_unique_filtered.at[i,col_name+"_days-between-first-last-drug"] = agg_val     
+                earliest = filtered_df.sort_values(by='datetime').iloc[-1]['datetime']
+
+                oldest = filtered_df.sort_values(by='datetime').iloc[-1]['datetime']
+
+                delta = earliest - oldest
+
+                agg_val = delta.days
+
+                df_unique_filtered.at[i,col_name+"_days-between-first-last-drug"] = agg_val     
 
 
     

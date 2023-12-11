@@ -1,25 +1,40 @@
 
-from scipy import stats
-from medcat.cat import CAT
-from dateutil.relativedelta import relativedelta
-from credentials import *
+import csv
+import datetime as dt
+import logging
+import multiprocessing
+import os
+import pickle
+import random
+import re
+import subprocess
+import sys
+import time
+import traceback
+import warnings
+from csv import writer
+from datetime import datetime, timedelta, timezone
+from io import StringIO
+from multiprocessing import Pool
+from os.path import exists
+from pathlib import Path
+
+import numpy as np
+import pandas as pd
+import paramiko
 # wrap with option and put behind boolean check, no wildcard in function.
 from cogstack_v8_lite import *
-import paramiko
-from pathlib import Path
-from io import StringIO
-from datetime import datetime, timedelta, timezone
-import traceback
-import time
-import subprocess
-import pickle
-import logging
-import datetime as dt
-from util.methods_get_medcat import get_cat
-from util.methods_get import (create_folders, filter_stripped_list,
-                              generate_date_list, list_dir_wrapper,
-                              update_pbar)
-from util import config_pat2vec
+from colorama import Back, Fore, Style
+from credentials import *
+from dateutil.relativedelta import relativedelta
+from IPython.display import display
+from IPython.utils import io
+from medcat.cat import CAT
+from pat2vec_get_methods.current_pat_annotations_to_file import (
+    get_current_pat_annotations_batch_to_file,
+    get_current_pat_annotations_mct_batch_to_file)
+from pat2vec_main_methods.main_batch import main_batch
+from pat2vec_pat_list.get_patient_treatment_list import get_all_patients_list
 from patvec_get_batch_methods.main import (get_pat_batch_bloods,
                                            get_pat_batch_bmi,
                                            get_pat_batch_demo,
@@ -31,27 +46,13 @@ from patvec_get_batch_methods.main import (get_pat_batch_bloods,
                                            get_pat_batch_mct_docs_annotations,
                                            get_pat_batch_news,
                                            get_pat_batch_obs)
-from pat2vec_pat_list.get_patient_treatment_list import get_all_patients_list
-from pat2vec_main_methods.main_batch import main_batch
-from pat2vec_get_methods.current_pat_annotations_to_file import (
-    get_current_pat_annotations_batch_to_file,
-    get_current_pat_annotations_mct_batch_to_file)
+from scipy import stats
 from tqdm import trange
-from IPython.utils import io
-from IPython.display import display
-from colorama import Back, Fore, Style
-import pandas as pd
-import numpy as np
-from os.path import exists
-from multiprocessing import Pool
-from csv import writer
-import warnings
-import re
-import random
-import os
-import multiprocessing
-import csv
-import sys
+from util import config_pat2vec
+from util.methods_get import (create_folders, filter_stripped_list,
+                              generate_date_list, list_dir_wrapper,
+                              update_pbar)
+from util.methods_get_medcat import get_cat
 
 # stuff paths for portability
 sys.path.insert(0, '/home/aliencat/samora/gloabl_files')
@@ -345,15 +346,24 @@ class main:
             empty_return_mct = pd.DataFrame(columns=['observationdocument_recordeddtm', 'observation_valuetext_analysed'])
             
 
-            search_term = None  # inside function
-            batch_epr = get_pat_batch_epr_docs(current_pat_client_id_code=current_pat_client_id_code,
-                                               search_term=search_term,
-                                               config_obj=self.config_obj,
-                                               cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search)
+            
+            if self.config_obj.main_options.get('annotations', True):
+                search_term = None  # inside function
+                batch_epr = get_pat_batch_epr_docs(current_pat_client_id_code=current_pat_client_id_code,
+                                                search_term=search_term,
+                                                config_obj=self.config_obj,
+                                                cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search)
+            else:
+                batch_epr = empty_return_epr
 
-            search_term = None  # inside function
-            batch_mct = get_pat_batch_mct_docs(current_pat_client_id_code, search_term, config_obj=self.config_obj,
-                                               cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search)
+
+            if self.config_obj.main_options.get('annotations_mrc', True):
+                search_term = None  # inside function
+                batch_mct = get_pat_batch_mct_docs(current_pat_client_id_code, search_term, config_obj=self.config_obj,
+                                                cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search)
+            else:
+                batch_mct = empty_return_mct
+
 
             if not annot_first:
 
@@ -505,35 +515,40 @@ class main:
             if (self.config_obj.dropna_doc_timestamps):
                 # clean epr and mct:
 
-                target_column_string = 'updatetime'
-                batch_epr[target_column_string] = pd.to_datetime(
-                    batch_epr[target_column_string], errors='coerce', utc=True)
-                batch_epr.dropna(subset=[target_column_string], inplace=True)
-                batch_epr.dropna(subset=['body_analysed'], inplace=True)
-                batch_epr = batch_epr[batch_epr['body_analysed'].apply(
-                    lambda x: isinstance(x, str))]
+                if self.config_obj.main_options.get('annotations', True):
+                    target_column_string = 'updatetime'
+                    batch_epr[target_column_string] = pd.to_datetime(
+                        batch_epr[target_column_string], errors='coerce', utc=True)
+                    batch_epr.dropna(subset=[target_column_string], inplace=True)
+                    batch_epr.dropna(subset=['body_analysed'], inplace=True)
+                    batch_epr = batch_epr[batch_epr['body_analysed'].apply(
+                        lambda x: isinstance(x, str))]
 
-                target_column_string = 'observationdocument_recordeddtm'
-                batch_mct[target_column_string] = pd.to_datetime(
-                    batch_mct[target_column_string], errors='coerce', utc=True)
-                batch_mct.dropna(subset=[target_column_string], inplace=True)
-                batch_mct.dropna(
-                    subset=['observation_valuetext_analysed'], inplace=True)
-                batch_mct = batch_mct[batch_mct['observation_valuetext_analysed'].apply(
-                    lambda x: isinstance(x, str))]
+                if self.config_obj.main_options.get('annotations_mrc', True):
+                    target_column_string = 'observationdocument_recordeddtm'
+                    batch_mct[target_column_string] = pd.to_datetime(
+                        batch_mct[target_column_string], errors='coerce', utc=True)
+                    batch_mct.dropna(subset=[target_column_string], inplace=True)
+                    batch_mct.dropna(
+                        subset=['observation_valuetext_analysed'], inplace=True)
+                    batch_mct = batch_mct[batch_mct['observation_valuetext_analysed'].apply(
+                        lambda x: isinstance(x, str))]
 
-                target_column_string = 'updatetime'
-                batch_epr_docs_annotations[target_column_string] = pd.to_datetime(
-                    batch_epr_docs_annotations[target_column_string], errors='coerce', utc=True)
-                batch_epr_docs_annotations.dropna(
-                    subset=[target_column_string], inplace=True)
+
+                if self.config_obj.main_options.get('annotations', True):
+                    target_column_string = 'updatetime'
+                    batch_epr_docs_annotations[target_column_string] = pd.to_datetime(
+                        batch_epr_docs_annotations[target_column_string], errors='coerce', utc=True)
+                    batch_epr_docs_annotations.dropna(
+                        subset=[target_column_string], inplace=True)
                 # batch_epr_docs_annotations.dropna(subset=['body_analysed'], inplace=True)
 
-                target_column_string = 'observationdocument_recordeddtm'
-                batch_epr_docs_annotations_mct[target_column_string] = pd.to_datetime(
-                    batch_epr_docs_annotations_mct[target_column_string], errors='coerce', utc=True)
-                batch_epr_docs_annotations_mct.dropna(
-                    subset=[target_column_string], inplace=True)
+                if self.config_obj.main_options.get('annotations_mrc', True):
+                    target_column_string = 'observationdocument_recordeddtm'
+                    batch_epr_docs_annotations_mct[target_column_string] = pd.to_datetime(
+                        batch_epr_docs_annotations_mct[target_column_string], errors='coerce', utc=True)
+                    batch_epr_docs_annotations_mct.dropna(
+                        subset=[target_column_string], inplace=True)
                 # batch_epr_docs_annotations_mct.dropna(subset=['observation_valuetext_analysed'], inplace=True)
 
                 # target_column_string = 'body_analysed'
