@@ -2,7 +2,6 @@ import os
 
 import pandas as pd
 from IPython.display import display
-
 from util.methods_annotation import (get_pat_document_annotation_batch,
                                      get_pat_document_annotation_batch_mct)
 from util.methods_get import exist_check
@@ -433,7 +432,7 @@ def get_pat_batch_mct_docs_annotations(current_pat_client_id_code, config_obj = 
     
         pat_batch = pd.read_csv(batch_epr_target_path_mct)
         
-        pat_batch.dropna(subset=['body_analysed'], axis=0, inplace=True)
+        pat_batch.dropna(subset=['observation_valuetext_analysed'], axis=0, inplace=True)
         
         batch_target = get_pat_document_annotation_batch_mct(current_pat_client_idcode = current_pat_client_id_code, pat_batch=pat_batch, cat=cat, config_obj=config_obj, t=t)
 
