@@ -35,7 +35,7 @@ def get_current_pat_annotations_batch_to_file(current_pat_client_id_code, target
     
     if(file_exists == False):
     
-        start_year, start_month, end_year, end_month, start_day, end_day = get_start_end_year_month(target_date_range)
+        start_year, start_month, end_year, end_month, start_day, end_day = get_start_end_year_month(target_date_range, config_obj = config_obj)
 
         current_pat_docs = filter_dataframe_by_timestamp(pat_doc_batch, start_year, start_month, end_year, end_month,start_day, end_day, 'updatetime')
 

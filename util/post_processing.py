@@ -19,7 +19,7 @@ def count_files(path):
     return count
 
 
-def process_csv_files(input_path, out_folder='outputs', output_filename_suffix='concatenated_output',  part_size=336, sample_size = None):
+def process_csv_files(input_path, out_folder='outputs', output_filename_suffix='concatenated_output',  part_size=336, sample_size = None, append_timestamp_column=False):
     """
     Concatenate multiple CSV files from a given input path and save the result to a specified output path.
 
@@ -112,6 +112,15 @@ def process_csv_files(input_path, out_folder='outputs', output_filename_suffix='
             for i in range(len(concatenated_data[next(iter(concatenated_data))])):
                 writer.writerow({column: concatenated_data[column][i] for column in unique_columns})
 
+
+    if(append_timestamp_column):
+        print("Reading results and appending updatetime column")
+        df = pd.read_csv(output_file)
+        
+        df = extract_datetime_to_column(df)
+        
+        df.to_csv(output_file)
+
     print(f"Concatenated data saved to {output_file}")
 
 # Example Usage:
@@ -119,7 +128,7 @@ def process_csv_files(input_path, out_folder='outputs', output_filename_suffix='
 
 
 
-def extract_datetime_to_column(df):
+def extract_datetime_to_column(df, drop=True):
     """
     Extracts datetime information from specified columns and creates a new column.
 
@@ -148,6 +157,13 @@ def extract_datetime_to_column(df):
 
     # Display the count of extracted datetime values
     print(df['extracted_datetime_stamp'].value_counts())
+    
+    if(drop):
+        columns_to_drop = [col for col in df.columns if 'date_time_stamp' in col]
+
+        # Drop columns
+        df = df.drop(columns=columns_to_drop)
+    
 
     return df
 

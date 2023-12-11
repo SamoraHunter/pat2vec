@@ -69,7 +69,7 @@ class config_class:
                  individual_patient_window_start_column_name=None,
                  individual_patient_id_column_name=None,
                  dropna_doc_timestamps=True,
-                 time_window_interval_delta = timedelta(days=1),
+                 time_window_interval_delta = relativedelta(days=1),
 
 
                  ):

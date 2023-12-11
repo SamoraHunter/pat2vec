@@ -279,7 +279,7 @@ def get_demographics3_batch(patlist, target_date_range, pat_batch, config_obj = 
     #patlist = config_obj.patlist #is present?
 
     
-    start_year, start_month, end_year, end_month, start_day, end_day = get_start_end_year_month(target_date_range)
+    start_year, start_month, end_year, end_month, start_day, end_day = get_start_end_year_month(target_date_range, config_obj = config_obj)
     
     
     if(batch_mode):
@@ -463,12 +463,19 @@ def convert_date(date_string):
 
 
 
-def get_start_end_year_month(target_date_range, n=1):
+def get_start_end_year_month(target_date_range, config_obj=None):
+    
+    if config_obj is None:
+        raise ValueError("config_obj cannot be None")
+    
+    time_window_interval_delta = config_obj.time_window_interval_delta
     
     start_year, start_month, start_day = target_date_range[0], target_date_range[1], target_date_range[2]
     
     start_date = dt.date(start_year, start_month, start_day)
-    end_date = start_date + dt.timedelta(days=n)
+    #end_date = start_date + dt.timedelta(days=n)
+    end_date = start_date + time_window_interval_delta
+    
     return (
         start_date.year,
         start_date.month,

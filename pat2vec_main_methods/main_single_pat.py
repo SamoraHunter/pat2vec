@@ -6,7 +6,7 @@ from util.methods_get import filter_dataframe_by_timestamp, get_start_end_year_m
 def get_single_pat(current_pat_client_id_code, target_date_range, pat_batch=None, cohort_searcher_with_terms_and_search = None, batch_mode=None, config_obj=None):
     
     
-    start_year, start_month, end_year, end_month, start_day, end_day = get_start_end_year_month(target_date_range)
+    start_year, start_month, end_year, end_month, start_day, end_day = get_start_end_year_month(target_date_range, config_obj = config_obj)
     batch_mode = config_obj.batch_mode
 
     

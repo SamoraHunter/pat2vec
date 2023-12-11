@@ -20,7 +20,7 @@ def get_demographics3(patlist, target_date_range, cohort_searcher_with_terms_and
     print(type(cohort_searcher_with_terms_and_search))
 
     start_year, start_month, end_year, end_month, start_day, end_day = get_start_end_year_month(
-        target_date_range)
+        target_date_range, config_obj = config_obj)
 
     demo = cohort_searcher_with_terms_and_search(
         index_name="epr_documents",

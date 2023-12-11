@@ -296,11 +296,15 @@ class main:
                     self.config_obj.global_end_year).zfill(4)
                 self.config_obj.global_end_month = str(
                     self.config_obj.global_end_month).zfill(2)
+                
+            #calculate for ipw    
+            interval_window_delta = self.config_obj.time_window_interval_delta
 
             self.config_obj.date_list = generate_date_list(self.config_obj.start_date,
                                                            self.config_obj.years,
                                                            self.config_obj.months,
-                                                           self.config_obj.days
+                                                           self.config_obj.days,
+                                                           interval_window_delta
                                                            )
 
             self.n_pat_lines = len(self.config_obj.date_list)
@@ -335,6 +339,11 @@ class main:
                         self.t, self.config_obj, skipped_counter)
 
             empty_return = pd.DataFrame()
+            
+            empty_return_epr = pd.DataFrame(columns=['updatetime', 'body_analysed'])
+            
+            empty_return_mct = pd.DataFrame(columns=['observationdocument_recordeddtm', 'observation_valuetext_analysed'])
+            
 
             search_term = None  # inside function
             batch_epr = get_pat_batch_epr_docs(current_pat_client_id_code=current_pat_client_id_code,
@@ -445,7 +454,7 @@ class main:
                         print(f'batch_epr_docs_annotations empty')
                     batch_epr_docs_annotations = empty_return
             else:
-                batch_epr_docs_annotations = empty_return
+                batch_epr_docs_annotations = empty_return_epr
 
             if self.config_obj.main_options.get('annotations_mrc', True):
 
@@ -457,7 +466,7 @@ class main:
                         print(f'batch_epr_docs_annotations_mct empty')
 
             else:
-                batch_epr_docs_annotations_mct = empty_return
+                batch_epr_docs_annotations_mct = empty_return_mct
 
             update_pbar(p_bar_entry, start_time, 0,
                         f'Done batches in {time.time()-start_time}', self.t, self.config_obj, skipped_counter)

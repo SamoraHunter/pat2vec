@@ -379,11 +379,28 @@ def get_pat_batch_epr_docs_annotations(current_pat_client_id_code, config_obj = 
     
     #t = config_obj.t
     
-    pat_batch = pd.read_csv(batch_epr_target_path)
+    #add read existing if exist here..
+    pre_document_annotation_batch_path = config_obj.pre_document_annotation_batch_path
     
-    pat_batch.dropna(subset=['body_analysed'], axis=0, inplace=True)
     
-    batch_target = get_pat_document_annotation_batch(current_pat_client_idcode = current_pat_client_id_code, pat_batch=pat_batch, cat=cat, config_obj=config_obj, t=t)
+    current_pat_document_annotation_batch_path = os.path.join(pre_document_annotation_batch_path, current_pat_client_id_code + ".csv")
+    
+    if exist_check(current_pat_document_annotation_batch_path, config_obj = config_obj):
+    
+        #if annotation batch already created, read it
+    
+        batch_target = pd.read_csv(current_pat_document_annotation_batch_path)
+    
+    
+    else:
+    
+        pat_batch = pd.read_csv(batch_epr_target_path)
+        
+        pat_batch.dropna(subset=['body_analysed'], axis=0, inplace=True)
+        
+        batch_target = get_pat_document_annotation_batch(current_pat_client_idcode = current_pat_client_id_code, pat_batch=pat_batch, cat=cat, config_obj=config_obj, t=t)
+
+
 
     return batch_target
 
@@ -397,9 +414,28 @@ def get_pat_batch_mct_docs_annotations(current_pat_client_id_code, config_obj = 
     
     #t = config_obj.t
     
-    pat_batch = pd.read_csv(batch_epr_target_path_mct)
+    pre_document_annotation_batch_path_mct = config_obj.pre_document_annotation_batch_path_mct
     
-    batch_target = get_pat_document_annotation_batch_mct(current_pat_client_idcode = current_pat_client_id_code, pat_batch=pat_batch, cat=cat, config_obj=config_obj, t=t)
+    
+    current_pat_document_annotation_batch_path = os.path.join(pre_document_annotation_batch_path_mct, current_pat_client_id_code + ".csv")
+    
+    
+    if exist_check(current_pat_document_annotation_batch_path, config_obj = config_obj):
+    
+        #if annotation batch already created, read it
+    
+        batch_target = pd.read_csv(current_pat_document_annotation_batch_path)
+    
+    
+    else:
+    
+    
+    
+        pat_batch = pd.read_csv(batch_epr_target_path_mct)
+        
+        pat_batch.dropna(subset=['body_analysed'], axis=0, inplace=True)
+        
+        batch_target = get_pat_document_annotation_batch_mct(current_pat_client_idcode = current_pat_client_id_code, pat_batch=pat_batch, cat=cat, config_obj=config_obj, t=t)
 
     return batch_target
 
