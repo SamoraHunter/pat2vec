@@ -1,5 +1,4 @@
 
-from util.methods_get import add_offset_column, build_patient_dict, generate_date_list
 import os
 import sys
 from datetime import datetime, timedelta
@@ -9,6 +8,8 @@ import pandas as pd
 import paramiko
 from dateutil.relativedelta import relativedelta
 from IPython.display import display
+from pat2vec.util.methods_get import (add_offset_column, build_patient_dict,
+                                      generate_date_list)
 
 # stuff paths for portability
 sys.path.insert(0, '/home/aliencat/samora/gloabl_files')
@@ -68,6 +69,7 @@ class config_class:
                  individual_patient_window_start_column_name=None,
                  individual_patient_id_column_name=None,
                  dropna_doc_timestamps=True,
+                 time_window_interval_delta = timedelta(days=1),
 
 
                  ):
@@ -141,6 +143,8 @@ class config_class:
         self.control_list_path = 'control_path.pkl'
 
         self.dropna_doc_timestamps = dropna_doc_timestamps
+        
+        self.time_window_interval_delta = time_window_interval_delta
 
         if (start_time == None):
             self.start_time = datetime.now()
@@ -400,7 +404,8 @@ class config_class:
             self.sftp_client = None
 
         self.date_list = generate_date_list(
-            self.start_date, self.years, self.months, self.days)
+            self.start_date, self.years, self.months, self.days,
+            time_window_interval_delta = self.time_window_interval_delta)
 
         if (self.verbosity > 0):
             for date in self.date_list[0:5]:

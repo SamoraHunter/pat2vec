@@ -129,7 +129,7 @@ def enum_target_date_vector(target_date_range, current_pat_client_id_code, confi
     
 
 
-def generate_date_list(start_date, years, months, days):
+def generate_date_list(start_date, years, months, days, time_window_interval_delta=relativedelta(days=1)):
     
     end_date = start_date + relativedelta(years=years, months=months, days=days)
     
@@ -138,7 +138,7 @@ def generate_date_list(start_date, years, months, days):
     
     while current_date <= end_date:
         date_list.append((current_date.year, current_date.month, current_date.day))
-        current_date += timedelta(days=1)
+        current_date += time_window_interval_delta #timedelta(days=1)
     
     return date_list
     
@@ -490,7 +490,10 @@ def get_empty_date_vector(config_obj):
     months = config_obj.months
     days = config_obj.days
     
-    combinations = generate_date_list(start_date, years, months, days)
+    interval_window_delta = config_obj.time_window_interval_delta
+    
+    
+    combinations = generate_date_list(start_date, years, months, days, interval_window_delta)
     
     combinations = [str(item) + '_' + 'date_time_stamp' for item in combinations]
     
