@@ -2,7 +2,7 @@ import csv
 import os
 import sys
 from datetime import datetime
-from multiprocessing import Pool
+from multiprocessing import Pool, cpu_count
 
 import pandas as pd
 from tqdm import tqdm
@@ -399,7 +399,7 @@ def process_chunk(args):
                         concatenated_data[column].append(row.get(column, ''))
     return concatenated_data
 
-def process_csv_files_multi(input_path, out_folder='outputs', output_filename_suffix='concatenated_output', part_size=336, sample_size=None, append_timestamp_column=False):
+def process_csv_files_multi(input_path, out_folder='outputs', output_filename_suffix='concatenated_output', part_size=336, sample_size=None, append_timestamp_column=False, n_proc=None):
     curate_columns = False
 
     all_file_paths = [os.path.join(dp, f) for dp, dn, filenames in os.walk(input_path) for f in filenames if os.path.splitext(f)[1] == '.csv']
@@ -417,7 +417,7 @@ def process_csv_files_multi(input_path, out_folder='outputs', output_filename_su
     print("all files size", len(all_files))
 
     if not curate_columns:
-        for file in all_files:
+        for file in tqdm(all_files):
             if file.endswith('.csv'):
                 with open(file, 'r', newline='') as infile:
                     reader = csv.reader(infile)
@@ -442,8 +442,23 @@ def process_csv_files_multi(input_path, out_folder='outputs', output_filename_su
     with open(output_file, 'w', newline='') as outfile:
         writer = csv.DictWriter(outfile, fieldnames=unique_columns)
         writer.writeheader()
+        
+    # Get the number of available CPU cores
+    available_cores = cpu_count()
 
-    with Pool() as pool:
+    # Set the desired number of processes (e.g., half of the available cores)
+    desired_half_processes = available_cores // 2
+        
+    if(n_proc!=None):
+        if(n_proc == 'all'):
+            n_proc_val = available_cores
+        if(n_proc == 'half'):
+            n_proc_val = desired_half_processes
+        elif(type(n_proc)==int ):
+            n_proc_val = n_proc
+    print("desried cores:" ,n_proc_val)
+    
+    with Pool(processes=n_proc_val) as pool:
         args_list = [(i, all_files, part_size, unique_columns) for i in range(0, len(all_files), part_size)]
         results = list(tqdm(pool.imap(process_chunk, args_list), total=len(all_files)//part_size))
 
