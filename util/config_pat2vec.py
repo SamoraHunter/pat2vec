@@ -55,6 +55,8 @@ class config_class:
                  global_start_month=None,
                  global_end_year=None,
                  global_end_month=None,
+                 global_start_day = None,
+                 global_end_day = None,
                  skip_additional_listdir=False,
                  start_time=None,
                  root_path=None,
@@ -435,21 +437,29 @@ class config_class:
         }
 
         if (global_start_year == None):
-            self.global_start_year, self.global_start_month, self.global_end_year, self.global_end_month = '1995', '01', '2023', '11'
+            self.global_start_year, self.global_start_month, self.global_end_year, self.global_end_month, self.global_start_day, self.global_end_day = '1995', '01', '2023', '11', '01', '01'
         else:
 
             self.global_start_year = str(global_start_year).zfill(4)
             self.global_start_month = str(global_start_month).zfill(2)
             self.global_end_year = str(global_end_year).zfill(4)
             self.global_end_month = str(global_end_month).zfill(2)
+            self.global_start_day = str(global_start_day).zfill(2)
+            self.global_end_day = str(global_end_day).zfill(2)
+            
 
         def update_global_start_date(self, start_date):
-
+            print("updating global start date")
             # Compare and update individual elements of global start date if necessary
             if start_date.year > int(self.global_start_year):
                 self.global_start_year = str(start_date.year)
             if start_date.month > int(self.global_start_month):
                 self.global_start_month = str(start_date.month)
+            if start_date.day > int(self.global_start_day):
+                self.global_start_day = str(start_date.day)   
+                
+            
+
 
             print(
                 "Warning: Updated global start date as start date later than global start date.")
@@ -492,5 +502,8 @@ class config_class:
             print("Debug message: global_start_month =", self.global_start_month)
             print("Debug message: global_end_year =", self.global_end_year)
             print("Debug message: global_end_month =", self.global_end_month)
+            print("Debug message: global_start_day =", self.global_start_day)
+            print("Debug message: global_end_day =", self.global_end_day)
+            
 
         self.skip_additional_listdir = skip_additional_listdir

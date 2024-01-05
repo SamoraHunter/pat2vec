@@ -30,6 +30,9 @@ def get_pat_batch_obs(current_pat_client_id_code, search_term, config_obj=None, 
     global_start_month = config_obj.global_start_month
     global_end_year = config_obj.global_end_year
     global_end_month = config_obj.global_end_month
+    global_start_day = config_obj.global_start_day
+    global_end_day = config_obj.global_end_day
+    
 
     try:
         batch_target = cohort_searcher_with_terms_and_search(
@@ -40,7 +43,7 @@ def get_pat_batch_obs(current_pat_client_id_code, search_term, config_obj=None, 
             term_name="client_idcode.keyword",
             entered_list=[current_pat_client_id_code],
             search_string=f"obscatalogmasteritem_displayname:(\"{search_term}\") AND "
-                          f'observationdocument_recordeddtm:[{global_start_year}-{global_start_month} TO {global_end_year}-{global_end_month}]'
+                          f'observationdocument_recordeddtm:[{global_start_year}-{global_start_month}-{global_start_day} TO {global_end_year}-{global_end_month}-{global_end_day}]'
         )
         return batch_target
     except Exception as e:
@@ -74,6 +77,8 @@ def get_pat_batch_news(current_pat_client_id_code, search_term, config_obj=None,
     global_start_month = config_obj.global_start_month
     global_end_year = config_obj.global_end_year
     global_end_month = config_obj.global_end_month
+    global_start_day = config_obj.global_start_day
+    global_end_day = config_obj.global_end_day
 
     try:
         batch_target = cohort_searcher_with_terms_and_search(
@@ -84,7 +89,7 @@ def get_pat_batch_news(current_pat_client_id_code, search_term, config_obj=None,
             term_name="client_idcode.keyword",
             entered_list=[current_pat_client_id_code],
             search_string=f'obscatalogmasteritem_displayname:("NEWS" OR "NEWS2") AND '
-                          f'observationdocument_recordeddtm:[{global_start_year}-{global_start_month} TO {global_end_year}-{global_end_month}]'
+                          f'observationdocument_recordeddtm:[{global_start_year}-{global_start_month}-{global_start_day} TO {global_end_year}-{global_end_month}-{global_end_day}]'
         )
         return batch_target
     except Exception as e:
@@ -118,6 +123,8 @@ def get_pat_batch_bmi(current_pat_client_id_code, search_term, config_obj=None, 
     global_start_month = config_obj.global_start_month
     global_end_year = config_obj.global_end_year
     global_end_month = config_obj.global_end_month
+    global_start_day = config_obj.global_start_day
+    global_end_day = config_obj.global_end_day
 
     try:
         batch_target = cohort_searcher_with_terms_and_search(
@@ -128,7 +135,7 @@ def get_pat_batch_bmi(current_pat_client_id_code, search_term, config_obj=None, 
             term_name="client_idcode.keyword",
             entered_list=[current_pat_client_id_code],
             search_string=f'obscatalogmasteritem_displayname:("OBS BMI" OR "OBS Weight" OR "OBS height") AND '
-                          f'observationdocument_recordeddtm:[{global_start_year}-{global_start_month} TO {global_end_year}-{global_end_month}]'
+                          f'observationdocument_recordeddtm:[{global_start_year}-{global_start_month}-{global_start_day} TO {global_end_year}-{global_end_month}-{global_end_day}]'
         )
         return batch_target
     except Exception as e:
@@ -161,6 +168,8 @@ def get_pat_batch_bloods(current_pat_client_id_code, search_term, config_obj=Non
     global_start_month = config_obj.global_start_month
     global_end_year = config_obj.global_end_year
     global_end_month = config_obj.global_end_month
+    global_start_day = config_obj.global_start_day
+    global_end_day = config_obj.global_end_day
 
     try:
         batch_target = cohort_searcher_with_terms_and_search(
@@ -169,7 +178,7 @@ def get_pat_batch_bloods(current_pat_client_id_code, search_term, config_obj=Non
             term_name="client_idcode.keyword",
             entered_list=[current_pat_client_id_code],
             search_string=f'basicobs_value_numeric:* AND '
-                          f'updatetime:[{global_start_year}-{global_start_month} TO {global_end_year}-{global_end_month}]'
+                          f'updatetime:[{global_start_year}-{global_start_month}-{global_start_day} TO {global_end_year}-{global_end_month}-{global_end_day}]'
         )
         return batch_target
     except Exception as e:
@@ -202,6 +211,8 @@ def get_pat_batch_drugs(current_pat_client_id_code, search_term, config_obj=None
     global_start_month = config_obj.global_start_month
     global_end_year = config_obj.global_end_year
     global_end_month = config_obj.global_end_month
+    global_start_day = config_obj.global_start_day
+    global_end_day = config_obj.global_end_day
 
     try:
         batch_target = cohort_searcher_with_terms_and_search(
@@ -210,7 +221,7 @@ def get_pat_batch_drugs(current_pat_client_id_code, search_term, config_obj=None
             term_name="client_idcode.keyword",
             entered_list=[current_pat_client_id_code],
             search_string=f'order_typecode:"medication" AND '
-                          f'updatetime:[{global_start_year}-{global_start_month} TO {global_end_year}-{global_end_month}]'
+                          f'updatetime:[{global_start_year}-{global_start_month}-{global_start_day} TO {global_end_year}-{global_end_month}-{global_end_day}]'
         )
         return batch_target
     except Exception as e:
@@ -243,6 +254,8 @@ def get_pat_batch_diagnostics(current_pat_client_id_code, search_term, config_ob
     global_start_month = config_obj.global_start_month
     global_end_year = config_obj.global_end_year
     global_end_month = config_obj.global_end_month
+    global_start_day = config_obj.global_start_day
+    global_end_day = config_obj.global_end_day
 
     try:
         batch_target = cohort_searcher_with_terms_and_search(
@@ -251,7 +264,7 @@ def get_pat_batch_diagnostics(current_pat_client_id_code, search_term, config_ob
             term_name="client_idcode.keyword",
             entered_list=[current_pat_client_id_code],
             search_string=f'order_typecode:"diagnostic" AND '
-                          f'updatetime:[{global_start_year}-{global_start_month} TO {global_end_year}-{global_end_month}]'
+                          f'updatetime:[{global_start_year}-{global_start_month}-{global_start_day} TO {global_end_year}-{global_end_month}-{global_end_day}]'
         )
         return batch_target
     except Exception as e:
@@ -293,6 +306,8 @@ def get_pat_batch_epr_docs(current_pat_client_id_code, search_term, config_obj=N
     global_start_month = config_obj.global_start_month
     global_end_year = config_obj.global_end_year
     global_end_month = config_obj.global_end_month
+    global_start_day = config_obj.global_start_day
+    global_end_day = config_obj.global_end_day
     
     
     global_start_year = str(global_start_year).zfill(4)
@@ -327,7 +342,7 @@ def get_pat_batch_epr_docs(current_pat_client_id_code, search_term, config_obj=N
                 fields_list="""client_idcode document_guid document_description body_analysed updatetime clientvisit_visitidcode""".split(),
                 term_name="client_idcode.keyword",
                 entered_list=[current_pat_client_id_code],
-                search_string=f'updatetime:[{global_start_year}-{global_start_month} TO {global_end_year}-{global_end_month}]'
+                search_string=f'updatetime:[{global_start_year}-{global_start_month}-{global_start_day} TO {global_end_year}-{global_end_month}-{global_end_day}]'
             )
             
             #display(batch_target)
@@ -461,6 +476,8 @@ def get_pat_batch_mct_docs(current_pat_client_id_code, search_term, config_obj=N
     global_start_month = config_obj.global_start_month
     global_end_year = config_obj.global_end_year
     global_end_month = config_obj.global_end_month
+    global_start_day = config_obj.global_start_day
+    global_end_day = config_obj.global_end_day
     
     overwrite_stored_pat_docs = config_obj.overwrite_stored_pat_docs
     store_pat_batch_docs = config_obj.store_pat_batch_docs
@@ -481,7 +498,7 @@ def get_pat_batch_mct_docs(current_pat_client_id_code, search_term, config_obj=N
                 term_name="client_idcode.keyword",
                 entered_list=[current_pat_client_id_code],
                 search_string=f'obscatalogmasteritem_displayname:("AoMRC_ClinicalSummary_FT") AND '
-                            f'observationdocument_recordeddtm:[{global_start_year}-{global_start_month} TO {global_end_year}-{global_end_month}]'
+                            f'observationdocument_recordeddtm:[{global_start_year}-{global_start_month}-{global_start_day} TO {global_end_year}-{global_end_month}-{global_end_day}]'
             )
             
             if(config_obj.store_pat_batch_docs or overwrite_stored_pat_docs):
@@ -539,6 +556,8 @@ def get_pat_batch_demo(current_pat_client_id_code, search_term, config_obj=None,
     global_start_month = config_obj.global_start_month
     global_end_year = config_obj.global_end_year
     global_end_month = config_obj.global_end_month
+    global_start_day = config_obj.global_start_day
+    global_end_day = config_obj.global_end_day
 
     try:
         batch_target = cohort_searcher_with_terms_and_search(
@@ -546,7 +565,7 @@ def get_pat_batch_demo(current_pat_client_id_code, search_term, config_obj=None,
             fields_list=["client_idcode", "client_firstname", "client_lastname", "client_dob", "client_gendercode", "client_racecode", "client_deceaseddtm", "updatetime"],
             term_name="client_idcode.keyword",
             entered_list=[current_pat_client_id_code],
-            search_string=f'updatetime:[{global_start_year}-{global_start_month} TO {global_end_year}-{global_end_month}]'
+            search_string=f'updatetime:[{global_start_year}-{global_start_month}-{global_start_day} TO {global_end_year}-{global_end_month}-{global_end_day}]'
         )
         return batch_target
     except Exception as e:

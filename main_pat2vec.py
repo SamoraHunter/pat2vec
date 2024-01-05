@@ -275,6 +275,11 @@ class main:
             self.config_obj.global_end_month = current_pat_end_date.month
 
             self.config_obj.global_end_year = current_pat_end_date.year
+            
+            self.config_obj.global_start_day = current_pat_start_date.day
+            
+            self.config_obj.global_end_day = current_pat_end_date.day
+            
 
             self.config_obj.start_date = current_pat_start_date
 
@@ -282,10 +287,18 @@ class main:
                 self.config_obj.global_start_year).zfill(4)
             self.config_obj.global_start_month = str(
                 self.config_obj.global_start_month).zfill(2)
+            
             self.config_obj.global_end_year = str(
                 self.config_obj.global_end_year).zfill(4)
             self.config_obj.global_end_month = str(
                 self.config_obj.global_end_month).zfill(2)
+            
+            self.config_obj.global_start_day = str(
+                self.config_obj.global_start_day).zfill(2)
+            self.config_obj.global_end_day = str(
+                self.config_obj.global_end_day).zfill(2)
+            
+            
 
             if self.config_obj.verbosity >= 4:
                 print("ipw dates:")
@@ -297,6 +310,13 @@ class main:
                     self.config_obj.global_end_year).zfill(4)
                 self.config_obj.global_end_month = str(
                     self.config_obj.global_end_month).zfill(2)
+                
+                self.config_obj.global_start_day = str(
+                    self.config_obj.global_start_day).zfill(2)
+                
+                self.config_obj.global_end_day = str(
+                    self.config_obj.global_end_day).zfill(2)
+                
                 
             #calculate for ipw    
             interval_window_delta = self.config_obj.time_window_interval_delta
