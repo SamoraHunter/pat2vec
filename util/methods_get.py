@@ -14,12 +14,9 @@ import numpy as np
 import pandas as pd
 import paramiko
 from colorama import Back, Fore, Style
-from dateutil.relativedelta import relativedelta
-
-from datetime import timedelta
 from dateutil.parser import parse
+from dateutil.relativedelta import relativedelta
 from IPython.display import display
-
 
 color_bars = [Fore.RED,
     Fore.GREEN,
@@ -129,21 +126,30 @@ def enum_target_date_vector(target_date_range, current_pat_client_id_code, confi
     
 
 
-def generate_date_list(start_date, years, months, days, time_window_interval_delta=relativedelta(days=1)):
+def generate_date_list(start_date, years, months, days, time_window_interval_delta=relativedelta(days=1), lookback = True):
     
-    end_date = start_date + relativedelta(years=years, months=months, days=days)
+    if(lookback ==False):
+        end_date = start_date + relativedelta(years=years, months=months, days=days)
+    else:
+        end_date = start_date - relativedelta(years=years, months=months, days=days)
     
     date_list = []
     current_date = start_date
     
-    while current_date <= end_date:
-        date_list.append((current_date.year, current_date.month, current_date.day))
-        current_date += time_window_interval_delta #timedelta(days=1)
+    if(lookback ==False):
+        #look forward...
+        while current_date <= end_date:
+            date_list.append((current_date.year, current_date.month, current_date.day))
+            current_date += time_window_interval_delta #timedelta(days=1)
+    else:
+        #look back
+        while current_date >= end_date:
+            date_list.append((current_date.year, current_date.month, current_date.day))
+            current_date += time_window_interval_delta
     
     return date_list
     
     
-
 
         
         
@@ -500,7 +506,7 @@ def get_empty_date_vector(config_obj):
     interval_window_delta = config_obj.time_window_interval_delta
     
     
-    combinations = generate_date_list(start_date, years, months, days, interval_window_delta)
+    combinations = generate_date_list(start_date, years, months, days, interval_window_delta, lookback = config_obj.lookback)
     
     combinations = [str(item) + '_' + 'date_time_stamp' for item in combinations]
     

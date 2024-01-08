@@ -30,6 +30,9 @@ from dateutil.relativedelta import relativedelta
 from IPython.display import display
 from IPython.utils import io
 from medcat.cat import CAT
+from scipy import stats
+from tqdm import trange
+
 from pat2vec_get_methods.current_pat_annotations_to_file import (
     get_current_pat_annotations_batch_to_file,
     get_current_pat_annotations_mct_batch_to_file)
@@ -46,8 +49,6 @@ from patvec_get_batch_methods.main import (get_pat_batch_bloods,
                                            get_pat_batch_mct_docs_annotations,
                                            get_pat_batch_news,
                                            get_pat_batch_obs)
-from scipy import stats
-from tqdm import trange
 from util import config_pat2vec
 from util.methods_get import (create_folders, filter_stripped_list,
                               generate_date_list, list_dir_wrapper,
@@ -325,7 +326,8 @@ class main:
                                                            self.config_obj.years,
                                                            self.config_obj.months,
                                                            self.config_obj.days,
-                                                           interval_window_delta
+                                                           interval_window_delta,
+                                                           lookback = self.config_obj.lookback
                                                            )
 
             self.n_pat_lines = len(self.config_obj.date_list)

@@ -489,7 +489,7 @@ def get_pat_batch_mct_docs(current_pat_client_id_code, search_term, config_obj=N
     split_clinical_notes_bool = config_obj.split_clinical_notes
     
     batch_epr_target_path_mct = os.path.join(config_obj.pre_document_batch_path_mct, str(current_pat_client_id_code) + ".csv")
-
+    
 
     existence_check = exist_check(batch_epr_target_path_mct, config_obj)
     

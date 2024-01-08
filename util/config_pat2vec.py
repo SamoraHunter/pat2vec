@@ -8,6 +8,7 @@ import pandas as pd
 import paramiko
 from dateutil.relativedelta import relativedelta
 from IPython.display import display
+
 from pat2vec.util.methods_get import (add_offset_column, build_patient_dict,
                                       generate_date_list)
 
@@ -73,7 +74,8 @@ class config_class:
                  dropna_doc_timestamps=True,
                  time_window_interval_delta = relativedelta(days=1),
                  feature_engineering_arg_dict = None,
-                 split_clinical_notes = True
+                 split_clinical_notes = True,
+                 lookback = True
 
 
                  ):
@@ -151,6 +153,8 @@ class config_class:
         self.time_window_interval_delta = time_window_interval_delta
         
         self.split_clinical_notes = split_clinical_notes
+        
+        self.lookback = lookback
 
         if (start_time == None):
             self.start_time = datetime.now()
@@ -419,10 +423,17 @@ class config_class:
 
         else:
             self.sftp_client = None
+            
+        if(self.lookback):
+             self.time_window_interval_delta = -self.time_window_interval_delta
+             print("looking back with ", self.time_window_interval_delta)
+        else:
+            print("looking forward with ", self.time_window_interval_delta)
 
         self.date_list = generate_date_list(
             self.start_date, self.years, self.months, self.days,
-            time_window_interval_delta = self.time_window_interval_delta)
+            time_window_interval_delta = self.time_window_interval_delta,
+            lookback = self.lookback)
 
         if (self.verbosity > 0):
             for date in self.date_list[0:5]:
@@ -481,7 +492,12 @@ class config_class:
 
             # Your code with relativedelta
             # time_offset = timedelta(days=days) + relativedelta(months=months, years=years)
-            time_offset = relativedelta(days=days, months=months, years=years)
+            
+            if(self.lookback):
+                time_offset = -relativedelta(days=days, months=months, years=years)
+                
+            else:
+                time_offset = relativedelta(days=days, months=months, years=years)
 
             # print(start_column_name, self.individual_patient_window_start_column_name ,offset_column_name,time_offset )
 
@@ -496,6 +512,12 @@ class config_class:
                                                    patient_id_column=self.individual_patient_id_column_name,
                                                    start_column=f"{start_column_name}_converted",
                                                    end_column=f'{start_column_name}_offset')
+            
+            if(self.lookback ==True):
+                #reverse tuples for elastic search parse
+                reversed_patient_dict = {key: tuple(reversed(value)) for key, value in self.patient_dict.items()}
+                print('reversed_patient_dict')
+                self.patient_dict = reversed_patient_dict
 
             # display(self.patient_dict)
 
