@@ -1,7 +1,10 @@
 import os
 
 import pandas as pd
+from clinical_note_splitter.clinical_notes_splitter import \
+    split_and_append_chunks
 from IPython.display import display
+
 from util.methods_annotation import (get_pat_document_annotation_batch,
                                      get_pat_document_annotation_batch_mct)
 from util.methods_get import exist_check
@@ -297,6 +300,8 @@ def get_pat_batch_epr_docs(current_pat_client_id_code, search_term, config_obj=N
     overwrite_stored_pat_docs = config_obj.overwrite_stored_pat_docs
     store_pat_batch_docs = config_obj.store_pat_batch_docs
     
+    split_clinical_notes_bool = config_obj.split_clinical_notes
+    
     batch_epr_target_path = os.path.join(config_obj.pre_document_batch_path, str(current_pat_client_id_code) + ".csv")
 
     global_start_year = config_obj.global_start_year
@@ -364,6 +369,10 @@ def get_pat_batch_epr_docs(current_pat_client_id_code, search_term, config_obj=N
                 # batch_target.dropna(subset=['updatetime'], inplace=True)
                 # if(config_obj.verbosity >= 3):
                 #     print('get_epr_mct_docs_postdropna on dt col', len(batch_target))
+                if(split_clinical_notes_bool):
+                    
+                    batch_target = split_and_append_chunks(batch_target, epr=True)
+                
                 
                 batch_target.to_csv(batch_epr_target_path)
             
@@ -477,7 +486,7 @@ def get_pat_batch_mct_docs(current_pat_client_id_code, search_term, config_obj=N
     overwrite_stored_pat_docs = config_obj.overwrite_stored_pat_docs
     store_pat_batch_docs = config_obj.store_pat_batch_docs
     
-    
+    split_clinical_notes_bool = config_obj.split_clinical_notes
     
     batch_epr_target_path_mct = os.path.join(config_obj.pre_document_batch_path_mct, str(current_pat_client_id_code) + ".csv")
 
@@ -517,6 +526,10 @@ def get_pat_batch_mct_docs(current_pat_client_id_code, search_term, config_obj=N
                 # batch_target.dropna(subset=['observationdocument_recordeddtm'], inplace=True)
                 # if(config_obj.verbosity >= 3):
                 #     print('get_epr_mct_docs_postdropna on dt col', len(batch_target))
+                
+                if(split_clinical_notes_bool):
+                    
+                    batch_target = split_and_append_chunks(batch_target, epr=False, mct=True)
                 
                 batch_target.to_csv(batch_epr_target_path_mct)
         else:

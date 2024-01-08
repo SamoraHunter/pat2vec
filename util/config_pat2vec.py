@@ -72,7 +72,8 @@ class config_class:
                  individual_patient_id_column_name=None,
                  dropna_doc_timestamps=True,
                  time_window_interval_delta = relativedelta(days=1),
-                 feature_engineering_arg_dict = None
+                 feature_engineering_arg_dict = None,
+                 split_clinical_notes = True
 
 
                  ):
@@ -148,6 +149,8 @@ class config_class:
         self.dropna_doc_timestamps = dropna_doc_timestamps
         
         self.time_window_interval_delta = time_window_interval_delta
+        
+        self.split_clinical_notes = split_clinical_notes
 
         if (start_time == None):
             self.start_time = datetime.now()
