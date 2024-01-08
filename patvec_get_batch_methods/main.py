@@ -297,10 +297,7 @@ def get_pat_batch_epr_docs(current_pat_client_id_code, search_term, config_obj=N
     overwrite_stored_pat_docs = config_obj.overwrite_stored_pat_docs
     store_pat_batch_docs = config_obj.store_pat_batch_docs
     
-    
     batch_epr_target_path = os.path.join(config_obj.pre_document_batch_path, str(current_pat_client_id_code) + ".csv")
-
-
 
     global_start_year = config_obj.global_start_year
     global_start_month = config_obj.global_start_month
@@ -315,19 +312,17 @@ def get_pat_batch_epr_docs(current_pat_client_id_code, search_term, config_obj=N
     global_end_year = str(global_end_year).zfill(4)
     global_end_month = str(global_end_month).zfill(2)
     
+    global_start_day = str(global_start_day).zfill(2)
+    global_end_day = str(global_end_day).zfill(2)
+    
     if config_obj.verbosity >= 6:
         print("batch_epr_target_path:", batch_epr_target_path)
         print("global_start_year:", global_start_year)
         print("global_start_month:", global_start_month)
         print("global_end_year:", global_end_year)
         print("global_end_month:", global_end_month)
-
-    # print("batch_epr_target_path:", batch_epr_target_path)
-    # print("global_start_year:", global_start_year)
-    # print("global_start_month:", global_start_month)
-    # print("global_end_year:", global_end_year)
-    # print("global_end_month:", global_end_month)
-    #zfill
+        print("global_start_day:", global_start_day)
+        print("global_end_day:", global_end_day)
 
 
     existence_check = exist_check(batch_epr_target_path, config_obj)
@@ -481,6 +476,8 @@ def get_pat_batch_mct_docs(current_pat_client_id_code, search_term, config_obj=N
     
     overwrite_stored_pat_docs = config_obj.overwrite_stored_pat_docs
     store_pat_batch_docs = config_obj.store_pat_batch_docs
+    
+    
     
     batch_epr_target_path_mct = os.path.join(config_obj.pre_document_batch_path_mct, str(current_pat_client_id_code) + ".csv")
 
