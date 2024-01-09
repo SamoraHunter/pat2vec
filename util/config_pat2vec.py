@@ -75,7 +75,8 @@ class config_class:
                  time_window_interval_delta = relativedelta(days=1),
                  feature_engineering_arg_dict = None,
                  split_clinical_notes = True,
-                 lookback = True
+                 lookback = True,
+                 add_icd10 = False,
 
 
                  ):
@@ -99,6 +100,8 @@ class config_class:
 
         self.negate_biochem = negate_biochem
         self.patient_id_column_name = patient_id_column_name
+        
+        self.add_icd10 = add_icd10
 
         self.aliencat = aliencat
         self.dgx = dgx

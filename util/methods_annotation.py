@@ -7,6 +7,7 @@ import pandas as pd
 from IPython.display import display
 
 from util.methods_get import exist_check, update_pbar
+from util.post_processing import join_icd10_codes_to_annot
 
 
 def check_pat_document_annotation_complete(current_pat_client_id_code, config_obj=None):
@@ -171,6 +172,16 @@ def multi_annots_to_df(current_pat_client_idcode,
     
     shutil.copy(temp_file_path, current_pat_document_annotation_batch_path)
     
+    if config_obj.add_icd10:
+        
+        temp_df = pd.read_csv(current_pat_document_annotation_batch_path)
+        temp_result = join_icd10_codes_to_annot(df = temp_df, inner=False)
+        
+        temp_result.to_csv(current_pat_document_annotation_batch_path)
+        
+        
+        
+    
     
     
 def multi_annots_to_df_mct(current_pat_client_idcode,
@@ -240,6 +251,12 @@ def multi_annots_to_df_mct(current_pat_client_idcode,
     
     shutil.copy(temp_file_path, current_pat_document_annotation_batch_path)
 
+    if config_obj.add_icd10:
+        
+        temp_df = pd.read_csv(current_pat_document_annotation_batch_path)
+        temp_result = join_icd10_codes_to_annot(df = temp_df, inner=False)
+        
+        temp_result.to_csv(current_pat_document_annotation_batch_path)
 
 
 def json_to_dataframe(json_data, doc,current_pat_client_id_code, full_doc=False, window=300, text_column='body_analysed', time_column='updatetime', guid_column = 'document_guid'):
