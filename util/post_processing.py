@@ -5,6 +5,7 @@ from datetime import datetime
 from multiprocessing import Pool, cpu_count
 
 import pandas as pd
+from IPython.display import display
 from tqdm import tqdm
 
 sys.path.insert(0,'/home/aliencat/samora/gloabl_files')
@@ -477,3 +478,90 @@ def process_csv_files_multi(input_path, out_folder='outputs', output_filename_su
     print(f"Concatenated data saved to {output_file}")
 
     return output_file
+
+
+
+
+def join_icd10_codes_to_annot(df, inner=False):
+    
+    mfp = '/home/cogstack/samora/_data/gloabl_files/snomed_icd10_map/data/tls_Icd10cmHumanReadableMap_US1000124_20230901.tsv'
+    
+    mdf = pd.read_csv(mfp, sep='\t')
+    
+    if(inner==True):
+        result = pd.merge(df, mdf, left_on='cui', right_on='referencedComponentId', how='inner')
+
+    else:
+        result = pd.merge(df, mdf, left_on='cui', right_on='referencedComponentId', how='left')
+    
+    
+    return result
+    
+    
+    
+    
+def filter_dataframe_by_cui(dataframe, filter_list, filter_column='cui', mode="earliest", temporal='before', verbosity=0, time_column='updatetime'):
+    """
+    Filter an annotation DataFrame based on a list of CUI codes and a specified mode.
+
+    Parameters:
+    - dataframe (pd.DataFrame): The input DataFrame.
+    - filter_list (list): List of CUI codes to filter the DataFrame.
+    - filter_column (str): The column containing filter. Default is 'cui'.
+    - mode (str): Specifies whether to consider the earliest or latest entry for each filter. Default is "earliest".
+    - temporal (str): Specifies whether to retain entries before or after the selected mode entry. Default is "before".
+    - verbosity (int): Verbosity level. 0 for no debug statements, higher values for more verbosity.
+    - time_column (str): The column containing time information. Default is 'updatetime'.
+
+    Returns:
+    - pd.DataFrame: Filtered DataFrame based on the specified criteria.
+    """
+
+    # Ensure the time column is in datetime format
+    dataframe[time_column] = pd.to_datetime(dataframe[time_column], utc=True)
+
+    # Ensure filter_list contains integers
+    filter_list = [int(cui) for cui in filter_list]
+
+    # Filter the DataFrame based on the given CUI codes
+    filtered_df = dataframe[dataframe[filter_column].isin(filter_list)]
+
+    # Debug statement for verbosity
+    if verbosity > 0:
+        display(f"Filtered DataFrame based on {filter_column} codes:\n{filtered_df.head()}")
+
+    # Find the earliest or latest entry for each CUI code
+    if mode == "earliest":
+        result_df = filtered_df.groupby(filter_column, as_index=False)[time_column].min()
+    elif mode == "latest":
+        result_df = filtered_df.groupby(filter_column, as_index=False)[time_column].max()
+    else:
+        raise ValueError("Invalid mode. Use 'earliest' or 'latest'")
+
+    # Debug statement for verbosity
+    if verbosity > 0:
+        display(f"Result DataFrame based on {mode} mode:\n{result_df.head()}")
+
+    # Merge with the original DataFrame to get the full rows
+    result_df = pd.merge(result_df, dataframe, on=[filter_column, time_column], how='inner')
+
+    # Filter the original DataFrame based on the earliest or latest entry
+    if temporal == "before":
+        filtered_original_df = dataframe[dataframe[time_column] <= result_df[time_column].min()]
+    elif temporal == "after":
+        filtered_original_df = dataframe[dataframe[time_column] >= result_df[time_column].max()]
+    else:
+        raise ValueError("Invalid temporal value. Use 'before' or 'after'")
+
+    # Debug statement for verbosity
+    if verbosity > 0:
+        display(f"Filtered original DataFrame based on {temporal} temporal:\n{filtered_original_df.head()}")
+
+    return filtered_original_df
+
+
+# Example usage:
+# filter_codes = [109989006]
+#
+# Returns all rows after the earliest cui code match. 
+# filter_dataframe_by_cui(res, filter_list=filter_codes, filter_column = 'cui', mode="earliest", temporal = 'after', verbosity=3)
