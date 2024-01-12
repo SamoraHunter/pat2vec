@@ -33,6 +33,8 @@ from medcat.cat import CAT
 from scipy import stats
 from tqdm import trange
 
+
+
 from pat2vec.pat2vec_get_methods.current_pat_annotations_to_file import (
     get_current_pat_annotations_batch_to_file,
     get_current_pat_annotations_mct_batch_to_file)
