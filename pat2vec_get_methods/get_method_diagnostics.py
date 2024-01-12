@@ -6,7 +6,7 @@ import pandas as pd
 from IPython.display import display
 from scipy import stats
 
-from util.methods_get import (convert_date, filter_dataframe_by_timestamp,
+from pat2vec.util.methods_get import (convert_date, filter_dataframe_by_timestamp,
                               get_start_end_year_month)
 
 

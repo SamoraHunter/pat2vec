@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 from IPython.display import display
 
-from util.methods_get import (filter_dataframe_by_timestamp,
+from pat2vec.util.methods_get import (filter_dataframe_by_timestamp,
                               get_start_end_year_month)
 
 

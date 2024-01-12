@@ -1,7 +1,7 @@
-from util.methods_get import get_demographics3_batch
+from pat2vec.util.methods_get import get_demographics3_batch
 # from COGStats import EthnicityAbstractor
 # from COGStats import *
-from util.ethnicity_abstractor import EthnicityAbstractor
+from pat2vec.util.ethnicity_abstractor import EthnicityAbstractor
 from cogstack_v8_lite import append_age_at_record_series
 import os
 import sys
