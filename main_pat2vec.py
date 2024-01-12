@@ -33,29 +33,22 @@ from medcat.cat import CAT
 from scipy import stats
 from tqdm import trange
 
-from pat2vec_get_methods.current_pat_annotations_to_file import (
+from pat2vec.pat2vec_get_methods.current_pat_annotations_to_file import (
     get_current_pat_annotations_batch_to_file,
     get_current_pat_annotations_mct_batch_to_file)
-from pat2vec_main_methods.main_batch import main_batch
-from pat2vec_pat_list.get_patient_treatment_list import get_all_patients_list
-from patvec_get_batch_methods.main import (get_pat_batch_bloods,
-                                           get_pat_batch_bmi,
-                                           get_pat_batch_demo,
-                                           get_pat_batch_diagnostics,
-                                           get_pat_batch_drugs,
-                                           get_pat_batch_epr_docs,
-                                           get_pat_batch_epr_docs_annotations,
-                                           get_pat_batch_mct_docs,
-                                           get_pat_batch_mct_docs_annotations,
-                                           get_pat_batch_news,
-                                           get_pat_batch_obs)
-from util import config_pat2vec
-from util.methods_get import (create_folders, filter_stripped_list,
-                              generate_date_list, list_dir_wrapper,
-                              update_pbar)
-from util.methods_get_medcat import get_cat
-
-from . import pat2vec_get_methods
+from pat2vec.pat2vec_main_methods.main_batch import main_batch
+from pat2vec.pat2vec_pat_list.get_patient_treatment_list import \
+    get_all_patients_list
+from pat2vec.patvec_get_batch_methods.main import (
+    get_pat_batch_bloods, get_pat_batch_bmi, get_pat_batch_demo,
+    get_pat_batch_diagnostics, get_pat_batch_drugs, get_pat_batch_epr_docs,
+    get_pat_batch_epr_docs_annotations, get_pat_batch_mct_docs,
+    get_pat_batch_mct_docs_annotations, get_pat_batch_news, get_pat_batch_obs)
+from pat2vec.util import config_pat2vec
+from pat2vec.util.methods_get import (create_folders, filter_stripped_list,
+                                      generate_date_list, list_dir_wrapper,
+                                      update_pbar)
+from pat2vec.util.methods_get_medcat import get_cat
 
 # stuff paths for portability
 sys.path.insert(0, '/home/aliencat/samora/gloabl_files')
