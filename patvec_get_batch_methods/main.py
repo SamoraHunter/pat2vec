@@ -5,9 +5,9 @@ from clinical_note_splitter.clinical_notes_splitter import \
     split_and_append_chunks
 from IPython.display import display
 
-from util.methods_annotation import (get_pat_document_annotation_batch,
-                                     get_pat_document_annotation_batch_mct)
-from util.methods_get import exist_check
+from pat2vec.util.methods_annotation import (
+    get_pat_document_annotation_batch, get_pat_document_annotation_batch_mct)
+from pat2vec.util.methods_get import exist_check
 
 
 def get_pat_batch_obs(current_pat_client_id_code, search_term, config_obj=None, cohort_searcher_with_terms_and_search=None):
