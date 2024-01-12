@@ -1,8 +1,10 @@
 import pandas as pd
+from IPython.display import display
+
 # from your_module import cohort_searcher_with_terms_and_search  # replace 'your_module' with the actual module name containing cohort_searcher_with_terms_and_search
 # replace 'your_module' with the actual module name containing get_start_end_year_month
 from pat2vec.util.methods_get import get_start_end_year_month
-from IPython.display import display
+
 # cogstack object pass?
 
 

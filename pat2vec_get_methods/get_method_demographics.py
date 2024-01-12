@@ -1,14 +1,15 @@
-from pat2vec.util.methods_get import get_demographics3_batch
-# from COGStats import EthnicityAbstractor
-# from COGStats import *
-from pat2vec.util.ethnicity_abstractor import EthnicityAbstractor
-from cogstack_v8_lite import append_age_at_record_series
 import os
 import sys
 
 import numpy as np
 import pandas as pd
+from cogstack_v8_lite import append_age_at_record_series
 from IPython.display import display
+
+# from COGStats import EthnicityAbstractor
+# from COGStats import *
+from pat2vec.util.ethnicity_abstractor import EthnicityAbstractor
+from pat2vec.util.methods_get import get_demographics3_batch
 
 sys.path.insert(0, '/home/aliencat/samora/gloabl_files')
 sys.path.insert(0, '/data/AS/Samora/gloabl_files')

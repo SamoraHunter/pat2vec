@@ -2,12 +2,13 @@
 
 
 import time
+
 from IPython.display import display
 from IPython.utils import io
 
 from pat2vec.util.methods_get import (dump_results, exist_check,
-                              filter_dataframe_by_timestamp,
-                              get_start_end_year_month, update_pbar)
+                                      filter_dataframe_by_timestamp,
+                                      get_start_end_year_month, update_pbar)
 
 
 def get_current_pat_annotations_batch_to_file(current_pat_client_id_code, target_date_range, pat_doc_batch,t=None,  skip_check=False, config_obj = None, cat=None):

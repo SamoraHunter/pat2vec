@@ -6,7 +6,7 @@ from IPython.display import display
 from scipy import stats
 
 from pat2vec.util.methods_get import (filter_dataframe_by_timestamp,
-                              get_start_end_year_month)
+                                      get_start_end_year_month)
 
 
 def get_current_pat_bloods(current_pat_client_id_code, target_date_range, pat_batch, batch_mode=False, cohort_searcher_with_terms_and_search=None, config_obj=None):

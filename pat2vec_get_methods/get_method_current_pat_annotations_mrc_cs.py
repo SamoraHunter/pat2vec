@@ -9,13 +9,13 @@ import paramiko
 from IPython.display import display
 from IPython.utils import io
 
-from pat2vec.util.methods_annotation import (calculate_pretty_name_count_features,
-                                     check_pat_document_annotation_complete,
-                                     filter_annot_dataframe,
-                                     get_pat_document_annotation_batch)
+from pat2vec.util.methods_annotation import (
+    calculate_pretty_name_count_features,
+    check_pat_document_annotation_complete, filter_annot_dataframe,
+    get_pat_document_annotation_batch)
 from pat2vec.util.methods_get import (dump_results, exist_check,
-                              filter_dataframe_by_timestamp,
-                              get_start_end_year_month, update_pbar)
+                                      filter_dataframe_by_timestamp,
+                                      get_start_end_year_month, update_pbar)
 
 
 def get_current_pat_annotations_mrc_cs(current_pat_client_id_code, target_date_range, batch_epr_docs_annotations, config_obj=None, t=None, cohort_searcher_with_terms_and_search=None, cat=None):
