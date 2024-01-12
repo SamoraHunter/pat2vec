@@ -32,6 +32,7 @@ from IPython.utils import io
 from medcat.cat import CAT
 from scipy import stats
 from tqdm import trange
+from methods_get import get_free_gpu
 
 from pat2vec.pat2vec_get_methods.current_pat_annotations_to_file import (
     get_current_pat_annotations_batch_to_file,
@@ -177,7 +178,7 @@ class main:
 
         if not (self.dhcap) and not (self.dhcap02):
 
-            gpu_index, free_mem = self.get_free_gpu()
+            gpu_index, free_mem = get_free_gpu()
 
         else:
             gpu_index, free_mem = -1, self.gpu_mem_threshold - 1
