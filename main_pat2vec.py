@@ -55,6 +55,8 @@ from util.methods_get import (create_folders, filter_stripped_list,
                               update_pbar)
 from util.methods_get_medcat import get_cat
 
+from . import pat2vec_get_methods
+
 # stuff paths for portability
 sys.path.insert(0, '/home/aliencat/samora/gloabl_files')
 sys.path.insert(0, '/data/AS/Samora/gloabl_files')
