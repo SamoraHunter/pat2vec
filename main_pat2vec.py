@@ -32,7 +32,7 @@ from IPython.utils import io
 from medcat.cat import CAT
 from scipy import stats
 from tqdm import trange
-from methods_get import get_free_gpu
+from pat2vec.util.methods_get import get_free_gpu
 
 from pat2vec.pat2vec_get_methods.current_pat_annotations_to_file import (
     get_current_pat_annotations_batch_to_file,
