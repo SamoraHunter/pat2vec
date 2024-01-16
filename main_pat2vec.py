@@ -23,7 +23,7 @@ import numpy as np
 import pandas as pd
 import paramiko
 # wrap with option and put behind boolean check, no wildcard in function.
-from cogstack_v8_lite import *
+from cogstack_search_methods.cogstack_v8_lite import *
 from colorama import Back, Fore, Style
 from credentials import *
 from dateutil.relativedelta import relativedelta
