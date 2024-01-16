@@ -77,6 +77,7 @@ class config_class:
                  split_clinical_notes = True,
                  lookback = True,
                  add_icd10 = False,
+                 all_epr_patient_list_path = '/home/cogstack/samora/_data/gloabl_files/all_client_idcodes_epr_unique.csv'
 
 
                  ):
@@ -156,6 +157,8 @@ class config_class:
         self.time_window_interval_delta = time_window_interval_delta
         
         self.split_clinical_notes = split_clinical_notes
+        
+        self.all_epr_patient_list_path = all_epr_patient_list_path
         
         self.lookback = lookback
 

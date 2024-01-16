@@ -76,7 +76,7 @@ def extract_treatment_id_list_from_docs(config_obj):
 
 
 
-def generate_control_list(treatment_client_id_list: List[str], treatment_control_ratio_n: int, control_list_path: str = 'control_list.pkl', verbosity: int = 0) -> None:
+def generate_control_list(treatment_client_id_list: List[str], treatment_control_ratio_n: int, control_list_path: str = 'control_list.pkl', all_epr_patient_list_path: str = 'none', verbosity: int = 0) -> None:
     """
     Generate a list of control patients for a given list of treatment patients.
 
@@ -92,7 +92,10 @@ def generate_control_list(treatment_client_id_list: List[str], treatment_control
     random.seed(42)
 
     # Get control docs default 1:1
-    all_idcodes = pd.read_csv('/home/cogstack/samora/_data/gloabl_files/all_client_idcodes_epr_unique.csv')['client_idcode']
+    
+    
+    all_idcodes = pd.read_csv(all_epr_patient_list_path)['client_idcode']
+    #all_idcodes = pd.read_csv('/home/cogstack/samora/_data/gloabl_files/all_client_idcodes_epr_unique.csv')['client_idcode']
 
     full_control_client_id_list = list(set(all_idcodes) - set(treatment_client_id_list))
     full_control_client_id_list.sort()  # ensure sort for repeatability
@@ -129,12 +132,17 @@ def get_all_patients_list(config_obj):
     
     all_patient_list = pd.Series(all_patient_list).dropna().to_list()
     
+    all_epr_patient_list_path = config_obj.all_epr_patient_list_path
+    
     if config_obj.use_controls:
         
         control_ids = generate_control_list(treatment_client_id_list=patient_ids,
                                              treatment_control_ratio_n=config_obj.treatment_control_ratio_n,
                                              control_list_path=config_obj.control_list_path,
-                                             verbosity=config_obj.verbosity)
+                                             verbosity=config_obj.verbosity,
+                                             all_epr_patient_list_path = all_epr_patient_list_path
+                                             
+                                             )
         all_patient_list.extend(control_ids)
         
         
