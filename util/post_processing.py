@@ -334,6 +334,12 @@ def produce_filtered_annotation_dataframe(cui_filter=False, meta_annot_filter=Fa
             current_pat_annot_batch_path = config_obj.pre_document_annotation_batch_path_mct + current_pat_client_idcode + ".csv"
             
         current_pat_annot_batch = pd.read_csv(current_pat_annot_batch_path)
+        
+        #drop nan on any col:
+        necessary_columns = ['client_idcode', 'updatetime', 'pretty_name', 'cui', 'type_ids', 'types', 'source_value', 'detected_name', 'acc', 'id', 'Time_Value', 'Time_Confidence', 'Presence_Value', 'Presence_Confidence', 'Subject_Value', 'Subject_Confidence']
+
+        current_pat_annot_batch = current_pat_annot_batch.dropna(subset=necessary_columns)
+
 
         if meta_annot_filter:
             current_pat_annot_batch = filter_annot_dataframe2(current_pat_annot_batch, filter_args)
@@ -571,7 +577,7 @@ def filter_dataframe_by_cui(dataframe, filter_list, filter_column='cui', mode="e
 
 
 
-def copy_files_and_dirs(source_root: str, source_name: str, destination: str, items_to_copy: List[str] = None) -> None:
+def copy_files_and_dirs(source_root: str, source_name: str, destination: str, items_to_copy: List[str] = None, loose_files: List[str] = None) -> None:
     """
     Useful for porting project files to a new project location.
     
@@ -631,8 +637,9 @@ def copy_files_and_dirs(source_root: str, source_name: str, destination: str, it
         else:
             shutil.copy2(source_path, destination_path)
 
-    # Look for loose files specifically in the root directory of the source
-    loose_files = ['treatment_docs.csv', 'control_path.pkl']
+    if loose_files is None:
+        # Look for loose files specifically in the root directory of the source
+        loose_files = ['treatment_docs.csv', 'control_path.pkl']
     
     # Copy loose files to the root directory of the destination
     for loose_file in tqdm(loose_files, desc="Copying loose files"):
