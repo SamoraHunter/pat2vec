@@ -571,27 +571,27 @@ def filter_dataframe_by_cui(dataframe, filter_list, filter_column='cui', mode="e
 
 
 
-def copy_files_and_dirs(source_root: str, source_name: str, destination: str, items_to_copy: List) -> None:
+def copy_files_and_dirs(source_root: str, source_name: str, destination: str, items_to_copy: List[str] = None) -> None:
     """
-        Useful for porting project files to a new project location. 
-        
+    Useful for porting project files to a new project location.
+    
     Copy specified directories and files from the source directory to the destination directory.
 
     Parameters:
         source_root (str): The root directory of the source project.
         source_name (str): The name of the source project directory.
         destination (str): The destination directory.
+        items_to_copy (List[str], optional): List of directories/files to copy. Defaults to None.
 
     Returns:
         None
-    
+
     Usage:
         project_root_source = "/home/cogstack/%USERNAME%/_data/HFE_5"
         project_name_source = "new_project"
         project_destination = "."
 
         copy_files_and_dirs(project_root_source, project_name_source, project_destination)
-        
     """
     source_dir = os.path.join(source_root, source_name)
     
@@ -599,29 +599,52 @@ def copy_files_and_dirs(source_root: str, source_name: str, destination: str, it
     destination_dir = os.path.join(destination, source_name)
     os.makedirs(destination_dir, exist_ok=True)
 
-    
-    if(items_to_copy is None):
+    if items_to_copy is None:
         # List of directories/files to copy
         items_to_copy = ['current_pat_annots_parts',
-                        'current_pat_annots_mrc_parts',
-                        'outputs',
-                        'current_pat_document_batches',
-                        'current_pat_document_batches_mct',
-                        'current_pat_documents_annotations_batches',
-                        'current_pat_documents_annotations_batches_mct',
-                        'current_pat_lines_parts',
-                        'treatment_docs.csv',
-                        'control_path.pkl']
+                         'current_pat_annots_mrc_parts',
+                         'outputs',
+                         'current_pat_document_batches',
+                         'current_pat_document_batches_mct',
+                         'current_pat_documents_annotations_batches',
+                         'current_pat_documents_annotations_batches_mct',
+                         'current_pat_lines_parts']
 
-    # Recursively copy each directory/file
-    for item in tqdm(items_to_copy, desc="Copying"):
-        source_item_path = os.path.join(source_dir, item)
-        destination_item_path = os.path.join(destination_dir, item)
+    # Get all paths from the source directory
+    all_source_paths = []
+    for root, dirs, files in os.walk(source_dir):
+        for file in files:
+            all_source_paths.append(os.path.relpath(os.path.join(root, file), source_dir))
+        for dir in dirs:
+            all_source_paths.append(os.path.relpath(os.path.join(root, dir), source_dir))
 
-        if os.path.exists(source_item_path):
-            if os.path.isdir(source_item_path):
-                shutil.copytree(source_item_path, destination_item_path)
-            else:
-                shutil.copy2(source_item_path, destination_item_path)
+    # Filter paths based on items_to_copy
+    paths_to_copy = [path for path in all_source_paths if any(item in path for item in items_to_copy)]
+
+    # Copy each path to the destination preserving structure
+    for path in tqdm(paths_to_copy, desc="Copying"):
+        source_path = os.path.join(source_dir, path)
+        destination_path = os.path.join(destination_dir, path)
+
+        if os.path.isdir(source_path):
+            os.makedirs(destination_path, exist_ok=True)
         else:
-            print(f"Warning: {item} not found in {source_name}")
+            shutil.copy2(source_path, destination_path)
+
+    # Look for loose files specifically in the root directory of the source
+    loose_files = ['treatment_docs.csv', 'control_path.pkl']
+    
+    # Copy loose files to the root directory of the destination
+    for loose_file in tqdm(loose_files, desc="Copying loose files"):
+        source_loose_path = os.path.join(source_root, loose_file)
+        destination_loose_path = os.path.join(destination, loose_file)
+        shutil.copy2(source_loose_path, destination_loose_path)
+        
+    
+    #Example usage:
+    # if __name__ == "__main__":
+    # project_root_source = "/home/cogstack/%USERNAME%/_data/HFE_5"
+    # project_name_source = "new_project"
+    # project_destination = "."
+
+    # copy_files_and_dirs(project_root_source, project_name_source, project_destination)
