@@ -322,6 +322,7 @@ def produce_filtered_annotation_dataframe(cui_filter=False, meta_annot_filter=Fa
     results = []
 
     if pat_list is None:
+        
         print("Using all patient list", len(config_obj.all_patient_list))
         pat_list = config_obj.all_patient_list
 
@@ -333,21 +334,26 @@ def produce_filtered_annotation_dataframe(cui_filter=False, meta_annot_filter=Fa
         else:
             current_pat_annot_batch_path = config_obj.pre_document_annotation_batch_path_mct + current_pat_client_idcode + ".csv"
             
-        current_pat_annot_batch = pd.read_csv(current_pat_annot_batch_path)
-        
-        #drop nan on any col:
-        necessary_columns = ['client_idcode', 'updatetime', 'pretty_name', 'cui', 'type_ids', 'types', 'source_value', 'detected_name', 'acc', 'id', 'Time_Value', 'Time_Confidence', 'Presence_Value', 'Presence_Confidence', 'Subject_Value', 'Subject_Confidence']
+        if os.path.exists(current_pat_annot_batch_path):
+            current_pat_annot_batch = pd.read_csv(current_pat_annot_batch_path)
+            
+            #drop nan on any col:
+            necessary_columns = ['client_idcode', 'updatetime', 'pretty_name', 'cui', 'type_ids', 'types', 'source_value', 'detected_name', 'acc', 'id', 'Time_Value', 'Time_Confidence', 'Presence_Value', 'Presence_Confidence', 'Subject_Value', 'Subject_Confidence']
 
-        current_pat_annot_batch = current_pat_annot_batch.dropna(subset=necessary_columns)
+            current_pat_annot_batch = current_pat_annot_batch.dropna(subset=necessary_columns)
 
+            if meta_annot_filter:
+                try:
+                    current_pat_annot_batch = filter_annot_dataframe2(current_pat_annot_batch, filter_args)
+                except Exception as e:
+                    print(e,i)
+                    display(current_pat_annot_batch)
+                    raise e
 
-        if meta_annot_filter:
-            current_pat_annot_batch = filter_annot_dataframe2(current_pat_annot_batch, filter_args)
+            if cui_filter:
+                current_pat_annot_batch = current_pat_annot_batch[current_pat_annot_batch['cui'].isin(cui_code_list)]
 
-        if cui_filter:
-            current_pat_annot_batch = current_pat_annot_batch[current_pat_annot_batch['cui'].isin(cui_code_list)]
-
-        results.append(current_pat_annot_batch)
+            results.append(current_pat_annot_batch)
         
     super_result = pd.concat(results)
 
