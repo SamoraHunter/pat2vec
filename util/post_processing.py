@@ -552,6 +552,7 @@ def filter_dataframe_by_cui(dataframe, filter_list, filter_column='cui', mode="e
     else:
         raise ValueError("Invalid mode. Use 'earliest' or 'latest'")
 
+    filter_row = result_df.copy() #preserve row used for filter
     # Debug statement for verbosity
     if verbosity > 0:
         display(f"Result DataFrame based on {mode} mode:\n{result_df.head()}")
@@ -571,7 +572,7 @@ def filter_dataframe_by_cui(dataframe, filter_list, filter_column='cui', mode="e
     if verbosity > 0:
         display(f"Filtered original DataFrame based on {temporal} temporal:\n{filtered_original_df.head()}")
 
-    return filtered_original_df
+    return filtered_original_df, filter_row
 
 
 # Example usage:
