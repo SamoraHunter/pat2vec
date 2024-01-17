@@ -3,10 +3,12 @@ import os
 import sys
 from datetime import datetime
 from multiprocessing import Pool, cpu_count
-
 import pandas as pd
 from IPython.display import display
 from tqdm import tqdm
+import shutil
+from typing import List, Union
+
 
 sys.path.insert(0,'/home/aliencat/samora/gloabl_files')
 sys.path.insert(0,'/data/AS/Samora/gloabl_files')
@@ -565,3 +567,61 @@ def filter_dataframe_by_cui(dataframe, filter_list, filter_column='cui', mode="e
 #
 # Returns all rows after the earliest cui code match. 
 # filter_dataframe_by_cui(res, filter_list=filter_codes, filter_column = 'cui', mode="earliest", temporal = 'after', verbosity=3)
+
+
+
+
+def copy_files_and_dirs(source_root: str, source_name: str, destination: str, items_to_copy: List) -> None:
+    """
+        Useful for porting project files to a new project location. 
+        
+    Copy specified directories and files from the source directory to the destination directory.
+
+    Parameters:
+        source_root (str): The root directory of the source project.
+        source_name (str): The name of the source project directory.
+        destination (str): The destination directory.
+
+    Returns:
+        None
+    
+    Usage:
+        project_root_source = "/home/cogstack/%USERNAME%/_data/HFE_5"
+        project_name_source = "new_project"
+        project_destination = "."
+
+        copy_files_and_dirs(project_root_source, project_name_source, project_destination)
+        
+    """
+    source_dir = os.path.join(source_root, source_name)
+    
+    # Create the destination directory if it doesn't exist
+    destination_dir = os.path.join(destination, source_name)
+    os.makedirs(destination_dir, exist_ok=True)
+
+    
+    if(items_to_copy is None):
+        # List of directories/files to copy
+        items_to_copy = ['current_pat_annots_parts',
+                        'current_pat_annots_mrc_parts',
+                        'outputs',
+                        'current_pat_document_batches',
+                        'current_pat_document_batches_mct',
+                        'current_pat_documents_annotations_batches',
+                        'current_pat_documents_annotations_batches_mct',
+                        'current_pat_lines_parts',
+                        'treatment_docs.csv',
+                        'control_path.pkl']
+
+    # Recursively copy each directory/file
+    for item in tqdm(items_to_copy, desc="Copying"):
+        source_item_path = os.path.join(source_dir, item)
+        destination_item_path = os.path.join(destination_dir, item)
+
+        if os.path.exists(source_item_path):
+            if os.path.isdir(source_item_path):
+                shutil.copytree(source_item_path, destination_item_path)
+            else:
+                shutil.copy2(source_item_path, destination_item_path)
+        else:
+            print(f"Warning: {item} not found in {source_name}")

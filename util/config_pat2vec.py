@@ -77,7 +77,8 @@ class config_class:
                  split_clinical_notes = True,
                  lookback = True,
                  add_icd10 = False,
-                 all_epr_patient_list_path = '/home/cogstack/samora/_data/gloabl_files/all_client_idcodes_epr_unique.csv'
+                 all_epr_patient_list_path = '/home/cogstack/samora/_data/gloabl_files/all_client_idcodes_epr_unique.csv',
+                 override_medcat_model_path = None
 
 
                  ):
@@ -161,6 +162,8 @@ class config_class:
         self.all_epr_patient_list_path = all_epr_patient_list_path
         
         self.lookback = lookback
+        
+        self.override_medcat_model_path = override_medcat_model_path
 
         if (start_time == None):
             self.start_time = datetime.now()
@@ -452,7 +455,8 @@ class config_class:
             'aliencat': '/home/aliencat/samora/HFE/HFE/medcat_models/medcat_model_pack_316666b47dfaac07.zip',
             'dgx': '/data/AS/Samora/HFE/HFE/v18/medcat_models/20230328_trained_model_hfe_redone/medcat_model_pack_316666b47dfaac07',
             'dhcap': '/home/jovyan/work/medcat_models/medcat_model_pack_316666b47dfaac07.zip',
-            'dhcap02': '/home/cogstack/samora/_data/medcat_models/medcat_model_pack_316666b47dfaac07.zip'
+            'dhcap02': '/home/cogstack/samora/_data/medcat_models/medcat_model_pack_316666b47dfaac07.zip',
+            'override_medcat_model_path' : None
 
         }
 
