@@ -512,7 +512,47 @@ def join_icd10_codes_to_annot(df, inner=False):
     return result
     
     
-    
+def filter_and_select_rows(dataframe, filter_list, verbosity=0, time_column='updatetime', filter_column='cui', mode='earliest', n_rows=1):
+    """
+    Filter a dataframe based on a filter_column and filter_list, and return either the earliest or latest rows.
+
+    Parameters:
+    - dataframe (pd.DataFrame): Input dataframe.
+    - filter_list (list): List of values to filter the dataframe.
+    - verbosity (int): If True, print additional information during execution.
+    - time_column (str): Column representing time, used for sorting if specified.
+    - filter_column (str): Column used for filtering based on filter_list.
+    - mode (str): Either 'earliest' or 'latest' to specify the rows to return.
+    - n_rows (int): Number of rows to return if they exist.
+
+    Returns:
+    - pd.DataFrame: Filtered and selected rows from the input dataframe.
+    """
+    if not all(arg is not None for arg in [dataframe, filter_list, filter_column]):
+        raise ValueError("Please provide a valid dataframe, filter_list, and filter_column.")
+
+    if filter_column not in dataframe.columns:
+        raise ValueError(f"{filter_column} not found in the dataframe columns.")
+
+    filtered_df = dataframe[dataframe[filter_column].isin(filter_list)]
+
+    if time_column:
+        filtered_df.sort_values(by=time_column, inplace=True)
+
+    if mode == 'earliest':
+        selected_rows = filtered_df.head(n_rows)
+    elif mode == 'latest':
+        selected_rows = filtered_df.tail(n_rows)
+    else:
+        raise ValueError("Invalid mode. Please choose 'earliest' or 'latest'.")
+
+    if verbosity > 0:
+        print("Filtered DataFrame:")
+        print(filtered_df)
+        print(f"Selected {mode} {n_rows} row(s):")
+        print(selected_rows)
+
+    return selected_rows
     
 def filter_dataframe_by_cui(dataframe, filter_list, filter_column='cui', mode="earliest", temporal='before', verbosity=0, time_column='updatetime'):
     """
@@ -575,7 +615,7 @@ def filter_dataframe_by_cui(dataframe, filter_list, filter_column='cui', mode="e
         print(f"Filtered original DataFrame based on {temporal} temporal:\n")
         display(filtered_original_df.head())
 
-    return filtered_original_df, filter_row
+    return filtered_original_df, filter_row, filtered_df
 
 
 # Example usage:
@@ -665,3 +705,62 @@ def copy_files_and_dirs(source_root: str, source_name: str, destination: str, it
     # project_destination = "."
 
     # copy_files_and_dirs(project_root_source, project_name_source, project_destination)
+
+    def build_ipw_and_mark_control(current_pat_idcode, config_obj=None, annot_filter_arguments = annot_filter_arguments, filter_codes = None):
+    
+        output_df = pd.DataFrame()
+        
+        pre_document_annotation_batch_path = config_obj.pre_document_annotation_batch_path
+        
+        pre_document_annotation_batch_path_mct = config_obj.pre_document_annotation_batch_path_mct
+        
+        
+        #EPR annotations
+        dfa = pd.read_csv(f'{pre_document_annotation_batch_path}/{current_pat_idcode}.csv')
+        necessary_columns = ['client_idcode', 'updatetime', 'pretty_name', 'cui', 'type_ids', 'types', 'source_value', 'detected_name', 'acc', 'id', 'Time_Value', 'Time_Confidence', 'Presence_Value', 'Presence_Confidence', 'Subject_Value', 'Subject_Confidence']
+
+        dfa = dfa.dropna(subset=necessary_columns)
+        
+        #display(dfa)
+        if(annot_filter_arguments is not None):
+            
+            dfa = filter_annot_dataframe2(dfa, annot_filter_arguments)
+
+        if(len(dfa)>0):
+            
+            fsr = filter_and_select_rows(dfa, filter_codes, verbosity=0, time_column='updatetime', filter_column='cui', mode='earliest', n_rows=1)
+        
+        
+        
+        #MCT annotations
+        dfa_mct = pd.read_csv(f'{pre_document_annotation_batch_path_mct}/{current_pat_idcode}.csv')
+        necessary_columns = ['client_idcode', 'observationdocument_recordeddtm', 'pretty_name', 'cui', 'type_ids', 'types', 'source_value', 'detected_name', 'acc', 'id', 'Time_Value', 'Time_Confidence', 'Presence_Value', 'Presence_Confidence', 'Subject_Value', 'Subject_Confidence']
+
+        dfa_mct = dfa_mct.dropna(subset=necessary_columns)
+        
+        #display(dfa_mct)
+        
+        if(annot_filter_arguments is not None):
+            
+            dfa_mct = filter_annot_dataframe2(dfa_mct, annot_filter_arguments)
+            
+
+        if(len(dfa_mct)>0):
+            
+            fsr_mct = filter_and_select_rows(dfa_mct, filter_codes, verbosity=0, time_column='observationdocument_recordeddtm', filter_column='cui', mode='earliest', n_rows=1)
+            
+        if not fsr.empty and not fsr_mct.empty:
+            earliest_df = fsr if fsr['updatetime'].min() < fsr_mct['observationdocument_recordeddtm'].min() else fsr_mct #Earliest mode
+        elif not fsr.empty:
+            earliest_df = fsr
+        elif not fsr_mct.empty:
+            earliest_df = fsr_mct
+        else:
+            # Both DataFrames are empty
+            earliest_df = pd.DataFrame()
+
+        earliest_df = earliest_df.copy()
+        
+        return earliest_df
+    
+    
