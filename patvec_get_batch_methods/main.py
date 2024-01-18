@@ -164,6 +164,14 @@ def get_pat_batch_bloods(current_pat_client_id_code, search_term, config_obj=Non
     Raises:
         ValueError: If config_obj is None or missing required attributes.
     """
+    
+    overwrite_stored_pat_observations = config_obj.overwrite_stored_pat_observations
+    store_pat_batch_observations = config_obj.store_pat_batch_observations
+    
+    
+    batch_obs_target_path = os.path.join(config_obj.pre_bloods_batch_path, str(current_pat_client_id_code) + ".csv")
+
+    
     if config_obj is None or not all(hasattr(config_obj, attr) for attr in ['global_start_year', 'global_start_month', 'global_end_year', 'global_end_month']):
         raise ValueError("Invalid or missing configuration object.")
 
@@ -174,15 +182,27 @@ def get_pat_batch_bloods(current_pat_client_id_code, search_term, config_obj=Non
     global_start_day = config_obj.global_start_day
     global_end_day = config_obj.global_end_day
 
+    existence_check = exist_check(batch_obs_target_path, config_obj)
+
     try:
-        batch_target = cohort_searcher_with_terms_and_search(
-            index_name="basic_observations",
-            fields_list=["client_idcode", "basicobs_itemname_analysed", "basicobs_value_numeric", "basicobs_entered", "clientvisit_serviceguid"],
-            term_name="client_idcode.keyword",
-            entered_list=[current_pat_client_id_code],
-            search_string=f'basicobs_value_numeric:* AND '
-                          f'updatetime:[{global_start_year}-{global_start_month}-{global_start_day} TO {global_end_year}-{global_end_month}-{global_end_day}]'
-        )
+        if(store_pat_batch_observations or existence_check is False):
+        
+            batch_target = cohort_searcher_with_terms_and_search(
+                index_name="basic_observations",
+                fields_list=["client_idcode", "basicobs_itemname_analysed", "basicobs_value_numeric", "basicobs_entered", "clientvisit_serviceguid"],
+                term_name="client_idcode.keyword",
+                entered_list=[current_pat_client_id_code],
+                search_string=f'basicobs_value_numeric:* AND '
+                            f'updatetime:[{global_start_year}-{global_start_month}-{global_start_day} TO {global_end_year}-{global_end_month}-{global_end_day}]'
+            )
+            if(config_obj.store_pat_batch_docs or overwrite_stored_pat_observations):
+                batch_target.to_csv(batch_obs_target_path)
+            
+            
+        
+        else:
+            batch_target = pd.read_csv(batch_obs_target_path)
+            
         return batch_target
     except Exception as e:
         ""

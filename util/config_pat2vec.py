@@ -64,7 +64,9 @@ class config_class:
                  negate_biochem=False,
                  patient_id_column_name='client_idcode',
                  overwrite_stored_pat_docs=False,
+                 overwrite_stored_pat_observations = False,
                  store_pat_batch_docs=True,
+                 store_pat_batch_observations=True,
                  annot_filter_options=None,
                  shuffle_pat_list=False,
                  individual_patient_window=False,
@@ -94,8 +96,12 @@ class config_class:
         self.pre_document_annotation_batch_path_mct = f'current_pat_documents_annotations_batches_mct{self.suffix}/'
         self.pre_document_batch_path = f"current_pat_document_batches{self.suffix}/"
         self.pre_document_batch_path_mct = f"current_pat_document_batches_mct{self.suffix}/"
+        
+        self.pre_bloods_batch_path = f'current_pat_bloods_batches{self.suffix}/'
 
         self.store_pat_batch_docs = store_pat_batch_docs
+        
+        self.store_pat_batch_observations = store_pat_batch_observations
 
         self.proj_name = proj_name
         self.main_options = main_options
@@ -136,7 +142,9 @@ class config_class:
         self.root_path = root_path
 
         self.overwrite_stored_pat_docs = overwrite_stored_pat_docs
-
+        
+        self.overwrite_stored_pat_observations = overwrite_stored_pat_observations
+        
         self.annot_filter_options = annot_filter_options
 
         self.start_time = start_time
@@ -246,6 +254,9 @@ class config_class:
 
             self.pre_document_annotation_batch_path_mct = self.root_path + \
                 self.pre_document_annotation_batch_path_mct
+                
+            self.pre_bloods_batch_path = self.root_path + \
+                self.pre_bloods_batch_path
 
             self.output_folder = 'outputs'
 
@@ -267,6 +278,9 @@ class config_class:
                 parents=True, exist_ok=True)
             Path(self.pre_document_annotation_batch_path_mct).mkdir(
                 parents=True, exist_ok=True)
+            
+            Path(self.pre_bloods_batch_path).mkdir(
+                parents=True, exist_ok=True)
 
             print(self.pre_annotation_path)
             print(self.pre_annotation_path_mrc)
@@ -276,6 +290,8 @@ class config_class:
 
             print(self.pre_document_annotation_batch_path)
             print(self.pre_document_annotation_batch_path_mct)
+            
+            print(self.pre_bloods_batch_path)
 
             print(self.output_folder)
 
