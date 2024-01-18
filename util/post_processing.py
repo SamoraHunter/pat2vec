@@ -706,61 +706,62 @@ def copy_files_and_dirs(source_root: str, source_name: str, destination: str, it
 
     # copy_files_and_dirs(project_root_source, project_name_source, project_destination)
 
-    def get_pat_ipw_record(current_pat_idcode, config_obj=None, annot_filter_arguments = None, filter_codes = None):
+def get_pat_ipw_record(current_pat_idcode, config_obj=None, annot_filter_arguments = None, filter_codes = None):
+
+    output_df = pd.DataFrame()
     
-        output_df = pd.DataFrame()
-        
-        pre_document_annotation_batch_path = config_obj.pre_document_annotation_batch_path
-        
-        pre_document_annotation_batch_path_mct = config_obj.pre_document_annotation_batch_path_mct
-        
-        
-        #EPR annotations
-        dfa = pd.read_csv(f'{pre_document_annotation_batch_path}/{current_pat_idcode}.csv')
-        necessary_columns = ['client_idcode', 'updatetime', 'pretty_name', 'cui', 'type_ids', 'types', 'source_value', 'detected_name', 'acc', 'id', 'Time_Value', 'Time_Confidence', 'Presence_Value', 'Presence_Confidence', 'Subject_Value', 'Subject_Confidence']
+    pre_document_annotation_batch_path = config_obj.pre_document_annotation_batch_path
+    
+    pre_document_annotation_batch_path_mct = config_obj.pre_document_annotation_batch_path_mct
+    
+    fsr = pd.DataFrame()
+    fsr_mct = pd.DataFrame()
+    #EPR annotations
+    dfa = pd.read_csv(f'{pre_document_annotation_batch_path}/{current_pat_idcode}.csv')
+    necessary_columns = ['client_idcode', 'updatetime', 'pretty_name', 'cui', 'type_ids', 'types', 'source_value', 'detected_name', 'acc', 'id', 'Time_Value', 'Time_Confidence', 'Presence_Value', 'Presence_Confidence', 'Subject_Value', 'Subject_Confidence']
 
-        dfa = dfa.dropna(subset=necessary_columns)
+    dfa = dfa.dropna(subset=necessary_columns)
+    
+    #display(dfa)
+    if(annot_filter_arguments is not None):
         
-        #display(dfa)
-        if(annot_filter_arguments is not None):
-            
-            dfa = filter_annot_dataframe2(dfa, annot_filter_arguments)
+        dfa = filter_annot_dataframe2(dfa, annot_filter_arguments)
 
-        if(len(dfa)>0):
-            
-            fsr = filter_and_select_rows(dfa, filter_codes, verbosity=0, time_column='updatetime', filter_column='cui', mode='earliest', n_rows=1)
+    if(len(dfa)>0):
         
-        
-        
-        #MCT annotations
-        dfa_mct = pd.read_csv(f'{pre_document_annotation_batch_path_mct}/{current_pat_idcode}.csv')
-        necessary_columns = ['client_idcode', 'observationdocument_recordeddtm', 'pretty_name', 'cui', 'type_ids', 'types', 'source_value', 'detected_name', 'acc', 'id', 'Time_Value', 'Time_Confidence', 'Presence_Value', 'Presence_Confidence', 'Subject_Value', 'Subject_Confidence']
+        fsr = filter_and_select_rows(dfa, filter_codes, verbosity=0, time_column='updatetime', filter_column='cui', mode='earliest', n_rows=1)
+    
+    
+    
+    #MCT annotations
+    dfa_mct = pd.read_csv(f'{pre_document_annotation_batch_path_mct}/{current_pat_idcode}.csv')
+    necessary_columns = ['client_idcode', 'observationdocument_recordeddtm', 'pretty_name', 'cui', 'type_ids', 'types', 'source_value', 'detected_name', 'acc', 'id', 'Time_Value', 'Time_Confidence', 'Presence_Value', 'Presence_Confidence', 'Subject_Value', 'Subject_Confidence']
 
-        dfa_mct = dfa_mct.dropna(subset=necessary_columns)
+    dfa_mct = dfa_mct.dropna(subset=necessary_columns)
+    
+    #display(dfa_mct)
+    
+    if(annot_filter_arguments is not None):
         
-        #display(dfa_mct)
+        dfa_mct = filter_annot_dataframe2(dfa_mct, annot_filter_arguments)
         
-        if(annot_filter_arguments is not None):
-            
-            dfa_mct = filter_annot_dataframe2(dfa_mct, annot_filter_arguments)
-            
 
-        if(len(dfa_mct)>0):
-            
-            fsr_mct = filter_and_select_rows(dfa_mct, filter_codes, verbosity=0, time_column='observationdocument_recordeddtm', filter_column='cui', mode='earliest', n_rows=1)
-            
-        if not fsr.empty and not fsr_mct.empty:
-            earliest_df = fsr if fsr['updatetime'].min() < fsr_mct['observationdocument_recordeddtm'].min() else fsr_mct #Earliest mode
-        elif not fsr.empty:
-            earliest_df = fsr
-        elif not fsr_mct.empty:
-            earliest_df = fsr_mct
-        else:
-            # Both DataFrames are empty
-            earliest_df = pd.DataFrame()
-
-        earliest_df = earliest_df.copy()
+    if(len(dfa_mct)>0):
         
-        return earliest_df
+        fsr_mct = filter_and_select_rows(dfa_mct, filter_codes, verbosity=0, time_column='observationdocument_recordeddtm', filter_column='cui', mode='earliest', n_rows=1)
+        
+    if not fsr.empty and not fsr_mct.empty:
+        earliest_df = fsr if fsr['updatetime'].min() < fsr_mct['observationdocument_recordeddtm'].min() else fsr_mct #Earliest mode
+    elif not fsr.empty:
+        earliest_df = fsr
+    elif not fsr_mct.empty:
+        earliest_df = fsr_mct
+    else:
+        # Both DataFrames are empty
+        earliest_df = pd.DataFrame()
+
+    earliest_df = earliest_df.copy()
+    
+    return earliest_df
     
     
