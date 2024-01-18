@@ -706,7 +706,7 @@ def copy_files_and_dirs(source_root: str, source_name: str, destination: str, it
 
     # copy_files_and_dirs(project_root_source, project_name_source, project_destination)
 
-    def build_ipw_and_mark_control(current_pat_idcode, config_obj=None, annot_filter_arguments = annot_filter_arguments, filter_codes = None):
+    def get_pat_ipw_record(current_pat_idcode, config_obj=None, annot_filter_arguments = None, filter_codes = None):
     
         output_df = pd.DataFrame()
         
