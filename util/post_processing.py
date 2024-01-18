@@ -542,7 +542,8 @@ def filter_dataframe_by_cui(dataframe, filter_list, filter_column='cui', mode="e
 
     # Debug statement for verbosity
     if verbosity > 0:
-        display(f"Filtered DataFrame based on {filter_column} codes:\n{filtered_df.head()}")
+        print(f"Filtered DataFrame based on {filter_column} codes:\n")
+        display(filtered_df.head())
 
     # Find the earliest or latest entry for each CUI code
     if mode == "earliest":
@@ -555,7 +556,8 @@ def filter_dataframe_by_cui(dataframe, filter_list, filter_column='cui', mode="e
     filter_row = result_df.copy() #preserve row used for filter
     # Debug statement for verbosity
     if verbosity > 0:
-        display(f"Result DataFrame based on {mode} mode:\n{result_df.head()}")
+        print(f"Result DataFrame based on {mode} mode:\n")
+        display(result_df.head())
 
     # Merge with the original DataFrame to get the full rows
     result_df = pd.merge(result_df, dataframe, on=[filter_column, time_column], how='inner')
@@ -570,7 +572,8 @@ def filter_dataframe_by_cui(dataframe, filter_list, filter_column='cui', mode="e
 
     # Debug statement for verbosity
     if verbosity > 0:
-        display(f"Filtered original DataFrame based on {temporal} temporal:\n{filtered_original_df.head()}")
+        print(f"Filtered original DataFrame based on {temporal} temporal:\n")
+        display(filtered_original_df.head())
 
     return filtered_original_df, filter_row
 
