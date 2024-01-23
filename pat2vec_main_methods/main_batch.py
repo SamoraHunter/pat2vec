@@ -4,6 +4,7 @@ import time
 import traceback
 
 import pandas as pd
+from pat2vec.util.methods_get import exist_check
 
 from pat2vec.pat2vec_get_methods.get_method_bed import get_bed
 from pat2vec.pat2vec_get_methods.get_method_bloods import \
@@ -83,8 +84,8 @@ def main_batch(current_pat_client_id_code,
     #stripped_list_start = config_obj.stripped_list_start
     n_pat_lines = config_obj.n_pat_lines
     skip_additional_listdir = config_obj.skip_additional_listdir
-    current_pat_line_path = config_obj.current_pat_line_path
     current_pat_lines_path = config_obj.current_pat_lines_path
+    
     #write_remote = config_obj.write_remote
     remote_dump = config_obj.remote_dump
     sftp_client = config_obj.sftp_client
@@ -104,9 +105,11 @@ def main_batch(current_pat_client_id_code,
             stripped_list = stripped_list_start
         else:
             
-            if(len(list_dir_wrapper(current_pat_lines_path + str(current_pat_client_id_code), config_obj)) >= n_pat_lines):
-                already_done = True
-                stripped_list_start.append(current_pat_client_id_code)
+            if(exist_check(current_pat_lines_path + str(current_pat_client_id_code), config_obj=config_obj)):
+                
+                if(len(list_dir_wrapper(current_pat_lines_path + str(current_pat_client_id_code), config_obj)) >= n_pat_lines):
+                    already_done = True
+                    stripped_list_start.append(current_pat_client_id_code)
             stripped_list = stripped_list_start.copy()
             
                 
@@ -254,7 +257,7 @@ def main_batch(current_pat_client_id_code,
                                             
                 update_pbar(p_bar_entry, start_time, 2, 'saving...', t , config_obj)
                 
-                output_path = current_pat_line_path  + current_pat_client_id_code + "/" +str(current_pat_client_id_code) + "_" + str(target_date_range)+".csv"
+                output_path = config_obj.current_pat_lines_path  + current_pat_client_id_code + "/" +str(current_pat_client_id_code) + "_" + str(target_date_range)+".csv"
                 
                 
                 if(remote_dump==False):

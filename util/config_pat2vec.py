@@ -9,6 +9,8 @@ import paramiko
 from dateutil.relativedelta import relativedelta
 from IPython.display import display
 
+from pat2vec.util.current_pat_batch_path_methods import PathsClass
+
 from pat2vec.util.methods_get import (add_offset_column, build_patient_dict,
                                       generate_date_list)
 
@@ -88,10 +90,11 @@ class config_class:
         self.suffix = suffix
         self.treatment_doc_filename = treatment_doc_filename
         self.treatment_control_ratio_n = treatment_control_ratio_n
+        
+        
         self.pre_annotation_path = f'current_pat_annots_parts{self.suffix}/'
         self.pre_annotation_path_mrc = f'current_pat_annots_mrc_parts{self.suffix}/'
 
-        # self.pre_document_day_path = f'current_pat_documents{self.suffix}/'
         self.pre_document_annotation_batch_path = f'current_pat_documents_annotations_batches{self.suffix}/'
         self.pre_document_annotation_batch_path_mct = f'current_pat_documents_annotations_batches_mct{self.suffix}/'
         self.pre_document_batch_path = f"current_pat_document_batches{self.suffix}/"
@@ -110,7 +113,11 @@ class config_class:
         self.pre_bmi_batch_path = f'current_pat_bmi_batches{self.suffix}/'
 
         self.pre_demo_batch_path = f'current_pat_demo_batches{self.suffix}/'
-
+        
+        self.pre_misc_batch_path = f'current_pat_misc_batches{self.suffix}/'
+        
+        self.current_pat_line_path = f'current_pat_line_path{self.suffix}/'
+        
 
         self.store_pat_batch_docs = store_pat_batch_docs
         
@@ -249,76 +256,37 @@ class config_class:
             if (self.root_path == None):
                 self.root_path = f'{os.getcwd()}/{self.proj_name}/'
 
-            self.pre_annotation_path = self.root_path + self.pre_annotation_path
+            self.pre_annotation_path = os.path.join(self.root_path, f'current_pat_annots_parts{self.suffix}/')
+            self.pre_annotation_path_mrc = os.path.join(self.root_path, f'current_pat_annots_mrc_parts{self.suffix}/')
 
-            self.pre_annotation_path_mrc = self.root_path + self.pre_annotation_path_mrc
+            self.pre_document_annotation_batch_path = os.path.join(self.root_path, f'current_pat_documents_annotations_batches{self.suffix}/')
+            self.pre_document_annotation_batch_path_mct = os.path.join(self.root_path, f'current_pat_documents_annotations_batches_mct{self.suffix}/')
+            self.pre_document_batch_path = os.path.join(self.root_path, f"current_pat_document_batches{self.suffix}/")
+            self.pre_document_batch_path_mct = os.path.join(self.root_path, f"current_pat_document_batches_mct{self.suffix}/")
 
-            # Make document batch paths for epr and mct
+            self.pre_bloods_batch_path = os.path.join(self.root_path, f'current_pat_bloods_batches{self.suffix}/')
 
-            self.pre_document_batch_path = self.root_path + self.pre_document_batch_path
+            self.pre_drugs_batch_path = os.path.join(self.root_path, f'current_pat_drugs_batches{self.suffix}/')
 
-            self.pre_document_batch_path_mct = self.root_path + \
-                self.pre_document_batch_path_mct
+            self.pre_diagnostics_batch_path = os.path.join(self.root_path, f'current_pat_diagnostics_batches{self.suffix}/')
 
-            # Make annotation batch paths for epr and mct
+            self.pre_news_batch_path = os.path.join(self.root_path, f'current_pat_news_batches{self.suffix}/')
 
-            self.pre_document_annotation_batch_path = self.root_path + \
-                self.pre_document_annotation_batch_path
+            self.pre_obs_batch_path = os.path.join(self.root_path, f'current_pat_obs_batches{self.suffix}/')
 
-            self.pre_document_annotation_batch_path_mct = self.root_path + \
-                self.pre_document_annotation_batch_path_mct
-                
-            self.pre_bloods_batch_path = self.root_path + \
-                self.pre_bloods_batch_path
+            self.pre_bmi_batch_path = os.path.join(self.root_path, f'current_pat_bmi_batches{self.suffix}/')
+
+            self.pre_demo_batch_path = os.path.join(self.root_path, f'current_pat_demo_batches{self.suffix}/')
+
+            self.pre_misc_batch_path = os.path.join(self.root_path, f'current_pat_misc_batches{self.suffix}/')
+            
+            self.current_pat_lines_path = os.path.join(self.root_path, f'current_pat_lines_parts{self.suffix}/')
 
             self.output_folder = 'outputs'
 
-            self.output_folder = os.path.join(
-                self.root_path, self.output_folder)
-
-            Path(self.pre_annotation_path).mkdir(parents=True, exist_ok=True)
-            Path(self.pre_annotation_path_mrc).mkdir(
-                parents=True, exist_ok=True)
-
-            Path(self.output_folder).mkdir(parents=True, exist_ok=True)
-
-            Path(self.pre_document_batch_path).mkdir(
-                parents=True, exist_ok=True)
-            Path(self.pre_document_batch_path_mct).mkdir(
-                parents=True, exist_ok=True)
-
-            Path(self.pre_document_annotation_batch_path).mkdir(
-                parents=True, exist_ok=True)
-            Path(self.pre_document_annotation_batch_path_mct).mkdir(
-                parents=True, exist_ok=True)
+            self.PathsClass_instance = PathsClass(self.root_path, self.suffix, self.output_folder)
             
-            Path(self.pre_bloods_batch_path).mkdir(
-                parents=True, exist_ok=True)
-
-            print(self.pre_annotation_path)
-            print(self.pre_annotation_path_mrc)
-
-            print(self.pre_document_batch_path)
-            print(self.pre_document_batch_path_mct)
-
-            print(self.pre_document_annotation_batch_path)
-            print(self.pre_document_annotation_batch_path_mct)
-            
-            print(self.pre_bloods_batch_path)
-
-            print(self.output_folder)
-
-        self.current_pat_line_path = f"current_pat_lines_parts{self.suffix}/"
-
-        if (remote_dump == False):
-
-            self.current_pat_line_path = self.root_path + self.current_pat_line_path
-
-            self.current_pat_lines_path = self.current_pat_line_path
-
-            Path(self.current_pat_line_path).mkdir(parents=True, exist_ok=True)
-
-        print(self.current_pat_line_path)
+        
 
         print(f"Setting start_date to: {start_date}")
         self.start_date = start_date

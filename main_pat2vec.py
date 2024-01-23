@@ -32,6 +32,7 @@ from IPython.utils import io
 from medcat.cat import CAT
 from scipy import stats
 from tqdm import trange
+from pat2vec.util.methods_get import create_folders_for_pat
 from pat2vec.util.methods_get import get_free_gpu
 
 from pat2vec.pat2vec_get_methods.current_pat_annotations_to_file import (
@@ -117,9 +118,8 @@ class main:
 
         self.all_patient_list = get_all_patients_list(self.config_obj)
 
-        create_folders(self.all_patient_list, self.config_obj)
+        #create_folders(self.all_patient_list, self.config_obj)
 
-        self.current_pat_line_path = config_obj.current_pat_line_path
         self.current_pat_lines_path = config_obj.current_pat_lines_path
         self.sftp_client = config_obj.sftp_obj
 
@@ -198,7 +198,6 @@ class main:
             print(f"remote_dump {self.remote_dump}")
             print(self.pre_annotation_path)
             print(self.pre_annotation_path_mrc)
-            print(self.current_pat_line_path)
 
         self.stripped_list_start = [x.replace(".csv", "") for x in list_dir_wrapper(
             path=self.current_pat_lines_path,  config_obj=config_obj)]
@@ -233,6 +232,7 @@ class main:
         if self.config_obj.verbosity > 3:
             print(f"Processing patient {i} at {self.all_patient_list[i]}...")
 
+
         skipped_counter = self.config_obj.skipped_counter
         stripped_list = self.stripped_list
         all_patient_list = self.all_patient_list
@@ -254,6 +254,10 @@ class main:
             skipped_counter = 0
 
         current_pat_client_id_code = str(all_patient_list[i])
+        
+        #create_folders(list(current_pat_client_id_code), self.config_obj)
+        
+        create_folders_for_pat(current_pat_client_id_code, self.config_obj)
 
         p_bar_entry = current_pat_client_id_code
 

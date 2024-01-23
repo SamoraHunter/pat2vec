@@ -36,24 +36,36 @@ def get_pat_batch_obs(current_pat_client_id_code, search_term, config_obj=None, 
     global_start_day = config_obj.global_start_day
     global_end_day = config_obj.global_end_day
     
+    batch_obs_target_path = os.path.join(config_obj.pre_misc_batch_path.replace('misc', search_term) , str(current_pat_client_id_code) + ".csv")
+    existence_check = exist_check(batch_obs_target_path, config_obj)
 
     try:
-        batch_target = cohort_searcher_with_terms_and_search(
-            index_name="observations",
-            fields_list="""observation_guid client_idcode	obscatalogmasteritem_displayname
-                            observation_valuetext_analysed observationdocument_recordeddtm 
-                            clientvisit_visitidcode""".split(),
-            term_name="client_idcode.keyword",
-            entered_list=[current_pat_client_id_code],
-            search_string=f"obscatalogmasteritem_displayname:(\"{search_term}\") AND "
-                          f'observationdocument_recordeddtm:[{global_start_year}-{global_start_month}-{global_start_day} TO {global_end_year}-{global_end_month}-{global_end_day}]'
-        )
+        if (config_obj.store_pat_batch_observations or existence_check is False):
+            batch_target = cohort_searcher_with_terms_and_search(
+                index_name="observations",
+                fields_list="""observation_guid client_idcode	obscatalogmasteritem_displayname
+                                observation_valuetext_analysed observationdocument_recordeddtm 
+                                clientvisit_visitidcode""".split(),
+                term_name="client_idcode.keyword",
+                entered_list=[current_pat_client_id_code],
+                search_string=f"obscatalogmasteritem_displayname:(\"{search_term}\") AND "
+                            f'observationdocument_recordeddtm:[{global_start_year}-{global_start_month}-{global_start_day} TO {global_end_year}-{global_end_month}-{global_end_day}]'
+            )
+            if(config_obj.store_pat_batch_docs or config_obj.overwrite_stored_pat_observations):
+                
+                directory_path = config_obj.pre_misc_batch_path.replace('misc', search_term)
+                
+                if not os.path.exists(directory_path):
+                    os.makedirs(directory_path)
+                batch_target.to_csv(batch_obs_target_path)
+        else:
+            batch_target = pd.read_csv(batch_obs_target_path)
+            
         return batch_target
     except Exception as e:
         
         print(f"Error retrieving batch observations: {e}")
         return []
-
 
 
 
@@ -98,6 +110,9 @@ def get_pat_batch_news(current_pat_client_id_code, search_term, config_obj=None,
                 search_string=f'obscatalogmasteritem_displayname:("NEWS" OR "NEWS2") AND '
                             f'observationdocument_recordeddtm:[{global_start_year}-{global_start_month}-{global_start_day} TO {global_end_year}-{global_end_month}-{global_end_day}]'
             )
+            if(config_obj.store_pat_batch_docs or config_obj.overwrite_stored_pat_observations):
+                
+                batch_target.to_csv(batch_obs_target_path)
         else:
             batch_target = pd.read_csv(batch_obs_target_path)
         
@@ -151,6 +166,9 @@ def get_pat_batch_bmi(current_pat_client_id_code, search_term, config_obj=None, 
                 search_string=f'obscatalogmasteritem_displayname:("OBS BMI" OR "OBS Weight" OR "OBS height") AND '
                             f'observationdocument_recordeddtm:[{global_start_year}-{global_start_month}-{global_start_day} TO {global_end_year}-{global_end_month}-{global_end_day}]'
             )
+            if(config_obj.store_pat_batch_docs or config_obj.overwrite_stored_pat_observations):
+                
+                batch_target.to_csv(batch_obs_target_path)
         else:
             batch_target = pd.read_csv(batch_obs_target_path)
             
@@ -320,6 +338,9 @@ def get_pat_batch_diagnostics(current_pat_client_id_code, search_term, config_ob
                 search_string=f'order_typecode:"diagnostic" AND '
                             f'updatetime:[{global_start_year}-{global_start_month}-{global_start_day} TO {global_end_year}-{global_end_month}-{global_end_day}]'
             )
+            if(config_obj.store_pat_batch_docs or config_obj.overwrite_stored_pat_observations):
+                
+                batch_target.to_csv(batch_obs_target_path)
         else:
             batch_target = pd.read_csv(batch_obs_target_path)
         return batch_target
@@ -634,6 +655,9 @@ def get_pat_batch_demo(current_pat_client_id_code, search_term, config_obj=None,
                 entered_list=[current_pat_client_id_code],
                 search_string=f'updatetime:[{global_start_year}-{global_start_month}-{global_start_day} TO {global_end_year}-{global_end_month}-{global_end_day}]'
             )
+            if(config_obj.store_pat_batch_docs or config_obj.overwrite_stored_pat_observations):
+                
+                batch_target.to_csv(batch_obs_target_path)
         else:
             batch_target = pd.read_csv(batch_obs_target_path)
         

@@ -1041,16 +1041,42 @@ def create_folders(all_patient_list, config_obj=None):
     """
     pre_annotation_path = config_obj.pre_annotation_path
     pre_annotation_path_mrc = config_obj.pre_annotation_path_mrc
-    current_pat_line_path = config_obj.current_pat_line_path
+    current_pat_lines_path = config_obj.current_pat_lines_path
 
     for patient_id in all_patient_list:
-        for path in [pre_annotation_path, pre_annotation_path_mrc, current_pat_line_path]:
+        for path in [pre_annotation_path, pre_annotation_path_mrc, current_pat_lines_path]:
             folder_path = os.path.join(path, str(patient_id))
 
             if not os.path.exists(folder_path):
                 os.makedirs(folder_path)
     if config_obj.verbosity > 0:
-                print(f"Folders created: {current_pat_line_path}...") 
+                print(f"Folders created: {current_pat_lines_path}...") 
+                
+                
+def create_folders_for_pat(patient_id, config_obj=None):
+    """
+    Create folders for a single patient in the specified paths.
+
+    Parameters:
+    - patient_id (str): Patient ID.
+    - config_obj (object): Configuration object containing paths and verbosity level.
+
+    Returns:
+    None
+    """
+    pre_annotation_path = config_obj.pre_annotation_path
+    pre_annotation_path_mrc = config_obj.pre_annotation_path_mrc
+    current_pat_lines_path = config_obj.current_pat_lines_path
+
+    for path in [pre_annotation_path, pre_annotation_path_mrc, current_pat_lines_path]:
+        folder_path = os.path.join(path, str(patient_id))
+
+        if not os.path.exists(folder_path):
+            os.makedirs(folder_path)
+
+    if config_obj.verbosity > 0:
+        print(f"Folders created for patient {patient_id}: {current_pat_lines_path}...")
+            
                     
 
 
