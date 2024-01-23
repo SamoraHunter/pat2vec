@@ -101,8 +101,16 @@ class config_class:
         
         self.pre_drugs_batch_path = f'current_pat_drugs_batches{self.suffix}/'
         
+        self.pre_diagnostics_batch_path = f'current_pat_diagnostics_batches{self.suffix}/'
         
-        
+        self.pre_news_batch_path = f'current_pat_news_batches{self.suffix}/'
+
+        self.pre_obs_batch_path = f'current_pat_obs_batches{self.suffix}/'
+
+        self.pre_bmi_batch_path = f'current_pat_bmi_batches{self.suffix}/'
+
+        self.pre_demo_batch_path = f'current_pat_demo_batches{self.suffix}/'
+
 
         self.store_pat_batch_docs = store_pat_batch_docs
         
