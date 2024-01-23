@@ -227,6 +227,11 @@ def get_pat_batch_drugs(current_pat_client_id_code, search_term, config_obj=None
     Raises:
         ValueError: If config_obj is None or missing required attributes.
     """
+    
+    
+    batch_obs_target_path = os.path.join(config_obj.pre_drugs_batch_path, str(current_pat_client_id_code) + ".csv")
+
+    
     if config_obj is None or not all(hasattr(config_obj, attr) for attr in ['global_start_year', 'global_start_month', 'global_end_year', 'global_end_month']):
         raise ValueError("Invalid or missing configuration object.")
 
@@ -236,16 +241,27 @@ def get_pat_batch_drugs(current_pat_client_id_code, search_term, config_obj=None
     global_end_month = config_obj.global_end_month
     global_start_day = config_obj.global_start_day
     global_end_day = config_obj.global_end_day
+    
+    existence_check = exist_check(batch_obs_target_path, config_obj)
 
     try:
-        batch_target = cohort_searcher_with_terms_and_search(
-            index_name="order",
-            fields_list="""client_idcode order_guid order_name order_summaryline order_holdreasontext order_entered clientvisit_visitidcode""".split(),
-            term_name="client_idcode.keyword",
-            entered_list=[current_pat_client_id_code],
-            search_string=f'order_typecode:"medication" AND '
-                          f'updatetime:[{global_start_year}-{global_start_month}-{global_start_day} TO {global_end_year}-{global_end_month}-{global_end_day}]'
-        )
+        # Similar logic as in the first function
+        if (config_obj.store_pat_batch_observations or existence_check is False):
+            batch_target = cohort_searcher_with_terms_and_search(
+                index_name="order",
+                fields_list="""client_idcode order_guid order_name order_summaryline order_holdreasontext order_entered clientvisit_visitidcode""".split(),
+                term_name="client_idcode.keyword",
+                entered_list=[current_pat_client_id_code],
+                search_string=f'order_typecode:"medication" AND '
+                              f'updatetime:[{global_start_year}-{global_start_month}-{global_start_day} TO {global_end_year}-{global_end_month}-{global_end_day}]'
+            )
+
+            if (config_obj.store_pat_batch_docs or config_obj.overwrite_stored_pat_observations):
+                batch_target.to_csv(batch_obs_target_path)
+
+        else:
+            batch_target = pd.read_csv(batch_obs_target_path)
+
         return batch_target
     except Exception as e:
         ""

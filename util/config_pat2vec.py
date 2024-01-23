@@ -98,6 +98,11 @@ class config_class:
         self.pre_document_batch_path_mct = f"current_pat_document_batches_mct{self.suffix}/"
         
         self.pre_bloods_batch_path = f'current_pat_bloods_batches{self.suffix}/'
+        
+        self.pre_drugs_batch_path = f'current_pat_drugs_batches{self.suffix}/'
+        
+        
+        
 
         self.store_pat_batch_docs = store_pat_batch_docs
         
