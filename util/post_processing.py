@@ -781,3 +781,54 @@ def get_pat_ipw_record(
     return earliest_df
     
     
+    
+def filter_and_update_csv(target_directory, rsuf_dataframe, filter_type='after', verbosity=False):
+    for _, row in rsuf_dataframe.iterrows():
+        client_idcode = row['client_idcode']
+        #print(client_idcode, row['updatetime'])
+        #filter_date = pd.to_datetime(row['updatetime']).tz_convert('UTC')  # Convert filter_date to UTC
+        filter_date = pd.to_datetime(row['updatetime'], utc=True, errors='coerce')
+
+        if verbosity:
+            print(f"Processing client_idcode: {client_idcode}")
+
+        # Recursively walk through the target directory
+        for root, dirs, files in os.walk(target_directory):
+            for file in files:
+                if file.startswith(client_idcode) and file.endswith('.csv'):
+                    file_path = os.path.join(root, file)
+
+                    if verbosity:
+                        print(f"Found CSV file: {file_path}")
+
+                    df = pd.read_csv(file_path)
+
+                    # Check if 'updatetime' is in columns
+                    if 'updatetime' in df.columns:
+                        df['updatetime'] = pd.to_datetime(df['updatetime'], utc=True, errors='coerce')
+                        update_column = 'updatetime'
+                    elif 'observationdocument_recordeddtm' in df.columns:
+                        df['observationdocument_recordeddtm'] = pd.to_datetime(df['observationdocument_recordeddtm'], utc=True, errors='coerce')
+                        update_column = 'observationdocument_recordeddtm'
+                    elif 'order_entered' in df.columns:
+                        df['order_entered'] = pd.to_datetime(df['order_entered'], utc=True, errors='coerce')
+                        update_column = 'order_entered'
+                    elif 'basicobs_entered' in df.columns:
+                        df['basicobs_entered'] = pd.to_datetime(df['basicobs_entered'], utc=True, errors='coerce')
+                        update_column = 'basicobs_entered'
+                    else:
+                        print(f"Warning: Neither 'updatetime', 'observationdocument_recordeddtm', 'order_entered', nor 'basicobs_entered' found in {file_path}")
+                        
+                    # Drop rows with NaT values in the updated column
+                    df = df.dropna(subset=[update_column])
+
+                    if verbosity:
+                        print(f"Updating CSV file based on {update_column}")
+
+                    df[update_column] = pd.to_datetime(df[update_column], utc=True)
+                    filter_condition = df[update_column] > filter_date if filter_type == 'after' else df[update_column] < filter_date
+                    filtered_df = df[filter_condition]
+                    filtered_df.to_csv(file_path, index=False)
+
+                    if verbosity:
+                        print("CSV file updated successfully")
