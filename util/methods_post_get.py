@@ -62,41 +62,58 @@ def copy_project_folders_with_substring_match(pat2vec_obj, substrings_to_match=N
 
 import warnings
 
-def check_csv_integrity(file_path, verbosity=0):
+def check_csv_integrity(file_path, verbosity=0, delete_broken=False):
     try:
         df = pd.read_csv(file_path)
+
         # Perform integrity checks on the DataFrame
-        # Check for missing values in columns specified in the list
         non_nullable_columns = ['client_idcode']  # Add more columns as needed
+
         for column in non_nullable_columns:
             if column in df.columns and df[column].isnull().any():
                 warning_message = f"Column {column} contains missing values in CSV: {file_path}"
                 warnings.warn(warning_message, UserWarning)
-            else:
-                if verbosity >1:
-                    warning_message = f"Column {column} in CSV file has no missing values: {file_path}"
-                    warnings.warn(warning_message, UserWarning)
-                else:
-                    continue
+                if delete_broken:
+                    _, filename_ext = os.path.split(file_path)
+                    filename, _ = os.path.splitext(filename_ext)
+                    remove_file_from_paths(filename)
+                    print(f"Deleted broken file: {file_path}")
+                    return  # Stop further processing as the file is deleted
+            elif verbosity > 1:
+                warning_message = f"Column {column} in CSV file has no missing values: {file_path}"
+                warnings.warn(warning_message, UserWarning)
 
         if verbosity == 2:
             print("CSV file integrity is good.")
+
     except pd.errors.EmptyDataError:
         warning_message = f"CSV file is empty: {file_path}"
         warnings.warn(warning_message, UserWarning)
+        if delete_broken:
+            _, filename_ext = os.path.split(file_path)
+            filename, _ = os.path.splitext(filename_ext)
+            remove_file_from_paths(filename)
+            print(f"Deleted broken file: {file_path}")
+
     except pd.errors.ParserError:
         warning_message = f"Error parsing CSV file: {file_path}"
         warnings.warn(warning_message, UserWarning)
+        if delete_broken:
+            _, filename_ext = os.path.split(file_path)
+            filename, _ = os.path.splitext(filename_ext)
+            remove_file_from_paths(filename)
+            print(f"Deleted broken file: {file_path}")
+
     except FileNotFoundError:
         warning_message = f"File not found: {file_path}"
         warnings.warn(warning_message, UserWarning)
 
 from tqdm import tqdm
 
-def check_csv_files_in_directory(directory, verbosity=0, ignore_outputs=True, ignore_output_vectors=True):
+def check_csv_files_in_directory(directory, verbosity=0, ignore_outputs=True, ignore_output_vectors=True, delete_broken=False):
     total_files = sum(1 for _ in os.walk(directory) for _ in os.listdir(directory))
 
-    # Initialize tqdm progress bar
+    # Initialize tqdm progrcommitess bar
     progress_bar = tqdm(total=total_files, unit="file", desc=f"Checking CSV files in {directory}")
 
     for root, dirs, files in os.walk(directory):
@@ -108,9 +125,11 @@ def check_csv_files_in_directory(directory, verbosity=0, ignore_outputs=True, ig
                 continue  # Skip files with 'current_pat_lines_parts' in the path
             if file_path.lower().endswith('.csv'):
                 progress_bar.set_description(f"Checking CSV integrity for: {file_path}")
-                check_csv_integrity(file_path, verbosity)
+                check_csv_integrity(file_path, verbosity, delete_broken)
                 progress_bar.update(1)
 
     progress_bar.close()
 
+
+from pat2vec.util.post_processing import remove_file_from_paths
 

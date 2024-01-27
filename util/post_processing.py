@@ -382,24 +382,33 @@ def extract_types_from_csv(directory):
     return list(all_types)
 
 
-
-
-def remove_file_from_paths(current_pat_idcode: str, project_name='new_project' ) -> None:
-    #project_name = 'new_project'
-    #current_pat_idcode = 'D886526'
+def remove_file_from_paths(current_pat_idcode: str, project_name='new_project', verbosity=0) -> None:
     pat_file_paths = [
         f"{project_name}/current_pat_document_batches/",
         f"{project_name}/current_pat_document_batches_mct/",
         f"{project_name}/current_pat_documents_annotations_batches/",
-        f"{project_name}/current_pat_documents_annotations_batches_mct/"
+        f"{project_name}/current_pat_documents_annotations_batches_mct/",
+        f"{project_name}/current_pat_bloods_batches/",
+        f"{project_name}/current_pat_drugs_batches/",
+        f"{project_name}/current_pat_diagnostics_batches/",
+        f"{project_name}/current_pat_news_batches/",
+        f"{project_name}/current_pat_obs_batches/",
+        f"{project_name}/current_pat_bmi_batches/",
+        f"{project_name}/current_pat_demo_batches/"
     ]
+    
     for path in pat_file_paths:
+        file_path = path + current_pat_idcode + ".csv"
         try:
-            os.remove(path + current_pat_idcode + ".csv")
-            print(path + current_pat_idcode + ".csv", "successfully removed")
-        except:
-            print(path + current_pat_idcode + ".csv", "not found")
-
+            os.remove(file_path)
+            if verbosity > 0:
+                print(f"{file_path} successfully removed")
+        except FileNotFoundError:
+            if verbosity > 0:
+                print(f"{file_path} not found")
+        except Exception as e:
+            if verbosity > 0:
+                print(f"Error removing {file_path}: {e}")
 
 
 def process_chunk(args):
