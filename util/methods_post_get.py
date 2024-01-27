@@ -58,3 +58,59 @@ def copy_project_folders_with_substring_match(pat2vec_obj, substrings_to_match=N
             shutil.copytree(src_path, dest_path)
 
     print("Folders copied successfully.")
+    
+
+import warnings
+
+def check_csv_integrity(file_path, verbosity=0):
+    try:
+        df = pd.read_csv(file_path)
+        # Perform integrity checks on the DataFrame
+        # Check for missing values in columns specified in the list
+        non_nullable_columns = ['client_idcode']  # Add more columns as needed
+        for column in non_nullable_columns:
+            if column in df.columns and df[column].isnull().any():
+                warning_message = f"Column {column} contains missing values in CSV: {file_path}"
+                warnings.warn(warning_message, UserWarning)
+            else:
+                if verbosity >1:
+                    warning_message = f"Column {column} in CSV file has no missing values: {file_path}"
+                    warnings.warn(warning_message, UserWarning)
+                else:
+                    continue
+
+        if verbosity == 2:
+            print("CSV file integrity is good.")
+    except pd.errors.EmptyDataError:
+        warning_message = f"CSV file is empty: {file_path}"
+        warnings.warn(warning_message, UserWarning)
+    except pd.errors.ParserError:
+        warning_message = f"Error parsing CSV file: {file_path}"
+        warnings.warn(warning_message, UserWarning)
+    except FileNotFoundError:
+        warning_message = f"File not found: {file_path}"
+        warnings.warn(warning_message, UserWarning)
+
+from tqdm import tqdm
+
+def check_csv_files_in_directory(directory, verbosity=0, ignore_outputs=True, ignore_output_vectors=True):
+    total_files = sum(1 for _ in os.walk(directory) for _ in os.listdir(directory))
+
+    # Initialize tqdm progress bar
+    progress_bar = tqdm(total=total_files, unit="file", desc=f"Checking CSV files in {directory}")
+
+    for root, dirs, files in os.walk(directory):
+        for file in files:
+            file_path = os.path.join(root, file)
+            if ignore_outputs and 'output' in file_path.lower():
+                continue  # Skip files with 'output' in the path
+            if ignore_output_vectors and 'current_pat_lines_parts' in file_path.lower():
+                continue  # Skip files with 'current_pat_lines_parts' in the path
+            if file_path.lower().endswith('.csv'):
+                progress_bar.set_description(f"Checking CSV integrity for: {file_path}")
+                check_csv_integrity(file_path, verbosity)
+                progress_bar.update(1)
+
+    progress_bar.close()
+
+
