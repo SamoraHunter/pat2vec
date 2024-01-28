@@ -1,39 +1,16 @@
-
-import csv
-import datetime as dt
 import logging
-import multiprocessing
 import os
-import pickle
 import random
-import re
-import subprocess
 import sys
 import time
 import traceback
-import warnings
-from csv import writer
-from datetime import datetime, timedelta, timezone
-from io import StringIO
+from datetime import datetime
 from multiprocessing import Pool
-from os.path import exists
-from pathlib import Path
-
-import numpy as np
 import pandas as pd
-import paramiko
-# wrap with option and put behind boolean check, no wildcard in function.
 from cogstack_search_methods.cogstack_v8_lite import *
 from colorama import Back, Fore, Style
 from credentials import *
-from dateutil.relativedelta import relativedelta
-from IPython.display import display
-from IPython.utils import io
-from medcat.cat import CAT
-from scipy import stats
 from tqdm import trange
-from pat2vec.util.methods_get import create_folders_for_pat
-from pat2vec.util.methods_get import get_free_gpu
 
 from pat2vec.pat2vec_get_methods.current_pat_annotations_to_file import (
     get_current_pat_annotations_batch_to_file,
@@ -47,8 +24,9 @@ from pat2vec.patvec_get_batch_methods.main import (
     get_pat_batch_epr_docs_annotations, get_pat_batch_mct_docs,
     get_pat_batch_mct_docs_annotations, get_pat_batch_news, get_pat_batch_obs)
 from pat2vec.util import config_pat2vec
-from pat2vec.util.methods_get import (create_folders, filter_stripped_list,
-                                      generate_date_list, list_dir_wrapper,
+from pat2vec.util.methods_get import (create_folders, create_folders_for_pat,
+                                      filter_stripped_list, generate_date_list,
+                                      get_free_gpu, list_dir_wrapper,
                                       update_pbar)
 from pat2vec.util.methods_get_medcat import get_cat
 
@@ -58,10 +36,6 @@ sys.path.insert(0, '/data/AS/Samora/gloabl_files')
 sys.path.insert(0, '/home/jovyan/work/gloabl_files')
 sys.path.insert(0, '/home/cogstack/samora/_data/gloabl_files')
 sys.path.insert(0, '/home/cogstack/samora/_data/gloabl_files/pat2vec')
-# import tqdm
-
-# from tqdm import trange
-
 
 color_bars = [Fore.RED,
               Fore.GREEN,
@@ -70,12 +44,6 @@ color_bars = [Fore.RED,
               Fore.YELLOW,
               Fore.CYAN,
               Fore.WHITE]
-
-# nb_full_path = os.path.join(os.getcwd(), nb_name)
-
-# from COGStats import *
-
-# from util.config_pat2vec import config_class
 
 
 class main:
@@ -118,7 +86,7 @@ class main:
 
         self.all_patient_list = get_all_patients_list(self.config_obj)
 
-        #create_folders(self.all_patient_list, self.config_obj)
+        # create_folders(self.all_patient_list, self.config_obj)
 
         self.current_pat_lines_path = config_obj.current_pat_lines_path
         self.sftp_client = config_obj.sftp_obj
@@ -232,7 +200,6 @@ class main:
         if self.config_obj.verbosity > 3:
             print(f"Processing patient {i} at {self.all_patient_list[i]}...")
 
-
         skipped_counter = self.config_obj.skipped_counter
         stripped_list = self.stripped_list
         all_patient_list = self.all_patient_list
@@ -254,9 +221,9 @@ class main:
             skipped_counter = 0
 
         current_pat_client_id_code = str(all_patient_list[i])
-        
-        #create_folders(list(current_pat_client_id_code), self.config_obj)
-        
+
+        # create_folders(list(current_pat_client_id_code), self.config_obj)
+
         create_folders_for_pat(current_pat_client_id_code, self.config_obj)
 
         p_bar_entry = current_pat_client_id_code
@@ -276,11 +243,10 @@ class main:
             self.config_obj.global_end_month = current_pat_end_date.month
 
             self.config_obj.global_end_year = current_pat_end_date.year
-            
+
             self.config_obj.global_start_day = current_pat_start_date.day
-            
+
             self.config_obj.global_end_day = current_pat_end_date.day
-            
 
             self.config_obj.start_date = current_pat_start_date
 
@@ -288,18 +254,16 @@ class main:
                 self.config_obj.global_start_year).zfill(4)
             self.config_obj.global_start_month = str(
                 self.config_obj.global_start_month).zfill(2)
-            
+
             self.config_obj.global_end_year = str(
                 self.config_obj.global_end_year).zfill(4)
             self.config_obj.global_end_month = str(
                 self.config_obj.global_end_month).zfill(2)
-            
+
             self.config_obj.global_start_day = str(
                 self.config_obj.global_start_day).zfill(2)
             self.config_obj.global_end_day = str(
                 self.config_obj.global_end_day).zfill(2)
-            
-            
 
             if self.config_obj.verbosity >= 4:
                 print("ipw dates:")
@@ -311,15 +275,14 @@ class main:
                     self.config_obj.global_end_year).zfill(4)
                 self.config_obj.global_end_month = str(
                     self.config_obj.global_end_month).zfill(2)
-                
+
                 self.config_obj.global_start_day = str(
                     self.config_obj.global_start_day).zfill(2)
-                
+
                 self.config_obj.global_end_day = str(
                     self.config_obj.global_end_day).zfill(2)
-                
-                
-            #calculate for ipw    
+
+            # calculate for ipw
             interval_window_delta = self.config_obj.time_window_interval_delta
 
             self.config_obj.date_list = generate_date_list(self.config_obj.start_date,
@@ -327,7 +290,7 @@ class main:
                                                            self.config_obj.months,
                                                            self.config_obj.days,
                                                            interval_window_delta,
-                                                           lookback = self.config_obj.lookback
+                                                           lookback=self.config_obj.lookback
                                                            )
 
             self.n_pat_lines = len(self.config_obj.date_list)
@@ -362,30 +325,28 @@ class main:
                         self.t, self.config_obj, skipped_counter)
 
             empty_return = pd.DataFrame()
-            
-            empty_return_epr = pd.DataFrame(columns=['updatetime', 'body_analysed'])
-            
-            empty_return_mct = pd.DataFrame(columns=['observationdocument_recordeddtm', 'observation_valuetext_analysed'])
-            
 
-            
+            empty_return_epr = pd.DataFrame(
+                columns=['updatetime', 'body_analysed'])
+
+            empty_return_mct = pd.DataFrame(
+                columns=['observationdocument_recordeddtm', 'observation_valuetext_analysed'])
+
             if self.config_obj.main_options.get('annotations', True):
                 search_term = None  # inside function
                 batch_epr = get_pat_batch_epr_docs(current_pat_client_id_code=current_pat_client_id_code,
-                                                search_term=search_term,
-                                                config_obj=self.config_obj,
-                                                cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search)
+                                                   search_term=search_term,
+                                                   config_obj=self.config_obj,
+                                                   cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search)
             else:
                 batch_epr = empty_return_epr
-
 
             if self.config_obj.main_options.get('annotations_mrc', True):
                 search_term = None  # inside function
                 batch_mct = get_pat_batch_mct_docs(current_pat_client_id_code, search_term, config_obj=self.config_obj,
-                                                cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search)
+                                                   cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search)
             else:
                 batch_mct = empty_return_mct
-
 
             if not annot_first:
 
@@ -541,7 +502,8 @@ class main:
                     target_column_string = 'updatetime'
                     batch_epr[target_column_string] = pd.to_datetime(
                         batch_epr[target_column_string], errors='coerce', utc=True)
-                    batch_epr.dropna(subset=[target_column_string], inplace=True)
+                    batch_epr.dropna(
+                        subset=[target_column_string], inplace=True)
                     batch_epr.dropna(subset=['body_analysed'], inplace=True)
                     batch_epr = batch_epr[batch_epr['body_analysed'].apply(
                         lambda x: isinstance(x, str))]
@@ -550,12 +512,12 @@ class main:
                     target_column_string = 'observationdocument_recordeddtm'
                     batch_mct[target_column_string] = pd.to_datetime(
                         batch_mct[target_column_string], errors='coerce', utc=True)
-                    batch_mct.dropna(subset=[target_column_string], inplace=True)
+                    batch_mct.dropna(
+                        subset=[target_column_string], inplace=True)
                     batch_mct.dropna(
                         subset=['observation_valuetext_analysed'], inplace=True)
                     batch_mct = batch_mct[batch_mct['observation_valuetext_analysed'].apply(
                         lambda x: isinstance(x, str))]
-
 
                 if self.config_obj.main_options.get('annotations', True):
                     target_column_string = 'updatetime'
