@@ -3,7 +3,7 @@ import os
 import pandas as pd
 from tqdm import tqdm
 import shutil
-
+from pat2vec.util.post_processing import remove_file_from_paths
 
 def retrieve_pat_annotations(current_pat_client_idcode: str, config_obj= None) -> pd.DataFrame:
     """
@@ -77,7 +77,7 @@ def check_csv_integrity(file_path, verbosity=0, delete_broken=False):
                     _, filename_ext = os.path.split(file_path)
                     filename, _ = os.path.splitext(filename_ext)
                     remove_file_from_paths(filename)
-                    print(f"Deleted broken file: {file_path}")
+                    print(f"Deleted broken file: {filename} : {file_path}")
                     return  # Stop further processing as the file is deleted
             elif verbosity > 1:
                 warning_message = f"Column {column} in CSV file has no missing values: {file_path}"
@@ -93,7 +93,7 @@ def check_csv_integrity(file_path, verbosity=0, delete_broken=False):
             _, filename_ext = os.path.split(file_path)
             filename, _ = os.path.splitext(filename_ext)
             remove_file_from_paths(filename)
-            print(f"Deleted broken file: {file_path}")
+            print(f"Deleted broken file: {filename} : {file_path}")
 
     except pd.errors.ParserError:
         warning_message = f"Error parsing CSV file: {file_path}"
@@ -102,7 +102,8 @@ def check_csv_integrity(file_path, verbosity=0, delete_broken=False):
             _, filename_ext = os.path.split(file_path)
             filename, _ = os.path.splitext(filename_ext)
             remove_file_from_paths(filename)
-            print(f"Deleted broken file: {file_path}")
+            print(f"Deleted broken file: {filename} : {file_path}")
+
 
     except FileNotFoundError:
         warning_message = f"File not found: {file_path}"
@@ -131,5 +132,5 @@ def check_csv_files_in_directory(directory, verbosity=0, ignore_outputs=True, ig
     progress_bar.close()
 
 
-from pat2vec.util.post_processing import remove_file_from_paths
+
 
