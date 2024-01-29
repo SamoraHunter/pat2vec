@@ -748,8 +748,8 @@ def get_pat_ipw_record(
     return earliest_df
 
 
-def filter_and_update_csv(target_directory, rsuf_dataframe, filter_type='after', verbosity=False):
-    for _, row in rsuf_dataframe.iterrows():
+def filter_and_update_csv(target_directory, ipw_dataframe, filter_type='after', verbosity=False):
+    for _, row in ipw_dataframe.iterrows():
         client_idcode = row['client_idcode']
         # print(client_idcode, row['updatetime'])
         # filter_date = pd.to_datetime(row['updatetime']).tz_convert('UTC')  # Convert filter_date to UTC
@@ -806,20 +806,21 @@ def filter_and_update_csv(target_directory, rsuf_dataframe, filter_type='after',
                     if verbosity:
                         print("CSV file updated successfully")
 
-    def build_ipw_dataframe(annot_filter_arguments=None, filter_codes=None, config_obj=None):
 
-        df = pd.DataFrame()
+def build_ipw_dataframe(annot_filter_arguments=None, filter_codes=None, config_obj=None):
 
-        pat_list = os.listdir(config_obj.pre_document_batch_path)
+    df = pd.DataFrame()
 
-        pat_list_stripped = [os.path.splitext(
-            file)[0] for file in pat_list if file.endswith(".csv")]
+    pat_list = os.listdir(config_obj.pre_document_batch_path)
 
-        for pat in pat_list_stripped:
+    pat_list_stripped = [os.path.splitext(
+        file)[0] for file in pat_list if file.endswith(".csv")]
 
-            res = get_pat_ipw_record(current_pat_idcode=pat, annot_filter_arguments=None,
-                                     filter_codes=filter_codes, config_obj=config_obj)
+    for pat in pat_list_stripped:
 
-            df = pd.concat([df, res], ignore_index=True)
+        res = get_pat_ipw_record(current_pat_idcode=pat, annot_filter_arguments=None,
+                                 filter_codes=filter_codes, config_obj=config_obj)
 
-        return df
+        df = pd.concat([df, res], ignore_index=True)
+
+    return df
