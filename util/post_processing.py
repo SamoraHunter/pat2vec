@@ -674,7 +674,7 @@ def get_pat_ipw_record(
     config_obj=None,
     annot_filter_arguments: Optional[Dict[str,
                                           Union[int, str, List[str]]]] = None,
-    filter_codes: Optional[List[str]] = None
+    filter_codes: Optional[List[int]] = None
 ) -> pd.DataFrame:
     """
     Retrieve patient IPW record.
@@ -683,7 +683,7 @@ def get_pat_ipw_record(
     - current_pat_idcode (str): Patient ID code.
     - config_obj (Optional[pat2vec config obj]): Configuration object (default: None).
     - annot_filter_arguments (Optional[YourFilterArgType]): Annotation filter arguments (default: None).
-    - filter_codes (Optional[YourFilterCodeType]): Filter codes (default: None).
+    - filter_codes (Optional[int]): Filter codes (default: None).
 
     Returns:
     pd.DataFrame: DataFrame containing the earliest relevant records.
@@ -805,3 +805,21 @@ def filter_and_update_csv(target_directory, rsuf_dataframe, filter_type='after',
 
                     if verbosity:
                         print("CSV file updated successfully")
+
+    def build_ipw_dataframe(annot_filter_arguments=None, filter_codes=None, config_obj=None):
+
+        df = pd.DataFrame()
+
+        pat_list = os.listdir(config_obj.pre_document_batch_path)
+
+        pat_list_stripped = [os.path.splitext(
+            file)[0] for file in pat_list if file.endswith(".csv")]
+
+        for pat in pat_list_stripped:
+
+            res = get_pat_ipw_record(current_pat_idcode=pat, annot_filter_arguments=None,
+                                     filter_codes=filter_codes, config_obj=config_obj)
+
+            df = pd.concat([df, res], ignore_index=True)
+
+        return df
