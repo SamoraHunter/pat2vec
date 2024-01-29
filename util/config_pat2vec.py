@@ -58,15 +58,15 @@ class config_class:
                  global_start_month=None,
                  global_end_year=None,
                  global_end_month=None,
-                 global_start_day = None,
-                 global_end_day = None,
+                 global_start_day=None,
+                 global_end_day=None,
                  skip_additional_listdir=False,
                  start_time=None,
                  root_path=None,
                  negate_biochem=False,
                  patient_id_column_name='client_idcode',
                  overwrite_stored_pat_docs=False,
-                 overwrite_stored_pat_observations = False,
+                 overwrite_stored_pat_observations=False,
                  store_pat_batch_docs=True,
                  store_pat_batch_observations=True,
                  annot_filter_options=None,
@@ -76,22 +76,21 @@ class config_class:
                  individual_patient_window_start_column_name=None,
                  individual_patient_id_column_name=None,
                  dropna_doc_timestamps=True,
-                 time_window_interval_delta = relativedelta(days=1),
-                 feature_engineering_arg_dict = None,
-                 split_clinical_notes = True,
-                 lookback = True,
-                 add_icd10 = False,
-                 all_epr_patient_list_path = '/home/cogstack/samora/_data/gloabl_files/all_client_idcodes_epr_unique.csv',
-                 override_medcat_model_path = None
-
+                 time_window_interval_delta=relativedelta(days=1),
+                 feature_engineering_arg_dict=None,
+                 split_clinical_notes=True,
+                 lookback=True,
+                 add_icd10=False,
+                 add_opc4s=False,
+                 all_epr_patient_list_path='/home/cogstack/samora/_data/gloabl_files/all_client_idcodes_epr_unique.csv',
+                 override_medcat_model_path=None
 
                  ):
 
         self.suffix = suffix
         self.treatment_doc_filename = treatment_doc_filename
         self.treatment_control_ratio_n = treatment_control_ratio_n
-        
-        
+
         self.pre_annotation_path = f'current_pat_annots_parts{self.suffix}/'
         self.pre_annotation_path_mrc = f'current_pat_annots_mrc_parts{self.suffix}/'
 
@@ -99,13 +98,13 @@ class config_class:
         self.pre_document_annotation_batch_path_mct = f'current_pat_documents_annotations_batches_mct{self.suffix}/'
         self.pre_document_batch_path = f"current_pat_document_batches{self.suffix}/"
         self.pre_document_batch_path_mct = f"current_pat_document_batches_mct{self.suffix}/"
-        
+
         self.pre_bloods_batch_path = f'current_pat_bloods_batches{self.suffix}/'
-        
+
         self.pre_drugs_batch_path = f'current_pat_drugs_batches{self.suffix}/'
-        
+
         self.pre_diagnostics_batch_path = f'current_pat_diagnostics_batches{self.suffix}/'
-        
+
         self.pre_news_batch_path = f'current_pat_news_batches{self.suffix}/'
 
         self.pre_obs_batch_path = f'current_pat_obs_batches{self.suffix}/'
@@ -113,14 +112,13 @@ class config_class:
         self.pre_bmi_batch_path = f'current_pat_bmi_batches{self.suffix}/'
 
         self.pre_demo_batch_path = f'current_pat_demo_batches{self.suffix}/'
-        
+
         self.pre_misc_batch_path = f'current_pat_misc_batches{self.suffix}/'
-        
+
         self.current_pat_line_path = f'current_pat_line_path{self.suffix}/'
-        
 
         self.store_pat_batch_docs = store_pat_batch_docs
-        
+
         self.store_pat_batch_observations = store_pat_batch_observations
 
         self.proj_name = proj_name
@@ -128,8 +126,9 @@ class config_class:
 
         self.negate_biochem = negate_biochem
         self.patient_id_column_name = patient_id_column_name
-        
+
         self.add_icd10 = add_icd10
+        self.add_opc4s = add_opc4s
 
         self.aliencat = aliencat
         self.dgx = dgx
@@ -162,9 +161,9 @@ class config_class:
         self.root_path = root_path
 
         self.overwrite_stored_pat_docs = overwrite_stored_pat_docs
-        
+
         self.overwrite_stored_pat_observations = overwrite_stored_pat_observations
-        
+
         self.annot_filter_options = annot_filter_options
 
         self.start_time = start_time
@@ -182,15 +181,15 @@ class config_class:
         self.control_list_path = 'control_path.pkl'
 
         self.dropna_doc_timestamps = dropna_doc_timestamps
-        
+
         self.time_window_interval_delta = time_window_interval_delta
-        
+
         self.split_clinical_notes = split_clinical_notes
-        
+
         self.all_epr_patient_list_path = all_epr_patient_list_path
-        
+
         self.lookback = lookback
-        
+
         self.override_medcat_model_path = override_medcat_model_path
 
         if (start_time == None):
@@ -237,16 +236,15 @@ class config_class:
                 'Subject_Confidence': 0.8  # Specify the confidence threshold as a float
             }
 
-        if(feature_engineering_arg_dict == None):
+        if (feature_engineering_arg_dict == None):
             self.feature_engineering_arg_dict = {
-                'drugs':{'_num-drug-order': True,
-                        '_days-since-last-drug-order': True,
-                        '_days-between-first-last-drug': True}
-                
+                'drugs': {'_num-drug-order': True,
+                          '_days-since-last-drug-order': True,
+                          '_days-between-first-last-drug': True}
+
             }
         else:
             self.feature_engineering_arg_dict = feature_engineering_arg_dict
-            
 
         self.negated_presence_annotations = self.main_options.get(
             'negated_presence_annotations')
@@ -256,37 +254,51 @@ class config_class:
             if (self.root_path == None):
                 self.root_path = f'{os.getcwd()}/{self.proj_name}/'
 
-            self.pre_annotation_path = os.path.join(self.root_path, f'current_pat_annots_parts{self.suffix}/')
-            self.pre_annotation_path_mrc = os.path.join(self.root_path, f'current_pat_annots_mrc_parts{self.suffix}/')
+            self.pre_annotation_path = os.path.join(
+                self.root_path, f'current_pat_annots_parts{self.suffix}/')
+            self.pre_annotation_path_mrc = os.path.join(
+                self.root_path, f'current_pat_annots_mrc_parts{self.suffix}/')
 
-            self.pre_document_annotation_batch_path = os.path.join(self.root_path, f'current_pat_documents_annotations_batches{self.suffix}/')
-            self.pre_document_annotation_batch_path_mct = os.path.join(self.root_path, f'current_pat_documents_annotations_batches_mct{self.suffix}/')
-            self.pre_document_batch_path = os.path.join(self.root_path, f"current_pat_document_batches{self.suffix}/")
-            self.pre_document_batch_path_mct = os.path.join(self.root_path, f"current_pat_document_batches_mct{self.suffix}/")
+            self.pre_document_annotation_batch_path = os.path.join(
+                self.root_path, f'current_pat_documents_annotations_batches{self.suffix}/')
+            self.pre_document_annotation_batch_path_mct = os.path.join(
+                self.root_path, f'current_pat_documents_annotations_batches_mct{self.suffix}/')
+            self.pre_document_batch_path = os.path.join(
+                self.root_path, f"current_pat_document_batches{self.suffix}/")
+            self.pre_document_batch_path_mct = os.path.join(
+                self.root_path, f"current_pat_document_batches_mct{self.suffix}/")
 
-            self.pre_bloods_batch_path = os.path.join(self.root_path, f'current_pat_bloods_batches{self.suffix}/')
+            self.pre_bloods_batch_path = os.path.join(
+                self.root_path, f'current_pat_bloods_batches{self.suffix}/')
 
-            self.pre_drugs_batch_path = os.path.join(self.root_path, f'current_pat_drugs_batches{self.suffix}/')
+            self.pre_drugs_batch_path = os.path.join(
+                self.root_path, f'current_pat_drugs_batches{self.suffix}/')
 
-            self.pre_diagnostics_batch_path = os.path.join(self.root_path, f'current_pat_diagnostics_batches{self.suffix}/')
+            self.pre_diagnostics_batch_path = os.path.join(
+                self.root_path, f'current_pat_diagnostics_batches{self.suffix}/')
 
-            self.pre_news_batch_path = os.path.join(self.root_path, f'current_pat_news_batches{self.suffix}/')
+            self.pre_news_batch_path = os.path.join(
+                self.root_path, f'current_pat_news_batches{self.suffix}/')
 
-            self.pre_obs_batch_path = os.path.join(self.root_path, f'current_pat_obs_batches{self.suffix}/')
+            self.pre_obs_batch_path = os.path.join(
+                self.root_path, f'current_pat_obs_batches{self.suffix}/')
 
-            self.pre_bmi_batch_path = os.path.join(self.root_path, f'current_pat_bmi_batches{self.suffix}/')
+            self.pre_bmi_batch_path = os.path.join(
+                self.root_path, f'current_pat_bmi_batches{self.suffix}/')
 
-            self.pre_demo_batch_path = os.path.join(self.root_path, f'current_pat_demo_batches{self.suffix}/')
+            self.pre_demo_batch_path = os.path.join(
+                self.root_path, f'current_pat_demo_batches{self.suffix}/')
 
-            self.pre_misc_batch_path = os.path.join(self.root_path, f'current_pat_misc_batches{self.suffix}/')
-            
-            self.current_pat_lines_path = os.path.join(self.root_path, f'current_pat_lines_parts{self.suffix}/')
+            self.pre_misc_batch_path = os.path.join(
+                self.root_path, f'current_pat_misc_batches{self.suffix}/')
+
+            self.current_pat_lines_path = os.path.join(
+                self.root_path, f'current_pat_lines_parts{self.suffix}/')
 
             self.output_folder = 'outputs'
 
-            self.PathsClass_instance = PathsClass(self.root_path, self.suffix, self.output_folder)
-            
-        
+            self.PathsClass_instance = PathsClass(
+                self.root_path, self.suffix, self.output_folder)
 
         print(f"Setting start_date to: {start_date}")
         self.start_date = start_date
@@ -429,17 +441,17 @@ class config_class:
 
         else:
             self.sftp_client = None
-            
-        if(self.lookback):
-             self.time_window_interval_delta = -self.time_window_interval_delta
-             print("looking back with ", self.time_window_interval_delta)
+
+        if (self.lookback):
+            self.time_window_interval_delta = -self.time_window_interval_delta
+            print("looking back with ", self.time_window_interval_delta)
         else:
             print("looking forward with ", self.time_window_interval_delta)
 
         self.date_list = generate_date_list(
             self.start_date, self.years, self.months, self.days,
-            time_window_interval_delta = self.time_window_interval_delta,
-            lookback = self.lookback)
+            time_window_interval_delta=self.time_window_interval_delta,
+            lookback=self.lookback)
 
         if (self.verbosity > 0):
             for date in self.date_list[0:5]:
@@ -453,7 +465,7 @@ class config_class:
             'dgx': '/data/AS/Samora/HFE/HFE/v18/medcat_models/20230328_trained_model_hfe_redone/medcat_model_pack_316666b47dfaac07',
             'dhcap': '/home/jovyan/work/medcat_models/medcat_model_pack_316666b47dfaac07.zip',
             'dhcap02': '/home/cogstack/samora/_data/medcat_models/medcat_model_pack_316666b47dfaac07.zip',
-            'override_medcat_model_path' : None
+            'override_medcat_model_path': None
 
         }
 
@@ -467,7 +479,6 @@ class config_class:
             self.global_end_month = str(global_end_month).zfill(2)
             self.global_start_day = str(global_start_day).zfill(2)
             self.global_end_day = str(global_end_day).zfill(2)
-            
 
         def update_global_start_date(self, start_date):
             print("updating global start date")
@@ -477,10 +488,7 @@ class config_class:
             if start_date.month > int(self.global_start_month):
                 self.global_start_month = str(start_date.month)
             if start_date.day > int(self.global_start_day):
-                self.global_start_day = str(start_date.day)   
-                
-            
-
+                self.global_start_day = str(start_date.day)
 
             print(
                 "Warning: Updated global start date as start date later than global start date.")
@@ -499,12 +507,14 @@ class config_class:
 
             # Your code with relativedelta
             # time_offset = timedelta(days=days) + relativedelta(months=months, years=years)
-            
-            if(self.lookback):
-                time_offset = -relativedelta(days=days, months=months, years=years)
-                
+
+            if (self.lookback):
+                time_offset = - \
+                    relativedelta(days=days, months=months, years=years)
+
             else:
-                time_offset = relativedelta(days=days, months=months, years=years)
+                time_offset = relativedelta(
+                    days=days, months=months, years=years)
 
             # print(start_column_name, self.individual_patient_window_start_column_name ,offset_column_name,time_offset )
 
@@ -519,10 +529,11 @@ class config_class:
                                                    patient_id_column=self.individual_patient_id_column_name,
                                                    start_column=f"{start_column_name}_converted",
                                                    end_column=f'{start_column_name}_offset')
-            
-            if(self.lookback ==True):
-                #reverse tuples for elastic search parse
-                reversed_patient_dict = {key: tuple(reversed(value)) for key, value in self.patient_dict.items()}
+
+            if (self.lookback == True):
+                # reverse tuples for elastic search parse
+                reversed_patient_dict = {key: tuple(
+                    reversed(value)) for key, value in self.patient_dict.items()}
                 print('reversed_patient_dict')
                 self.patient_dict = reversed_patient_dict
 
@@ -536,6 +547,5 @@ class config_class:
             print("Debug message: global_end_month =", self.global_end_month)
             print("Debug message: global_start_day =", self.global_start_day)
             print("Debug message: global_end_day =", self.global_end_day)
-            
 
         self.skip_additional_listdir = skip_additional_listdir

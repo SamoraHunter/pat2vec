@@ -10,10 +10,10 @@ import shutil
 from typing import Optional, Union, Dict, List
 
 
-sys.path.insert(0,'/home/aliencat/samora/gloabl_files')
-sys.path.insert(0,'/data/AS/Samora/gloabl_files')
-sys.path.insert(0,'/home/jovyan/work/gloabl_files')
-sys.path.insert(0,'/home/cogstack/samora/_data/gloabl_files')
+sys.path.insert(0, '/home/aliencat/samora/gloabl_files')
+sys.path.insert(0, '/data/AS/Samora/gloabl_files')
+sys.path.insert(0, '/home/jovyan/work/gloabl_files')
+sys.path.insert(0, '/home/cogstack/samora/_data/gloabl_files')
 
 
 def count_files(path):
@@ -23,10 +23,7 @@ def count_files(path):
     return count
 
 
-
-
-
-def process_csv_files(input_path, out_folder='outputs', output_filename_suffix='concatenated_output',  part_size=336, sample_size = None, append_timestamp_column=False):
+def process_csv_files(input_path, out_folder='outputs', output_filename_suffix='concatenated_output',  part_size=336, sample_size=None, append_timestamp_column=False):
     """
     Concatenate multiple CSV files from a given input path and save the result to a specified output path.
 
@@ -42,18 +39,19 @@ def process_csv_files(input_path, out_folder='outputs', output_filename_suffix='
     Returns:
     - None: The function saves the concatenated data to the specified output path.
     """
-    
-    curate_columns=False
-    
+
+    curate_columns = False
 
     # Specify the directory where your CSV files are located
-    all_file_paths = [os.path.join(dp, f) for dp, dn, filenames in os.walk(input_path) for f in filenames if os.path.splitext(f)[1] == '.csv']
+    all_file_paths = [os.path.join(dp, f) for dp, dn, filenames in os.walk(
+        input_path) for f in filenames if os.path.splitext(f)[1] == '.csv']
     if type(sample_size) == str or sample_size == None:
-        if(sample_size == None or sample_size.lower() == 'all'):
-            sample_size= len(all_file_paths)
+        if (sample_size == None or sample_size.lower() == 'all'):
+            sample_size = len(all_file_paths)
 
     # Create an output CSV file to hold the concatenated data
-    output_file = os.path.join(out_folder, f'concatenated_data_{output_filename_suffix}.csv')
+    output_file = os.path.join(
+        out_folder, f'concatenated_data_{output_filename_suffix}.csv')
 
     # Keep track of all unique column names found across all CSV files
     unique_columns = set()
@@ -77,20 +75,18 @@ def process_csv_files(input_path, out_folder='outputs', output_filename_suffix='
                         unique_columns.update(header)
                     except StopIteration:
                         pass
-    
-    #Check if the output file already exists
+
+    # Check if the output file already exists
     if os.path.exists(output_file):
         # If it exists, append datetime stamp and "overwritten" to the filename
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         base_name, extension = os.path.splitext(output_file)
         new_output_file = f"{base_name}_{timestamp}_overwritten{extension}"
-        print(f"Warning: Output file already exists. Renaming {output_file} to {new_output_file}")
+        print(
+            f"Warning: Output file already exists. Renaming {output_file} to {new_output_file}")
         os.rename(output_file, new_output_file)
     else:
         new_output_file = output_file
-
-
-
 
     # Create a header and write it to the output CSV file
     with open(output_file, 'w', newline='') as outfile:
@@ -111,30 +107,30 @@ def process_csv_files(input_path, out_folder='outputs', output_filename_suffix='
                     for row in reader:
                         # Add each value to the appropriate column in the dictionary
                         for column in unique_columns:
-                            concatenated_data[column].append(row.get(column, ''))
+                            concatenated_data[column].append(
+                                row.get(column, ''))
 
         # Append the concatenated data to the output CSV file
         with open(output_file, 'a', newline='') as outfile:
             writer = csv.DictWriter(outfile, fieldnames=unique_columns)
             for i in range(len(concatenated_data[next(iter(concatenated_data))])):
-                writer.writerow({column: concatenated_data[column][i] for column in unique_columns})
+                writer.writerow(
+                    {column: concatenated_data[column][i] for column in unique_columns})
 
-
-    if(append_timestamp_column):
+    if (append_timestamp_column):
         print("Reading results and appending updatetime column")
         df = pd.read_csv(output_file)
-        
+
         df = extract_datetime_to_column(df)
-        
+
         df.to_csv(output_file)
 
     print(f"Concatenated data saved to {output_file}")
-    
+
     return output_file
 
 # Example Usage:
 # concatenate_csv_files('/home/cogstack/samora/_data/HAEM_AG11193_3/new_project/current_pat_lines_parts', 'output_path_here')
-
 
 
 def extract_datetime_to_column(df, drop=True):
@@ -166,15 +162,16 @@ def extract_datetime_to_column(df, drop=True):
 
     # Display the count of extracted datetime values
     print(df['extracted_datetime_stamp'].value_counts())
-    
-    if(drop):
-        columns_to_drop = [col for col in df.columns if 'date_time_stamp' in col]
+
+    if (drop):
+        columns_to_drop = [
+            col for col in df.columns if 'date_time_stamp' in col]
 
         # Drop columns
         df = df.drop(columns=columns_to_drop)
-    
 
     return df
+
 
 def filter_annot_dataframe2(dataframe, filter_args):
     """
@@ -197,10 +194,12 @@ def filter_annot_dataframe2(dataframe, filter_args):
         if column in dataframe.columns:
             # Special case for 'types' column
             if column == 'types':
-                mask &= dataframe[column].apply(lambda x: any(item.lower() in x for item in value))
+                mask &= dataframe[column].apply(
+                    lambda x: any(item.lower() in x for item in value))
             elif column in ['Time_Value', 'Presence_Value', 'Subject_Value']:
                 # Include rows where the column is in the specified list of values
-                mask &= dataframe[column].isin(value) if isinstance(value, list) else (dataframe[column] == value)
+                mask &= dataframe[column].isin(value) if isinstance(
+                    value, list) else (dataframe[column] == value)
             elif column in ['Time_Confidence', 'Presence_Confidence', 'Subject_Confidence']:
                 # Include rows where the column is greater than or equal to the specified confidence threshold
                 mask &= dataframe[column] >= value
@@ -212,88 +211,6 @@ def filter_annot_dataframe2(dataframe, filter_args):
 
     # Return the filtered DataFrame
     return dataframe[mask]
-
-# def produce_filtered_annotation_dataframe(cui_filter = False, meta_annot_filter = False, pat_list = None, config_obj = None, filter_custom_args =None, cui_code_list=None):
-    
-#     if(meta_annot_filter):
-#         if(filter_custom_args ==None):
-#             print("using config obj filter arguments..")
-#             filter_args = config_obj.filter_arguments
-#         else:
-#             filter_args = filter_custom_args
-    
-#     results = []
-    
-#     if(pat_list ==None):
-#         print("using all patient list", len(config_obj.all_patient_list))
-#         pat_list = config_obj.all_patient_list
-        
-#         for i in tqdm(range(0, len(pat_list))):
-            
-#             current_pat_client_idcode = pat_list[i]
-            
-#             current_pat_annot_batch_path = config_obj.pre_document_annotation_batch_path + current_pat_client_idcode
-            
-#             current_pat_annot_batch = pd.read_csv(current_pat_annot_batch_path)
-            
-#             if(meta_annot_filter):
-                
-#                 current_pat_annot_batch = filter_annot_dataframe2(current_pat_annot_batch, filter_args)
-            
-            
-#             if(cui_filter):
-#                 current_pat_annot_batch = current_pat_annot_batch[current_pat_annot_batch['cui'].isin(cui_code_list)]
-                
-                
-#     return current_pat_annot_batch
-
-
-
-# def produce_filtered_annotation_dataframe(cui_filter=False, meta_annot_filter=False, pat_list=None, config_obj=None, filter_custom_args=None, cui_code_list=None):
-#     """
-#     Filter annotation dataframe based on specified criteria.
-
-#     Parameters:
-#     - cui_filter (bool): Whether to filter by CUI codes.
-#     - meta_annot_filter (bool): Whether to apply meta annotation filtering.
-#     - pat_list (list): List of patient identifiers.
-#     - config_obj (ConfigObject): Configuration object containing necessary parameters.
-#     - filter_custom_args (dict): Custom filter arguments.
-#     - cui_code_list (list): List of CUI codes for filtering.
-
-#     Returns:
-#     - pd.DataFrame: Filtered annotation dataframe.
-#     """
-
-#     if meta_annot_filter:
-#         if filter_custom_args is None:
-#             print("Using config obj filter arguments..")
-#             filter_args = config_obj.filter_arguments
-#         else:
-#             filter_args = filter_custom_args
-
-#     results = []
-
-#     if pat_list is None:
-#         print("Using all patient list", len(config_obj.all_patient_list))
-#         pat_list = config_obj.all_patient_list
-
-#     for i in tqdm(range(len(pat_list))):
-#         current_pat_client_idcode = str(pat_list[i])
-#         current_pat_annot_batch_path = config_obj.pre_document_annotation_batch_path + current_pat_client_idcode + ".csv"
-#         current_pat_annot_batch = pd.read_csv(current_pat_annot_batch_path)
-
-#         if meta_annot_filter:
-#             current_pat_annot_batch = filter_annot_dataframe2(current_pat_annot_batch, filter_args)
-
-#         if cui_filter:
-#             current_pat_annot_batch = current_pat_annot_batch[current_pat_annot_batch['cui'].isin(cui_code_list)]
-
-#         results.append(current_pat_annot_batch)
-        
-#     super_result = pd.concat(results)
-
-#     return super_result
 
 
 def produce_filtered_annotation_dataframe(cui_filter=False, meta_annot_filter=False, pat_list=None, config_obj=None, filter_custom_args=None, cui_code_list=None, mct=False):
@@ -322,43 +239,48 @@ def produce_filtered_annotation_dataframe(cui_filter=False, meta_annot_filter=Fa
     results = []
 
     if pat_list is None:
-        
+
         print("Using all patient list", len(config_obj.all_patient_list))
         pat_list = config_obj.all_patient_list
 
     for i in tqdm(range(len(pat_list))):
         current_pat_client_idcode = str(pat_list[i])
-        
-        if(mct==False):
-            current_pat_annot_batch_path = config_obj.pre_document_annotation_batch_path + current_pat_client_idcode + ".csv"
+
+        if (mct == False):
+            current_pat_annot_batch_path = config_obj.pre_document_annotation_batch_path + \
+                current_pat_client_idcode + ".csv"
         else:
-            current_pat_annot_batch_path = config_obj.pre_document_annotation_batch_path_mct + current_pat_client_idcode + ".csv"
-            
+            current_pat_annot_batch_path = config_obj.pre_document_annotation_batch_path_mct + \
+                current_pat_client_idcode + ".csv"
+
         if os.path.exists(current_pat_annot_batch_path):
             current_pat_annot_batch = pd.read_csv(current_pat_annot_batch_path)
-            
-            #drop nan on any col:
-            necessary_columns = ['client_idcode', 'updatetime', 'pretty_name', 'cui', 'type_ids', 'types', 'source_value', 'detected_name', 'acc', 'id', 'Time_Value', 'Time_Confidence', 'Presence_Value', 'Presence_Confidence', 'Subject_Value', 'Subject_Confidence']
 
-            current_pat_annot_batch = current_pat_annot_batch.dropna(subset=necessary_columns)
+            # drop nan on any col:
+            necessary_columns = ['client_idcode', 'updatetime', 'pretty_name', 'cui', 'type_ids', 'types', 'source_value', 'detected_name',
+                                 'acc', 'id', 'Time_Value', 'Time_Confidence', 'Presence_Value', 'Presence_Confidence', 'Subject_Value', 'Subject_Confidence']
+
+            current_pat_annot_batch = current_pat_annot_batch.dropna(
+                subset=necessary_columns)
 
             if meta_annot_filter:
                 try:
-                    current_pat_annot_batch = filter_annot_dataframe2(current_pat_annot_batch, filter_args)
+                    current_pat_annot_batch = filter_annot_dataframe2(
+                        current_pat_annot_batch, filter_args)
                 except Exception as e:
-                    print(e,i)
+                    print(e, i)
                     display(current_pat_annot_batch)
                     raise e
 
             if cui_filter:
-                current_pat_annot_batch = current_pat_annot_batch[current_pat_annot_batch['cui'].isin(cui_code_list)]
+                current_pat_annot_batch = current_pat_annot_batch[current_pat_annot_batch['cui'].isin(
+                    cui_code_list)]
 
             results.append(current_pat_annot_batch)
-        
+
     super_result = pd.concat(results)
 
     return super_result
-
 
 
 def extract_types_from_csv(directory):
@@ -396,7 +318,7 @@ def remove_file_from_paths(current_pat_idcode: str, project_name='new_project', 
         f"{project_name}/current_pat_bmi_batches/",
         f"{project_name}/current_pat_demo_batches/"
     ]
-    
+
     for path in pat_file_paths:
         file_path = path + current_pat_idcode + ".csv"
         try:
@@ -423,16 +345,19 @@ def process_chunk(args):
                         concatenated_data[column].append(row.get(column, ''))
     return concatenated_data
 
+
 def process_csv_files_multi(input_path, out_folder='outputs', output_filename_suffix='concatenated_output', part_size=336, sample_size=None, append_timestamp_column=False, n_proc=None):
     curate_columns = False
 
-    all_file_paths = [os.path.join(dp, f) for dp, dn, filenames in os.walk(input_path) for f in filenames if os.path.splitext(f)[1] == '.csv']
+    all_file_paths = [os.path.join(dp, f) for dp, dn, filenames in os.walk(
+        input_path) for f in filenames if os.path.splitext(f)[1] == '.csv']
 
     if type(sample_size) == str or sample_size is None:
         if sample_size is None or sample_size.lower() == 'all':
             sample_size = len(all_file_paths)
 
-    output_file = os.path.join(out_folder, f'concatenated_data_{output_filename_suffix}.csv')
+    output_file = os.path.join(
+        out_folder, f'concatenated_data_{output_filename_suffix}.csv')
 
     unique_columns = set()
 
@@ -455,7 +380,8 @@ def process_csv_files_multi(input_path, out_folder='outputs', output_filename_su
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         base_name, extension = os.path.splitext(output_file)
         new_output_file = f"{base_name}_{timestamp}_overwritten{extension}"
-        print(f"Warning: Output file already exists. Renaming {output_file} to {new_output_file}")
+        print(
+            f"Warning: Output file already exists. Renaming {output_file} to {new_output_file}")
         os.rename(output_file, new_output_file)
     else:
         new_output_file = output_file
@@ -466,31 +392,34 @@ def process_csv_files_multi(input_path, out_folder='outputs', output_filename_su
     with open(output_file, 'w', newline='') as outfile:
         writer = csv.DictWriter(outfile, fieldnames=unique_columns)
         writer.writeheader()
-        
+
     # Get the number of available CPU cores
     available_cores = cpu_count()
 
     # Set the desired number of processes (e.g., half of the available cores)
     desired_half_processes = available_cores // 2
-        
-    if(n_proc!=None):
-        if(n_proc == 'all'):
+
+    if (n_proc != None):
+        if (n_proc == 'all'):
             n_proc_val = available_cores
-        if(n_proc == 'half'):
+        if (n_proc == 'half'):
             n_proc_val = desired_half_processes
-        elif(type(n_proc)==int ):
+        elif (type(n_proc) == int):
             n_proc_val = n_proc
-    print("desried cores:" ,n_proc_val)
-    
+    print("desried cores:", n_proc_val)
+
     with Pool(processes=n_proc_val) as pool:
-        args_list = [(i, all_files, part_size, unique_columns) for i in range(0, len(all_files), part_size)]
-        results = list(tqdm(pool.imap(process_chunk, args_list), total=len(all_files)//part_size))
+        args_list = [(i, all_files, part_size, unique_columns)
+                     for i in range(0, len(all_files), part_size)]
+        results = list(tqdm(pool.imap(process_chunk, args_list),
+                       total=len(all_files)//part_size))
 
     with open(output_file, 'a', newline='') as outfile:
         writer = csv.DictWriter(outfile, fieldnames=unique_columns)
         for result in tqdm(results, desc='Writing lines...'):
             for i in range(len(result[next(iter(result))])):
-                writer.writerow({column: result[column][i] for column in unique_columns})
+                writer.writerow({column: result[column][i]
+                                for column in unique_columns})
 
     if append_timestamp_column:
         print("Reading results and appending updatetime column")
@@ -503,24 +432,40 @@ def process_csv_files_multi(input_path, out_folder='outputs', output_filename_su
     return output_file
 
 
-
-
 def join_icd10_codes_to_annot(df, inner=False):
-    
+
     mfp = '/home/cogstack/samora/_data/gloabl_files/snomed_icd10_map/data/tls_Icd10cmHumanReadableMap_US1000124_20230901.tsv'
-    
+
     mdf = pd.read_csv(mfp, sep='\t')
-    
-    if(inner==True):
-        result = pd.merge(df, mdf, left_on='cui', right_on='referencedComponentId', how='inner')
+
+    if (inner == True):
+        result = pd.merge(df, mdf, left_on='cui',
+                          right_on='referencedComponentId', how='inner')
 
     else:
-        result = pd.merge(df, mdf, left_on='cui', right_on='referencedComponentId', how='left')
-    
-    
+        result = pd.merge(df, mdf, left_on='cui',
+                          right_on='referencedComponentId', how='left')
+
     return result
-    
-    
+
+
+def join_icd10_OPC4S_codes_to_annot(df, inner=False):
+
+    mfp = '/home/cogstack/samora/_data/gloabl_files/snomed_to_icd10_opcs4/map.csv'
+
+    mdf = pd.read_csv(mfp)
+
+    if (inner == True):
+        result = pd.merge(df, mdf, left_on='cui',
+                          right_on='conceptId', how='inner')
+
+    else:
+        result = pd.merge(df, mdf, left_on='cui',
+                          right_on='conceptId', how='left')
+
+    return result
+
+
 def filter_and_select_rows(dataframe, filter_list, verbosity=0, time_column='updatetime', filter_column='cui', mode='earliest', n_rows=1):
     """
     Filter a dataframe based on a filter_column and filter_list, and return either the earliest or latest rows.
@@ -538,10 +483,12 @@ def filter_and_select_rows(dataframe, filter_list, verbosity=0, time_column='upd
     - pd.DataFrame: Filtered and selected rows from the input dataframe.
     """
     if not all(arg is not None for arg in [dataframe, filter_list, filter_column]):
-        raise ValueError("Please provide a valid dataframe, filter_list, and filter_column.")
+        raise ValueError(
+            "Please provide a valid dataframe, filter_list, and filter_column.")
 
     if filter_column not in dataframe.columns:
-        raise ValueError(f"{filter_column} not found in the dataframe columns.")
+        raise ValueError(
+            f"{filter_column} not found in the dataframe columns.")
 
     filtered_df = dataframe[dataframe[filter_column].isin(filter_list)]
 
@@ -562,7 +509,8 @@ def filter_and_select_rows(dataframe, filter_list, verbosity=0, time_column='upd
         print(selected_rows)
 
     return selected_rows
-    
+
+
 def filter_dataframe_by_cui(dataframe, filter_list, filter_column='cui', mode="earliest", temporal='before', verbosity=0, time_column='updatetime'):
     """
     Filter an annotation DataFrame based on a list of CUI codes and a specified mode.
@@ -596,26 +544,31 @@ def filter_dataframe_by_cui(dataframe, filter_list, filter_column='cui', mode="e
 
     # Find the earliest or latest entry for each CUI code
     if mode == "earliest":
-        result_df = filtered_df.groupby(filter_column, as_index=False)[time_column].min()
+        result_df = filtered_df.groupby(filter_column, as_index=False)[
+            time_column].min()
     elif mode == "latest":
-        result_df = filtered_df.groupby(filter_column, as_index=False)[time_column].max()
+        result_df = filtered_df.groupby(filter_column, as_index=False)[
+            time_column].max()
     else:
         raise ValueError("Invalid mode. Use 'earliest' or 'latest'")
 
-    filter_row = result_df.copy() #preserve row used for filter
+    filter_row = result_df.copy()  # preserve row used for filter
     # Debug statement for verbosity
     if verbosity > 0:
         print(f"Result DataFrame based on {mode} mode:\n")
         display(result_df.head())
 
     # Merge with the original DataFrame to get the full rows
-    result_df = pd.merge(result_df, dataframe, on=[filter_column, time_column], how='inner')
+    result_df = pd.merge(result_df, dataframe, on=[
+                         filter_column, time_column], how='inner')
 
     # Filter the original DataFrame based on the earliest or latest entry
     if temporal == "before":
-        filtered_original_df = dataframe[dataframe[time_column] <= result_df[time_column].min()]
+        filtered_original_df = dataframe[dataframe[time_column]
+                                         <= result_df[time_column].min()]
     elif temporal == "after":
-        filtered_original_df = dataframe[dataframe[time_column] >= result_df[time_column].max()]
+        filtered_original_df = dataframe[dataframe[time_column]
+                                         >= result_df[time_column].max()]
     else:
         raise ValueError("Invalid temporal value. Use 'before' or 'after'")
 
@@ -630,16 +583,14 @@ def filter_dataframe_by_cui(dataframe, filter_list, filter_column='cui', mode="e
 # Example usage:
 # filter_codes = [109989006]
 #
-# Returns all rows after the earliest cui code match. 
+# Returns all rows after the earliest cui code match.
 # filter_dataframe_by_cui(res, filter_list=filter_codes, filter_column = 'cui', mode="earliest", temporal = 'after', verbosity=3)
-
-
 
 
 def copy_files_and_dirs(source_root: str, source_name: str, destination: str, items_to_copy: List[str] = None, loose_files: List[str] = None) -> None:
     """
     Useful for porting project files to a new project location.
-    
+
     Copy specified directories and files from the source directory to the destination directory.
 
     Parameters:
@@ -659,7 +610,7 @@ def copy_files_and_dirs(source_root: str, source_name: str, destination: str, it
         copy_files_and_dirs(project_root_source, project_name_source, project_destination)
     """
     source_dir = os.path.join(source_root, source_name)
-    
+
     # Create the destination directory if it doesn't exist
     destination_dir = os.path.join(destination, source_name)
     os.makedirs(destination_dir, exist_ok=True)
@@ -679,12 +630,15 @@ def copy_files_and_dirs(source_root: str, source_name: str, destination: str, it
     all_source_paths = []
     for root, dirs, files in os.walk(source_dir):
         for file in files:
-            all_source_paths.append(os.path.relpath(os.path.join(root, file), source_dir))
+            all_source_paths.append(os.path.relpath(
+                os.path.join(root, file), source_dir))
         for dir in dirs:
-            all_source_paths.append(os.path.relpath(os.path.join(root, dir), source_dir))
+            all_source_paths.append(os.path.relpath(
+                os.path.join(root, dir), source_dir))
 
     # Filter paths based on items_to_copy
-    paths_to_copy = [path for path in all_source_paths if any(item in path for item in items_to_copy)]
+    paths_to_copy = [path for path in all_source_paths if any(
+        item in path for item in items_to_copy)]
 
     # Copy each path to the destination preserving structure
     for path in tqdm(paths_to_copy, desc="Copying"):
@@ -699,15 +653,14 @@ def copy_files_and_dirs(source_root: str, source_name: str, destination: str, it
     if loose_files is None:
         # Look for loose files specifically in the root directory of the source
         loose_files = ['treatment_docs.csv', 'control_path.pkl']
-    
+
     # Copy loose files to the root directory of the destination
     for loose_file in tqdm(loose_files, desc="Copying loose files"):
         source_loose_path = os.path.join(source_root, loose_file)
         destination_loose_path = os.path.join(destination, loose_file)
         shutil.copy2(source_loose_path, destination_loose_path)
-        
-    
-    #Example usage:
+
+    # Example usage:
     # if __name__ == "__main__":
     # project_root_source = "/home/cogstack/%USERNAME%/_data/HFE_5"
     # project_name_source = "new_project"
@@ -715,10 +668,12 @@ def copy_files_and_dirs(source_root: str, source_name: str, destination: str, it
 
     # copy_files_and_dirs(project_root_source, project_name_source, project_destination)
 
+
 def get_pat_ipw_record(
     current_pat_idcode: str,
-    config_obj = None,
-    annot_filter_arguments: Optional[Dict[str, Union[int, str, List[str]]]] = None,
+    config_obj=None,
+    annot_filter_arguments: Optional[Dict[str,
+                                          Union[int, str, List[str]]]] = None,
     filter_codes: Optional[List[str]] = None
 ) -> pd.DataFrame:
     """
@@ -741,7 +696,8 @@ def get_pat_ipw_record(
     fsr_mct = pd.DataFrame()
 
     # EPR annotations
-    dfa = pd.read_csv(f'{pre_document_annotation_batch_path}/{current_pat_idcode}.csv')
+    dfa = pd.read_csv(
+        f'{pre_document_annotation_batch_path}/{current_pat_idcode}.csv')
     necessary_columns = ['client_idcode', 'updatetime', 'pretty_name', 'cui', 'type_ids', 'types', 'source_value',
                          'detected_name', 'acc', 'id', 'Time_Value', 'Time_Confidence', 'Presence_Value',
                          'Presence_Confidence', 'Subject_Value', 'Subject_Confidence']
@@ -756,7 +712,8 @@ def get_pat_ipw_record(
                                      mode='earliest', n_rows=1)
 
     # MCT annotations
-    dfa_mct = pd.read_csv(f'{pre_document_annotation_batch_path_mct}/{current_pat_idcode}.csv')
+    dfa_mct = pd.read_csv(
+        f'{pre_document_annotation_batch_path_mct}/{current_pat_idcode}.csv')
     necessary_columns_mct = ['client_idcode', 'observationdocument_recordeddtm', 'pretty_name', 'cui', 'type_ids',
                              'types', 'source_value', 'detected_name', 'acc', 'id', 'Time_Value', 'Time_Confidence',
                              'Presence_Value', 'Presence_Confidence', 'Subject_Value', 'Subject_Confidence']
@@ -768,11 +725,12 @@ def get_pat_ipw_record(
 
     if len(dfa_mct) > 0:
         fsr_mct = filter_and_select_rows(dfa_mct, filter_codes, verbosity=0,
-                                          time_column='observationdocument_recordeddtm', filter_column='cui',
-                                          mode='earliest', n_rows=1)
+                                         time_column='observationdocument_recordeddtm', filter_column='cui',
+                                         mode='earliest', n_rows=1)
 
     if not fsr.empty and not fsr_mct.empty:
-        earliest_df = fsr if fsr['updatetime'].min() < fsr_mct['observationdocument_recordeddtm'].min() else fsr_mct
+        earliest_df = fsr if fsr['updatetime'].min(
+        ) < fsr_mct['observationdocument_recordeddtm'].min() else fsr_mct
     elif not fsr.empty:
         earliest_df = fsr
     elif not fsr_mct.empty:
@@ -788,15 +746,15 @@ def get_pat_ipw_record(
         display(earliest_df)
 
     return earliest_df
-    
-    
-    
+
+
 def filter_and_update_csv(target_directory, rsuf_dataframe, filter_type='after', verbosity=False):
     for _, row in rsuf_dataframe.iterrows():
         client_idcode = row['client_idcode']
-        #print(client_idcode, row['updatetime'])
-        #filter_date = pd.to_datetime(row['updatetime']).tz_convert('UTC')  # Convert filter_date to UTC
-        filter_date = pd.to_datetime(row['updatetime'], utc=True, errors='coerce')
+        # print(client_idcode, row['updatetime'])
+        # filter_date = pd.to_datetime(row['updatetime']).tz_convert('UTC')  # Convert filter_date to UTC
+        filter_date = pd.to_datetime(
+            row['updatetime'], utc=True, errors='coerce')
 
         if verbosity:
             print(f"Processing client_idcode: {client_idcode}")
@@ -814,27 +772,33 @@ def filter_and_update_csv(target_directory, rsuf_dataframe, filter_type='after',
 
                     # Check if 'updatetime' is in columns
                     if 'updatetime' in df.columns:
-                        df['updatetime'] = pd.to_datetime(df['updatetime'], utc=True, errors='coerce')
+                        df['updatetime'] = pd.to_datetime(
+                            df['updatetime'], utc=True, errors='coerce')
                         update_column = 'updatetime'
                     elif 'observationdocument_recordeddtm' in df.columns:
-                        df['observationdocument_recordeddtm'] = pd.to_datetime(df['observationdocument_recordeddtm'], utc=True, errors='coerce')
+                        df['observationdocument_recordeddtm'] = pd.to_datetime(
+                            df['observationdocument_recordeddtm'], utc=True, errors='coerce')
                         update_column = 'observationdocument_recordeddtm'
                     elif 'order_entered' in df.columns:
-                        df['order_entered'] = pd.to_datetime(df['order_entered'], utc=True, errors='coerce')
+                        df['order_entered'] = pd.to_datetime(
+                            df['order_entered'], utc=True, errors='coerce')
                         update_column = 'order_entered'
                     elif 'basicobs_entered' in df.columns:
-                        df['basicobs_entered'] = pd.to_datetime(df['basicobs_entered'], utc=True, errors='coerce')
+                        df['basicobs_entered'] = pd.to_datetime(
+                            df['basicobs_entered'], utc=True, errors='coerce')
                         update_column = 'basicobs_entered'
                     else:
-                        print(f"Warning: Neither 'updatetime', 'observationdocument_recordeddtm', 'order_entered', nor 'basicobs_entered' found in {file_path}")
-                        
+                        print(
+                            f"Warning: Neither 'updatetime', 'observationdocument_recordeddtm', 'order_entered', nor 'basicobs_entered' found in {file_path}")
+
                     # Drop rows with NaT values in the updated column
                     df = df.dropna(subset=[update_column])
 
                     if verbosity:
                         print(f"Updating CSV file based on {update_column}")
 
-                    df[update_column] = pd.to_datetime(df[update_column], utc=True)
+                    df[update_column] = pd.to_datetime(
+                        df[update_column], utc=True)
                     filter_condition = df[update_column] > filter_date if filter_type == 'after' else df[update_column] < filter_date
                     filtered_df = df[filter_condition]
                     filtered_df.to_csv(file_path, index=False)
