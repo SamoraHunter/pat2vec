@@ -17,57 +17,58 @@ from colorama import Back, Fore, Style
 from dateutil.parser import parse
 from dateutil.relativedelta import relativedelta
 from IPython.display import display
+from tqdm import tqdm
 
 color_bars = [Fore.RED,
-    Fore.GREEN,
-    Fore.BLUE,
-    Fore.MAGENTA,
-    Fore.YELLOW,
-    Fore.CYAN,
-    Fore.WHITE]
+              Fore.GREEN,
+              Fore.BLUE,
+              Fore.MAGENTA,
+              Fore.YELLOW,
+              Fore.CYAN,
+              Fore.WHITE]
+
 
 def list_dir_wrapper(path, config_obj=None):
-        
-        hostname = config_obj.hostname
-        
-        username = config_obj.username
-        
-        password = config_obj.password
-        
-        remote_dump = config_obj.remote_dump
-        
-        share_sftp = config_obj.share_sftp
-        
-        sftp_obj = config_obj.sftp_obj
-        
-        
-        #global sftp_client
-        if(remote_dump):
-            if(share_sftp == False):
-                ssh_client = paramiko.SSHClient()
-                ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-                ssh_client.connect(hostname=hostname, username=username, password=password)
 
-                sftp_client = ssh_client.open_sftp()
-                sftp_obj = sftp_client
-            elif(sftp_obj ==None):
-                sftp_obj = sftp_client
-                
-            res = sftp_obj.listdir(path)
-            
-            
-            return res
-            
-        else:
-            
-            return os.listdir(path)
+    hostname = config_obj.hostname
 
+    username = config_obj.username
+
+    password = config_obj.password
+
+    remote_dump = config_obj.remote_dump
+
+    share_sftp = config_obj.share_sftp
+
+    sftp_obj = config_obj.sftp_obj
+
+    # global sftp_client
+    if (remote_dump):
+        if (share_sftp == False):
+            ssh_client = paramiko.SSHClient()
+            ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+            ssh_client.connect(hostname=hostname,
+                               username=username, password=password)
+
+            sftp_client = ssh_client.open_sftp()
+            sftp_obj = sftp_client
+        elif (sftp_obj == None):
+            sftp_obj = sftp_client
+
+        res = sftp_obj.listdir(path)
+
+        return res
+
+    else:
+
+        return os.listdir(path)
 
 
 def get_start_end_year_month(target_date_range, n=1):
-    
-    start_year, start_month, start_day = target_date_range[0], target_date_range[1], target_date_range[2]
-    
+
+    start_year, start_month, start_day = target_date_range[
+        0], target_date_range[1], target_date_range[2]
+
     start_date = dt.date(start_year, start_month, start_day)
     end_date = start_date + dt.timedelta(days=n)
     return (
@@ -82,267 +83,243 @@ def get_start_end_year_month(target_date_range, n=1):
 # def get_empty_date_vector(config_object):
 
 #     #start date. Other days are for duration of time window
-    
+
 #     start_date = config_object.start_date
-    
-    
-    
+
+
 #     years = config_object.years
 #     months = config_object.months
 #     days = config_object.days
-    
+
 #     combinations = generate_date_list(start_date, years, months, days)
-    
+
 #     combinations = [str(item) + '_' + 'date_time_stamp' for item in combinations]
-    
+
 #     return pd.DataFrame(data=0.0, index=np.arange(1), columns = combinations).astype(float) #untested float cast
-
-
 
 
 def convert_timestamp_to_tuple(timestamp):
     # parse the timestamp string into a datetime object
     dt = datetime.strptime(timestamp, '%Y-%m-%dT%H:%M:%S.%f%z')
-    
+
     # extract the year and month from the datetime object
     year = dt.year
     month = dt.month
-    
+
     # return the tuple of year and month
     return (year, month)
 
 
-
 def enum_target_date_vector(target_date_range, current_pat_client_id_code, config_obj):
-    
+
     empty_date_vector = get_empty_date_vector(config_obj=config_obj)
-    
-    empty_date_vector.at[0,str(target_date_range)+"_date_time_stamp"] = 1
-    
+
+    empty_date_vector.at[0, str(target_date_range)+"_date_time_stamp"] = 1
+
     empty_date_vector['client_idcode'] = current_pat_client_id_code
-    
+
     return empty_date_vector
-    
-    
 
 
-def generate_date_list(start_date, years, months, days, time_window_interval_delta=relativedelta(days=1), lookback = True):
-    
-    if(lookback ==False):
-        end_date = start_date + relativedelta(years=years, months=months, days=days)
+def generate_date_list(start_date, years, months, days, time_window_interval_delta=relativedelta(days=1), lookback=True):
+
+    if (lookback == False):
+        end_date = start_date + \
+            relativedelta(years=years, months=months, days=days)
     else:
-        end_date = start_date - relativedelta(years=years, months=months, days=days)
-    
+        end_date = start_date - \
+            relativedelta(years=years, months=months, days=days)
+
     date_list = []
     current_date = start_date
-    
-    if(lookback ==False):
-        #look forward...
-        while current_date <= end_date:
-            date_list.append((current_date.year, current_date.month, current_date.day))
-            current_date += time_window_interval_delta #timedelta(days=1)
-    else:
-        #look back
-        while current_date >= end_date:
-            date_list.append((current_date.year, current_date.month, current_date.day))
-            current_date += time_window_interval_delta
-    
-    return date_list
-    
-    
 
-        
-        
+    if (lookback == False):
+        # look forward...
+        while current_date <= end_date:
+            date_list.append(
+                (current_date.year, current_date.month, current_date.day))
+            current_date += time_window_interval_delta  # timedelta(days=1)
+    else:
+        # look back
+        while current_date >= end_date:
+            date_list.append(
+                (current_date.year, current_date.month, current_date.day))
+            current_date += time_window_interval_delta
+
+    return date_list
+
+
 def filter_dataframe_by_timestamp(df, start_year, start_month, end_year, end_month, start_day, end_day, timestamp_string, dropna=False):
-        # Convert timestamp column to datetime format
-    
+    # Convert timestamp column to datetime format
+
     # if(dropna):
     #     df[timestamp_string] = pd.to_datetime(df[timestamp_string], errors='coerce')
     #     df.dropna(subset=[timestamp_string], inplace=True)
-        
-    df[timestamp_string] = pd.to_datetime(df[timestamp_string], utc=True)
-    
-    
-    
-    #df[timestamp_string] = pd.to_datetime(df[timestamp_string])
-    
 
-    #imputed from elastic. Mirror:
-    #start_day = 1
-    #end_day = 1
+    df[timestamp_string] = pd.to_datetime(df[timestamp_string], utc=True)
+
+    # df[timestamp_string] = pd.to_datetime(df[timestamp_string])
+
+    # imputed from elastic. Mirror:
+    # start_day = 1
+    # end_day = 1
     hour = 23
     minute = 59
     second = 59
 
-
     # Filter based on year and month ranges
     try:
-        filtered_df = df[(df[timestamp_string] >= str(datetime(start_year, int(start_month), int(start_day), hour, minute, second))) & 
-                         (df[timestamp_string] <= str(datetime(end_year, int(end_month), int(end_day), hour, minute, second)))
-                        ]
+        filtered_df = df[(df[timestamp_string] >= str(datetime(start_year, int(start_month), int(start_day), hour, minute, second))) &
+                         (df[timestamp_string] <= str(datetime(end_year, int(
+                             end_month), int(end_day), hour, minute, second)))
+                         ]
     except Exception as e:
         print("error in filter_dataframe_by_timestamp")
         print(e)
         display(df)
-        print(start_year, start_month, end_year, end_month, start_day, end_day, timestamp_string)
+        print(start_year, start_month, end_year, end_month,
+              start_day, end_day, timestamp_string)
         raise e
-        #filtered_df = df[df[timestamp_string] =="2323"]
+        # filtered_df = df[df[timestamp_string] =="2323"]
 
     return filtered_df
 
 
 def dump_results(file_data, path, config_obj=None):
-    
-        share_sftp = config_obj.share_sftp
-        hostname = config_obj.hostname
-        username = config_obj.username
-        password = config_obj.password
-        
-        sftp_obj = config_obj.sftp_obj
-        
-        remote_dump = config_obj.remote_dump
-    
-        if(remote_dump):
-            if(share_sftp == False):
-                ssh_client = paramiko.SSHClient()
-                ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-                ssh_client.connect(hostname=hostname, username=username, password=password)
 
-                sftp_client = ssh_client.open_sftp()
-                sftp_obj = sftp_client
-            
-            
-            with sftp_obj.open(path, 'w') as file:
-        
-                pickle.dump(file_data, file)
-            if(share_sftp == False):
-                sftp_obj.close()
-                sftp_obj.close()
-            
-        else:
-            with open(path, 'wb') as f:
-                pickle.dump(file_data, f)
-                
-                
-                
-                
-                
-                
+    share_sftp = config_obj.share_sftp
+    hostname = config_obj.hostname
+    username = config_obj.username
+    password = config_obj.password
+
+    sftp_obj = config_obj.sftp_obj
+
+    remote_dump = config_obj.remote_dump
+
+    if (remote_dump):
+        if (share_sftp == False):
+            ssh_client = paramiko.SSHClient()
+            ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+            ssh_client.connect(hostname=hostname,
+                               username=username, password=password)
+
+            sftp_client = ssh_client.open_sftp()
+            sftp_obj = sftp_client
+
+        with sftp_obj.open(path, 'w') as file:
+
+            pickle.dump(file_data, file)
+        if (share_sftp == False):
+            sftp_obj.close()
+            sftp_obj.close()
+
+    else:
+        with open(path, 'wb') as f:
+            pickle.dump(file_data, f)
+
 
 def update_pbar(current_pat_client_id_code, start_time, stage_int, stage_str, t, config_obj, skipped_counter=None, **n_docs_to_annotate):
-    
+
     start_time = config_obj.start_time
 
-    
     multi_process = config_obj.multi_process
     slow_execution_threshold_low = config_obj.slow_execution_threshold_low
     slow_execution_threshold_high = config_obj.slow_execution_threshold_high
     slow_execution_threshold_extreme = config_obj.slow_execution_threshold_extreme
-    
-  
-    
-    colour_val = Fore.GREEN +  Style.BRIGHT + stage_str
-    
-    if(multi_process):
-        
+
+    colour_val = Fore.GREEN + Style.BRIGHT + stage_str
+
+    if (multi_process):
+
         counter_disp = skipped_counter.value
-    
+
     else:
         counter_disp = skipped_counter
-    
-    t.set_description(f"s: {counter_disp} | {current_pat_client_id_code} | task: {colour_val} | {n_docs_to_annotate}" )
-    if((datetime.now() - start_time)>slow_execution_threshold_low):
+
+    t.set_description(
+        f"s: {counter_disp} | {current_pat_client_id_code} | task: {colour_val} | {n_docs_to_annotate}")
+    if ((datetime.now() - start_time) > slow_execution_threshold_low):
         t.colour = Fore.YELLOW
         colour_val = Fore.YELLOW + stage_str
-        t.set_description(f"s: {counter_disp} | {current_pat_client_id_code} | task: {colour_val} | {n_docs_to_annotate}" )
-        
-    elif((datetime.now() - start_time)>slow_execution_threshold_high):
-        t.colour = Fore.RED +  Style.BRIGHT
-        colour_val = Fore.RED +  Style.BRIGHT + stage_str
-        t.set_description(f"s: {counter_disp} | {current_pat_client_id_code} | task: {colour_val} | {n_docs_to_annotate}" )
-        
-    elif((datetime.now() - start_time)>slow_execution_threshold_extreme):
-        t.colour = Fore.RED +  Style.DIM
-        colour_val = Fore.RED +  Style.DIM + stage_str
-        t.set_description(f"s: {counter_disp} | {current_pat_client_id_code} | task: {colour_val} | {n_docs_to_annotate}" )
-        
+        t.set_description(
+            f"s: {counter_disp} | {current_pat_client_id_code} | task: {colour_val} | {n_docs_to_annotate}")
+
+    elif ((datetime.now() - start_time) > slow_execution_threshold_high):
+        t.colour = Fore.RED + Style.BRIGHT
+        colour_val = Fore.RED + Style.BRIGHT + stage_str
+        t.set_description(
+            f"s: {counter_disp} | {current_pat_client_id_code} | task: {colour_val} | {n_docs_to_annotate}")
+
+    elif ((datetime.now() - start_time) > slow_execution_threshold_extreme):
+        t.colour = Fore.RED + Style.DIM
+        colour_val = Fore.RED + Style.DIM + stage_str
+        t.set_description(
+            f"s: {counter_disp} | {current_pat_client_id_code} | task: {colour_val} | {n_docs_to_annotate}")
+
     else:
-        t.colour =  Fore.GREEN +  Style.DIM
-        colour_val = Fore.GREEN +  Style.DIM + stage_str
-        t.set_description(f"s: {counter_disp} | {current_pat_client_id_code} | task: {colour_val} | {n_docs_to_annotate}" )
-        
-        
+        t.colour = Fore.GREEN + Style.DIM
+        colour_val = Fore.GREEN + Style.DIM + stage_str
+        t.set_description(
+            f"s: {counter_disp} | {current_pat_client_id_code} | task: {colour_val} | {n_docs_to_annotate}")
 
     t.refresh()
-    
-    
-    
-    
-def get_demographics3_batch(patlist, target_date_range, pat_batch, config_obj = None, cohort_searcher_with_terms_and_search=None):
-    
+
+
+def get_demographics3_batch(patlist, target_date_range, pat_batch, config_obj=None, cohort_searcher_with_terms_and_search=None):
+
     batch_mode = config_obj.batch_mode
-    
-    #patlist = config_obj.patlist #is present?
 
-    
-    start_year, start_month, end_year, end_month, start_day, end_day = get_start_end_year_month(target_date_range, config_obj = config_obj)
-    
-    
-    if(batch_mode):
-        
-        demo = filter_dataframe_by_timestamp(pat_batch, start_year, start_month, end_year, end_month, start_day, end_day, 'updatetime')
+    # patlist = config_obj.patlist #is present?
 
-        
-        
+    start_year, start_month, end_year, end_month, start_day, end_day = get_start_end_year_month(
+        target_date_range, config_obj=config_obj)
+
+    if (batch_mode):
+
+        demo = filter_dataframe_by_timestamp(
+            pat_batch, start_year, start_month, end_year, end_month, start_day, end_day, 'updatetime')
+
     else:
-        demo = cohort_searcher_with_terms_and_search(index_name="epr_documents", 
-                                            fields_list=["client_idcode", "client_firstname", "client_lastname", "client_dob", "client_gendercode", "client_racecode", "client_deceaseddtm", "updatetime"], 
-                                            term_name="client_idcode.keyword", 
-                                            entered_list=patlist,
-                                            search_string= f'updatetime:[{start_year}-{start_month}-{start_day} TO {end_year}-{end_month}-{end_day}] '
-                                                )
-    
-    
+        demo = cohort_searcher_with_terms_and_search(index_name="epr_documents",
+                                                     fields_list=["client_idcode", "client_firstname", "client_lastname", "client_dob",
+                                                                  "client_gendercode", "client_racecode", "client_deceaseddtm", "updatetime"],
+                                                     term_name="client_idcode.keyword",
+                                                     entered_list=patlist,
+                                                     search_string=f'updatetime:[{start_year}-{start_month}-{start_day} TO {end_year}-{end_month}-{end_day}] '
+                                                     )
+
     demo["updatetime"] = pd.to_datetime(demo["updatetime"], utc=True)
-    demo = demo.sort_values(["client_idcode", "updatetime"]) #.drop_duplicates(subset = ["client_idcode"], keep = "last", inplace = True)
-    
-    #if more than one in the range return the nearest the end of the period
-    if(len(demo)> 1):
+    # .drop_duplicates(subset = ["client_idcode"], keep = "last", inplace = True)
+    demo = demo.sort_values(["client_idcode", "updatetime"])
+
+    # if more than one in the range return the nearest the end of the period
+    if (len(demo) > 1):
         try:
-            #print("case1")
+            # print("case1")
             return demo.tail(1)
-            #return demo.iloc[-1].to_frame()
+            # return demo.iloc[-1].to_frame()
         except Exception as e:
             print(e)
-            
-    #if only one return it        
-    elif len(demo)==1:
+
+    # if only one return it
+    elif len(demo) == 1:
         return demo
-    
-    #otherwise return only the client id
+
+    # otherwise return only the client id
     else:
         demo = pd.DataFrame(data=None, columns=None)
         demo['client_idcode'] = patlist
         return demo
-        
-        
-        
-
-
-
-
-
-
 
 
 # def list_dir_wrapper(self, path, sftp_obj=None, config_obj = None):
-    
+
 #     hostname = config_obj.hostname
-    
+
 #     username = config_obj.username
-    
+
 #     password = config_obj.password
-    
+
 #     #global sftp_client
 #     if(self.remote_dump):
 #         if(self.share_sftp == False):
@@ -354,113 +331,95 @@ def get_demographics3_batch(patlist, target_date_range, pat_batch, config_obj = 
 #             sftp_obj = sftp_client
 #         elif(sftp_obj ==None):
 #             sftp_obj = sftp_client
-            
+
 #         res = sftp_obj.listdir(path)
-        
-        
+
+
 #         return res
-        
+
 #     else:
-        
+
 #         return os.listdir(path)
 
 
-
-
-
 def get_free_gpu():
-    ## move to cogstats?
-    gpu_stats = subprocess.check_output(["nvidia-smi", "--format=csv", "--query-gpu=memory.used,memory.free"])
+    # move to cogstats?
+    gpu_stats = subprocess.check_output(
+        ["nvidia-smi", "--format=csv", "--query-gpu=memory.used,memory.free"])
     gpu_df = pd.read_csv(StringIO(gpu_stats.decode('utf-8')),
-                        names=['memory.used', 'memory.free'],
-                        skiprows=1)
+                         names=['memory.used', 'memory.free'],
+                         skiprows=1)
     print('GPU usage:\n{}'.format(gpu_df))
-    gpu_df['memory.free'] = gpu_df['memory.free'].map(lambda x: x.rstrip(' [MiB]'))
+    gpu_df['memory.free'] = gpu_df['memory.free'].map(
+        lambda x: x.rstrip(' [MiB]'))
     idx = gpu_df['memory.free'].astype(int).idxmax()
-    print('Returning GPU{} with {} free MiB'.format(idx, gpu_df.iloc[idx]['memory.free']))
+    print('Returning GPU{} with {} free MiB'.format(
+        idx, gpu_df.iloc[idx]['memory.free']))
     return int(idx), gpu_df.iloc[idx]['memory.free']
 
 
-
 def method1(self):
-    
+
     self.logger.debug("This is a debug message from your_method.")
     self.logger.warning("This is a warning message from your_method.")
 
     # Code for method1
     pass
 
+
 def method2(self):
     # Code for method2
     pass
+
 
 def __str__(self):
     return f"MyClass instance with parameters: {self.parameter1}, {self.parameter2}"
 
 
-
-import datetime as dt
-import os
-import pickle
-import subprocess
-import time
-from datetime import datetime, timedelta
-from io import StringIO
-from os.path import exists
-
-import numpy as np
-import pandas as pd
-import paramiko
-from colorama import Back, Fore, Style
-from dateutil.relativedelta import relativedelta
-from tqdm import tqdm
-
 color_bars = [Fore.RED,
-    Fore.GREEN,
-    Fore.BLUE,
-    Fore.MAGENTA,
-    Fore.YELLOW,
-    Fore.CYAN,
-    Fore.WHITE]
+              Fore.GREEN,
+              Fore.BLUE,
+              Fore.MAGENTA,
+              Fore.YELLOW,
+              Fore.CYAN,
+              Fore.WHITE]
+
 
 def list_dir_wrapper(path, config_obj=None):
-        
-        hostname = config_obj.hostname
-        
-        username = config_obj.username
-        
-        password = config_obj.password
-        
-        remote_dump = config_obj.remote_dump
-        
-        share_sftp = config_obj.share_sftp
-        
-        sftp_obj = config_obj.sftp_obj
-        
-        
-        #global sftp_client
-        if(remote_dump):
-            if(share_sftp == False):
-                ssh_client = paramiko.SSHClient()
-                ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-                ssh_client.connect(hostname=hostname, username=username, password=password)
 
-                sftp_client = ssh_client.open_sftp()
-                sftp_obj = sftp_client
-            elif(sftp_obj ==None):
-                sftp_obj = sftp_client
-                
-            res = sftp_obj.listdir(path)
-            
-            
-            return res
-            
-        else:
-            
-            return os.listdir(path)
-        
-        
-        
+    hostname = config_obj.hostname
+
+    username = config_obj.username
+
+    password = config_obj.password
+
+    remote_dump = config_obj.remote_dump
+
+    share_sftp = config_obj.share_sftp
+
+    sftp_obj = config_obj.sftp_obj
+
+    # global sftp_client
+    if (remote_dump):
+        if (share_sftp == False):
+            ssh_client = paramiko.SSHClient()
+            ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+            ssh_client.connect(hostname=hostname,
+                               username=username, password=password)
+
+            sftp_client = ssh_client.open_sftp()
+            sftp_obj = sftp_client
+        elif (sftp_obj == None):
+            sftp_obj = sftp_client
+
+        res = sftp_obj.listdir(path)
+
+        return res
+
+    else:
+
+        return os.listdir(path)
+
 
 def convert_date(date_string):
     date_string = date_string.split("T")[0]
@@ -468,20 +427,20 @@ def convert_date(date_string):
     return date_object
 
 
-
 def get_start_end_year_month(target_date_range, config_obj=None):
-    
+
     if config_obj is None:
         raise ValueError("config_obj cannot be None")
-    
+
     time_window_interval_delta = config_obj.time_window_interval_delta
-    
-    start_year, start_month, start_day = target_date_range[0], target_date_range[1], target_date_range[2]
-    
+
+    start_year, start_month, start_day = target_date_range[
+        0], target_date_range[1], target_date_range[2]
+
     start_date = dt.date(start_year, start_month, start_day)
-    #end_date = start_date + dt.timedelta(days=n)
+    # end_date = start_date + dt.timedelta(days=n)
     end_date = start_date + time_window_interval_delta
-    
+
     return (
         start_date.year,
         start_date.month,
@@ -491,60 +450,56 @@ def get_start_end_year_month(target_date_range, config_obj=None):
         end_date.day
     )
 
+
 def get_empty_date_vector(config_obj):
 
-    #start date. Other days are for duration of time window
-    
+    # start date. Other days are for duration of time window
+
     start_date = config_obj.start_date
-    
-    
-    
+
     years = config_obj.years
     months = config_obj.months
     days = config_obj.days
-    
+
     interval_window_delta = config_obj.time_window_interval_delta
-    
-    
-    combinations = generate_date_list(start_date, years, months, days, interval_window_delta, lookback = config_obj.lookback)
-    
-    combinations = [str(item) + '_' + 'date_time_stamp' for item in combinations]
-    
-    return pd.DataFrame(data=0.0, index=np.arange(1), columns = combinations).astype(float) #untested float cast
 
+    combinations = generate_date_list(
+        start_date, years, months, days, interval_window_delta, lookback=config_obj.lookback)
 
+    combinations = [
+        str(item) + '_' + 'date_time_stamp' for item in combinations]
 
+    # untested float cast
+    return pd.DataFrame(data=0.0, index=np.arange(1), columns=combinations).astype(float)
 
-    
 
 # def get_demographics3_batch(patlist, target_date_range, pat_batch, config_obj = None, cohort_searcher_with_terms_and_search=None):
-    
+
 #     batch_mode = config_obj.batch_mode
-    
+
 #     #patlist = config_obj.patlist #is present?
 
-    
+
 #     start_year, start_month, end_year, end_month, start_day, end_day = get_start_end_year_month(target_date_range)
-    
-    
+
+
 #     if(batch_mode):
-        
+
 #         demo = filter_dataframe_by_timestamp(pat_batch, start_year, start_month, end_year, end_month, start_day, end_day, 'updatetime')
 
-        
-        
+
 #     else:
-#         demo = cohort_searcher_with_terms_and_search(index_name="epr_documents", 
-#                                             fields_list=["client_idcode", "client_firstname", "client_lastname", "client_dob", "client_gendercode", "client_racecode", "client_deceaseddtm", "updatetime"], 
-#                                             term_name="client_idcode.keyword", 
+#         demo = cohort_searcher_with_terms_and_search(index_name="epr_documents",
+#                                             fields_list=["client_idcode", "client_firstname", "client_lastname", "client_dob", "client_gendercode", "client_racecode", "client_deceaseddtm", "updatetime"],
+#                                             term_name="client_idcode.keyword",
 #                                             entered_list=patlist,
 #                                             search_string= f'updatetime:[{start_year}-{start_month}-{start_day} TO {end_year}-{end_month}-{end_day}] '
 #                                                 )
-    
-    
+
+
 #     demo["updatetime"] = pd.to_datetime(demo["updatetime"], utc=True)
 #     demo = demo.sort_values(["client_idcode", "updatetime"]) #.drop_duplicates(subset = ["client_idcode"], keep = "last", inplace = True)
-    
+
 #     #if more than one in the range return the nearest the end of the period
 #     if(len(demo)> 1):
 #         try:
@@ -553,114 +508,103 @@ def get_empty_date_vector(config_obj):
 #             #return demo.iloc[-1].to_frame()
 #         except Exception as e:
 #             print(e)
-            
-#     #if only one return it        
+
+#     #if only one return it
 #     elif len(demo)==1:
 #         return demo
-    
+
 #     #otherwise return only the client id
 #     else:
 #         demo = pd.DataFrame(data=None, columns=None)
 #         demo['client_idcode'] = patlist
 #         return demo
-        
-        
-        
-
 
 
 def sftp_exists(path, config_obj=None):
-        
-        hostname = config_obj.hostname
-        
-        username = config_obj.username
-        
-        password = config_obj.password
-        
-        sftp_obj = config_obj.sftp_obj
-        
-        share_sftp = config_obj.share_sftp
-        
-        try:
-            if(share_sftp == False):
-                ssh_client = paramiko.SSHClient()
-                ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-                ssh_client.connect(hostname=hostname, username=username, password=password)
 
-                sftp_obj = ssh_client.open_sftp()
-            
-            sftp_obj.stat(path)
-            
-            if(share_sftp == False):
-                sftp_obj.close()
-                sftp_obj.close()
-            return True
-        except FileNotFoundError:
-            return False
-
-
-
-
-
-
-
-def list_dir_wrapper(path, config_obj = None):
-    
     hostname = config_obj.hostname
-    
+
     username = config_obj.username
-    
+
     password = config_obj.password
-    
+
     sftp_obj = config_obj.sftp_obj
-    
-    remote_dump = config_obj.remote_dump
-    
+
     share_sftp = config_obj.share_sftp
-    
-    #global sftp_client
-    if(remote_dump):
-        if(share_sftp == False):
+
+    try:
+        if (share_sftp == False):
             ssh_client = paramiko.SSHClient()
             ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-            ssh_client.connect(hostname=hostname, username=username, password=password)
+            ssh_client.connect(hostname=hostname,
+                               username=username, password=password)
+
+            sftp_obj = ssh_client.open_sftp()
+
+        sftp_obj.stat(path)
+
+        if (share_sftp == False):
+            sftp_obj.close()
+            sftp_obj.close()
+        return True
+    except FileNotFoundError:
+        return False
+
+
+def list_dir_wrapper(path, config_obj=None):
+
+    hostname = config_obj.hostname
+
+    username = config_obj.username
+
+    password = config_obj.password
+
+    sftp_obj = config_obj.sftp_obj
+
+    remote_dump = config_obj.remote_dump
+
+    share_sftp = config_obj.share_sftp
+
+    # global sftp_client
+    if (remote_dump):
+        if (share_sftp == False):
+            ssh_client = paramiko.SSHClient()
+            ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+            ssh_client.connect(hostname=hostname,
+                               username=username, password=password)
 
             sftp_client = ssh_client.open_sftp()
             sftp_obj = sftp_client
-        elif(sftp_obj ==None):
+        elif (sftp_obj == None):
             sftp_obj = sftp_client
-            
+
         res = sftp_obj.listdir(path)
-        
-        
+
         return res
-        
+
     else:
-        
+
         return os.listdir(path)
 
 
-
-
-
 def exist_check(path, config_obj=None):
-    
-    
+
     sftp_obj = config_obj.sftp_obj
     remote_dump = config_obj.remote_dump
-    
-    if(remote_dump):
+
+    if (remote_dump):
         return sftp_exists(path, config_obj)
     else:
         return exists(path)
-    
+
+
 def check_sftp_connection(self, remote_directory, config_obj):
-    
+
     hostname = config_obj.hostname
     port = config_obj.port
     username = config_obj.username
     password = config_obj.password
-    
+
     try:
         # Create an SSH client
         ssh = paramiko.SSHClient()
@@ -676,7 +620,8 @@ def check_sftp_connection(self, remote_directory, config_obj):
 
         # Check if the connection is successful by listing the remote directory
         remote_directory = sftp.listdir()
-        print(f"Connection successful. Remote directory contents: {remote_directory}")
+        print(
+            f"Connection successful. Remote directory contents: {remote_directory}")
 
         # Close the SFTP session and the SSH connection
         sftp.close()
@@ -684,43 +629,41 @@ def check_sftp_connection(self, remote_directory, config_obj):
 
     except Exception as e:
         print(f"Error: {e}")
-    
-    
+
 
 def get_free_gpu():
-    ## move to cogstats?
-    gpu_stats = subprocess.check_output(["nvidia-smi", "--format=csv", "--query-gpu=memory.used,memory.free"])
+    # move to cogstats?
+    gpu_stats = subprocess.check_output(
+        ["nvidia-smi", "--format=csv", "--query-gpu=memory.used,memory.free"])
     gpu_df = pd.read_csv(StringIO(gpu_stats.decode('utf-8')),
-                        names=['memory.used', 'memory.free'],
-                        skiprows=1)
+                         names=['memory.used', 'memory.free'],
+                         skiprows=1)
     print('GPU usage:\n{}'.format(gpu_df))
-    gpu_df['memory.free'] = gpu_df['memory.free'].map(lambda x: x.rstrip(' [MiB]'))
+    gpu_df['memory.free'] = gpu_df['memory.free'].map(
+        lambda x: x.rstrip(' [MiB]'))
     idx = gpu_df['memory.free'].astype(int).idxmax()
-    print('Returning GPU{} with {} free MiB'.format(idx, gpu_df.iloc[idx]['memory.free']))
+    print('Returning GPU{} with {} free MiB'.format(
+        idx, gpu_df.iloc[idx]['memory.free']))
     return int(idx), gpu_df.iloc[idx]['memory.free']
 
 
-
-
-
-
-
 def method1(self):
-    
+
     self.logger.debug("This is a debug message from your_method.")
     self.logger.warning("This is a warning message from your_method.")
 
     # Code for method1
     pass
 
+
 def method2(self):
     # Code for method2
     pass
 
+
 def __str__(self):
     return f"MyClass instance with parameters: {self.parameter1}, {self.parameter2}"
-        
-        
+
 
 def write_remote(path, csv_file, config_obj=None):
     """
@@ -750,7 +693,8 @@ def write_remote(path, csv_file, config_obj=None):
     else:
         ssh_client = paramiko.SSHClient()
         ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        ssh_client.connect(hostname=hostname, username=username, password=password)
+        ssh_client.connect(hostname=hostname,
+                           username=username, password=password)
         sftp_client = ssh_client.open_sftp()
         sftp_obj = sftp_client
 
@@ -782,9 +726,8 @@ def write_csv_wrapper(path, csv_file_data=None, config_obj=None):
     else:
         # Write data remotely using a custom function (write_remote)
         write_remote(path, csv_file_data, config_obj=config_obj)
-            
-        
-    
+
+
 def read_remote(path, config_obj=None):
     """
     Read a remote CSV file using SFTP or SSH and return a Pandas DataFrame.
@@ -812,7 +755,8 @@ def read_remote(path, config_obj=None):
     else:
         ssh_client = paramiko.SSHClient()
         ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        ssh_client.connect(hostname=hostname, username=username, password=password)
+        ssh_client.connect(hostname=hostname,
+                           username=username, password=password)
         sftp_client = ssh_client.open_sftp()
         sftp_obj = sftp_client
 
@@ -850,8 +794,6 @@ def read_csv_wrapper(path, config_obj=None):
 
     return df
 
-    
-
 
 def create_local_folders(config_obj=None):
     """
@@ -865,16 +807,14 @@ def create_local_folders(config_obj=None):
     None
     """
     project_name = config_obj.project_name
-    
+
     root_path = config_obj.root_path
-    
-    
-    
-    
+
     pat_doc_folder_path = root_path + "/" + project_name + "/pat_docs/"
     Path(pat_doc_folder_path).mkdir(parents=True, exist_ok=True)
 
-    pat_doc_annot_vec_folder_path = root_path + "/" + project_name + "/pat_docs_annot_vecs/"
+    pat_doc_annot_vec_folder_path = root_path + \
+        "/" + project_name + "/pat_docs_annot_vecs/"
     Path(pat_doc_annot_vec_folder_path).mkdir(parents=True, exist_ok=True)
 
 
@@ -894,8 +834,7 @@ def create_remote_folders(config_obj=None):
     """
     root_path = config_obj.root_path
     project_name = config_obj.proj_name
-    
-    
+
     if config_obj is None:
         raise ValueError("Config object cannot be None.")
 
@@ -909,30 +848,31 @@ def create_remote_folders(config_obj=None):
     else:
         ssh_client = paramiko.SSHClient()
         ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        ssh_client.connect(hostname=hostname, username=username, password=password)
+        ssh_client.connect(hostname=hostname,
+                           username=username, password=password)
         sftp_client = ssh_client.open_sftp()
         sftp_obj = sftp_client
 
     pat_doc_folder_path = root_path + "/" + project_name + "/pat_docs/"
-    pat_doc_annot_vec_folder_path = root_path + "/" + project_name + "/pat_docs_annot_vecs/"
+    pat_doc_annot_vec_folder_path = root_path + \
+        "/" + project_name + "/pat_docs_annot_vecs/"
 
-    
     try:
         # Create the remote directory if it doesn't exist
         sftp_obj.stat(pat_doc_folder_path)
     except FileNotFoundError:
         sftp_obj.mkdir(pat_doc_folder_path)
-        
+
     try:
         # Create the remote directory if it doesn't exist
         sftp_obj.stat(pat_doc_annot_vec_folder_path)
     except FileNotFoundError:
         sftp_obj.mkdir(pat_doc_annot_vec_folder_path)
-    
 
     if not share_sftp:
         sftp_obj.close()
         ssh_client.close()
+
 
 def create_folders_annot_csv_wrapper(config_obj=None):
     """
@@ -951,8 +891,7 @@ def create_folders_annot_csv_wrapper(config_obj=None):
     """
     root_path = config_obj.root_path
     project_name = config_obj.proj_name
-    
-    
+
     # Create folders
     if not config_obj or not config_obj.remote_dump:
         # Create local folders
@@ -962,10 +901,8 @@ def create_folders_annot_csv_wrapper(config_obj=None):
         create_remote_folders(config_obj=config_obj)
 
 
-
-
 def filter_stripped_list(stripped_list, config_obj=None):
-    
+
     strip_list = config_obj.strip_list
     remote_dump = config_obj.remote_dump
     hostname = config_obj.hostname
@@ -973,16 +910,16 @@ def filter_stripped_list(stripped_list, config_obj=None):
     password = config_obj.password
     current_pat_lines_path = config_obj.current_pat_lines_path
     n_pat_lines = config_obj.n_pat_lines
-    
-    
+
     if strip_list:
-        #stripped_list_start_copy = stripped_list.copy()
+        # stripped_list_start_copy = stripped_list.copy()
         container_list = []
 
         if remote_dump:
             ssh_client = paramiko.SSHClient()
             ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-            ssh_client.connect(hostname=hostname, username=username, password=password)
+            ssh_client.connect(hostname=hostname,
+                               username=username, password=password)
 
             sftp_client = ssh_client.open_sftp()
 
@@ -993,7 +930,7 @@ def filter_stripped_list(stripped_list, config_obj=None):
                 except:
                     pass
         else:
-            if(config_obj.verbosity>0):
+            if (config_obj.verbosity > 0):
                 print("Stripping list...")
             for i in tqdm(range(len(stripped_list))):
                 if len(list_dir_wrapper(current_pat_lines_path + stripped_list[i], config_obj=config_obj)) >= n_pat_lines:
@@ -1001,7 +938,7 @@ def filter_stripped_list(stripped_list, config_obj=None):
 
         stripped_list_start = container_list.copy()
         stripped_list = container_list.copy()
-        
+
         if remote_dump:
             sftp_client.close()
             ssh_client.close()
@@ -1013,7 +950,6 @@ def filter_stripped_list(stripped_list, config_obj=None):
 
 # Example usage:
 # stripped_list, stripped_list_start = filter_stripped_list(your_stripped_list, strip_list=True, remote_dump=True, hostname="your_host", username="your_username", password="your_password", current_pat_lines_path="your_path", n_pat_lines=your_n)
-
 
 
 # def create_folders(all_patient_list, config_obj=None):
@@ -1050,9 +986,9 @@ def create_folders(all_patient_list, config_obj=None):
             if not os.path.exists(folder_path):
                 os.makedirs(folder_path)
     if config_obj.verbosity > 0:
-                print(f"Folders created: {current_pat_lines_path}...") 
-                
-                
+        print(f"Folders created: {current_pat_lines_path}...")
+
+
 def create_folders_for_pat(patient_id, config_obj=None):
     """
     Create folders for a single patient in the specified paths.
@@ -1075,9 +1011,8 @@ def create_folders_for_pat(patient_id, config_obj=None):
             os.makedirs(folder_path)
 
     if config_obj.verbosity > 0:
-        print(f"Folders created for patient {patient_id}: {current_pat_lines_path}...")
-            
-                    
+        print(
+            f"Folders created for patient {patient_id}: {current_pat_lines_path}...")
 
 
 def convert_date(date_string):
@@ -1100,33 +1035,41 @@ def add_offset_column(dataframe, start_column_name, offset_column_name, time_off
     - None (modifies the input DataFrame in place)
     """
     # Drop rows with NaN values in the start_column_name
-    #dataframe.dropna(subset=[start_column_name], inplace=True)
+    # dataframe.dropna(subset=[start_column_name], inplace=True)
 
     # Reset the index after dropping rows
-    #dataframe.reset_index(drop=True, inplace=True)
-    
-    #dataframe[start_column_name].dropna(inplace=True)
-    
-    #print(dataframe[start_column_name])
+    # dataframe.reset_index(drop=True, inplace=True)
 
-    #print(dataframe[start_column_name].dtype)
+    # dataframe[start_column_name].dropna(inplace=True)
 
-    #attempt to fix human time stamp inconsistencies:
-    dataframe[start_column_name] = pd.to_datetime(dataframe[start_column_name].astype(str), infer_datetime_format=True, format='%d/%m/%y %H.%M.%S')
+    # print(dataframe[start_column_name])
 
-    #cast back to str for parser
+    # print(dataframe[start_column_name].dtype)
+
+    try:
+        # attempt to fix human time stamp inconsistencies:
+        dataframe[start_column_name] = pd.to_datetime(dataframe[start_column_name].astype(
+            str), infer_datetime_format=True, format='%d/%m/%y %H.%M.%S')
+    except:
+        dataframe[start_column_name] = pd.to_datetime(dataframe[start_column_name].astype(
+            str), infer_datetime_format=True, format='mixed')
+
+    # cast back to str for parser
     dataframe[start_column_name] = dataframe[start_column_name].astype(str)
-    
+
     # Attempt to parse datetime using dateutil.parser.parse
     try:
-        dataframe[start_column_name + "_converted"] = dataframe[start_column_name].apply(lambda x: parse(x, fuzzy=True))
+        dataframe[start_column_name + "_converted"] = dataframe[start_column_name].apply(
+            lambda x: parse(x, fuzzy=True))
     except ValueError:
         # Fallback to specified format if parsing fails
-        dataframe[start_column_name + "_converted"] = pd.to_datetime(dataframe[start_column_name], format='%m/%d/%y %H.%M.%S', errors='coerce')
+        dataframe[start_column_name + "_converted"] = pd.to_datetime(
+            dataframe[start_column_name], format='%m/%d/%y %H.%M.%S', errors='coerce')
 
     # Ensure the start column is now in datetime format
     if not pd.api.types.is_datetime64_any_dtype(dataframe[start_column_name + "_converted"]):
-        raise ValueError(f"Column '{start_column_name}_converted' does not exist or cannot be converted to datetime format.")
+        raise ValueError(
+            f"Column '{start_column_name}_converted' does not exist or cannot be converted to datetime format.")
 
     # Define a function to apply the offset individually to each element
     def apply_offset(dt):
@@ -1136,11 +1079,13 @@ def add_offset_column(dataframe, start_column_name, offset_column_name, time_off
             return dt
 
     # Apply the offset function to create the new column
-    dataframe[offset_column_name] = dataframe[start_column_name + "_converted"].apply(apply_offset)
+    dataframe[offset_column_name] = dataframe[start_column_name +
+                                              "_converted"].apply(apply_offset)
 
     return dataframe
 
-#add_offset_column(df, 'ADMISSION_DTTM', offset_column_name, time_offset)
+# add_offset_column(df, 'ADMISSION_DTTM', offset_column_name, time_offset)
+
 
 def build_patient_dict(dataframe, patient_id_column, start_column, end_column):
     """
@@ -1169,4 +1114,4 @@ def build_patient_dict(dataframe, patient_id_column, start_column, end_column):
 
     return patient_dict
 
-    #patient_dict = build_patient_dict(df, 'PATIENT_ID', 'ADMISSION_DTTM_converted', 'ADMISSION_DTTM_offset')
+    # patient_dict = build_patient_dict(df, 'PATIENT_ID', 'ADMISSION_DTTM_converted', 'ADMISSION_DTTM_offset')
