@@ -1,3 +1,4 @@
+import warnings
 from typing import Union
 import os
 import pandas as pd
@@ -5,7 +6,8 @@ from tqdm import tqdm
 import shutil
 from pat2vec.util.post_processing import remove_file_from_paths
 
-def retrieve_pat_annotations(current_pat_client_idcode: str, config_obj= None) -> pd.DataFrame:
+
+def retrieve_pat_annotations(current_pat_client_idcode: str, config_obj=None) -> pd.DataFrame:
     """
     Concatenates data from two CSV files (EPR and MCT) into a single dataframe.
     Maps values from 'observationdocument_recordeddtm' to a new column 'updatetime' in the MCT dataframe.
@@ -18,8 +20,10 @@ def retrieve_pat_annotations(current_pat_client_idcode: str, config_obj= None) -
     pd.DataFrame: Concatenated dataframe with the 'updatetime' column added.
     """
     # Specify the file paths
-    current_pat_docs_epr = os.path.join(config_obj.pre_document_annotation_batch_path, current_pat_client_idcode + '.csv')
-    current_pat_docs_mct = os.path.join(config_obj.pre_document_annotation_batch_path_mct, current_pat_client_idcode + '.csv')
+    current_pat_docs_epr = os.path.join(
+        config_obj.pre_document_annotation_batch_path, current_pat_client_idcode + '.csv')
+    current_pat_docs_mct = os.path.join(
+        config_obj.pre_document_annotation_batch_path_mct, current_pat_client_idcode + '.csv')
 
     # Read CSV files into dataframes
     df_epr = pd.read_csv(current_pat_docs_epr)
@@ -27,7 +31,8 @@ def retrieve_pat_annotations(current_pat_client_idcode: str, config_obj= None) -
 
     # Check if 'updatetime' column exists in df_mct, if not, create it and map values
     if 'updatetime' not in df_mct.columns:
-        df_mct['updatetime'] = df_mct['observationdocument_recordeddtm'].map(lambda x: pd.to_datetime(x, errors='coerce'))
+        df_mct['updatetime'] = df_mct['observationdocument_recordeddtm'].map(
+            lambda x: pd.to_datetime(x, errors='coerce'))
 
     # Concatenate dataframes
     result_df = pd.concat([df_epr, df_mct], axis=0, ignore_index=True)
@@ -58,9 +63,7 @@ def copy_project_folders_with_substring_match(pat2vec_obj, substrings_to_match=N
             shutil.copytree(src_path, dest_path)
 
     print("Folders copied successfully.")
-    
 
-import warnings
 
 def check_csv_integrity(file_path, verbosity=0, delete_broken=False):
     try:
@@ -104,18 +107,18 @@ def check_csv_integrity(file_path, verbosity=0, delete_broken=False):
             remove_file_from_paths(filename)
             print(f"Deleted broken file: {filename} : {file_path}")
 
-
     except FileNotFoundError:
         warning_message = f"File not found: {file_path}"
         warnings.warn(warning_message, UserWarning)
 
-from tqdm import tqdm
 
 def check_csv_files_in_directory(directory, verbosity=0, ignore_outputs=True, ignore_output_vectors=True, delete_broken=False):
-    total_files = sum(1 for _ in os.walk(directory) for _ in os.listdir(directory))
+    total_files = sum(1 for _ in os.walk(directory)
+                      for _ in os.listdir(directory))
 
     # Initialize tqdm progrcommitess bar
-    progress_bar = tqdm(total=total_files, unit="file", desc=f"Checking CSV files in {directory}")
+    progress_bar = tqdm(total=total_files, unit="file",
+                        desc=f"Checking CSV files in {directory}")
 
     for root, dirs, files in os.walk(directory):
         for file in files:
@@ -125,12 +128,9 @@ def check_csv_files_in_directory(directory, verbosity=0, ignore_outputs=True, ig
             if ignore_output_vectors and 'current_pat_lines_parts' in file_path.lower():
                 continue  # Skip files with 'current_pat_lines_parts' in the path
             if file_path.lower().endswith('.csv'):
-                progress_bar.set_description(f"Checking CSV integrity for: {file_path}")
+                progress_bar.set_description(
+                    f"Checking CSV integrity for: {file_path}")
                 check_csv_integrity(file_path, verbosity, delete_broken)
                 progress_bar.update(1)
 
     progress_bar.close()
-
-
-
-

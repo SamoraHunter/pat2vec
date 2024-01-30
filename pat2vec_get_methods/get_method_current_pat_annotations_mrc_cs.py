@@ -60,7 +60,7 @@ def get_current_pat_annotations_mrc_cs(current_pat_client_id_code, target_date_r
                 p_bar_entry, t, config_obj, config_obj.skipped_counter)
 
     start_year, start_month, end_year, end_month, start_day, end_day = get_start_end_year_month(
-        target_date_range, config_obj = config_obj)
+        target_date_range, config_obj=config_obj)
 
     # display(batch_epr_docs_annotations)
 

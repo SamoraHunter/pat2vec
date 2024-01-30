@@ -23,7 +23,7 @@ def get_smoking(current_pat_client_id_code, target_date_range, pat_batch, config
     batch_mode = config_obj.batch_mode
 
     start_year, start_month, end_year, end_month, start_day, end_day = get_start_end_year_month(
-        target_date_range, config_obj = config_obj)
+        target_date_range, config_obj=config_obj)
     search_term = 'CORE_SmokingStatus'
 
     # Filtering data based on batch mode or cohort search

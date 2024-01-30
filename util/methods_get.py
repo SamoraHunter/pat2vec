@@ -1034,17 +1034,6 @@ def add_offset_column(dataframe, start_column_name, offset_column_name, time_off
     Returns:
     - None (modifies the input DataFrame in place)
     """
-    # Drop rows with NaN values in the start_column_name
-    # dataframe.dropna(subset=[start_column_name], inplace=True)
-
-    # Reset the index after dropping rows
-    # dataframe.reset_index(drop=True, inplace=True)
-
-    # dataframe[start_column_name].dropna(inplace=True)
-
-    # print(dataframe[start_column_name])
-
-    # print(dataframe[start_column_name].dtype)
 
     try:
         # attempt to fix human time stamp inconsistencies:
