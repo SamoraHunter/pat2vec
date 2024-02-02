@@ -820,23 +820,36 @@ def build_ipw_dataframe(annot_filter_arguments=None, filter_codes=None, config_o
 
         res = get_pat_ipw_record(current_pat_idcode=pat, annot_filter_arguments=None,
                                  filter_codes=filter_codes, config_obj=config_obj)
-
         df = pd.concat([df, res], ignore_index=True)
 
     return df
 
 
-def retrieve_pat_annots_mct_epr(client_idcode, config_obj, merge_time_columns=True):
+def retrieve_pat_annots_mct_epr(client_idcode, config_obj, columns_epr=None, columns_mct=None, merge_time_columns=True):
     pre_document_annotation_batch_path = config_obj.pre_document_annotation_batch_path
     pre_document_annotation_batch_path_mct = config_obj.pre_document_annotation_batch_path_mct
 
-    dfa = pd.read_csv(f'{pre_document_annotation_batch_path}/{client_idcode}.csv')
-    dfa_mct = pd.read_csv(f'{pre_document_annotation_batch_path_mct}/{client_idcode}.csv')
+    dfa = pd.read_csv(
+        f'{pre_document_annotation_batch_path}/{client_idcode}.csv', usecols=columns_epr)
+
+    dfa_mct = pd.read_csv(
+        f'{pre_document_annotation_batch_path_mct}/{client_idcode}.csv', usecols=columns_mct)
 
     all_annots = pd.concat([dfa, dfa_mct], ignore_index=True)
 
     if merge_time_columns:
-        all_annots['updatetime'] = all_annots['updatetime'].fillna(all_annots['observationdocument_recordeddtm'])
-        all_annots['observationdocument_recordeddtm'] = all_annots['observationdocument_recordeddtm'].fillna(all_annots['updatetime'])
+        all_annots['updatetime'] = all_annots['updatetime'].fillna(
+            all_annots['observationdocument_recordeddtm'])
+        all_annots['observationdocument_recordeddtm'] = all_annots['observationdocument_recordeddtm'].fillna(
+            all_annots['updatetime'])
 
     return all_annots
+
+
+def check_list_presence(df, column, lst):
+    str_lst = list(map(str, lst))  # Convert elements to strings
+    return any(df[column].astype(str).str.contains('|'.join(str_lst), case=False, na=False))
+
+
+# Check if at least one element from each list is present in the 'cui' column
+# result = all(check_list_presence(all_annots, 'cui', lst) for lst in n_lists)
