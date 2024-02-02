@@ -824,3 +824,19 @@ def build_ipw_dataframe(annot_filter_arguments=None, filter_codes=None, config_o
         df = pd.concat([df, res], ignore_index=True)
 
     return df
+
+
+def retrieve_pat_annots_mct_epr(client_idcode, config_obj, merge_time_columns=True):
+    pre_document_annotation_batch_path = config_obj.pre_document_annotation_batch_path
+    pre_document_annotation_batch_path_mct = config_obj.pre_document_annotation_batch_path_mct
+
+    dfa = pd.read_csv(f'{pre_document_annotation_batch_path}/{client_idcode}.csv')
+    dfa_mct = pd.read_csv(f'{pre_document_annotation_batch_path_mct}/{client_idcode}.csv')
+
+    all_annots = pd.concat([dfa, dfa_mct], ignore_index=True)
+
+    if merge_time_columns:
+        all_annots['updatetime'] = all_annots['updatetime'].fillna(all_annots['observationdocument_recordeddtm'])
+        all_annots['observationdocument_recordeddtm'] = all_annots['observationdocument_recordeddtm'].fillna(all_annots['updatetime'])
+
+    return all_annots
