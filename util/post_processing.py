@@ -846,7 +846,11 @@ def retrieve_pat_annots_mct_epr(client_idcode, config_obj, columns_epr=None, col
     return all_annots
 
 
-def check_list_presence(df, column, lst):
+def check_list_presence(df, column, lst, annot_filter_arguments=None):
+
+    if annot_filter_arguments is not None:
+        df = filter_annot_dataframe2(df, annot_filter_arguments)
+
     str_lst = list(map(str, lst))  # Convert elements to strings
     return any(df[column].astype(str).str.contains('|'.join(str_lst), case=False, na=False))
 
