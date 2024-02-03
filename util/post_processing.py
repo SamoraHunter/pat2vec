@@ -8,6 +8,7 @@ from IPython.display import display
 from tqdm import tqdm
 import shutil
 from typing import Optional, Union, Dict, List
+from itertools import chain
 
 
 sys.path.insert(0, '/home/aliencat/samora/gloabl_files')
@@ -857,3 +858,47 @@ def check_list_presence(df, column, lst, annot_filter_arguments=None):
 
 # Check if at least one element from each list is present in the 'cui' column
 # result = all(check_list_presence(all_annots, 'cui', lst) for lst in n_lists)
+
+def filter_dataframe_n_lists(df, column_name, n_lists):
+    # Create a mask for each list in n_lists
+    masks = [df[column_name].isin(lst) for lst in n_lists]
+
+    # Combine masks with logical AND to get the final mask
+    final_mask = pd.concat(masks, axis=1).all(axis=1)
+
+    # Apply the mask to the DataFrame
+    filtered_df = df[final_mask]
+
+    return filtered_df
+
+
+def get_all_target_annots(all_pat_list, n_lists, config_obj=None, annot_filter_arguments=None):
+    results_df = pd.DataFrame()
+
+    for sublist in n_lists:
+        for i, element in enumerate(sublist):
+            sublist[i] = int(element)
+
+    for i in tqdm(range(0, len(all_pat_list)), total=len(all_pat_list)):
+
+        current_pat_idcode = all_pat_list[i]
+
+        all_annots = retrieve_pat_annots_mct_epr(
+            current_pat_idcode, config_obj)
+
+        all_annots.dropna(subset='acc', inplace=True)
+
+        if annot_filter_arguments is not None:
+            all_annots = filter_annot_dataframe2(
+                all_annots, annot_filter_arguments)
+
+        annots_to_return = filter_dataframe_n_lists(all_annots, 'cui', n_lists)
+
+        if annots_to_return:
+            filtered_df = all_annots[all_annots['cui'].isin(
+                list(chain(*n_lists)))]
+            results_df = pd.concat([results_df, filtered_df])
+
+    results_df.to_csv('all_target_annots.csv')
+
+    return results_df
