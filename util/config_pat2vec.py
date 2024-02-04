@@ -10,7 +10,6 @@ from dateutil.relativedelta import relativedelta
 from IPython.display import display
 
 from pat2vec.util.current_pat_batch_path_methods import PathsClass
-
 from pat2vec.util.methods_get import (add_offset_column, build_patient_dict,
                                       generate_date_list)
 
