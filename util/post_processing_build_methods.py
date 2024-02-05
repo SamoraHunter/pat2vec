@@ -99,3 +99,5 @@ def build_merged_epr_mct_annot_df(all_pat_list, config_obj):
             # Append each result to the output file
             all_annots.to_csv(output_file_path, mode='a',
                               header=False, index=False)
+
+    return output_file_path
