@@ -363,7 +363,8 @@ class config_class:
             # self.treatment_doc_filename = 'test_files/' + \
             #     treatment_doc_filename
 
-            self.treatment_doc_filename = fr'{os.getcwd()}\test_files\treatment_docs.csv'
+            #self.treatment_doc_filename = fr'{os.getcwd()}\test_files\treatment_docs.csv'
+            self.treatment_doc_filename = os.path.join(os.getcwd(), 'test_files', 'treatment_docs.csv')
 
         if (self.remote_dump == False):
             self.sftp_obj = None

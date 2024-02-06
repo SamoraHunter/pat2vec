@@ -6,6 +6,7 @@ from faker import Faker
 
 fake = Faker()
 
+#pending implementation of other data sources/ orders index etc..
 
 def generate_epr_documents_data(num_rows, entered_list, global_start_year, global_start_month, global_end_year, global_end_month):
     """
@@ -113,7 +114,11 @@ def generate_observations_data(num_rows, entered_list, global_start_year, global
             random.randint(0, 59),
             random.randint(0, 59)
         ) for _ in range(num_rows)],
-        'clientvisit_visitidcode': [f'visit_{i}' for i in range(num_rows)]
+        'clientvisit_visitidcode': [f'visit_{i}' for i in range(num_rows)],
+        '_id': ['{i}' for i in range(num_rows)],
+        '_index': ['{np.nan}' for i in range(num_rows)],
+        '_score' : ['{np.nan}' for i in range(num_rows)]
+        
     }
 
     df = pd.DataFrame(data)
@@ -135,6 +140,7 @@ def generate_basic_observations_data(num_rows, entered_list, global_start_year, 
     Returns:
     - pd.DataFrame: Generated DataFrame with specified columns.
     """
+    print("generate_basic_observations_data")
     current_pat_client_id_code = random.choice(entered_list)
 
     data = {
@@ -149,8 +155,20 @@ def generate_basic_observations_data(num_rows, entered_list, global_start_year, 
             random.randint(0, 59),
             random.randint(0, 59)
         ) for _ in range(num_rows)],
-        'clientvisit_serviceguid': [f'service_{i}' for i in range(num_rows)]
+        'clientvisit_serviceguid': [f'service_{i}' for i in range(num_rows)],
+        '_id': ['{i}' for i in range(num_rows)],
+        '_index': ['{np.nan}' for i in range(num_rows)],
+        '_score' : ['{np.nan}' for i in range(num_rows)],
+        'order_guid' : ['{np.nan}' for i in range(num_rows)],
+        'order_name' : ['{np.nan}' for i in range(num_rows)],
+        'order_summaryline' : ['{np.nan}' for i in range(num_rows)],
+        'order_holdreasontext' : ['{np.nan}' for i in range(num_rows)],
+        'order_entered' : ['{np.nan}' for i in range(num_rows)],
+        'clientvisit_visitidcode' : ['{np.nan}' for i in range(num_rows)],
+        
+        
     }
+    
 
     df = pd.DataFrame(data)
     return df
