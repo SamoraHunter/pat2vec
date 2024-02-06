@@ -1,9 +1,0 @@
-,client_idcode,basicobs_itemname_analysed,basicobs_value_numeric,basicobs_entered,clientvisit_serviceguid,_id,_index,_score,order_guid,order_name,order_summaryline,order_holdreasontext,order_entered,clientvisit_visitidcode
-0,D3232DUM23,staff,13.402394817657026,2023-01-18 00:49:55,service_0,{i},{np.nan},{np.nan},{np.nan},{np.nan},{np.nan},{np.nan},{np.nan},{np.nan}
-1,D3232DUM23,time describe,1.5452347196499727,2021-01-27 19:09:41,service_1,{i},{np.nan},{np.nan},{np.nan},{np.nan},{np.nan},{np.nan},{np.nan},{np.nan}
-2,D3232DUM23,court hour,14.159429553301488,2020-01-25 08:14:31,service_2,{i},{np.nan},{np.nan},{np.nan},{np.nan},{np.nan},{np.nan},{np.nan},{np.nan}
-3,D3232DUM23,degree,8.986020033304655,2020-01-08 10:33:32,service_3,{i},{np.nan},{np.nan},{np.nan},{np.nan},{np.nan},{np.nan},{np.nan},{np.nan}
-4,D3232DUM23,approach,90.45880347636665,2020-01-25 10:41:14,service_4,{i},{np.nan},{np.nan},{np.nan},{np.nan},{np.nan},{np.nan},{np.nan},{np.nan}
-5,D3232DUM23,do,57.54670466942641,2020-01-08 16:47:00,service_5,{i},{np.nan},{np.nan},{np.nan},{np.nan},{np.nan},{np.nan},{np.nan},{np.nan}
-6,D3232DUM23,between know,72.74312653107727,2020-01-05 14:52:22,service_6,{i},{np.nan},{np.nan},{np.nan},{np.nan},{np.nan},{np.nan},{np.nan},{np.nan}
-7,D3232DUM23,audience,6.484706276772616,2021-01-24 07:42:18,service_7,{i},{np.nan},{np.nan},{np.nan},{np.nan},{np.nan},{np.nan},{np.nan},{np.nan}
