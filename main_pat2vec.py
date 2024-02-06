@@ -29,6 +29,7 @@ from pat2vec.util.methods_get import (create_folders, create_folders_for_pat,
                                       get_free_gpu, list_dir_wrapper,
                                       update_pbar)
 from pat2vec.util.methods_get_medcat import get_cat
+from util.get_dummy_data_cohort_searcher import cohort_searcher_with_terms_and_search_dummy
 
 # stuff paths for portability
 sys.path.insert(0, '/home/aliencat/samora/gloabl_files')
@@ -92,9 +93,14 @@ class main:
         self.sftp_client = config_obj.sftp_obj
 
         if (cogstack == True):
-            if (self.config_obj.verbosity > 0):
-                print("Init cohort_searcher_with_terms_and_search function")
-            self.cohort_searcher_with_terms_and_search = cohort_searcher_with_terms_and_search
+
+            if (config_obj.testing):
+                self.cohort_searcher_with_terms_and_search = cohort_searcher_with_terms_and_search_dummy
+                print("Init cohort_searcher_with_terms_and_search_dummy function")
+            else:
+                if (self.config_obj.verbosity > 0):
+                    print("Init cohort_searcher_with_terms_and_search function")
+                self.cohort_searcher_with_terms_and_search = cohort_searcher_with_terms_and_search
         else:
             self.cohort_searcher_with_terms_and_search = None
 

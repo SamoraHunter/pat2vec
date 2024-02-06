@@ -1,3 +1,4 @@
+import re
 import pandas as pd
 import random
 from datetime import datetime, timedelta
@@ -155,7 +156,22 @@ def generate_basic_observations_data(num_rows, entered_list, global_start_year, 
     return df
 
 
-def cohort_searcher_with_terms_and_search_dummy(index_name, fields_list, term_name, entered_list, global_start_year, global_start_month, global_end_year, global_end_month, search_string):
+def extract_date_range(string):
+    pattern = r'(\d+)-(\d+)-(\d+) TO (\d+)-(\d+)-(\d+)'
+    match = re.search(pattern, string)
+    if match:
+        global_start_year = int(match.group(1))
+        global_start_month = int(match.group(2))
+        global_start_day = int(match.group(3))
+        global_end_year = int(match.group(4))
+        global_end_month = int(match.group(5))
+        global_end_day = int(match.group(6))
+        return global_start_year, global_start_month, global_start_day, global_end_year, global_end_month, global_end_day
+    else:
+        return None
+
+
+def cohort_searcher_with_terms_and_search_dummy(index_name, fields_list, term_name, entered_list, search_string):
     """
     Generate dummy data based on the provided index and search parameters. This function is a dummy for a real cogStack deployment. 
 
@@ -173,6 +189,13 @@ def cohort_searcher_with_terms_and_search_dummy(index_name, fields_list, term_na
     Returns:
     - pd.DataFrame: Generated DataFrame based on the specified conditions.
     """
+
+    global_start_year, global_start_month, global_start_day, global_end_year, global_end_month, global_end_day = extract_date_range(
+        search_string)
+
+    print(global_start_year, global_start_month, global_start_day,
+          global_end_year, global_end_month, global_end_day)
+
     if "client_firstname" in fields_list:
         # You can adjust the number of rows as needed
         num_rows = random.randint(0, 10)
