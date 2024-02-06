@@ -5,7 +5,8 @@ from pathlib import Path
 import pandas as pd
 from tqdm import tqdm
 
-from pat2vec.util.post_processing import retrieve_pat_annots_mct_epr
+from pat2vec.util.post_processing import (retrieve_pat_annots_mct_epr,
+                                          retrieve_pat_docs_mct_epr)
 
 
 def filter_annot_dataframe(df, annot_filter_arguments):
@@ -145,7 +146,7 @@ def build_merged_epr_mct_doc_df(all_pat_list, config_obj, overwrite=False):
     else:
         for i in tqdm(range(0, len(all_pat_list)), total=len(all_pat_list)):
             current_pat_idcode = all_pat_list[i]
-            all_annots = retrieve_pat_annots_mct_epr(
+            all_annots = retrieve_pat_docs_mct_epr(
                 current_pat_idcode, config_obj)
 
             if i == 0:
@@ -159,39 +160,50 @@ def build_merged_epr_mct_doc_df(all_pat_list, config_obj, overwrite=False):
     return output_file_path
 
 
-def retrieve_pat_docs_mct_epr(client_idcode, config_obj, columns_epr=None, columns_mct=None, merge_time_columns=True):
+def join_docs_to_annots(annots_df, docs_temp, drop_duplicates=True):
     """
-    Retrieve patient documents for Electronic Patient Record (EPR) and Medical Chart (MCT).
+    Merge two DataFrames based on the 'document_guid' column.
 
-    Args:
-        client_idcode (str): The client's unique identifier code.
-        config_obj: The configuration object containing paths for document batches.
-        columns_epr (list, optional): List of columns to be used from the EPR document batch CSV.
-        columns_mct (list, optional): List of columns to be used from the MCT document batch CSV.
-        merge_time_columns (bool, optional): Whether to merge time columns. Default is True.
+    Parameters:
+    annots_df (DataFrame): The DataFrame containing annotations.
+    docs_temp (DataFrame): The DataFrame containing documents.
 
     Returns:
-        pandas.DataFrame: A DataFrame containing combined patient documents from EPR and MCT.
-
-    Note:
-        The function assumes that the EPR and MCT documents are stored in separate CSV files
-        and are accessible via the provided paths in the `config_obj`.
+    DataFrame: A merged DataFrame.
     """
-    pre_document_batch_path = config_obj.pre_document_batch_path
-    pre_document_batch_path_mct = config_obj.pre_document_batch_path_mct
+    
+    if(drop_duplicates):
+        # Get the sets of column names
+        annots_columns_set = set(annots_df.columns)
+        docs_columns_set = set(docs_temp.columns)
 
-    dfa = pd.read_csv(
-        f'{pre_document_batch_path}/{client_idcode}.csv', usecols=columns_epr)
+        # Identify duplicated column names
+        duplicated_columns = annots_columns_set.intersection(docs_columns_set)
+        duplicated_columns.remove('document_guid')  # Assuming 'document_guid' is a unique identifier
+        if duplicated_columns:
+            print("Duplicated columns found:", duplicated_columns)
+            # Drop duplicated columns from docs_temp
+            docs_temp_dropped = docs_temp.drop(columns=duplicated_columns)
+        else:
+            docs_temp_dropped = docs_temp
 
-    dfa_mct = pd.read_csv(
-        f'{pre_document_batch_path_mct}/{client_idcode}.csv', usecols=columns_mct)
+    # Merge the DataFrames on 'document_guid' column
+    merged_df = pd.merge(annots_df, docs_temp_dropped, on='document_guid', how='left')
 
-    all_docs = pd.concat([dfa, dfa_mct], ignore_index=True)
+    return merged_df
 
-    if merge_time_columns:
-        all_docs['updatetime'] = all_docs['updatetime'].fillna(
-            all_docs['observationdocument_recordeddtm'])
-        all_docs['observationdocument_recordeddtm'] = all_docs['observationdocument_recordeddtm'].fillna(
-            all_docs['updatetime'])
-
-    return all_docs
+def get_annots_joined_to_docs(config_obj, pat2vec_obj):
+    
+    pre_path = config_obj.proj_name
+    
+    build_merged_epr_mct_doc_df(pat2vec_obj.all_patient_list, config_obj )
+    
+    build_merged_epr_mct_annot_df(pat2vec_obj.all_patient_list, config_obj)
+    
+    annots_df = pd.read_csv(f'{pre_path}/merged_batches/annots_mct_epr.csv')
+    
+    docs_temp = pd.read_csv(f'{pre_path}/merged_batches/docs_mct_epr.csv')
+    
+    res = join_docs_to_annots(annots_df, docs_temp, drop_duplicates=True)
+    
+    return res

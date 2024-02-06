@@ -861,10 +861,14 @@ def retrieve_pat_annots_mct_epr(client_idcode, config_obj, columns_epr=None, col
             all_annots['observationdocument_recordeddtm'])
         all_annots['observationdocument_recordeddtm'] = all_annots['observationdocument_recordeddtm'].fillna(
             all_annots['updatetime'])
+        
+        all_annots['document_guid'] = all_annots['document_guid'].fillna(
+            all_annots['observation_guid'])
+        
 
     return all_annots
 
-def retrieve_pat_docs_mct_epr(client_idcode, config_obj, columns_epr=None, columns_mct=None, merge_time_columns=True):
+def retrieve_pat_docs_mct_epr(client_idcode, config_obj, columns_epr=None, columns_mct=None, merge_columns=True):
     """
     Retrieve patient documents for Electronic Patient Record (EPR) and Medical Chart (MCT).
 
@@ -893,11 +897,25 @@ def retrieve_pat_docs_mct_epr(client_idcode, config_obj, columns_epr=None, colum
 
     all_docs = pd.concat([dfa, dfa_mct], ignore_index=True)
 
-    if merge_time_columns:
+    if merge_columns:
         all_docs['updatetime'] = all_docs['updatetime'].fillna(
             all_docs['observationdocument_recordeddtm'])
         all_docs['observationdocument_recordeddtm'] = all_docs['observationdocument_recordeddtm'].fillna(
             all_docs['updatetime'])
+    
+    # Merge observation_guid to document_guid
+    all_docs['document_guid'] = all_docs['document_guid'].fillna(all_docs['observation_guid'])
+
+    # Add obscatalogmasteritem_displayname to document_description
+    all_docs['document_description'] = all_docs['document_description'].fillna(all_docs['obscatalogmasteritem_displayname'])
+    
+    all_docs['body_analysed'] = all_docs['body_analysed'].fillna(all_docs['observation_valuetext_analysed'])
+    
+    all_docs['_id'] = all_docs['_id'].fillna(all_docs['id'])
+    
+    all_docs.drop(['observation_guid','obscatalogmasteritem_displayname','observation_valuetext_analysed','observationdocument_recordeddtm','id'], axis=1, inplace=True)
+    
+    
 
     return all_docs
 
