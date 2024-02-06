@@ -109,3 +109,89 @@ def build_merged_epr_mct_annot_df(all_pat_list, config_obj, overwrite=False):
                                   header=False, index=False)
 
     return output_file_path
+
+
+
+def build_merged_epr_mct_doc_df(all_pat_list, config_obj, overwrite=False):
+    """
+    Build a merged DataFrame containing annotations for multiple patients using MCT and EPR data.
+
+    Parameters:
+    - config_obj (ConfigObject): An object containing configuration settings, including project name,
+                                patient list, etc.
+    - overwrite (bool): If True, overwrite the existing output file. Default is False.
+
+    Returns:
+    File path to output
+
+    This function creates a directory for merged batches, retrieves annotations for each patient,
+    and writes the merged annotations to a CSV file named 'annots_mct_epr.csv'.
+    If the output file already exists and overwrite is False, subsequent batches are appended to it.
+
+    Example usage:
+    ```
+    config = ConfigObject(...)  # Create or load your configuration object
+    build_merged_epr_mct_annot_df(config, overwrite=True)
+    ```
+
+    """
+    directory_path = config_obj.proj_name + "/" + "merged_batches/"
+    Path(directory_path).mkdir(parents=True, exist_ok=True)
+
+    output_file_path = directory_path + 'docs_mct_epr.csv'
+
+    if not overwrite and Path(output_file_path).is_file():
+        print("Output file already exists. Appending to the existing file.")
+    else:
+        for i in tqdm(range(0, len(all_pat_list)), total=len(all_pat_list)):
+            current_pat_idcode = all_pat_list[i]
+            all_annots = retrieve_pat_annots_mct_epr(
+                current_pat_idcode, config_obj)
+
+            if i == 0:
+                # Create the output file and write the first batch directly
+                all_annots.to_csv(output_file_path, index=False)
+            else:
+                # Append each result to the output file
+                all_annots.to_csv(output_file_path, mode='a',
+                                  header=False, index=False)
+
+    return output_file_path
+
+
+def retrieve_pat_docs_mct_epr(client_idcode, config_obj, columns_epr=None, columns_mct=None, merge_time_columns=True):
+    """
+    Retrieve patient documents for Electronic Patient Record (EPR) and Medical Chart (MCT).
+
+    Args:
+        client_idcode (str): The client's unique identifier code.
+        config_obj: The configuration object containing paths for document batches.
+        columns_epr (list, optional): List of columns to be used from the EPR document batch CSV.
+        columns_mct (list, optional): List of columns to be used from the MCT document batch CSV.
+        merge_time_columns (bool, optional): Whether to merge time columns. Default is True.
+
+    Returns:
+        pandas.DataFrame: A DataFrame containing combined patient documents from EPR and MCT.
+
+    Note:
+        The function assumes that the EPR and MCT documents are stored in separate CSV files
+        and are accessible via the provided paths in the `config_obj`.
+    """
+    pre_document_batch_path = config_obj.pre_document_batch_path
+    pre_document_batch_path_mct = config_obj.pre_document_batch_path_mct
+
+    dfa = pd.read_csv(
+        f'{pre_document_batch_path}/{client_idcode}.csv', usecols=columns_epr)
+
+    dfa_mct = pd.read_csv(
+        f'{pre_document_batch_path_mct}/{client_idcode}.csv', usecols=columns_mct)
+
+    all_docs = pd.concat([dfa, dfa_mct], ignore_index=True)
+
+    if merge_time_columns:
+        all_docs['updatetime'] = all_docs['updatetime'].fillna(
+            all_docs['observationdocument_recordeddtm'])
+        all_docs['observationdocument_recordeddtm'] = all_docs['observationdocument_recordeddtm'].fillna(
+            all_docs['updatetime'])
+
+    return all_docs
