@@ -828,6 +828,23 @@ def build_ipw_dataframe(annot_filter_arguments=None, filter_codes=None, config_o
 
 
 def retrieve_pat_annots_mct_epr(client_idcode, config_obj, columns_epr=None, columns_mct=None, merge_time_columns=True):
+    """
+    Retrieve patient annotations for Electronic Patient Record (EPR) and Medical Chart (MCT).
+
+    Args:
+        client_idcode (str): The client's unique identifier code.
+        config_obj: The configuration object containing paths for annotation batches.
+        columns_epr (list, optional): List of columns to be used from the EPR annotation batch CSV.
+        columns_mct (list, optional): List of columns to be used from the MCT annotation batch CSV.
+        merge_time_columns (bool, optional): Whether to merge time columns. Default is True.
+
+    Returns:
+        pandas.DataFrame: A DataFrame containing combined patient annotations from EPR and MCT.
+
+    Note:
+        The function assumes that the EPR and MCT annotation documents are stored in separate CSV files
+        and are accessible via the provided paths in the `config_obj`.
+    """
     pre_document_annotation_batch_path = config_obj.pre_document_annotation_batch_path
     pre_document_annotation_batch_path_mct = config_obj.pre_document_annotation_batch_path_mct
 
@@ -847,6 +864,42 @@ def retrieve_pat_annots_mct_epr(client_idcode, config_obj, columns_epr=None, col
 
     return all_annots
 
+def retrieve_pat_docs_mct_epr(client_idcode, config_obj, columns_epr=None, columns_mct=None, merge_time_columns=True):
+    """
+    Retrieve patient documents for Electronic Patient Record (EPR) and Medical Chart (MCT).
+
+    Args:
+        client_idcode (str): The client's unique identifier code.
+        config_obj: The configuration object containing paths for document batches.
+        columns_epr (list, optional): List of columns to be used from the EPR document batch CSV.
+        columns_mct (list, optional): List of columns to be used from the MCT document batch CSV.
+        merge_time_columns (bool, optional): Whether to merge time columns. Default is True.
+
+    Returns:
+        pandas.DataFrame: A DataFrame containing combined patient documents from EPR and MCT.
+
+    Note:
+        The function assumes that the EPR and MCT documents are stored in separate CSV files
+        and are accessible via the provided paths in the `config_obj`.
+    """
+    pre_document_batch_path = config_obj.pre_document_batch_path
+    pre_document_batch_path_mct = config_obj.pre_document_batch_path_mct
+
+    dfa = pd.read_csv(
+        f'{pre_document_batch_path}/{client_idcode}.csv', usecols=columns_epr)
+
+    dfa_mct = pd.read_csv(
+        f'{pre_document_batch_path_mct}/{client_idcode}.csv', usecols=columns_mct)
+
+    all_docs = pd.concat([dfa, dfa_mct], ignore_index=True)
+
+    if merge_time_columns:
+        all_docs['updatetime'] = all_docs['updatetime'].fillna(
+            all_docs['observationdocument_recordeddtm'])
+        all_docs['observationdocument_recordeddtm'] = all_docs['observationdocument_recordeddtm'].fillna(
+            all_docs['updatetime'])
+
+    return all_docs
 
 def check_list_presence(df, column, lst, annot_filter_arguments=None):
 
