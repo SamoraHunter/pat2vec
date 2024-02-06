@@ -1,3 +1,4 @@
+import os
 
 
 def get_cat(config_obj):
@@ -5,8 +6,26 @@ def get_cat(config_obj):
 
     if (config_obj.medcat):
 
+        medcat_path = None
+
+        # Check if the file exists
+        if os.path.exists("paths.py"):
+            # If the file exists, try to import the variable
+            try:
+                from paths import medcat_path
+                print(
+                    "Variable 'medcat_path' imported successfully from 'paths.py' file.")
+                # Now you can use medcat_path variable here
+                print("medcat_path:", medcat_path)
+            except ImportError:
+                print("Error: Could not import 'medcat_path' from 'paths.py' file.")
+        else:
+            print("The 'paths.py' file does not exist.")
+
         from medcat.cat import CAT
-        if (config_obj.override_medcat_model_path is not None):
+        if (medcat_path is not None):
+            model_path = medcat_path
+        elif (config_obj.override_medcat_model_path is not None):
             model_path = config_obj.override_medcat_model_path
         elif config_obj.testing:
             model_path = 'medcat_models\medcat_model_pack_422d1d38fc58f158.zip'
