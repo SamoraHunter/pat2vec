@@ -1,4 +1,5 @@
 from typing import List
+
 # CogStack login details
 # Any questions on what these details are please contact your local CogStack administrator.
 
@@ -10,6 +11,11 @@ hosts: List[str] = [  # Dummy Elasticsearch URL
 username = 'dummy_user'
 password = 'dummy_password'
 
+host_name = 'localhost'
+
+port = '9200'
+
+scheme = 'https'
 
 # NLM authentication
 # The UMLS REST API requires a UMLS account for the authentication described below.
