@@ -128,6 +128,7 @@ live_test.ipynb
 new_project
 
 temp_annot_file.csv
+/notebooks/temp_annot_file.csv
 
 # pyenv
 #   For a library or package, you might want to ignore these files since the code is
