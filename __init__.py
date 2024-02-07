@@ -1,2 +1,2 @@
 from . import *
-from all_methods import *
+from pat2vec.all_methods import *
