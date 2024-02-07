@@ -62,9 +62,6 @@ def filter_annot_dataframe(df, annot_filter_arguments):
 # filtered_df = filter_annot_dataframe(df, annot_filter_arguments)
 
 
-from pathlib import Path
-
-
 def build_merged_epr_mct_annot_df(all_pat_list, config_obj, overwrite=False):
     """
     Build a merged DataFrame containing annotations for multiple patients using MCT and EPR data.
@@ -110,7 +107,6 @@ def build_merged_epr_mct_annot_df(all_pat_list, config_obj, overwrite=False):
                                   header=False, index=False)
 
     return output_file_path
-
 
 
 def build_merged_epr_mct_doc_df(all_pat_list, config_obj, overwrite=False):
@@ -171,15 +167,16 @@ def join_docs_to_annots(annots_df, docs_temp, drop_duplicates=True):
     Returns:
     DataFrame: A merged DataFrame.
     """
-    
-    if(drop_duplicates):
+
+    if (drop_duplicates):
         # Get the sets of column names
         annots_columns_set = set(annots_df.columns)
         docs_columns_set = set(docs_temp.columns)
 
         # Identify duplicated column names
         duplicated_columns = annots_columns_set.intersection(docs_columns_set)
-        duplicated_columns.remove('document_guid')  # Assuming 'document_guid' is a unique identifier
+        # Assuming 'document_guid' is a unique identifier
+        duplicated_columns.remove('document_guid')
         if duplicated_columns:
             print("Duplicated columns found:", duplicated_columns)
             # Drop duplicated columns from docs_temp
@@ -188,22 +185,24 @@ def join_docs_to_annots(annots_df, docs_temp, drop_duplicates=True):
             docs_temp_dropped = docs_temp
 
     # Merge the DataFrames on 'document_guid' column
-    merged_df = pd.merge(annots_df, docs_temp_dropped, on='document_guid', how='left')
+    merged_df = pd.merge(annots_df, docs_temp_dropped,
+                         on='document_guid', how='left')
 
     return merged_df
 
+
 def get_annots_joined_to_docs(config_obj, pat2vec_obj):
-    
+
     pre_path = config_obj.proj_name
-    
-    build_merged_epr_mct_doc_df(pat2vec_obj.all_patient_list, config_obj )
-    
+
+    build_merged_epr_mct_doc_df(pat2vec_obj.all_patient_list, config_obj)
+
     build_merged_epr_mct_annot_df(pat2vec_obj.all_patient_list, config_obj)
-    
+
     annots_df = pd.read_csv(f'{pre_path}/merged_batches/annots_mct_epr.csv')
-    
+
     docs_temp = pd.read_csv(f'{pre_path}/merged_batches/docs_mct_epr.csv')
-    
+
     res = join_docs_to_annots(annots_df, docs_temp, drop_duplicates=True)
-    
+
     return res

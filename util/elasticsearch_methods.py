@@ -17,11 +17,19 @@ def ingest_data_to_elasticsearch(temp_df, index_name):
     Returns:
         tuple: A tuple containing the number of successfully ingested documents and the number of failed documents.
     """
-    
+
     print(host_name, port, scheme, username)
-    
+
     # Elastic cannot handle nan
     temp_df.fillna("", inplace=True)
+
+    if 'updatetime' in temp_df.columns:
+        temp_df['updatetime'] = pd.to_datetime(
+            temp_df['updatetime'], format='ISO8601')
+
+    if 'observationdocument_recordeddtm' in temp_df.columns:
+        temp_df['observationdocument_recordeddtm'] = pd.to_datetime(
+            temp_df['observationdocument_recordeddtm'], format='ISO8601')
 
     # Connect to Elasticsearch
     es = Elasticsearch(
@@ -60,7 +68,8 @@ def ingest_data_to_elasticsearch(temp_df, index_name):
 
     try:
         success, failed = bulk(es, actions)
-        print(f"Successfully ingested {success} documents, failed to ingest {failed} documents.")
+        print(
+            f"Successfully ingested {success} documents, failed to ingest {failed} documents.")
 
         # If there are failed documents, print detailed error information
         if failed:
