@@ -21,6 +21,31 @@ sys.path.insert(0, '/home/cogstack/samora/_data/gloabl_files')
 sys.path.insert(0, '/home/cogstack/samora/_data/gloabl_files/pat2vec')
 
 
+def calculate_interval(start_date, time_delta, m=1):
+    # adjust for time interval width
+    end_date = start_date + time_delta
+    interval_days = (end_date - start_date).days
+
+    n_intervals = interval_days // m
+    return n_intervals
+
+
+def update_global_start_date(self, start_date):
+    print("updating global start date")
+    # Compare and update individual elements of global start date if necessary
+    if start_date.year > int(self.global_start_year):
+        self.global_start_year = str(start_date.year)
+    if start_date.month > int(self.global_start_month):
+        self.global_start_month = str(start_date.month)
+    if start_date.day > int(self.global_start_day):
+        self.global_start_day = str(start_date.day)
+
+    print(
+        "Warning: Updated global start date as start date later than global start date.")
+
+    return self
+
+
 class config_class:
     def __init__(self,
                  remote_dump=False,
@@ -319,14 +344,6 @@ class config_class:
 
         # timedelta()
 
-        def calculate_interval(start_date, time_delta, m=1):
-            # adjust for time interval width
-            end_date = start_date + time_delta
-            interval_days = (end_date - start_date).days
-
-            n_intervals = interval_days // m
-            return n_intervals
-
         result = calculate_interval(
             start_date=self.start_date, time_delta=self.time_delta, m=m)
 
@@ -363,8 +380,9 @@ class config_class:
             # self.treatment_doc_filename = 'test_files/' + \
             #     treatment_doc_filename
 
-            #self.treatment_doc_filename = fr'{os.getcwd()}\test_files\treatment_docs.csv'
-            self.treatment_doc_filename = os.path.join(os.getcwd(), 'test_files', 'treatment_docs.csv')
+            # self.treatment_doc_filename = fr'{os.getcwd()}\test_files\treatment_docs.csv'
+            self.treatment_doc_filename = os.path.join(
+                os.getcwd(), 'test_files', 'treatment_docs.csv')
 
         if (self.remote_dump == False):
             self.sftp_obj = None
@@ -480,20 +498,7 @@ class config_class:
             self.global_start_day = str(global_start_day).zfill(2)
             self.global_end_day = str(global_end_day).zfill(2)
 
-        def update_global_start_date(self, start_date):
-            print("updating global start date")
-            # Compare and update individual elements of global start date if necessary
-            if start_date.year > int(self.global_start_year):
-                self.global_start_year = str(start_date.year)
-            if start_date.month > int(self.global_start_month):
-                self.global_start_month = str(start_date.month)
-            if start_date.day > int(self.global_start_day):
-                self.global_start_day = str(start_date.day)
-
-            print(
-                "Warning: Updated global start date as start date later than global start date.")
-
-        update_global_start_date(self, self.start_date)
+        self = update_global_start_date(self, self.start_date)
 
         if (self.individual_patient_window):
             print("individual_patient_window set!")
