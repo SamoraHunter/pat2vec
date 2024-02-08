@@ -1,7 +1,7 @@
 import re
 import pandas as pd
 import random
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from faker import Faker
 
 from transformers import pipeline
@@ -74,7 +74,7 @@ def generate_epr_documents_personal_data(num_rows, entered_list, global_start_ye
         'client_idcode': [current_pat_client_id_code] * num_rows,
         'client_firstname': [fake.first_name() for _ in range(num_rows)],
         'client_lastname': [fake.last_name() for _ in range(num_rows)],
-        'client_dob': [fake.date_of_birth(minimum_age=18, maximum_age=90).strftime('%Y-%m-%d') for _ in range(num_rows)],
+        'client_dob': [fake.date_of_birth(minimum_age=18, maximum_age=90).strftime('%Y-%m-%dT%H:%M:%S') for _ in range(num_rows)],
         'client_gendercode': [random.choice(['male', 'female']) for _ in range(num_rows)],
         'client_racecode': [fake.random_element(['Caucasian', 'African American', 'Hispanic', 'Asian', 'Other']) for _ in range(num_rows)],
         'client_deceaseddtm': [fake.date_time_this_decade() if random.choice([True, False]) else None for _ in range(num_rows)],
@@ -84,8 +84,7 @@ def generate_epr_documents_personal_data(num_rows, entered_list, global_start_ye
             random.randint(1, 28),
             random.randint(0, 23),
             random.randint(0, 59),
-            random.randint(0, 59)
-        ) for _ in range(num_rows)]
+            random.randint(0, 59), tzinfo=timezone.utc).strftime('%Y-%m-%d') for _ in range(num_rows)]
     }
 
     df = pd.DataFrame(data)
@@ -247,8 +246,7 @@ def generate_basic_observations_data(num_rows, entered_list, global_start_year, 
             random.randint(1, 28),
             random.randint(0, 23),
             random.randint(0, 59),
-            random.randint(0, 59)
-        ) for _ in range(num_rows)],
+            random.randint(0, 59), tzinfo=timezone.utc).strftime('%Y-%m-%dT%H:%M:%S') for _ in range(num_rows)],
         'clientvisit_serviceguid': [f'service_{i}' for i in range(num_rows)],
         '_id': ['{i}' for i in range(num_rows)],
         '_index': ['{np.nan}' for i in range(num_rows)],
@@ -291,71 +289,76 @@ def cohort_searcher_with_terms_and_search_dummy(index_name, fields_list, term_na
     - fields_list (list): List of fields for the DataFrame columns.
     - term_name (str): Term name for search.
     - entered_list (list): List of entered values.
-    - global_start_year (int): Start year for the global date range.
-    - global_start_month (int): Start month for the global date range.
-    - global_end_year (int): End year for the global date range.
-    - global_end_month (int): End month for the global date range.
     - search_string (str): Search string for additional filtering.
+    - verbose (bool): Verbosity flag to enable/disable print statements.
 
     Returns:
     - pd.DataFrame: Generated DataFrame based on the specified conditions.
     """
 
+    verbose = True
+
     global_start_year, global_start_month, global_start_day, global_end_year, global_end_month, global_end_day = extract_date_range(
         search_string)
 
-    # print(search_string)
-
-    # print(global_start_year, global_start_month, global_start_day,
-    #      global_end_year, global_end_month, global_end_day)
+    if verbose:
+        print('cohort_searcher_with_terms_and_search_dummy:', search_string)
 
     if "client_firstname" in fields_list:
-        # You can adjust the number of rows as needed
+        if verbose:
+            print("Generating data for 'client_firstname'")
         num_rows = random.randint(0, 10)
         df = generate_epr_documents_personal_data(
             num_rows, entered_list, global_start_year, global_start_month, global_end_year, global_end_month)
         return df
+
     elif "basicobs_value_numeric" in search_string:
-        # You can adjust the number of rows as needed
+        if verbose:
+            print("Generating data for 'basicobs_value_numeric'")
         num_rows = random.randint(0, 10)
         df = generate_basic_observations_data(
             num_rows, entered_list, global_start_year, global_start_month, global_end_year, global_end_month)
         return df
-    elif index_name == "epr_documents" or (index_name == 'observations' and search_string.find('AoMRC_ClinicalSummary_FT') != -1):
-        # You can adjust the number of rows as needed
-        num_rows = random.randint(0, 10)
+
+    elif index_name == "epr_documents":
+        if verbose:
+            print("Generating data for 'epr_documents'")
 
         probabilities = [0.7, 0.1, 0.05, 0.05, 0.05]  # Adjust as needed
-
-        # Perform a weighted random selection based on the defined probabilities
         num_rows = random.choices(range(1, 6), probabilities)[0]
-
         df = generate_epr_documents_data(
             num_rows, entered_list, global_start_year, global_start_month, global_end_year, global_end_month)
         return df
+
     elif index_name == "observations":
-        # You can adjust the number of rows as needed
-        num_rows = random.randint(0, 10)
+        if verbose:
+            print("Generating data for 'observations'")
+
+        probabilities = [0.7, 0.1, 0.05, 0.05, 0.05]  # Adjust as needed
+        num_rows = random.choices(range(1, 6), probabilities)[0]
         df = generate_observations_data(
             num_rows, entered_list, global_start_year, global_start_month, global_end_year, global_end_month)
         return df
-    elif index_name == "orders" and search_string.find('medication') != -1:
-        # You can adjust the number of rows as needed
+
+    elif index_name == "order" and 'medication' in search_string:
+        if verbose:
+            print("Generating data for 'orders' with medication")
         num_rows = random.randint(0, 10)
         df = generate_drug_orders_data(
             num_rows, entered_list, global_start_year, global_start_month, global_end_year, global_end_month)
         return df
 
-    elif index_name == "orders" and search_string.find('diagnostic') != -1:
-        # You can adjust the number of rows as needed
+    elif index_name == "order" and 'diagnostic' in search_string:
+        if verbose:
+            print("Generating data for 'orders' with diagnostic")
         num_rows = random.randint(0, 10)
         df = generate_diagnostic_orders_data(
             num_rows, entered_list, global_start_year, global_start_month, global_end_year, global_end_month)
         return df
 
     else:
-        print(f"Index name is not 'epr_documents', 'observations', 'basic_observations', 'orders. Returning an empty DataFrame.")
-        return pd.DataFrame(columns=['updatetime', '_index', '_id', '_score',] + fields_list)
+        print("Index name is not 'epr_documents', 'observations', 'basic_observations', 'orders'. Returning an empty DataFrame.")
+        return pd.DataFrame(columns=['updatetime', '_index', '_id', '_score'] + fields_list)
 
 
 # # Example usage for epr_documents with personal information:
