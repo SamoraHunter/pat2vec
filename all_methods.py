@@ -86,9 +86,9 @@ from pat2vec.util.current_pat_batch_path_methods import __init__
 # from pat2vec.util.current_pat_batch_path_methods import _print_paths
 from pat2vec.util.elasticsearch_methods import ingest_data_to_elasticsearch
 # from pat2vec.util.ethnicity_abstractor import abstractEthnicity
-from pat2vec.util.evaluation_methods import compare_ipw_annotation_rows
-from pat2vec.util.evaluation_methods import create_profile_reports
-from pat2vec.util.evaluation_methods_ploting import generate_pie_charts
+# from pat2vec.util.evaluation_methods import compare_ipw_annotation_rows
+# from pat2vec.util.evaluation_methods import create_profile_reports
+# from pat2vec.util.evaluation_methods_ploting import generate_pie_charts
 from pat2vec.util.get_dummy_data_cohort_searcher import generate_epr_documents_data
 from pat2vec.util.get_dummy_data_cohort_searcher import generate_epr_documents_personal_data
 from pat2vec.util.get_dummy_data_cohort_searcher import generate_observations_data
@@ -280,9 +280,9 @@ class pat2vec_methods():
         # self._print_paths = _print_paths
         self.ingest_data_to_elasticsearch = ingest_data_to_elasticsearch
         # self.abstractEthnicity = abstractEthnicity
-        self.compare_ipw_annotation_rows = compare_ipw_annotation_rows
-        self.create_profile_reports = create_profile_reports
-        self.generate_pie_charts = generate_pie_charts
+        # self.compare_ipw_annotation_rows = compare_ipw_annotation_rows
+        # self.create_profile_reports = create_profile_reports
+        # self.generate_pie_charts = generate_pie_charts
         self.generate_epr_documents_data = generate_epr_documents_data
         self.generate_epr_documents_personal_data = generate_epr_documents_personal_data
         self.generate_observations_data = generate_observations_data
