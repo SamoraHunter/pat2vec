@@ -4,8 +4,8 @@ import random
 
 from tqdm import trange
 
-from pat2vec_get_methods.current_pat_annotations_batch_to_file import get_current_pat_annotations_batch_to_file
-from pat2vec_get_methods.current_pat_annotations_mrc_batch_to_file import get_current_pat_annotations_mct_batch_to_file
+# from pat2vec_get_methods.current_pat_annotations_batch_to_file import get_current_pat_annotations_batch_to_file
+# from pat2vec_get_methods.current_pat_annotations_mrc_batch_to_file import get_current_pat_annotations_mct_batch_to_file
 
 
 def main_annotate_only(all_patient_list, annotate_only=False, cohort_searcher_with_terms_and_search=None):
