@@ -7,7 +7,8 @@ import pandas as pd
 from IPython.display import display
 
 from pat2vec.util.methods_get import exist_check, update_pbar
-from pat2vec.util.post_processing import join_icd10_codes_to_annot, join_icd10_OPC4S_codes_to_annot
+from pat2vec.util.post_processing import (join_icd10_codes_to_annot,
+                                          join_icd10_OPC4S_codes_to_annot)
 
 
 def check_pat_document_annotation_complete(current_pat_client_id_code, config_obj=None):
