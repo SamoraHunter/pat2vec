@@ -36,6 +36,10 @@ notebooks/new_project/*
 
 util/medcat_models/*
 
+notebooks/output_directory/*
+
+notebooks/output_directory
+
 ####### git template for python projects: ########
 
 # Byte-compiled / optimized / DLL files
