@@ -9,6 +9,8 @@ import logging
 
 import random
 
+from util.dummy_data_files.dummy_lists import ethnicity_list, drug_names, diagnostic_names, blood_test_names
+
 
 fake = Faker()
 
@@ -70,13 +72,15 @@ def generate_epr_documents_personal_data(num_rows, entered_list, global_start_ye
     """
     current_pat_client_id_code = random.choice(entered_list)
 
+    ethnicity = fake.random_element(ethnicity_list)
+
     data = {
         'client_idcode': [current_pat_client_id_code] * num_rows,
         'client_firstname': [fake.first_name() for _ in range(num_rows)],
         'client_lastname': [fake.last_name() for _ in range(num_rows)],
         'client_dob': [fake.date_of_birth(minimum_age=18, maximum_age=90).strftime('%Y-%m-%dT%H:%M:%S') for _ in range(num_rows)],
         'client_gendercode': [random.choice(['male', 'female']) for _ in range(num_rows)],
-        'client_racecode': [fake.random_element(['Caucasian', 'African American', 'Hispanic', 'Asian', 'Other']) for _ in range(num_rows)],
+        'client_racecode': [ethnicity for _ in range(num_rows)],
         'client_deceaseddtm': [fake.date_time_this_decade() if random.choice([True, False]) else None for _ in range(num_rows)],
         'updatetime': [datetime(
             random.randint(global_start_year, global_end_year),
@@ -110,7 +114,7 @@ def generate_diagnostic_orders_data(num_rows, entered_list, global_start_year, g
     data = {
         'order_guid': [f'order_{i}' for i in range(num_rows)],
         'client_idcode': [random.choice(entered_list) for _ in range(num_rows)],
-        'order_name': [fake.word() for _ in range(num_rows)],
+        'order_name': [fake.random_element(diagnostic_names) for _ in range(num_rows)],
         'order_summaryline': [fake.sentence() for _ in range(num_rows)],
         'order_holdreasontext': [fake.sentence() for _ in range(num_rows)],
         'order_entered': [datetime(
@@ -151,7 +155,7 @@ def generate_drug_orders_data(num_rows, entered_list, global_start_year, global_
         'order_guid': [f'order_{i}' for i in range(num_rows)],
         'client_idcode': [random.choice(entered_list) for _ in range(num_rows)],
         # New value for drug_name
-        'order_name': [fake.word() for _ in range(num_rows)],
+        'order_name': [fake.random_element(drug_names) for _ in range(num_rows)],
         # New value for drug_description
         'order_summaryline': [fake.sentence() for _ in range(num_rows)],
         # New value for dosage
@@ -238,7 +242,7 @@ def generate_basic_observations_data(num_rows, entered_list, global_start_year, 
 
     data = {
         'client_idcode': [current_pat_client_id_code] * num_rows,
-        'basicobs_itemname_analysed': [' '.join(fake.words(nb=random.randint(1, 2))) for _ in range(num_rows)],
+        'basicobs_itemname_analysed': [fake.random_element(blood_test_names) for _ in range(num_rows)],
         'basicobs_value_numeric': [random.uniform(1, 100) for _ in range(num_rows)],
         'basicobs_entered': [datetime(
             random.randint(global_start_year, global_end_year),
@@ -358,7 +362,7 @@ def cohort_searcher_with_terms_and_search_dummy(index_name, fields_list, term_na
 
     else:
         print("Index name is not 'epr_documents', 'observations', 'basic_observations', 'orders'. Returning an empty DataFrame.")
-        return pd.DataFrame(columns=['updatetime', '_index', '_id', '_score'] + fields_list)
+        return pd.DataFrame(columns=['updatetime', '_index', '_id', '_score', 'observationdocument_recordeddtm', 'observation_valuetext_analysed'] + fields_list)
 
 
 # # Example usage for epr_documents with personal information:
