@@ -192,11 +192,14 @@ def generate_observations_data(num_rows, entered_list, global_start_year, global
     - pd.DataFrame: Generated DataFrame with specified columns.
     """
 
+    current_pat_client_id_code = random.choice(entered_list)
+
     data = {
         'observation_guid': [f'obs_{i}' for i in range(num_rows)],
-        'client_idcode': [random.choice(entered_list) for _ in range(num_rows)],
+        'client_idcode': [current_pat_client_id_code for _ in range(num_rows)],
         'obscatalogmasteritem_displayname': 'AoMRC_ClinicalSummary_FT',
-        'observation_valuetext_analysed': [fake.paragraph() for _ in range(num_rows)],
+        'observation_valuetext_analysed': [generate_patient_timeline(current_pat_client_id_code) for _ in range(num_rows)],
+        # 'observation_valuetext_analysed': [fake.paragraph() for _ in range(num_rows)],
         'observationdocument_recordeddtm': [datetime(
             random.randint(global_start_year, global_end_year),
             random.randint(global_start_month, global_end_month),
