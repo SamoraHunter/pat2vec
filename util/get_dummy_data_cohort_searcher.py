@@ -127,7 +127,7 @@ def generate_diagnostic_orders_data(num_rows, entered_list, global_start_year, g
         '_index': ['{np.nan}' for _ in range(num_rows)],
         '_score': ['{np.nan}' for _ in range(num_rows)]
     }
-    print("generate_diagnostic_orders_data")
+    # print("generate_diagnostic_orders_data")
     df = pd.DataFrame(data)
     return df
 
@@ -147,7 +147,7 @@ def generate_drug_orders_data(num_rows, entered_list, global_start_year, global_
     Returns:
     - pd.DataFrame: Generated DataFrame with specified columns.
     """
-    print("generate_drug_orders_data")
+    # print("generate_drug_orders_data")
     data = {
         'order_guid': [f'order_{i}' for i in range(num_rows)],
         'client_idcode': [random.choice(entered_list) for _ in range(num_rows)],
@@ -231,7 +231,7 @@ def generate_basic_observations_data(num_rows, entered_list, global_start_year, 
     Returns:
     - pd.DataFrame: Generated DataFrame with specified columns.
     """
-    print("generate_basic_observations_data")
+    # print("generate_basic_observations_data")
     current_pat_client_id_code = random.choice(entered_list)
 
     data = {
@@ -301,10 +301,10 @@ def cohort_searcher_with_terms_and_search_dummy(index_name, fields_list, term_na
     global_start_year, global_start_month, global_start_day, global_end_year, global_end_month, global_end_day = extract_date_range(
         search_string)
 
-    print(search_string)
+    # print(search_string)
 
-    print(global_start_year, global_start_month, global_start_day,
-          global_end_year, global_end_month, global_end_day)
+    # print(global_start_year, global_start_month, global_start_day,
+    #      global_end_year, global_end_month, global_end_day)
 
     if "client_firstname" in fields_list:
         # You can adjust the number of rows as needed
@@ -318,9 +318,15 @@ def cohort_searcher_with_terms_and_search_dummy(index_name, fields_list, term_na
         df = generate_basic_observations_data(
             num_rows, entered_list, global_start_year, global_start_month, global_end_year, global_end_month)
         return df
-    elif index_name == "epr_documents":
+    elif index_name == "epr_documents" or (index_name == 'observations' and search_string.find('AoMRC_ClinicalSummary_FT') != -1):
         # You can adjust the number of rows as needed
         num_rows = random.randint(0, 10)
+
+        probabilities = [0.7, 0.1, 0.05, 0.05, 0.05]  # Adjust as needed
+
+        # Perform a weighted random selection based on the defined probabilities
+        num_rows = random.choices(range(1, 6), probabilities)[0]
+
         df = generate_epr_documents_data(
             num_rows, entered_list, global_start_year, global_start_month, global_end_year, global_end_month)
         return df
@@ -371,14 +377,17 @@ def generate_patient_timeline(client_idcode):
     logging.getLogger("transformers").setLevel(logging.WARNING)
     generator = pipeline("text-generation", model="gpt2")
 
-    num_entries = random.randint(1, 3)
+    probabilities = [0.7, 0.1, 0.05, 0.05, 0.05]  # Adjust as needed
+
+    # Perform a weighted random selection based on the defined probabilities
+    num_entries = random.choices(range(1, 6), probabilities)[0]
 
     starting_age = random.randint(18, 99)
     # Initialize patient demographic information
     patient_info = {
         "client_idcode": client_idcode,
         "Age": starting_age,
-        "Gender": "Male",  # Assuming male for simplicity
+        "Gender": random.choice(["Male", "Female"]),
         "DOB": datetime.utcnow() - timedelta(days=365 * starting_age)
     }
 
