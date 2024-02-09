@@ -1,16 +1,15 @@
-import re
-import pandas as pd
-import random
-from datetime import datetime, timedelta, timezone
-from faker import Faker
-
-from transformers import pipeline
 import logging
-
 import random
+import re
+from datetime import datetime, timedelta, timezone
 
-from util.dummy_data_files.dummy_lists import ethnicity_list, drug_names, diagnostic_names, blood_test_names
+import pandas as pd
+from faker import Faker
+from transformers import pipeline
 
+from util.dummy_data_files.dummy_lists import (blood_test_names,
+                                               diagnostic_names, drug_names,
+                                               ethnicity_list)
 
 fake = Faker()
 
@@ -179,7 +178,7 @@ def generate_drug_orders_data(num_rows, entered_list, global_start_year, global_
     return df
 
 
-def generate_observations_data(num_rows, entered_list, global_start_year, global_start_month, global_end_year, global_end_month):
+def generate_observations_MRC_text_data(num_rows, entered_list, global_start_year, global_start_month, global_end_year, global_end_month):
     """
     Generate dummy data for the 'observations' index.
 
@@ -202,6 +201,48 @@ def generate_observations_data(num_rows, entered_list, global_start_year, global
         'client_idcode': [current_pat_client_id_code for _ in range(num_rows)],
         'obscatalogmasteritem_displayname': 'AoMRC_ClinicalSummary_FT',
         'observation_valuetext_analysed': [generate_patient_timeline(current_pat_client_id_code) for _ in range(num_rows)],
+        # 'observation_valuetext_analysed': [fake.paragraph() for _ in range(num_rows)],
+        'observationdocument_recordeddtm': [datetime(
+            random.randint(global_start_year, global_end_year),
+            random.randint(global_start_month, global_end_month),
+            random.randint(1, 28),
+            random.randint(0, 23),
+            random.randint(0, 59),
+            random.randint(0, 59)
+        ) for _ in range(num_rows)],
+        'clientvisit_visitidcode': [f'visit_{i}' for i in range(num_rows)],
+        '_id': ['{i}' for i in range(num_rows)],
+        '_index': ['{np.nan}' for i in range(num_rows)],
+        '_score': ['{np.nan}' for i in range(num_rows)]
+
+    }
+
+    df = pd.DataFrame(data)
+    return df
+
+def generate_observations_data(num_rows, entered_list, global_start_year, global_start_month, global_end_year, global_end_month, search_term):
+    """
+    Generate dummy data for the 'observations' index.
+
+    Parameters:
+    - num_rows (int): Number of rows to generate.
+    - entered_list (list): List of entered values.
+    - global_start_year (int): Start year for the global date range.
+    - global_start_month (int): Start month for the global date range.
+    - global_end_year (int): End year for the global date range.
+    - global_end_month (int): End month for the global date range.
+
+    Returns:
+    - pd.DataFrame: Generated DataFrame with specified columns.
+    """
+
+    current_pat_client_id_code = random.choice(entered_list)
+
+    data = {
+        'observation_guid': [f'obs_{i}' for i in range(num_rows)],
+        'client_idcode': [current_pat_client_id_code for _ in range(num_rows)],
+        'obscatalogmasteritem_displayname': [search_term],
+        'observation_valuetext_analysed': [random.uniform(0, 100) for _ in range(num_rows)],
         # 'observation_valuetext_analysed': [fake.paragraph() for _ in range(num_rows)],
         'observationdocument_recordeddtm': [datetime(
             random.randint(global_start_year, global_end_year),
@@ -266,6 +307,7 @@ def generate_basic_observations_data(num_rows, entered_list, global_start_year, 
     }
 
     df = pd.DataFrame(data)
+    print(type(df))
     return df
 
 
@@ -334,15 +376,30 @@ def cohort_searcher_with_terms_and_search_dummy(index_name, fields_list, term_na
             num_rows, entered_list, global_start_year, global_start_month, global_end_year, global_end_month)
         return df
 
+    elif index_name == "observations MRC text" and search_string.find('AoMRC_ClinicalSummary_FT')!=-1:
+        if verbose:
+            print("Generating data for 'observations'")
+
+        probabilities = [0.7, 0.1, 0.05, 0.05, 0.05]  # Adjust as needed
+        num_rows = random.choices(range(1, 6), probabilities)[0]
+        df = generate_observations_MRC_text_data(
+            num_rows, entered_list, global_start_year, global_start_month, global_end_year, global_end_month)
+        return df
+    
     elif index_name == "observations":
         if verbose:
             print("Generating data for 'observations'")
 
         probabilities = [0.7, 0.1, 0.05, 0.05, 0.05]  # Adjust as needed
         num_rows = random.choices(range(1, 6), probabilities)[0]
+        
+        search_term = str(extract_search_term_obscatalogmasteritem_displayname(search_string))
+        
         df = generate_observations_data(
-            num_rows, entered_list, global_start_year, global_start_month, global_end_year, global_end_month)
+            num_rows, entered_list, global_start_year, global_start_month, global_end_year, global_end_month, search_term)
         return df
+    
+    
 
     elif index_name == "order" and 'medication' in search_string:
         if verbose:
@@ -429,3 +486,16 @@ def generate_patient_timeline(client_idcode):
     patient_timeline = "\n".join(timeline)
 
     return patient_timeline
+
+
+def extract_search_term_obscatalogmasteritem_displayname(search_string):
+    # Using regular expression to find the part after 'obscatalogmasteritem_displayname:'
+    match = re.search(r'obscatalogmasteritem_displayname:\((.*?)\)', search_string)
+    if match:
+        # Get the matched group and remove punctuation
+        search_term = match.group(1).replace('"', '').replace("'", "").strip()
+        # Ignore anything after 'AND' or 'OR'
+        search_term = search_term.split('AND', 1)[0].split('OR', 1)[0].strip()
+        return search_term
+    else:
+        return search_string
