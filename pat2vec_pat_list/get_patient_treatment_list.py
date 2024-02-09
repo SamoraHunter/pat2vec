@@ -1,12 +1,14 @@
+import os
 import pickle
 import random
 import re
+import sys
 from typing import List
 
 import pandas as pd
 
+from notebooks.test_files.read_test_file import read_test_data
 
-import sys
 #stuff paths for portability
 sys.path.insert(0,'/home/aliencat/samora/gloabl_files')
 sys.path.insert(0,'/data/AS/Samora/gloabl_files')
@@ -126,8 +128,19 @@ def get_all_patients_list(config_obj):
     Returns:
         A list of all patient IDs.
     """
-    patient_ids = extract_treatment_id_list_from_docs(config_obj)
+    if(config_obj.testing == False):
     
+        patient_ids = extract_treatment_id_list_from_docs(config_obj)
+    
+    else:
+        
+        file_path = 'notebooks/test_files/treatment_docs.csv'
+
+        patient_ids = read_test_data()['client_idcode']
+
+            
+            
+            
     all_patient_list = patient_ids.copy()
     
     all_patient_list = pd.Series(all_patient_list).dropna().to_list()
