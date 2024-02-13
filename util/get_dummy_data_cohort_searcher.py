@@ -220,6 +220,7 @@ def generate_observations_MRC_text_data(num_rows, entered_list, global_start_yea
     df = pd.DataFrame(data)
     return df
 
+
 def generate_observations_data(num_rows, entered_list, global_start_year, global_start_month, global_end_year, global_end_month, search_term):
     """
     Generate dummy data for the 'observations' index.
@@ -376,30 +377,29 @@ def cohort_searcher_with_terms_and_search_dummy(index_name, fields_list, term_na
             num_rows, entered_list, global_start_year, global_start_month, global_end_year, global_end_month)
         return df
 
-    elif index_name == "observations MRC text" and search_string.find('AoMRC_ClinicalSummary_FT')!=-1:
+    elif index_name == "observations" and search_string.find('AoMRC_ClinicalSummary_FT') != -1:
         if verbose:
-            print("Generating data for 'observations'")
+            print("Generating mrc text data for 'observations'")
 
         probabilities = [0.7, 0.1, 0.05, 0.05, 0.05]  # Adjust as needed
         num_rows = random.choices(range(1, 6), probabilities)[0]
         df = generate_observations_MRC_text_data(
             num_rows, entered_list, global_start_year, global_start_month, global_end_year, global_end_month)
         return df
-    
+
     elif index_name == "observations":
         if verbose:
             print("Generating data for 'observations'")
 
         probabilities = [0.7, 0.1, 0.05, 0.05, 0.05]  # Adjust as needed
         num_rows = random.choices(range(1, 6), probabilities)[0]
-        
-        search_term = str(extract_search_term_obscatalogmasteritem_displayname(search_string))
-        
+
+        search_term = str(
+            extract_search_term_obscatalogmasteritem_displayname(search_string))
+
         df = generate_observations_data(
             num_rows, entered_list, global_start_year, global_start_month, global_end_year, global_end_month, search_term)
         return df
-    
-    
 
     elif index_name == "order" and 'medication' in search_string:
         if verbose:
@@ -490,7 +490,8 @@ def generate_patient_timeline(client_idcode):
 
 def extract_search_term_obscatalogmasteritem_displayname(search_string):
     # Using regular expression to find the part after 'obscatalogmasteritem_displayname:'
-    match = re.search(r'obscatalogmasteritem_displayname:\((.*?)\)', search_string)
+    match = re.search(
+        r'obscatalogmasteritem_displayname:\((.*?)\)', search_string)
     if match:
         # Get the matched group and remove punctuation
         search_term = match.group(1).replace('"', '').replace("'", "").strip()
