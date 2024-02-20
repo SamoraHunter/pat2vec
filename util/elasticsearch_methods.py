@@ -91,3 +91,39 @@ def ingest_data_to_elasticsearch(temp_df, index_name):
 
 # Example usage:
 # ingest_data_to_elasticsearch(temp_df, "annotations_myeloma")
+
+
+def handle_inconsistent_dtypes(df):
+    for column in tqdm(df.columns, desc='Processing columns'):
+        non_null_values = df[column].dropna()
+        dt_count = non_null_values.apply(pd.to_datetime, errors='coerce').notnull().sum()
+        str_count = non_null_values.apply(type).eq(str).sum()
+        int_count = non_null_values.apply(type).eq(int).sum()
+        float_count = non_null_values.apply(type).eq(float).sum()
+        
+        total_valid = dt_count + str_count + int_count + float_count
+        if total_valid == 0:
+            print(f"No valid data types found in column '{column}'")
+            continue
+        
+        dt_percent = dt_count / total_valid
+        str_percent = str_count / total_valid
+        int_percent = int_count / total_valid
+        float_percent = float_count / total_valid
+        
+        majority_dtype = max(dt_percent, str_percent, int_percent, float_percent)
+        if dt_percent > 0.5:
+            display(f"Casting column '{column}' to datetime...")
+            df[column] = pd.to_datetime(df[column], errors='ignore')
+        else:
+            display(f"Casting column '{column}' to majority datatype...")
+            if majority_dtype == dt_percent:
+                df[column] = pd.to_datetime(df[column], errors='ignore')
+            elif majority_dtype == str_percent:
+                df[column] = df[column].astype(str, errors='ignore')
+            elif majority_dtype == int_percent:
+                df[column] = df[column].astype(int, errors='ignore')
+            elif majority_dtype == float_percent:
+                df[column] = df[column].astype(float, errors='ignore')
+    
+    return df
