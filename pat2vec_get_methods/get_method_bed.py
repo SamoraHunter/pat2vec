@@ -3,6 +3,9 @@
 import pandas as pd
 from IPython.display import display
 
+from util.methods_get import (convert_date, filter_dataframe_by_timestamp,
+                              get_start_end_year_month)
+
 
 def get_bed(current_pat_client_id_code, target_date_range, pat_batch, config_obj=None, cohort_searcher_with_terms_and_search=None):
     """
