@@ -31,6 +31,11 @@ def ingest_data_to_elasticsearch(temp_df, index_name):
         temp_df['observationdocument_recordeddtm'] = pd.to_datetime(
             temp_df['observationdocument_recordeddtm'], format='ISO8601')
 
+    for column in tempdf.columns:
+        if pd.api.types.is_datetime64_any_dtype(tempdf[column]):
+            # If it's a datetime column, convert it to ISO 8601 format
+            tempdf[column] = tempdf[column].dt.strftime('%Y-%m-%dT%H:%M:%S%z') if tempdf[column].dt.tz is not None else tempdf[column].dt.strftime('%Y-%m-%d')
+
     # Connect to Elasticsearch
     es = Elasticsearch(
         [{'host': host_name, 'port': port, 'scheme': scheme}],
