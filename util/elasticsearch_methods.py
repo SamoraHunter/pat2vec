@@ -4,6 +4,8 @@ import pandas as pd
 from credentials import *
 from elasticsearch import Elasticsearch
 from elasticsearch.helpers import bulk
+from IPython.display import display
+from tqdm import tqdm
  
 
 def ingest_data_to_elasticsearch(temp_df, index_name):
