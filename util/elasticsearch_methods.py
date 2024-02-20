@@ -150,3 +150,31 @@ def guess_datetime_columns(df, threshold=0.5):
         if parse_count / total_count >= threshold:
             datetime_columns.append(column)
     return datetime_columns
+
+
+def get_guess_datetime_column(df, threshold=0.2):
+    highest_ratio = 0
+    highest_column = None
+
+    for column in tqdm(df.columns, desc="Processing Columns"):
+        parse_count = 0
+        total_count = 0
+        for value in (df[column]):
+            total_count += 1
+            # Skip parsing if the value is NaN
+            if pd.isna(value):
+                continue
+            # Check if the value is a string, int, or float before attempting to parse as datetime
+            if isinstance(value, str):
+                try:
+                    pd.to_datetime(value)
+                    parse_count += 1
+                except ValueError:
+                    continue
+        if total_count > 0:
+            parse_ratio = parse_count / total_count
+            if parse_ratio >= threshold and parse_ratio > highest_ratio:
+                highest_ratio = parse_ratio
+                highest_column = column
+
+    return highest_column
