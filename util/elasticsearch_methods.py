@@ -8,7 +8,7 @@ from IPython.display import display
 from tqdm import tqdm
  
 
-def ingest_data_to_elasticsearch(temp_df, index_name):
+def ingest_data_to_elasticsearch(temp_df, index_name, index_mapping=None):
     """
     Function to ingest data from a DataFrame into Elasticsearch.
 
@@ -55,7 +55,7 @@ def ingest_data_to_elasticsearch(temp_df, index_name):
     # Create the index if it does not exist
     if not es.indices.exists(index=index_name):
         try:
-            es.indices.create(index=index_name, ignore=400)
+            es.indices.create(index=index_name, body=mapping, ignore=400)
         except Exception as e:
             print(f"Error creating index: {e}")
             raise
