@@ -120,6 +120,20 @@ def enum_target_date_vector(target_date_range, current_pat_client_id_code, confi
 
     return empty_date_vector
 
+def enum_exact_target_date_vector(target_date_range, current_pat_client_id_code, config_obj):
+
+    #empty_date_vector = get_empty_date_vector(config_obj=config_obj)
+
+    empty_date_vector = pd.DataFrame(columns=['client_idcode', str(target_date_range)+"_date_time_stamp"])
+
+    empty_date_vector[str(target_date_range)+"_date_time_stamp"] = 1
+
+    empty_date_vector.at[0, str(target_date_range)+"_date_time_stamp"] = 1
+
+    empty_date_vector['client_idcode'] = current_pat_client_id_code
+
+    return empty_date_vector
+
 
 def generate_date_list(start_date, years, months, days, time_window_interval_delta=relativedelta(days=1), lookback=True):
 

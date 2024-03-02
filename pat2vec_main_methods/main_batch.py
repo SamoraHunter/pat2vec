@@ -26,6 +26,7 @@ from pat2vec.pat2vec_get_methods.get_method_pat_annotations import \
 from pat2vec.pat2vec_get_methods.get_method_smoking import get_smoking
 from pat2vec.pat2vec_get_methods.get_method_vte_status import get_vte_status
 from pat2vec.util.methods_get import (enum_target_date_vector,
+                                      enum_exact_target_date_vector,
                                       list_dir_wrapper, update_pbar,
                                       write_remote)
 
@@ -230,8 +231,11 @@ def main_batch(current_pat_client_id_code,
                 update_pbar(p_bar_entry, start_time, 2,
                             'concatenating', t, config_obj)
 
-                target_date_vector = enum_target_date_vector(
-                    target_date_range, current_pat_client_id_code, config_obj=config_obj)
+                if(config_obj.individual_patient_window):
+                    target_date_vector = enum_exact_target_date_vector(target_date_range, current_pat_client_id_code, config_obj=config_obj)
+                else:
+                    target_date_vector = enum_target_date_vector(
+                        target_date_range, current_pat_client_id_code, config_obj=config_obj)
 
                 patient_vector.append(target_date_vector)
 
