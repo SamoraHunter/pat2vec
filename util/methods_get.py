@@ -199,7 +199,7 @@ def filter_dataframe_by_timestamp(df, start_year, start_month, end_year, end_mon
 
     if dropna:
         filtered_df.dropna(subset=[timestamp_string], inplace=True)
-    display(filtered_df)
+    #display(filtered_df)
     return filtered_df
 
 # def filter_dataframe_by_timestamp(df, start_year, start_month, end_year, end_month, start_day, end_day, timestamp_string, dropna=False):
