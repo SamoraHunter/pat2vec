@@ -71,6 +71,7 @@ class main:
         self.hostname = config_obj.hostname
 
         self.config_obj = config_obj
+        
 
         if (self.config_obj == None):
             print("Init default config on config_pat2vec")
@@ -203,6 +204,7 @@ class main:
     # ------------------------------------begin main----------------------------------
 
     def pat_maker(self, i):
+        
         if self.config_obj.verbosity > 3:
             print(f"Processing patient {i} at {self.all_patient_list[i]}...")
 
@@ -220,6 +222,9 @@ class main:
         stripped_list_start = self.stripped_list_start
 
         date_list = self.config_obj.date_list
+        if self.config_obj.verbosity > 3:
+            print("Date list> pat_maker")
+            print(date_list[0:5])
 
         multi_process = self.config_obj.multi_process
 
@@ -235,6 +240,9 @@ class main:
         p_bar_entry = current_pat_client_id_code
 
         if (self.config_obj.individual_patient_window):
+            
+            if self.config_obj.verbosity >= 4:
+                print("main_pat2vec>self.config_obj.individual_patient_window: ")
 
             current_pat_start_date = self.config_obj.patient_dict.get(all_patient_list[i])[
                 0]
@@ -272,7 +280,7 @@ class main:
                 self.config_obj.global_end_day).zfill(2)
 
             if self.config_obj.verbosity >= 4:
-                print("ipw dates:")
+                print("main_pat2vec > ipw dates:")
                 self.config_obj.global_start_year = str(
                     self.config_obj.global_start_year).zfill(4)
                 self.config_obj.global_start_month = str(
@@ -291,13 +299,42 @@ class main:
             # calculate for ipw
             interval_window_delta = self.config_obj.time_window_interval_delta
 
-            self.config_obj.date_list = generate_date_list(self.config_obj.start_date,
+            # self.config_obj.date_list = generate_date_list(self.config_obj.start_date,
+            #                                                self.config_obj.years,
+            #                                                self.config_obj.months,
+            #                                                self.config_obj.days,
+            #                                                interval_window_delta,
+            #                                                lookback=self.config_obj.lookback
+            #                                                )
+
+            if self.config_obj.verbosity >= 4:
+                print("overwriting datelist in ipw", self.config_obj.start_date, interval_window_delta)
+                print("current_pat_end_date", current_pat_end_date)
+                print("current_pat_start_date", current_pat_start_date)
+
+            if self.config_obj.lookback:
+                date_for_generate = current_pat_end_date
+            else:
+                date_for_generate = current_pat_start_date
+            if self.config_obj.verbosity >= 4:
+
+                print("date for generate", date_for_generate)
+
+
+            self.config_obj.date_list = generate_date_list(date_for_generate,
                                                            self.config_obj.years,
                                                            self.config_obj.months,
                                                            self.config_obj.days,
                                                            interval_window_delta,
-                                                           lookback=self.config_obj.lookback
+                                                           lookback=self.config_obj.lookback,
+                                                        #verbose=bool(self.config_obj.verbosity>0)
                                                            )
+            if self.config_obj.verbosity >= 4:                                               
+                print("overwriting temp datetime with ipw")
+            date_list = self.config_obj.date_list
+
+            if self.config_obj.verbosity >= 4:
+                print(self.config_obj.date_list)
 
             self.n_pat_lines = len(self.config_obj.date_list)
 

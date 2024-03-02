@@ -13,12 +13,12 @@ from pat2vec.util.current_pat_batch_path_methods import PathsClass
 from pat2vec.util.methods_get import (add_offset_column, build_patient_dict,
                                       generate_date_list)
 
-# stuff paths for portability
+# stuff paths for portability #need fix
 sys.path.insert(0, '/home/aliencat/samora/gloabl_files')
 sys.path.insert(0, '/data/AS/Samora/gloabl_files')
 sys.path.insert(0, '/home/jovyan/work/gloabl_files')
-sys.path.insert(0, '/home/cogstack/samora/_data/gloabl_files')
-sys.path.insert(0, '/home/cogstack/samora/_data/gloabl_files/pat2vec')
+sys.path.insert(0, '/home/samorah/_data/gloabl_files')
+sys.path.insert(0, '/home/samorah/_data/gloabl_files/pat2vec')
 
 
 def calculate_interval(start_date, time_delta, m=1):
@@ -552,5 +552,9 @@ class config_class:
             print("Debug message: global_end_month =", self.global_end_month)
             print("Debug message: global_start_day =", self.global_start_day)
             print("Debug message: global_end_day =", self.global_end_day)
+
+            first_key = next(iter(self.patient_dict))
+            display(self.patient_dict[first_key])
+
 
         self.skip_additional_listdir = skip_additional_listdir

@@ -154,14 +154,14 @@ def multi_annots_to_df(current_pat_client_idcode,
         # Check for NaN values in any column of the specified list
         col_list_drop_nan = ['client_idcode', time_column, ]
 
-        if (config_obj.verbosity >= 3):
+        if (config_obj.verbosity >= 14):
             print('multi_annots_to_df', len(doc_to_annot_df))
         rows_with_nan = doc_to_annot_df[doc_to_annot_df[col_list_drop_nan].isna().any(
             axis=1)]
 
         # Drop rows with NaN values
         doc_to_annot_df = doc_to_annot_df.drop(rows_with_nan.index).copy()
-        if (config_obj.verbosity >= 3):
+        if (config_obj.verbosity >= 14):
             print('multi_annots_to_df', len(doc_to_annot_df))
 
         doc_to_annot_df.to_csv(temp_file_path, mode='a',
