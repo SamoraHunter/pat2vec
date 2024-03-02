@@ -48,7 +48,6 @@ def main_batch(current_pat_client_id_code,
                batch_drugs=None,
                batch_epr_docs_annotations=None,
                batch_epr_docs_annotations_mct=None,
-
                config_obj=None,
                stripped_list_start=None,
                t=None,

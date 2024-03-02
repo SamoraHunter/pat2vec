@@ -106,7 +106,7 @@ class config_class:
                  lookback=True,
                  add_icd10=False,
                  add_opc4s=False,
-                 all_epr_patient_list_path='/home/cogstack/samora/_data/gloabl_files/all_client_idcodes_epr_unique.csv',
+                 all_epr_patient_list_path='/home/samorah/_data/gloabl_files/all_client_idcodes_epr_unique.csv',
                  override_medcat_model_path=None
 
                  ):
@@ -536,7 +536,8 @@ class config_class:
                                                    end_column=f'{start_column_name}_offset')
 
             if (self.lookback == True):
-                # reverse tuples for elastic search parse
+                #print("skipping reverse")
+                #reverse tuples for elastic search parse
                 reversed_patient_dict = {key: tuple(
                     reversed(value)) for key, value in self.patient_dict.items()}
                 print('reversed_patient_dict')

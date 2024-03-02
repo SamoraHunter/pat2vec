@@ -35,8 +35,8 @@ from util.get_dummy_data_cohort_searcher import cohort_searcher_with_terms_and_s
 sys.path.insert(0, '/home/aliencat/samora/gloabl_files')
 sys.path.insert(0, '/data/AS/Samora/gloabl_files')
 sys.path.insert(0, '/home/jovyan/work/gloabl_files')
-sys.path.insert(0, '/home/cogstack/samora/_data/gloabl_files')
-sys.path.insert(0, '/home/cogstack/samora/_data/gloabl_files/pat2vec')
+sys.path.insert(0, '/home/samorah/_data/gloabl_files')
+sys.path.insert(0, '/home/samorah/_data/gloabl_files/pat2vec')
 
 color_bars = [Fore.RED,
               Fore.GREEN,

@@ -149,40 +149,79 @@ def generate_date_list(start_date, years, months, days, time_window_interval_del
     return date_list
 
 
+# def filter_dataframe_by_timestamp(df, start_year, start_month, end_year, end_month, start_day, end_day, timestamp_string, dropna=False):
+#     # Convert timestamp column to datetime format
+
+#     # if(dropna):
+#     #     df[timestamp_string] = pd.to_datetime(df[timestamp_string], errors='coerce')
+#     #     df.dropna(subset=[timestamp_string], inplace=True)
+
+#     df[timestamp_string] = pd.to_datetime(df[timestamp_string], utc=True)
+
+#     # df[timestamp_string] = pd.to_datetime(df[timestamp_string])
+
+#     # imputed from elastic. Mirror:
+#     # start_day = 1
+#     # end_day = 1
+#     hour = 23
+#     minute = 59
+#     second = 59
+
+#     # Filter based on year and month ranges
+#     try:
+#         filtered_df = df[(df[timestamp_string] >= str(datetime(start_year, int(start_month), int(start_day), hour, minute, second))) &
+#                          (df[timestamp_string] <= str(datetime(end_year, int(
+#                              end_month), int(end_day), hour, minute, second)))
+#                          ]
+#     except Exception as e:
+#         print("error in filter_dataframe_by_timestamp")
+#         print(e)
+#         display(df)
+#         print(start_year, start_month, end_year, end_month,
+#               start_day, end_day, timestamp_string)
+#         raise e
+#         # filtered_df = df[df[timestamp_string] =="2323"]
+
+#     return filtered_df
 def filter_dataframe_by_timestamp(df, start_year, start_month, end_year, end_month, start_day, end_day, timestamp_string, dropna=False):
+    
     # Convert timestamp column to datetime format
-
-    # if(dropna):
-    #     df[timestamp_string] = pd.to_datetime(df[timestamp_string], errors='coerce')
-    #     df.dropna(subset=[timestamp_string], inplace=True)
-
     df[timestamp_string] = pd.to_datetime(df[timestamp_string], utc=True)
 
-    # df[timestamp_string] = pd.to_datetime(df[timestamp_string])
+    # Ensure start date is earlier than end date
+    start_datetime = pd.Timestamp(datetime(start_year, int(start_month), int(start_day)), tz='UTC')
+    end_datetime = pd.Timestamp(datetime(end_year, int(end_month), int(end_day)), tz='UTC')
+    if start_datetime > end_datetime:
+        start_datetime, end_datetime = end_datetime, start_datetime
 
-    # imputed from elastic. Mirror:
-    # start_day = 1
-    # end_day = 1
-    hour = 23
-    minute = 59
-    second = 59
+    # Filter based on datetime range
+    filtered_df = df[(df[timestamp_string] >= start_datetime) & (df[timestamp_string] <= end_datetime)]
 
-    # Filter based on year and month ranges
-    try:
-        filtered_df = df[(df[timestamp_string] >= str(datetime(start_year, int(start_month), int(start_day), hour, minute, second))) &
-                         (df[timestamp_string] <= str(datetime(end_year, int(
-                             end_month), int(end_day), hour, minute, second)))
-                         ]
-    except Exception as e:
-        print("error in filter_dataframe_by_timestamp")
-        print(e)
-        display(df)
-        print(start_year, start_month, end_year, end_month,
-              start_day, end_day, timestamp_string)
-        raise e
-        # filtered_df = df[df[timestamp_string] =="2323"]
-
+    if dropna:
+        filtered_df.dropna(subset=[timestamp_string], inplace=True)
+    display(filtered_df)
     return filtered_df
+
+# def filter_dataframe_by_timestamp(df, start_year, start_month, end_year, end_month, start_day, end_day, timestamp_string, dropna=False):
+    
+#     #print("filter_dataframe_by_timestamp", "methods_get")
+#     #raise
+#     # Convert timestamp column to datetime format
+#     df[timestamp_string] = pd.to_datetime(df[timestamp_string], utc=True)
+
+#     # Ensure start date is earlier than end date
+#     start_datetime = datetime(start_year, int(start_month), int(start_day))
+#     end_datetime = datetime(end_year, int(end_month), int(end_day))
+#     if start_datetime > end_datetime:
+#         start_datetime, end_datetime = end_datetime, start_datetime
+
+#     # Filter based on datetime range
+#     filtered_df = df[(df[timestamp_string] >= start_datetime) & (df[timestamp_string] <= end_datetime)]
+
+#     if dropna:
+#         filtered_df.dropna(subset=[timestamp_string], inplace=True)
+#     display(filtered_df)
+#     return filtered_df
 
 
 def dump_results(file_data, path, config_obj=None):
