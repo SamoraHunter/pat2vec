@@ -244,11 +244,56 @@ class main:
             if self.config_obj.verbosity >= 4:
                 print("main_pat2vec>self.config_obj.individual_patient_window: ")
 
-            current_pat_start_date = self.config_obj.patient_dict.get(all_patient_list[i])[
-                0]
 
-            current_pat_end_date = self.config_obj.patient_dict.get(all_patient_list[i])[
-                1]
+
+            if(all_patient_list[i] not in self.config_obj.patient_dict.keys()):  
+                #is control pat  
+
+                if(self.config_obj.individual_patient_window_controls_method == 'full'):
+                    #Use the initally set global time window
+                    # Assuming you have access to the global variables
+                    global_start_month = self.config_obj.initial_global_start_month
+                    global_start_year = self.config_obj.initial_global_start_year
+                    global_end_month = self.config_obj.initial_global_end_month
+                    global_end_year = self.config_obj.initial_global_end_year
+                    global_start_day = self.config_obj.initial_global_start_day
+                    global_end_day = self.config_obj.initial_global_end_day
+                    
+                    # Convert global variables to integers
+                    global_start_month = int(global_start_month)
+                    global_start_year = int(global_start_year)
+                    global_end_month = int(global_end_month)
+                    global_end_year = int(global_end_year)
+                    global_start_day = int(global_start_day)
+                    global_end_day = int(global_end_day)
+
+                    # Create datetime objects for start and end dates
+                    current_pat_start_date = datetime(global_start_year, global_start_month, global_start_day)
+                    current_pat_end_date = datetime(global_end_year, global_end_month, global_end_day)
+
+                    if(self.config_obj.verbosity >=4):
+                        print(f"Control pat full {all_patient_list[i]} ipw dates set:")
+                        # Print the datetime objects for verification (optional)
+                        print("Start Date:", current_pat_start_date)
+                        print("End Date:", current_pat_end_date)
+
+
+                elif(individual_patient_window_controls_method == 'random'):
+                    #Select a random treatments time window for application.
+                    index = random.randint(0, len(all_patient_list))
+                    current_pat_start_date = self.config_obj.patient_dict.get(all_patient_list[index])[
+                    0]
+
+                    current_pat_end_date = self.config_obj.patient_dict.get(all_patient_list[index])[
+                        1]
+                    
+            else:
+
+                current_pat_start_date = self.config_obj.patient_dict.get(all_patient_list[i])[
+                    0]
+
+                current_pat_end_date = self.config_obj.patient_dict.get(all_patient_list[i])[
+                    1]
 
             self.config_obj.global_start_month = current_pat_start_date.month
 
@@ -326,7 +371,7 @@ class main:
                                                            self.config_obj.months,
                                                            self.config_obj.days,
                                                            interval_window_delta,
-                                                           lookback=self.config_obj.lookback,
+                                                           config_obj = self.config_obj,
                                                         #verbose=bool(self.config_obj.verbosity>0)
                                                            )
             if self.config_obj.verbosity >= 4:                                               

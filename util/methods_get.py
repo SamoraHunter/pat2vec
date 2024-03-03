@@ -18,6 +18,7 @@ from dateutil.parser import parse
 from dateutil.relativedelta import relativedelta
 from IPython.display import display
 from tqdm import tqdm
+import pytz
 
 color_bars = [Fore.RED,
               Fore.GREEN,
@@ -135,7 +136,43 @@ def enum_exact_target_date_vector(target_date_range, current_pat_client_id_code,
     return empty_date_vector
 
 
-def generate_date_list(start_date, years, months, days, time_window_interval_delta=relativedelta(days=1), lookback=True):
+# def generate_date_list(start_date, years, months, days, time_window_interval_delta=relativedelta(days=1), config_obj=None):
+##working
+#     lookback = config_obj.lookback
+
+#     config_obj.global_start_year, config_obj.global_start_month, config_obj.global_end_year, config_obj.global_end_month, config_obj.global_start_day, config_obj.global_end_day
+
+#     if (lookback == False):
+#         end_date = start_date + \
+#             relativedelta(years=years, months=months, days=days)
+#     else:
+#         end_date = start_date - \
+#             relativedelta(years=years, months=months, days=days)
+
+#     date_list = []
+#     current_date = start_date
+
+#     if (lookback == False):
+#         # look forward...
+#         while current_date <= end_date:
+#             date_list.append(
+#                 (current_date.year, current_date.month, current_date.day))
+#             current_date += time_window_interval_delta  # timedelta(days=1)
+#     else:
+#         # look back
+#         while current_date >= end_date:
+#             date_list.append(
+#                 (current_date.year, current_date.month, current_date.day))
+#             current_date += time_window_interval_delta
+
+#     return date_list
+
+
+def generate_date_list(start_date, years, months, days, time_window_interval_delta=relativedelta(days=1), config_obj=None):
+
+    lookback = config_obj.lookback
+
+    config_obj.global_start_year, config_obj.global_start_month, config_obj.global_end_year, config_obj.global_end_month, config_obj.global_start_day, config_obj.global_end_day
 
     if (lookback == False):
         end_date = start_date + \
@@ -143,6 +180,39 @@ def generate_date_list(start_date, years, months, days, time_window_interval_del
     else:
         end_date = start_date - \
             relativedelta(years=years, months=months, days=days)
+
+    global_start_date = datetime.strptime(f"{config_obj.global_start_year}-{config_obj.global_start_month}-{config_obj.global_start_day}", "%Y-%m-%d")
+    global_end_date = datetime.strptime(f"{config_obj.global_end_year}-{config_obj.global_end_month}-{config_obj.global_end_day}", "%Y-%m-%d")
+
+    #import pytz
+
+    # Assuming your timezone is 'UTC', you can replace it with your actual timezone
+    timezone = pytz.UTC
+
+    # Check if start_date and end_date are timezone-aware
+    if not start_date.tzinfo:
+        start_date = timezone.localize(start_date)
+
+    if not end_date.tzinfo:
+        end_date = timezone.localize(end_date)
+
+    # Check if global_start_date and global_end_date are timezone-aware
+    if not global_start_date.tzinfo:
+        global_start_date = timezone.localize(global_start_date)
+
+    if not global_end_date.tzinfo:
+        global_end_date = timezone.localize(global_end_date)
+
+    # Adjust start_date and end_date based on global start and end dates
+    if start_date < global_start_date:
+        start_date = global_start_date
+
+    if end_date > global_end_date:
+        end_date = global_end_date
+
+    # Rest of your code
+
+
 
     date_list = []
     current_date = start_date
@@ -155,6 +225,18 @@ def generate_date_list(start_date, years, months, days, time_window_interval_del
             current_date += time_window_interval_delta  # timedelta(days=1)
     else:
         # look back
+        #limit lookback dates by global dates. 
+        if start_date < global_start_date:
+            
+            start_date = global_start_date
+            if(config_obj.verbose >= 1):
+                print("start_date < global_start_date", start_date)
+
+        if end_date > global_end_date:
+            end_date = global_end_date
+            if(config_obj.verbose >= 1):
+                print("end_date > global_end_date", end_date)
+
         while current_date >= end_date:
             date_list.append(
                 (current_date.year, current_date.month, current_date.day))
@@ -517,7 +599,7 @@ def get_empty_date_vector(config_obj):
     interval_window_delta = config_obj.time_window_interval_delta
 
     combinations = generate_date_list(
-        start_date, years, months, days, interval_window_delta, lookback=config_obj.lookback)
+        start_date, years, months, days, interval_window_delta, config_obj = self.config_obj)
 
     combinations = [
         str(item) + '_' + 'date_time_stamp' for item in combinations]

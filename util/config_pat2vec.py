@@ -99,6 +99,7 @@ class config_class:
                  individual_patient_window_df=None,
                  individual_patient_window_start_column_name=None,
                  individual_patient_id_column_name=None,
+                 individual_patient_window_controls_method = 'full', # full, random
                  dropna_doc_timestamps=True,
                  time_window_interval_delta=relativedelta(days=1),
                  feature_engineering_arg_dict=None,
@@ -201,6 +202,8 @@ class config_class:
         self.individual_patient_window_start_column_name = individual_patient_window_start_column_name
 
         self.individual_patient_id_column_name = individual_patient_id_column_name
+
+        self.individual_patient_window_controls_method = individual_patient_window_controls_method
 
         self.control_list_path = 'control_path.pkl'
 
@@ -466,16 +469,9 @@ class config_class:
         else:
             print("looking forward with ", self.time_window_interval_delta)
 
-        self.date_list = generate_date_list(
-            self.start_date, self.years, self.months, self.days,
-            time_window_interval_delta=self.time_window_interval_delta,
-            lookback=self.lookback)
+        
 
-        if (self.verbosity > 0):
-            for date in self.date_list[0:5]:
-                print(date)
-
-        self.n_pat_lines = len(self.date_list)
+        
 
         self.model_paths = {
 
@@ -498,7 +494,26 @@ class config_class:
             self.global_start_day = str(global_start_day).zfill(2)
             self.global_end_day = str(global_end_day).zfill(2)
 
+        self.initial_global_start_year = self.global_start_year
+        self.initial_global_start_month = self.global_start_month
+        self.initial_global_end_year = self.global_end_year
+        self.initial_global_end_month = self.global_end_month
+        self.initial_global_start_day = self.global_start_day
+        self.initial_global_end_day = self.global_end_day
+
+
         self = update_global_start_date(self, self.start_date)
+
+        self.date_list = generate_date_list(
+            self.start_date, self.years, self.months, self.days,
+            time_window_interval_delta=self.time_window_interval_delta,
+            config_obj = self)
+
+        if (self.verbosity > 0):
+            for date in self.date_list[0:5]:
+                print(date)
+
+        self.n_pat_lines = len(self.date_list)
 
         if (self.individual_patient_window):
             print("individual_patient_window set!")
