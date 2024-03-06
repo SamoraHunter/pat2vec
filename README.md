@@ -1,7 +1,12 @@
-# pat2vec_time
-transform patient data to time interval feature vectors
+# pat2vec
+Converts individual patient data into time interval feature vectors, suitable for filtering and concatenation into a data matrix D for binary classification machine learning tasks.
 
-Transforms single patient data to time interval feature vectors. Ready to be filtered and concatenated into a data matrix D ready for machine learning (binary classification).
+
+Example use case 1: I aim to compute the mean of n variables for each unique patient, resulting in a single row representing each patient.
+
+Example use case 2: I intend to generate a monthly time series comprising patient data encompassing biochemistry, demographic details, and textual annotations (MedCat annotations) spanning the last 25 years. Each patient's data begins from a distinct start date (diagnosis date), providing a retrospective view.
+
+
 
 ## Table of Contents
 - [Requirements](#requirements)
@@ -35,6 +40,9 @@ See util/requirements.txt
 - Cohort search and creation
 - Automated random controls
 - Modular feature space selection
+- Look back
+- Look forward
+- Individual patient time windows. 
 
 ## Installation
 
