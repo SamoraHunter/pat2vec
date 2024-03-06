@@ -1,11 +1,13 @@
 import csv
 import os
+import pickle
 import shutil
 import sys
 from datetime import datetime
 from itertools import chain
 from multiprocessing import Pool, cpu_count
 from pathlib import Path
+import time
 from typing import Dict, List, Optional, Union
 
 import pandas as pd
@@ -996,3 +998,263 @@ def build_merged_epr_mct_annot_df(config_obj):
             # Append each result to the output file
             all_annots.to_csv(output_file_path, mode='a',
                               header=False, index=False)
+
+
+
+
+def extract_datetime_from_binary_columns(df):
+    """
+    Extracts datetime values from binary columns representing dates in a DataFrame.
+
+    Parameters:
+        df (DataFrame): The DataFrame containing the binary columns with '_date_time_stamp' in column names.
+
+    Returns:
+        list: A list of datetime values extracted from the binary columns.
+    """
+    # Extracting date columns with '_date_time_stamp' in their names
+    date_columns = [col.strip('()').split(')')[0] for col in df.columns if '_date_time_stamp' in col]
+
+    date_columns_raw = [col for col in df.columns if '_date_time_stamp' in col]
+
+    date_time_column_values = []
+
+    # Iterate over each row in the DataFrame
+    for index, row in tqdm(df.iterrows(), total=len(df)):
+
+        # Iterate over each date column
+        for i in range(len(date_columns)):
+            if row[date_columns_raw[i]] == 1:  # Check if the value in the column is 1
+                date_string = date_columns[i]
+
+                # Split the date string and convert each part to integer
+                date_parts = [int(part) for part in date_string.split(', ')]
+
+                # Unpack date_parts and create a datetime object
+                formatted_date = datetime(*date_parts)
+                
+                # Append the datetime object to the list
+                date_time_column_values.append(formatted_date)
+
+    df['datetime'] = date_time_column_values
+    return df
+
+# Example usage:
+# Assuming df_copy is defined
+#df = extract_datetime_from_binary_columns(df)
+
+
+def extract_datetime_from_binary_columns_chunk_reader(filepath):
+    """
+    Extracts datetime values from binary columns representing dates in a DataFrame.
+
+    Parameters:
+        filepath (str): The file path to the DataFrame containing the binary columns with '_date_time_stamp' in column names.
+
+    Returns:
+        DataFrame: The DataFrame with the 'datetime' column appended.
+    """
+    chunk_size = 1000  # Adjust this value based on your RAM capacity
+    date_time_column_values = []
+
+    # Iterate over DataFrame chunks
+    for chunk in pd.read_csv(filepath, chunksize=chunk_size):
+        # Extracting date columns with '_date_time_stamp' in their names
+        date_columns = [col.strip('()').split(')')[0] for col in chunk.columns if '_date_time_stamp' in col]
+        date_columns_raw = [col for col in chunk.columns if '_date_time_stamp' in col]
+
+        # Iterate over each row in the chunk
+        for index, row in tqdm(chunk.iterrows(), total=len(chunk)):
+            # Iterate over each date column
+            for i in range(len(date_columns)):
+                if row[date_columns_raw[i]] == 1:  # Check if the value in the column is 1
+                    date_string = date_columns[i]
+
+                    # Split the date string and convert each part to integer
+                    date_parts = [int(part) for part in date_string.split(', ')]
+
+                    # Unpack date_parts and create a datetime object
+                    formatted_date = datetime(*date_parts)
+
+                    # Append the datetime object to the list
+                    date_time_column_values.append(formatted_date)
+
+    # Add 'datetime' column to the chunk DataFrame
+    chunk['datetime'] = date_time_column_values
+    return chunk
+
+
+def drop_columns_with_all_nan(df):
+    # Identify columns where all values are NaN or None
+    nan_columns = df.columns[df.isna().all()]
+
+    # Drop columns with all NaN or None values
+    df.drop(columns=nan_columns, inplace=True)
+    
+    return df, nan_columns
+
+def save_missing_values_pickle(df, out_file_path, overwrite=False):
+    # Calculate percentage of missing values for each column
+    missing_percentages = (df.isnull().sum() / len(df)) * 100
+    
+    # Create dictionary with column names as keys and percentage missing as values
+    missing_dict = missing_percentages.to_dict()
+    
+    # Extracting the directory and filename from out_file_path
+    output_dir = os.path.dirname(out_file_path)
+    filename = os.path.basename(out_file_path)
+    
+    # Constructing the output pickle file path
+    pickle_filename = os.path.splitext(filename)[0] + "_missing_dict.pickle"
+    pickle_file_path = os.path.join(output_dir, pickle_filename)
+    
+    # Check if the pickle file already exists
+    if os.path.exists(pickle_file_path) and not overwrite:
+        print(f"Skipping saving as '{pickle_filename}' already exists and overwrite is set to False.")
+    else:
+        # Write the dictionary to the pickle file
+        with open(pickle_file_path, 'wb') as f:
+            pickle.dump(missing_dict, f)
+        
+        print(f"Missing values dictionary written to: {pickle_file_path}")
+
+# Example usage:
+# Provide the path to your CSV file as an argument to the function
+
+#save_missing_values_pickle(df, out_file_path)
+
+
+def convert_true_to_float(df, columns = ['census_black_african_caribbean_or_black_british',
+                      'census_mixed_or_multiple_ethnic_groups',
+                      'census_white',
+                      'census_asian_or_asian_british',
+                      'census_other_ethnic_group']
+                          ):
+    """
+    Convert 'True' strings to float 1.0 in specified columns and
+    ensure those columns are of float datatype.
+
+    Parameters:
+        df (pandas.DataFrame): The DataFrame to operate on.
+        columns (list): List of column names to convert.
+
+    Returns:
+        pandas.DataFrame: DataFrame with specified columns converted.
+    """
+    # Replace 'True' with 1.0 in the specified columns
+    df[columns] = df[columns].replace('True', 1.0)
+    
+    # Convert the columns to float datatype
+    df[columns] = df[columns].astype(float)
+    
+    return df
+
+
+def impute_datetime(df, datetime_column='datetime', patient_column='client_idcode', forward=True, backward=True, mean_impute=True, verbose=False):
+    start_time = time.time()
+    if verbose:
+        print("Converting datetime column to datetime type...")
+    df[datetime_column] = pd.to_datetime(df[datetime_column])
+    
+    if verbose:
+        print("Sorting DataFrame by patient_column and datetime_column...")
+    df = df.sort_values(by=[patient_column, datetime_column])
+    end_time = time.time()
+    if verbose:
+        print("Sorting complete. Time taken: {:.2f} seconds.".format(end_time - start_time))
+    
+    if forward:
+        start_time = time.time()
+        if verbose:
+            print("Forward filling missing values per patient_column...")
+        df = df.groupby(patient_column).ffill()
+        end_time = time.time()
+        if verbose:
+            print("Forward filling complete. Time taken: {:.2f} seconds.".format(end_time - start_time))
+    
+    if backward:
+        start_time = time.time()
+        if verbose:
+            print("Backward filling missing values per patient_column...")
+        df = df.groupby(patient_column).bfill()
+        end_time = time.time()
+        if verbose:
+            print("Backward filling complete. Time taken: {:.2f} seconds.".format(end_time - start_time))
+    
+    if mean_impute:
+        start_time = time.time()
+        if verbose:
+            print("Mean imputing missing values...")
+        df = df.fillna(df.mean())
+        end_time = time.time()
+        if verbose:
+            print("Mean imputing complete. Time taken: {:.2f} seconds.".format(end_time - start_time))
+    
+    if verbose:
+        print("Imputation complete.")
+    
+    return df
+
+
+def impute_dataframe(df, verbose=True, datetime_column='datetime', patient_column='client_idcode', forward=True, backward=True, mean_impute=True):
+    start_time = time.time()
+
+    numeric_columns = df.select_dtypes(include='number').columns.tolist()
+
+    df = df.sort_values(by=[patient_column, datetime_column])
+
+    for i in tqdm(range(0, len(numeric_columns))):
+        if forward:
+            df[numeric_columns[i]] = df.groupby(patient_column, as_index=True)[numeric_columns[i]].ffill()
+        if backward:
+            df[numeric_columns[i]] = df.groupby(patient_column, as_index=True)[numeric_columns[i]].bfill()
+        if mean_impute:
+            df[numeric_columns[i]] = df[numeric_columns[i]].fillna(df[numeric_columns[i]].mean())
+
+    if verbose:
+        print("Preprocessing took: %s seconds" % (time.time() - start_time))
+
+    return df
+
+
+def missing_percentage_df(dataframe):
+    """
+    Calculate the percentage of missing values in each column of a DataFrame.
+
+    Parameters:
+    dataframe (DataFrame): The input DataFrame.
+
+    Returns:
+    DataFrame: A DataFrame containing two columns: 'Column' (column names) and 'MissingPercentage' (percentage of missing values).
+    """
+    # Calculate percentage of missing values
+    missing_percentage = dataframe.isnull().mean() * 100
+
+    # Create a new DataFrame to store the missing percentage
+    missing_df = pd.DataFrame({'Column': missing_percentage.index, 'MissingPercentage': missing_percentage.values})
+
+    return missing_df
+
+def aggregate_dataframe_mean(df, group_by_column='client_idcode'):
+    # Convert non-float columns to string
+    #non_float_columns = df.select_dtypes(include=['object']).columns
+    #df[non_float_columns] = df[non_float_columns].astype(str)
+
+    # Define aggregation function
+    def custom_aggregation(x):
+        agg_values = {}
+        for col in x.columns:
+            if pd.api.types.is_numeric_dtype(x[col].dtype):
+                agg_values[col] = x[col].mean()
+            else:
+                agg_values[col] = x[col].iloc[0]
+        return pd.Series(agg_values)
+
+    # Group by specified column and aggregate
+    grouped = df.groupby(group_by_column)
+    
+    # Use tqdm for progress tracking
+    tqdm.pandas(desc="Aggregating")
+    aggregated_df = grouped.progress_apply(custom_aggregation)
+
+    return aggregated_df
