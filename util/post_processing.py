@@ -1258,3 +1258,62 @@ def aggregate_dataframe_mean(df, group_by_column='client_idcode'):
     aggregated_df = grouped.progress_apply(custom_aggregation)
 
     return aggregated_df
+
+
+def collapse_df_to_mean(df, output_filename='output.csv', client_idcode_string='client_idcode'):
+    """
+    Collapse a DataFrame to calculate mean values for numeric columns and retain the first non-numeric value for non-numeric columns
+    for each unique client_idcode.
+
+    Args:
+        df (DataFrame): Input DataFrame containing client_idcode and other columns.
+        output_filename (str, optional): Name of the output file to save the processed DataFrame. Default is 'output.csv'.
+        client_idcode_string (str, optional): Name of the client_idcode column in the DataFrame. Default is 'client_idcode'.
+
+    Returns:
+        None: Saves the processed DataFrame to the specified output file.
+    """
+    # Check if the output file exists
+    if os.path.exists(output_filename):
+        # Read the output DataFrame from the existing file
+        output_df = pd.read_csv(output_filename)
+    else:
+        # Initialize an empty DataFrame for output
+        output_df = pd.DataFrame(columns=df.columns)
+        # Write the header to the output file
+        #output_df.to_csv(output_filename, index=False)
+
+    # Function to check if a row exists in the output DataFrame
+    def row_exists(client_idcode):
+        return any(output_df[client_idcode_string] == client_idcode)
+
+    len_out_df = len(output_df)
+    started = False
+    # Iterate over unique client_idcodes with tqdm progress bar
+    for client_idcode in tqdm(df[client_idcode_string].unique(), desc="Processing", total=len(df[client_idcode_string].unique())):
+        # Check if the row already exists in output_df
+        if not row_exists(client_idcode):
+            # Filter rows for the current client_idcode
+            client_df = df[df[client_idcode_string] == client_idcode]
+            
+            # Initialize a dictionary to store mean values and first non-numeric values
+            mean_values = {}
+            first_non_numeric_values = {}
+            
+            # Iterate over columns
+            for column in df.columns:
+                # Check if the column is numeric
+                if pd.api.types.is_numeric_dtype(df[column]):
+                    mean_values[column] = client_df[column].mean()
+                else:
+                    first_non_numeric_values[column] = client_df[column].iloc[0]
+            
+            # Append mean values and first non-numeric values to output_df
+            row_data = {client_idcode_string: client_idcode, **mean_values, **first_non_numeric_values}
+            if(started==False and len_out_df == 0):
+                pd.DataFrame([row_data]).to_csv(output_filename, mode='a', index=False, header=True)
+                started = True
+            else:
+                pd.DataFrame([row_data]).to_csv(output_filename, mode='a', index=False, header=False)
+
+    
