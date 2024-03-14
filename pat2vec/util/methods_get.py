@@ -599,7 +599,7 @@ def get_empty_date_vector(config_obj):
     interval_window_delta = config_obj.time_window_interval_delta
 
     combinations = generate_date_list(
-        start_date, years, months, days, interval_window_delta, config_obj = self.config_obj)
+        start_date, years, months, days, interval_window_delta, config_obj = config_obj)
 
     combinations = [
         str(item) + '_' + 'date_time_stamp' for item in combinations]

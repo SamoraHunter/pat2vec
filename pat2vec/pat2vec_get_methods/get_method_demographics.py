@@ -11,13 +11,6 @@ from IPython.display import display
 from pat2vec.util.ethnicity_abstractor import EthnicityAbstractor
 from pat2vec.util.methods_get import get_demographics3_batch
 
-sys.path.insert(0, '/home/aliencat/samora/gloabl_files')
-sys.path.insert(0, '/data/AS/Samora/gloabl_files')
-sys.path.insert(0, '/home/jovyan/work/gloabl_files')
-sys.path.insert(0, '/home/cogstack/samora/gloabl_files')
-sys.path.insert(0, '/home/cogstack/samora/_data/gloabl_files')
-
-
 def get_demo(current_pat_client_id_code, target_date_range, pat_batch, config_obj=None):
     """
     Retrieve demographic information for a patient based on the provided parameters.

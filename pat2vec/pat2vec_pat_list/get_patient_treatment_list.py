@@ -9,13 +9,6 @@ import pandas as pd
 
 from notebooks.test_files.read_test_file import read_test_data
 
-#stuff paths for portability
-sys.path.insert(0,'/home/aliencat/samora/gloabl_files')
-sys.path.insert(0,'/data/AS/Samora/gloabl_files')
-sys.path.insert(0,'/home/jovyan/work/gloabl_files')
-sys.path.insert(0, '/home/cogstack/samora/_data/gloabl_files')
-sys.path.insert(0, '/home/cogstack/samora/_data/gloabl_files/pat2vec')
-
 def extract_treatment_id_list_from_docs(config_obj):
     """
     Retrieves a list of unique client IDs from a treatment document specified in the configuration.

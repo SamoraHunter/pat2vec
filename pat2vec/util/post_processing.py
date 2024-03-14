@@ -14,12 +14,6 @@ import pandas as pd
 from IPython.display import display
 from tqdm import tqdm
 
-sys.path.insert(0, '/home/aliencat/samora/gloabl_files')
-sys.path.insert(0, '/data/AS/Samora/gloabl_files')
-sys.path.insert(0, '/home/jovyan/work/gloabl_files')
-sys.path.insert(0, '/home/cogstack/samora/_data/gloabl_files')
-
-
 def count_files(path):
     count = 0
     for root, dirs, files in os.walk(path):

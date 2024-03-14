@@ -40,6 +40,11 @@ notebooks/output_directory/*
 
 notebooks/output_directory
 
+myenv/*
+
+myenv
+pat2vec_env
+
 ####### git template for python projects: ########
 
 # Byte-compiled / optimized / DLL files
