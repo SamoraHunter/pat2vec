@@ -29,7 +29,7 @@ from pat2vec.util.methods_get import (create_folders, create_folders_for_pat,
                                       get_free_gpu, list_dir_wrapper,
                                       update_pbar)
 from pat2vec.util.methods_get_medcat import get_cat
-from util.get_dummy_data_cohort_searcher import cohort_searcher_with_terms_and_search_dummy
+from pat2vec.util.get_dummy_data_cohort_searcher import cohort_searcher_with_terms_and_search_dummy
 
 # stuff paths for portability
 sys.path.insert(0, '/home/aliencat/samora/gloabl_files')
