@@ -42,9 +42,18 @@ def get_cat(config_obj):
             for directory in sys.path:
                 medcat_models_path = os.path.join(directory, "medcat_models")
                 if os.path.exists(medcat_models_path):
-                    model_path = os.path.join(
-                        medcat_models_path, os.listdir(medcat_models_path)[0] + ".zip"
-                    )
+                    files_in_dir = os.listdir(medcat_models_path)
+                    zip_files = [
+                        file for file in files_in_dir if file.endswith(".zip")]
+                    if zip_files:
+                        model_path = os.path.join(
+                            medcat_models_path, zip_files[0])
+                    else:
+                        # Handle case where no zip files are found
+                        print("No ZIP files found in the directory.")
+                else:
+                    # Handle case where medcat_models_path doesn't exist
+                    print("The specified path does not exist.")
                     print(
                         "auto selected: Path to 'medcat_models/':", medcat_models_path
                     )
