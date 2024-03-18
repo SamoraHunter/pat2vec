@@ -3,6 +3,10 @@ import sys
 
 
 def get_cat(config_obj):
+
+    if (config_obj.verbosity >= 1):
+        print(config_obj.override_medcat_model_path)
+
     model_path = None
 
     if config_obj.medcat:
@@ -10,7 +14,9 @@ def get_cat(config_obj):
         medcat_path = None
 
         # Check if the file exists
-        if os.path.exists("paths.py"):
+        if os.path.exists("paths.py") and config_obj.override_medcat_model_path == None:
+            if (config_obj.verbosity >= 1):
+                print('paths file found, importing..')
             # If the file exists, try to import the variable
             try:
                 from paths import medcat_path
@@ -29,13 +35,15 @@ def get_cat(config_obj):
 
         path_found = False
 
-        if medcat_path == "auto":
-
+        if config_obj.override_medcat_model_path == "auto":
+            if (config_obj.verbosity >= 1):
+                print(f"{config_obj.override_medcat_model_path} == auto")
             # Search for 'medcat_models/' in each directory in sys.path
             for directory in sys.path:
                 medcat_models_path = os.path.join(directory, "medcat_models")
                 if os.path.exists(medcat_models_path):
-                    model_path = medcat_models_path
+                    model_path = os.path.join(
+                        medcat_models_path, os.listdir(medcat_models_path)[0] + ".zip")
                     print(
                         "auto selected: Path to 'medcat_models/':", medcat_models_path
                     )
@@ -47,7 +55,7 @@ def get_cat(config_obj):
                 )
 
         if path_found == False:
-            if medcat_path is not None and medcat_path is not "auto":
+            if medcat_path is not None or medcat_path is "auto":
                 model_path = medcat_path
             elif config_obj.override_medcat_model_path is not None:
                 model_path = config_obj.override_medcat_model_path
@@ -62,7 +70,7 @@ def get_cat(config_obj):
             elif config_obj.dhcap02:
                 model_path = "/home/samorah/_data/medcat_models/medcat_model_pack_316666b47dfaac07.zip"
 
-        if model_path:
+        if model_path is not None:
             if config_obj.verbosity > 0:
                 print(f"Loading medcat model at {model_path}")
 
