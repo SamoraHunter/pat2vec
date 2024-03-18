@@ -92,7 +92,7 @@ class config_class:
                  individual_patient_window_df=None,
                  individual_patient_window_start_column_name=None,
                  individual_patient_id_column_name=None,
-                 individual_patient_window_controls_method = 'full', # full, random
+                 individual_patient_window_controls_method='full',  # full, random
                  dropna_doc_timestamps=True,
                  time_window_interval_delta=relativedelta(days=1),
                  feature_engineering_arg_dict=None,
@@ -101,7 +101,8 @@ class config_class:
                  add_icd10=False,
                  add_opc4s=False,
                  all_epr_patient_list_path='/home/samorah/_data/gloabl_files/all_client_idcodes_epr_unique.csv',
-                 override_medcat_model_path=None
+                 override_medcat_model_path=None,
+                 data_type_filter_dict=None
 
                  ):
 
@@ -147,6 +148,8 @@ class config_class:
 
         self.add_icd10 = add_icd10
         self.add_opc4s = add_opc4s
+
+        self.data_type_filter_dict = data_type_filter_dict
 
         self.aliencat = aliencat
         self.dgx = dgx
@@ -462,10 +465,6 @@ class config_class:
         else:
             print("looking forward with ", self.time_window_interval_delta)
 
-        
-
-        
-
         self.model_paths = {
 
             'aliencat': '/home/aliencat/samora/HFE/HFE/medcat_models/medcat_model_pack_316666b47dfaac07.zip',
@@ -494,13 +493,12 @@ class config_class:
         self.initial_global_start_day = self.global_start_day
         self.initial_global_end_day = self.global_end_day
 
-
         self = update_global_start_date(self, self.start_date)
 
         self.date_list = generate_date_list(
             self.start_date, self.years, self.months, self.days,
             time_window_interval_delta=self.time_window_interval_delta,
-            config_obj = self)
+            config_obj=self)
 
         if (self.verbosity > 0):
             for date in self.date_list[0:5]:
@@ -544,8 +542,8 @@ class config_class:
                                                    end_column=f'{start_column_name}_offset')
 
             if (self.lookback == True):
-                #print("skipping reverse")
-                #reverse tuples for elastic search parse
+                # print("skipping reverse")
+                # reverse tuples for elastic search parse
                 reversed_patient_dict = {key: tuple(
                     reversed(value)) for key, value in self.patient_dict.items()}
                 print('reversed_patient_dict')
@@ -564,6 +562,5 @@ class config_class:
 
             first_key = next(iter(self.patient_dict))
             display(self.patient_dict[first_key])
-
 
         self.skip_additional_listdir = skip_additional_listdir

@@ -5,6 +5,7 @@ from clinical_note_splitter.clinical_notes_splitter import \
     split_and_append_chunks
 from IPython.display import display
 
+from pat2vec.util.filter_methods import filter_dataframe_by_fuzzy_terms
 from pat2vec.util.methods_annotation import (
     get_pat_document_annotation_batch, get_pat_document_annotation_batch_mct)
 from pat2vec.util.methods_get import exist_check
@@ -35,8 +36,9 @@ def get_pat_batch_obs(current_pat_client_id_code, search_term, config_obj=None, 
     global_end_month = config_obj.global_end_month
     global_start_day = config_obj.global_start_day
     global_end_day = config_obj.global_end_day
-    
-    batch_obs_target_path = os.path.join(config_obj.pre_misc_batch_path.replace('misc', search_term) , str(current_pat_client_id_code) + ".csv")
+
+    batch_obs_target_path = os.path.join(config_obj.pre_misc_batch_path.replace(
+        'misc', search_term), str(current_pat_client_id_code) + ".csv")
     existence_check = exist_check(batch_obs_target_path, config_obj)
 
     try:
@@ -51,22 +53,22 @@ def get_pat_batch_obs(current_pat_client_id_code, search_term, config_obj=None, 
                 search_string=f"obscatalogmasteritem_displayname:(\"{search_term}\") AND "
                             f'observationdocument_recordeddtm:[{global_start_year}-{global_start_month}-{global_start_day} TO {global_end_year}-{global_end_month}-{global_end_day}]'
             )
-            if(config_obj.store_pat_batch_docs or config_obj.overwrite_stored_pat_observations):
-                
-                directory_path = config_obj.pre_misc_batch_path.replace('misc', search_term)
-                
+            if (config_obj.store_pat_batch_docs or config_obj.overwrite_stored_pat_observations):
+
+                directory_path = config_obj.pre_misc_batch_path.replace(
+                    'misc', search_term)
+
                 if not os.path.exists(directory_path):
                     os.makedirs(directory_path)
                 batch_target.to_csv(batch_obs_target_path)
         else:
             batch_target = pd.read_csv(batch_obs_target_path)
-            
+
         return batch_target
     except Exception as e:
-        
+
         print(f"Error retrieving batch observations: {e}")
         return []
-
 
 
 def get_pat_batch_news(current_pat_client_id_code, search_term, config_obj=None, cohort_searcher_with_terms_and_search=None):
@@ -94,8 +96,9 @@ def get_pat_batch_news(current_pat_client_id_code, search_term, config_obj=None,
     global_end_month = config_obj.global_end_month
     global_start_day = config_obj.global_start_day
     global_end_day = config_obj.global_end_day
-    
-    batch_obs_target_path = os.path.join(config_obj.pre_news_batch_path, str(current_pat_client_id_code) + ".csv")
+
+    batch_obs_target_path = os.path.join(
+        config_obj.pre_news_batch_path, str(current_pat_client_id_code) + ".csv")
     existence_check = exist_check(batch_obs_target_path, config_obj)
 
     try:
@@ -110,19 +113,17 @@ def get_pat_batch_news(current_pat_client_id_code, search_term, config_obj=None,
                 search_string=f'obscatalogmasteritem_displayname:("NEWS" OR "NEWS2") AND '
                             f'observationdocument_recordeddtm:[{global_start_year}-{global_start_month}-{global_start_day} TO {global_end_year}-{global_end_month}-{global_end_day}]'
             )
-            if(config_obj.store_pat_batch_docs or config_obj.overwrite_stored_pat_observations):
-                
+            if (config_obj.store_pat_batch_docs or config_obj.overwrite_stored_pat_observations):
+
                 batch_target.to_csv(batch_obs_target_path)
         else:
             batch_target = pd.read_csv(batch_obs_target_path)
-        
+
         return batch_target
     except Exception as e:
-        
+
         print(f"Error retrieving batch NEWS observations: {e}")
         return []
-
-
 
 
 def get_pat_batch_bmi(current_pat_client_id_code, search_term, config_obj=None, cohort_searcher_with_terms_and_search=None):
@@ -150,8 +151,9 @@ def get_pat_batch_bmi(current_pat_client_id_code, search_term, config_obj=None, 
     global_end_month = config_obj.global_end_month
     global_start_day = config_obj.global_start_day
     global_end_day = config_obj.global_end_day
-    
-    batch_obs_target_path = os.path.join(config_obj.pre_bmi_batch_path, str(current_pat_client_id_code) + ".csv")
+
+    batch_obs_target_path = os.path.join(
+        config_obj.pre_bmi_batch_path, str(current_pat_client_id_code) + ".csv")
     existence_check = exist_check(batch_obs_target_path, config_obj)
 
     try:
@@ -166,18 +168,17 @@ def get_pat_batch_bmi(current_pat_client_id_code, search_term, config_obj=None, 
                 search_string=f'obscatalogmasteritem_displayname:("OBS BMI" OR "OBS Weight" OR "OBS height") AND '
                             f'observationdocument_recordeddtm:[{global_start_year}-{global_start_month}-{global_start_day} TO {global_end_year}-{global_end_month}-{global_end_day}]'
             )
-            if(config_obj.store_pat_batch_docs or config_obj.overwrite_stored_pat_observations):
-                
+            if (config_obj.store_pat_batch_docs or config_obj.overwrite_stored_pat_observations):
+
                 batch_target.to_csv(batch_obs_target_path)
         else:
             batch_target = pd.read_csv(batch_obs_target_path)
-            
+
         return batch_target
     except Exception as e:
         ""
         print(f"Error retrieving batch BMI-related observations: {e}")
         return []
-
 
 
 def get_pat_batch_bloods(current_pat_client_id_code, search_term, config_obj=None, cohort_searcher_with_terms_and_search=None):
@@ -196,14 +197,13 @@ def get_pat_batch_bloods(current_pat_client_id_code, search_term, config_obj=Non
     Raises:
         ValueError: If config_obj is None or missing required attributes.
     """
-    
+
     overwrite_stored_pat_observations = config_obj.overwrite_stored_pat_observations
     store_pat_batch_observations = config_obj.store_pat_batch_observations
-    
-    
-    batch_obs_target_path = os.path.join(config_obj.pre_bloods_batch_path, str(current_pat_client_id_code) + ".csv")
 
-    
+    batch_obs_target_path = os.path.join(
+        config_obj.pre_bloods_batch_path, str(current_pat_client_id_code) + ".csv")
+
     if config_obj is None or not all(hasattr(config_obj, attr) for attr in ['global_start_year', 'global_start_month', 'global_end_year', 'global_end_month']):
         raise ValueError("Invalid or missing configuration object.")
 
@@ -217,30 +217,41 @@ def get_pat_batch_bloods(current_pat_client_id_code, search_term, config_obj=Non
     existence_check = exist_check(batch_obs_target_path, config_obj)
 
     try:
-        if(store_pat_batch_observations or existence_check is False):
-        
+        if (store_pat_batch_observations or existence_check is False):
+
             batch_target = cohort_searcher_with_terms_and_search(
                 index_name="basic_observations",
-                fields_list=["client_idcode", "basicobs_itemname_analysed", "basicobs_value_numeric", "basicobs_entered", "clientvisit_serviceguid"],
+                fields_list=["client_idcode", "basicobs_itemname_analysed",
+                             "basicobs_value_numeric", "basicobs_entered", "clientvisit_serviceguid"],
                 term_name="client_idcode.keyword",
                 entered_list=[current_pat_client_id_code],
                 search_string=f'basicobs_value_numeric:* AND '
-                            f'updatetime:[{global_start_year}-{global_start_month}-{global_start_day} TO {global_end_year}-{global_end_month}-{global_end_day}]'
+                f'updatetime:[{global_start_year}-{global_start_month}-{global_start_day} TO {global_end_year}-{global_end_month}-{global_end_day}]'
             )
-            if(config_obj.store_pat_batch_docs or overwrite_stored_pat_observations):
+            if config_obj.document_type_filter_dict is not None:
+                if (config_obj.document_type_filter_dict.get('filter_term_lists').get('bloods') is not None):
+
+                    if (config_obj.verbosity >= 1):
+                        print("applying doc type filter to bloods",
+                              config_obj.document_type_filter_dict)
+
+                        filter_term_list = config_obj.document_type_filter_dict.get(
+                            'filter_term_list')
+
+                        batch_target = filter_dataframe_by_fuzzy_terms(
+                            batch_target, filter_term_list, column_name='basicobs_itemname_analysed', verbose=config_obj.verbosity)
+
+            if (config_obj.store_pat_batch_docs or overwrite_stored_pat_observations):
                 batch_target.to_csv(batch_obs_target_path)
-            
-            
-        
+
         else:
             batch_target = pd.read_csv(batch_obs_target_path)
-            
+
         return batch_target
     except Exception as e:
         ""
         print(f"Error retrieving batch blood test-related observations: {e}")
         return []
-
 
 
 def get_pat_batch_drugs(current_pat_client_id_code, search_term, config_obj=None, cohort_searcher_with_terms_and_search=None):
@@ -269,12 +280,13 @@ def get_pat_batch_drugs(current_pat_client_id_code, search_term, config_obj=None
     global_end_month = config_obj.global_end_month
     global_start_day = config_obj.global_start_day
     global_end_day = config_obj.global_end_day
-    
-    batch_obs_target_path = os.path.join(config_obj.pre_drugs_batch_path, str(current_pat_client_id_code) + ".csv")
+
+    batch_obs_target_path = os.path.join(
+        config_obj.pre_drugs_batch_path, str(current_pat_client_id_code) + ".csv")
     existence_check = exist_check(batch_obs_target_path, config_obj)
 
     try:
-        
+
         if (config_obj.store_pat_batch_observations or existence_check is False):
             batch_target = cohort_searcher_with_terms_and_search(
                 index_name="order",
@@ -296,7 +308,6 @@ def get_pat_batch_drugs(current_pat_client_id_code, search_term, config_obj=None
         ""
         print(f"Error retrieving batch medication orders: {e}")
         return []
-
 
 
 def get_pat_batch_diagnostics(current_pat_client_id_code, search_term, config_obj=None, cohort_searcher_with_terms_and_search=None):
@@ -324,8 +335,9 @@ def get_pat_batch_diagnostics(current_pat_client_id_code, search_term, config_ob
     global_end_month = config_obj.global_end_month
     global_start_day = config_obj.global_start_day
     global_end_day = config_obj.global_end_day
-    
-    batch_obs_target_path = os.path.join(config_obj.pre_diagnostics_batch_path, str(current_pat_client_id_code) + ".csv")
+
+    batch_obs_target_path = os.path.join(
+        config_obj.pre_diagnostics_batch_path, str(current_pat_client_id_code) + ".csv")
     existence_check = exist_check(batch_obs_target_path, config_obj)
 
     try:
@@ -338,8 +350,8 @@ def get_pat_batch_diagnostics(current_pat_client_id_code, search_term, config_ob
                 search_string=f'order_typecode:"diagnostic" AND '
                             f'updatetime:[{global_start_year}-{global_start_month}-{global_start_day} TO {global_end_year}-{global_end_month}-{global_end_day}]'
             )
-            if(config_obj.store_pat_batch_docs or config_obj.overwrite_stored_pat_observations):
-                
+            if (config_obj.store_pat_batch_docs or config_obj.overwrite_stored_pat_observations):
+
                 batch_target.to_csv(batch_obs_target_path)
         else:
             batch_target = pd.read_csv(batch_obs_target_path)
@@ -348,7 +360,6 @@ def get_pat_batch_diagnostics(current_pat_client_id_code, search_term, config_ob
         ""
         print(f"Error retrieving batch diagnostic orders: {e}")
         return []
-
 
 
 def get_pat_batch_epr_docs(current_pat_client_id_code, search_term, config_obj=None, cohort_searcher_with_terms_and_search=None):
@@ -370,13 +381,13 @@ def get_pat_batch_epr_docs(current_pat_client_id_code, search_term, config_obj=N
     if config_obj is None or not all(hasattr(config_obj, attr) for attr in ['global_start_year', 'global_start_month', 'global_end_year', 'global_end_month']):
         raise ValueError("Invalid or missing configuration object.")
 
-
     overwrite_stored_pat_docs = config_obj.overwrite_stored_pat_docs
     store_pat_batch_docs = config_obj.store_pat_batch_docs
-    
+
     split_clinical_notes_bool = config_obj.split_clinical_notes
-    
-    batch_epr_target_path = os.path.join(config_obj.pre_document_batch_path, str(current_pat_client_id_code) + ".csv")
+
+    batch_epr_target_path = os.path.join(
+        config_obj.pre_document_batch_path, str(current_pat_client_id_code) + ".csv")
 
     global_start_year = config_obj.global_start_year
     global_start_month = config_obj.global_start_month
@@ -384,16 +395,15 @@ def get_pat_batch_epr_docs(current_pat_client_id_code, search_term, config_obj=N
     global_end_month = config_obj.global_end_month
     global_start_day = config_obj.global_start_day
     global_end_day = config_obj.global_end_day
-    
-    
+
     global_start_year = str(global_start_year).zfill(4)
     global_start_month = str(global_start_month).zfill(2)
     global_end_year = str(global_end_year).zfill(4)
     global_end_month = str(global_end_month).zfill(2)
-    
+
     global_start_day = str(global_start_day).zfill(2)
     global_end_day = str(global_end_day).zfill(2)
-    
+
     if config_obj.verbosity >= 6:
         print("batch_epr_target_path:", batch_epr_target_path)
         print("global_start_year:", global_start_year)
@@ -403,14 +413,12 @@ def get_pat_batch_epr_docs(current_pat_client_id_code, search_term, config_obj=N
         print("global_start_day:", global_start_day)
         print("global_end_day:", global_end_day)
 
-
     existence_check = exist_check(batch_epr_target_path, config_obj)
 
     try:
-        
-        if(overwrite_stored_pat_docs or existence_check is False):
-            
-        
+
+        if (overwrite_stored_pat_docs or existence_check is False):
+
             batch_target = cohort_searcher_with_terms_and_search(
                 index_name="epr_documents",
                 fields_list="""client_idcode document_guid document_description body_analysed updatetime clientvisit_visitidcode""".split(),
@@ -418,118 +426,129 @@ def get_pat_batch_epr_docs(current_pat_client_id_code, search_term, config_obj=N
                 entered_list=[current_pat_client_id_code],
                 search_string=f'updatetime:[{global_start_year}-{global_start_month}-{global_start_day} TO {global_end_year}-{global_end_month}-{global_end_day}]'
             )
-            
-            #display(batch_target)
-            
-            
-            if(config_obj.store_pat_batch_docs or overwrite_stored_pat_docs):
-                #batch_target.dropna(subset='body_analysed', inplace=True)
-                
-                if(config_obj.verbosity >= 3):
+
+            if config_obj.document_type_filter_dict is not None:
+                if (config_obj.document_type_filter_dict.get('filter_term_lists').get('epr_docs') is not None):
+
+                    if (config_obj.verbosity >= 1):
+                        print("applying doc type filter to EPR docs",
+                              config_obj.document_type_filter_dict)
+
+                        filter_term_list = config_obj.document_type_filter_dict.get(
+                            'filter_term_list')
+
+                        batch_target = filter_dataframe_by_fuzzy_terms(
+                            batch_target, filter_term_list, column_name='document_description', verbose=config_obj.verbosity)
+
+            # display(batch_target)
+
+            if (config_obj.store_pat_batch_docs or overwrite_stored_pat_docs):
+                # batch_target.dropna(subset='body_analysed', inplace=True)
+
+                if (config_obj.verbosity >= 3):
                     print('get_epr_docs_predropna', len(batch_target))
-                
-                col_list_drop_nan = ['body_analysed', 'updatetime', 'client_idcode']
-                
-                rows_with_nan = batch_target[batch_target[col_list_drop_nan].isna().any(axis=1)]
+
+                col_list_drop_nan = ['body_analysed',
+                                     'updatetime', 'client_idcode']
+
+                rows_with_nan = batch_target[batch_target[col_list_drop_nan].isna().any(
+                    axis=1)]
 
                 # Drop rows with NaN values
                 batch_target = batch_target.drop(rows_with_nan.index).copy()
-                
-                if(config_obj.verbosity >= 3):
+
+                if (config_obj.verbosity >= 3):
                     print('get_epr_docs_postdropna', len(batch_target))
-                    
-                # #handle non datetime obs recorded    
+
+                # #handle non datetime obs recorded
                 # batch_target['updatetime'] = pd.to_datetime(batch_target['updatetime'], errors='coerce')
                 # batch_target.dropna(subset=['updatetime'], inplace=True)
                 # if(config_obj.verbosity >= 3):
                 #     print('get_epr_mct_docs_postdropna on dt col', len(batch_target))
-                if(split_clinical_notes_bool):
-                    
-                    batch_target = split_and_append_chunks(batch_target, epr=True)
-                
-                
+                if (split_clinical_notes_bool):
+
+                    batch_target = split_and_append_chunks(
+                        batch_target, epr=True)
+
                 batch_target.to_csv(batch_epr_target_path)
-            
-        
+
         else:
             batch_target = pd.read_csv(batch_epr_target_path)
-        
+
         return batch_target
     except Exception as e:
         ""
         print(f"Error retrieving batch EPR documents: {e}")
         raise UnboundLocalError("Error retrieving batch EPR documents.")
-        #return []
+        # return []
 
 
-def get_pat_batch_epr_docs_annotations(current_pat_client_id_code, config_obj = None, cat=None, t=None):
-    
-    batch_epr_target_path = os.path.join(config_obj.pre_document_batch_path, str(current_pat_client_id_code) + ".csv")
-    
-    #print(batch_epr_target_path)
-    #cat = config_obj.cat
-    
-    #t = config_obj.t
-    
-    #add read existing if exist here..
+def get_pat_batch_epr_docs_annotations(current_pat_client_id_code, config_obj=None, cat=None, t=None):
+
+    batch_epr_target_path = os.path.join(
+        config_obj.pre_document_batch_path, str(current_pat_client_id_code) + ".csv")
+
+    # print(batch_epr_target_path)
+    # cat = config_obj.cat
+
+    # t = config_obj.t
+
+    # add read existing if exist here..
     pre_document_annotation_batch_path = config_obj.pre_document_annotation_batch_path
-    
-    
-    current_pat_document_annotation_batch_path = os.path.join(pre_document_annotation_batch_path, current_pat_client_id_code + ".csv")
-    
-    if exist_check(current_pat_document_annotation_batch_path, config_obj = config_obj):
-    
-        #if annotation batch already created, read it
-    
+
+    current_pat_document_annotation_batch_path = os.path.join(
+        pre_document_annotation_batch_path, current_pat_client_id_code + ".csv")
+
+    if exist_check(current_pat_document_annotation_batch_path, config_obj=config_obj):
+
+        # if annotation batch already created, read it
+
         batch_target = pd.read_csv(current_pat_document_annotation_batch_path)
-    
-    
+
     else:
-    
+
         pat_batch = pd.read_csv(batch_epr_target_path)
-        
+
         pat_batch.dropna(subset=['body_analysed'], axis=0, inplace=True)
-        
-        batch_target = get_pat_document_annotation_batch(current_pat_client_idcode = current_pat_client_id_code, pat_batch=pat_batch, cat=cat, config_obj=config_obj, t=t)
 
-
+        batch_target = get_pat_document_annotation_batch(
+            current_pat_client_idcode=current_pat_client_id_code, pat_batch=pat_batch, cat=cat, config_obj=config_obj, t=t)
 
     return batch_target
 
 
+def get_pat_batch_mct_docs_annotations(current_pat_client_id_code, config_obj=None, cat=None, t=None):
 
-def get_pat_batch_mct_docs_annotations(current_pat_client_id_code, config_obj = None, cat=None, t=None):
-    
-    batch_epr_target_path_mct = os.path.join(config_obj.pre_document_batch_path_mct, str(current_pat_client_id_code) + ".csv")
-    
-    #cat = config_obj.cat
-    
-    #t = config_obj.t
-    
+    batch_epr_target_path_mct = os.path.join(
+        config_obj.pre_document_batch_path_mct, str(current_pat_client_id_code) + ".csv")
+
+    # cat = config_obj.cat
+
+    # t = config_obj.t
+
     pre_document_annotation_batch_path_mct = config_obj.pre_document_annotation_batch_path_mct
-    
-    
-    current_pat_document_annotation_batch_path = os.path.join(pre_document_annotation_batch_path_mct, current_pat_client_id_code + ".csv")
-    
-    
-    if exist_check(current_pat_document_annotation_batch_path, config_obj = config_obj):
-    
-        #if annotation batch already created, read it
-    
+
+    current_pat_document_annotation_batch_path = os.path.join(
+        pre_document_annotation_batch_path_mct, current_pat_client_id_code + ".csv")
+
+    if exist_check(current_pat_document_annotation_batch_path, config_obj=config_obj):
+
+        # if annotation batch already created, read it
+
         batch_target = pd.read_csv(current_pat_document_annotation_batch_path)
-    
-    
+
     else:
-    
-    
-    
+
         pat_batch = pd.read_csv(batch_epr_target_path_mct)
-        
-        pat_batch.dropna(subset=['observation_valuetext_analysed'], axis=0, inplace=True)
-        
-        batch_target = get_pat_document_annotation_batch_mct(current_pat_client_idcode = current_pat_client_id_code, pat_batch=pat_batch, cat=cat, config_obj=config_obj, t=t)
+
+        pat_batch.dropna(
+            subset=['observation_valuetext_analysed'], axis=0, inplace=True)
+
+        batch_target = get_pat_document_annotation_batch_mct(
+            current_pat_client_idcode=current_pat_client_id_code, pat_batch=pat_batch, cat=cat, config_obj=config_obj, t=t)
 
     return batch_target
+
 
 def get_pat_batch_mct_docs(current_pat_client_id_code, search_term, config_obj=None, cohort_searcher_with_terms_and_search=None):
     """
@@ -556,20 +575,20 @@ def get_pat_batch_mct_docs(current_pat_client_id_code, search_term, config_obj=N
     global_end_month = config_obj.global_end_month
     global_start_day = config_obj.global_start_day
     global_end_day = config_obj.global_end_day
-    
+
     overwrite_stored_pat_docs = config_obj.overwrite_stored_pat_docs
     store_pat_batch_docs = config_obj.store_pat_batch_docs
-    
+
     split_clinical_notes_bool = config_obj.split_clinical_notes
-    
-    batch_epr_target_path_mct = os.path.join(config_obj.pre_document_batch_path_mct, str(current_pat_client_id_code) + ".csv")
-    
+
+    batch_epr_target_path_mct = os.path.join(
+        config_obj.pre_document_batch_path_mct, str(current_pat_client_id_code) + ".csv")
 
     existence_check = exist_check(batch_epr_target_path_mct, config_obj)
-    
+
     try:
-        if(overwrite_stored_pat_docs or existence_check is False):
-        
+        if (overwrite_stored_pat_docs or existence_check is False):
+
             batch_target = cohort_searcher_with_terms_and_search(
                 index_name="observations",
                 fields_list="""observation_guid client_idcode obscatalogmasteritem_displayname
@@ -580,36 +599,38 @@ def get_pat_batch_mct_docs(current_pat_client_id_code, search_term, config_obj=N
                 search_string=f'obscatalogmasteritem_displayname:("AoMRC_ClinicalSummary_FT") AND '
                             f'observationdocument_recordeddtm:[{global_start_year}-{global_start_month}-{global_start_day} TO {global_end_year}-{global_end_month}-{global_end_day}]'
             )
-            
-            if(config_obj.store_pat_batch_docs or overwrite_stored_pat_docs):
-                #batch_target.dropna(subset='observation_valuetext_analysed', inplace=True)
-                if(config_obj.verbosity >= 3):
+
+            if (config_obj.store_pat_batch_docs or overwrite_stored_pat_docs):
+                # batch_target.dropna(subset='observation_valuetext_analysed', inplace=True)
+                if (config_obj.verbosity >= 3):
                     print('get_epr_mct_docs_predropna', len(batch_target))
-                col_list_drop_nan = ['observation_valuetext_analysed', 'observationdocument_recordeddtm', 'client_idcode' ]
-                
-                rows_with_nan = batch_target[batch_target[col_list_drop_nan].isna().any(axis=1)]
+                col_list_drop_nan = ['observation_valuetext_analysed',
+                                     'observationdocument_recordeddtm', 'client_idcode']
+
+                rows_with_nan = batch_target[batch_target[col_list_drop_nan].isna().any(
+                    axis=1)]
 
                 # Drop rows with NaN values
                 batch_target = batch_target.drop(rows_with_nan.index).copy()
-                
-                if(config_obj.verbosity >= 3):
+
+                if (config_obj.verbosity >= 3):
                     print('get_epr_mct_docs_postdropna', len(batch_target))
-                    
-                # #handle non datetime obs recorded    
+
+                # #handle non datetime obs recorded
                 # batch_target['observationdocument_recordeddtm'] = pd.to_datetime(batch_target['observationdocument_recordeddtm'], errors='coerce')
                 # batch_target.dropna(subset=['observationdocument_recordeddtm'], inplace=True)
                 # if(config_obj.verbosity >= 3):
                 #     print('get_epr_mct_docs_postdropna on dt col', len(batch_target))
-                
-                if(split_clinical_notes_bool):
-                    
-                    batch_target = split_and_append_chunks(batch_target, epr=False, mct=True)
-                
+
+                if (split_clinical_notes_bool):
+
+                    batch_target = split_and_append_chunks(
+                        batch_target, epr=False, mct=True)
+
                 batch_target.to_csv(batch_epr_target_path_mct)
         else:
             batch_target = pd.read_csv(batch_epr_target_path_mct)
-            
-            
+
         return batch_target
     except Exception as e:
         ""
@@ -642,34 +663,29 @@ def get_pat_batch_demo(current_pat_client_id_code, search_term, config_obj=None,
     global_end_month = config_obj.global_end_month
     global_start_day = config_obj.global_start_day
     global_end_day = config_obj.global_end_day
-    
-    batch_obs_target_path = os.path.join(config_obj.pre_demo_batch_path, str(current_pat_client_id_code) + ".csv")
+
+    batch_obs_target_path = os.path.join(
+        config_obj.pre_demo_batch_path, str(current_pat_client_id_code) + ".csv")
     existence_check = exist_check(batch_obs_target_path, config_obj)
 
     try:
         if (config_obj.store_pat_batch_observations or existence_check is False):
             batch_target = cohort_searcher_with_terms_and_search(
                 index_name="epr_documents",
-                fields_list=["client_idcode", "client_firstname", "client_lastname", "client_dob", "client_gendercode", "client_racecode", "client_deceaseddtm", "updatetime"],
+                fields_list=["client_idcode", "client_firstname", "client_lastname", "client_dob",
+                             "client_gendercode", "client_racecode", "client_deceaseddtm", "updatetime"],
                 term_name="client_idcode.keyword",
                 entered_list=[current_pat_client_id_code],
                 search_string=f'updatetime:[{global_start_year}-{global_start_month}-{global_start_day} TO {global_end_year}-{global_end_month}-{global_end_day}]'
             )
-            if(config_obj.store_pat_batch_docs or config_obj.overwrite_stored_pat_observations):
-                
+            if (config_obj.store_pat_batch_docs or config_obj.overwrite_stored_pat_observations):
+
                 batch_target.to_csv(batch_obs_target_path)
         else:
             batch_target = pd.read_csv(batch_obs_target_path)
-        
-        
+
         return batch_target
     except Exception as e:
         ""
         print(f"Error retrieving batch demographic information: {e}")
         return []
-
-
-
-
-
-
