@@ -302,9 +302,9 @@ def get_pat_batch_bloods(
                 search_string=f"basicobs_value_numeric:* AND "
                 f"updatetime:[{global_start_year}-{global_start_month}-{global_start_day} TO {global_end_year}-{global_end_month}-{global_end_day}]",
             )
-            if config_obj.document_type_filter_dict is not None:
+            if config_obj.data_type_filter_dict is not None:
                 if (
-                    config_obj.document_type_filter_dict.get("filter_term_lists").get(
+                    config_obj.data_type_filter_dict.get("filter_term_lists").get(
                         "bloods"
                     )
                     is not None
@@ -313,10 +313,10 @@ def get_pat_batch_bloods(
                     if config_obj.verbosity >= 1:
                         print(
                             "applying doc type filter to bloods",
-                            config_obj.document_type_filter_dict,
+                            config_obj.data_type_filter_dict,
                         )
 
-                        filter_term_list = config_obj.document_type_filter_dict.get(
+                        filter_term_list = config_obj.data_type_filter_dict.get(
                             "filter_term_list"
                         )
 
@@ -586,12 +586,20 @@ def get_pat_batch_epr_docs(
                             verbose=config_obj.verbosity,
                         )
 
-                if config_obj.data_type_filter_dict.get("filter_term_lists").get(
-                    "epr_docs_term_regex"
+                if (
+                    config_obj.data_type_filter_dict.get("filter_term_lists").get(
+                        "epr_docs_term_regex"
+                    )
+                    is not None
                 ):
                     if config_obj.verbosity > 1:
                         print("append_regex_term_counts...")
-                    batch_target = append_regex_term_counts(batch_target)
+                    batch_target = append_regex_term_counts(
+                        batch_target,
+                        config_obj.data_type_filter_dict.get("filter_term_lists").get(
+                            "epr_docs_term_regex"
+                        ),
+                    )
             # display(batch_target)
 
             if config_obj.store_pat_batch_docs or overwrite_stored_pat_docs:
