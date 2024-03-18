@@ -4,7 +4,7 @@ import sys
 
 def get_cat(config_obj):
 
-    if (config_obj.verbosity >= 1):
+    if config_obj.verbosity >= 1:
         print(config_obj.override_medcat_model_path)
 
     model_path = None
@@ -15,8 +15,8 @@ def get_cat(config_obj):
 
         # Check if the file exists
         if os.path.exists("paths.py") and config_obj.override_medcat_model_path == None:
-            if (config_obj.verbosity >= 1):
-                print('paths file found, importing..')
+            if config_obj.verbosity >= 1:
+                print("paths file found, importing..")
             # If the file exists, try to import the variable
             try:
                 from paths import medcat_path
@@ -36,14 +36,15 @@ def get_cat(config_obj):
         path_found = False
 
         if config_obj.override_medcat_model_path == "auto":
-            if (config_obj.verbosity >= 1):
+            if config_obj.verbosity >= 1:
                 print(f"{config_obj.override_medcat_model_path} == auto")
             # Search for 'medcat_models/' in each directory in sys.path
             for directory in sys.path:
                 medcat_models_path = os.path.join(directory, "medcat_models")
                 if os.path.exists(medcat_models_path):
                     model_path = os.path.join(
-                        medcat_models_path, os.listdir(medcat_models_path)[0] + ".zip")
+                        medcat_models_path, os.listdir(medcat_models_path)[0] + ".zip"
+                    )
                     print(
                         "auto selected: Path to 'medcat_models/':", medcat_models_path
                     )
