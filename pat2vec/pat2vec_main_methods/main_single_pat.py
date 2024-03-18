@@ -1,7 +1,7 @@
 from datetime import datetime
 import pandas as pd
 
-from util.methods_get import filter_dataframe_by_timestamp, get_start_end_year_month
+from pat2vec.util.methods_get import filter_dataframe_by_timestamp, get_start_end_year_month
 
 
 def get_single_pat(current_pat_client_id_code, target_date_range, pat_batch=None, cohort_searcher_with_terms_and_search=None, batch_mode=None, config_obj=None):
