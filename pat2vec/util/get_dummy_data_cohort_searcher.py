@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta
 import logging
 import random
 import re
@@ -26,6 +27,7 @@ def generate_epr_documents_data(
     global_start_month,
     global_end_year,
     global_end_month,
+    use_GPT=True
 ):
     """
     Generate dummy data for the 'epr_documents' index.
@@ -50,6 +52,8 @@ def generate_epr_documents_data(
         # 'body_analysed': [fake.paragraph() for _ in range(num_rows)],
         "body_analysed": [
             generate_patient_timeline(current_pat_client_id_code)
+            if use_GPT else
+            generate_patient_timeline_faker(current_pat_client_id_code)
             for _ in range(num_rows)
         ],
         "updatetime": [
@@ -111,7 +115,8 @@ def generate_epr_documents_personal_data(
         ],
         "client_racecode": [ethnicity for _ in range(num_rows)],
         "client_deceaseddtm": [
-            fake.date_time_this_decade() if random.choice([True, False]) else None
+            fake.date_time_this_decade() if random.choice(
+                [True, False]) else None
             for _ in range(num_rows)
         ],
         "updatetime": [
@@ -242,6 +247,7 @@ def generate_observations_MRC_text_data(
     global_start_month,
     global_end_year,
     global_end_month,
+    use_GPT=False
 ):
     """
     Generate dummy data for the 'observations' index.
@@ -266,6 +272,8 @@ def generate_observations_MRC_text_data(
         "obscatalogmasteritem_displayname": "AoMRC_ClinicalSummary_FT",
         "observation_valuetext_analysed": [
             generate_patient_timeline(current_pat_client_id_code)
+            if use_GPT else
+            generate_patient_timeline_faker(current_pat_client_id_code)
             for _ in range(num_rows)
         ],
         # 'observation_valuetext_analysed': [fake.paragraph() for _ in range(num_rows)],
@@ -445,6 +453,9 @@ def cohort_searcher_with_terms_and_search_dummy(
     - pd.DataFrame: Generated DataFrame based on the specified conditions.
     """
 
+    # set here for drop in replacement of function
+    use_GPT = False
+
     verbose = True
 
     (
@@ -500,6 +511,7 @@ def cohort_searcher_with_terms_and_search_dummy(
             global_start_month,
             global_end_year,
             global_end_month,
+            use_GPT=use_GPT
         )
         return df
 
@@ -519,6 +531,7 @@ def cohort_searcher_with_terms_and_search_dummy(
             global_start_month,
             global_end_year,
             global_end_month,
+            use_GPT=use_GPT
         )
         return df
 
@@ -656,9 +669,58 @@ def generate_patient_timeline(client_idcode):
     return patient_timeline
 
 
+faker = Faker()
+
+
+def generate_patient_timeline_faker(client_idcode):
+
+    probabilities = [0.7, 0.1, 0.05, 0.05, 0.05]  # Adjust as needed
+
+    # Perform a weighted random selection based on the defined probabilities
+    num_entries = random.choices(range(1, 6), probabilities)[0]
+
+    starting_age = random.randint(18, 99)
+    # Initialize patient demographic information
+    patient_info = {
+        "client_idcode": client_idcode,
+        "Age": starting_age,
+        "Gender": random.choice(["Male", "Female"]),
+        "DOB": datetime.utcnow() - timedelta(days=365 * starting_age),
+    }
+
+    # Generate clinical note summaries
+    timeline = []
+
+    # Generate a random timestamp between 1995 and the current time
+    current_time = datetime.utcfromtimestamp(
+        random.randint(789331200, int(datetime.now().timestamp()))
+    )
+
+    for i in range(num_entries):
+        entry_timestamp = current_time + timedelta(days=random.randint(1, 30))
+        entry_text = faker.sentence(nb_words=15)
+
+        # Update patient information
+        patient_info["Age"] += (entry_timestamp - current_time).days / 365
+
+        # Format entry
+        entry_summary = f"Entered on - {entry_timestamp.strftime('%Y-%m-%d %H:%M:%S')} UTC:\n{entry_text}\n"
+        timeline.append(entry_summary)
+
+        current_time = entry_timestamp
+
+    # Construct the final timeline
+    patient_demographics = f"Patient Demographics:\nclient_idcode: {patient_info['client_idcode']}\nAge: {patient_info['Age']:.1f}\nGender: {patient_info['Gender']}\nDOB: {patient_info['DOB'].strftime('%Y-%m-%d')}"
+    timeline.insert(0, f"{patient_demographics}\n\nClinical Note Timeline:\n")
+    patient_timeline = "\n".join(timeline)
+
+    return patient_timeline
+
+
 def extract_search_term_obscatalogmasteritem_displayname(search_string):
     # Using regular expression to find the part after 'obscatalogmasteritem_displayname:'
-    match = re.search(r"obscatalogmasteritem_displayname:\((.*?)\)", search_string)
+    match = re.search(
+        r"obscatalogmasteritem_displayname:\((.*?)\)", search_string)
     if match:
         # Get the matched group and remove punctuation
         search_term = match.group(1).replace('"', "").replace("'", "").strip()
