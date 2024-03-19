@@ -1,4 +1,3 @@
-
 import os
 import sys
 from datetime import datetime, timedelta
@@ -10,8 +9,11 @@ from dateutil.relativedelta import relativedelta
 from IPython.display import display
 
 from pat2vec.util.current_pat_batch_path_methods import PathsClass
-from pat2vec.util.methods_get import (add_offset_column, build_patient_dict,
-                                      generate_date_list)
+from pat2vec.util.methods_get import (
+    add_offset_column,
+    build_patient_dict,
+    generate_date_list,
+)
 
 
 def calculate_interval(start_date, time_delta, m=1):
@@ -34,107 +36,116 @@ def update_global_start_date(self, start_date):
         self.global_start_day = str(start_date.day)
 
     print(
-        "Warning: Updated global start date as start date later than global start date.")
+        "Warning: Updated global start date as start date later than global start date."
+    )
 
     return self
 
 
 class config_class:
-    def __init__(self,
-                 remote_dump=False,
-                 suffix='',
-                 treatment_doc_filename='treatment_docs.csv',
-                 treatment_control_ratio_n=1,
-                 proj_name='new_project',
-                 current_path_dir=".",
-                 main_options=None,
-                 start_date=(datetime(1995, 1, 1)),
-                 years=0,
-                 months=0,
-                 days=1,
-                 aliencat=False,
-                 dgx=False,
-                 dhcap=False,
-                 dhcap02=True,
-                 batch_mode=True,
-                 store_annot=False,
-                 share_sftp=True,
-                 multi_process=False,
-                 annot_first=False,
-                 strip_list=True,
-                 verbosity=3,
-                 random_seed_val=42,
-                 hostname=None,
-                 username=None,
-                 password=None,
-                 gpu_mem_threshold=4000,
-                 testing=False,
-                 use_controls=False,
-                 medcat=False,
-                 global_start_year=None,
-                 global_start_month=None,
-                 global_end_year=None,
-                 global_end_month=None,
-                 global_start_day=None,
-                 global_end_day=None,
-                 skip_additional_listdir=False,
-                 start_time=None,
-                 root_path=None,
-                 negate_biochem=False,
-                 patient_id_column_name='client_idcode',
-                 overwrite_stored_pat_docs=False,
-                 overwrite_stored_pat_observations=False,
-                 store_pat_batch_docs=True,
-                 store_pat_batch_observations=True,
-                 annot_filter_options=None,
-                 shuffle_pat_list=False,
-                 individual_patient_window=False,
-                 individual_patient_window_df=None,
-                 individual_patient_window_start_column_name=None,
-                 individual_patient_id_column_name=None,
-                 individual_patient_window_controls_method='full',  # full, random
-                 dropna_doc_timestamps=True,
-                 time_window_interval_delta=relativedelta(days=1),
-                 feature_engineering_arg_dict=None,
-                 split_clinical_notes=True,
-                 lookback=True,
-                 add_icd10=False,
-                 add_opc4s=False,
-                 all_epr_patient_list_path='/home/samorah/_data/gloabl_files/all_client_idcodes_epr_unique.csv',
-                 override_medcat_model_path=None,
-                 data_type_filter_dict=None
-
-                 ):
+    def __init__(
+        self,
+        remote_dump=False,
+        suffix="",
+        treatment_doc_filename="treatment_docs.csv",
+        treatment_control_ratio_n=1,
+        proj_name="new_project",
+        current_path_dir=".",
+        main_options=None,
+        start_date=(datetime(1995, 1, 1)),
+        years=0,
+        months=0,
+        days=1,
+        aliencat=False,
+        dgx=False,
+        dhcap=False,
+        dhcap02=True,
+        batch_mode=True,
+        store_annot=False,
+        share_sftp=True,
+        multi_process=False,
+        annot_first=False,
+        strip_list=True,
+        verbosity=3,
+        random_seed_val=42,
+        hostname=None,
+        username=None,
+        password=None,
+        gpu_mem_threshold=4000,
+        testing=False,
+        use_controls=False,
+        medcat=False,
+        global_start_year=None,
+        global_start_month=None,
+        global_end_year=None,
+        global_end_month=None,
+        global_start_day=None,
+        global_end_day=None,
+        skip_additional_listdir=False,
+        start_time=None,
+        root_path=None,
+        negate_biochem=False,
+        patient_id_column_name="client_idcode",
+        overwrite_stored_pat_docs=False,
+        overwrite_stored_pat_observations=False,
+        store_pat_batch_docs=True,
+        store_pat_batch_observations=True,
+        annot_filter_options=None,
+        shuffle_pat_list=False,
+        individual_patient_window=False,
+        individual_patient_window_df=None,
+        individual_patient_window_start_column_name=None,
+        individual_patient_id_column_name=None,
+        individual_patient_window_controls_method="full",  # full, random
+        dropna_doc_timestamps=True,
+        time_window_interval_delta=relativedelta(days=1),
+        feature_engineering_arg_dict=None,
+        split_clinical_notes=True,
+        lookback=True,
+        add_icd10=False,
+        add_opc4s=False,
+        all_epr_patient_list_path="/home/samorah/_data/gloabl_files/all_client_idcodes_epr_unique.csv",
+        override_medcat_model_path=None,
+        data_type_filter_dict=None,
+    ):
 
         self.suffix = suffix
         self.treatment_doc_filename = treatment_doc_filename
         self.treatment_control_ratio_n = treatment_control_ratio_n
 
-        self.pre_annotation_path = f'current_pat_annots_parts{self.suffix}/'
-        self.pre_annotation_path_mrc = f'current_pat_annots_mrc_parts{self.suffix}/'
+        self.pre_annotation_path = f"current_pat_annots_parts{self.suffix}/"
+        self.pre_annotation_path_mrc = f"current_pat_annots_mrc_parts{self.suffix}/"
 
-        self.pre_document_annotation_batch_path = f'current_pat_documents_annotations_batches{self.suffix}/'
-        self.pre_document_annotation_batch_path_mct = f'current_pat_documents_annotations_batches_mct{self.suffix}/'
+        self.pre_document_annotation_batch_path = (
+            f"current_pat_documents_annotations_batches{self.suffix}/"
+        )
+        self.pre_document_annotation_batch_path_mct = (
+            f"current_pat_documents_annotations_batches_mct{self.suffix}/"
+        )
         self.pre_document_batch_path = f"current_pat_document_batches{self.suffix}/"
-        self.pre_document_batch_path_mct = f"current_pat_document_batches_mct{self.suffix}/"
+        self.pre_document_batch_path_mct = (
+            f"current_pat_document_batches_mct{self.suffix}/"
+        )
 
-        self.pre_bloods_batch_path = f'current_pat_bloods_batches{self.suffix}/'
+        self.pre_bloods_batch_path = f"current_pat_bloods_batches{self.suffix}/"
 
-        self.pre_drugs_batch_path = f'current_pat_drugs_batches{self.suffix}/'
+        self.pre_drugs_batch_path = f"current_pat_drugs_batches{self.suffix}/"
 
-        self.pre_diagnostics_batch_path = f'current_pat_diagnostics_batches{self.suffix}/'
+        self.pre_diagnostics_batch_path = (
+            f"current_pat_diagnostics_batches{self.suffix}/"
+        )
 
-        self.pre_news_batch_path = f'current_pat_news_batches{self.suffix}/'
+        self.pre_news_batch_path = f"current_pat_news_batches{self.suffix}/"
 
-        self.pre_obs_batch_path = f'current_pat_obs_batches{self.suffix}/'
+        self.pre_obs_batch_path = f"current_pat_obs_batches{self.suffix}/"
 
-        self.pre_bmi_batch_path = f'current_pat_bmi_batches{self.suffix}/'
+        self.pre_bmi_batch_path = f"current_pat_bmi_batches{self.suffix}/"
 
-        self.pre_demo_batch_path = f'current_pat_demo_batches{self.suffix}/'
+        self.pre_demo_batch_path = f"current_pat_demo_batches{self.suffix}/"
 
-        self.pre_misc_batch_path = f'current_pat_misc_batches{self.suffix}/'
+        self.pre_misc_batch_path = f"current_pat_misc_batches{self.suffix}/"
 
-        self.current_pat_line_path = f'current_pat_line_path{self.suffix}/'
+        self.current_pat_line_path = f"current_pat_line_path{self.suffix}/"
 
         self.store_pat_batch_docs = store_pat_batch_docs
 
@@ -195,13 +206,17 @@ class config_class:
 
         self.individual_patient_window_df = individual_patient_window_df
 
-        self.individual_patient_window_start_column_name = individual_patient_window_start_column_name
+        self.individual_patient_window_start_column_name = (
+            individual_patient_window_start_column_name
+        )
 
         self.individual_patient_id_column_name = individual_patient_id_column_name
 
-        self.individual_patient_window_controls_method = individual_patient_window_controls_method
+        self.individual_patient_window_controls_method = (
+            individual_patient_window_controls_method
+        )
 
-        self.control_list_path = 'control_path.pkl'
+        self.control_list_path = "control_path.pkl"
 
         self.dropna_doc_timestamps = dropna_doc_timestamps
 
@@ -215,113 +230,139 @@ class config_class:
 
         self.override_medcat_model_path = override_medcat_model_path
 
-        if (start_time == None):
+        if start_time == None:
             self.start_time = datetime.now()
 
-        if (self.main_options == None):
-            if (self.verbosity >= 1):
-                print('default main_options set!')
+        if self.main_options == None:
+            if self.verbosity >= 1:
+                print("default main_options set!")
 
-            self.main_options = {'demo': True,
-                                 'bmi': False,
-                                 'bloods': False,
-                                 'drugs': False,
-                                 'diagnostics': False,
-
-                                 'core_02': False,
-                                 'bed': False,
-                                 'vte_status': False,
-                                 'hosp_site': False,
-                                 'core_resus': False,
-                                 'news': False,
-
-                                 'annotations': False,
-                                 'annotations_mrc': False,
-                                 'negated_presence_annotations': False
-
-                                 }
-            if (self.verbosity >= 1):
+            self.main_options = {
+                "demo": True,
+                "bmi": False,
+                "bloods": False,
+                "drugs": False,
+                "diagnostics": False,
+                "core_02": False,
+                "bed": False,
+                "vte_status": False,
+                "hosp_site": False,
+                "core_resus": False,
+                "news": False,
+                "annotations": False,
+                "annotations_mrc": False,
+                "negated_presence_annotations": False,
+            }
+            if self.verbosity >= 1:
                 print(self.main_options)
 
-        if (self.annot_filter_options == None):
+        if self.annot_filter_options == None:
             self.filter_arguments = {
-                'Confidence': 0.8,
-                'Accuracy': 0.8,
-                'types': ['qualifier value', 'procedure', 'substance', 'finding', 'environment', 'disorder', 'observable entity'],
+                "Confidence": 0.8,
+                "Accuracy": 0.8,
+                "types": [
+                    "qualifier value",
+                    "procedure",
+                    "substance",
+                    "finding",
+                    "environment",
+                    "disorder",
+                    "observable entity",
+                ],
                 # Specify the values you want to include in a list
-                'Time_Value': ['Recent', 'Past'],
-                'Time_Confidence': 0.8,  # Specify the confidence threshold as a float
+                "Time_Value": ["Recent", "Past"],
+                "Time_Confidence": 0.8,  # Specify the confidence threshold as a float
                 # Specify the values you want to include in a list
-                'Presence_Value': ['True'],
-                'Presence_Confidence': 0.8,  # Specify the confidence threshold as a float
+                "Presence_Value": ["True"],
+                "Presence_Confidence": 0.8,  # Specify the confidence threshold as a float
                 # Specify the values you want to include in a list
-                'Subject_Value': ['Patient'],
-                'Subject_Confidence': 0.8  # Specify the confidence threshold as a float
+                "Subject_Value": ["Patient"],
+                "Subject_Confidence": 0.8,  # Specify the confidence threshold as a float
             }
 
-        if (feature_engineering_arg_dict == None):
+        if feature_engineering_arg_dict == None:
             self.feature_engineering_arg_dict = {
-                'drugs': {'_num-drug-order': True,
-                          '_days-since-last-drug-order': True,
-                          '_days-between-first-last-drug': True}
-
+                "drugs": {
+                    "_num-drug-order": True,
+                    "_days-since-last-drug-order": True,
+                    "_days-between-first-last-drug": True,
+                }
             }
         else:
             self.feature_engineering_arg_dict = feature_engineering_arg_dict
 
         self.negated_presence_annotations = self.main_options.get(
-            'negated_presence_annotations')
+            "negated_presence_annotations"
+        )
 
-        if (remote_dump == False):
+        if remote_dump == False:
 
-            if (self.root_path == None):
-                self.root_path = f'{os.getcwd()}/{self.proj_name}/'
+            if self.root_path == None:
+                self.root_path = f"{os.getcwd()}/{self.proj_name}/"
 
             self.pre_annotation_path = os.path.join(
-                self.root_path, f'current_pat_annots_parts{self.suffix}/')
+                self.root_path, f"current_pat_annots_parts{self.suffix}/"
+            )
             self.pre_annotation_path_mrc = os.path.join(
-                self.root_path, f'current_pat_annots_mrc_parts{self.suffix}/')
+                self.root_path, f"current_pat_annots_mrc_parts{self.suffix}/"
+            )
 
             self.pre_document_annotation_batch_path = os.path.join(
-                self.root_path, f'current_pat_documents_annotations_batches{self.suffix}/')
+                self.root_path,
+                f"current_pat_documents_annotations_batches{self.suffix}/",
+            )
             self.pre_document_annotation_batch_path_mct = os.path.join(
-                self.root_path, f'current_pat_documents_annotations_batches_mct{self.suffix}/')
+                self.root_path,
+                f"current_pat_documents_annotations_batches_mct{self.suffix}/",
+            )
             self.pre_document_batch_path = os.path.join(
-                self.root_path, f"current_pat_document_batches{self.suffix}/")
+                self.root_path, f"current_pat_document_batches{self.suffix}/"
+            )
             self.pre_document_batch_path_mct = os.path.join(
-                self.root_path, f"current_pat_document_batches_mct{self.suffix}/")
+                self.root_path, f"current_pat_document_batches_mct{self.suffix}/"
+            )
 
             self.pre_bloods_batch_path = os.path.join(
-                self.root_path, f'current_pat_bloods_batches{self.suffix}/')
+                self.root_path, f"current_pat_bloods_batches{self.suffix}/"
+            )
 
             self.pre_drugs_batch_path = os.path.join(
-                self.root_path, f'current_pat_drugs_batches{self.suffix}/')
+                self.root_path, f"current_pat_drugs_batches{self.suffix}/"
+            )
 
             self.pre_diagnostics_batch_path = os.path.join(
-                self.root_path, f'current_pat_diagnostics_batches{self.suffix}/')
+                self.root_path, f"current_pat_diagnostics_batches{self.suffix}/"
+            )
 
             self.pre_news_batch_path = os.path.join(
-                self.root_path, f'current_pat_news_batches{self.suffix}/')
+                self.root_path, f"current_pat_news_batches{self.suffix}/"
+            )
 
             self.pre_obs_batch_path = os.path.join(
-                self.root_path, f'current_pat_obs_batches{self.suffix}/')
+                self.root_path, f"current_pat_obs_batches{self.suffix}/"
+            )
 
             self.pre_bmi_batch_path = os.path.join(
-                self.root_path, f'current_pat_bmi_batches{self.suffix}/')
+                self.root_path, f"current_pat_bmi_batches{self.suffix}/"
+            )
 
             self.pre_demo_batch_path = os.path.join(
-                self.root_path, f'current_pat_demo_batches{self.suffix}/')
+                self.root_path, f"current_pat_demo_batches{self.suffix}/"
+            )
 
             self.pre_misc_batch_path = os.path.join(
-                self.root_path, f'current_pat_misc_batches{self.suffix}/')
+                self.root_path, f"current_pat_misc_batches{self.suffix}/"
+            )
 
             self.current_pat_lines_path = os.path.join(
-                self.root_path, f'current_pat_lines_parts{self.suffix}/')
+                self.root_path, f"current_pat_lines_parts{self.suffix}/"
+            )
 
-            self.output_folder = 'outputs'
+            self.output_folder = "outputs"
 
             self.PathsClass_instance = PathsClass(
-                self.root_path, self.suffix, self.output_folder)
+                self.root_path, self.suffix, self.output_folder
+            )
 
         print(f"Setting start_date to: {start_date}")
         self.start_date = start_date
@@ -338,16 +379,17 @@ class config_class:
         m = 1
 
         # self.start_date = datetime.strptime(start_date, "%Y-%m-%d")
-        self.time_delta = relativedelta(
-            days=days, weeks=0, months=months, years=years)
+        self.time_delta = relativedelta(days=days, weeks=0, months=months, years=years)
 
         # timedelta()
 
         result = calculate_interval(
-            start_date=self.start_date, time_delta=self.time_delta, m=m)
+            start_date=self.start_date, time_delta=self.time_delta, m=m
+        )
 
         print(
-            f"Number of {m}-day intervals between {start_date} and the calculated end date: {result}")
+            f"Number of {m}-day intervals between {start_date} and the calculated end date: {result}"
+        )
 
         # months = [x for x in range(1,4)]
         # years = [x for x in range(2023, 2024)]
@@ -362,18 +404,24 @@ class config_class:
 
         priority_list_bool = False
 
-        if (priority_list_bool):
+        if priority_list_bool:
             # add logic to prioritise pats from list.
 
-            df_old_done = pd.read_csv('/data/AS/Samora/HFE/HFE/v18/current_pat_lines_parts/current_pat_lines__part_0_merged.csv',
-                                      usecols=['client_idcode', 'Hemochromatosis (disorder)_count_subject_present'])
-
-            priority_list = df_old_done[df_old_done['Hemochromatosis (disorder)_count_subject_present'] > 0]['client_idcode'].to_list(
+            df_old_done = pd.read_csv(
+                "/data/AS/Samora/HFE/HFE/v18/current_pat_lines_parts/current_pat_lines__part_0_merged.csv",
+                usecols=[
+                    "client_idcode",
+                    "Hemochromatosis (disorder)_count_subject_present",
+                ],
             )
+
+            priority_list = df_old_done[
+                df_old_done["Hemochromatosis (disorder)_count_subject_present"] > 0
+            ]["client_idcode"].to_list()
 
             all_patient_list = priority_list  # + all_patient_list
 
-        if (self.testing):
+        if self.testing:
             # self.treatment_doc_filename = '/home/cogstack/samora/_data/pat2vec_tests/' + \
             #     treatment_doc_filename
             # self.treatment_doc_filename = 'test_files/' + \
@@ -381,16 +429,17 @@ class config_class:
 
             # self.treatment_doc_filename = fr'{os.getcwd()}\test_files\treatment_docs.csv'
             self.treatment_doc_filename = os.path.join(
-                os.getcwd(), 'test_files', 'treatment_docs.csv')
+                os.getcwd(), "test_files", "treatment_docs.csv"
+            )
 
-        if (self.remote_dump == False):
+        if self.remote_dump == False:
             self.sftp_obj = None
 
-        if (self.remote_dump):
+        if self.remote_dump:
 
-            if (self.root_path == None):
+            if self.root_path == None:
 
-                self.root_path = f'/mnt/hdd1/samora/{self.proj_name}/'
+                self.root_path = f"/mnt/hdd1/samora/{self.proj_name}/"
                 print(f"sftp root_path: {self.root_path}")
 
             else:
@@ -405,14 +454,14 @@ class config_class:
 
             # Create an SSH client and connect to the remote machine
             self.ssh_client = paramiko.SSHClient()
-            self.ssh_client.set_missing_host_key_policy(
-                paramiko.AutoAddPolicy())
+            self.ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
             self.ssh_client.connect(
-                hostname=self.hostname, username=self.username, password=self.password)
+                hostname=self.hostname, username=self.username, password=self.password
+            )
 
             self.sftp_client = self.ssh_client.open_sftp()
 
-            if (self.remote_dump):
+            if self.remote_dump:
                 try:
                     # Test if remote_path exists
                     self.sftp_client.chdir(self.root_path)
@@ -421,17 +470,17 @@ class config_class:
                     self.sftp_client.mkdir(self.root_path)
 
             self.pre_annotation_path = f"{self.root_path}{self.pre_annotation_path}"
-            self.pre_annotation_path_mrc = f"{self.root_path}{self.pre_annotation_path_mrc}"
+            self.pre_annotation_path_mrc = (
+                f"{self.root_path}{self.pre_annotation_path_mrc}"
+            )
             self.current_pat_line_path = f"{self.root_path}{self.current_pat_line_path}"
             self.current_pat_lines_path = self.current_pat_line_path
 
-            if (self.remote_dump == False):
-                Path(self.current_pat_annot_path).mkdir(
-                    parents=True, exist_ok=True)
-                Path(self.pre_annotation_path_mrc).mkdir(
-                    parents=True, exist_ok=True)
+            if self.remote_dump == False:
+                Path(self.current_pat_annot_path).mkdir(parents=True, exist_ok=True)
+                Path(self.pre_annotation_path_mrc).mkdir(parents=True, exist_ok=True)
 
-            elif (root_path == f'/mnt/hdd1/samora/{self.proj_name}/'):
+            elif root_path == f"/mnt/hdd1/samora/{self.proj_name}/":
 
                 try:
                     # Test if remote_path exists
@@ -459,24 +508,29 @@ class config_class:
         else:
             self.sftp_client = None
 
-        if (self.lookback):
+        if self.lookback:
             self.time_window_interval_delta = -self.time_window_interval_delta
             print("looking back with ", self.time_window_interval_delta)
         else:
             print("looking forward with ", self.time_window_interval_delta)
 
         self.model_paths = {
-
-            'aliencat': '/home/aliencat/samora/HFE/HFE/medcat_models/medcat_model_pack_316666b47dfaac07.zip',
-            'dgx': '/data/AS/Samora/HFE/HFE/v18/medcat_models/20230328_trained_model_hfe_redone/medcat_model_pack_316666b47dfaac07',
-            'dhcap': '/home/jovyan/work/medcat_models/medcat_model_pack_316666b47dfaac07.zip',
-            'dhcap02': '/home/cogstack/samora/_data/medcat_models/medcat_model_pack_316666b47dfaac07.zip',
-            'override_medcat_model_path': None
-
+            "aliencat": "/home/aliencat/samora/HFE/HFE/medcat_models/medcat_model_pack_316666b47dfaac07.zip",
+            "dgx": "/data/AS/Samora/HFE/HFE/v18/medcat_models/20230328_trained_model_hfe_redone/medcat_model_pack_316666b47dfaac07",
+            "dhcap": "/home/jovyan/work/medcat_models/medcat_model_pack_316666b47dfaac07.zip",
+            "dhcap02": "/home/cogstack/samora/_data/medcat_models/medcat_model_pack_316666b47dfaac07.zip",
+            "override_medcat_model_path": None,
         }
 
-        if (global_start_year == None):
-            self.global_start_year, self.global_start_month, self.global_end_year, self.global_end_month, self.global_start_day, self.global_end_day = '1995', '01', '2023', '11', '01', '01'
+        if global_start_year == None:
+            (
+                self.global_start_year,
+                self.global_start_month,
+                self.global_end_year,
+                self.global_end_month,
+                self.global_start_day,
+                self.global_end_day,
+            ) = ("1995", "01", "2023", "11", "01", "01")
         else:
 
             self.global_start_year = str(global_start_year).zfill(4)
@@ -496,17 +550,21 @@ class config_class:
         self = update_global_start_date(self, self.start_date)
 
         self.date_list = generate_date_list(
-            self.start_date, self.years, self.months, self.days,
+            self.start_date,
+            self.years,
+            self.months,
+            self.days,
             time_window_interval_delta=self.time_window_interval_delta,
-            config_obj=self)
+            config_obj=self,
+        )
 
-        if (self.verbosity > 0):
+        if self.verbosity > 0:
             for date in self.date_list[0:5]:
                 print(date)
 
         self.n_pat_lines = len(self.date_list)
 
-        if (self.individual_patient_window):
+        if self.individual_patient_window:
             print("individual_patient_window set!")
 
             start_column_name = self.individual_patient_window_start_column_name
@@ -519,39 +577,45 @@ class config_class:
             # Your code with relativedelta
             # time_offset = timedelta(days=days) + relativedelta(months=months, years=years)
 
-            if (self.lookback):
-                time_offset = - \
-                    relativedelta(days=days, months=months, years=years)
+            if self.lookback:
+                time_offset = -relativedelta(days=days, months=months, years=years)
 
             else:
-                time_offset = relativedelta(
-                    days=days, months=months, years=years)
+                time_offset = relativedelta(days=days, months=months, years=years)
 
             # print(start_column_name, self.individual_patient_window_start_column_name ,offset_column_name,time_offset )
 
             # display(self.individual_patient_window_df)
 
-            self.individual_patient_window_df = add_offset_column(self.individual_patient_window_df,
-                                                                  start_column_name, offset_column_name, time_offset)
+            self.individual_patient_window_df = add_offset_column(
+                self.individual_patient_window_df,
+                start_column_name,
+                offset_column_name,
+                time_offset,
+            )
 
             # display(self.individual_patient_window_df)
 
-            self.patient_dict = build_patient_dict(dataframe=self.individual_patient_window_df,
-                                                   patient_id_column=self.individual_patient_id_column_name,
-                                                   start_column=f"{start_column_name}_converted",
-                                                   end_column=f'{start_column_name}_offset')
+            self.patient_dict = build_patient_dict(
+                dataframe=self.individual_patient_window_df,
+                patient_id_column=self.individual_patient_id_column_name,
+                start_column=f"{start_column_name}_converted",
+                end_column=f"{start_column_name}_offset",
+            )
 
-            if (self.lookback == True):
+            if self.lookback == True:
                 # print("skipping reverse")
                 # reverse tuples for elastic search parse
-                reversed_patient_dict = {key: tuple(
-                    reversed(value)) for key, value in self.patient_dict.items()}
-                print('reversed_patient_dict')
+                reversed_patient_dict = {
+                    key: tuple(reversed(value))
+                    for key, value in self.patient_dict.items()
+                }
+                print("reversed_patient_dict")
                 self.patient_dict = reversed_patient_dict
 
             # display(self.patient_dict)
 
-        if (self.verbosity > 1):
+        if self.verbosity > 1:
 
             print("Debug message: global_start_year =", self.global_start_year)
             print("Debug message: global_start_month =", self.global_start_month)
@@ -560,7 +624,8 @@ class config_class:
             print("Debug message: global_start_day =", self.global_start_day)
             print("Debug message: global_end_day =", self.global_end_day)
 
-            first_key = next(iter(self.patient_dict))
-            display(self.patient_dict[first_key])
+            if self.individual_patient_window:
+                first_key = next(iter(self.patient_dict))
+                display(self.patient_dict[first_key])
 
         self.skip_additional_listdir = skip_additional_listdir
