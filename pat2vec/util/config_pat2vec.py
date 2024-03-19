@@ -28,16 +28,17 @@ def calculate_interval(start_date, time_delta, m=1):
 def update_global_start_date(self, start_date):
     print("updating global start date")
     # Compare and update individual elements of global start date if necessary
-    if start_date.year > int(self.global_start_year):
-        self.global_start_year = str(start_date.year)
-    if start_date.month > int(self.global_start_month):
-        self.global_start_month = str(start_date.month)
-    if start_date.day > int(self.global_start_day):
-        self.global_start_day = str(start_date.day)
+    if self.lookback == False:
+        if start_date.year > int(self.global_start_year):
+            self.global_start_year = str(start_date.year)
+        if start_date.month > int(self.global_start_month):
+            self.global_start_month = str(start_date.month)
+        if start_date.day > int(self.global_start_day):
+            self.global_start_day = str(start_date.day)
 
-    print(
-        "Warning: Updated global start date as start date later than global start date."
-    )
+        print(
+            "Warning: Updated global start date as start date later than global start date."
+        )
 
     return self
 
@@ -540,6 +541,25 @@ class config_class:
             self.global_start_day = str(global_start_day).zfill(2)
             self.global_end_day = str(global_end_day).zfill(2)
 
+        if self.lookback:
+
+            self = swap_start_end(self)
+            if self.verbosity >= 1:
+                print("Swapping start and end dates, lookback True")
+                # Output
+                print(
+                    "Start:",
+                    self.global_start_year,
+                    self.global_start_month,
+                    self.global_start_day,
+                )
+                print(
+                    "End:",
+                    self.global_end_year,
+                    self.global_end_month,
+                    self.global_end_day,
+                )
+
         self.initial_global_start_year = self.global_start_year
         self.initial_global_start_month = self.global_start_month
         self.initial_global_end_year = self.global_end_year
@@ -631,6 +651,29 @@ class config_class:
         self.skip_additional_listdir = skip_additional_listdir
 
         if self.verbosity >= 1:
-            print("data_type_filter_dict")
-            print(self.data_type_filter_dict)
-            print(self.data_type_filter_dict.keys())
+            if self.data_type_filter_dict is not None:
+                print("data_type_filter_dict")
+                print(self.data_type_filter_dict)
+                print(self.data_type_filter_dict.keys())
+
+        # finally if lookback, reverse the order of global start and end for elastic search string
+
+
+def swap_start_end(self):
+    # Temporary variables to hold start values
+    temp_year = self.global_start_year
+    temp_month = self.global_start_month
+    temp_day = self.global_start_day
+
+    # Assigning end values to start variables
+    self.global_start_year = self.global_end_year
+    self.global_start_month = self.global_end_month
+    self.global_start_day = self.global_end_day
+
+    # Assigning temporary values to end variables
+    self.global_end_year = temp_year
+    self.global_end_month = temp_month
+    self.global_end_day = temp_day
+
+    # Return self for method chaining
+    return self
