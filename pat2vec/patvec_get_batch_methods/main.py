@@ -317,8 +317,8 @@ def get_pat_batch_bloods(
                         )
 
                         filter_term_list = config_obj.data_type_filter_dict.get(
-                            "filter_term_list"
-                        )
+                            "filter_term_lists"
+                        ).get("bloods")
 
                         batch_target = filter_dataframe_by_fuzzy_terms(
                             batch_target,
@@ -561,7 +561,7 @@ def get_pat_batch_epr_docs(
                 search_string=f"updatetime:[{global_start_year}-{global_start_month}-{global_start_day} TO {global_end_year}-{global_end_month}-{global_end_day}]",
             )
 
-            if config_obj.data_type_filter_dict is not None:
+            if config_obj.data_type_filter_dict is not None and not batch_target.empty:
                 if (
                     config_obj.data_type_filter_dict.get("filter_term_lists").get(
                         "epr_docs"
@@ -576,8 +576,8 @@ def get_pat_batch_epr_docs(
                         )
 
                         filter_term_list = config_obj.data_type_filter_dict.get(
-                            "filter_term_list"
-                        )
+                            "filter_term_lists"
+                        ).get("epr_docs")
 
                         batch_target = filter_dataframe_by_fuzzy_terms(
                             batch_target,
@@ -594,11 +594,14 @@ def get_pat_batch_epr_docs(
                 ):
                     if config_obj.verbosity > 1:
                         print("append_regex_term_counts...")
+                        display(batch_target)
                     batch_target = append_regex_term_counts(
-                        batch_target,
-                        config_obj.data_type_filter_dict.get("filter_term_lists").get(
-                            "epr_docs_term_regex"
-                        ),
+                        df=batch_target,
+                        terms=config_obj.data_type_filter_dict.get(
+                            "filter_term_lists"
+                        ).get("epr_docs_term_regex"),
+                        text_column="body_analysed",
+                        debug=config_obj.verbosity > 5,
                     )
             # display(batch_target)
 

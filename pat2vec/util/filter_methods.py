@@ -2,7 +2,9 @@ import pandas as pd
 from fuzzywuzzy import process
 
 
-def filter_dataframe_by_fuzzy_terms(df, filter_term_list, column_name='document_description', verbose=0):
+def filter_dataframe_by_fuzzy_terms(
+    df, filter_term_list, column_name="document_description", verbose=0
+):
     """
     Filter DataFrame by fuzzy matching terms in the specified column.
 
@@ -18,7 +20,7 @@ def filter_dataframe_by_fuzzy_terms(df, filter_term_list, column_name='document_
     if verbose >= 1:
         print("Filtering DataFrame by fuzzy terms...")
 
-    filtered_df = pd.DataFrame()
+    matched_indices = set()
     for term in filter_term_list:
         if verbose >= 1:
             print(f"Processing term: {term}")
@@ -26,9 +28,10 @@ def filter_dataframe_by_fuzzy_terms(df, filter_term_list, column_name='document_
         for match, score, idx in matches:
             if verbose >= 2:
                 print(f"Found match: {match} with similarity score: {score}")
-            filtered_df = pd.concat([filtered_df, df.iloc[[idx]]])
+            matched_indices.add(idx)
 
     if verbose >= 1:
         print("Filtering complete.")
 
+    filtered_df = df[df.index.isin(matched_indices)]
     return filtered_df

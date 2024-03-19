@@ -629,3 +629,8 @@ class config_class:
                 display(self.patient_dict[first_key])
 
         self.skip_additional_listdir = skip_additional_listdir
+
+        if self.verbosity >= 1:
+            print("data_type_filter_dict")
+            print(self.data_type_filter_dict)
+            print(self.data_type_filter_dict.keys())
