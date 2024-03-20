@@ -4,7 +4,7 @@ import pandas as pd
 from clinical_note_splitter.clinical_notes_splitter import split_and_append_chunks
 from IPython.display import display
 
-from pat2vec.util.filter_methods import apply_bloods_data_type_filter, apply_data_type_epr_docs_filters, filter_dataframe_by_fuzzy_terms
+from pat2vec.util.filter_methods import apply_bloods_data_type_filter, apply_data_type_epr_docs_filters, apply_data_type_mct_docs_filters, filter_dataframe_by_fuzzy_terms
 from pat2vec.util.methods_annotation import (
     get_pat_document_annotation_batch,
     get_pat_document_annotation_batch_mct,
@@ -302,7 +302,7 @@ def get_pat_batch_bloods(
                 search_string=f"basicobs_value_numeric:* AND "
                 f"updatetime:[{global_start_year}-{global_start_month}-{global_start_day} TO {global_end_year}-{global_end_month}-{global_end_day}]",
             )
-            
+
             batch_target = apply_bloods_data_type_filter(config_obj, batch_target)
 
             if config_obj.store_pat_batch_docs or overwrite_stored_pat_observations:
@@ -733,6 +733,7 @@ def get_pat_batch_mct_docs(
                 search_string=f'obscatalogmasteritem_displayname:("AoMRC_ClinicalSummary_FT") AND '
                 f"observationdocument_recordeddtm:[{global_start_year}-{global_start_month}-{global_start_day} TO {global_end_year}-{global_end_month}-{global_end_day}]",
             )
+            batch_target = apply_data_type_mct_docs_filters(config_obj, batch_target)
 
             if config_obj.store_pat_batch_docs or overwrite_stored_pat_docs:
                 # batch_target.dropna(subset='observation_valuetext_analysed', inplace=True)

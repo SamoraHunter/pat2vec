@@ -40,7 +40,7 @@ def filter_dataframe_by_fuzzy_terms(
 
 def apply_data_type_epr_docs_filters(config_obj, batch_target):
     """
-    Apply data type filters to the batch target based on the configuration object.
+    Apply data type filters specific to EPR documents to the batch target based on the configuration object.
 
     Args:
         config_obj (object): Configuration object containing data type filter information.
@@ -79,6 +79,7 @@ def apply_data_type_epr_docs_filters(config_obj, batch_target):
     return batch_target
 
 
+
 def apply_bloods_data_type_filter(config_obj, batch_target):
     """
     Apply data type filter specific to bloods to the batch target based on the configuration object.
@@ -108,3 +109,42 @@ def apply_bloods_data_type_filter(config_obj, batch_target):
     return batch_target
 
 
+def apply_data_type_mct_docs_filters(config_obj, batch_target):
+    """
+    Apply data type filters specific to MCT documents to the batch target based on the configuration object.
+
+    Args:
+        config_obj (object): Configuration object containing data type filter information.
+        batch_target (DataFrame): Batch target DataFrame to be filtered.
+
+    Returns:
+        DataFrame: Filtered batch target DataFrame.
+
+    """
+    if config_obj.data_type_filter_dict is not None and not batch_target.empty:
+        if config_obj.data_type_filter_dict.get("filter_term_lists").get("mct_docs") is not None:
+            if config_obj.verbosity >= 1:
+                print("Applying document type filter to MCT documents", config_obj.data_type_filter_dict)
+            filter_term_list = config_obj.data_type_filter_dict.get("filter_term_lists").get("mct_docs")
+            batch_target = filter_dataframe_by_fuzzy_terms(
+                batch_target,
+                filter_term_list,
+                column_name="document_description",
+                verbose=config_obj.verbosity,
+            )
+
+        if config_obj.data_type_filter_dict.get("filter_term_lists").get("mct_docs_term_regex") is not None:
+            if config_obj.verbosity > 1:
+                print("Appending regex term counts...")
+                if config_obj.verbosity > 5:
+                    display(batch_target)
+            batch_target = append_regex_term_counts(
+                df=batch_target,
+                terms=config_obj.data_type_filter_dict.get("filter_term_lists").get("mct_docs_term_regex"),
+                text_column="body_analysed",
+                debug=config_obj.verbosity > 5,
+            )
+    else:
+        if config_obj.verbosity >= 1:
+            print("Data type filter dictionary is None or batch target is empty. No filtering applied.")
+    return batch_target
