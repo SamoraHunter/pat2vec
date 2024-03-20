@@ -854,3 +854,94 @@ def get_pat_batch_demo(
         """"""
         print(f"Error retrieving batch demographic information: {e}")
         return []
+
+
+
+def get_pat_batch_reports(
+    current_pat_client_id_code,
+    search_term,
+    config_obj=None,
+    cohort_searcher_with_terms_and_search=None,
+):
+    """
+    Retrieve batch reports for a patient based on the given parameters.
+    Example search_term: KHMDC >>>> retreives KHMDC reports
+
+    Args:
+        current_pat_client_id_code (str): The client ID code for the current patient.
+        search_term (str): The term used for searching report-related observations.
+        config_obj (ConfigObject): An object containing global start and end year/month.
+        cohort_searcher_with_terms_and_search (function): A function for searching a cohort with terms.
+
+    Returns:
+        list: Batch of report-related observations.
+
+    Raises:
+        ValueError: If config_obj is None or missing required attributes.
+    """
+
+    overwrite_stored_pat_observations = config_obj.overwrite_stored_pat_observations
+    store_pat_batch_observations = config_obj.store_pat_batch_observations
+
+    batch_obs_target_path = os.path.join(
+        f"current_pat_{search_term}_reports_batches{config_obj.suffix}/", str(current_pat_client_id_code) + ".csv"
+    )
+
+    os.makedirs(batch_obs_target_path, exist_ok=True)
+
+
+    if config_obj is None or not all(
+        hasattr(config_obj, attr)
+        for attr in [
+            "global_start_year",
+            "global_start_month",
+            "global_end_year",
+            "global_end_month",
+        ]
+    ):
+        raise ValueError("Invalid or missing configuration object.")
+
+    global_start_year = config_obj.global_start_year
+    global_start_month = config_obj.global_start_month
+    global_end_year = config_obj.global_end_year
+    global_end_month = config_obj.global_end_month
+    global_start_day = config_obj.global_start_day
+    global_end_day = config_obj.global_end_day
+
+    existence_check = exist_check(batch_obs_target_path, config_obj)
+
+    try:
+        if store_pat_batch_observations or existence_check is False:
+
+            batch_target = cohort_searcher_with_terms_and_search(
+                index_name="basic_observations",
+                fields_list=[
+                    "client_idcode",
+                    "updatetime",
+                    "textualObs",
+                    "basicobs_guid",
+                    "basicobs_value_analysed",
+                    "basicobs_itemname_analysed"
+                ],
+                term_name="client_idcode.keyword",
+                entered_list=[current_pat_client_id_code],
+                search_string=f"basicobs_itemname_analysed:{search_term} AND "
+                f"updatetime:[{global_start_year}-{global_start_month}-{global_start_day} TO {global_end_year}-{global_end_month}-{global_end_day}]",
+            )
+
+            batch_target = batch_target.rename(columns={'textualObs': 'body_analysed'})
+
+            # You might need to adjust or add filters specific to report data.
+
+            if config_obj.store_pat_batch_docs or overwrite_stored_pat_observations:
+                batch_target.to_csv(batch_obs_target_path)
+
+        else:
+            batch_target = pd.read_csv(batch_obs_target_path)
+
+        return batch_target
+    except Exception as e:
+        """"""
+        print(f"Error retrieving batch reports: {e}")
+        return []
+
