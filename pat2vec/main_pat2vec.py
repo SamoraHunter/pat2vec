@@ -22,7 +22,7 @@ from pat2vec.patvec_get_batch_methods.main import (
     get_pat_batch_bloods, get_pat_batch_bmi, get_pat_batch_demo,
     get_pat_batch_diagnostics, get_pat_batch_drugs, get_pat_batch_epr_docs,
     get_pat_batch_epr_docs_annotations, get_pat_batch_mct_docs,
-    get_pat_batch_mct_docs_annotations, get_pat_batch_news, get_pat_batch_obs)
+    get_pat_batch_mct_docs_annotations, get_pat_batch_news, get_pat_batch_obs, get_pat_batch_reports, get_pat_batch_reports_docs_annotations)
 from pat2vec.util import config_pat2vec
 from pat2vec.util.methods_get import (create_folders, create_folders_for_pat,
                                       filter_stripped_list, generate_date_list,
@@ -31,12 +31,6 @@ from pat2vec.util.methods_get import (create_folders, create_folders_for_pat,
 from pat2vec.util.methods_get_medcat import get_cat
 from pat2vec.util.get_dummy_data_cohort_searcher import cohort_searcher_with_terms_and_search_dummy
 
-# stuff paths for portability
-sys.path.insert(0, '/home/aliencat/samora/gloabl_files')
-sys.path.insert(0, '/data/AS/Samora/gloabl_files')
-sys.path.insert(0, '/home/jovyan/work/gloabl_files')
-sys.path.insert(0, '/home/samorah/_data/gloabl_files')
-sys.path.insert(0, '/home/samorah/_data/gloabl_files/pat2vec')
 
 color_bars = [Fore.RED,
               Fore.GREEN,
@@ -419,6 +413,9 @@ class main:
 
             empty_return_mct = pd.DataFrame(
                 columns=['observationdocument_recordeddtm', 'observation_valuetext_analysed'])
+            
+            empty_return_reports = pd.DataFrame(
+                columns=['updatetime', 'observation_valuetext_analysed'])
 
             if self.config_obj.main_options.get('annotations', True):
                 search_term = None  # inside function
@@ -435,6 +432,18 @@ class main:
                                                    cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search)
             else:
                 batch_mct = empty_return_mct
+
+
+            if self.config_obj.main_options.get('annotations_reports', True):
+                search_term = None  # inside function
+                batch_reports = get_pat_batch_reports(current_pat_client_id_code=current_pat_client_id_code,
+                                                   search_term=search_term,
+                                                   config_obj=self.config_obj,
+                                                   cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search)
+            else:
+                batch_epr = empty_return_reports
+
+
 
             if not annot_first:
 
@@ -537,6 +546,7 @@ class main:
             else:
                 batch_epr_docs_annotations = empty_return_epr
 
+
             if self.config_obj.main_options.get('annotations_mrc', True):
 
                 batch_epr_docs_annotations_mct = get_pat_batch_mct_docs_annotations(
@@ -548,6 +558,21 @@ class main:
 
             else:
                 batch_epr_docs_annotations_mct = empty_return_mct
+
+
+            if self.config_obj.main_options.get('annotations_reports', True):
+
+                batch_reports_docs_annotations = get_pat_batch_reports_docs_annotations(
+                    current_pat_client_id_code, config_obj=self.config_obj, cat=self.cat, t=self.t)
+
+                if (type(batch_reports_docs_annotations) == None):
+                    if self.config_obj.verbosity > 2:
+                        print(f'batch_reports_docs_annotations empty')
+                    batch_reports_docs_annotations = empty_return
+            else:
+                batch_epr_docs_annotations = empty_return_reports
+
+
 
             update_pbar(p_bar_entry, start_time, 0,
                         f'Done batches in {time.time()-start_time}', self.t, self.config_obj, skipped_counter)
@@ -574,6 +599,9 @@ class main:
                 print("EPR annotations:", len(batch_epr_docs_annotations))
                 print("EPR annotations mct:", len(
                     batch_epr_docs_annotations_mct))
+                print("batch_reports:", len(batch_reports))
+                print("batch_report_docs_annotations:", len(batch_reports_docs_annotations))
+
 
             if self.config_obj.verbosity > 3:
                 print(f'Done batches in {time.time() - start_time}')
@@ -621,6 +649,23 @@ class main:
                         batch_epr_docs_annotations_mct[target_column_string], errors='coerce', utc=True)
                     batch_epr_docs_annotations_mct.dropna(
                         subset=[target_column_string], inplace=True)
+                    
+                if self.config_obj.main_options.get('annotations_reports', True):
+                    target_column_string = 'updatetime'
+                    batch_reports_docs_annotations[target_column_string] = pd.to_datetime(
+                        batch_reports_docs_annotations[target_column_string], errors='coerce', utc=True)
+                    batch_reports_docs_annotations.dropna(
+                        subset=[target_column_string], inplace=True)
+                    
+            
+
+                if self.config_obj.main_options.get('annotations_reports', True):
+                    target_column_string = 'updatetime'
+                    batch_reports[target_column_string] = pd.to_datetime(
+                        batch_reports[target_column_string], errors='coerce', utc=True)
+                    batch_reports.dropna(
+                        subset=[target_column_string], inplace=True)
+
                 # batch_epr_docs_annotations_mct.dropna(subset=['observation_valuetext_analysed'], inplace=True)
 
                 # target_column_string = 'body_analysed'
@@ -646,6 +691,7 @@ class main:
                     print("EPR annotations:", len(batch_epr_docs_annotations))
                     print("EPR annotations mct:", len(
                         batch_epr_docs_annotations_mct))
+                    print("batch_report_docs_annotations:", len(batch_report_docs_annotations))
 
             for j in range(0, len(date_list)):
                 try:
@@ -685,6 +731,7 @@ class main:
                                        batch_drugs=batch_drugs,
                                        batch_epr_docs_annotations=batch_epr_docs_annotations,
                                        batch_epr_docs_annotations_mct=batch_epr_docs_annotations_mct,
+                                       batch_report_docs_annotations=batch_report_docs_annotations,
                                        config_obj=self.config_obj,
                                        stripped_list_start=stripped_list_start,
                                        t=self.t,

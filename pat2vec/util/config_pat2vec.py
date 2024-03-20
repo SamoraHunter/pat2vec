@@ -146,6 +146,8 @@ class config_class:
 
         self.pre_misc_batch_path = f"current_pat_misc_batches{self.suffix}/"
 
+        self.pre_reports_path = f"current_pat_reports{self.suffix}/"
+
         self.current_pat_line_path = f"current_pat_line_path{self.suffix}/"
 
         self.store_pat_batch_docs = store_pat_batch_docs
@@ -321,6 +323,10 @@ class config_class:
             )
             self.pre_document_batch_path_mct = os.path.join(
                 self.root_path, f"current_pat_document_batches_mct{self.suffix}/"
+            )
+
+            self.pre_document_annotation_batch_path_reports = os.path.join(
+                self.root_path, f"current_pat_document_batches_reports{self.suffix}/"
             )
 
             self.pre_bloods_batch_path = os.path.join(

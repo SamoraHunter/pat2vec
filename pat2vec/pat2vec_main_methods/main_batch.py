@@ -4,6 +4,7 @@ import time
 import traceback
 
 import pandas as pd
+from pat2vec.pat2vec_get_methods.get_method_report_annotations import get_current_pat_report_annotations
 from pat2vec.util.methods_get import exist_check
 
 from pat2vec.pat2vec_get_methods.get_method_bed import get_bed
@@ -49,6 +50,7 @@ def main_batch(current_pat_client_id_code,
                batch_drugs=None,
                batch_epr_docs_annotations=None,
                batch_epr_docs_annotations_mct=None,
+               batch_report_docs_annotations=None,
                config_obj=None,
                stripped_list_start=None,
                t=None,
@@ -227,6 +229,15 @@ def main_batch(current_pat_client_id_code,
                     df_pat_target = get_smoking(current_pat_client_id_code, target_date_range, batch_smoking, config_obj=config_obj,
                                                 cohort_searcher_with_terms_and_search=cohort_searcher_with_terms_and_search)
                     patient_vector.append(df_pat_target)
+
+                if(main_options.get('annotations_reports')):
+                    update_pbar(p_bar_entry, start_time, 4,
+                                'reports', t, config_obj)
+                     
+                    df_pat_target = get_current_pat_report_annotations(current_pat_client_id_code, target_date_range, batch_report_docs_annotations, config_obj=config_obj,
+                                                cohort_searcher_with_terms_and_search=cohort_searcher_with_terms_and_search)
+                    patient_vector.append(df_pat_target)
+
 
                 update_pbar(p_bar_entry, start_time, 2,
                             'concatenating', t, config_obj)

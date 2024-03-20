@@ -5,9 +5,16 @@ from clinical_note_splitter.clinical_notes_splitter import split_and_append_chun
 from IPython.display import display
 
 from pat2vec.util.filter_methods import filter_dataframe_by_fuzzy_terms
+from pat2vec.util.filter_methods import (
+    apply_bloods_data_type_filter,
+    apply_data_type_epr_docs_filters,
+    apply_data_type_mct_docs_filters,
+    filter_dataframe_by_fuzzy_terms,
+)
 from pat2vec.util.methods_annotation import (
     get_pat_document_annotation_batch,
     get_pat_document_annotation_batch_mct,
+    get_pat_document_annotation_batch_reports,
 )
 from pat2vec.util.methods_annotation_regex import append_regex_term_counts
 from pat2vec.util.methods_get import exist_check
@@ -326,6 +333,8 @@ def get_pat_batch_bloods(
                             column_name="basicobs_itemname_analysed",
                             verbose=config_obj.verbosity,
                         )
+
+            batch_target = apply_bloods_data_type_filter(config_obj, batch_target)
 
             if config_obj.store_pat_batch_docs or overwrite_stored_pat_observations:
                 batch_target.to_csv(batch_obs_target_path)
@@ -733,6 +742,40 @@ def get_pat_batch_mct_docs_annotations(
     return batch_target
 
 
+def get_pat_batch_reports_docs_annotations(
+    current_pat_client_id_code, config_obj=None, cat=None, t=None
+):
+    batch_reports_target_path_report = os.path.join(
+        config_obj.pre_document_batch_path_reports,
+        str(current_pat_client_id_code) + ".csv",
+    )
+
+    pre_document_annotation_batch_path_reports = (
+        config_obj.pre_document_annotation_batch_path_reports
+    )
+
+    current_pat_document_annotation_batch_path = os.path.join(
+        pre_document_annotation_batch_path_reports, current_pat_client_id_code + ".csv"
+    )
+
+    if exist_check(current_pat_document_annotation_batch_path, config_obj=config_obj):
+        batch_target = pd.read_csv(current_pat_document_annotation_batch_path)
+    else:
+        pat_batch = pd.read_csv(batch_reports_target_path_report)
+        pat_batch.dropna(
+            subset=["body_analysed"], axis=0, inplace=True
+        )  # composite of textual obs and value analysed concat
+        batch_target = get_pat_document_annotation_batch_reports(
+            current_pat_client_idcode=current_pat_client_id_code,
+            pat_batch=pat_batch,
+            cat=cat,
+            config_obj=config_obj,
+            t=t,
+        )
+
+    return batch_target
+
+
 def get_pat_batch_mct_docs(
     current_pat_client_id_code,
     search_term,
@@ -796,6 +839,7 @@ def get_pat_batch_mct_docs(
                 search_string=f'obscatalogmasteritem_displayname:("AoMRC_ClinicalSummary_FT") AND '
                 f"observationdocument_recordeddtm:[{global_start_year}-{global_start_month}-{global_start_day} TO {global_end_year}-{global_end_month}-{global_end_day}]",
             )
+            batch_target = apply_data_type_mct_docs_filters(config_obj, batch_target)
 
             if config_obj.store_pat_batch_docs or overwrite_stored_pat_docs:
                 # batch_target.dropna(subset='observation_valuetext_analysed', inplace=True)
@@ -915,4 +959,100 @@ def get_pat_batch_demo(
     except Exception as e:
         """"""
         print(f"Error retrieving batch demographic information: {e}")
+        return []
+
+
+def get_pat_batch_reports(
+    current_pat_client_id_code,
+    search_term,
+    config_obj=None,
+    cohort_searcher_with_terms_and_search=None,
+):
+    """
+    Retrieve batch reports for a patient based on the given parameters.
+    Filter reports with doc type filter arg set in config: KHMDC >>>> retreives KHMDC reports
+
+    Args:
+        current_pat_client_id_code (str): The client ID code for the current patient.
+        search_term (str): The term used for searching report-related observations.
+        config_obj (ConfigObject): An object containing global start and end year/month.
+        cohort_searcher_with_terms_and_search (function): A function for searching a cohort with terms.
+
+    Returns:
+        list: Batch of report-related observations.
+
+    Raises:
+        ValueError: If config_obj is None or missing required attributes.
+    """
+
+    overwrite_stored_pat_observations = config_obj.overwrite_stored_pat_observations
+    store_pat_batch_observations = config_obj.store_pat_batch_observations
+
+    search_term = "reports"
+
+    batch_obs_target_path = os.path.join(
+        config_obj.pre_reports_path, str(current_pat_client_id_code) + ".csv"
+    )
+
+    # os.makedirs(batch_obs_target_path, exist_ok=True)
+
+    if config_obj is None or not all(
+        hasattr(config_obj, attr)
+        for attr in [
+            "global_start_year",
+            "global_start_month",
+            "global_end_year",
+            "global_end_month",
+        ]
+    ):
+        raise ValueError("Invalid or missing configuration object.")
+
+    global_start_year = config_obj.global_start_year
+    global_start_month = config_obj.global_start_month
+    global_end_year = config_obj.global_end_year
+    global_end_month = config_obj.global_end_month
+    global_start_day = config_obj.global_start_day
+    global_end_day = config_obj.global_end_day
+
+    existence_check = exist_check(batch_obs_target_path, config_obj)
+
+    try:
+        if store_pat_batch_observations or existence_check is False:
+
+            batch_target = cohort_searcher_with_terms_and_search(
+                index_name="basic_observations",
+                fields_list=[
+                    "client_idcode",
+                    "updatetime",
+                    "textualObs",
+                    "basicobs_guid",
+                    "basicobs_value_analysed",
+                    "basicobs_itemname_analysed",
+                ],
+                term_name="client_idcode.keyword",
+                entered_list=[current_pat_client_id_code],
+                search_string=f"basicobs_itemname_analysed:{search_term} AND "
+                f"updatetime:[{global_start_year}-{global_start_month}-{global_start_day} TO {global_end_year}-{global_end_month}-{global_end_day}]",
+            )
+
+            # batch_target = batch_target.rename(columns={'textualObs': 'body_analysed'})
+            batch_target["body_analysed"] = (
+                batch_target["textualObs"]
+                + "\n"
+                + batch_target["basicobs_value_analysed"]
+            )
+
+            # You might need to adjust or add filters specific to report data.
+
+            if config_obj.store_pat_batch_docs or overwrite_stored_pat_observations:
+                batch_target.to_csv(batch_obs_target_path)
+
+        else:
+
+            batch_target = pd.read_csv(batch_obs_target_path)
+
+        return batch_target
+    except Exception as e:
+        """"""
+        print(f"Error retrieving batch reports: {e}")
         return []
