@@ -1138,8 +1138,9 @@ def create_folders_for_pat(patient_id, config_obj=None):
     pre_annotation_path = config_obj.pre_annotation_path
     pre_annotation_path_mrc = config_obj.pre_annotation_path_mrc
     current_pat_lines_path = config_obj.current_pat_lines_path
+    pre_annotation_path_reports = config_obj.pre_document_annotation_batch_path_reports
 
-    for path in [pre_annotation_path, pre_annotation_path_mrc, current_pat_lines_path]:
+    for path in [pre_annotation_path, pre_annotation_path_mrc, current_pat_lines_path, pre_annotation_path_reports]:
         folder_path = os.path.join(path, str(patient_id))
 
         if not os.path.exists(folder_path):

@@ -991,7 +991,7 @@ def get_pat_batch_reports(
     search_term = "reports"
 
     batch_obs_target_path = os.path.join(
-        config_obj.pre_reports_path, str(current_pat_client_id_code) + ".csv"
+        config_obj.pre_document_batch_path_reports, str(current_pat_client_id_code) + ".csv"
     )
 
     # os.makedirs(batch_obs_target_path, exist_ok=True)

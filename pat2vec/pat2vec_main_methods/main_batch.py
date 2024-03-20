@@ -232,9 +232,9 @@ def main_batch(current_pat_client_id_code,
 
                 if(main_options.get('annotations_reports')):
                     update_pbar(p_bar_entry, start_time, 4,
-                                'reports', t, config_obj)
+                                'annotations_reports', t, config_obj)
                      
-                    df_pat_target = get_current_pat_report_annotations(current_pat_client_id_code, target_date_range, batch_report_docs_annotations, config_obj=config_obj,
+                    df_pat_target = get_current_pat_report_annotations(current_pat_client_id_code=current_pat_client_id_code, target_date_range=target_date_range, report_annotations=batch_report_docs_annotations, config_obj=config_obj,
                                                 cohort_searcher_with_terms_and_search=cohort_searcher_with_terms_and_search)
                     patient_vector.append(df_pat_target)
 

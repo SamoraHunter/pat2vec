@@ -65,6 +65,8 @@ class main:
         self.hostname = config_obj.hostname
 
         self.config_obj = config_obj
+
+        individual_patient_window_controls_method = config_obj.individual_patient_window_controls_method
         
 
         if (self.config_obj == None):
@@ -272,7 +274,7 @@ class main:
                         print("End Date:", current_pat_end_date)
 
 
-                elif(individual_patient_window_controls_method == 'random'):
+                elif(self.config_obj.individual_patient_window_controls_method == 'random'):
                     #Select a random treatments time window for application.
                     index = random.randint(0, len(all_patient_list))
                     current_pat_start_date = self.config_obj.patient_dict.get(all_patient_list[index])[
@@ -441,7 +443,7 @@ class main:
                                                    config_obj=self.config_obj,
                                                    cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search)
             else:
-                batch_epr = empty_return_reports
+                batch_reports = empty_return_reports
 
 
 
@@ -691,7 +693,7 @@ class main:
                     print("EPR annotations:", len(batch_epr_docs_annotations))
                     print("EPR annotations mct:", len(
                         batch_epr_docs_annotations_mct))
-                    print("batch_report_docs_annotations:", len(batch_report_docs_annotations))
+                    print("batch_report_docs_annotations:", len(batch_reports_docs_annotations))
 
             for j in range(0, len(date_list)):
                 try:
@@ -731,7 +733,7 @@ class main:
                                        batch_drugs=batch_drugs,
                                        batch_epr_docs_annotations=batch_epr_docs_annotations,
                                        batch_epr_docs_annotations_mct=batch_epr_docs_annotations_mct,
-                                       batch_report_docs_annotations=batch_report_docs_annotations,
+                                       batch_report_docs_annotations=batch_reports_docs_annotations,
                                        config_obj=self.config_obj,
                                        stripped_list_start=stripped_list_start,
                                        t=self.t,

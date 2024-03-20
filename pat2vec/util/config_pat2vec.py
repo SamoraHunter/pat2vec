@@ -123,10 +123,17 @@ class config_class:
         self.pre_document_annotation_batch_path_mct = (
             f"current_pat_documents_annotations_batches_mct{self.suffix}/"
         )
+        self.pre_report_annotation_batch_path_report = (
+            f"current_pat_documents_annotations_batches_report{self.suffix}/"
+        )
+
         self.pre_document_batch_path = f"current_pat_document_batches{self.suffix}/"
         self.pre_document_batch_path_mct = (
             f"current_pat_document_batches_mct{self.suffix}/"
         )
+
+        self.pre_report_batch_path = f"current_pat_report_batches{self.suffix}/"
+
 
         self.pre_bloods_batch_path = f"current_pat_bloods_batches{self.suffix}/"
 
@@ -145,8 +152,6 @@ class config_class:
         self.pre_demo_batch_path = f"current_pat_demo_batches{self.suffix}/"
 
         self.pre_misc_batch_path = f"current_pat_misc_batches{self.suffix}/"
-
-        self.pre_reports_path = f"current_pat_reports{self.suffix}/"
 
         self.current_pat_line_path = f"current_pat_line_path{self.suffix}/"
 
@@ -325,8 +330,13 @@ class config_class:
                 self.root_path, f"current_pat_document_batches_mct{self.suffix}/"
             )
 
-            self.pre_document_annotation_batch_path_reports = os.path.join(
+
+            self.pre_document_batch_path_reports = os.path.join(
                 self.root_path, f"current_pat_document_batches_reports{self.suffix}/"
+            )
+
+            self.pre_document_annotation_batch_path_reports = os.path.join(
+                self.root_path, f"current_pat_documents_annotations_batches_reports{self.suffix}/"
             )
 
             self.pre_bloods_batch_path = os.path.join(
