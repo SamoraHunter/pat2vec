@@ -8,6 +8,7 @@ from pat2vec.util.filter_methods import apply_bloods_data_type_filter, apply_dat
 from pat2vec.util.methods_annotation import (
     get_pat_document_annotation_batch,
     get_pat_document_annotation_batch_mct,
+    get_pat_document_annotation_batch_reports,
 )
 from pat2vec.util.methods_annotation_regex import append_regex_term_counts
 from pat2vec.util.methods_get import exist_check
@@ -670,6 +671,35 @@ def get_pat_batch_mct_docs_annotations(
     return batch_target
 
 
+def get_pat_batch_reports_docs_annotations(current_pat_client_id_code, config_obj=None, cat=None, t=None):
+    batch_reports_target_path_report = os.path.join(
+        config_obj.pre_document_batch_path_reports, str(current_pat_client_id_code) + ".csv"
+    )
+
+    pre_document_annotation_batch_path_reports = (
+        config_obj.pre_document_annotation_batch_path_reports
+    )
+
+    current_pat_document_annotation_batch_path = os.path.join(
+        pre_document_annotation_batch_path_reports, current_pat_client_id_code + ".csv"
+    )
+
+    if exist_check(current_pat_document_annotation_batch_path, config_obj=config_obj):
+        batch_target = pd.read_csv(current_pat_document_annotation_batch_path)
+    else:
+        pat_batch = pd.read_csv(batch_reports_target_path_report)
+        pat_batch.dropna(subset=["body_analysed"], axis=0, inplace=True) #composite of textual obs and value analysed concat
+        batch_target = get_pat_document_annotation_batch_reports(
+            current_pat_client_idcode=current_pat_client_id_code,
+            pat_batch=pat_batch,
+            cat=cat,
+            config_obj=config_obj,
+            t=t,
+        )
+
+    return batch_target
+
+
 def get_pat_batch_mct_docs(
     current_pat_client_id_code,
     search_term,
@@ -865,7 +895,7 @@ def get_pat_batch_reports(
 ):
     """
     Retrieve batch reports for a patient based on the given parameters.
-    Example search_term: KHMDC >>>> retreives KHMDC reports
+    Filter reports with doc type filter arg set in config: KHMDC >>>> retreives KHMDC reports
 
     Args:
         current_pat_client_id_code (str): The client ID code for the current patient.
@@ -883,11 +913,13 @@ def get_pat_batch_reports(
     overwrite_stored_pat_observations = config_obj.overwrite_stored_pat_observations
     store_pat_batch_observations = config_obj.store_pat_batch_observations
 
+    search_term = "reports"
+
     batch_obs_target_path = os.path.join(
-        f"current_pat_{search_term}_reports_batches{config_obj.suffix}/", str(current_pat_client_id_code) + ".csv"
+        config_obj.pre_reports_path, str(current_pat_client_id_code) + ".csv"
     )
 
-    os.makedirs(batch_obs_target_path, exist_ok=True)
+    #os.makedirs(batch_obs_target_path, exist_ok=True)
 
 
     if config_obj is None or not all(
@@ -929,7 +961,9 @@ def get_pat_batch_reports(
                 f"updatetime:[{global_start_year}-{global_start_month}-{global_start_day} TO {global_end_year}-{global_end_month}-{global_end_day}]",
             )
 
-            batch_target = batch_target.rename(columns={'textualObs': 'body_analysed'})
+            #batch_target = batch_target.rename(columns={'textualObs': 'body_analysed'})
+            batch_target['body_analysed'] = batch_target['textualObs'] + '\n' + batch_target['basicobs_value_analysed']
+
 
             # You might need to adjust or add filters specific to report data.
 
@@ -937,6 +971,7 @@ def get_pat_batch_reports(
                 batch_target.to_csv(batch_obs_target_path)
 
         else:
+
             batch_target = pd.read_csv(batch_obs_target_path)
 
         return batch_target
