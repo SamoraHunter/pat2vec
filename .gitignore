@@ -34,6 +34,8 @@ util/cohort_searcher_dummy.ipynb
 
 notebooks/new_project/*
 
+output_directory/*
+
 util/medcat_models/*
 
 notebooks/output_directory/*
@@ -41,6 +43,8 @@ notebooks/output_directory/*
 notebooks/output_directory
 
 myenv/*
+
+pat2vec/notebooks/*
 
 myenv
 pat2vec_env
