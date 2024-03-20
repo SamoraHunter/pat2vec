@@ -4,7 +4,7 @@ import pandas as pd
 from clinical_note_splitter.clinical_notes_splitter import split_and_append_chunks
 from IPython.display import display
 
-from pat2vec.util.filter_methods import apply_bloods_data_type_filter, apply_data_type_epr_docs_filters, filter_dataframe_by_fuzzy_terms
+from pat2vec.util.filter_methods import filter_dataframe_by_fuzzy_terms
 from pat2vec.util.methods_annotation import (
     get_pat_document_annotation_batch,
     get_pat_document_annotation_batch_mct,
@@ -302,8 +302,30 @@ def get_pat_batch_bloods(
                 search_string=f"basicobs_value_numeric:* AND "
                 f"updatetime:[{global_start_year}-{global_start_month}-{global_start_day} TO {global_end_year}-{global_end_month}-{global_end_day}]",
             )
-            
-            batch_target = apply_bloods_data_type_filter(config_obj, batch_target)
+            if config_obj.data_type_filter_dict is not None:
+                if (
+                    config_obj.data_type_filter_dict.get("filter_term_lists").get(
+                        "bloods"
+                    )
+                    is not None
+                ):
+
+                    if config_obj.verbosity >= 1:
+                        print(
+                            "applying doc type filter to bloods",
+                            config_obj.data_type_filter_dict,
+                        )
+
+                        filter_term_list = config_obj.data_type_filter_dict.get(
+                            "filter_term_lists"
+                        ).get("bloods")
+
+                        batch_target = filter_dataframe_by_fuzzy_terms(
+                            batch_target,
+                            filter_term_list,
+                            column_name="basicobs_itemname_analysed",
+                            verbose=config_obj.verbosity,
+                        )
 
             if config_obj.store_pat_batch_docs or overwrite_stored_pat_observations:
                 batch_target.to_csv(batch_obs_target_path)
@@ -539,7 +561,48 @@ def get_pat_batch_epr_docs(
                 search_string=f"updatetime:[{global_start_year}-{global_start_month}-{global_start_day} TO {global_end_year}-{global_end_month}-{global_end_day}]",
             )
 
-            batch_target = apply_data_type_epr_docs_filters(config_obj, batch_target)
+            if config_obj.data_type_filter_dict is not None and not batch_target.empty:
+                if (
+                    config_obj.data_type_filter_dict.get("filter_term_lists").get(
+                        "epr_docs"
+                    )
+                    is not None
+                ):
+
+                    if config_obj.verbosity >= 1:
+                        print(
+                            "applying doc type filter to EPR docs",
+                            config_obj.data_type_filter_dict,
+                        )
+
+                        filter_term_list = config_obj.data_type_filter_dict.get(
+                            "filter_term_lists"
+                        ).get("epr_docs")
+
+                        batch_target = filter_dataframe_by_fuzzy_terms(
+                            batch_target,
+                            filter_term_list,
+                            column_name="document_description",
+                            verbose=config_obj.verbosity,
+                        )
+
+                if (
+                    config_obj.data_type_filter_dict.get("filter_term_lists").get(
+                        "epr_docs_term_regex"
+                    )
+                    is not None
+                ):
+                    if config_obj.verbosity > 1:
+                        print("append_regex_term_counts...")
+                        display(batch_target)
+                    batch_target = append_regex_term_counts(
+                        df=batch_target,
+                        terms=config_obj.data_type_filter_dict.get(
+                            "filter_term_lists"
+                        ).get("epr_docs_term_regex"),
+                        text_column="body_analysed",
+                        debug=config_obj.verbosity > 5,
+                    )
             # display(batch_target)
 
             if config_obj.store_pat_batch_docs or overwrite_stored_pat_docs:
