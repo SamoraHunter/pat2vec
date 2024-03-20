@@ -988,7 +988,7 @@ def get_pat_batch_reports(
     overwrite_stored_pat_observations = config_obj.overwrite_stored_pat_observations
     store_pat_batch_observations = config_obj.store_pat_batch_observations
 
-    search_term = "reports"
+    search_term = "report"
 
     batch_obs_target_path = os.path.join(
         config_obj.pre_document_batch_path_reports, str(current_pat_client_id_code) + ".csv"
@@ -1041,8 +1041,6 @@ def get_pat_batch_reports(
                 + "\n"
                 + batch_target["basicobs_value_analysed"]
             )
-
-            # You might need to adjust or add filters specific to report data.
 
             if config_obj.store_pat_batch_docs or overwrite_stored_pat_observations:
                 batch_target.to_csv(batch_obs_target_path)
