@@ -8,6 +8,9 @@ import pandas as pd
 from faker import Faker
 from transformers import pipeline
 
+from IPython import display
+
+
 from pat2vec.util.dummy_data_files.dummy_lists import (
     blood_test_names,
     diagnostic_names,
@@ -322,6 +325,7 @@ def generate_observations_Reports_text_data(
     Returns:
     - pd.DataFrame: Generated DataFrame with specified columns.
     """
+    #print("generate_observations_Reports_text_data")
 
     current_pat_client_id_code = random.choice(entered_list)
 
@@ -355,6 +359,8 @@ def generate_observations_Reports_text_data(
     }
 
     df = pd.DataFrame(data)
+    #display(df)
+
     return df
 
 def generate_observations_data(
@@ -596,7 +602,7 @@ def cohort_searcher_with_terms_and_search_dummy(
     
     elif (
         index_name == "basic_observations"
-        and search_string.find("basicobs_itemname_analysed:reports") != -1
+        and search_string.find("basicobs_itemname_analysed:report") != -1
     ):
         if verbose:
             print("Generating text data for 'basic_observations, reports'")
@@ -666,7 +672,7 @@ def cohort_searcher_with_terms_and_search_dummy(
 
     else:
         print(
-            "Index name is not 'epr_documents', 'observations', 'basic_observations', 'orders'. Returning an empty DataFrame."
+            "Index name is not 'epr_documents', 'observations', 'basic_observations', 'orders'. Returning an empty DataFrame.", search_string
         )
         return pd.DataFrame(
             columns=[
