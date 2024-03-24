@@ -46,11 +46,68 @@ See util/requirements.txt
 
 ## Installation
 
-To install pat2vec, you can clone this repo:
+### Windows:
+
+1. **Clone the repository:**
+    ```shell
+    git clone https://github.com/SamoraHunter/pat2vec.git
+    cd pat2vec
+    ```
+
+    **Run the installation script:**
+    ```shell
+    install.bat
+    ```
+
+2. **Add the `pat2vec` directory to the Python path:**
+
+   Before importing `pat2vec` in your Python script, add the following lines to the script, replacing `/path/to/pat2vec` with the actual path to the `pat2vec` directory inside your project:
+   
+    ```python
+    import sys
+    sys.path.append('/path/to/pat2vec')
+    ```
+
+3. **Import `pat2vec` in your Python script:**
+
+    ```python
+    import pat2vec
+    ```
+
+### Unix/Linux:
+
+1. **Clone the repository:**
+    ```shell
+    git clone https://github.com/SamoraHunter/pat2vec.git
+    
+    . **Run the installation script:**
+    ```shell
+    chmod +x install.sh
+    ./install.sh
+    ```
+    
+    cd pat2vec
+    ```
+
+2. **Add the `pat2vec` directory to the Python path:**
+
+   Before importing `pat2vec` in your Python script, add the following lines to the script, replacing `/path/to/pat2vec` with the actual path to the `pat2vec` directory inside your project:
+   
+    ```python
+    import sys
+    sys.path.append('/path/to/pat2vec')
+    ```
+
+3. **Import `pat2vec` in your Python script:**
+
+    ```python
+    import pat2vec
+    ```
+
 
 ## Usage:
 
-- Set paths
+- Set paths, gloabl_files/medcat_models/modelpack.zip, gloabl_files/snomed_methods, gloabl_files/..
 
 - Configure options
 
