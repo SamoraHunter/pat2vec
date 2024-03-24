@@ -79,8 +79,10 @@ See util/requirements.txt
 1. **Clone the repository:**
     ```shell
     git clone https://github.com/SamoraHunter/pat2vec.git
+    ```
     
     . **Run the installation script:**
+    
     ```shell
     chmod +x install.sh
     ./install.sh
