@@ -84,6 +84,7 @@ See util/requirements.txt
     . **Run the installation script:**
     
     ```shell
+    (Requires python3 on path and venv)
     chmod +x install.sh
     ./install.sh
     ```
