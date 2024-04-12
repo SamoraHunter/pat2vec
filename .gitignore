@@ -41,6 +41,7 @@ util/medcat_models/*
 notebooks/output_directory/*
 
 notebooks/output_directory
+example_usage_DEV.ipynb
 
 myenv/*
 
