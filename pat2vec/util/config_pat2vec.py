@@ -43,6 +43,36 @@ def update_global_start_date(self, start_date):
     return self
 
 
+def get_test_options_dict():
+    #contains implemented testing functions, i.e have a dummy data generator implemented. 
+    main_options_dict = {
+    # Enable demographic information (Ethnicity mapped to UK census, age, death)
+    'demo': True,
+    'bmi': False,  # Enable BMI (Body Mass Index) tracking
+    'bloods': True,  # Enable blood-related information
+    'drugs': True,  # Enable drug-related information
+    'diagnostics': True,  # Enable diagnostic information
+
+    'core_02': False,  # Enable core_02 information
+    'bed': False,  # Enable bed n information
+    'vte_status': False,  # Enable VTE () status tracking
+    'hosp_site': False,  # Enable hospital site information
+    'core_resus': False,  # Enable core resuscitation information
+    'news': False,  # Enable NEWS (National Early Warning Score) tracking
+
+    'smoking': False,  # Enable smoking-related information
+    'annotations': True,  # Enable EPR annotations
+    # Enable MRC (Additional clinical note observations index) annotations
+    'annotations_mrc': True,
+    # Enable or disable negated presence annotations
+    'negated_presence_annotations': False
+}
+    return main_options_dict
+
+
+
+
+
 class config_class:
     def __init__(
         self,
@@ -438,6 +468,12 @@ class config_class:
 
             all_patient_list = priority_list  # + all_patient_list
 
+        def update_main_options(self):
+                test_options_dict = get_test_options_dict()
+                for option, value in self.main_options.items():
+                    if value and not test_options_dict[option]:
+                        self.main_options[option] = False
+
         if self.testing:
             # self.treatment_doc_filename = '/home/cogstack/samora/_data/pat2vec_tests/' + \
             #     treatment_doc_filename
@@ -445,9 +481,16 @@ class config_class:
             #     treatment_doc_filename
 
             # self.treatment_doc_filename = fr'{os.getcwd()}\test_files\treatment_docs.csv'
+            print("Setting test options")
+
             self.treatment_doc_filename = os.path.join(
                 os.getcwd(), "test_files", "treatment_docs.csv"
             )
+            
+            
+            #Enforce implemented testing options
+            update_main_options(self)
+
 
         if self.remote_dump == False:
             self.sftp_obj = None
