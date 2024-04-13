@@ -268,6 +268,8 @@ class config_class:
 
         self.override_medcat_model_path = override_medcat_model_path
 
+        self.dummy_medcat_model = True
+
         if start_time == None:
             self.start_time = datetime.now()
 

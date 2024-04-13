@@ -1,11 +1,24 @@
 import os
 import sys
 
+from pat2vec.util.get_dummy_data_cohort_searcher import dummy_CAT
+
 
 def get_cat(config_obj):
 
+
+
     if config_obj.verbosity >= 1:
         print(config_obj.override_medcat_model_path)
+
+    if(config_obj.testing):
+        print("Returning dummy_CAT, TESTING")
+
+        if(config_obj.dummy_medcat_model):
+
+            cat = dummy_CAT()
+
+            return cat
 
     model_path = None
 

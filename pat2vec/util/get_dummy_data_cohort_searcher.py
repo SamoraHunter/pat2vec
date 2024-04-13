@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 import logging
+import pickle
 import random
 import re
 from datetime import datetime, timedelta, timezone
@@ -814,3 +815,44 @@ def extract_search_term_obscatalogmasteritem_displayname(search_string):
         return search_term
     else:
         return search_string
+
+
+
+def random_sample(pickled_dict, sample_size):
+    keys = list(pickled_dict['entities'].keys())
+    sample_keys = random.sample(keys, min(sample_size, len(keys)))
+    sample = {'entities': {key: pickled_dict['entities'][key] for key in sample_keys}}
+    return sample
+
+def dummy_medcat_annotation_generator():
+    pickle_file = 'test_files/sample_annotations.pickle'
+    # Load the dictionary from the pickle file
+    with open(pickle_file, 'rb') as f:
+        sample_annotations = pickle.load(f)
+
+    
+    dummy_annotations = random_sample(sample_annotations, random.randint(0, 10))
+
+    return dummy_annotations
+
+
+class dummy_CAT(object):
+
+    def __init__(self):
+        pass
+    
+    def get_entities(self, text):
+        
+        return dummy_medcat_annotation_generator()
+    
+
+    def get_entities_multi_texts(self, texts):
+        
+        result = []
+
+        for i in range(0, len(texts)):
+
+            result.append(dummy_medcat_annotation_generator())
+            
+        return result
+    
