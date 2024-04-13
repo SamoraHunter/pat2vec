@@ -242,6 +242,8 @@ def generate_date_list(start_date, years, months, days, time_window_interval_del
                 (current_date.year, current_date.month, current_date.day))
             current_date += time_window_interval_delta
 
+        #date_list.reverse() # cohort searcher date order fix
+
     return date_list
 
 

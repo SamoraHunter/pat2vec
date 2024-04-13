@@ -584,6 +584,24 @@ class config_class:
             "override_medcat_model_path": None,
         }
 
+        if(self.lookback==True):
+            print("Swapping global values")
+            # Swapping values
+            # Swapping values
+            global_start_year, global_end_year = global_end_year, global_start_year
+            global_start_month, global_end_month = global_end_month, global_start_month
+            global_start_day, global_end_day = global_end_day, global_start_day
+
+            # Output the swapped values
+            print("global_start_year:", global_start_year)
+            print("global_start_month:", global_start_month)
+            print("global_end_year:", global_end_year)
+            print("global_end_month:", global_end_month)
+            print("global_start_day:", global_start_day)
+            print("global_end_day:", global_end_day)
+
+
+
         if global_start_year == None:
             (
                 self.global_start_year,
