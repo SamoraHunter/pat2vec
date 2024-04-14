@@ -667,66 +667,117 @@ def copy_files_and_dirs(source_root: str, source_name: str, destination: str, it
     # copy_files_and_dirs(project_root_source, project_name_source, project_destination)
 
 
+from typing import Dict, List, Union, Optional
+import pandas as pd
+
 def get_pat_ipw_record(
     current_pat_idcode: str,
     config_obj=None,
-    annot_filter_arguments: Optional[Dict[str,
-                                          Union[int, str, List[str]]]] = None,
-    filter_codes: Optional[List[int]] = None
+    annot_filter_arguments: Optional[Dict[str, Union[int, str, List[str]]]] = None,
+    filter_codes: Optional[List[int]] = None,
+    verbose: int = 3  # Added default verbosity level
 ) -> pd.DataFrame:
     """
     Retrieve patient IPW record.
+
+    This function retrieves the earliest relevant records, based on the filter_codes,
+    from the EPR and MCT annotation dataframes.
 
     Parameters:
     - current_pat_idcode (str): Patient ID code.
     - config_obj (Optional[pat2vec config obj]): Configuration object (default: None).
     - annot_filter_arguments (Optional[YourFilterArgType]): Annotation filter arguments (default: None).
     - filter_codes (Optional[int]): Filter codes (default: None).
+    - verbose (int): Verbosity level for printing messages (default: 1).
 
     Returns:
     pd.DataFrame: DataFrame containing the earliest relevant records.
     """
 
+    if verbose > 0:
+        print(f"Getting IPW record for patient: {current_pat_idcode}")
+
+    # Retrieve necessary paths
     pre_document_annotation_batch_path = config_obj.pre_document_annotation_batch_path
     pre_document_annotation_batch_path_mct = config_obj.pre_document_annotation_batch_path_mct
 
-    fsr = pd.DataFrame()
-    fsr_mct = pd.DataFrame()
+    # Initialize dataframes
+    fsr = pd.DataFrame()  # Filters DataFrame
+    fsr_mct = pd.DataFrame()  # Filters MCT DataFrame
 
-    # EPR annotations
+    # Read EPR annotations
+    if verbose > 0:
+        print("Reading EPR annotations...")
     dfa = pd.read_csv(
         f'{pre_document_annotation_batch_path}/{current_pat_idcode}.csv')
+
+    if verbose > 0:
+        print("Sample EPR annotations...")
+        display(dfa.head())
+
+    # Drop NaNs in columns that are necessary for filtering
     necessary_columns = ['client_idcode', 'updatetime', 'pretty_name', 'cui', 'type_ids', 'types', 'source_value',
                          'detected_name', 'acc', 'id', 'Time_Value', 'Time_Confidence', 'Presence_Value',
                          'Presence_Confidence', 'Subject_Value', 'Subject_Confidence']
 
+    if verbose > 1:
+        print(f"Dropping NaNs in columns: {necessary_columns}...")
     dfa = dfa.dropna(subset=necessary_columns)
+    
+    if verbose > 2:
+        print("Sample of filtered EPR DataFrame:")
+        print(dfa.head())
 
+    # Apply annotation filter if provided
     if annot_filter_arguments is not None:
+        if verbose > 0:
+            print("Filtering EPR annotations...")
         dfa = filter_annot_dataframe2(dfa, annot_filter_arguments)
 
+    # Filter based on filter_codes if provided
     if len(dfa) > 0:
-        fsr = filter_and_select_rows(dfa, filter_codes, verbosity=0, time_column='updatetime', filter_column='cui',
+        if verbose > 0:
+            print("Filtering EPR annotations based on filter_codes...")
+        fsr = filter_and_select_rows(dfa, filter_codes, verbosity=verbose > 0, time_column='updatetime', filter_column='cui',
                                      mode='earliest', n_rows=1)
 
-    # MCT annotations
+    # Read MCT annotations
+    if verbose > 0:
+        print("Reading MCT annotations...")
     dfa_mct = pd.read_csv(
         f'{pre_document_annotation_batch_path_mct}/{current_pat_idcode}.csv')
+
+    # Drop NaNs in columns that are necessary for filtering
     necessary_columns_mct = ['client_idcode', 'observationdocument_recordeddtm', 'pretty_name', 'cui', 'type_ids',
                              'types', 'source_value', 'detected_name', 'acc', 'id', 'Time_Value', 'Time_Confidence',
                              'Presence_Value', 'Presence_Confidence', 'Subject_Value', 'Subject_Confidence']
 
+    if verbose > 1:
+        print(f"Dropping NaNs in columns: {necessary_columns_mct}...")
     dfa_mct = dfa_mct.dropna(subset=necessary_columns_mct)
 
+    if verbose > 2:
+        print("Sample of filtered MCT DataFrame:")
+        print(dfa_mct.head())
+
+    # Apply annotation filter if provided
     if annot_filter_arguments is not None:
+        if verbose > 0:
+            print("Filtering MCT annotations...")
         dfa_mct = filter_annot_dataframe2(dfa_mct, annot_filter_arguments)
 
+    # Filter based on filter_codes if provided
     if len(dfa_mct) > 0:
-        fsr_mct = filter_and_select_rows(dfa_mct, filter_codes, verbosity=0,
+        if verbose > 0:
+            print("Filtering MCT annotations based on filter_codes...")
+        fsr_mct = filter_and_select_rows(dfa_mct, filter_codes, verbosity=verbose > 0,
                                          time_column='observationdocument_recordeddtm', filter_column='cui',
                                          mode='earliest', n_rows=1)
 
     if not fsr.empty and not fsr_mct.empty:
+        # Compare EPR and MCT earliest dates and select earliest
+        if verbose > 0:
+            print("Comparing EPR and MCT earliest dates...")
         earliest_df = fsr if fsr['updatetime'].min(
         ) < fsr_mct['observationdocument_recordeddtm'].min() else fsr_mct
     elif not fsr.empty:
@@ -735,15 +786,20 @@ def get_pat_ipw_record(
         earliest_df = fsr_mct
     else:
         # Both DataFrames are empty
+        if verbose > 0:
+            print("Neither EPR nor MCT annotations available...")
         earliest_df = pd.DataFrame(columns=necessary_columns)
         earliest_df['client_idcode'] = [current_pat_idcode]
 
     earliest_df = earliest_df.copy()
 
     if len(earliest_df) == 0:
-        display(earliest_df)
+        if verbose > 0:
+            print("No earliest IPW records available...")
 
     return earliest_df
+
+
 
 
 def filter_and_update_csv(target_directory, ipw_dataframe, filter_type='after', verbosity=False):

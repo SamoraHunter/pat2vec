@@ -104,6 +104,7 @@ class config_class:
         password=None,
         gpu_mem_threshold=4000,
         testing=False,
+        dummy_medcat_model=False,
         use_controls=False,
         medcat=False,
         global_start_year=None,
@@ -138,6 +139,7 @@ class config_class:
         all_epr_patient_list_path="/home/samorah/_data/gloabl_files/all_client_idcodes_epr_unique.csv",
         override_medcat_model_path=None,
         data_type_filter_dict=None,
+        
     ):
 
         self.suffix = suffix
@@ -268,7 +270,10 @@ class config_class:
 
         self.override_medcat_model_path = override_medcat_model_path
 
-        self.dummy_medcat_model = True
+        if(dummy_medcat_model == None):
+            self.dummy_medcat_model = True
+        else:
+            self.dummy_medcat_model = dummy_medcat_model
 
         if start_time == None:
             self.start_time = datetime.now()
