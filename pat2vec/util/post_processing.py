@@ -816,7 +816,7 @@ def build_ipw_dataframe(annot_filter_arguments=None, filter_codes=None, config_o
 
     for pat in pat_list_stripped:
 
-        res = get_pat_ipw_record(current_pat_idcode=pat, annot_filter_arguments=None,
+        res = get_pat_ipw_record(current_pat_idcode=pat, annot_filter_arguments=annot_filter_arguments,
                                  filter_codes=filter_codes, config_obj=config_obj)
         df = pd.concat([df, res], ignore_index=True)
 
