@@ -1,9 +1,12 @@
 from datetime import datetime, timedelta
 import logging
+import os
 import pickle
 import random
 import re
 from datetime import datetime, timedelta, timezone
+import string
+from typing import Optional, cast
 
 import pandas as pd
 from faker import Faker
@@ -57,7 +60,9 @@ def generate_epr_documents_data(
         "body_analysed": [
             generate_patient_timeline(current_pat_client_id_code)
             if use_GPT else
-            generate_patient_timeline_faker(current_pat_client_id_code)
+
+            #generate_patient_timeline_faker(current_pat_client_id_code)
+            get_patient_timeline_dummy(current_pat_client_id_code)
             for _ in range(num_rows)
         ],
         "updatetime": [
@@ -856,3 +861,93 @@ class dummy_CAT(object):
             
         return result
     
+
+
+def run_generate_patient_timeline_and_append(n=10, output_path=r"test_files\dummy_timeline.csv"):
+    # This function is used to generate a dummy patient timeline text for each client_idcode and
+    # append it to an existing CSV file or create a new one if it doesn't exist
+    # Check for null pointer references and unhandled exceptions
+
+    try:
+        # Check if the CSV file exists, if not, create a new DataFrame
+        if os.path.exists(output_path):  # If the CSV file exists
+            df = pd.read_csv(output_path)  # Read existing CSV file
+        else:  # If the CSV file doesn't exist
+            df = pd.DataFrame(columns=['client_idcode', 'body_analysed'])  # Create a new DataFrame with two columns
+    except FileNotFoundError:
+        print(f"FileNotFoundError: {output_path} doesn't exist!")
+        return
+
+    for _ in range(n):  # Loop n times
+        # Generate a random client_idcode using regex
+        client_idcode = ''.join(random.choices(string.ascii_uppercase + string.digits, k=9))
+
+        # Generate patient timeline text
+        try:
+            patient_timeline_text = generate_patient_timeline(client_idcode)
+        except Exception as e:
+            print(f"Exception: {e}")
+            return
+
+        # Append to DataFrame
+        try:
+            df = df.append({'client_idcode': client_idcode, 'body_analysed': patient_timeline_text, },
+                            ignore_index=True)  # Append a new row to the DataFrame
+        except Exception as e:
+            print(f"Exception: {e}")
+            return
+
+    # Write DataFrame to CSV with append mode
+    try:
+        df.to_csv(output_path, mode='a', header=not os.path.exists(output_path), index=False)  # Write to CSV file
+    except Exception as e:
+        print(f"Exception: {e}")
+        return
+
+
+
+def get_patient_timeline_dummy(
+        client_idcode: str,
+        output_path: str = r"test_files\dummy_timeline.csv") -> Optional[str]:
+    """
+    Get a random patient timeline text from a pre-existing CSV file
+    :param client_idcode: The client_idcode to search for
+    :param output_path: The path to the CSV file containing the patient timeline texts
+    :return: The corresponding patient timeline text or None if not found
+    """
+    try:
+        df: pd.DataFrame = pd.read_csv(output_path)
+    except FileNotFoundError:
+        print(f"FileNotFoundError: {output_path} doesn't exist!")
+        return None
+
+    # Check if the DataFrame is empty
+    if df.empty:
+        print("DataFrame is empty!")
+        return None
+
+    # Check if the 'client_idcode' column exists in the DataFrame
+    if 'client_idcode' not in df.columns:
+        print("'client_idcode' column doesn't exist in the DataFrame!")
+        return None
+
+    # Check if the 'body_analysed' column exists in the DataFrame
+    if 'body_analysed' not in df.columns:
+        print("'body_analysed' column doesn't exist in the DataFrame!")
+        return None
+
+    # Get a random row from the DataFrame, we don't care which one we get
+    sample: pd.DataFrame = df.sample(1)
+
+    # Check if we got a valid row
+    if len(sample) == 0:
+        print("Sample is empty!")
+        return None
+
+    # Get the value of the 'body_analysed' column from the random row
+    try:
+        return cast(str, sample.iloc[0]['body_analysed'])
+    except KeyError:
+        print("KeyError: 'body_analysed' column doesn't exist in the DataFrame!")
+        return None
+
