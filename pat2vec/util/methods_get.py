@@ -1159,7 +1159,7 @@ def convert_date(date_string):
     return date_object
 
 
-def add_offset_column(dataframe, start_column_name, offset_column_name, time_offset):
+def add_offset_column(dataframe, start_column_name, offset_column_name, time_offset, verbose=1):
     """
     Adds a new column with the offset from the start time to the provided DataFrame.
 
@@ -1173,13 +1173,20 @@ def add_offset_column(dataframe, start_column_name, offset_column_name, time_off
     - None (modifies the input DataFrame in place)
     """
 
+    if start_column_name not in dataframe.columns:
+        raise ValueError(f"Column '{start_column_name}' does not exist.")
+
+    # attempt to fix human time stamp inconsistencies:
     try:
-        # attempt to fix human time stamp inconsistencies:
         dataframe[start_column_name] = pd.to_datetime(dataframe[start_column_name].astype(
             str), infer_datetime_format=True, format='%d/%m/%y %H.%M.%S')
-    except:
-        dataframe[start_column_name] = pd.to_datetime(dataframe[start_column_name].astype(
-            str), infer_datetime_format=True, format='mixed')
+    except Exception as e:
+        if verbose > 1:
+            print(f"Failed to convert column '{start_column_name}' to datetime: {e}")
+
+        # If the conversion fails, move on without raising an error
+        dataframe[start_column_name] = pd.to_datetime(dataframe[start_column_name],
+                                                       errors='coerce')
 
     # cast back to str for parser
     dataframe[start_column_name] = dataframe[start_column_name].astype(str)
@@ -1187,9 +1194,13 @@ def add_offset_column(dataframe, start_column_name, offset_column_name, time_off
     # Attempt to parse datetime using dateutil.parser.parse
     try:
         dataframe[start_column_name + "_converted"] = dataframe[start_column_name].apply(
-            lambda x: parse(x, fuzzy=True))
-    except ValueError:
-        # Fallback to specified format if parsing fails
+            lambda x: parse(x, fuzzy=True) if pd.notna(x) else pd.NaT)
+    except Exception as e:
+        if verbose > 1:
+            print(
+                f"Failed to parse column '{start_column_name}' using dateutil.parser.parse: {e}")
+
+        # If parsing fails, move on without raising an error
         dataframe[start_column_name + "_converted"] = pd.to_datetime(
             dataframe[start_column_name], format='%m/%d/%y %H.%M.%S', errors='coerce')
 
@@ -1203,7 +1214,7 @@ def add_offset_column(dataframe, start_column_name, offset_column_name, time_off
         if pd.notna(dt):
             return dt + time_offset
         else:
-            return dt
+            return pd.NaT
 
     # Apply the offset function to create the new column
     dataframe[offset_column_name] = dataframe[start_column_name +
@@ -1227,6 +1238,15 @@ def build_patient_dict(dataframe, patient_id_column, start_column, end_column):
     Returns:
     - patient_dict: dict, a dictionary with patient_id as key and (start, end) as values
     """
+    if patient_id_column not in dataframe.columns:
+        raise ValueError(f"Column '{patient_id_column}' does not exist.")
+
+    if start_column not in dataframe.columns:
+        raise ValueError(f"Column '{start_column}' does not exist.")
+
+    if end_column not in dataframe.columns:
+        raise ValueError(f"Column '{end_column}' does not exist.")
+
     patient_dict = {}
 
     for index, row in dataframe.iterrows():
@@ -1238,7 +1258,10 @@ def build_patient_dict(dataframe, patient_id_column, start_column, end_column):
         if pd.notnull(start_time) and pd.notnull(end_time):
             # Add the patient_id and corresponding start and end times to the dictionary
             patient_dict[patient_id] = (start_time, end_time)
+        else:
+            print(
+                f"Ignoring patient {patient_id}: start or end time is null. "
+                f"start: {start_time}, end: {end_time}"
+            )
 
     return patient_dict
-
-    # patient_dict = build_patient_dict(df, 'PATIENT_ID', 'ADMISSION_DTTM_converted', 'ADMISSION_DTTM_offset')
