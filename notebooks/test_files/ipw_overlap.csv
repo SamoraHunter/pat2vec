@@ -1,0 +1,14 @@
+,client_idcode,updatetime,pretty_name,cui,type_ids,types,source_value,detected_name,acc,id,Time_Value,Time_Confidence,Presence_Value,Presence_Confidence,Subject_Value,Subject_Confidence,Unnamed: 0,context_similarity,start,end,icd10,ontologies,snomed,text_sample,full_doc,document_guid,observationdocument_recordeddtm,observation_guid
+0,D3232DUM23,2010-01-01 00:00:00,,,,,,,,,,,,,,,,,,,,,,,,,2010-01-01 00:00:00,
+1,F982DUM23,2010-01-01 00:00:00,,,,,,,,,,,,,,,,,,,,,,,,,2010-01-01 00:00:00,
+2,G123DUM23,2010-01-01 00:00:00,,,,,,,,,,,,,,,,,,,,,,,,,2010-01-01 00:00:00,
+3,H1011DUM23,2010-01-01 00:00:00,,,,,,,,,,,,,,,,,,,,,,,,,2010-01-01 00:00:00,
+4,H123DUM23,2010-01-01 00:00:00,,,,,,,,,,,,,,,,,,,,,,,,,2010-01-01 00:00:00,
+5,H456DUM23,2010-01-01 00:00:00,,,,,,,,,,,,,,,,,,,,,,,,,2010-01-01 00:00:00,
+6,H764DUM23,2013-01-09 21:05:10,Hyperlipidemia (disorder),55822004,['T-11'],['disorder'],Hyperlipidemia,hyperlipidemia,0.9307357200980187,57,Recent,0.9911634922027588,True,1.0,Patient,0.9999994039535522,0.0,0.9307357200980187,664.0,678.0,[],['SNOMED'],[],"d or worn t-shirt, shoes (not shoes recommended), gloves or other suitable clothing on the floor or other suitable means. Patient and equipment: 2 patients were treated (treated with: santinoin,
+",,doc_4,2013-01-09 21:05:10,
+7,H789DUM23,2010-01-01 00:00:00,,,,,,,,,,,,,,,,,,,,,,,,,2010-01-01 00:00:00,
+8,M543DUM23,2010-01-01 00:00:00,,,,,,,,,,,,,,,,,,,,,,,,,2010-01-01 00:00:00,
+9,P545DUM23,2010-01-01 00:00:00,,,,,,,,,,,,,,,,,,,,,,,,,2010-01-01 00:00:00,
+10,R776DUM23,2010-01-01 00:00:00,,,,,,,,,,,,,,,,,,,,,,,,,2010-01-01 00:00:00,
+11,Z982DUM23,2018-01-09 01:05:40,Hyperlipidemia (disorder),55822004,['T-11'],['disorder'],Hyperlipidemia,hyperlipidemia,0.9307357200980187,57,Recent,0.9911634922027588,True,1.0,Patient,0.9999994039535522,0.0,0.9307357200980187,664.0,678.0,[],['SNOMED'],[],,,,2018-01-09 01:05:40,obs_2
