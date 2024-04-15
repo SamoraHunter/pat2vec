@@ -12,9 +12,10 @@ def get_cat(config_obj):
         print(config_obj.override_medcat_model_path)
 
     if(config_obj.testing):
-        print("Returning dummy_CAT, TESTING")
+        
 
         if(config_obj.dummy_medcat_model):
+            print("Returning dummy_CAT, TESTING")
 
             cat = dummy_CAT()
 
