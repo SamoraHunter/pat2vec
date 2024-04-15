@@ -1,3 +1,5 @@
+import io
+import logging
 import os
 import sys
 from datetime import datetime, timedelta
@@ -14,6 +16,41 @@ from pat2vec.util.methods_get import (
     build_patient_dict,
     generate_date_list,
 )
+
+
+class MultiStream:
+    # This class is a simple container for multiple streams that can be used
+    # interchangeably with a single stream. For example, you can create an
+    # instance of this class and pass it to the logging module as the stream
+    # to be used for logging. Then, any messages that are logged will be
+    # written to all of the streams that are contained within this class.
+    # This is useful for situations where you want to log to multiple
+    # places at the same time.
+    #
+    # The constructor takes a single argument, which is a list of streams.
+    # The streams can be any type of stream, including strings (in which
+    # case they will be used as file names), or already open file objects.
+    #
+    # For example, to create a MultiStream that logs to the console and to
+    # a file, you could do the following:
+    #
+    #     stream_list = [sys.stdout, 'logfile.txt']
+    #     multi_stream = MultiStream(stream_list)
+    #     logging.basicConfig(stream=multi_stream, level=logging.INFO)
+    #
+    # Then, any messages that are logged will be written to both the console
+    # and the logfile.
+
+    def __init__(self, streams):
+        self.streams = streams
+
+    def write(self, text):
+        for stream in self.streams:
+            stream.write(text)
+
+    def flush(self):
+        for stream in self.streams:
+            stream.flush()
 
 
 def calculate_interval(start_date, time_delta, m=1):
@@ -44,33 +81,28 @@ def update_global_start_date(self, start_date):
 
 
 def get_test_options_dict():
-    #contains implemented testing functions, i.e have a dummy data generator implemented. 
+    # contains implemented testing functions, i.e have a dummy data generator implemented.
     main_options_dict = {
-    # Enable demographic information (Ethnicity mapped to UK census, age, death)
-    'demo': True,
-    'bmi': False,  # Enable BMI (Body Mass Index) tracking
-    'bloods': True,  # Enable blood-related information
-    'drugs': True,  # Enable drug-related information
-    'diagnostics': True,  # Enable diagnostic information
-
-    'core_02': False,  # Enable core_02 information
-    'bed': False,  # Enable bed n information
-    'vte_status': False,  # Enable VTE () status tracking
-    'hosp_site': False,  # Enable hospital site information
-    'core_resus': False,  # Enable core resuscitation information
-    'news': False,  # Enable NEWS (National Early Warning Score) tracking
-
-    'smoking': False,  # Enable smoking-related information
-    'annotations': True,  # Enable EPR annotations
-    # Enable MRC (Additional clinical note observations index) annotations
-    'annotations_mrc': True,
-    # Enable or disable negated presence annotations
-    'negated_presence_annotations': False
-}
+        # Enable demographic information (Ethnicity mapped to UK census, age, death)
+        "demo": True,
+        "bmi": False,  # Enable BMI (Body Mass Index) tracking
+        "bloods": True,  # Enable blood-related information
+        "drugs": True,  # Enable drug-related information
+        "diagnostics": True,  # Enable diagnostic information
+        "core_02": False,  # Enable core_02 information
+        "bed": False,  # Enable bed n information
+        "vte_status": False,  # Enable VTE () status tracking
+        "hosp_site": False,  # Enable hospital site information
+        "core_resus": False,  # Enable core resuscitation information
+        "news": False,  # Enable NEWS (National Early Warning Score) tracking
+        "smoking": False,  # Enable smoking-related information
+        "annotations": True,  # Enable EPR annotations
+        # Enable MRC (Additional clinical note observations index) annotations
+        "annotations_mrc": True,
+        # Enable or disable negated presence annotations
+        "negated_presence_annotations": False,
+    }
     return main_options_dict
-
-
-
 
 
 class config_class:
@@ -139,8 +171,48 @@ class config_class:
         all_epr_patient_list_path="/home/samorah/_data/gloabl_files/all_client_idcodes_epr_unique.csv",
         override_medcat_model_path=None,
         data_type_filter_dict=None,
-        
     ):
+
+        # Configure logging
+        # logging.basicConfig(
+        #     level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+        # )
+
+        # Test it out
+        # print("This will be logged.")
+
+        log_folder = "logs"
+        os.makedirs(log_folder, exist_ok=True)
+
+        # Create a logger
+        self.logger = logging.getLogger(__name__)
+
+        # Create a handler that writes log messages to a file with a timestamp
+        log_file = (
+            f"{log_folder}/logfile_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
+        )
+        file_handler = logging.FileHandler(log_file)
+
+        # Create a formatter to include timestamp in the log messages
+        formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
+        file_handler.setFormatter(formatter)
+
+        # Optionally set the logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
+        self.logger.setLevel(logging.DEBUG)
+
+        # Add the file handler to the logger
+        self.logger.addHandler(file_handler)
+
+        # Add a StreamHandler to print log messages to the console
+        console_handler = logging.StreamHandler(sys.stdout)
+        console_handler.setFormatter(formatter)
+        self.logger.addHandler(console_handler)
+
+        # Redirect stdout to both console handler and file handler
+        sys.stdout = MultiStream([sys.stdout, file_handler.stream])
+
+        # Now you can use the logger to log messages within the class
+        self.logger.info("Initialized config_pat2vec")
 
         self.suffix = suffix
         self.treatment_doc_filename = treatment_doc_filename
@@ -165,7 +237,6 @@ class config_class:
         )
 
         self.pre_report_batch_path = f"current_pat_report_batches{self.suffix}/"
-
 
         self.pre_bloods_batch_path = f"current_pat_bloods_batches{self.suffix}/"
 
@@ -270,7 +341,7 @@ class config_class:
 
         self.override_medcat_model_path = override_medcat_model_path
 
-        if(dummy_medcat_model == None):
+        if dummy_medcat_model == None:
             self.dummy_medcat_model = True
         else:
             self.dummy_medcat_model = dummy_medcat_model
@@ -367,13 +438,13 @@ class config_class:
                 self.root_path, f"current_pat_document_batches_mct{self.suffix}/"
             )
 
-
             self.pre_document_batch_path_reports = os.path.join(
                 self.root_path, f"current_pat_document_batches_reports{self.suffix}/"
             )
 
             self.pre_document_annotation_batch_path_reports = os.path.join(
-                self.root_path, f"current_pat_documents_annotations_batches_reports{self.suffix}/"
+                self.root_path,
+                f"current_pat_documents_annotations_batches_reports{self.suffix}/",
             )
 
             self.pre_bloods_batch_path = os.path.join(
@@ -476,10 +547,10 @@ class config_class:
             all_patient_list = priority_list  # + all_patient_list
 
         def update_main_options(self):
-                test_options_dict = get_test_options_dict()
-                for option, value in self.main_options.items():
-                    if value and not test_options_dict[option]:
-                        self.main_options[option] = False
+            test_options_dict = get_test_options_dict()
+            for option, value in self.main_options.items():
+                if value and not test_options_dict[option]:
+                    self.main_options[option] = False
 
         if self.testing:
             # self.treatment_doc_filename = '/home/cogstack/samora/_data/pat2vec_tests/' + \
@@ -493,11 +564,9 @@ class config_class:
             self.treatment_doc_filename = os.path.join(
                 os.getcwd(), "test_files", "treatment_docs.csv"
             )
-            
-            
-            #Enforce implemented testing options
-            update_main_options(self)
 
+            # Enforce implemented testing options
+            update_main_options(self)
 
         if self.remote_dump == False:
             self.sftp_obj = None
@@ -589,7 +658,7 @@ class config_class:
             "override_medcat_model_path": None,
         }
 
-        if(self.lookback==True):
+        if self.lookback == True:
             print("Swapping global values")
             # Swapping values
             # Swapping values
@@ -604,8 +673,6 @@ class config_class:
             print("global_end_month:", global_end_month)
             print("global_start_day:", global_start_day)
             print("global_end_day:", global_end_day)
-
-
 
         if global_start_year == None:
             (
