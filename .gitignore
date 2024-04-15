@@ -33,6 +33,7 @@ backups/
 util/cohort_searcher_dummy.ipynb
 
 notebooks/new_project/*
+notebooks/new_project_ipw/*
 
 output_directory/*
 
@@ -46,7 +47,7 @@ example_usage_DEV.ipynb
 myenv/*
 
 pat2vec/notebooks/*
-
+logs/
 myenv
 pat2vec_env
 
@@ -140,6 +141,7 @@ ipython_config.py
 live_test.ipynb
 
 new_project
+new_project_ipw
 
 temp_annot_file.csv
 /notebooks/temp_annot_file.csv
