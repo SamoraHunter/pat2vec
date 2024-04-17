@@ -34,7 +34,7 @@ def generate_epr_documents_data(
     global_start_month,
     global_end_year,
     global_end_month,
-    use_GPT=True
+    use_GPT=True,
 ):
     """
     Generate dummy data for the 'epr_documents' index.
@@ -58,11 +58,13 @@ def generate_epr_documents_data(
         "document_description": [f"description_{i}" for i in range(num_rows)],
         # 'body_analysed': [fake.paragraph() for _ in range(num_rows)],
         "body_analysed": [
-            generate_patient_timeline(current_pat_client_id_code)
-            if use_GPT else
-
-            #generate_patient_timeline_faker(current_pat_client_id_code)
-            get_patient_timeline_dummy(current_pat_client_id_code)
+            (
+                generate_patient_timeline(current_pat_client_id_code)
+                if use_GPT
+                else
+                # generate_patient_timeline_faker(current_pat_client_id_code)
+                get_patient_timeline_dummy(current_pat_client_id_code)
+            )
             for _ in range(num_rows)
         ],
         "updatetime": [
@@ -124,8 +126,7 @@ def generate_epr_documents_personal_data(
         ],
         "client_racecode": [ethnicity for _ in range(num_rows)],
         "client_deceaseddtm": [
-            fake.date_time_this_decade() if random.choice(
-                [True, False]) else None
+            fake.date_time_this_decade() if random.choice([True, False]) else None
             for _ in range(num_rows)
         ],
         "updatetime": [
@@ -256,7 +257,7 @@ def generate_observations_MRC_text_data(
     global_start_month,
     global_end_year,
     global_end_month,
-    use_GPT=False
+    use_GPT=False,
 ):
     """
     Generate dummy data for the 'observations' index.
@@ -280,9 +281,11 @@ def generate_observations_MRC_text_data(
         "client_idcode": [current_pat_client_id_code for _ in range(num_rows)],
         "obscatalogmasteritem_displayname": "AoMRC_ClinicalSummary_FT",
         "observation_valuetext_analysed": [
-            generate_patient_timeline(current_pat_client_id_code)
-            if use_GPT else
-            generate_patient_timeline_faker(current_pat_client_id_code)
+            (
+                generate_patient_timeline(current_pat_client_id_code)
+                if use_GPT
+                else generate_patient_timeline_faker(current_pat_client_id_code)
+            )
             for _ in range(num_rows)
         ],
         # 'observation_valuetext_analysed': [fake.paragraph() for _ in range(num_rows)],
@@ -307,7 +310,6 @@ def generate_observations_MRC_text_data(
     return df
 
 
-
 def generate_observations_Reports_text_data(
     num_rows,
     entered_list,
@@ -315,7 +317,7 @@ def generate_observations_Reports_text_data(
     global_start_month,
     global_end_year,
     global_end_month,
-    use_GPT=False
+    use_GPT=False,
 ):
     """
     Generate dummy data for the 'basic observations' index and reports.
@@ -331,7 +333,7 @@ def generate_observations_Reports_text_data(
     Returns:
     - pd.DataFrame: Generated DataFrame with specified columns.
     """
-    #print("generate_observations_Reports_text_data")
+    # print("generate_observations_Reports_text_data")
 
     current_pat_client_id_code = random.choice(entered_list)
 
@@ -339,11 +341,13 @@ def generate_observations_Reports_text_data(
         "basicobs_guid": [f"obs_{i}" for i in range(num_rows)],
         "client_idcode": [current_pat_client_id_code for _ in range(num_rows)],
         "basicobs_itemname_analysed": "Report",
-        "basicobs_value_analysed":"", 
+        "basicobs_value_analysed": "",
         "textualObs": [
-            generate_patient_timeline(current_pat_client_id_code)
-            if use_GPT else
-            generate_patient_timeline_faker(current_pat_client_id_code)
+            (
+                generate_patient_timeline(current_pat_client_id_code)
+                if use_GPT
+                else generate_patient_timeline_faker(current_pat_client_id_code)
+            )
             for _ in range(num_rows)
         ],
         # 'observation_valuetext_analysed': [fake.paragraph() for _ in range(num_rows)],
@@ -365,9 +369,10 @@ def generate_observations_Reports_text_data(
     }
 
     df = pd.DataFrame(data)
-    #display(df)
+    # display(df)
 
     return df
+
 
 def generate_observations_data(
     num_rows,
@@ -582,7 +587,7 @@ def cohort_searcher_with_terms_and_search_dummy(
             global_start_month,
             global_end_year,
             global_end_month,
-            use_GPT=use_GPT
+            use_GPT=use_GPT,
         )
         return df
 
@@ -602,10 +607,10 @@ def cohort_searcher_with_terms_and_search_dummy(
             global_start_month,
             global_end_year,
             global_end_month,
-            use_GPT=use_GPT
+            use_GPT=use_GPT,
         )
         return df
-    
+
     elif (
         index_name == "basic_observations"
         and search_string.find("basicobs_itemname_analysed:report") != -1
@@ -622,7 +627,7 @@ def cohort_searcher_with_terms_and_search_dummy(
             global_start_month,
             global_end_year,
             global_end_month,
-            use_GPT=use_GPT
+            use_GPT=use_GPT,
         )
         return df
 
@@ -678,7 +683,8 @@ def cohort_searcher_with_terms_and_search_dummy(
 
     else:
         print(
-            "Index name is not 'epr_documents', 'observations', 'basic_observations', 'orders'. Returning an empty DataFrame.", search_string
+            "Index name is not 'epr_documents', 'observations', 'basic_observations', 'orders'. Returning an empty DataFrame.",
+            search_string,
         )
         return pd.DataFrame(
             columns=[
@@ -810,8 +816,7 @@ def generate_patient_timeline_faker(client_idcode):
 
 def extract_search_term_obscatalogmasteritem_displayname(search_string):
     # Using regular expression to find the part after 'obscatalogmasteritem_displayname:'
-    match = re.search(
-        r"obscatalogmasteritem_displayname:\((.*?)\)", search_string)
+    match = re.search(r"obscatalogmasteritem_displayname:\((.*?)\)", search_string)
     if match:
         # Get the matched group and remove punctuation
         search_term = match.group(1).replace('"', "").replace("'", "").strip()
@@ -822,20 +827,19 @@ def extract_search_term_obscatalogmasteritem_displayname(search_string):
         return search_string
 
 
-
 def random_sample(pickled_dict, sample_size):
-    keys = list(pickled_dict['entities'].keys())
+    keys = list(pickled_dict["entities"].keys())
     sample_keys = random.sample(keys, min(sample_size, len(keys)))
-    sample = {'entities': {key: pickled_dict['entities'][key] for key in sample_keys}}
+    sample = {"entities": {key: pickled_dict["entities"][key] for key in sample_keys}}
     return sample
 
+
 def dummy_medcat_annotation_generator():
-    pickle_file = 'test_files/sample_annotations.pickle'
+    pickle_file = "test_files/sample_annotations.pickle"
     # Load the dictionary from the pickle file
-    with open(pickle_file, 'rb') as f:
+    with open(pickle_file, "rb") as f:
         sample_annotations = pickle.load(f)
 
-    
     dummy_annotations = random_sample(sample_annotations, random.randint(0, 10))
 
     return dummy_annotations
@@ -845,25 +849,25 @@ class dummy_CAT(object):
 
     def __init__(self):
         pass
-    
+
     def get_entities(self, text):
-        
+
         return dummy_medcat_annotation_generator()
-    
 
     def get_entities_multi_texts(self, texts):
-        
+
         result = []
 
         for i in range(0, len(texts)):
 
             result.append(dummy_medcat_annotation_generator())
-            
+
         return result
-    
 
 
-def run_generate_patient_timeline_and_append(n=10, output_path=r"test_files\dummy_timeline.csv"):
+def run_generate_patient_timeline_and_append(
+    n=10, output_path=r"test_files\dummy_timeline.csv"
+):
     # This function is used to generate a dummy patient timeline text for each client_idcode and
     # append it to an existing CSV file or create a new one if it doesn't exist
     # Check for null pointer references and unhandled exceptions
@@ -873,14 +877,18 @@ def run_generate_patient_timeline_and_append(n=10, output_path=r"test_files\dumm
         if os.path.exists(output_path):  # If the CSV file exists
             df = pd.read_csv(output_path)  # Read existing CSV file
         else:  # If the CSV file doesn't exist
-            df = pd.DataFrame(columns=['client_idcode', 'body_analysed'])  # Create a new DataFrame with two columns
+            df = pd.DataFrame(
+                columns=["client_idcode", "body_analysed"]
+            )  # Create a new DataFrame with two columns
     except FileNotFoundError:
         print(f"FileNotFoundError: {output_path} doesn't exist!")
         return
 
     for _ in range(n):  # Loop n times
         # Generate a random client_idcode using regex
-        client_idcode = ''.join(random.choices(string.ascii_uppercase + string.digits, k=9))
+        client_idcode = "".join(
+            random.choices(string.ascii_uppercase + string.digits, k=9)
+        )
 
         # Generate patient timeline text
         try:
@@ -891,24 +899,30 @@ def run_generate_patient_timeline_and_append(n=10, output_path=r"test_files\dumm
 
         # Append to DataFrame
         try:
-            df = df.append({'client_idcode': client_idcode, 'body_analysed': patient_timeline_text, },
-                            ignore_index=True)  # Append a new row to the DataFrame
+            df = df.append(
+                {
+                    "client_idcode": client_idcode,
+                    "body_analysed": patient_timeline_text,
+                },
+                ignore_index=True,
+            )  # Append a new row to the DataFrame
         except Exception as e:
             print(f"Exception: {e}")
             return
 
     # Write DataFrame to CSV with append mode
     try:
-        df.to_csv(output_path, mode='a', header=not os.path.exists(output_path), index=False)  # Write to CSV file
+        df.to_csv(
+            output_path, mode="a", header=not os.path.exists(output_path), index=False
+        )  # Write to CSV file
     except Exception as e:
         print(f"Exception: {e}")
         return
 
 
-
 def get_patient_timeline_dummy(
-        client_idcode: str,
-        output_path: str = r"test_files\dummy_timeline.csv") -> Optional[str]:
+    client_idcode: str, output_path: str = r"test_files\dummy_timeline.csv"
+) -> Optional[str]:
     """
     Get a random patient timeline text from a pre-existing CSV file
     :param client_idcode: The client_idcode to search for
@@ -927,12 +941,12 @@ def get_patient_timeline_dummy(
         return None
 
     # Check if the 'client_idcode' column exists in the DataFrame
-    if 'client_idcode' not in df.columns:
+    if "client_idcode" not in df.columns:
         print("'client_idcode' column doesn't exist in the DataFrame!")
         return None
 
     # Check if the 'body_analysed' column exists in the DataFrame
-    if 'body_analysed' not in df.columns:
+    if "body_analysed" not in df.columns:
         print("'body_analysed' column doesn't exist in the DataFrame!")
         return None
 
@@ -946,8 +960,7 @@ def get_patient_timeline_dummy(
 
     # Get the value of the 'body_analysed' column from the random row
     try:
-        return cast(str, sample.iloc[0]['body_analysed'])
+        return cast(str, sample.iloc[0]["body_analysed"])
     except KeyError:
         print("KeyError: 'body_analysed' column doesn't exist in the DataFrame!")
         return None
-
