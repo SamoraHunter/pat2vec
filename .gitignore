@@ -51,6 +51,8 @@ logs/
 myenv
 pat2vec_env
 
+notebooks/treatment_docs.csv
+
 ####### git template for python projects: ########
 
 # Byte-compiled / optimized / DLL files
