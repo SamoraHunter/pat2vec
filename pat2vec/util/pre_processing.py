@@ -58,7 +58,7 @@ def get_treatment_docs_by_iterative_multi_term_cohort_searcher_no_terms_fuzzy(
     # create function that takes a list of terms, runs iterative_multi_term_cohort_searcher_no_terms_fuzzy and returns terms
 
     if pat2vec_obj.config_obj.lookback == False:
-
+        print("Using global start date.")
         global_start_day = pat2vec_obj.config_obj.global_start_day
         global_start_month = pat2vec_obj.config_obj.global_start_month
         global_start_year = pat2vec_obj.config_obj.global_start_year
@@ -66,12 +66,29 @@ def get_treatment_docs_by_iterative_multi_term_cohort_searcher_no_terms_fuzzy(
         global_end_month = pat2vec_obj.config_obj.global_end_month
         global_end_year = pat2vec_obj.config_obj.global_end_year
     else:
+        print("Using global end date.")
         global_start_day = pat2vec_obj.config_obj.global_end_day
         global_start_month = pat2vec_obj.config_obj.global_end_month
         global_start_year = pat2vec_obj.config_obj.global_start_year
         global_end_day = pat2vec_obj.config_obj.global_start_day
         global_end_month = pat2vec_obj.config_obj.global_start_month
-        global_end_year = pat2vec_obj.config_obj.global_end_year
+        global_end_year = pat2vec_obj.config_obj.global_start_year
+
+    # # Printing results
+    # print("Global Start Date:", global_start_day, global_start_month, global_start_year)
+    # print("Global End Date:", global_end_day, global_end_month, global_end_year)
+
+    # global_start_day = pat2vec_obj.config_obj.global_start_day
+    # global_start_month = pat2vec_obj.config_obj.global_start_month
+    # global_start_year = pat2vec_obj.config_obj.global_start_year
+    # global_end_day = pat2vec_obj.config_obj.global_end_day
+    # global_end_month = pat2vec_obj.config_obj.global_end_month
+    # global_end_year = pat2vec_obj.config_obj.global_end_year
+
+    # Printing results
+    print("Lookback", pat2vec_obj.config_obj.lookback)
+    print("Global Start Date:", global_start_day, global_start_month, global_start_year)
+    print("Global End Date:", global_end_day, global_end_month, global_end_year)
 
     if pat2vec_obj.config_obj.testing == True:
 
@@ -84,18 +101,9 @@ def get_treatment_docs_by_iterative_multi_term_cohort_searcher_no_terms_fuzzy(
                 entered_list=generate_uuid_list(
                     random.randint(0, 10), random.choice(["P", "V"])
                 ),
-                search_string=term_list[i]
-                + str(global_start_year)
-                + "-"
-                + str(global_start_month).zfill(2)
-                + "-"
-                + str(global_start_day).zfill(2)
-                + " TO "
-                + str(global_end_year)
-                + "-"
-                + str(global_end_month).zfill(2)
-                + "-"
-                + str(global_end_day).zfill(2),
+                search_string=f'body_analysed:"{term_list[i]}" AND '
+                + " "
+                + f"updatetime:[{global_start_year}-{global_start_month}-{global_start_day} TO {global_end_year}-{global_end_month}-{global_end_day}]",
             )
             results_holder.append(search_results)
 
