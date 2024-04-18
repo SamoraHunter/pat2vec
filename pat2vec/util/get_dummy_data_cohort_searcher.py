@@ -835,7 +835,7 @@ def random_sample(pickled_dict, sample_size):
 
 
 def dummy_medcat_annotation_generator():
-    pickle_file = "test_files/sample_annotations.pickle"
+    pickle_file = os.path.join("test_files", "sample_annotations.pickle")
     # Load the dictionary from the pickle file
     with open(pickle_file, "rb") as f:
         sample_annotations = pickle.load(f)
@@ -866,7 +866,7 @@ class dummy_CAT(object):
 
 
 def run_generate_patient_timeline_and_append(
-    n=10, output_path=r"test_files\dummy_timeline.csv"
+    n=10, output_path=os.path.join("test_files", "dummy_timeline.csv")
 ):
     # This function is used to generate a dummy patient timeline text for each client_idcode and
     # append it to an existing CSV file or create a new one if it doesn't exist
@@ -921,7 +921,7 @@ def run_generate_patient_timeline_and_append(
 
 
 def get_patient_timeline_dummy(
-    client_idcode: str, output_path: str = r"test_files\dummy_timeline.csv"
+    client_idcode: str, output_path: str = os.path.join("test_files", "dummy_timeline.csv")
 ) -> Optional[str]:
     """
     Get a random patient timeline text from a pre-existing CSV file
