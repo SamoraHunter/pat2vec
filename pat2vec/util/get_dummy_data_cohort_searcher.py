@@ -454,8 +454,7 @@ def generate_appointments_data(
     }
 
     df = pd.DataFrame(data)
-    print("Dummy df return!")
-    display(df)
+
     return df
 
 

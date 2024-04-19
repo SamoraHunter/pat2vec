@@ -103,34 +103,36 @@ def get_appointments(
             data=[current_pat_client_id_code], columns=["client_idcode"]
         )
 
-    current_pat_raw = current_pat_raw[current_pat_raw["Attended"].astype(int) == 1]
+    else:
 
-    # Calculate value counts for consultant_code, ClinicCode, and AppointmentType
-    counts_consultant = current_pat_raw["consultant_code"].value_counts()
-    counts_clinic = current_pat_raw["ClinicCode"].value_counts()
-    counts_appointment_type = current_pat_raw["AppointmentType"].value_counts()
+        current_pat_raw = current_pat_raw[current_pat_raw["Attended"].astype(int) == 1]
 
-    # Create a dictionary to hold the new feature vector
-    feature_vector = {}
+        # Calculate value counts for consultant_code, ClinicCode, and AppointmentType
+        counts_consultant = current_pat_raw["consultant_code"].value_counts()
+        counts_clinic = current_pat_raw["ClinicCode"].value_counts()
+        counts_appointment_type = current_pat_raw["AppointmentType"].value_counts()
 
-    # Iterate over counts_consultant and populate the feature vector
-    for consultant, count in counts_consultant.items():
-        feature_vector[f"consultant_code_{consultant}"] = count
+        # Create a dictionary to hold the new feature vector
+        feature_vector = {}
 
-    # Iterate over counts_clinic and populate the feature vector
-    for clinic, count in counts_clinic.items():
-        feature_vector[f"ClinicCode_{clinic}"] = count
+        # Iterate over counts_consultant and populate the feature vector
+        for consultant, count in counts_consultant.items():
+            feature_vector[f"consultant_code_{consultant}"] = count
 
-    # Iterate over counts_appointment_type and populate the feature vector
-    for appointment_type, count in counts_appointment_type.items():
-        feature_vector[f"AppointmentType_{appointment_type}"] = count
+        # Iterate over counts_clinic and populate the feature vector
+        for clinic, count in counts_clinic.items():
+            feature_vector[f"ClinicCode_{clinic}"] = count
 
-    # Convert the feature vector into a DataFrame with a single row
-    feature_vector_df = pd.DataFrame([feature_vector])
+        # Iterate over counts_appointment_type and populate the feature vector
+        for appointment_type, count in counts_appointment_type.items():
+            feature_vector[f"AppointmentType_{appointment_type}"] = count
 
-    feature_vector_df["client_idcode"] = current_pat_client_id_code
+        # Convert the feature vector into a DataFrame with a single row
+        features = pd.DataFrame([feature_vector])
+
+        features["client_idcode"] = current_pat_client_id_code
 
     if config_obj.verbosity >= 6:
         display(features)
 
-    return feature_vector_df
+    return features
