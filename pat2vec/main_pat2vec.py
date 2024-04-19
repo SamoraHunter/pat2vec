@@ -32,6 +32,7 @@ from pat2vec.patvec_get_batch_methods.main import (
     get_pat_batch_obs,
     get_pat_batch_reports,
     get_pat_batch_reports_docs_annotations,
+    get_pat_batch_appointments,
 )
 from pat2vec.util import config_pat2vec
 from pat2vec.util.methods_get import (
@@ -653,6 +654,17 @@ class main:
                 else:
                     batch_bloods = empty_return
 
+                if self.config_obj.main_options.get("appointments", True):
+
+                    batch_appointments = get_pat_batch_appointments(
+                        current_pat_client_id_code,
+                        search_term,
+                        config_obj=self.config_obj,
+                        cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search,
+                    )
+                else:
+                    batch_appointments = empty_return
+
             if self.config_obj.main_options.get("annotations", True):
 
                 batch_epr_docs_annotations = get_pat_batch_epr_docs_annotations(
@@ -898,6 +910,7 @@ class main:
                                 batch_epr_docs_annotations=batch_epr_docs_annotations,
                                 batch_epr_docs_annotations_mct=batch_epr_docs_annotations_mct,
                                 batch_report_docs_annotations=batch_reports_docs_annotations,
+                                batch_appointments=batch_appointments,
                                 config_obj=self.config_obj,
                                 stripped_list_start=stripped_list_start,
                                 t=self.t,

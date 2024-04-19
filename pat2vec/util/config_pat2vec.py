@@ -101,6 +101,7 @@ def get_test_options_dict():
         "annotations_mrc": True,
         # Enable or disable negated presence annotations
         "negated_presence_annotations": False,
+        "appointments": False,
     }
     return main_options_dict
 
@@ -372,6 +373,7 @@ class config_class:
                 "annotations": False,
                 "annotations_mrc": False,
                 "negated_presence_annotations": False,
+                "appointments": False,
             }
             if self.verbosity >= 1:
                 print(self.main_options)
