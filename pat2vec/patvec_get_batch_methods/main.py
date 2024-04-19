@@ -991,7 +991,8 @@ def get_pat_batch_reports(
     search_term = "report"
 
     batch_obs_target_path = os.path.join(
-        config_obj.pre_document_batch_path_reports, str(current_pat_client_id_code) + ".csv"
+        config_obj.pre_document_batch_path_reports,
+        str(current_pat_client_id_code) + ".csv",
     )
 
     # os.makedirs(batch_obs_target_path, exist_ok=True)
@@ -1053,4 +1054,92 @@ def get_pat_batch_reports(
     except Exception as e:
         """"""
         print(f"Error retrieving batch reports: {e}")
+        return []
+
+
+def get_pat_batch_appointments(
+    current_pat_client_id_code,
+    search_term,
+    config_obj=None,
+    cohort_searcher_with_terms_and_search=None,
+):
+    """ """
+    if config_obj is None or not all(
+        hasattr(config_obj, attr)
+        for attr in [
+            "global_start_year",
+            "global_start_month",
+            "global_end_year",
+            "global_end_month",
+        ]
+    ):
+        raise ValueError("Invalid or missing configuration object.")
+
+    global_start_year = config_obj.global_start_year
+    global_start_month = config_obj.global_start_month
+    global_end_year = config_obj.global_end_year
+    global_end_month = config_obj.global_end_month
+    global_start_day = config_obj.global_start_day
+    global_end_day = config_obj.global_end_day
+
+    appointments_target_path = os.path.join(
+        config_obj.pre_appointments_batch_path, str(current_pat_client_id_code) + ".csv"
+    )
+    existence_check = exist_check(appointments_target_path, config_obj)
+
+    try:
+        if config_obj.store_pat_batch_observations or existence_check is False:
+            batch_target = cohort_searcher_with_terms_and_search(
+                index_name="pimps_apps*",
+                fields_list=[
+                    "Popular",
+                    "AppointmentType",
+                    "AttendanceReference",
+                    "ClinicCode",
+                    "ClinicDesc",
+                    "Consultant",
+                    "DateModified",
+                    "DNA",
+                    "HospitalID",
+                    "PatNHSNo",
+                    "Specialty",
+                    "_id",
+                    "_index",
+                    "_score",
+                    "AppointmentDateTime",
+                    "Attended",
+                    "CancDesc",
+                    "CancRefNo",
+                    "ConsultantCode",
+                    "DateCreated",
+                    "Ethnicity",
+                    "Gender",
+                    "NHSNoStatusCode",
+                    "NotSpec",
+                    "PatDateOfBirth",
+                    "PatForename",
+                    "PatPostCode",
+                    "PatSurname",
+                    "PiMsPatRefNo",
+                    "Primarykeyfieldname",
+                    "Primarykeyfieldvalue",
+                    "SessionCode",
+                    "SpecialtyCode",
+                ],
+                term_name="client_idcode.keyword",
+                entered_list=[current_pat_client_id_code],
+                search_string=f"updatetime:[{global_start_year}-{global_start_month}-{global_start_day} TO {global_end_year}-{global_end_month}-{global_end_day}]",
+            )
+            if (
+                config_obj.store_pat_batch_docs
+                or config_obj.overwrite_stored_pat_observations
+            ):
+
+                batch_target.to_csv(appointments_target_path)
+        else:
+            batch_target = pd.read_csv(appointments_target_path)
+        return batch_target
+    except Exception as e:
+        """"""
+        print(f"Error retrieving batch appointments orders: {e}")
         return []

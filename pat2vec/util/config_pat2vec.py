@@ -258,6 +258,10 @@ class config_class:
 
         self.current_pat_line_path = f"current_pat_line_path{self.suffix}/"
 
+        self.pre_appointments_batch_path = (
+            f"current_pat_appointments_batches{self.suffix}/"
+        )
+
         self.store_pat_batch_docs = store_pat_batch_docs
 
         self.store_pat_batch_observations = store_pat_batch_observations

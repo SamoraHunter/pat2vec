@@ -3,13 +3,12 @@
 # takes pat2vec_obj
 
 import os
-
 from cogstack_search_methods.cogstack_v8_lite import *
 from pat2vec.util.get_dummy_data_cohort_searcher import (
     cohort_searcher_with_terms_and_search_dummy,
 )
 import pandas as pd
-
+import numpy as np
 
 import random
 import string
@@ -140,7 +139,12 @@ def get_treatment_docs_by_iterative_multi_term_cohort_searcher_no_terms_fuzzy(
     if (os.path.exists(output_path) and overwrite) or os.path.exists(
         output_path
     ) == False:
+        output_directory = os.path.dirname(output_path)
+        # Check if the directory exists, if not, create it
+        if not os.path.exists(output_directory):
+            os.makedirs(output_directory)
 
+        # Save the DataFrame to CSV
         search_results.to_csv(output_path, index=False)
 
     elif os.path.exists(output_path) and not overwrite:
@@ -152,3 +156,29 @@ def get_treatment_docs_by_iterative_multi_term_cohort_searcher_no_terms_fuzzy(
         search_results = pd.read_csv(output_path)
 
     return search_results
+
+
+def draw_document_samples(df: pd.DataFrame, n: int) -> pd.DataFrame:
+    """
+    Draw n samples for each search_term from the given DataFrame.
+
+    Parameters:
+        df (pd.DataFrame): DataFrame containing search_term and document_description columns.
+        n (int): Number of samples to draw for each search_term.
+
+    Returns:
+        pd.DataFrame: DataFrame containing the sampled entries.
+    """
+    sampled_df = pd.DataFrame(columns=df.columns)
+    for term in df["search_term"].unique():
+        term_df = df[df["search_term"] == term]
+        term_size = len(term_df)
+        if term_size <= n:
+            sampled_df = pd.concat([sampled_df, term_df])
+        else:
+            weights = pd.Series(np.ones(term_size) / term_size)
+            sampled_indices = np.random.choice(
+                term_size, size=n, replace=False, p=weights
+            )
+            sampled_df = pd.concat([sampled_df, term_df.iloc[sampled_indices]])
+    return sampled_df
