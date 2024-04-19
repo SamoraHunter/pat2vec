@@ -10,6 +10,7 @@ from typing import Optional, cast
 
 import pandas as pd
 from faker import Faker
+import pytz
 from transformers import pipeline
 
 from IPython import display
@@ -374,6 +375,90 @@ def generate_observations_Reports_text_data(
     return df
 
 
+def generate_appointments_data(
+    num_rows,
+    entered_list,
+    global_start_year,
+    global_start_month,
+    global_end_year,
+    global_end_month,
+):
+    """
+    Generate dummy data for the 'pimps_apps' index.
+
+    Parameters:
+    - num_rows (int): Number of rows to generate.
+    - entered_list (list): List of entered values.
+    - global_start_year (int): Start year for the global date range.
+    - global_start_month (int): Start month for the global date range.
+    - global_end_year (int): End year for the global date range.
+    - global_end_month (int): End month for the global date range.
+
+    Returns:
+    - pd.DataFrame: Generated DataFrame with specified columns.
+    """
+
+    data = {
+        "Popular": [fake.random_number(digits=3) for _ in range(num_rows)],
+        "AppointmentType": [
+            fake.random_element(["Type A", "Type B", "Type C"]) for _ in range(num_rows)
+        ],
+        "AttendanceReference": [fake.random_number(digits=6) for _ in range(num_rows)],
+        "ClinicCode": [fake.random_number(digits=4) for _ in range(num_rows)],
+        "ClinicDesc": [fake.word() for _ in range(num_rows)],
+        "Consultant": [fake.name() for _ in range(num_rows)],
+        "DateModified": [
+            datetime(
+                random.randint(global_start_year, global_end_year),
+                random.randint(global_start_month, global_end_month),
+                random.randint(1, 28),
+                random.randint(0, 23),
+                random.randint(0, 59),
+                random.randint(0, 59),
+                tzinfo=pytz.utc,
+            )
+            for _ in range(num_rows)
+        ],
+        "DNA": [fake.random_element(["Y", "N"]) for _ in range(num_rows)],
+        "HospitalID": [fake.random_number(digits=5) for _ in range(num_rows)],
+        "PatNHSNo": [fake.random_number(digits=10) for _ in range(num_rows)],
+        "Specialty": [
+            fake.random_element(["Specialty A", "Specialty B", "Specialty C"])
+            for _ in range(num_rows)
+        ],
+        "_id": [str(i) for i in range(num_rows)],
+        "_index": [str(None) for _ in range(num_rows)],
+        "_score": [str(None) for _ in range(num_rows)],
+        "AppointmentDateTime": [fake.date_time_this_year() for _ in range(num_rows)],
+        "Attended": [fake.random_element(["Y", "N"]) for _ in range(num_rows)],
+        "CancDesc": [fake.sentence() for _ in range(num_rows)],
+        "CancRefNo": [fake.random_number(digits=8) for _ in range(num_rows)],
+        "ConsultantCode": [fake.random_number(digits=4) for _ in range(num_rows)],
+        "DateCreated": [fake.date_time_this_year() for _ in range(num_rows)],
+        "Ethnicity": [
+            fake.random_element(["Ethnicity A", "Ethnicity B", "Ethnicity C"])
+            for _ in range(num_rows)
+        ],
+        "Gender": [fake.random_element(["Male", "Female"]) for _ in range(num_rows)],
+        "NHSNoStatusCode": [fake.random_number(digits=2) for _ in range(num_rows)],
+        "NotSpec": [fake.random_element(["Y", "N"]) for _ in range(num_rows)],
+        "PatDateOfBirth": [fake.date_of_birth() for _ in range(num_rows)],
+        "PatForename": [fake.first_name() for _ in range(num_rows)],
+        "PatPostCode": [fake.postcode() for _ in range(num_rows)],
+        "PatSurname": [fake.last_name() for _ in range(num_rows)],
+        "PiMsPatRefNo": [fake.random_number(digits=6) for _ in range(num_rows)],
+        "Primarykeyfieldname": [fake.word() for _ in range(num_rows)],
+        "Primarykeyfieldvalue": [fake.random_number(digits=4) for _ in range(num_rows)],
+        "SessionCode": [fake.random_number(digits=3) for _ in range(num_rows)],
+        "SpecialtyCode": [fake.random_number(digits=4) for _ in range(num_rows)],
+    }
+
+    df = pd.DataFrame(data)
+    print("Dummy df return!")
+    display(df)
+    return df
+
+
 def generate_observations_data(
     num_rows,
     entered_list,
@@ -681,6 +766,20 @@ def cohort_searcher_with_terms_and_search_dummy(
         )
         return df
 
+    elif index_name == "pims_apps*":
+        if verbose:
+            print("Generating data for 'pims_apps'")
+        num_rows = random.randint(0, 10)
+        df = generate_appointments_data(
+            num_rows,
+            entered_list,
+            global_start_year,
+            global_start_month,
+            global_end_year,
+            global_end_month,
+        )
+        return df
+
     else:
         print(
             "Index name is not 'epr_documents', 'observations', 'basic_observations', 'orders'. Returning an empty DataFrame.",
@@ -921,7 +1020,8 @@ def run_generate_patient_timeline_and_append(
 
 
 def get_patient_timeline_dummy(
-    client_idcode: str, output_path: str = os.path.join("test_files", "dummy_timeline.csv")
+    client_idcode: str,
+    output_path: str = os.path.join("test_files", "dummy_timeline.csv"),
 ) -> Optional[str]:
     """
     Get a random patient timeline text from a pre-existing CSV file

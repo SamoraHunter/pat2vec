@@ -101,7 +101,7 @@ def get_test_options_dict():
         "annotations_mrc": True,
         # Enable or disable negated presence annotations
         "negated_presence_annotations": False,
-        "appointments": False,
+        "appointments": True,
     }
     return main_options_dict
 
@@ -487,6 +487,10 @@ class config_class:
 
             self.current_pat_lines_path = os.path.join(
                 self.root_path, f"current_pat_lines_parts{self.suffix}/"
+            )
+
+            self.pre_appointments_batch_path = os.path.join(
+                self.root_path, f"current_pat_appointments_batches{self.suffix}/"
             )
 
             self.output_folder = "outputs"

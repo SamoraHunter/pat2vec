@@ -50,7 +50,7 @@ def get_appointments(
             end_month,
             start_day,
             end_day,
-            "DateModified",
+            timestamp_string="DateModified",
         )
     else:
         current_pat_raw = cohort_searcher_with_terms_and_search(
