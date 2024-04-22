@@ -12,6 +12,8 @@
 .idea/
 .vscode/
 
+t1.ipynb
+
 # Ignore node_modules directory
 node_modules/
 

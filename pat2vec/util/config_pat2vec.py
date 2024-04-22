@@ -182,38 +182,38 @@ class config_class:
         # Test it out
         # print("This will be logged.")
 
-        log_folder = "logs"
-        os.makedirs(log_folder, exist_ok=True)
+        # log_folder = "logs"
+        # os.makedirs(log_folder, exist_ok=True)
 
-        # Create a logger
-        self.logger = logging.getLogger(__name__)
+        # # Create a logger
+        # self.logger = logging.getLogger(__name__)
 
-        # Create a handler that writes log messages to a file with a timestamp
-        log_file = (
-            f"{log_folder}/logfile_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
-        )
-        file_handler = logging.FileHandler(log_file)
+        # # Create a handler that writes log messages to a file with a timestamp
+        # log_file = (
+        #     f"{log_folder}/logfile_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
+        # )
+        # file_handler = logging.FileHandler(log_file)
 
-        # Create a formatter to include timestamp in the log messages
-        formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
-        file_handler.setFormatter(formatter)
+        # # Create a formatter to include timestamp in the log messages
+        # formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
+        # file_handler.setFormatter(formatter)
 
-        # Optionally set the logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
-        self.logger.setLevel(logging.DEBUG)
+        # # Optionally set the logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
+        # self.logger.setLevel(logging.DEBUG)
 
-        # Add the file handler to the logger
-        self.logger.addHandler(file_handler)
+        # # Add the file handler to the logger
+        # self.logger.addHandler(file_handler)
 
-        # Add a StreamHandler to print log messages to the console
-        console_handler = logging.StreamHandler(sys.stdout)
-        console_handler.setFormatter(formatter)
-        self.logger.addHandler(console_handler)
+        # # Add a StreamHandler to print log messages to the console
+        # console_handler = logging.StreamHandler(sys.stdout)
+        # console_handler.setFormatter(formatter)
+        # self.logger.addHandler(console_handler)
 
-        # Redirect stdout to both console handler and file handler
-        sys.stdout = MultiStream([sys.stdout, file_handler.stream])
+        # # Redirect stdout to both console handler and file handler
+        # sys.stdout = MultiStream([sys.stdout, file_handler.stream])
 
-        # Now you can use the logger to log messages within the class
-        self.logger.info("Initialized config_pat2vec")
+        # # Now you can use the logger to log messages within the class
+        # self.logger.info("Initialized config_pat2vec")
 
         self.suffix = suffix
         self.treatment_doc_filename = treatment_doc_filename
