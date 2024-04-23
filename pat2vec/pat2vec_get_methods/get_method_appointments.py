@@ -67,9 +67,6 @@ def get_appointments(
                 "HospitalID",
                 "PatNHSNo",
                 "Specialty",
-                "_id",
-                "_index",
-                "_score",
                 "AppointmentDateTime",
                 "Attended",
                 "CancDesc",
@@ -90,7 +87,7 @@ def get_appointments(
                 "SessionCode",
                 "SpecialtyCode",
             ],
-            term_name="HospitalID",
+            term_name="HospitalID.keyword",
             entered_list=[current_pat_client_id_code],
             search_string=f"DateModified:[{start_year}-{start_month}-{start_day} TO {end_year}-{end_month}-{end_day}]",
         )
