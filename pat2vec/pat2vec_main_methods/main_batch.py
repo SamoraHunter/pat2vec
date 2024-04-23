@@ -320,9 +320,9 @@ def main_batch(
                     update_pbar(
                         p_bar_entry, start_time, 3, "appointments", t, config_obj
                     )
-                    from IPython.display import display
+                    # from IPython.display import display
 
-                    display(batch_appointments)
+                    # display(batch_appointments)
 
                     df_pat_target = get_appointments(
                         current_pat_client_id_code=current_pat_client_id_code,

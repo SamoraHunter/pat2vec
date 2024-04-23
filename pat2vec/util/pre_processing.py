@@ -33,9 +33,7 @@ def generate_uuid_list(n, prefix, length=7):
 
 
 def get_treatment_docs_by_iterative_multi_term_cohort_searcher_no_terms_fuzzy(
-    pat2vec_obj,
-    term_list,
-    overwrite=False,
+    pat2vec_obj, term_list, overwrite=False, overwrite_search_term=None
 ):
     """
     This function takes a list of terms, runs iterative_multi_term_cohort_searcher_no_terms_fuzzy
@@ -93,6 +91,12 @@ def get_treatment_docs_by_iterative_multi_term_cohort_searcher_no_terms_fuzzy(
 
         results_holder = []
         for i in range(0, len(term_list)):
+
+            if overwrite_search_term is not None:
+                term_to_search = f'body_analysed:"{term_list[i]}"'
+            else:
+                term_to_search = overwrite_search_term
+
             search_results = cohort_searcher_with_terms_and_search_dummy(
                 index_name="epr_documents",
                 fields_list="""client_idcode document_guid document_description body_analysed updatetime clientvisit_visitidcode""".split(),
@@ -100,7 +104,8 @@ def get_treatment_docs_by_iterative_multi_term_cohort_searcher_no_terms_fuzzy(
                 entered_list=generate_uuid_list(
                     random.randint(0, 10), random.choice(["P", "V"])
                 ),
-                search_string=f'body_analysed:"{term_list[i]}" AND '
+                search_string=term_to_search
+                + " AND "
                 + " "
                 + f"updatetime:[{global_start_year}-{global_start_month}-{global_start_day} TO {global_end_year}-{global_end_month}-{global_end_day}]",
             )
