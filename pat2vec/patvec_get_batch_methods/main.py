@@ -1123,7 +1123,7 @@ def get_pat_batch_appointments(
                     "SessionCode",
                     "SpecialtyCode",
                 ],
-                term_name="HospitalID",
+                term_name="HospitalID.keyword",
                 entered_list=[current_pat_client_id_code],
                 search_string=f"DateModified:[{global_start_year}-{global_start_month}-{global_start_day} TO {global_end_year}-{global_end_month}-{global_end_day}]",
             )
