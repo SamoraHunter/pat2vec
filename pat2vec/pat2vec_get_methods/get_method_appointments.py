@@ -105,7 +105,7 @@ def get_appointments(
         current_pat_raw = current_pat_raw[current_pat_raw["Attended"].astype(int) == 1]
 
         # Calculate value counts for consultant_code, ClinicCode, and AppointmentType
-        counts_consultant = current_pat_raw["consultant_code"].value_counts()
+        counts_consultant = current_pat_raw["ConsultantCode"].value_counts()
         counts_clinic = current_pat_raw["ClinicCode"].value_counts()
         counts_appointment_type = current_pat_raw["AppointmentType"].value_counts()
 
@@ -114,7 +114,7 @@ def get_appointments(
 
         # Iterate over counts_consultant and populate the feature vector
         for consultant, count in counts_consultant.items():
-            feature_vector[f"consultant_code_{consultant}"] = count
+            feature_vector[f"ConsultantCode_{consultant}"] = count
 
         # Iterate over counts_clinic and populate the feature vector
         for clinic, count in counts_clinic.items():
