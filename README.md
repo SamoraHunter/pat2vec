@@ -341,6 +341,19 @@ See util/requirements.txt
 
 - Set paths, gloabl_files/medcat_models/modelpack.zip, gloabl_files/snomed_methods, gloabl_files/..
 
+- gloabl_files/
+    - medcat_models/
+        - modelpack.zip
+    - SNOMED_methods/snomed_methods_v1.py**
+    - pat2vec/
+    - pat2vec_projects/
+        - project_01/
+            - example_usage.ipynb
+            - treatment_docs.csv
+ 
+*treatment_docs.csv should contain a column 'client_idcode' with your UUID's. 
+**https://github.com/SamoraHunter/SNOMED_methods.git
+
 - Configure options
 
 - Run all
