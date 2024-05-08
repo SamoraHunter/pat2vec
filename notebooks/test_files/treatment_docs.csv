@@ -1,5 +1,30 @@
 client_idcode,document_guid,document_description,body_analysed,updatetime,clientvisit_visitidcode
-V3082J4R,doc_0,description_0,"Patient Demographics:\client_idcode: SU66XVS9I\client_idcode: 19.1
+P3W5UZBI,doc_0,description_0,"Patient Demographics:\client_idcode: XVS15N3RU\client_idcode: 74.0
+Gender: Female
+DOB: 1950-05-03
+
+Clinical Note Timeline:
+
+Entered on - 2006-07-23 11:20:21 UTC:
+Patient presented with:
+
+A complete medical history of the patient
+
+Dry mouth
+
+Anemia
+
+Dental problems requiring intravenous drip
+
+Rash glands
+
+Nausea
+
+Rash.
+
+To
+",2023-11-16 12:56:58,visit_0
+P3W5UZBI,doc_1,description_1,"Patient Demographics:\client_idcode: SU66XVS9I\client_idcode: 19.1
 Gender: Male
 DOB: 2005-04-19
 
@@ -9,21 +34,32 @@ Entered on - 2007-08-26 08:27:02 UTC:
 Patient presented with:
 
 Eyes closed over the head. Head lying on its right side; head lying in the water with its right side facing away from the sun; mouth covered with the head's tissue. Ears closed with head above
-",2023-07-21 10:41:07,visit_0
-V3082J4R,doc_1,description_1,"Patient Demographics:\client_idcode: ONOFFKSTJ\client_idcode: 49.0
-Gender: Female
-DOB: 1975-04-27
+",2023-03-09 04:15:47,visit_1
+P3W5UZBI,doc_2,description_2,"Patient Demographics:\client_idcode: 91RJQ6TGN\client_idcode: 42.1
+Gender: Male
+DOB: 1982-04-25
 
 Clinical Note Timeline:
 
-Entered on - 2009-03-10 10:41:55 UTC:
-Patient presented with: None at 10, 25, and 45 min
+Entered on - 2014-08-02 23:32:14 UTC:
+Patient presented with:
 
-Lipids examined (n = 23)
+– The largest brain tumor
 
-Dose
+– The central nervous system
 
-2, 6, 8, 12, 16, 20–65 mL/kg
+– Intractable epilepsy in a mouse
 
-D
-",2023-10-26 20:16:44,visit_1
+– Non-neurological brain tumor
+
+– The onset of a mild, non
+",2023-10-14 18:25:23,visit_2
+P3W5UZBI,doc_3,description_3,"Patient Demographics:\client_idcode: HF82OO6OC\client_idcode: 39.0
+Gender: Male
+DOB: 1985-04-24
+
+Clinical Note Timeline:
+
+Entered on - 2021-09-11 17:28:45 UTC:
+Patient presented with: ""I have a severe asthma attack, which requires long, hard breathing. We will help you with your asthma treatment. But please do not get any more help during the therapy unless you are 100% sure in advance of their
+",2023-03-17 15:05:48,visit_3
