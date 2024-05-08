@@ -1,107 +1,29 @@
 client_idcode,document_guid,document_description,body_analysed,updatetime,clientvisit_visitidcode
-P3W5UZBI,doc_0,description_0,"Patient Demographics:\client_idcode: B0DZ593PW\client_idcode: 55.0
+V3082J4R,doc_0,description_0,"Patient Demographics:\client_idcode: SU66XVS9I\client_idcode: 19.1
 Gender: Male
-DOB: 1969-04-28
+DOB: 2005-04-19
 
 Clinical Note Timeline:
 
-Entered on - 1998-09-30 12:41:37 UTC:
-Patient presented with: 1) A small amount of caffeine (about 20% from the concentrate of a single source (100 g)] orally plus 8 to 12 mg dose at the end of a treatment session. 2) Three consecutive 10-minute treatment
-
-Entered on - 1998-10-10 12:41:37 UTC:
+Entered on - 2007-08-26 08:27:02 UTC:
 Patient presented with:
 
-""A strong abdominal pain. I felt like I had lost all control of my life to a bad situation. I was losing weight. After doing one or two of the following treatment sessions the pain returned to levels as
-",2021-01-13 20:29:09,visit_0
-P3W5UZBI,doc_1,description_1,"Patient Demographics:\client_idcode: B3GDVL5RS\client_idcode: 45.1
+Eyes closed over the head. Head lying on its right side; head lying in the water with its right side facing away from the sun; mouth covered with the head's tissue. Ears closed with head above
+",2023-07-21 10:41:07,visit_0
+V3082J4R,doc_1,description_1,"Patient Demographics:\client_idcode: ONOFFKSTJ\client_idcode: 49.0
 Gender: Female
-DOB: 1979-04-26
+DOB: 1975-04-27
 
 Clinical Note Timeline:
 
-Entered on - 1995-12-25 12:46:01 UTC:
-Patient presented with: (1) an open letter or oral communication that asks you to sign this petition; (2) an application to a doctor or physician concerning any prescription, prescription policy, plan, or schedule which you consider to be necessary or
+Entered on - 2009-03-10 10:41:55 UTC:
+Patient presented with: None at 10, 25, and 45 min
 
-Entered on - 1995-12-26 12:46:01 UTC:
-Patient presented with: a pangolin-wearing, black and white version of a human fetus
+Lipids examined (n = 23)
 
-It may seem contradictory to assume all of the above to mean the same thing, yet it is the case there is some degree of symmetry
-",2022-01-08 23:35:34,visit_1
-P3W5UZBI,doc_2,description_2,"Patient Demographics:\client_idcode: 5FRNM2HZX\client_idcode: 84.1
-Gender: Female
-DOB: 1940-05-05
+Dose
 
-Clinical Note Timeline:
+2, 6, 8, 12, 16, 20–65 mL/kg
 
-Entered on - 2001-09-13 18:15:00 UTC:
-Patient presented with:
-
-a very slight chest pain at times and symptoms of abdominal pain which are not unusual
-
-bilateral chest pain with intermittent chest pain (a pain that is more similar to that which you will experience during pregnancy)
-
-
-Entered on - 2001-09-26 18:15:00 UTC:
-Patient presented with:
-
-a significant number of small, low-grade amyloid peptide particles (SAPs) that were small and did not possess a biological activity within the cells of the cells.
-
-No other known risk
-
-Entered on - 2001-10-16 18:15:00 UTC:
-Patient presented with:
-
-Breath-cloning or similar tissue donation
-
-Assessment of risk factors
-
-Statistical analysis and cross-validation
-
-RESULTS
-
-Participants were divided into three groups:
-
-Individuals
-
-Entered on - 2001-10-18 18:15:00 UTC:
-Patient presented with: <4 min post-incorporation >2-3 x days of regular treatment (diet, 6 wk for 7 d) <0.10% per kg/d or >1 g / day for 8
-",2022-01-19 12:23:14,visit_2
-P3W5UZBI,doc_3,description_3,"Patient Demographics:\client_idcode: 5FRNM2HZX\client_idcode: 84.1
-Gender: Female
-DOB: 1940-05-05
-
-Clinical Note Timeline:
-
-Entered on - 2001-09-13 18:15:00 UTC:
-Patient presented with:
-
-a very slight chest pain at times and symptoms of abdominal pain which are not unusual
-
-bilateral chest pain with intermittent chest pain (a pain that is more similar to that which you will experience during pregnancy)
-
-
-Entered on - 2001-09-26 18:15:00 UTC:
-Patient presented with:
-
-a significant number of small, low-grade amyloid peptide particles (SAPs) that were small and did not possess a biological activity within the cells of the cells.
-
-No other known risk
-
-Entered on - 2001-10-16 18:15:00 UTC:
-Patient presented with:
-
-Breath-cloning or similar tissue donation
-
-Assessment of risk factors
-
-Statistical analysis and cross-validation
-
-RESULTS
-
-Participants were divided into three groups:
-
-Individuals
-
-Entered on - 2001-10-18 18:15:00 UTC:
-Patient presented with: <4 min post-incorporation >2-3 x days of regular treatment (diet, 6 wk for 7 d) <0.10% per kg/d or >1 g / day for 8
-",2021-01-03 01:55:07,visit_3
+D
+",2023-10-26 20:16:44,visit_1
