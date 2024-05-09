@@ -7,6 +7,7 @@ import re
 from datetime import datetime, timedelta, timezone
 import string
 from typing import Optional, cast
+import uuid
 
 import pandas as pd
 from faker import Faker
@@ -55,8 +56,8 @@ def generate_epr_documents_data(
 
     data = {
         "client_idcode": [current_pat_client_id_code for _ in range(num_rows)],
-        "document_guid": [f"doc_{i}" for i in range(num_rows)],
-        "document_description": [f"description_{i}" for i in range(num_rows)],
+        "document_guid": [str(uuid.uuid4()).split("-")[0] for _ in range(num_rows)],
+        "document_description": [f"clinical_note_summary" for i in range(num_rows)],
         # 'body_analysed': [fake.paragraph() for _ in range(num_rows)],
         "body_analysed": [
             (
@@ -79,7 +80,9 @@ def generate_epr_documents_data(
             )
             for _ in range(num_rows)
         ],
-        "clientvisit_visitidcode": [f"visit_{i}" for i in range(num_rows)],
+        "clientvisit_visitidcode": [
+            str(uuid.uuid4()).split("-")[0] for _ in range(num_rows)
+        ],
     }
 
     df = pd.DataFrame(data)
