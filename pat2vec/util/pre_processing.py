@@ -33,7 +33,12 @@ def generate_uuid_list(n, prefix, length=7):
 
 
 def get_treatment_docs_by_iterative_multi_term_cohort_searcher_no_terms_fuzzy(
-    pat2vec_obj, term_list, overwrite=False, overwrite_search_term=None, verbose=0
+    pat2vec_obj,
+    term_list,
+    overwrite=False,
+    overwrite_search_term=None,
+    append=False,
+    verbose=0,
 ):
     """
     This function takes a list of terms, runs iterative_multi_term_cohort_searcher_no_terms_fuzzy
@@ -93,34 +98,34 @@ def get_treatment_docs_by_iterative_multi_term_cohort_searcher_no_terms_fuzzy(
             print("Running in testing mode, doing dummy search.")
         results_holder = []
         for i in range(0, len(term_list)):
+            for j in range(0, random.randint(1, 3)):
+                if overwrite_search_term is None:
+                    term_to_search = f'body_analysed:"{term_list[i]}"'
+                    if verbose >= 1:
+                        print("term_to_search: ", term_to_search)
+                else:
+                    term_to_search = overwrite_search_term
+                    if verbose >= 1:
+                        print("overwrite_search_term: ", overwrite_search_term)
 
-            if overwrite_search_term is None:
-                term_to_search = f'body_analysed:"{term_list[i]}"'
+                search_results = cohort_searcher_with_terms_and_search_dummy(
+                    index_name="epr_documents",
+                    fields_list="""client_idcode document_guid document_description body_analysed updatetime clientvisit_visitidcode""".split(),
+                    term_name="client_idcode.keyword",
+                    entered_list=generate_uuid_list(
+                        random.randint(0, 10), random.choice(["P", "V"])
+                    ),
+                    search_string=term_to_search
+                    + " AND "
+                    + " "
+                    + f"updatetime:[{global_start_year}-{global_start_month}-{global_start_day} TO {global_end_year}-{global_end_month}-{global_end_day}]",
+                )
+                results_holder.append(search_results)
+
                 if verbose >= 1:
-                    print("term_to_search: ", term_to_search)
-            else:
-                term_to_search = overwrite_search_term
-                if verbose >= 1:
-                    print("overwrite_search_term: ", overwrite_search_term)
-
-            search_results = cohort_searcher_with_terms_and_search_dummy(
-                index_name="epr_documents",
-                fields_list="""client_idcode document_guid document_description body_analysed updatetime clientvisit_visitidcode""".split(),
-                term_name="client_idcode.keyword",
-                entered_list=generate_uuid_list(
-                    random.randint(0, 10), random.choice(["P", "V"])
-                ),
-                search_string=term_to_search
-                + " AND "
-                + " "
-                + f"updatetime:[{global_start_year}-{global_start_month}-{global_start_day} TO {global_end_year}-{global_end_month}-{global_end_day}]",
-            )
-            results_holder.append(search_results)
-
-            if verbose >= 1:
-                print("i: ", i)
-                print("search_results: ")
-                print(search_results)
+                    print("i: ", i)
+                    print("search_results: ")
+                    print(search_results)
 
         search_results = pd.concat(results_holder, ignore_index=True)
         # search_results = cohort_searcher_with_terms_and_search_dummy(
@@ -163,6 +168,10 @@ def get_treatment_docs_by_iterative_multi_term_cohort_searcher_no_terms_fuzzy(
 
         # Save the DataFrame to CSV
         search_results.to_csv(output_path, index=False)
+    elif os.path.exists(output_path) and append:
+        if verbose >= 1:
+            print("treatment docs already exist, appending...")
+            search_results.to_csv(output_path, index=False, mode="a", header=False)
 
     elif os.path.exists(output_path) and not overwrite:
         if verbose >= 1:
