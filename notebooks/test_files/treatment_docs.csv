@@ -1,65 +1,36 @@
 client_idcode,document_guid,document_description,body_analysed,updatetime,clientvisit_visitidcode
-P3W5UZBI,doc_0,description_0,"Patient Demographics:\client_idcode: XVS15N3RU\client_idcode: 74.0
+P0IFD0TV,941dca6f,clinical_note_summary,"Patient Demographics:\client_idcode: C42YFKJFP\client_idcode: 75.0
 Gender: Female
-DOB: 1950-05-03
+DOB: 1949-05-03
 
 Clinical Note Timeline:
 
-Entered on - 2006-07-23 11:20:21 UTC:
+Entered on - 2014-11-10 15:42:32 UTC:
+Patient presented with: I have had this for the past 8 years or so. It was an awesome and healthy morning experience. I took the bus to work (a couple of times after it had been raining that day) and I'm sure it
+",2023-04-17 19:01:35,d3294d80
+VF8MDD4V,a0b66d09,clinical_note_summary,"Patient Demographics:\client_idcode: RVB6TERR4\client_idcode: 80.0
+Gender: Male
+DOB: 1944-05-04
+
+Clinical Note Timeline:
+
+Entered on - 2018-09-19 18:38:05 UTC:
+Patient presented with: A total of 32 patients who are currently active or with previous lung cancer. A total of 40 patients who are currently active or with previous lung cancer were randomized to receive either 2 mg/kg of oral aspirin, 2 mg/
+",2023-02-02 21:14:49,ec9f6469
+PYZYCWTI,00d1bb06,clinical_note_summary,"Patient Demographics:\client_idcode: EAO4N5PP3\client_idcode: 94.0
+Gender: Male
+DOB: 1930-05-08
+
+Clinical Note Timeline:
+
+Entered on - 2005-04-07 10:58:49 UTC:
 Patient presented with:
 
-A complete medical history of the patient
+Fertilizing tube feeding;
 
-Dry mouth
+Pulse of stimulation
 
-Anemia
+Prevalence of allergic rhinitis at each cycle (5%)
 
-Dental problems requiring intravenous drip
-
-Rash glands
-
-Nausea
-
-Rash.
-
-To
-",2023-11-16 12:56:58,visit_0
-P3W5UZBI,doc_1,description_1,"Patient Demographics:\client_idcode: SU66XVS9I\client_idcode: 19.1
-Gender: Male
-DOB: 2005-04-19
-
-Clinical Note Timeline:
-
-Entered on - 2007-08-26 08:27:02 UTC:
-Patient presented with:
-
-Eyes closed over the head. Head lying on its right side; head lying in the water with its right side facing away from the sun; mouth covered with the head's tissue. Ears closed with head above
-",2023-03-09 04:15:47,visit_1
-P3W5UZBI,doc_2,description_2,"Patient Demographics:\client_idcode: 91RJQ6TGN\client_idcode: 42.1
-Gender: Male
-DOB: 1982-04-25
-
-Clinical Note Timeline:
-
-Entered on - 2014-08-02 23:32:14 UTC:
-Patient presented with:
-
-– The largest brain tumor
-
-– The central nervous system
-
-– Intractable epilepsy in a mouse
-
-– Non-neurological brain tumor
-
-– The onset of a mild, non
-",2023-10-14 18:25:23,visit_2
-P3W5UZBI,doc_3,description_3,"Patient Demographics:\client_idcode: HF82OO6OC\client_idcode: 39.0
-Gender: Male
-DOB: 1985-04-24
-
-Clinical Note Timeline:
-
-Entered on - 2021-09-11 17:28:45 UTC:
-Patient presented with: ""I have a severe asthma attack, which requires long, hard breathing. We will help you with your asthma treatment. But please do not get any more help during the therapy unless you are 100% sure in advance of their
-",2023-03-17 15:05:48,visit_3
+Admission of children to an oral/nasal nasal test
+",2023-07-21 14:09:16,31ca19ea
