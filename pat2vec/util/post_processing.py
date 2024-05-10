@@ -372,6 +372,8 @@ def remove_file_from_paths(
         f"{project_name}/current_pat_obs_batches/",
         f"{project_name}/current_pat_bmi_batches/",
         f"{project_name}/current_pat_demo_batches/",
+        f"{project_name}/current_pat_document_batches_reports/",
+        f"{project_name}/current_pat_documents_annotations_batches_reports/"
     ]
 
     for path in pat_file_paths:
