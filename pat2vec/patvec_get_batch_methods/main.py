@@ -1038,9 +1038,9 @@ def get_pat_batch_reports(
 
             # batch_target = batch_target.rename(columns={'textualObs': 'body_analysed'})
             batch_target["body_analysed"] = (
-                str(batch_target["textualObs"])
+                batch_target["textualObs"].astype(str)
                 + "\n"
-                + str(batch_target["basicobs_value_analysed"])
+                + batch_target["basicobs_value_analysed"].astype(str)
             )
 
             if config_obj.store_pat_batch_docs or overwrite_stored_pat_observations:
