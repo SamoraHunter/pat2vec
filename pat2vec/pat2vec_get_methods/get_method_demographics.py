@@ -11,6 +11,9 @@ from IPython.display import display
 from pat2vec.util.ethnicity_abstractor import EthnicityAbstractor
 from pat2vec.util.methods_get import get_demographics3_batch
 
+# individual elements:
+
+
 def get_demo(current_pat_client_id_code, target_date_range, pat_batch, config_obj=None):
     """
     Retrieve demographic information for a patient based on the provided parameters.
@@ -22,101 +25,223 @@ def get_demo(current_pat_client_id_code, target_date_range, pat_batch, config_ob
     - config_obj (Config,): Contains config options.
 
     Returns:
-    - pd.DataFrame: A DataFrame containing the demographic information for the specified patient, including columns such as:
-      - 'client_idcode': The client ID code for the patient.
-      - 'male': Binary representation of gender (1 for male, 0 for female).
-      - 'age': Age of the patient.
-      - 'dead': Binary representation of whether the patient is deceased (1 for deceased, 0 for alive).
-      - 'census_white': Binary representation of white ethnicity.
-      - 'census_asian_or_asian_british': Binary representation of Asian or Asian British ethnicity.
-      - 'census_black_african_caribbean_or_black_british': Binary representation of Black African, Caribbean, or Black British ethnicity.
-      - 'census_mixed_or_multiple_ethnic_groups': Binary representation of mixed or multiple ethnic groups.
-      - 'census_other_ethnic_group': Binary representation of other ethnic groups.
-
-    Note:
-    - The function utilizes various helper functions, such as get_demographics3_batch, append_age_at_record_series,
-      and EthnicityAbstractor.abstractEthnicity.
-    - The 'config_obj' parameter allows for customization of the function's behavior, with verbosity control.
+    - pd.DataFrame: A DataFrame containing the demographic information for the specified patient.
     """
 
+    # Filters the raw pat batch of data to return the latest row of raw data within the target date range
     current_pat_demo = get_demographics3_batch(
-        [current_pat_client_id_code], target_date_range, pat_batch, config_obj=config_obj)
-
+        [current_pat_client_id_code],
+        target_date_range,
+        pat_batch,
+        config_obj=config_obj,
+    )
+    current_pat_demo.reset_index(inplace=True)
+    # print("pre current_pat_demo")
     # display(current_pat_demo)
+    if config_obj.verbosity >= 1:
+        print("Get demo: get_demographics3_batch:")
 
-    # print(len(current_pat_demo.columns))
+    # If the demo data is not empty
+    if not current_pat_demo.drop(columns="client_idcode").isna().all().all():
 
-    if (len(current_pat_demo.columns) > 1):
+        if not current_pat_demo["client_dob"].isna().any():
 
-        current_pat_demo = append_age_at_record_series(current_pat_demo)
+            current_pat_demo = _process_age(current_pat_demo)
 
-        # demo_dataframe = pd.DataFrame(current_pat_demo).T
+        else:
+            current_pat_demo["age"] = np.nan
 
-        # demo_dataframe.reset_index(inplace=True)
+        if not current_pat_demo["client_gendercode"].isna().any():
 
-        demo_dataframe = current_pat_demo.copy()
+            current_pat_demo = _process_sex(current_pat_demo)
 
-        current_pat_demo = EthnicityAbstractor.abstractEthnicity(
-            demo_dataframe, outputNameString='_census', ethnicityColumnString='client_racecode')
+        else:
+            current_pat_demo["male"] = np.nan
 
-        dummied_dummy_ethnicity_dataframe = pd.DataFrame(data=[(np.zeros(5))], columns=['census_white',
-                                                                                        'census_asian_or_asian_british',
-                                                                                        'census_black_african_caribbean_or_black_british',
-                                                                                        'census_mixed_or_multiple_ethnic_groups',
-                                                                                        'census_other_ethnic_group'])
+        if not current_pat_demo["client_deceaseddtm"].isna().any():
 
-        cen_res = pd.get_dummies(current_pat_demo['census'], prefix='census')
+            current_pat_demo = _process_dead(current_pat_demo)
 
-        dummied_dummy_ethnicity_dataframe[cen_res.columns[0]
-                                          ] = cen_res[cen_res.columns[0]]
+        else:
+            current_pat_demo["dead"] = 0
 
-        abstrated_ethnicity_dummied = dummied_dummy_ethnicity_dataframe
+        if not current_pat_demo["client_racecode"].isna().any():
 
-        # abstrated_ethnicity_dummied = pd.concat([dummied_dummy_ethnicity_dataframe, pd.get_dummies(current_pat_demo['census'], prefix = 'census')], axis=1)
+            current_pat_demo = _process_ethnicity(current_pat_demo)
 
-        current_pat_demo = pd.concat(
-            [current_pat_demo.reset_index(), abstrated_ethnicity_dummied], axis=1)
+        else:
+            current_pat_demo["census_white"] = np.nan
+            current_pat_demo["census_asian_or_asian_british"] = np.nan
+            current_pat_demo["census_black_african_caribbean_or_black_british"] = np.nan
+            current_pat_demo["census_mixed_or_multiple_ethnic_groups"] = np.nan
+            current_pat_demo["census_other_ethnic_group"] = np.nan
 
+        # print("post ethnicity")
+        # print(current_pat_demo)
         current_pat_demo.reset_index(inplace=True)
 
-        # current_pat_demo
+        # Select necessary columns
+        current_pat_demo = current_pat_demo[
+            [
+                "client_idcode",
+                "male",
+                "age",
+                "dead",
+                "census_white",
+                "census_asian_or_asian_british",
+                "census_black_african_caribbean_or_black_british",
+                "census_mixed_or_multiple_ethnic_groups",
+                "census_other_ethnic_group",
+            ]
+        ].copy()
 
-        sex_map = {'Male': 1,
-                   'Female': 0,
-                   'male': 1,
-                   'female': 0}
-
-        current_pat_demo['male'] = current_pat_demo['client_gendercode'].map(
-            sex_map)
-
-        # current_pat_demo['dead'] = current_pat_demo['client_deceaseddtm'].apply(is_dead)
-
-        # current_pat_demo['dead'] = int(int((np.isnan(current_pat_demo['client_deceaseddtm'].iloc[0])))!=1)
-
-        current_pat_demo['dead'] = int(
-            type(current_pat_demo['client_deceaseddtm']) == str)
-
-        current_pat_demo = current_pat_demo[['client_idcode',
-                                             'male',
-                                             'age',
-                                             'dead',
-                                             'census_white',
-                                             'census_asian_or_asian_british',
-                                             'census_black_african_caribbean_or_black_british',
-                                             'census_mixed_or_multiple_ethnic_groups',
-                                             'census_other_ethnic_group']].copy()
-
-        current_pat_demo['dead'] = current_pat_demo['dead'].astype(int)
-
-        current_pat_demo['age'] = current_pat_demo['age'].astype(int)
-
-        current_pat_demo['dead'] = current_pat_demo['dead'].astype(float)
-
-        current_pat_demo['age'] = current_pat_demo['age'].astype(float)
-
-        current_pat_demo['male'] = current_pat_demo['male'].astype(float)
-
-        if config_obj.verbosity >= 6:
+        if config_obj and config_obj.verbosity >= 6:
             display(current_pat_demo)
+    if config_obj.verbosity >= 1:
+        print("Get demo: get_demographics3_batch: Done.")
+        print(current_pat_demo)
 
-        return current_pat_demo
+    if len(current_pat_demo) > 1:
+        display("error")
+        display(current_pat_demo)
+        raise Exception("more than one row process ethnicity")
+    # display(current_pat_demo)
+
+    return current_pat_demo.head(1)
+
+
+def _process_age(demo_dataframe):
+    """
+    Process age information for the patient.
+
+    Parameters:
+    - demo_dataframe (pd.DataFrame): DataFrame containing demographic information.
+
+    Returns:
+    - pd.DataFrame: DataFrame with processed age information.
+
+    """
+
+    demo_dataframe = append_age_at_record_series(demo_dataframe)
+
+    if len(demo_dataframe) > 1:
+        display("error")
+        display(demo_dataframe)
+        raise Exception("more than one row process _process_age")
+
+    return demo_dataframe
+
+
+def _process_ethnicity(demo_dataframe):
+    """
+    Process ethnicity information for the patient.
+
+    Parameters:
+    - demo_dataframe (pd.DataFrame): DataFrame containing demographic information.
+
+    Returns:
+    - pd.DataFrame: DataFrame with processed ethnicity information.
+    """
+    if len(demo_dataframe) > 1:
+        raise Exception("more than one row process ethnicity")
+
+    # Define the columns to ensure
+    target_columns = [
+        "census_white",
+        "census_asian_or_asian_british",
+        "census_black_african_caribbean_or_black_british",
+        "census_mixed_or_multiple_ethnic_groups",
+        "census_other_ethnic_group",
+    ]
+
+    # if latest:
+    #     demo_dataframe.dropna(subset="client_racecode", inplace=True)
+    #     # Select the latest row based on 'datetime_column'
+    #     latest_row_index = demo_dataframe[datetime_column].idxmax()
+    #     demo_dataframe = demo_dataframe.loc[[latest_row_index]]
+    #     display(type(demo_dataframe))
+    #     display(demo_dataframe)
+
+    ethnicity_df = EthnicityAbstractor.abstractEthnicity(
+        demo_dataframe,
+        outputNameString="_census",
+        ethnicityColumnString="client_racecode",
+    )
+
+    # One-hot encode the extracted ethnicity
+    encoded_ethnicity = pd.get_dummies(ethnicity_df["census"], prefix="census")
+
+    # Impute missing columns with zeros
+    for col in target_columns:
+        if col not in encoded_ethnicity.columns:
+            encoded_ethnicity[col] = 0
+
+    # Reorder columns to match the target order
+    encoded_ethnicity = encoded_ethnicity[target_columns]
+
+    processed_df = pd.DataFrame()
+
+    processed_df["client_idcode"] = demo_dataframe["client_idcode"]
+    processed_df["updatetime"] = demo_dataframe["updatetime"]
+    processed_df["census_white"] = encoded_ethnicity["census_white"]
+    processed_df["census_asian_or_asian_british"] = encoded_ethnicity[
+        "census_asian_or_asian_british"
+    ]
+    processed_df["census_black_african_caribbean_or_black_british"] = encoded_ethnicity[
+        "census_black_african_caribbean_or_black_british"
+    ]
+    processed_df["census_mixed_or_multiple_ethnic_groups"] = encoded_ethnicity[
+        "census_mixed_or_multiple_ethnic_groups"
+    ]
+    processed_df["census_other_ethnic_group"] = encoded_ethnicity[
+        "census_other_ethnic_group"
+    ]
+    for col in demo_dataframe.columns:
+        if col not in processed_df.columns:
+            processed_df[col] = demo_dataframe[col]
+
+    if len(processed_df) > 1:
+        print("error")
+        raise Exception("more than one row process ethnicity")
+
+    return processed_df
+
+
+def _process_sex(demo_dataframe):
+    """
+    Process gender information for the patient.
+
+    Parameters:
+    - demo_dataframe (pd.DataFrame): DataFrame containing demographic information.
+
+    Returns:
+    - pd.DataFrame: DataFrame with processed gender information.
+    """
+    sex_map = {"Male": 1, "Female": 0, "male": 1, "female": 0}
+    demo_dataframe["male"] = demo_dataframe["client_gendercode"].map(sex_map)
+
+    if len(demo_dataframe) > 1:
+        display("error")
+        display(demo_dataframe)
+        raise Exception("more than one row process _process_sex")
+    return demo_dataframe
+
+
+def _process_dead(demo_dataframe):
+    """
+    Process deceased status information for the patient.
+
+    Parameters:
+    - demo_dataframe (pd.DataFrame): DataFrame containing demographic information.
+
+    Returns:
+    - pd.DataFrame: DataFrame with processed deceased status information.
+    """
+    demo_dataframe["dead"] = demo_dataframe["client_deceaseddtm"].apply(
+        lambda x: int(isinstance(x, str))
+    )
+    if len(demo_dataframe) > 1:
+        display("error")
+        display(demo_dataframe)
+        raise Exception("more than one row process _process_dead")
+    return demo_dataframe
