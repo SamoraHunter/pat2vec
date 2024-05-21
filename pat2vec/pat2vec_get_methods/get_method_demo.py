@@ -8,7 +8,9 @@ from pat2vec.util.methods_get import get_start_end_year_month
 # cogstack object pass?
 
 
-def get_demographics3(patlist, target_date_range, cohort_searcher_with_terms_and_search):
+def get_demographics3(
+    patlist, target_date_range, cohort_searcher_with_terms_and_search, config_obj=None
+):
     """
     Get demographics information for a list of patients within a specified date range.
 
@@ -19,18 +21,26 @@ def get_demographics3(patlist, target_date_range, cohort_searcher_with_terms_and
     Returns:
     - pd.DataFrame: Demographics information for the specified patients.
     """
-    print(type(cohort_searcher_with_terms_and_search))
 
-    start_year, start_month, end_year, end_month, start_day, end_day = get_start_end_year_month(
-        target_date_range, config_obj=config_obj)
+    start_year, start_month, end_year, end_month, start_day, end_day = (
+        get_start_end_year_month(target_date_range, config_obj=config_obj)
+    )
 
     demo = cohort_searcher_with_terms_and_search(
         index_name="epr_documents",
-        fields_list=["client_idcode", "client_firstname", "client_lastname", "client_dob",
-                     "client_gendercode", "client_racecode", "client_deceaseddtm", "updatetime"],
+        fields_list=[
+            "client_idcode",
+            "client_firstname",
+            "client_lastname",
+            "client_dob",
+            "client_gendercode",
+            "client_racecode",
+            "client_deceaseddtm",
+            "updatetime",
+        ],
         term_name="client_idcode.keyword",
         entered_list=patlist,
-        search_string=f'updatetime:[{start_year}-{start_month}-{start_day} TO {end_year}-{end_month}-{end_day}]'
+        search_string=f"updatetime:[{start_year}-{start_month}-{start_day} TO {end_year}-{end_month}-{end_day}]",
     )
 
     demo["updatetime"] = pd.to_datetime(demo["updatetime"], utc=True)
@@ -45,9 +55,10 @@ def get_demographics3(patlist, target_date_range, cohort_searcher_with_terms_and
         return demo
     else:
         demo = pd.DataFrame(data=None, columns=None)
-        demo['client_idcode'] = patlist
+        demo["client_idcode"] = patlist
 
         return demo
+
 
 # # Example use:
 # patlist_example = ["patient_id1", "patient_id2"]
