@@ -9,6 +9,7 @@ import string
 from typing import Optional, cast
 import uuid
 
+import numpy as np
 import pandas as pd
 from faker import Faker
 import pytz
@@ -26,7 +27,9 @@ from pat2vec.util.dummy_data_files.dummy_lists import (
 
 fake = Faker()
 
-# pending implementation of other data sources/ orders index etc..
+
+def maybe_nan(value, probability=0.2):
+    return value if random.random() > probability else np.nan
 
 
 def generate_epr_documents_data(
@@ -115,23 +118,28 @@ def generate_epr_documents_personal_data(
 
     ethnicity = fake.random_element(ethnicity_list)
 
+    first_name = fake.first_name()
+    last_name = fake.last_name()
+    dob = fake.date_of_birth(minimum_age=18, maximum_age=90).strftime(
+        "%Y-%m-%dT%H:%M:%S"
+    )
+    gender = random.choice(["male", "female"])
+
+    # TODO: implement low change of death event, if so use date of death else None
+    death_probability = 0.1
+    client_deceaseddtm_val = (
+        fake.date_time_this_decade() if random.random() < death_probability else None
+    )
+
     data = {
         "client_idcode": [current_pat_client_id_code] * num_rows,
-        "client_firstname": [fake.first_name() for _ in range(num_rows)],
-        "client_lastname": [fake.last_name() for _ in range(num_rows)],
-        "client_dob": [
-            fake.date_of_birth(minimum_age=18, maximum_age=90).strftime(
-                "%Y-%m-%dT%H:%M:%S"
-            )
-            for _ in range(num_rows)
-        ],
-        "client_gendercode": [
-            random.choice(["male", "female"]) for _ in range(num_rows)
-        ],
-        "client_racecode": [ethnicity for _ in range(num_rows)],
+        "client_firstname": [maybe_nan(first_name) for _ in range(num_rows)],
+        "client_lastname": [maybe_nan(last_name) for _ in range(num_rows)],
+        "client_dob": [maybe_nan(dob) for _ in range(num_rows)],
+        "client_gendercode": [maybe_nan(gender) for _ in range(num_rows)],
+        "client_racecode": [maybe_nan(ethnicity) for _ in range(num_rows)],
         "client_deceaseddtm": [
-            fake.date_time_this_decade() if random.choice([True, False]) else None
-            for _ in range(num_rows)
+            maybe_nan(client_deceaseddtm_val) for _ in range(num_rows)
         ],
         "updatetime": [
             datetime(
@@ -146,6 +154,17 @@ def generate_epr_documents_personal_data(
             for _ in range(num_rows)
         ],
     }
+    if num_rows == 0:
+        data = {
+            "client_idcode": [current_pat_client_id_code],
+            "client_firstname": [np.nan],
+            "client_lastname": [np.nan],
+            "client_dob": [np.nan],
+            "client_gendercode": [np.nan],
+            "client_racecode": [np.nan],
+            "client_deceaseddtm": [np.nan],
+            "updatetime": [np.nan],
+        }
 
     df = pd.DataFrame(data)
     return df
@@ -560,13 +579,17 @@ def generate_basic_observations_data(
             for _ in range(num_rows)
         ],
         "clientvisit_serviceguid": [f"service_{i}" for i in range(num_rows)],
-        "_id": ["{i}" for i in range(num_rows)],
-        "_index": ["{np.nan}" for i in range(num_rows)],
-        "_score": ["{np.nan}" for i in range(num_rows)],
-        "order_guid": ["{np.nan}" for i in range(num_rows)],
-        "order_name": ["{np.nan}" for i in range(num_rows)],
-        "order_summaryline": ["{np.nan}" for i in range(num_rows)],
-        "order_holdreasontext": ["{np.nan}" for i in range(num_rows)],
+        "_id": [None for i in range(num_rows)],
+        "_index": [None for i in range(num_rows)],
+        "_score": [None for i in range(num_rows)],
+        "order_guid": [f"order_{i}" for i in range(num_rows)],
+        "order_name": [None for i in range(num_rows)],
+        "order_summaryline": [
+            maybe_nan(fake.sentence() for _ in range(num_rows)) for i in range(num_rows)
+        ],
+        "order_holdreasontext": [
+            maybe_nan(fake.sentence() for _ in range(num_rows)) for i in range(num_rows)
+        ],
         "order_entered": ["{np.nan}" for i in range(num_rows)],
         "clientvisit_visitidcode": ["{np.nan}" for i in range(num_rows)],
     }
@@ -619,7 +642,7 @@ def cohort_searcher_with_terms_and_search_dummy(
     # set here for drop in replacement of function
     use_GPT = False
 
-    verbose = True
+    verbose = False
 
     (
         global_start_year,
