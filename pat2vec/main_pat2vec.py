@@ -711,7 +711,7 @@ class main:
                         print(f"batch_reports_docs_annotations empty")
                     batch_reports_docs_annotations = empty_return
             else:
-                batch_epr_docs_annotations = empty_return_reports
+                batch_reports_docs_annotations = empty_return_reports
 
             update_pbar(
                 p_bar_entry,
