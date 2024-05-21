@@ -148,6 +148,7 @@ def main_batch(
                         batch_demo,
                         config_obj=config_obj,
                     )
+
                     patient_vector.append(current_pat_demo)
 
                 if main_options.get("bmi"):
@@ -369,6 +370,9 @@ def main_batch(
                 )
 
                 if remote_dump == False:
+                    if len(pat_concatted) > 1:
+                        print(pat_concatted)
+                        raise ValueError("Batch too large for local dump")
 
                     pat_concatted.to_csv(output_path)
                 else:
