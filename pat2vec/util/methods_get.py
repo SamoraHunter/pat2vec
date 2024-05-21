@@ -1,5 +1,3 @@
-
-
 import datetime as dt
 import os
 import pickle
@@ -20,13 +18,15 @@ from IPython.display import display
 from tqdm import tqdm
 import pytz
 
-color_bars = [Fore.RED,
-              Fore.GREEN,
-              Fore.BLUE,
-              Fore.MAGENTA,
-              Fore.YELLOW,
-              Fore.CYAN,
-              Fore.WHITE]
+color_bars = [
+    Fore.RED,
+    Fore.GREEN,
+    Fore.BLUE,
+    Fore.MAGENTA,
+    Fore.YELLOW,
+    Fore.CYAN,
+    Fore.WHITE,
+]
 
 
 def list_dir_wrapper(path, config_obj=None):
@@ -44,16 +44,15 @@ def list_dir_wrapper(path, config_obj=None):
     sftp_obj = config_obj.sftp_obj
 
     # global sftp_client
-    if (remote_dump):
-        if (share_sftp == False):
+    if remote_dump:
+        if share_sftp == False:
             ssh_client = paramiko.SSHClient()
             ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-            ssh_client.connect(hostname=hostname,
-                               username=username, password=password)
+            ssh_client.connect(hostname=hostname, username=username, password=password)
 
             sftp_client = ssh_client.open_sftp()
             sftp_obj = sftp_client
-        elif (sftp_obj == None):
+        elif sftp_obj == None:
             sftp_obj = sftp_client
 
         res = sftp_obj.listdir(path)
@@ -67,8 +66,11 @@ def list_dir_wrapper(path, config_obj=None):
 
 def get_start_end_year_month(target_date_range, n=1):
 
-    start_year, start_month, start_day = target_date_range[
-        0], target_date_range[1], target_date_range[2]
+    start_year, start_month, start_day = (
+        target_date_range[0],
+        target_date_range[1],
+        target_date_range[2],
+    )
 
     start_date = dt.date(start_year, start_month, start_day)
     end_date = start_date + dt.timedelta(days=n)
@@ -78,8 +80,9 @@ def get_start_end_year_month(target_date_range, n=1):
         end_date.year,
         end_date.month,
         start_date.day,
-        end_date.day
+        end_date.day,
     )
+
 
 # def get_empty_date_vector(config_object):
 
@@ -101,7 +104,7 @@ def get_start_end_year_month(target_date_range, n=1):
 
 def convert_timestamp_to_tuple(timestamp):
     # parse the timestamp string into a datetime object
-    dt = datetime.strptime(timestamp, '%Y-%m-%dT%H:%M:%S.%f%z')
+    dt = datetime.strptime(timestamp, "%Y-%m-%dT%H:%M:%S.%f%z")
 
     # extract the year and month from the datetime object
     year = dt.year
@@ -115,23 +118,28 @@ def enum_target_date_vector(target_date_range, current_pat_client_id_code, confi
 
     empty_date_vector = get_empty_date_vector(config_obj=config_obj)
 
-    empty_date_vector.at[0, str(target_date_range)+"_date_time_stamp"] = 1
+    empty_date_vector.at[0, str(target_date_range) + "_date_time_stamp"] = 1
 
-    empty_date_vector['client_idcode'] = current_pat_client_id_code
+    empty_date_vector["client_idcode"] = current_pat_client_id_code
 
     return empty_date_vector
 
-def enum_exact_target_date_vector(target_date_range, current_pat_client_id_code, config_obj):
 
-    #empty_date_vector = get_empty_date_vector(config_obj=config_obj)
+def enum_exact_target_date_vector(
+    target_date_range, current_pat_client_id_code, config_obj
+):
 
-    empty_date_vector = pd.DataFrame(columns=['client_idcode', str(target_date_range)+"_date_time_stamp"])
+    # empty_date_vector = get_empty_date_vector(config_obj=config_obj)
 
-    empty_date_vector[str(target_date_range)+"_date_time_stamp"] = 1
+    empty_date_vector = pd.DataFrame(
+        columns=["client_idcode", str(target_date_range) + "_date_time_stamp"]
+    )
 
-    empty_date_vector.at[0, str(target_date_range)+"_date_time_stamp"] = 1
+    empty_date_vector[str(target_date_range) + "_date_time_stamp"] = 1
 
-    empty_date_vector['client_idcode'] = current_pat_client_id_code
+    empty_date_vector.at[0, str(target_date_range) + "_date_time_stamp"] = 1
+
+    empty_date_vector["client_idcode"] = current_pat_client_id_code
 
     return empty_date_vector
 
@@ -168,23 +176,34 @@ def enum_exact_target_date_vector(target_date_range, current_pat_client_id_code,
 #     return date_list
 
 
-def generate_date_list(start_date, years, months, days, time_window_interval_delta=relativedelta(days=1), config_obj=None):
+def generate_date_list(
+    start_date,
+    years,
+    months,
+    days,
+    time_window_interval_delta=relativedelta(days=1),
+    config_obj=None,
+):
 
     lookback = config_obj.lookback
 
     config_obj.global_start_year, config_obj.global_start_month, config_obj.global_end_year, config_obj.global_end_month, config_obj.global_start_day, config_obj.global_end_day
 
-    if (lookback == False):
-        end_date = start_date + \
-            relativedelta(years=years, months=months, days=days)
+    if lookback == False:
+        end_date = start_date + relativedelta(years=years, months=months, days=days)
     else:
-        end_date = start_date - \
-            relativedelta(years=years, months=months, days=days)
+        end_date = start_date - relativedelta(years=years, months=months, days=days)
 
-    global_start_date = datetime.strptime(f"{config_obj.global_start_year}-{config_obj.global_start_month}-{config_obj.global_start_day}", "%Y-%m-%d")
-    global_end_date = datetime.strptime(f"{config_obj.global_end_year}-{config_obj.global_end_month}-{config_obj.global_end_day}", "%Y-%m-%d")
+    global_start_date = datetime.strptime(
+        f"{config_obj.global_start_year}-{config_obj.global_start_month}-{config_obj.global_start_day}",
+        "%Y-%m-%d",
+    )
+    global_end_date = datetime.strptime(
+        f"{config_obj.global_end_year}-{config_obj.global_end_month}-{config_obj.global_end_day}",
+        "%Y-%m-%d",
+    )
 
-    #import pytz
+    # import pytz
 
     # Assuming your timezone is 'UTC', you can replace it with your actual timezone
     timezone = pytz.UTC
@@ -212,37 +231,33 @@ def generate_date_list(start_date, years, months, days, time_window_interval_del
 
     # Rest of your code
 
-
-
     date_list = []
     current_date = start_date
 
-    if (lookback == False):
+    if lookback == False:
         # look forward...
         while current_date <= end_date:
-            date_list.append(
-                (current_date.year, current_date.month, current_date.day))
+            date_list.append((current_date.year, current_date.month, current_date.day))
             current_date += time_window_interval_delta  # timedelta(days=1)
     else:
         # look back
-        #limit lookback dates by global dates. 
+        # limit lookback dates by global dates.
         if start_date < global_start_date:
-            
+
             start_date = global_start_date
-            if(config_obj.verbose >= 1):
+            if config_obj.verbose >= 1:
                 print("start_date < global_start_date", start_date)
 
         if end_date > global_end_date:
             end_date = global_end_date
-            if(config_obj.verbose >= 1):
+            if config_obj.verbose >= 1:
                 print("end_date > global_end_date", end_date)
 
         while current_date >= end_date:
-            date_list.append(
-                (current_date.year, current_date.month, current_date.day))
+            date_list.append((current_date.year, current_date.month, current_date.day))
             current_date += time_window_interval_delta
 
-        #date_list.reverse() # cohort searcher date order fix
+        # date_list.reverse() # cohort searcher date order fix
 
     return date_list
 
@@ -280,28 +295,47 @@ def generate_date_list(start_date, years, months, days, time_window_interval_del
 #         raise e
 #         # filtered_df = df[df[timestamp_string] =="2323"]
 
+
 #     return filtered_df
-def filter_dataframe_by_timestamp(df, start_year, start_month, end_year, end_month, start_day, end_day, timestamp_string, dropna=False):
-    
+def filter_dataframe_by_timestamp(
+    df,
+    start_year,
+    start_month,
+    end_year,
+    end_month,
+    start_day,
+    end_day,
+    timestamp_string,
+    dropna=False,
+):
+
     # Convert timestamp column to datetime format
     df[timestamp_string] = pd.to_datetime(df[timestamp_string], utc=True)
 
     # Ensure start date is earlier than end date
-    start_datetime = pd.Timestamp(datetime(start_year, int(start_month), int(start_day)), tz='UTC')
-    end_datetime = pd.Timestamp(datetime(end_year, int(end_month), int(end_day)), tz='UTC')
+    start_datetime = pd.Timestamp(
+        datetime(start_year, int(start_month), int(start_day)), tz="UTC"
+    )
+    end_datetime = pd.Timestamp(
+        datetime(end_year, int(end_month), int(end_day)), tz="UTC"
+    )
     if start_datetime > end_datetime:
         start_datetime, end_datetime = end_datetime, start_datetime
 
     # Filter based on datetime range
-    filtered_df = df[(df[timestamp_string] >= start_datetime) & (df[timestamp_string] <= end_datetime)]
+    filtered_df = df[
+        (df[timestamp_string] >= start_datetime)
+        & (df[timestamp_string] <= end_datetime)
+    ]
 
     if dropna:
         filtered_df.dropna(subset=[timestamp_string], inplace=True)
-    #display(filtered_df)
+    # display(filtered_df)
     return filtered_df
 
+
 # def filter_dataframe_by_timestamp(df, start_year, start_month, end_year, end_month, start_day, end_day, timestamp_string, dropna=False):
-    
+
 #     #print("filter_dataframe_by_timestamp", "methods_get")
 #     #raise
 #     # Convert timestamp column to datetime format
@@ -333,29 +367,37 @@ def dump_results(file_data, path, config_obj=None):
 
     remote_dump = config_obj.remote_dump
 
-    if (remote_dump):
-        if (share_sftp == False):
+    if remote_dump:
+        if share_sftp == False:
             ssh_client = paramiko.SSHClient()
             ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-            ssh_client.connect(hostname=hostname,
-                               username=username, password=password)
+            ssh_client.connect(hostname=hostname, username=username, password=password)
 
             sftp_client = ssh_client.open_sftp()
             sftp_obj = sftp_client
 
-        with sftp_obj.open(path, 'w') as file:
+        with sftp_obj.open(path, "w") as file:
 
             pickle.dump(file_data, file)
-        if (share_sftp == False):
+        if share_sftp == False:
             sftp_obj.close()
             sftp_obj.close()
 
     else:
-        with open(path, 'wb') as f:
+        with open(path, "wb") as f:
             pickle.dump(file_data, f)
 
 
-def update_pbar(current_pat_client_id_code, start_time, stage_int, stage_str, t, config_obj, skipped_counter=None, **n_docs_to_annotate):
+def update_pbar(
+    current_pat_client_id_code,
+    start_time,
+    stage_int,
+    stage_str,
+    t,
+    config_obj,
+    skipped_counter=None,
+    **n_docs_to_annotate,
+):
 
     start_time = config_obj.start_time
 
@@ -366,7 +408,7 @@ def update_pbar(current_pat_client_id_code, start_time, stage_int, stage_str, t,
 
     colour_val = Fore.GREEN + Style.BRIGHT + stage_str
 
-    if (multi_process):
+    if multi_process:
 
         counter_disp = skipped_counter.value
 
@@ -374,63 +416,123 @@ def update_pbar(current_pat_client_id_code, start_time, stage_int, stage_str, t,
         counter_disp = skipped_counter
 
     t.set_description(
-        f"s: {counter_disp} | {current_pat_client_id_code} | task: {colour_val} | {n_docs_to_annotate}")
-    if ((datetime.now() - start_time) > slow_execution_threshold_low):
+        f"s: {counter_disp} | {current_pat_client_id_code} | task: {colour_val} | {n_docs_to_annotate}"
+    )
+    if (datetime.now() - start_time) > slow_execution_threshold_low:
         t.colour = Fore.YELLOW
         colour_val = Fore.YELLOW + stage_str
         t.set_description(
-            f"s: {counter_disp} | {current_pat_client_id_code} | task: {colour_val} | {n_docs_to_annotate}")
+            f"s: {counter_disp} | {current_pat_client_id_code} | task: {colour_val} | {n_docs_to_annotate}"
+        )
 
-    elif ((datetime.now() - start_time) > slow_execution_threshold_high):
+    elif (datetime.now() - start_time) > slow_execution_threshold_high:
         t.colour = Fore.RED + Style.BRIGHT
         colour_val = Fore.RED + Style.BRIGHT + stage_str
         t.set_description(
-            f"s: {counter_disp} | {current_pat_client_id_code} | task: {colour_val} | {n_docs_to_annotate}")
+            f"s: {counter_disp} | {current_pat_client_id_code} | task: {colour_val} | {n_docs_to_annotate}"
+        )
 
-    elif ((datetime.now() - start_time) > slow_execution_threshold_extreme):
+    elif (datetime.now() - start_time) > slow_execution_threshold_extreme:
         t.colour = Fore.RED + Style.DIM
         colour_val = Fore.RED + Style.DIM + stage_str
         t.set_description(
-            f"s: {counter_disp} | {current_pat_client_id_code} | task: {colour_val} | {n_docs_to_annotate}")
+            f"s: {counter_disp} | {current_pat_client_id_code} | task: {colour_val} | {n_docs_to_annotate}"
+        )
 
     else:
         t.colour = Fore.GREEN + Style.DIM
         colour_val = Fore.GREEN + Style.DIM + stage_str
         t.set_description(
-            f"s: {counter_disp} | {current_pat_client_id_code} | task: {colour_val} | {n_docs_to_annotate}")
+            f"s: {counter_disp} | {current_pat_client_id_code} | task: {colour_val} | {n_docs_to_annotate}"
+        )
 
     t.refresh()
 
 
-def get_demographics3_batch(patlist, target_date_range, pat_batch, config_obj=None, cohort_searcher_with_terms_and_search=None):
+def get_demographics3_batch(
+    patlist,
+    target_date_range,
+    pat_batch,
+    config_obj=None,
+    cohort_searcher_with_terms_and_search=None,
+):
 
     batch_mode = config_obj.batch_mode
 
     # patlist = config_obj.patlist #is present?
 
-    start_year, start_month, end_year, end_month, start_day, end_day = get_start_end_year_month(
-        target_date_range, config_obj=config_obj)
+    start_year, start_month, end_year, end_month, start_day, end_day = (
+        get_start_end_year_month(target_date_range, config_obj=config_obj)
+    )
+    pat_batch = pat_batch.sort_values(["client_idcode", "updatetime"])
 
-    if (batch_mode):
+    # if critical field is nan, lets impute from its most recent non nan
+    pat_batch[
+        [
+            "client_firstname",
+            "client_lastname",
+            "client_dob",
+            "client_gendercode",
+            "client_racecode",
+            "client_deceaseddtm",
+        ]
+    ] = (
+        pat_batch.groupby("client_idcode")[
+            [
+                "client_firstname",
+                "client_lastname",
+                "client_dob",
+                "client_gendercode",
+                "client_racecode",
+                "client_deceaseddtm",
+            ]
+        ]
+        .ffill()
+        .copy()
+    )
+
+    pat_batch.reset_index(drop=True, inplace=True)
+
+    if batch_mode:
 
         demo = filter_dataframe_by_timestamp(
-            pat_batch, start_year, start_month, end_year, end_month, start_day, end_day, 'updatetime')
+            pat_batch,
+            start_year,
+            start_month,
+            end_year,
+            end_month,
+            start_day,
+            end_day,
+            "updatetime",
+        )
 
     else:
-        demo = cohort_searcher_with_terms_and_search(index_name="epr_documents",
-                                                     fields_list=["client_idcode", "client_firstname", "client_lastname", "client_dob",
-                                                                  "client_gendercode", "client_racecode", "client_deceaseddtm", "updatetime"],
-                                                     term_name="client_idcode.keyword",
-                                                     entered_list=patlist,
-                                                     search_string=f'updatetime:[{start_year}-{start_month}-{start_day} TO {end_year}-{end_month}-{end_day}] '
-                                                     )
+        demo = cohort_searcher_with_terms_and_search(
+            index_name="epr_documents",
+            fields_list=[
+                "client_idcode",
+                "client_firstname",
+                "client_lastname",
+                "client_dob",
+                "client_gendercode",
+                "client_racecode",
+                "client_deceaseddtm",
+                "updatetime",
+            ],
+            term_name="client_idcode.keyword",
+            entered_list=patlist,
+            search_string=f"updatetime:[{start_year}-{start_month}-{start_day} TO {end_year}-{end_month}-{end_day}] ",
+        )
 
     demo["updatetime"] = pd.to_datetime(demo["updatetime"], utc=True)
     # .drop_duplicates(subset = ["client_idcode"], keep = "last", inplace = True)
     demo = demo.sort_values(["client_idcode", "updatetime"])
 
+    # Reset index if necessary
+    demo = demo.reset_index(drop=True)
+
     # if more than one in the range return the nearest the end of the period
-    if (len(demo) > 1):
+    if len(demo) > 1:
         try:
             # print("case1")
             return demo.tail(1)
@@ -444,9 +546,28 @@ def get_demographics3_batch(patlist, target_date_range, pat_batch, config_obj=No
 
     # otherwise return only the client id
     else:
+        if config_obj.verbosity >= 1:
+            display(f"no demo data found for {patlist}")
+            display(pat_batch)
+
         demo = pd.DataFrame(data=None, columns=None)
-        demo['client_idcode'] = patlist
-        return demo
+        demo["client_idcode"] = patlist
+        # Define the columns to be set to NaN
+        columns_to_set_nan = [
+            "client_firstname",
+            "client_lastname",
+            "client_dob",
+            "client_gendercode",
+            "client_racecode",
+            "client_deceaseddtm",
+            "updatetime",
+        ]
+
+        # Add these columns to the DataFrame and set their values to NaN
+        for column in columns_to_set_nan:
+            demo[column] = np.nan
+
+        return demo.head(1)
 
 
 # def list_dir_wrapper(self, path, sftp_obj=None, config_obj = None):
@@ -482,17 +603,20 @@ def get_demographics3_batch(patlist, target_date_range, pat_batch, config_obj=No
 def get_free_gpu():
     # move to cogstats?
     gpu_stats = subprocess.check_output(
-        ["nvidia-smi", "--format=csv", "--query-gpu=memory.used,memory.free"])
-    gpu_df = pd.read_csv(StringIO(gpu_stats.decode('utf-8')),
-                         names=['memory.used', 'memory.free'],
-                         skiprows=1)
-    print('GPU usage:\n{}'.format(gpu_df))
-    gpu_df['memory.free'] = gpu_df['memory.free'].map(
-        lambda x: x.rstrip(' [MiB]'))
-    idx = gpu_df['memory.free'].astype(int).idxmax()
-    print('Returning GPU{} with {} free MiB'.format(
-        idx, gpu_df.iloc[idx]['memory.free']))
-    return int(idx), gpu_df.iloc[idx]['memory.free']
+        ["nvidia-smi", "--format=csv", "--query-gpu=memory.used,memory.free"]
+    )
+    gpu_df = pd.read_csv(
+        StringIO(gpu_stats.decode("utf-8")),
+        names=["memory.used", "memory.free"],
+        skiprows=1,
+    )
+    print("GPU usage:\n{}".format(gpu_df))
+    gpu_df["memory.free"] = gpu_df["memory.free"].map(lambda x: x.rstrip(" [MiB]"))
+    idx = gpu_df["memory.free"].astype(int).idxmax()
+    print(
+        "Returning GPU{} with {} free MiB".format(idx, gpu_df.iloc[idx]["memory.free"])
+    )
+    return int(idx), gpu_df.iloc[idx]["memory.free"]
 
 
 def method1(self):
@@ -513,13 +637,15 @@ def __str__(self):
     return f"MyClass instance with parameters: {self.parameter1}, {self.parameter2}"
 
 
-color_bars = [Fore.RED,
-              Fore.GREEN,
-              Fore.BLUE,
-              Fore.MAGENTA,
-              Fore.YELLOW,
-              Fore.CYAN,
-              Fore.WHITE]
+color_bars = [
+    Fore.RED,
+    Fore.GREEN,
+    Fore.BLUE,
+    Fore.MAGENTA,
+    Fore.YELLOW,
+    Fore.CYAN,
+    Fore.WHITE,
+]
 
 
 def list_dir_wrapper(path, config_obj=None):
@@ -537,16 +663,15 @@ def list_dir_wrapper(path, config_obj=None):
     sftp_obj = config_obj.sftp_obj
 
     # global sftp_client
-    if (remote_dump):
-        if (share_sftp == False):
+    if remote_dump:
+        if share_sftp == False:
             ssh_client = paramiko.SSHClient()
             ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-            ssh_client.connect(hostname=hostname,
-                               username=username, password=password)
+            ssh_client.connect(hostname=hostname, username=username, password=password)
 
             sftp_client = ssh_client.open_sftp()
             sftp_obj = sftp_client
-        elif (sftp_obj == None):
+        elif sftp_obj == None:
             sftp_obj = sftp_client
 
         res = sftp_obj.listdir(path)
@@ -571,8 +696,11 @@ def get_start_end_year_month(target_date_range, config_obj=None):
 
     time_window_interval_delta = config_obj.time_window_interval_delta
 
-    start_year, start_month, start_day = target_date_range[
-        0], target_date_range[1], target_date_range[2]
+    start_year, start_month, start_day = (
+        target_date_range[0],
+        target_date_range[1],
+        target_date_range[2],
+    )
 
     start_date = dt.date(start_year, start_month, start_day)
     # end_date = start_date + dt.timedelta(days=n)
@@ -584,7 +712,7 @@ def get_start_end_year_month(target_date_range, config_obj=None):
         end_date.year,
         end_date.month,
         start_date.day,
-        end_date.day
+        end_date.day,
     )
 
 
@@ -601,13 +729,15 @@ def get_empty_date_vector(config_obj):
     interval_window_delta = config_obj.time_window_interval_delta
 
     combinations = generate_date_list(
-        start_date, years, months, days, interval_window_delta, config_obj = config_obj)
+        start_date, years, months, days, interval_window_delta, config_obj=config_obj
+    )
 
-    combinations = [
-        str(item) + '_' + 'date_time_stamp' for item in combinations]
+    combinations = [str(item) + "_" + "date_time_stamp" for item in combinations]
 
     # untested float cast
-    return pd.DataFrame(data=0.0, index=np.arange(1), columns=combinations).astype(float)
+    return pd.DataFrame(data=0.0, index=np.arange(1), columns=combinations).astype(
+        float
+    )
 
 
 # def get_demographics3_batch(patlist, target_date_range, pat_batch, config_obj = None, cohort_searcher_with_terms_and_search=None):
@@ -670,17 +800,16 @@ def sftp_exists(path, config_obj=None):
     share_sftp = config_obj.share_sftp
 
     try:
-        if (share_sftp == False):
+        if share_sftp == False:
             ssh_client = paramiko.SSHClient()
             ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-            ssh_client.connect(hostname=hostname,
-                               username=username, password=password)
+            ssh_client.connect(hostname=hostname, username=username, password=password)
 
             sftp_obj = ssh_client.open_sftp()
 
         sftp_obj.stat(path)
 
-        if (share_sftp == False):
+        if share_sftp == False:
             sftp_obj.close()
             sftp_obj.close()
         return True
@@ -703,16 +832,15 @@ def list_dir_wrapper(path, config_obj=None):
     share_sftp = config_obj.share_sftp
 
     # global sftp_client
-    if (remote_dump):
-        if (share_sftp == False):
+    if remote_dump:
+        if share_sftp == False:
             ssh_client = paramiko.SSHClient()
             ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-            ssh_client.connect(hostname=hostname,
-                               username=username, password=password)
+            ssh_client.connect(hostname=hostname, username=username, password=password)
 
             sftp_client = ssh_client.open_sftp()
             sftp_obj = sftp_client
-        elif (sftp_obj == None):
+        elif sftp_obj == None:
             sftp_obj = sftp_client
 
         res = sftp_obj.listdir(path)
@@ -729,7 +857,7 @@ def exist_check(path, config_obj=None):
     sftp_obj = config_obj.sftp_obj
     remote_dump = config_obj.remote_dump
 
-    if (remote_dump):
+    if remote_dump:
         return sftp_exists(path, config_obj)
     else:
         return exists(path)
@@ -757,8 +885,7 @@ def check_sftp_connection(self, remote_directory, config_obj):
 
         # Check if the connection is successful by listing the remote directory
         remote_directory = sftp.listdir()
-        print(
-            f"Connection successful. Remote directory contents: {remote_directory}")
+        print(f"Connection successful. Remote directory contents: {remote_directory}")
 
         # Close the SFTP session and the SSH connection
         sftp.close()
@@ -771,17 +898,20 @@ def check_sftp_connection(self, remote_directory, config_obj):
 def get_free_gpu():
     # move to cogstats?
     gpu_stats = subprocess.check_output(
-        ["nvidia-smi", "--format=csv", "--query-gpu=memory.used,memory.free"])
-    gpu_df = pd.read_csv(StringIO(gpu_stats.decode('utf-8')),
-                         names=['memory.used', 'memory.free'],
-                         skiprows=1)
-    print('GPU usage:\n{}'.format(gpu_df))
-    gpu_df['memory.free'] = gpu_df['memory.free'].map(
-        lambda x: x.rstrip(' [MiB]'))
-    idx = gpu_df['memory.free'].astype(int).idxmax()
-    print('Returning GPU{} with {} free MiB'.format(
-        idx, gpu_df.iloc[idx]['memory.free']))
-    return int(idx), gpu_df.iloc[idx]['memory.free']
+        ["nvidia-smi", "--format=csv", "--query-gpu=memory.used,memory.free"]
+    )
+    gpu_df = pd.read_csv(
+        StringIO(gpu_stats.decode("utf-8")),
+        names=["memory.used", "memory.free"],
+        skiprows=1,
+    )
+    print("GPU usage:\n{}".format(gpu_df))
+    gpu_df["memory.free"] = gpu_df["memory.free"].map(lambda x: x.rstrip(" [MiB]"))
+    idx = gpu_df["memory.free"].astype(int).idxmax()
+    print(
+        "Returning GPU{} with {} free MiB".format(idx, gpu_df.iloc[idx]["memory.free"])
+    )
+    return int(idx), gpu_df.iloc[idx]["memory.free"]
 
 
 def method1(self):
@@ -830,12 +960,11 @@ def write_remote(path, csv_file, config_obj=None):
     else:
         ssh_client = paramiko.SSHClient()
         ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        ssh_client.connect(hostname=hostname,
-                           username=username, password=password)
+        ssh_client.connect(hostname=hostname, username=username, password=password)
         sftp_client = ssh_client.open_sftp()
         sftp_obj = sftp_client
 
-    with sftp_obj.open(path, 'w') as file:
+    with sftp_obj.open(path, "w") as file:
         csv_file.to_csv(file)
 
     if not share_sftp:
@@ -892,14 +1021,13 @@ def read_remote(path, config_obj=None):
     else:
         ssh_client = paramiko.SSHClient()
         ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        ssh_client.connect(hostname=hostname,
-                           username=username, password=password)
+        ssh_client.connect(hostname=hostname, username=username, password=password)
         sftp_client = ssh_client.open_sftp()
         sftp_obj = sftp_client
 
-    with sftp_obj.open(path, 'r') as file:
+    with sftp_obj.open(path, "r") as file:
         # Read CSV content into a Pandas DataFrame
-        csv_content = file.read().decode('utf-8')
+        csv_content = file.read().decode("utf-8")
         df = pd.read_csv(StringIO(csv_content))
 
     if not share_sftp:
@@ -950,8 +1078,9 @@ def create_local_folders(config_obj=None):
     pat_doc_folder_path = root_path + "/" + project_name + "/pat_docs/"
     Path(pat_doc_folder_path).mkdir(parents=True, exist_ok=True)
 
-    pat_doc_annot_vec_folder_path = root_path + \
-        "/" + project_name + "/pat_docs_annot_vecs/"
+    pat_doc_annot_vec_folder_path = (
+        root_path + "/" + project_name + "/pat_docs_annot_vecs/"
+    )
     Path(pat_doc_annot_vec_folder_path).mkdir(parents=True, exist_ok=True)
 
 
@@ -985,14 +1114,14 @@ def create_remote_folders(config_obj=None):
     else:
         ssh_client = paramiko.SSHClient()
         ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        ssh_client.connect(hostname=hostname,
-                           username=username, password=password)
+        ssh_client.connect(hostname=hostname, username=username, password=password)
         sftp_client = ssh_client.open_sftp()
         sftp_obj = sftp_client
 
     pat_doc_folder_path = root_path + "/" + project_name + "/pat_docs/"
-    pat_doc_annot_vec_folder_path = root_path + \
-        "/" + project_name + "/pat_docs_annot_vecs/"
+    pat_doc_annot_vec_folder_path = (
+        root_path + "/" + project_name + "/pat_docs_annot_vecs/"
+    )
 
     try:
         # Create the remote directory if it doesn't exist
@@ -1055,22 +1184,36 @@ def filter_stripped_list(stripped_list, config_obj=None):
         if remote_dump:
             ssh_client = paramiko.SSHClient()
             ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-            ssh_client.connect(hostname=hostname,
-                               username=username, password=password)
+            ssh_client.connect(hostname=hostname, username=username, password=password)
 
             sftp_client = ssh_client.open_sftp()
 
             for i in range(len(stripped_list)):
                 try:
-                    if len(sftp_client.listdir(current_pat_lines_path + stripped_list[i])) >= n_pat_lines:
+                    if (
+                        len(
+                            sftp_client.listdir(
+                                current_pat_lines_path + stripped_list[i]
+                            )
+                        )
+                        >= n_pat_lines
+                    ):
                         container_list.append(stripped_list[i])
                 except:
                     pass
         else:
-            if (config_obj.verbosity > 0):
+            if config_obj.verbosity > 0:
                 print("Stripping list...")
             for i in tqdm(range(len(stripped_list))):
-                if len(list_dir_wrapper(current_pat_lines_path + stripped_list[i], config_obj=config_obj)) >= n_pat_lines:
+                if (
+                    len(
+                        list_dir_wrapper(
+                            current_pat_lines_path + stripped_list[i],
+                            config_obj=config_obj,
+                        )
+                    )
+                    >= n_pat_lines
+                ):
                     container_list.append(stripped_list[i])
 
         stripped_list_start = container_list.copy()
@@ -1085,6 +1228,7 @@ def filter_stripped_list(stripped_list, config_obj=None):
 
     return stripped_list, stripped_list_start
 
+
 # Example usage:
 # stripped_list, stripped_list_start = filter_stripped_list(your_stripped_list, strip_list=True, remote_dump=True, hostname="your_host", username="your_username", password="your_password", current_pat_lines_path="your_path", n_pat_lines=your_n)
 
@@ -1098,6 +1242,7 @@ def filter_stripped_list(stripped_list, config_obj=None):
 #     for i in tqdm(range(len(all_patient_list))):
 #         for path in [pre_annotation_path, pre_annotation_path_mrc, current_pat_line_path]:
 #             folder_path = os.path.join(path, str(all_patient_list[i]))
+
 
 #             if not os.path.exists(folder_path):
 #                 os.makedirs(folder_path)
@@ -1117,7 +1262,11 @@ def create_folders(all_patient_list, config_obj=None):
     current_pat_lines_path = config_obj.current_pat_lines_path
 
     for patient_id in all_patient_list:
-        for path in [pre_annotation_path, pre_annotation_path_mrc, current_pat_lines_path]:
+        for path in [
+            pre_annotation_path,
+            pre_annotation_path_mrc,
+            current_pat_lines_path,
+        ]:
             folder_path = os.path.join(path, str(patient_id))
 
             if not os.path.exists(folder_path):
@@ -1142,15 +1291,18 @@ def create_folders_for_pat(patient_id, config_obj=None):
     current_pat_lines_path = config_obj.current_pat_lines_path
     pre_annotation_path_reports = config_obj.pre_document_annotation_batch_path_reports
 
-    for path in [pre_annotation_path, pre_annotation_path_mrc, current_pat_lines_path,]:# pre_annotation_path_reports]:
+    for path in [
+        pre_annotation_path,
+        pre_annotation_path_mrc,
+        current_pat_lines_path,
+    ]:  # pre_annotation_path_reports]:
         folder_path = os.path.join(path, str(patient_id))
 
         if not os.path.exists(folder_path):
             os.makedirs(folder_path)
 
     if config_obj.verbosity > 0:
-        print(
-            f"Folders created for patient {patient_id}: {current_pat_lines_path}...")
+        print(f"Folders created for patient {patient_id}: {current_pat_lines_path}...")
 
 
 def convert_date(date_string):
@@ -1159,7 +1311,9 @@ def convert_date(date_string):
     return date_object
 
 
-def add_offset_column(dataframe, start_column_name, offset_column_name, time_offset, verbose=1):
+def add_offset_column(
+    dataframe, start_column_name, offset_column_name, time_offset, verbose=1
+):
     """
     Adds a new column with the offset from the start time to the provided DataFrame.
 
@@ -1178,36 +1332,46 @@ def add_offset_column(dataframe, start_column_name, offset_column_name, time_off
 
     # attempt to fix human time stamp inconsistencies:
     try:
-        dataframe[start_column_name] = pd.to_datetime(dataframe[start_column_name].astype(
-            str), infer_datetime_format=True, format='%d/%m/%y %H.%M.%S')
+        dataframe[start_column_name] = pd.to_datetime(
+            dataframe[start_column_name].astype(str),
+            infer_datetime_format=True,
+            format="%d/%m/%y %H.%M.%S",
+        )
     except Exception as e:
         if verbose > 1:
             print(f"Failed to convert column '{start_column_name}' to datetime: {e}")
 
         # If the conversion fails, move on without raising an error
-        dataframe[start_column_name] = pd.to_datetime(dataframe[start_column_name],
-                                                       errors='coerce')
+        dataframe[start_column_name] = pd.to_datetime(
+            dataframe[start_column_name], errors="coerce"
+        )
 
     # cast back to str for parser
     dataframe[start_column_name] = dataframe[start_column_name].astype(str)
 
     # Attempt to parse datetime using dateutil.parser.parse
     try:
-        dataframe[start_column_name + "_converted"] = dataframe[start_column_name].apply(
-            lambda x: parse(x, fuzzy=True) if pd.notna(x) else pd.NaT)
+        dataframe[start_column_name + "_converted"] = dataframe[
+            start_column_name
+        ].apply(lambda x: parse(x, fuzzy=True) if pd.notna(x) else pd.NaT)
     except Exception as e:
         if verbose > 1:
             print(
-                f"Failed to parse column '{start_column_name}' using dateutil.parser.parse: {e}")
+                f"Failed to parse column '{start_column_name}' using dateutil.parser.parse: {e}"
+            )
 
         # If parsing fails, move on without raising an error
         dataframe[start_column_name + "_converted"] = pd.to_datetime(
-            dataframe[start_column_name], format='%m/%d/%y %H.%M.%S', errors='coerce')
+            dataframe[start_column_name], format="%m/%d/%y %H.%M.%S", errors="coerce"
+        )
 
     # Ensure the start column is now in datetime format
-    if not pd.api.types.is_datetime64_any_dtype(dataframe[start_column_name + "_converted"]):
+    if not pd.api.types.is_datetime64_any_dtype(
+        dataframe[start_column_name + "_converted"]
+    ):
         raise ValueError(
-            f"Column '{start_column_name}_converted' does not exist or cannot be converted to datetime format.")
+            f"Column '{start_column_name}_converted' does not exist or cannot be converted to datetime format."
+        )
 
     # Define a function to apply the offset individually to each element
     def apply_offset(dt):
@@ -1217,10 +1381,12 @@ def add_offset_column(dataframe, start_column_name, offset_column_name, time_off
             return pd.NaT
 
     # Apply the offset function to create the new column
-    dataframe[offset_column_name] = dataframe[start_column_name +
-                                              "_converted"].apply(apply_offset)
+    dataframe[offset_column_name] = dataframe[start_column_name + "_converted"].apply(
+        apply_offset
+    )
 
     return dataframe
+
 
 # add_offset_column(df, 'ADMISSION_DTTM', offset_column_name, time_offset)
 
