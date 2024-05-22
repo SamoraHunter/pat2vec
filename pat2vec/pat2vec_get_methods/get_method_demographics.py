@@ -106,6 +106,10 @@ def get_demo(current_pat_client_id_code, target_date_range, pat_batch, config_ob
         display(current_pat_demo)
         raise Exception("more than one row process ethnicity")
     # display(current_pat_demo)
+    exclude_column = "client_idcode"
+    current_pat_demo = current_pat_demo.astype(
+        {col: "float" for col in current_pat_demo.columns if col != exclude_column}
+    )
 
     return current_pat_demo.head(1)
 
