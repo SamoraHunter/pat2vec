@@ -373,7 +373,7 @@ def remove_file_from_paths(
         f"{project_name}/current_pat_bmi_batches/",
         f"{project_name}/current_pat_demo_batches/",
         f"{project_name}/current_pat_document_batches_reports/",
-        f"{project_name}/current_pat_documents_annotations_batches_reports/"
+        f"{project_name}/current_pat_documents_annotations_batches_reports/",
     ]
 
     for path in pat_file_paths:
@@ -509,7 +509,7 @@ def process_csv_files_multi(
 
 def join_icd10_codes_to_annot(df, inner=False):
 
-    mfp = "/home/cogstack/samora/_data/gloabl_files/snomed_icd10_map/data/tls_Icd10cmHumanReadableMap_US1000124_20230901.tsv"
+    mfp = "snomed_icd10_map/data/tls_Icd10cmHumanReadableMap_US1000124_20230901.tsv"
 
     mdf = pd.read_csv(mfp, sep="\t")
 
@@ -528,7 +528,7 @@ def join_icd10_codes_to_annot(df, inner=False):
 
 def join_icd10_OPC4S_codes_to_annot(df, inner=False):
 
-    mfp = "/home/cogstack/samora/_data/gloabl_files/snomed_to_icd10_opcs4/map.csv"
+    mfp = "snomed_to_icd10_opcs4/map.csv"  # ../home/cogstack/samora/_data/gloabl_files/
 
     mdf = pd.read_csv(mfp)
 
