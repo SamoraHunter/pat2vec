@@ -41,6 +41,8 @@ def get_appointments(
     )
     search_term = ""
 
+    appointments_time_field = config_obj.appointments_time_field
+
     if batch_mode:
         current_pat_raw = filter_dataframe_by_timestamp(
             pat_batch,
@@ -50,7 +52,7 @@ def get_appointments(
             end_month,
             start_day,
             end_day,
-            timestamp_string="DateModified",
+            timestamp_string={appointments_time_field},
         )
     else:
         current_pat_raw = cohort_searcher_with_terms_and_search(
@@ -89,7 +91,7 @@ def get_appointments(
             ],
             term_name="HospitalID.keyword",
             entered_list=[current_pat_client_id_code],
-            search_string=f"DateModified:[{start_year}-{start_month}-{start_day} TO {end_year}-{end_month}-{end_day}]",
+            search_string=f"{appointments_time_field}:[{start_year}-{start_month}-{start_day} TO {end_year}-{end_month}-{end_day}]",
         )
 
     current_pat_raw.rename(columns={"HospitalID": "client_idcode"}, inplace=True)
