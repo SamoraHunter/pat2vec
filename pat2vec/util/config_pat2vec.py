@@ -354,6 +354,23 @@ class config_class:
         if start_time == None:
             self.start_time = datetime.now()
 
+        self.drug_time_field = "order_performeddtm"  # alt #order_createdwhen
+
+        self.diagnostic_time_field = "order_performeddtm"  # alt #order_createdwhen
+
+        self.appointments_time_field = "AppointmentDateTime"  # alt #DateModified
+
+        self.bloods_time_field = "updatetime"
+
+        if self.verbosity >= 1:
+            print("self.drug_time_field", self.drug_time_field)
+
+            print("self.diagnostic_time_field", self.diagnostic_time_field)
+
+            print("self.appointments_datetime_field", self.appointments_datetime_field)
+
+            print("self.bloods_time_field", self.bloods_time_field)
+
         if self.main_options == None:
             if self.verbosity >= 1:
                 print("default main_options set!")
