@@ -473,8 +473,19 @@ def generate_appointments_data(
         "_id": [str(i) for i in range(num_rows)],
         "_index": [str(None) for _ in range(num_rows)],
         "_score": [str(None) for _ in range(num_rows)],
-        "AppointmentDateTime": [fake.date_time_this_year() for _ in range(num_rows)],
-        "Attended": [fake.random_element(["Y", "N"]) for _ in range(num_rows)],
+        "AppointmentDateTime": [
+            datetime(
+                random.randint(global_start_year, global_end_year),
+                random.randint(global_start_month, global_end_month),
+                random.randint(1, 28),
+                random.randint(0, 23),
+                random.randint(0, 59),
+                random.randint(0, 59),
+                tzinfo=pytz.utc,
+            )
+            for _ in range(num_rows)
+        ],
+        "Attended": [fake.random_element([0, 1]) for _ in range(num_rows)],
         "CancDesc": [fake.sentence() for _ in range(num_rows)],
         "CancRefNo": [fake.random_number(digits=8) for _ in range(num_rows)],
         "ConsultantCode": [fake.random_number(digits=4) for _ in range(num_rows)],

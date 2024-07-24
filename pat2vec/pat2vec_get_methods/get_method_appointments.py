@@ -52,7 +52,7 @@ def get_appointments(
             end_month,
             start_day,
             end_day,
-            timestamp_string={appointments_time_field},
+            timestamp_string=appointments_time_field,
         )
     else:
         current_pat_raw = cohort_searcher_with_terms_and_search(
