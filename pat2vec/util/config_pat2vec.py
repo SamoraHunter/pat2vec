@@ -360,7 +360,7 @@ class config_class:
 
         self.appointments_time_field = "AppointmentDateTime"  # alt #DateModified
 
-        self.bloods_time_field = "updatetime"
+        self.bloods_time_field = "basicobs_entered"
 
         if self.verbosity >= 1:
             print("self.drug_time_field", self.drug_time_field)
