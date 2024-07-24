@@ -39,6 +39,13 @@ notebooks/new_project_ipw/*
 
 output_directory/*
 
+notebooks/pat2vec_projects/*
+
+notebooks/pat2vec_projects/notebooks/example_usage_dev.ipynb
+notebooks/pat2vec_projects/new_project/*
+notebooks/pat2vec_projects/new_project_ipw/*
+
+
 util/medcat_models/*
 
 notebooks/output_directory/*
