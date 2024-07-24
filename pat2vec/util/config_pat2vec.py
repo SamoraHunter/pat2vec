@@ -765,6 +765,8 @@ class config_class:
         if self.individual_patient_window:
             print("individual_patient_window set!")
 
+            # check if user uploaded ipw dataframe already contains offset, if so do not compute and print warning.
+
             start_column_name = self.individual_patient_window_start_column_name
             offset_column_name = start_column_name + "_offset"
 
@@ -785,12 +787,23 @@ class config_class:
 
             # display(self.individual_patient_window_df)
 
-            self.individual_patient_window_df = add_offset_column(
-                self.individual_patient_window_df,
-                start_column_name,
-                offset_column_name,
-                time_offset,
-            )
+            if offset_column_name in self.individual_patient_window_df.columns:
+                print("individual_patient_window already contains offset column")
+                print("skipping offset computation", "using existing offset column")
+                print(
+                    "if you want to recompute offset, delete offset column from dataframe"
+                )
+                print('using existing offset column: "{}"'.format(offset_column_name))
+
+            else:
+                print("computing offset column")
+
+                self.individual_patient_window_df = add_offset_column(
+                    self.individual_patient_window_df,
+                    start_column_name,
+                    offset_column_name,
+                    time_offset,
+                )
 
             # display(self.individual_patient_window_df)
 
