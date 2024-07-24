@@ -367,7 +367,7 @@ class config_class:
 
             print("self.diagnostic_time_field", self.diagnostic_time_field)
 
-            print("self.appointments_datetime_field", self.appointments_datetime_field)
+            print("self.appointments_time_field", self.appointments_time_field)
 
             print("self.bloods_time_field", self.bloods_time_field)
 
