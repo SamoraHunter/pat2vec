@@ -805,14 +805,14 @@ class config_class:
                     time_offset,
                 )
 
-            # display(self.individual_patient_window_df)
+                # display(self.individual_patient_window_df)
 
-            self.patient_dict = build_patient_dict(
-                dataframe=self.individual_patient_window_df,
-                patient_id_column=self.individual_patient_id_column_name,
-                start_column=f"{start_column_name}_converted",
-                end_column=f"{start_column_name}_offset",
-            )
+                self.patient_dict = build_patient_dict(
+                    dataframe=self.individual_patient_window_df,
+                    patient_id_column=self.individual_patient_id_column_name,
+                    start_column=f"{start_column_name}_converted",
+                    end_column=f"{start_column_name}_offset",
+                )
 
             if self.lookback == True:
                 # print("skipping reverse")
