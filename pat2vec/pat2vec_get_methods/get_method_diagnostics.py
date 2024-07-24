@@ -41,6 +41,8 @@ def get_current_pat_diagnostics(
         get_start_end_year_month(target_date_range, config_obj=config_obj)
     )
 
+    diagnostic_time_field = config_obj.diagnostic_time_field
+
     # Diagnostic tests
     if batch_mode:
         diagnostics = filter_dataframe_by_timestamp(
@@ -51,7 +53,7 @@ def get_current_pat_diagnostics(
             end_month,
             start_day,
             end_day,
-            "order_entered",
+            diagnostic_time_field,
         )
     else:
         diagnostics = cohort_searcher_with_terms_and_search(
@@ -64,23 +66,24 @@ def get_current_pat_diagnostics(
                 "order_holdreasontext",
                 "order_entered",
                 "clientvisit_visitidcode",
+                "order_performeddtm",
             ],
             term_name="client_idcode.keyword",
             entered_list=[current_pat_client_id_code],
             search_string='order_typecode:"diagnostic" AND '
-            + f"updatetime:[{start_year}-{start_month}-{start_day} TO {end_year}-{end_month}-{end_day}]",
+            + f"{diagnostic_time_field}:[{start_year}-{start_month}-{start_day} TO {end_year}-{end_month}-{end_day}]",
         )
 
     current_pat_diagnostics = diagnostics.copy()
 
     if batch_mode:
         current_pat_diagnostics["datetime"] = current_pat_diagnostics[
-            "order_entered"
+            diagnostic_time_field
         ].copy()
 
     else:
         current_pat_diagnostics["datetime"] = (
-            pd.Series(current_pat_diagnostics["order_entered"])
+            pd.Series(current_pat_diagnostics[diagnostic_time_field])
             .dropna()
             .apply(convert_date)
         )
@@ -138,6 +141,7 @@ def get_current_pat_diagnostics(
             "order_holdreasontext",
             "order_entered",
             "clientvisit_visitidcode",
+            "order_performeddtm",
         ],
         inplace=True,
         axis=1,
