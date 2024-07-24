@@ -292,6 +292,8 @@ def get_pat_batch_bloods(
 
     existence_check = exist_check(batch_obs_target_path, config_obj)
 
+    bloods_time_field = config_obj.bloods_time_field
+
     try:
         if store_pat_batch_observations or existence_check is False:
 
@@ -303,11 +305,12 @@ def get_pat_batch_bloods(
                     "basicobs_value_numeric",
                     "basicobs_entered",
                     "clientvisit_serviceguid",
+                    "updatetime",
                 ],
                 term_name="client_idcode.keyword",
                 entered_list=[current_pat_client_id_code],
                 search_string=f"basicobs_value_numeric:* AND "
-                f"updatetime:[{global_start_year}-{global_start_month}-{global_start_day} TO {global_end_year}-{global_end_month}-{global_end_day}]",
+                f"{bloods_time_field}:[{global_start_year}-{global_start_month}-{global_start_day} TO {global_end_year}-{global_end_month}-{global_end_day}]",
             )
             if config_obj.data_type_filter_dict is not None:
                 if (
@@ -389,6 +392,8 @@ def get_pat_batch_drugs(
     global_start_day = config_obj.global_start_day
     global_end_day = config_obj.global_end_day
 
+    drug_time_field = config_obj.drug_time_field
+
     batch_obs_target_path = os.path.join(
         config_obj.pre_drugs_batch_path, str(current_pat_client_id_code) + ".csv"
     )
@@ -399,11 +404,11 @@ def get_pat_batch_drugs(
         if config_obj.store_pat_batch_observations or existence_check is False:
             batch_target = cohort_searcher_with_terms_and_search(
                 index_name="order",
-                fields_list="""client_idcode order_guid order_name order_summaryline order_holdreasontext order_entered clientvisit_visitidcode""".split(),
+                fields_list="""client_idcode order_guid order_name order_summaryline order_holdreasontext order_entered clientvisit_visitidcode order_performeddtm""".split(),
                 term_name="client_idcode.keyword",
                 entered_list=[current_pat_client_id_code],
                 search_string=f'order_typecode:"medication" AND '
-                f"updatetime:[{global_start_year}-{global_start_month}-{global_start_day} TO {global_end_year}-{global_end_month}-{global_end_day}]",
+                f"{drug_time_field}:[{global_start_year}-{global_start_month}-{global_start_day} TO {global_end_year}-{global_end_month}-{global_end_day}]",
             )
 
             if (
@@ -461,6 +466,8 @@ def get_pat_batch_diagnostics(
     global_start_day = config_obj.global_start_day
     global_end_day = config_obj.global_end_day
 
+    diagnosic_time_field = config_obj.diagnostic_time_field
+
     batch_obs_target_path = os.path.join(
         config_obj.pre_diagnostics_batch_path, str(current_pat_client_id_code) + ".csv"
     )
@@ -470,11 +477,11 @@ def get_pat_batch_diagnostics(
         if config_obj.store_pat_batch_observations or existence_check is False:
             batch_target = cohort_searcher_with_terms_and_search(
                 index_name="order",
-                fields_list="""client_idcode order_guid order_name order_summaryline order_holdreasontext order_entered clientvisit_visitidcode""".split(),
+                fields_list="""client_idcode order_guid order_name order_summaryline order_holdreasontext order_entered clientvisit_visitidcode order_performeddtm""".split(),
                 term_name="client_idcode.keyword",
                 entered_list=[current_pat_client_id_code],
                 search_string=f'order_typecode:"diagnostic" AND '
-                f"updatetime:[{global_start_year}-{global_start_month}-{global_start_day} TO {global_end_year}-{global_end_month}-{global_end_day}]",
+                f"{diagnosic_time_field}:[{global_start_year}-{global_start_month}-{global_start_day} TO {global_end_year}-{global_end_month}-{global_end_day}]",
             )
             if (
                 config_obj.store_pat_batch_docs
@@ -1082,6 +1089,8 @@ def get_pat_batch_appointments(
     global_start_day = config_obj.global_start_day
     global_end_day = config_obj.global_end_day
 
+    appointments_time_field = config_obj.appointments_time_field
+
     appointments_target_path = os.path.join(
         config_obj.pre_appointments_batch_path, str(current_pat_client_id_code) + ".csv"
     )
@@ -1125,7 +1134,7 @@ def get_pat_batch_appointments(
                 ],
                 term_name="HospitalID.keyword",
                 entered_list=[current_pat_client_id_code],
-                search_string=f"DateModified:[{global_start_year}-{global_start_month}-{global_start_day} TO {global_end_year}-{global_end_month}-{global_end_day}]",
+                search_string=f"{appointments_time_field}:[{global_start_year}-{global_start_month}-{global_start_day} TO {global_end_year}-{global_end_month}-{global_end_day}]",
             )
 
             if (
