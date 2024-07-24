@@ -214,6 +214,17 @@ def generate_diagnostic_orders_data(
         "_id": ["{i}" for i in range(num_rows)],
         "_index": ["{np.nan}" for _ in range(num_rows)],
         "_score": ["{np.nan}" for _ in range(num_rows)],
+        "order_performeddtm": [
+            datetime(
+                random.randint(global_start_year, global_end_year),
+                random.randint(global_start_month, global_end_month),
+                random.randint(1, 28),
+                random.randint(0, 23),
+                random.randint(0, 59),
+                random.randint(0, 59),
+            )
+            for _ in range(num_rows)
+        ],
     }
     # print("generate_diagnostic_orders_data")
     df = pd.DataFrame(data)
@@ -267,6 +278,17 @@ def generate_drug_orders_data(
         "_id": ["{i}" for i in range(num_rows)],
         "_index": ["{np.nan}" for i in range(num_rows)],
         "_score": ["{np.nan}" for i in range(num_rows)],
+        "order_performeddtm": [
+            datetime(
+                random.randint(global_start_year, global_end_year),
+                random.randint(global_start_month, global_end_month),
+                random.randint(1, 28),
+                random.randint(0, 23),
+                random.randint(0, 59),
+                random.randint(0, 59),
+            )
+            for _ in range(num_rows)
+        ],
     }
 
     df = pd.DataFrame(data)
@@ -592,6 +614,18 @@ def generate_basic_observations_data(
         ],
         "order_entered": ["{np.nan}" for i in range(num_rows)],
         "clientvisit_visitidcode": ["{np.nan}" for i in range(num_rows)],
+        "updatetime": [
+            datetime(
+                random.randint(global_start_year, global_end_year),
+                random.randint(global_start_month, global_end_month),
+                random.randint(1, 28),
+                random.randint(0, 23),
+                random.randint(0, 59),
+                random.randint(0, 59),
+                tzinfo=timezone.utc,
+            ).strftime("%Y-%m-%dT%H:%M:%S")
+            for _ in range(num_rows)
+        ],
     }
 
     df = pd.DataFrame(data)
