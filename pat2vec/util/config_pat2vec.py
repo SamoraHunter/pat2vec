@@ -172,6 +172,7 @@ class config_class:
         all_epr_patient_list_path="/home/samorah/_data/gloabl_files/all_client_idcodes_epr_unique.csv",
         override_medcat_model_path=None,
         data_type_filter_dict=None,
+        filter_split_notes=True,
     ):
 
         # Configure logging
@@ -214,6 +215,8 @@ class config_class:
 
         # # Now you can use the logger to log messages within the class
         # self.logger.info("Initialized config_pat2vec")
+
+        self.filter_split_notes = filter_split_notes
 
         self.suffix = suffix
         self.treatment_doc_filename = treatment_doc_filename
@@ -794,6 +797,40 @@ class config_class:
                     "if you want to recompute offset, delete offset column from dataframe"
                 )
                 print('using existing offset column: "{}"'.format(offset_column_name))
+
+                # self.individual_patient_window_df = add_offset_column(
+                #     self.individual_patient_window_df,
+                #     start_column_name,
+                #     offset_column_name,
+                #     time_offset,
+                # )
+
+                self.patient_dict = build_patient_dict(
+                    dataframe=self.individual_patient_window_df,
+                    patient_id_column=self.individual_patient_id_column_name,
+                    start_column=self.individual_patient_window_start_column_name,
+                    end_column=self.individual_patient_window_start_column_name
+                    + "_offset",
+                )
+                individual_patient_window_df[
+                    self.individual_patient_window_start_column_name
+                ] = pd.to_datetime(
+                    individual_patient_window_df[
+                        self.individual_patient_window_start_column_name
+                    ],
+                    errors="coerce",
+                    utc=True,
+                )
+
+                individual_patient_window_df[
+                    self.individual_patient_window_start_column_name + "_offset"
+                ] = pd.to_datetime(
+                    individual_patient_window_df[
+                        self.individual_patient_window_start_column_name + "_offset"
+                    ],
+                    errors="coerce",
+                    utc=True,
+                )
 
             else:
                 print("computing offset column")

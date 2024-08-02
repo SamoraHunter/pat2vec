@@ -18,6 +18,7 @@ from pat2vec.util.methods_annotation import (
 )
 from pat2vec.util.methods_annotation_regex import append_regex_term_counts
 from pat2vec.util.methods_get import exist_check
+from pat2vec.util.methods_get import filter_dataframe_by_timestamp
 
 
 def get_pat_batch_obs(
@@ -647,6 +648,30 @@ def get_pat_batch_epr_docs(
                 if split_clinical_notes_bool:
 
                     batch_target = split_and_append_chunks(batch_target, epr=True)
+
+                    # if drop out of range notes, filter batch_target by global date. before writing.
+
+                    if config_obj.filter_split_notes:
+
+                        pre_filter_split_notes_len = len(batch_target)
+
+                        # reuse dataframe filter
+                        batch_target = filter_dataframe_by_timestamp(
+                            df=batch_target,
+                            start_year=int(global_start_year),
+                            start_month=int(global_start_month),
+                            end_year=int(global_end_year),
+                            end_month=int(global_end_month),
+                            start_day=int(global_start_day),
+                            end_day=int(global_end_day),
+                            timestamp_string="updatetime",
+                            dropna=False,
+                        )
+                        if config_obj.verbosity > 2:
+                            print(
+                                f"pre_filter_split_notes_len: {pre_filter_split_notes_len}"
+                            )
+                            print(f"post_filter_split_notes_len: {len(batch_target)}")
 
                 batch_target.to_csv(batch_epr_target_path)
 

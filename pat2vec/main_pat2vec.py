@@ -315,13 +315,67 @@ class main:
 
             else:
 
+                # Pat is in patient_dict.keys...
+
                 current_pat_start_date = self.config_obj.patient_dict.get(
                     all_patient_list[i]
                 )[0]
 
-                current_pat_end_date = self.config_obj.patient_dict.get(
-                    all_patient_list[i]
-                )[1]
+                if (
+                    type(self.config_obj.patient_dict.get(all_patient_list[i])[1])
+                    is not "datetime64[ns]"
+                ):
+                    try:
+                        # print("forcing end date datetime")
+                        current_pat_end_date = pd.to_datetime(
+                            self.config_obj.patient_dict.get(all_patient_list[i])[1],
+                            # infer_datetime_format=True,
+                            # format="%d/%m/%y %H.%M.%S",
+                            #    errors="coerce",
+                        )
+
+                        # current_pat_end_date = pd.to_datetime(
+                        #     self.config_obj.patient_dict.get(all_patient_list[i])[1],
+                        #     errors="coerce",
+                        #     utc=True,
+                        # )
+                    except Exception as e:
+                        print("failed force end date dt")
+                        print(e)
+
+                if (
+                    type(self.config_obj.patient_dict.get(all_patient_list[i])[0])
+                    is not "datetime64[ns]"
+                ):
+                    try:
+                        # print("forcing start date datetime")
+                        current_pat_start_date = pd.to_datetime(
+                            self.config_obj.patient_dict.get(all_patient_list[i])[0],
+                            # infer_datetime_format=True,
+                            # format="%d/%m/%y %H.%M.%S",
+                            #    errors="coerce",
+                        )
+
+                        # current_pat_end_date = pd.to_datetime(
+                        #     self.config_obj.patient_dict.get(all_patient_list[i])[1],
+                        #     errors="coerce",
+                        #     utc=True,
+                        # )
+                    except Exception as e:
+                        print("failed force start date dt")
+                        print(e)
+
+                else:
+                    # print("pats datetime end is is not datetime64[ns]")
+                    current_pat_end_date = self.config_obj.patient_dict.get(
+                        all_patient_list[i]
+                    )[1]
+
+                # print("Debug date routine:")
+                # print("current_pat_start_date", current_pat_start_date)
+                # print("current_pat_end_date", current_pat_end_date)
+                # print(self.config_obj.patient_dict.get(all_patient_list[i])[0])
+                # print(self.config_obj.patient_dict.get(all_patient_list[i])[1])
 
             self.config_obj.global_start_month = current_pat_start_date.month
 
