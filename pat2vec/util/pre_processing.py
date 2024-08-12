@@ -111,7 +111,7 @@ def get_treatment_docs_by_iterative_multi_term_cohort_searcher_no_terms_fuzzy(
                 search_results = cohort_searcher_with_terms_and_search_dummy(
                     index_name="epr_documents",
                     fields_list="""client_idcode document_guid document_description body_analysed updatetime clientvisit_visitidcode""".split(),
-                    term_name="client_idcode.keyword",
+                    term_name=pat2vec_obj.config_obj.client_idcode_term_name,
                     entered_list=generate_uuid_list(
                         random.randint(0, 10), random.choice(["P", "V"])
                     ),

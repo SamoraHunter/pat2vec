@@ -1144,15 +1144,26 @@ def retrieve_pat_annots_mct_epr(
     all_annots = pd.concat([dfa, dfa_mct], ignore_index=True)
 
     if merge_time_columns and not all_annots.empty:
-        all_annots["updatetime"] = all_annots["updatetime"].fillna(
-            all_annots["observationdocument_recordeddtm"]
-        )
-        all_annots["observationdocument_recordeddtm"] = all_annots[
-            "observationdocument_recordeddtm"
-        ].fillna(all_annots["updatetime"])
-        all_annots["document_guid"] = all_annots["document_guid"].fillna(
-            all_annots["observation_guid"]
-        )
+        try:
+            all_annots["updatetime"] = all_annots["updatetime"].fillna(
+                all_annots["observationdocument_recordeddtm"]
+            )
+        except Exception as e:
+            print(e)
+
+        try:
+            all_annots["observationdocument_recordeddtm"] = all_annots[
+                "observationdocument_recordeddtm"
+            ].fillna(all_annots["updatetime"])
+        except Exception as e:
+            print(e)
+
+        try:
+            all_annots["document_guid"] = all_annots["document_guid"].fillna(
+                all_annots["observation_guid"]
+            )
+        except Exception as e:
+            print(e)
 
     return all_annots
 
@@ -1223,7 +1234,7 @@ def retrieve_pat_docs_mct_epr(
         config_obj: The configuration object containing paths for document batches.
         columns_epr (list, optional): List of columns to be used from the EPR document batch CSV.
         columns_mct (list, optional): List of columns to be used from the MCT document batch CSV.
-        merge_time_columns (bool, optional): Whether to merge time columns. Default is True.
+        merge_columns (bool, optional): Whether to merge time columns. Default is True.
 
     Returns:
         pandas.DataFrame: A DataFrame containing combined patient documents from EPR and MCT.
@@ -1235,17 +1246,27 @@ def retrieve_pat_docs_mct_epr(
     pre_document_batch_path = config_obj.pre_document_batch_path
     pre_document_batch_path_mct = config_obj.pre_document_batch_path_mct
 
-    dfa = pd.read_csv(
-        f"{pre_document_batch_path}/{client_idcode}.csv", usecols=columns_epr
-    )
+    epr_file_path = f"{pre_document_batch_path}/{client_idcode}.csv"
+    mct_file_path = f"{pre_document_batch_path_mct}/{client_idcode}.csv"
 
-    dfa_mct = pd.read_csv(
-        f"{pre_document_batch_path_mct}/{client_idcode}.csv", usecols=columns_mct
-    )
+    dfa = pd.DataFrame()
+    dfa_mct = pd.DataFrame()
+
+    if os.path.exists(epr_file_path):
+        dfa = pd.read_csv(epr_file_path, usecols=columns_epr)
+    else:
+        pass
+        # print(f"EPR file for client_idcode {client_idcode} does not exist. Skipping EPR data.")
+
+    if os.path.exists(mct_file_path):
+        dfa_mct = pd.read_csv(mct_file_path, usecols=columns_mct)
+    else:
+        pass
+        # print(f"MCT file for client_idcode {client_idcode} does not exist. Skipping MCT data.")
 
     all_docs = pd.concat([dfa, dfa_mct], ignore_index=True)
 
-    if merge_columns:
+    if merge_columns and not all_docs.empty:
         all_docs["updatetime"] = all_docs["updatetime"].fillna(
             all_docs["observationdocument_recordeddtm"]
         )
@@ -1253,35 +1274,150 @@ def retrieve_pat_docs_mct_epr(
             "observationdocument_recordeddtm"
         ].fillna(all_docs["updatetime"])
 
-    # Merge observation_guid to document_guid
-    all_docs["document_guid"] = all_docs["document_guid"].fillna(
-        all_docs["observation_guid"]
-    )
+        # Merge observation_guid to document_guid
+        all_docs["document_guid"] = all_docs["document_guid"].fillna(
+            all_docs["observation_guid"]
+        )
 
-    # Add obscatalogmasteritem_displayname to document_description
-    all_docs["document_description"] = all_docs["document_description"].fillna(
-        all_docs["obscatalogmasteritem_displayname"]
-    )
+        # Add obscatalogmasteritem_displayname to document_description
+        all_docs["document_description"] = all_docs["document_description"].fillna(
+            all_docs["obscatalogmasteritem_displayname"]
+        )
 
-    all_docs["body_analysed"] = all_docs["body_analysed"].fillna(
-        all_docs["observation_valuetext_analysed"]
-    )
+        all_docs["body_analysed"] = all_docs["body_analysed"].fillna(
+            all_docs["observation_valuetext_analysed"]
+        )
 
-    all_docs["_id"] = all_docs["_id"].fillna(all_docs["id"])
+    # Check if '_id' column exists in the DataFrame
+    if "_id" in all_docs.columns:
+        print("Debug: '_id' column exists in the DataFrame.")
+        # Fill NaN values in '_id' with values from 'id' if 'id' exists
+        if "id" in all_docs.columns:
+            all_docs["_id"] = all_docs["_id"].fillna(all_docs["id"])
+        else:
+            print("Debug: 'id' does not exist, cannot fill NaN values in '_id'.")
 
-    all_docs.drop(
-        [
-            "observation_guid",
-            "obscatalogmasteritem_displayname",
-            "observation_valuetext_analysed",
-            "observationdocument_recordeddtm",
-            "id",
-        ],
-        axis=1,
-        inplace=True,
-    )
+        # Create 'id' column from '_id' if 'id' does not exist
+        if "id" not in all_docs.columns:
+            print("Debug: 'id' not in all_docs.columns, creating 'id' from '_id'.")
+            all_docs["id"] = all_docs["_id"]
+
+    else:
+        print("Debug: '_id' column does not exist in the DataFrame.")
+        # If 'id' exists, create '_id' from 'id'
+        if "id" in all_docs.columns:
+            print("Debug: Creating '_id' from 'id'.")
+            all_docs["_id"] = all_docs["id"]
+        else:
+            print("Debug: 'id' does not exist either. Cannot create '_id' or 'id'.")
+
+        # If '_id' is created and 'id' does not exist, create 'id' from '_id'
+        if "_id" in all_docs.columns and "id" not in all_docs.columns:
+            print("Debug: Creating 'id' from '_id'.")
+            all_docs["id"] = all_docs["_id"]
+
+    # Drop the specified columns
+    columns_to_drop = [
+        "observation_guid",
+        "obscatalogmasteritem_displayname",
+        "observation_valuetext_analysed",
+        "observationdocument_recordeddtm",
+        # "_id",
+    ]
+    try:
+        all_docs.drop(columns_to_drop, axis=1, inplace=True)
+    except Exception as e:
+        pass
+    # print("Debug: Specified columns dropped from the DataFrame.")
 
     return all_docs
+
+
+# def retrieve_pat_docs_mct_epr(
+#     client_idcode, config_obj, columns_epr=None, columns_mct=None, merge_columns=True
+# ):
+#     """
+#     Retrieve patient documents for Electronic Patient Record (EPR) and Medical Chart (MCT).
+
+#     Args:
+#         client_idcode (str): The client's unique identifier code.
+#         config_obj: The configuration object containing paths for document batches.
+#         columns_epr (list, optional): List of columns to be used from the EPR document batch CSV.
+#         columns_mct (list, optional): List of columns to be used from the MCT document batch CSV.
+#         merge_time_columns (bool, optional): Whether to merge time columns. Default is True.
+
+#     Returns:
+#         pandas.DataFrame: A DataFrame containing combined patient documents from EPR and MCT.
+
+#     Note:
+#         The function assumes that the EPR and MCT documents are stored in separate CSV files
+#         and are accessible via the provided paths in the `config_obj`.
+#     """
+#     pre_document_batch_path = config_obj.pre_document_batch_path
+#     pre_document_batch_path_mct = config_obj.pre_document_batch_path_mct
+
+#     dfa = pd.read_csv(
+#         f"{pre_document_batch_path}/{client_idcode}.csv", usecols=columns_epr
+#     )
+
+#     dfa_mct = pd.read_csv(
+#         f"{pre_document_batch_path_mct}/{client_idcode}.csv", usecols=columns_mct
+#     )
+
+#     all_docs = pd.concat([dfa, dfa_mct], ignore_index=True)
+
+#     if merge_columns:
+#         all_docs["updatetime"] = all_docs["updatetime"].fillna(
+#             all_docs["observationdocument_recordeddtm"]
+#         )
+#         all_docs["observationdocument_recordeddtm"] = all_docs[
+#             "observationdocument_recordeddtm"
+#         ].fillna(all_docs["updatetime"])
+
+#     # Merge observation_guid to document_guid
+#     all_docs["document_guid"] = all_docs["document_guid"].fillna(
+#         all_docs["observation_guid"]
+#     )
+
+#     # Add obscatalogmasteritem_displayname to document_description
+#     all_docs["document_description"] = all_docs["document_description"].fillna(
+#         all_docs["obscatalogmasteritem_displayname"]
+#     )
+
+#     all_docs["body_analysed"] = all_docs["body_analysed"].fillna(
+#         all_docs["observation_valuetext_analysed"]
+#     )
+
+#     # Check if '_id' column exists
+#     if "_id" in all_docs.columns:
+#         print("Debug: '_id' column exists in the DataFrame.")
+#         # Fill NaN values in '_id' with values from 'id'
+#         all_docs["_id"] = all_docs["_id"].fillna(all_docs["_id"])
+#         if('id' not in all_docs.columns):
+#             print("id not in all columns, making one from _id")
+#             all_docs['id'] = all_docs['_id']
+
+
+#     else:
+#         print(
+#             "Debug: '_id' column does not exist in the DataFrame. Creating '_id' from 'id'."
+#         )
+#         # Create '_id' column from 'id'
+#         all_docs["_id"] = all_docs["id"]
+
+#     # Drop the specified columns
+#     columns_to_drop = [
+#         "observation_guid",
+#         "obscatalogmasteritem_displayname",
+#         "observation_valuetext_analysed",
+#         "observationdocument_recordeddtm",
+#         "_id",
+#     ]
+
+#     all_docs.drop(columns_to_drop, axis=1, inplace=True)
+#     # print("Debug: Specified columns dropped from the DataFrame.")
+
+#     return all_docs
 
 
 def check_list_presence(df, column, lst, annot_filter_arguments=None):
