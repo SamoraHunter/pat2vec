@@ -173,6 +173,7 @@ class config_class:
         override_medcat_model_path=None,
         data_type_filter_dict=None,
         filter_split_notes=True,
+        client_idcode_term_name="client_idcode",
     ):
 
         # Configure logging
@@ -364,6 +365,14 @@ class config_class:
         self.appointments_time_field = "AppointmentDateTime"  # alt #DateModified
 
         self.bloods_time_field = "basicobs_entered"
+
+        if client_idcode_term_name is None:
+            self.client_idcode_term_name = "client_idcode"  # alt client_idcode.keyword #warn excludes on case basis.
+        else:
+            self.client_idcode_term_name = client_idcode_term_name
+
+        if self.client_idcode_term_name == "client_idcode.keyword":
+            print("Warning keyword not case inclusive.")
 
         if self.verbosity >= 1:
             print("self.drug_time_field", self.drug_time_field)
