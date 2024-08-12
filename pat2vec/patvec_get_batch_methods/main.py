@@ -73,7 +73,7 @@ def get_pat_batch_obs(
                 fields_list="""observation_guid client_idcode	obscatalogmasteritem_displayname
                                 observation_valuetext_analysed observationdocument_recordeddtm 
                                 clientvisit_visitidcode""".split(),
-                term_name="client_idcode.keyword",
+                term_name=config_obj.client_idcode_term_name,
                 entered_list=[current_pat_client_id_code],
                 search_string=f'obscatalogmasteritem_displayname:("{search_term}") AND '
                 f"observationdocument_recordeddtm:[{global_start_year}-{global_start_month}-{global_start_day} TO {global_end_year}-{global_end_month}-{global_end_day}]",
@@ -151,7 +151,7 @@ def get_pat_batch_news(
                 fields_list="""observation_guid client_idcode obscatalogmasteritem_displayname
                                 observation_valuetext_analysed observationdocument_recordeddtm 
                                 clientvisit_visitidcode""".split(),
-                term_name="client_idcode.keyword",
+                term_name=config_obj.client_idcode_term_name,
                 entered_list=[current_pat_client_id_code],
                 search_string=f'obscatalogmasteritem_displayname:("NEWS" OR "NEWS2") AND '
                 f"observationdocument_recordeddtm:[{global_start_year}-{global_start_month}-{global_start_day} TO {global_end_year}-{global_end_month}-{global_end_day}]",
@@ -223,7 +223,7 @@ def get_pat_batch_bmi(
                 fields_list="""observation_guid client_idcode obscatalogmasteritem_displayname
                                 observation_valuetext_analysed observationdocument_recordeddtm 
                                 clientvisit_visitidcode""".split(),
-                term_name="client_idcode.keyword",
+                term_name=config_obj.client_idcode_term_name,
                 entered_list=[current_pat_client_id_code],
                 search_string=f'obscatalogmasteritem_displayname:("OBS BMI" OR "OBS Weight" OR "OBS height") AND '
                 f"observationdocument_recordeddtm:[{global_start_year}-{global_start_month}-{global_start_day} TO {global_end_year}-{global_end_month}-{global_end_day}]",
@@ -308,7 +308,7 @@ def get_pat_batch_bloods(
                     "clientvisit_serviceguid",
                     "updatetime",
                 ],
-                term_name="client_idcode.keyword",
+                term_name=config_obj.client_idcode_term_name,
                 entered_list=[current_pat_client_id_code],
                 search_string=f"basicobs_value_numeric:* AND "
                 f"{bloods_time_field}:[{global_start_year}-{global_start_month}-{global_start_day} TO {global_end_year}-{global_end_month}-{global_end_day}]",
@@ -406,7 +406,7 @@ def get_pat_batch_drugs(
             batch_target = cohort_searcher_with_terms_and_search(
                 index_name="order",
                 fields_list="""client_idcode order_guid order_name order_summaryline order_holdreasontext order_entered clientvisit_visitidcode order_performeddtm""".split(),
-                term_name="client_idcode.keyword",
+                term_name=config_obj.client_idcode_term_name,
                 entered_list=[current_pat_client_id_code],
                 search_string=f'order_typecode:"medication" AND '
                 f"{drug_time_field}:[{global_start_year}-{global_start_month}-{global_start_day} TO {global_end_year}-{global_end_month}-{global_end_day}]",
@@ -479,7 +479,7 @@ def get_pat_batch_diagnostics(
             batch_target = cohort_searcher_with_terms_and_search(
                 index_name="order",
                 fields_list="""client_idcode order_guid order_name order_summaryline order_holdreasontext order_entered clientvisit_visitidcode order_performeddtm""".split(),
-                term_name="client_idcode.keyword",
+                term_name=config_obj.client_idcode_term_name,
                 entered_list=[current_pat_client_id_code],
                 search_string=f'order_typecode:"diagnostic" AND '
                 f"{diagnosic_time_field}:[{global_start_year}-{global_start_month}-{global_start_day} TO {global_end_year}-{global_end_month}-{global_end_day}]",
@@ -573,7 +573,7 @@ def get_pat_batch_epr_docs(
             batch_target = cohort_searcher_with_terms_and_search(
                 index_name="epr_documents",
                 fields_list="""client_idcode document_guid document_description body_analysed updatetime clientvisit_visitidcode""".split(),
-                term_name="client_idcode.keyword",
+                term_name=config_obj.client_idcode_term_name,
                 entered_list=[current_pat_client_id_code],
                 search_string=f"updatetime:[{global_start_year}-{global_start_month}-{global_start_day} TO {global_end_year}-{global_end_month}-{global_end_day}]",
             )
@@ -866,7 +866,7 @@ def get_pat_batch_mct_docs(
                 fields_list="""observation_guid client_idcode obscatalogmasteritem_displayname
                                 observation_valuetext_analysed observationdocument_recordeddtm 
                                 clientvisit_visitidcode""".split(),
-                term_name="client_idcode.keyword",
+                term_name=config_obj.client_idcode_term_name,
                 entered_list=[current_pat_client_id_code],
                 search_string=f'obscatalogmasteritem_displayname:("AoMRC_ClinicalSummary_FT") AND '
                 f"observationdocument_recordeddtm:[{global_start_year}-{global_start_month}-{global_start_day} TO {global_end_year}-{global_end_month}-{global_end_day}]",
@@ -974,7 +974,7 @@ def get_pat_batch_demo(
                     "client_deceaseddtm",
                     "updatetime",
                 ],
-                term_name="client_idcode.keyword",
+                term_name=config_obj.client_idcode_term_name,
                 entered_list=[current_pat_client_id_code],
                 search_string=f"updatetime:[{global_start_year}-{global_start_month}-{global_start_day} TO {global_end_year}-{global_end_month}-{global_end_day}]",
             )
@@ -1062,7 +1062,7 @@ def get_pat_batch_reports(
                     "basicobs_value_analysed",
                     "basicobs_itemname_analysed",
                 ],
-                term_name="client_idcode.keyword",
+                term_name=config_obj.client_idcode_term_name,
                 entered_list=[current_pat_client_id_code],
                 search_string=f"basicobs_itemname_analysed:{search_term} AND "
                 f"updatetime:[{global_start_year}-{global_start_month}-{global_start_day} TO {global_end_year}-{global_end_month}-{global_end_day}]",
@@ -1157,7 +1157,7 @@ def get_pat_batch_appointments(
                     "SessionCode",
                     "SpecialtyCode",
                 ],
-                term_name="HospitalID.keyword",
+                term_name="HospitalID",  # alt HospitalID.keyword #warn non case
                 entered_list=[current_pat_client_id_code],
                 search_string=f"{appointments_time_field}:[{global_start_year}-{global_start_month}-{global_start_day} TO {global_end_year}-{global_end_month}-{global_end_day}]",
             )

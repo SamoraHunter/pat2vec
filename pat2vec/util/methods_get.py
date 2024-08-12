@@ -519,7 +519,7 @@ def get_demographics3_batch(
                 "client_deceaseddtm",
                 "updatetime",
             ],
-            term_name="client_idcode.keyword",
+            term_name=config_obj.client_idcode_term_name,
             entered_list=patlist,
             search_string=f"updatetime:[{start_year}-{start_month}-{start_day} TO {end_year}-{end_month}-{end_day}] ",
         )
