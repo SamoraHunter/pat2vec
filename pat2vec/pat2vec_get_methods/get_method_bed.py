@@ -57,7 +57,7 @@ def get_bed(
                 "observationdocument_recordeddtm",
                 "clientvisit_visitidcode",
             ],
-            term_name="client_idcode.keyword",
+            term_name=config_obj.client_idcode_term_name,
             entered_list=[current_pat_client_id_code],
             search_string=f'obscatalogmasteritem_displayname:("{search_term}") AND observationdocument_recordeddtm:[{start_year}-{start_month}-{start_day} TO {end_year}-{end_month}-{end_day}]',
         )

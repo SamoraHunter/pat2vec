@@ -40,7 +40,7 @@ def get_news(current_pat_client_id_code, target_date_range, pat_batch, config_ob
     else:
         current_pat_raw_news = cohort_searcher_with_terms_and_search(index_name="observations",
                                                                      fields_list="""observation_guid client_idcode	obscatalogmasteritem_displayname	observation_valuetext_analysed	observationdocument_recordeddtm clientvisit_visitidcode""".split(),
-                                                                     term_name="client_idcode.keyword",
+                                                                     term_name=config_obj.client_idcode_term_name,
                                                                      entered_list=[
                                                                          current_pat_client_id_code],
                                                                      search_string='obscatalogmasteritem_displayname:(\"NEWS\" OR \"NEWS2\") AND ' + f'observationdocument_recordeddtm:[{start_year}-{start_month}-{start_day} TO {end_year}-{end_month}-{end_day}]')

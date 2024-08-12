@@ -68,7 +68,7 @@ def get_current_pat_drugs(
                 "clientvisit_visitidcode",
                 "order_performeddtm",
             ],
-            term_name="client_idcode.keyword",
+            term_name=config_obj.client_idcode_term_name,
             entered_list=[current_pat_client_id_code],
             search_string='order_typecode:"medication" AND '
             + f"{drug_time_field}:[{start_year}-{start_month}-{start_day} TO {end_year}-{end_month}-{end_day}]",
