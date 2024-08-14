@@ -12,6 +12,7 @@ from pat2vec.util.filter_methods import (
     filter_dataframe_by_fuzzy_terms,
 )
 from pat2vec.util.methods_annotation import (
+    get_pat_batch_textual_obs_annotation_batch,
     get_pat_document_annotation_batch,
     get_pat_document_annotation_batch_mct,
     get_pat_document_annotation_batch_reports,
@@ -774,6 +775,48 @@ def get_pat_batch_mct_docs_annotations(
     return batch_target
 
 
+def get_pat_batch_textual_obs_annotations(
+    current_pat_client_id_code, config_obj=None, cat=None, t=None
+):
+
+    batch_textual_obs_document_path = os.path.join(
+        config_obj.pre_textual_obs_document_batch_path,
+        str(current_pat_client_id_code) + ".csv",
+    )
+
+    pre_textual_obs_annotation_batch_path = (
+        config_obj.pre_textual_obs_annotation_batch_path
+    )
+
+    current_pat_document_annotation_batch_path = os.path.join(
+        pre_textual_obs_annotation_batch_path, current_pat_client_id_code + ".csv"
+    )
+
+    if exist_check(current_pat_document_annotation_batch_path, config_obj=config_obj):
+
+        # if annotation batch already created, read it
+
+        batch_target = pd.read_csv(current_pat_document_annotation_batch_path)
+
+    else:
+
+        pat_batch = pd.read_csv(batch_textual_obs_document_path)
+
+        pat_batch.dropna(subset=["textualObs"], axis=0, inplace=True)
+
+        pat_batch = pat_batch[pat_batch["textualObs"] != ""]
+
+        batch_target = get_pat_batch_textual_obs_annotation_batch(
+            current_pat_client_idcode=current_pat_client_id_code,
+            pat_batch=pat_batch,
+            cat=cat,
+            config_obj=config_obj,
+            t=t,
+        )
+
+    return batch_target
+
+
 def get_pat_batch_reports_docs_annotations(
     current_pat_client_id_code, config_obj=None, cat=None, t=None
 ):
@@ -1089,24 +1132,23 @@ def get_pat_batch_reports(
         return []
 
 
-def get_pat_batch_textual_obs(
+def get_pat_batch_textual_obs_docs(
     current_pat_client_id_code,
     search_term,
     config_obj=None,
     cohort_searcher_with_terms_and_search=None,
 ):
     """
-    Retrieve batch reports for a patient based on the given parameters.
-    Filter reports with doc type filter arg set in config: KHMDC >>>> retreives KHMDC reports
+    Retrieve batch textual observations for a patient based on the given parameters.
 
-    Args:
+    Parameters:
         current_pat_client_id_code (str): The client ID code for the current patient.
-        search_term (str): The term used for searching report-related observations.
-        config_obj (ConfigObject): An object containing global start and end year/month.
-        cohort_searcher_with_terms_and_search (function): A function for searching a cohort with terms.
+
+        config_obj (ConfigObject): An object containing global start and end year/month. (Default: None)
+        cohort_searcher_with_terms_and_search (function): A function for searching a cohort with terms. (Default: None)
 
     Returns:
-        list: Batch of report-related observations.
+        list: Batch of textualObs observations.
 
     Raises:
         ValueError: If config_obj is None or missing required attributes.
@@ -1120,7 +1162,8 @@ def get_pat_batch_textual_obs(
     bloods_time_field = config_obj.bloods_time_field
 
     batch_obs_target_path = os.path.join(
-        config_obj.pre_textual_obs_batch_path, str(current_pat_client_id_code) + ".csv"
+        config_obj.pre_textual_obs_document_batch_path,
+        str(current_pat_client_id_code) + ".csv",
     )
     # os.makedirs(batch_obs_target_path, exist_ok=True)
 
@@ -1151,16 +1194,19 @@ def get_pat_batch_textual_obs(
                 index_name="basic_observations",
                 fields_list=[
                     "client_idcode",
+                    "basicobs_itemname_analysed",
+                    "basicobs_value_numeric",
+                    "basicobs_value_analysed",
+                    "basicobs_entered",
+                    "clientvisit_serviceguid",
+                    "basicobs_guid",
                     "updatetime",
                     "textualObs",
-                    "basicobs_guid",
-                    "basicobs_value_analysed",
-                    "basicobs_itemname_analysed",
                 ],
                 term_name=config_obj.client_idcode_term_name,
                 entered_list=[current_pat_client_id_code],
-                search_string=f"basicobs_itemname_analysed:{search_term} AND "
-                f"{bloods_time_field}:[{global_start_year}-{global_start_month}-{global_start_day} TO {global_end_year}-{global_end_month}-{global_end_day}]",
+                search_string=f""
+                + f"{bloods_time_field}:[{global_start_year}-{global_start_month}-{global_start_day} TO {global_end_year}-{global_end_month}-{global_end_day}]",
             )
 
             # batch_target = batch_target.rename(columns={'textualObs': 'body_analysed'})
@@ -1180,7 +1226,7 @@ def get_pat_batch_textual_obs(
         return batch_target
     except Exception as e:
         """"""
-        print(f"Error retrieving batch reports: {e}")
+        print(f"Error retrieving batch textualObs: {e}")
         return []
 
 

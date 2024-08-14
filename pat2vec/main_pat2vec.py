@@ -33,6 +33,8 @@ from pat2vec.patvec_get_batch_methods.main import (
     get_pat_batch_reports,
     get_pat_batch_reports_docs_annotations,
     get_pat_batch_appointments,
+    get_pat_batch_textual_obs_docs,
+    get_pat_batch_textual_obs_annotations,
 )
 from pat2vec.util import config_pat2vec
 from pat2vec.util.methods_get import (
@@ -534,6 +536,12 @@ class main:
                     "observation_valuetext_analysed",
                 ]
             )
+            empty_return_textual_obs = pd.DataFrame(
+                columns=[
+                    "basicobs_entered",
+                    "textualObs",
+                ]
+            )
 
             empty_return_reports = pd.DataFrame(
                 columns=["updatetime", "observation_valuetext_analysed"]
@@ -560,6 +568,17 @@ class main:
                 )
             else:
                 batch_mct = empty_return_mct
+
+            if self.config_obj.main_options.get("textual_obs", True):
+                search_term = None  # inside function
+                batch_textual_obs_docs = get_pat_batch_textual_obs_docs(
+                    current_pat_client_id_code,
+                    search_term,
+                    config_obj=self.config_obj,
+                    cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search,
+                )
+            else:
+                batch_textual_obs_docs = empty_return_textual_obs
 
             if self.config_obj.main_options.get("annotations_reports", True):
                 search_term = None  # inside function
@@ -751,6 +770,17 @@ class main:
             else:
                 batch_epr_docs_annotations_mct = empty_return_mct
 
+            if self.config_obj.main_options.get("textual_obs", True):
+
+                batch_textual_obs_annotations = get_pat_batch_textual_obs_annotations(
+                    current_pat_client_id_code,
+                    config_obj=self.config_obj,
+                    cat=self.cat,
+                    t=self.t,
+                )
+            else:
+                batch_textual_obs_annotations = empty_return_textual_obs
+
             if self.config_obj.main_options.get("annotations_reports", True):
 
                 batch_reports_docs_annotations = get_pat_batch_reports_docs_annotations(
@@ -803,6 +833,8 @@ class main:
                     "batch_report_docs_annotations:",
                     len(batch_reports_docs_annotations),
                 )
+                print("TextualObs:", len(batch_textual_obs_docs))
+                print("TextualObs annotations:", len(batch_textual_obs_annotations))
 
             if self.config_obj.verbosity > 3:
                 print(f"Done batches in {time.time() - start_time}")
@@ -886,6 +918,17 @@ class main:
                     )
                     batch_reports.dropna(subset=[target_column_string], inplace=True)
 
+                if self.config_obj.main_options.get("textual_obs", True):
+                    target_column_string = "basicobs_entered"
+                    batch_textual_obs_docs[target_column_string] = pd.to_datetime(
+                        batch_textual_obs_docs[target_column_string],
+                        errors="coerce",
+                        utc=True,
+                    )
+                    batch_textual_obs_docs.dropna(
+                        subset=[target_column_string], inplace=True
+                    )
+
                 # batch_epr_docs_annotations_mct.dropna(subset=['observation_valuetext_analysed'], inplace=True)
 
                 # target_column_string = 'body_analysed'
@@ -910,6 +953,10 @@ class main:
                     print("MCT:", len(batch_mct))
                     print("EPR annotations:", len(batch_epr_docs_annotations))
                     print("EPR annotations mct:", len(batch_epr_docs_annotations_mct))
+                    print("textual obs docs:", len(batch_textual_obs_docs))
+                    print(
+                        "textual obs annotations:", len(batch_textual_obs_annotations)
+                    )
                     print(
                         "batch_report_docs_annotations:",
                         len(batch_reports_docs_annotations),
@@ -964,6 +1011,7 @@ class main:
                                 batch_epr_docs_annotations=batch_epr_docs_annotations,
                                 batch_epr_docs_annotations_mct=batch_epr_docs_annotations_mct,
                                 batch_report_docs_annotations=batch_reports_docs_annotations,
+                                batch_textual_obs_annotations=batch_textual_obs_annotations,
                                 batch_appointments=batch_appointments,
                                 config_obj=self.config_obj,
                                 stripped_list_start=stripped_list_start,
