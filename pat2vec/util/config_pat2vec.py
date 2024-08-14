@@ -102,6 +102,7 @@ def get_test_options_dict():
         # Enable or disable negated presence annotations
         "negated_presence_annotations": False,
         "appointments": True,
+        "textual_obs": False,
     }
     return main_options_dict
 
@@ -239,6 +240,10 @@ class config_class:
         self.pre_document_batch_path = f"current_pat_document_batches{self.suffix}/"
         self.pre_document_batch_path_mct = (
             f"current_pat_document_batches_mct{self.suffix}/"
+        )
+
+        self.pre_textual_obs_batch_path = (
+            f"current_pat_textual_obs_batches{self.suffix}/"
         )
 
         self.pre_report_batch_path = f"current_pat_report_batches{self.suffix}/"
@@ -403,6 +408,7 @@ class config_class:
                 "annotations_mrc": False,
                 "negated_presence_annotations": False,
                 "appointments": False,
+                "textual_obs": False,
             }
             if self.verbosity >= 1:
                 print(self.main_options)
@@ -462,10 +468,17 @@ class config_class:
                 self.root_path,
                 f"current_pat_documents_annotations_batches{self.suffix}/",
             )
+
             self.pre_document_annotation_batch_path_mct = os.path.join(
                 self.root_path,
                 f"current_pat_documents_annotations_batches_mct{self.suffix}/",
             )
+
+            self.pre_textual_obs_annotation_batch_path = os.path.join(
+                self.root_path,
+                f"current_pat_textual_obs_annotation_batches{self.suffix}/",
+            )
+
             self.pre_document_batch_path = os.path.join(
                 self.root_path, f"current_pat_document_batches{self.suffix}/"
             )
@@ -480,6 +493,10 @@ class config_class:
             self.pre_document_annotation_batch_path_reports = os.path.join(
                 self.root_path,
                 f"current_pat_documents_annotations_batches_reports{self.suffix}/",
+            )
+
+            self.pre_textual_obs_path = os.path.join(
+                self.root_path, f"current_pat_textual_obs_batches{self.suffix}/"
             )
 
             self.pre_bloods_batch_path = os.path.join(
