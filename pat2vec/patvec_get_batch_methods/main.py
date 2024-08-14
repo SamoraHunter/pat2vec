@@ -1210,11 +1210,12 @@ def get_pat_batch_textual_obs_docs(
             )
 
             # batch_target = batch_target.rename(columns={'textualObs': 'body_analysed'})
-            batch_target["body_analysed"] = (
-                batch_target["textualObs"].astype(str)
-                + "\n"
-                + batch_target["basicobs_value_analysed"].astype(str)
-            )
+            # batch_target["body_analysed"] = (
+            #     batch_target["textualObs"].astype(str)
+            #     + "\n"
+            #     + batch_target["basicobs_value_analysed"].astype(str)
+            # )
+            batch_target["body_analysed"] = batch_target["textualObs"].astype(str)
 
             if config_obj.store_pat_batch_docs or overwrite_stored_pat_observations:
                 batch_target.to_csv(batch_obs_target_path)
