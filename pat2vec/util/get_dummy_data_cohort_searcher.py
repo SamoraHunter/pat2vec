@@ -644,6 +644,65 @@ def generate_basic_observations_data(
     return df
 
 
+def generate_basic_observations_textual_obs_data(
+    num_rows,
+    entered_list,
+    global_start_year,
+    global_start_month,
+    global_end_year,
+    global_end_month,
+):
+
+    # print("generate_basic_observations_textual_obs_data")
+    current_pat_client_id_code = random.choice(entered_list)
+
+    data = {
+        "client_idcode": [current_pat_client_id_code] * num_rows,
+        "basicobs_itemname_analysed": [
+            fake.random_element(blood_test_names) for _ in range(num_rows)
+        ],
+        "basicobs_value_numeric": [random.uniform(1, 100) for _ in range(num_rows)],
+        "basicobs_value_analysed": [fake.sentence() for _ in range(num_rows)],
+        "basicobs_entered": [
+            datetime(
+                random.randint(global_start_year, global_end_year),
+                random.randint(global_start_month, global_end_month),
+                random.randint(1, 28),
+                random.randint(0, 23),
+                random.randint(0, 59),
+                random.randint(0, 59),
+                tzinfo=timezone.utc,
+            ).strftime("%Y-%m-%dT%H:%M:%S")
+            for _ in range(num_rows)
+        ],
+        "clientvisit_serviceguid": [f"service_{i}" for i in range(num_rows)],
+        "_id": [None for i in range(num_rows)],
+        "_index": [None for i in range(num_rows)],
+        "_score": [None for i in range(num_rows)],
+        "basicobs_guid": [f"obs_{i}" for i in range(num_rows)],
+        "clientvisit_serviceguid": ["{np.nan}" for i in range(num_rows)],
+        "updatetime": [
+            datetime(
+                random.randint(global_start_year, global_end_year),
+                random.randint(global_start_month, global_end_month),
+                random.randint(1, 28),
+                random.randint(0, 23),
+                random.randint(0, 59),
+                random.randint(0, 59),
+                tzinfo=timezone.utc,
+            ).strftime("%Y-%m-%dT%H:%M:%S")
+            for _ in range(num_rows)
+        ],
+        "textualObs": [
+            maybe_nan(fake.sentence() for _ in range(num_rows)) for i in range(num_rows)
+        ],
+    }
+
+    df = pd.DataFrame(data)
+    print(type(df))
+    return df
+
+
 def extract_date_range(string):
     pattern = r"(\d+)-(\d+)-(\d+) TO (\d+)-(\d+)-(\d+)"
     match = re.search(pattern, string)
@@ -783,6 +842,32 @@ def cohort_searcher_with_terms_and_search_dummy(
             global_end_year,
             global_end_month,
             use_GPT=use_GPT,
+        )
+        return df
+
+    elif index_name == "basic_observations" and fields_list == [
+        "client_idcode",
+        "basicobs_itemname_analysed",
+        "basicobs_value_numeric",
+        "basicobs_value_analysed",
+        "basicobs_entered",
+        "clientvisit_serviceguid",
+        "basicobs_guid",
+        "updatetime",
+        "textualObs",
+    ]:
+        if verbose:
+            print("Generating data for 'basic_observations textualObs'")
+
+        probabilities = [0.7, 0.1, 0.05, 0.05, 0.05]  # Adjust as needed
+        num_rows = random.choices(range(1, 6), probabilities)[0]
+        df = generate_basic_observations_textual_obs_data(
+            num_rows,
+            entered_list,
+            global_start_year,
+            global_start_month,
+            global_end_year,
+            global_end_month,
         )
         return df
 
