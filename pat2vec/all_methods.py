@@ -1,21 +1,37 @@
-from pat2vec.pat2vec_get_methods.current_pat_annotations_batch_to_file import get_current_pat_annotations_batch_to_file
-from pat2vec.pat2vec_get_methods.current_pat_annotations_mrc_batch_to_file import get_current_pat_annotations_mct_batch_to_file
-from pat2vec.pat2vec_get_methods.current_pat_annotations_to_file import get_current_pat_annotations_to_file
-from pat2vec.pat2vec_get_methods.current_pat_annotations_to_file import get_current_pat_annotations_mct_batch_to_file
-from pat2vec.pat2vec_get_methods.current_pat_annotations_to_file import get_current_pat_annotations_batch_to_file
+from pat2vec.pat2vec_get_methods.current_pat_annotations_batch_to_file import (
+    get_current_pat_annotations_batch_to_file,
+)
+from pat2vec.pat2vec_get_methods.current_pat_annotations_mrc_batch_to_file import (
+    get_current_pat_annotations_mct_batch_to_file,
+)
+from pat2vec.pat2vec_get_methods.current_pat_annotations_to_file import (
+    get_current_pat_annotations_to_file,
+)
+from pat2vec.pat2vec_get_methods.current_pat_annotations_to_file import (
+    get_current_pat_annotations_mct_batch_to_file,
+)
+from pat2vec.pat2vec_get_methods.current_pat_annotations_to_file import (
+    get_current_pat_annotations_batch_to_file,
+)
 from pat2vec.pat2vec_get_methods.get_method_bed import get_bed
 from pat2vec.pat2vec_get_methods.get_method_bloods import get_current_pat_bloods
 from pat2vec.pat2vec_get_methods.get_method_bmi import get_bmi_features
 from pat2vec.pat2vec_get_methods.get_method_core02 import get_core_02
 from pat2vec.pat2vec_get_methods.get_method_core_resus import get_core_resus
-from pat2vec.pat2vec_get_methods.get_method_current_pat_annotations_mrc_cs import get_current_pat_annotations_mrc_cs
+from pat2vec.pat2vec_get_methods.get_method_current_pat_annotations_mrc_cs import (
+    get_current_pat_annotations_mrc_cs,
+)
 from pat2vec.pat2vec_get_methods.get_method_demo import get_demographics3
 from pat2vec.pat2vec_get_methods.get_method_demographics import get_demo
-from pat2vec.pat2vec_get_methods.get_method_diagnostics import get_current_pat_diagnostics
+from pat2vec.pat2vec_get_methods.get_method_diagnostics import (
+    get_current_pat_diagnostics,
+)
 from pat2vec.pat2vec_get_methods.get_method_drugs import get_current_pat_drugs
 from pat2vec.pat2vec_get_methods.get_method_hosp_site import get_hosp_site
 from pat2vec.pat2vec_get_methods.get_method_news import get_news
-from pat2vec.pat2vec_get_methods.get_method_pat_annotations import get_current_pat_annotations
+from pat2vec.pat2vec_get_methods.get_method_pat_annotations import (
+    get_current_pat_annotations,
+)
 from pat2vec.pat2vec_get_methods.get_method_smoking import get_smoking
 from pat2vec.pat2vec_get_methods.get_method_vte_status import get_vte_status
 from pat2vec.pat2vec_main_methods.main_annotate_only import main_annotate_only
@@ -23,7 +39,9 @@ from pat2vec.pat2vec_main_methods.main_batch import main_batch
 from pat2vec.pat2vec_main_methods.main_main import main
 from pat2vec.pat2vec_main_methods.main_multi import main_multi
 from pat2vec.pat2vec_main_methods.main_single_pat import get_single_pat
-from pat2vec.pat2vec_pat_list.get_patient_treatment_list import extract_treatment_id_list_from_docs
+from pat2vec.pat2vec_pat_list.get_patient_treatment_list import (
+    extract_treatment_id_list_from_docs,
+)
 from pat2vec.pat2vec_pat_list.get_patient_treatment_list import generate_control_list
 from pat2vec.pat2vec_pat_list.get_patient_treatment_list import get_all_patients_list
 from pat2vec.patvec_get_batch_methods.main import get_pat_batch_obs
@@ -37,6 +55,7 @@ from pat2vec.patvec_get_batch_methods.main import get_pat_batch_epr_docs_annotat
 from pat2vec.patvec_get_batch_methods.main import get_pat_batch_mct_docs_annotations
 from pat2vec.patvec_get_batch_methods.main import get_pat_batch_mct_docs
 from pat2vec.patvec_get_batch_methods.main import get_pat_batch_demo
+
 # from pat2vec.util.cogstack_v8_lite import __init__
 # from pat2vec.util.cogstack_v8_lite import check_api_auth_details
 # from pat2vec.util.cogstack_v8_lite import _check_auth_details
@@ -82,19 +101,25 @@ from pat2vec.util.config_pat2vec import __init__
 from pat2vec.util.config_pat2vec import calculate_interval
 from pat2vec.util.config_pat2vec import update_global_start_date
 from pat2vec.util.current_pat_batch_path_methods import __init__
+
 # from pat2vec.util.current_pat_batch_path_methods import _create_directories
 # from pat2vec.util.current_pat_batch_path_methods import _print_paths
 from pat2vec.util.elasticsearch_methods import ingest_data_to_elasticsearch
+
 # from pat2vec.util.ethnicity_abstractor import abstractEthnicity
 # from pat2vec.util.evaluation_methods import compare_ipw_annotation_rows
 # from pat2vec.util.evaluation_methods import create_profile_reports
 # from pat2vec.util.evaluation_methods_ploting import generate_pie_charts
 from pat2vec.util.get_dummy_data_cohort_searcher import generate_epr_documents_data
-from pat2vec.util.get_dummy_data_cohort_searcher import generate_epr_documents_personal_data
+from pat2vec.util.get_dummy_data_cohort_searcher import (
+    generate_epr_documents_personal_data,
+)
 from pat2vec.util.get_dummy_data_cohort_searcher import generate_observations_data
 from pat2vec.util.get_dummy_data_cohort_searcher import generate_basic_observations_data
 from pat2vec.util.get_dummy_data_cohort_searcher import extract_date_range
-from pat2vec.util.get_dummy_data_cohort_searcher import cohort_searcher_with_terms_and_search_dummy
+from pat2vec.util.get_dummy_data_cohort_searcher import (
+    cohort_searcher_with_terms_and_search_dummy,
+)
 from pat2vec.util.methods_annotation import check_pat_document_annotation_complete
 from pat2vec.util.methods_annotation import parse_meta_anns
 from pat2vec.util.methods_annotation import get_pat_document_annotation_batch
@@ -146,6 +171,7 @@ from pat2vec.util.methods_get import create_folders
 from pat2vec.util.methods_get import create_folders_for_pat
 from pat2vec.util.methods_get import convert_date
 from pat2vec.util.methods_get import add_offset_column
+
 # from pat2vec.util.methods_get import apply_offset
 from pat2vec.util.methods_get import build_patient_dict
 from pat2vec.util.methods_get_medcat import get_cat
@@ -175,28 +201,39 @@ from pat2vec.util.post_processing import retrieve_pat_docs_mct_epr
 from pat2vec.util.post_processing import check_list_presence
 from pat2vec.util.post_processing import filter_dataframe_n_lists
 from pat2vec.util.post_processing import get_all_target_annots
-from pat2vec.util.post_processing import build_merged_epr_mct_annot_df
+from pat2vec.util.post_processing_build_methods import build_merged_epr_mct_annot_df
 from pat2vec.util.post_processing_build_methods import filter_annot_dataframe
+
 # from pat2vec.util.post_processing_build_methods import filter_float_column
 from pat2vec.util.post_processing_build_methods import build_merged_epr_mct_annot_df
 from pat2vec.util.post_processing_build_methods import build_merged_epr_mct_doc_df
 from pat2vec.util.post_processing_build_methods import join_docs_to_annots
 from pat2vec.util.post_processing_build_methods import get_annots_joined_to_docs
 from pat2vec.util.presentation_methods import group_images_by_suffix
-from pat2vec.util.presentation_methods import create_powerpoint_slides_client_idcode_groups
+from pat2vec.util.presentation_methods import (
+    create_powerpoint_slides_client_idcode_groups,
+)
 from pat2vec.util.presentation_methods import create_powerpoint_from_images_group
 from pat2vec.util.presentation_methods import create_powerpoint_slides
 from pat2vec.util.presentation_methods import create_powerpoint_from_images
 
 
-class pat2vec_methods():
+class pat2vec_methods:
     def __init__(self):
 
-        self.get_current_pat_annotations_batch_to_file = get_current_pat_annotations_batch_to_file
-        self.get_current_pat_annotations_mct_batch_to_file = get_current_pat_annotations_mct_batch_to_file
+        self.get_current_pat_annotations_batch_to_file = (
+            get_current_pat_annotations_batch_to_file
+        )
+        self.get_current_pat_annotations_mct_batch_to_file = (
+            get_current_pat_annotations_mct_batch_to_file
+        )
         self.get_current_pat_annotations_to_file = get_current_pat_annotations_to_file
-        self.get_current_pat_annotations_mct_batch_to_file = get_current_pat_annotations_mct_batch_to_file
-        self.get_current_pat_annotations_batch_to_file = get_current_pat_annotations_batch_to_file
+        self.get_current_pat_annotations_mct_batch_to_file = (
+            get_current_pat_annotations_mct_batch_to_file
+        )
+        self.get_current_pat_annotations_batch_to_file = (
+            get_current_pat_annotations_batch_to_file
+        )
         self.get_bed = get_bed
         self.get_current_pat_bloods = get_current_pat_bloods
         self.get_bmi_features = get_bmi_features
@@ -288,11 +325,17 @@ class pat2vec_methods():
         self.generate_observations_data = generate_observations_data
         self.generate_basic_observations_data = generate_basic_observations_data
         self.extract_date_range = extract_date_range
-        self.cohort_searcher_with_terms_and_search_dummy = cohort_searcher_with_terms_and_search_dummy
-        self.check_pat_document_annotation_complete = check_pat_document_annotation_complete
+        self.cohort_searcher_with_terms_and_search_dummy = (
+            cohort_searcher_with_terms_and_search_dummy
+        )
+        self.check_pat_document_annotation_complete = (
+            check_pat_document_annotation_complete
+        )
         self.parse_meta_anns = parse_meta_anns
         self.get_pat_document_annotation_batch = get_pat_document_annotation_batch
-        self.get_pat_document_annotation_batch_mct = get_pat_document_annotation_batch_mct
+        self.get_pat_document_annotation_batch_mct = (
+            get_pat_document_annotation_batch_mct
+        )
         self.annot_pat_batch_docs = annot_pat_batch_docs
         self.multi_annots_to_df = multi_annots_to_df
         self.multi_annots_to_df_mct = multi_annots_to_df_mct
@@ -344,14 +387,18 @@ class pat2vec_methods():
         self.build_patient_dict = build_patient_dict
         self.get_cat = get_cat
         self.retrieve_pat_annotations = retrieve_pat_annotations
-        self.copy_project_folders_with_substring_match = copy_project_folders_with_substring_match
+        self.copy_project_folders_with_substring_match = (
+            copy_project_folders_with_substring_match
+        )
         self.check_csv_integrity = check_csv_integrity
         self.check_csv_files_in_directory = check_csv_files_in_directory
         self.count_files = count_files
         self.process_csv_files = process_csv_files
         self.extract_datetime_to_column = extract_datetime_to_column
         self.filter_annot_dataframe2 = filter_annot_dataframe2
-        self.produce_filtered_annotation_dataframe = produce_filtered_annotation_dataframe
+        self.produce_filtered_annotation_dataframe = (
+            produce_filtered_annotation_dataframe
+        )
         self.extract_types_from_csv = extract_types_from_csv
         self.remove_file_from_paths = remove_file_from_paths
         self.process_chunk = process_chunk
@@ -377,7 +424,9 @@ class pat2vec_methods():
         self.join_docs_to_annots = join_docs_to_annots
         self.get_annots_joined_to_docs = get_annots_joined_to_docs
         self.group_images_by_suffix = group_images_by_suffix
-        self.create_powerpoint_slides_client_idcode_groups = create_powerpoint_slides_client_idcode_groups
+        self.create_powerpoint_slides_client_idcode_groups = (
+            create_powerpoint_slides_client_idcode_groups
+        )
         self.create_powerpoint_from_images_group = create_powerpoint_from_images_group
         self.create_powerpoint_slides = create_powerpoint_slides
         self.create_powerpoint_from_images = create_powerpoint_from_images
