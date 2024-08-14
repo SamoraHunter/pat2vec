@@ -26,6 +26,7 @@ class PathsClass:
             # f'current_pat_misc_batches{self.suffix}/', #Dynamically created
             f"current_pat_lines_parts{self.suffix}/",
             f"current_pat_appointments_batches{self.suffix}/",
+            f"current_pat_textual_obs_batches{self.suffix}/",
             output_folder,
         ]
 
