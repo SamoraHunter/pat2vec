@@ -175,7 +175,8 @@ class config_class:
         override_medcat_model_path=None,
         data_type_filter_dict=None,
         filter_split_notes=True,
-        client_idcode_term_name="client_idcode",
+        client_idcode_term_name="client_idcode.keyword",
+        sanitize_pat_list=True,
     ):
 
         # Configure logging
@@ -218,6 +219,10 @@ class config_class:
 
         # # Now you can use the logger to log messages within the class
         # self.logger.info("Initialized config_pat2vec")
+
+        self.sanitize_pat_list = (
+            sanitize_pat_list  # Enforce all characters capitalized in patient list.
+        )
 
         self.filter_split_notes = filter_split_notes
 
@@ -377,7 +382,7 @@ class config_class:
         self.bloods_time_field = "basicobs_entered"
 
         if client_idcode_term_name is None:
-            self.client_idcode_term_name = "client_idcode"  # alt client_idcode.keyword #warn excludes on case basis.
+            self.client_idcode_term_name = "client_idcode.keyword"  # alt client_idcode.keyword #warn excludes on case basis.
         else:
             self.client_idcode_term_name = client_idcode_term_name
 

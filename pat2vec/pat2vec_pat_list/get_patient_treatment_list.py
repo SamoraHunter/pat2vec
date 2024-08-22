@@ -135,6 +135,68 @@ def generate_control_list(
     return all_patient_list_control
 
 
+def sanitize_hospital_ids(hospital_ids, config_obj):
+    valid_format = re.compile(
+        r"^[A-Z]\d{6}$"
+    )  # Regular expression for one uppercase letter followed by 6 digits
+    valid_count = 0
+    uppercase_warning_count = 0
+    digit_warning_count = 0
+    changes_made = 0
+
+    # Debug and warnings before sanitization
+    for hospital_id in hospital_ids:
+        if valid_format.match(hospital_id):
+            valid_count += 1
+        else:
+            if not re.match(r"^[A-Z]", hospital_id):
+                uppercase_warning_count += 1
+            if not re.match(r"^\d{6}$", hospital_id[1:]):
+                digit_warning_count += 1
+
+    if config_obj.verbosity > 0:
+        print(
+            f"Debug: Number of hospital IDs conforming to the format before sanitization: {valid_count}"
+        )
+
+    if (
+        config_obj.verbosity > 1
+    ):  # Only print detailed warnings at a higher verbosity level
+        if uppercase_warning_count > 0:
+            print(
+                f"Warning: Number of hospital IDs that do not start with an uppercase letter: {uppercase_warning_count}"
+            )
+
+        if digit_warning_count > 0:
+            print(
+                f"Warning: Number of hospital IDs that do not have exactly 6 digits following the letter: {digit_warning_count}"
+            )
+
+    if config_obj.sanitize_pat_list:
+        sanitized_list = []
+        for hospital_id in hospital_ids:
+            new_id = hospital_id.upper()
+            if new_id != hospital_id:
+                changes_made += 1
+            sanitized_list.append(new_id)
+
+        # After sanitization
+        if config_obj.verbosity > 0:
+            print(f"Info: Number of hospital IDs changed to uppercase: {changes_made}")
+
+        # Warning on irregular number of digits after sanitization
+        irregular_count = sum(len(hospital_id) != 7 for hospital_id in sanitized_list)
+        if irregular_count > 0 and config_obj.verbosity > 1:
+            print(
+                f"Warning: Number of hospital IDs that do not have exactly 7 characters: {irregular_count}"
+            )
+
+        # Assuming all_patient_list should be returned or assigned
+        return sanitized_list
+    else:
+        return hospital_ids
+
+
 def get_all_patients_list(config_obj):
     """
     Extracts a list of all patient IDs from the given configuration object.
@@ -171,6 +233,10 @@ def get_all_patients_list(config_obj):
             all_epr_patient_list_path=all_epr_patient_list_path,
         )
         all_patient_list.extend(control_ids)
+
+    all_patient_list = sanitize_hospital_ids(
+        hospital_ids=all_patient_list, config_obj=config_obj
+    )
 
     # Propensity score matching here or in super function?
 
