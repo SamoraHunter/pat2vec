@@ -89,7 +89,7 @@ def get_appointments(
                 "SessionCode",
                 "SpecialtyCode",
             ],
-            term_name="HospitalID",
+            term_name="HospitalID.keyword",
             entered_list=[current_pat_client_id_code],
             search_string=f"{appointments_time_field}:[{start_year}-{start_month}-{start_day} TO {end_year}-{end_month}-{end_day}]",
         )
