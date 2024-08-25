@@ -1119,86 +1119,137 @@ def build_ipw_dataframe(
     return df
 
 
-import pandas as pd
-import os
 
-
-def retrieve_pat_annots_mct_epr(
-    client_idcode,
-    config_obj,
-    columns_epr=None,
-    columns_mct=None,
-    merge_time_columns=True,
-):
-    """
-    Retrieve patient annotations for Electronic Patient Record (EPR) and Medical Chart (MCT).
-
-    Args:
-        client_idcode (str): The client's unique identifier code.
-        config_obj: The configuration object containing paths for annotation batches.
-        columns_epr (list, optional): List of columns to be used from the EPR annotation batch CSV.
-        columns_mct (list, optional): List of columns to be used from the MCT annotation batch CSV.
-        merge_time_columns (bool, optional): Whether to merge time columns. Default is True.
-
-    Returns:
-        pandas.DataFrame: A DataFrame containing combined patient annotations from EPR and MCT.
-
-    Note:
-        The function assumes that the EPR and MCT annotation documents are stored in separate CSV files
-        and are accessible via the provided paths in the `config_obj`.
-    """
+def retrieve_pat_annots_mct_epr(client_idcode, config_obj, columns_epr=None, columns_mct=None, columns_to=None, columns_report=None, merge_columns=True):
+    # Define file paths based on the client_idcode and config paths
     pre_document_annotation_batch_path = config_obj.pre_document_annotation_batch_path
-    pre_document_annotation_batch_path_mct = (
-        config_obj.pre_document_annotation_batch_path_mct
-    )
+    pre_document_annotation_batch_path_mct = config_obj.pre_document_annotation_batch_path_mct
+    pre_textual_obs_annotation_batch_path = config_obj.pre_textual_obs_annotation_batch_path
+    pre_document_annotation_batch_path_reports = config_obj.pre_document_annotation_batch_path_reports
 
     epr_file_path = f"{pre_document_annotation_batch_path}/{client_idcode}.csv"
     mct_file_path = f"{pre_document_annotation_batch_path_mct}/{client_idcode}.csv"
+    textual_obs_files_path = f"{pre_textual_obs_annotation_batch_path}/{client_idcode}.csv"
+    report_file_path = f"{pre_document_annotation_batch_path_reports}/{client_idcode}.csv"
 
+    # Initialize DataFrames
     dfa = pd.DataFrame()
     dfa_mct = pd.DataFrame()
+    dfa_to = pd.DataFrame()
+    dfr = pd.DataFrame()
 
+    # Load data if files exist
     if os.path.exists(epr_file_path):
         dfa = pd.read_csv(epr_file_path, usecols=columns_epr)
-    else:
-        pass
-        # print(
-        #     f"EPR file for client_idcode {client_idcode} does not exist. Skipping EPR data."
-        # )
+        dfa['annotation_batch_source'] = 'epr'
 
     if os.path.exists(mct_file_path):
         dfa_mct = pd.read_csv(mct_file_path, usecols=columns_mct)
-    else:
-        pass
-        # print(
-        #     f"MCT file for client_idcode {client_idcode} does not exist. Skipping MCT data."
-        # )
+        dfa_mct['annotation_batch_source'] = 'mct'
 
-    all_annots = pd.concat([dfa, dfa_mct], ignore_index=True)
+    if os.path.exists(textual_obs_files_path):
+        dfa_to = pd.read_csv(textual_obs_files_path, usecols=columns_to)
+        dfa_to['annotation_batch_source'] = 'textual_obs'
 
-    if merge_time_columns and not all_annots.empty:
-        try:
-            all_annots["updatetime"] = all_annots["updatetime"].fillna(
-                all_annots["observationdocument_recordeddtm"]
-            )
-        except Exception as e:
-            print(e)
+    if os.path.exists(report_file_path):
+        dfr = pd.read_csv(report_file_path, usecols=columns_report)
+        dfr['annotation_batch_source'] = 'report'
 
-        try:
-            all_annots["observationdocument_recordeddtm"] = all_annots[
-                "observationdocument_recordeddtm"
-            ].fillna(all_annots["updatetime"])
-        except Exception as e:
-            print(e)
+    # Concatenate all dataframes
+    all_annots = pd.concat([dfa, dfa_mct, dfa_to, dfr], ignore_index=True)
 
-        try:
-            all_annots["document_guid"] = all_annots["document_guid"].fillna(
-                all_annots["observation_guid"]
-            )
-        except Exception as e:
-            print(e)
+    # Merge columns if required
+    if merge_columns and not all_annots.empty:
+        all_annots["updatetime"] = all_annots["updatetime"].fillna(all_annots["observationannotation_recordeddtm"])
+        all_annots["observationannotation_recordeddtm"] = all_annots["observationannotation_recordeddtm"].fillna(all_annots["updatetime"])
+
+        # Merge observation_guid to annotation_guid
+        all_annots["annotation_guid"] = all_annots["annotation_guid"].fillna(all_annots["observation_guid"])
+
+        # Add obscatalogmasteritem_displayname to annotation_description
+        all_annots["annotation_description"] = all_annots["annotation_description"].fillna(all_annots["obscatalogmasteritem_displayname"])
+
+        all_annots["body_analysed"] = all_annots["body_analysed"].fillna(all_annots["observation_valuetext_analysed"])
 
     return all_annots
+
+
+# def retrieve_pat_annots_mct_epr(
+#     client_idcode,
+#     config_obj,
+#     columns_epr=None,
+#     columns_mct=None,
+#     merge_time_columns=True,
+# ):
+#     """
+#     Retrieve patient annotations for Electronic Patient Record (EPR) and Medical Chart (MCT).
+
+#     Args:
+#         client_idcode (str): The client's unique identifier code.
+#         config_obj: The configuration object containing paths for annotation batches.
+#         columns_epr (list, optional): List of columns to be used from the EPR annotation batch CSV.
+#         columns_mct (list, optional): List of columns to be used from the MCT annotation batch CSV.
+#         merge_time_columns (bool, optional): Whether to merge time columns. Default is True.
+
+#     Returns:
+#         pandas.DataFrame: A DataFrame containing combined patient annotations from EPR and MCT.
+
+#     Note:
+#         The function assumes that the EPR and MCT annotation documents are stored in separate CSV files
+#         and are accessible via the provided paths in the `config_obj`.
+#     """
+#     pre_document_annotation_batch_path = config_obj.pre_document_annotation_batch_path
+#     pre_document_annotation_batch_path_mct = (
+#         config_obj.pre_document_annotation_batch_path_mct
+#     )
+
+#     epr_file_path = f"{pre_document_annotation_batch_path}/{client_idcode}.csv"
+#     mct_file_path = f"{pre_document_annotation_batch_path_mct}/{client_idcode}.csv"
+
+#     dfa = pd.DataFrame()
+#     dfa_mct = pd.DataFrame()
+
+#     if os.path.exists(epr_file_path):
+#         dfa = pd.read_csv(epr_file_path, usecols=columns_epr)
+#     else:
+#         pass
+#         # print(
+#         #     f"EPR file for client_idcode {client_idcode} does not exist. Skipping EPR data."
+#         # )
+
+#     if os.path.exists(mct_file_path):
+#         dfa_mct = pd.read_csv(mct_file_path, usecols=columns_mct)
+#     else:
+#         pass
+#         # print(
+#         #     f"MCT file for client_idcode {client_idcode} does not exist. Skipping MCT data."
+#         # )
+
+#     all_annots = pd.concat([dfa, dfa_mct], ignore_index=True)
+
+#     if merge_time_columns and not all_annots.empty:
+#         try:
+#             all_annots["updatetime"] = all_annots["updatetime"].fillna(
+#                 all_annots["observationdocument_recordeddtm"]
+#             )
+#         except Exception as e:
+#             print(e)
+
+#         try:
+#             all_annots["observationdocument_recordeddtm"] = all_annots[
+#                 "observationdocument_recordeddtm"
+#             ].fillna(all_annots["updatetime"])
+#         except Exception as e:
+#             print(e)
+
+#         try:
+#             all_annots["document_guid"] = all_annots["document_guid"].fillna(
+#                 all_annots["observation_guid"]
+#             )
+#         except Exception as e:
+#             print(e)
+
+#     return all_annots
 
 
 # def retrieve_pat_annots_mct_epr(
