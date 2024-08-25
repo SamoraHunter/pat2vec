@@ -358,23 +358,56 @@ def extract_types_from_csv(directory):
 
 
 def remove_file_from_paths(
-    current_pat_idcode: str, project_name="new_project", verbosity=0
+    current_pat_idcode: str, project_name="new_project", verbosity=0, config_obj=None
 ) -> None:
-    pat_file_paths = [
-        f"{project_name}/current_pat_document_batches/",
-        f"{project_name}/current_pat_document_batches_mct/",
-        f"{project_name}/current_pat_documents_annotations_batches/",
-        f"{project_name}/current_pat_documents_annotations_batches_mct/",
-        f"{project_name}/current_pat_bloods_batches/",
-        f"{project_name}/current_pat_drugs_batches/",
-        f"{project_name}/current_pat_diagnostics_batches/",
-        f"{project_name}/current_pat_news_batches/",
-        f"{project_name}/current_pat_obs_batches/",
-        f"{project_name}/current_pat_bmi_batches/",
-        f"{project_name}/current_pat_demo_batches/",
-        f"{project_name}/current_pat_document_batches_reports/",
-        f"{project_name}/current_pat_documents_annotations_batches_reports/",
-    ]
+
+    if config_obj == None:
+        pat_file_paths = [
+            f"{project_name}/current_pat_document_batches/",
+            f"{project_name}/current_pat_document_batches_mct/",
+            f"{project_name}/current_pat_documents_annotations_batches/",
+            f"{project_name}/current_pat_documents_annotations_batches_mct/",
+            f"{project_name}/current_pat_bloods_batches/",
+            f"{project_name}/current_pat_drugs_batches/",
+            f"{project_name}/current_pat_diagnostics_batches/",
+            f"{project_name}/current_pat_news_batches/",
+            f"{project_name}/current_pat_obs_batches/",
+            f"{project_name}/current_pat_bmi_batches/",
+            f"{project_name}/current_pat_demo_batches/",
+            f"{project_name}/current_pat_document_batches_reports/",
+            f"{project_name}/current_pat_documents_annotations_batches_reports/",
+            f"{project_name}/current_pat_textual_obs_document_batches/",
+            f"{project_name}/current_pat_textual_obs_annotation_batches/",
+            f"{project_name}/current_pat_appointments_batches/",
+        ]
+    else:
+        project_name = config_obj.proj_name
+
+        pat_file_paths = [
+            config_obj.pre_document_batch_path,
+            config_obj.pre_document_batch_path_mct,
+            config_obj.pre_document_annotation_batch_path,
+            config_obj.pre_document_annotation_batch_path_mct,
+            config_obj.pre_bloods_batch_path,
+            config_obj.pre_drugs_batch_path,
+            config_obj.pre_diagnostics_batch_path,
+            config_obj.pre_news_batch_path,
+            config_obj.pre_obs_batch_path,
+            config_obj.pre_bmi_batch_path,
+            config_obj.pre_demo_batch_path,
+            config_obj.pre_document_batch_path_reports,
+            config_obj.pre_document_annotation_batch_path_reports,
+            config_obj.pre_textual_obs_annotation_batch_path,
+            config_obj.pre_textual_obs_document_batch_path,
+            config_obj.pre_appointments_batch_path,
+        ]
+
+    # Print debug messages:
+
+    print(f"Removing files for patient {current_pat_idcode}...")
+    print("Project_name: ", project_name)
+    print("Searching for files in the following paths:")
+    print(pat_file_paths)
 
     for path in pat_file_paths:
         file_path = path + current_pat_idcode + ".csv"
