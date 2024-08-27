@@ -1173,7 +1173,7 @@ def retrieve_pat_annots_mct_epr(
         dfr["annotation_batch_source"] = "report"
 
     # Concatenate all dataframes
-    all_annots = pd.concat([dfa, dfa_mct, dfa_to, dfr], ignore_index=True)
+    all_annots = pd.concat([dfa, dfa_mct, dfa_to, dfr], axis=0, ignore_index=True)
 
     # Merge columns if required
     if merge_columns and not all_annots.empty:
@@ -1218,8 +1218,6 @@ def retrieve_pat_annots_mct_epr(
             all_annots["body_analysed"] = all_annots["body_analysed"].fillna(
                 all_annots["observation_valuetext_analysed"]
             )
-
-
 
     return all_annots
 
@@ -1357,98 +1355,131 @@ def retrieve_pat_annots_mct_epr(
 #     return all_annots
 
 
-def retrieve_pat_docs_mct_epr(
-    client_idcode,
-    config_obj,
-    columns_epr=None,
-    columns_mct=None,
-    columns_to=None,
-    columns_report=None,
-    merge_columns=True,
-):
-    # Define file paths based on the client_idcode and config paths
-    """
-    Retrieve patient documents for Electronic Patient Record (EPR), Medical Chart (MCT), textual observations and reports.
+# def retrieve_pat_docs_mct_epr(
+#     client_idcode,
+#     config_obj,
+#     columns_epr=None,
+#     columns_mct=None,
+#     columns_to=None,
+#     columns_report=None,
+#     merge_columns=True,
+# ):
+#     # Define file paths based on the client_idcode and config paths
+#     """
+#     Retrieve patient documents for Electronic Patient Record (EPR), Medical Chart (MCT), textual observations and reports.
 
-    Args:
-        client_idcode (str): The client's unique identifier code.
-        config_obj: The configuration object containing paths for document batches.
-        columns_epr (list, optional): List of columns to be used from the EPR document batch CSV.
-        columns_mct (list, optional): List of columns to be used from the MCT document batch CSV.
-        columns_to (list, optional): List of columns to be used from the textual observations document batch CSV.
-        columns_report (list, optional): List of columns to be used from the reports document batch CSV.
-        merge_columns (bool, optional): Whether to merge time columns. Default is True.
+#     Args:
+#         client_idcode (str): The client's unique identifier code.
+#         config_obj: The configuration object containing paths for document batches.
+#         columns_epr (list, optional): List of columns to be used from the EPR document batch CSV.
+#         columns_mct (list, optional): List of columns to be used from the MCT document batch CSV.
+#         columns_to (list, optional): List of columns to be used from the textual observations document batch CSV.
+#         columns_report (list, optional): List of columns to be used from the reports document batch CSV.
+#         merge_columns (bool, optional): Whether to merge time columns. Default is True.
 
-    Returns:
-        pandas.DataFrame: A DataFrame containing combined patient documents from EPR, MCT, textual observations and reports.
+#     Returns:
+#         pandas.DataFrame: A DataFrame containing combined patient documents from EPR, MCT, textual observations and reports.
 
-    Note:
-        The function assumes that the EPR, MCT, textual observations and reports documents are stored in separate CSV files
-        and are accessible via the provided paths in the `config_obj`.
-    """
+#     Note:
+#         The function assumes that the EPR, MCT, textual observations and reports documents are stored in separate CSV files
+#         and are accessible via the provided paths in the `config_obj`.
+#     """
 
-    pre_document_batch_path = config_obj.pre_document_batch_path
-    pre_document_batch_path_mct = config_obj.pre_document_batch_path_mct
-    pre_textual_obs_document_batch_path = config_obj.pre_textual_obs_document_batch_path
-    pre_document_batch_path_reports = config_obj.pre_document_batch_path_reports
+#     pre_document_batch_path = config_obj.pre_document_batch_path
+#     pre_document_batch_path_mct = config_obj.pre_document_batch_path_mct
+#     pre_textual_obs_document_batch_path = config_obj.pre_textual_obs_document_batch_path
+#     pre_document_batch_path_reports = config_obj.pre_document_batch_path_reports
 
-    epr_file_path = f"{pre_document_batch_path}/{client_idcode}.csv"
-    mct_file_path = f"{pre_document_batch_path_mct}/{client_idcode}.csv"
-    textual_obs_files_path = (
-        f"{pre_textual_obs_document_batch_path}/{client_idcode}.csv"
-    )
-    report_file_path = f"{pre_document_batch_path_reports}/{client_idcode}.csv"
+#     epr_file_path = f"{pre_document_batch_path}/{client_idcode}.csv"
+#     mct_file_path = f"{pre_document_batch_path_mct}/{client_idcode}.csv"
+#     textual_obs_files_path = (
+#         f"{pre_textual_obs_document_batch_path}/{client_idcode}.csv"
+#     )
+#     report_file_path = f"{pre_document_batch_path_reports}/{client_idcode}.csv"
 
-    # Initialize DataFrames
-    dfa = pd.DataFrame()
-    dfa_mct = pd.DataFrame()
-    dfa_to = pd.DataFrame()
-    dfr = pd.DataFrame()
+#     # Initialize DataFrames
+#     dfa = pd.DataFrame()
+#     dfa_mct = pd.DataFrame()
+#     dfa_to = pd.DataFrame()
+#     dfr = pd.DataFrame()
 
-    # Load data if files exist
-    if os.path.exists(epr_file_path):
-        dfa = pd.read_csv(epr_file_path, usecols=columns_epr)
-        dfa["document_batch_source"] = "epr"
+#     # Load data if files exist
+#     if os.path.exists(epr_file_path):
+#         dfa = pd.read_csv(epr_file_path, usecols=columns_epr)
+#         dfa["document_batch_source"] = "epr"
+#         dfa.reset_index(inplace=True, drop=True)
 
-    if os.path.exists(mct_file_path):
-        dfa_mct = pd.read_csv(mct_file_path, usecols=columns_mct)
-        dfa_mct["document_batch_source"] = "mct"
+#     if os.path.exists(mct_file_path):
+#         dfa_mct = pd.read_csv(mct_file_path, usecols=columns_mct)
+#         dfa_mct["document_batch_source"] = "mct"
+#         dfa_mct.reset_index(inplace=True, drop=True)
 
-    if os.path.exists(textual_obs_files_path):
-        dfa_to = pd.read_csv(textual_obs_files_path, usecols=columns_to)
-        dfa_to["document_batch_source"] = "textual_obs"
+#     if os.path.exists(textual_obs_files_path):
+#         dfa_to = pd.read_csv(textual_obs_files_path, usecols=columns_to)
+#         dfa_to["document_batch_source"] = "textual_obs"
+#         dfa_to.dropna(subset=["textualObs"], inplace=True)
+#         dfa_to.reset_index(inplace=True, drop=True)
 
-    if os.path.exists(report_file_path):
-        dfr = pd.read_csv(report_file_path, usecols=columns_report)
-        dfr["document_batch_source"] = "report"
+#     if os.path.exists(report_file_path):
+#         dfr = pd.read_csv(report_file_path, usecols=columns_report)
+#         dfr["document_batch_source"] = "report"
+#         dfr.reset_index(inplace=True, drop=True)
 
-    # Concatenate all dataframes
-    all_docs = pd.concat([dfa, dfa_mct, dfa_to, dfr], ignore_index=True)
+#     dfs = [dfa, dfa_mct, dfa_to, dfr]
 
-    # Merge columns if required
-    if merge_columns and not all_docs.empty:
-        all_docs["updatetime"] = all_docs["updatetime"].fillna(
-            all_docs["observationdocument_recordeddtm"]
-        )
-        all_docs["observationdocument_recordeddtm"] = all_docs[
-            "observationdocument_recordeddtm"
-        ].fillna(all_docs["updatetime"])
+#     # Function to ensure each DataFrame is 2D
+#     def ensure_2d(dataframes):
+#         for i, df in enumerate(dataframes):
+#             if df.ndim > 2:
+#                 print(
+#                     f"DataFrame at index {i} had more than two dimensions. It has been reduced to 2D."
+#                 )
 
-        # Merge observation_guid to document_guid
-        all_docs["document_guid"] = all_docs["document_guid"].fillna(
-            all_docs["observation_guid"]
-        )
+#                 print(
+#                     "offending df:", ["dfa", "dfa_mct", "dfa_to", "dfr"][i]
+#                 )  # Reduce the DataFrame to 2D (in this case, we just keep it as-is)
+#                 dataframes[i] = df.iloc[:, :]
 
-        # Add obscatalogmasteritem_displayname to document_description
-        all_docs["document_description"] = all_docs["document_description"].fillna(
-            all_docs["obscatalogmasteritem_displayname"]
-        )
+#             # After checking, you can print or handle the DataFrame
+#             # print(f"DataFrame at index {i}:\n{dataframes[i]}\n")
 
-        all_docs["body_analysed"] = all_docs["body_analysed"].fillna(
-            all_docs["observation_valuetext_analysed"]
-        )
+#     # Apply the function to the list of DataFrames
+#     ensure_2d(dfs)
+#     # Step 1: Get the union of all columns from all DataFrames
+#     all_columns = pd.Index([])  # Start with an empty Index
+#     for df in dfs:
+#         all_columns = all_columns.union(df.columns)
 
-    return all_docs
+#     # Step 2: Reindex each DataFrame to have the same columns
+#     dfs_reindexed = [df.reindex(columns=all_columns) for df in dfs]
+
+#     # Concatenate all dataframes
+#     all_docs = pd.concat(dfs_reindexed, ignore_index=True)
+
+#     # Merge columns if required
+#     if merge_columns and not all_docs.empty:
+#         all_docs["updatetime"] = all_docs["updatetime"].fillna(
+#             all_docs["observationdocument_recordeddtm"]
+#         )
+#         all_docs["observationdocument_recordeddtm"] = all_docs[
+#             "observationdocument_recordeddtm"
+#         ].fillna(all_docs["updatetime"])
+
+#         # Merge observation_guid to document_guid
+#         all_docs["document_guid"] = all_docs["document_guid"].fillna(
+#             all_docs["observation_guid"]
+#         )
+
+#         # Add obscatalogmasteritem_displayname to document_description
+#         all_docs["document_description"] = all_docs["document_description"].fillna(
+#             all_docs["obscatalogmasteritem_displayname"]
+#         )
+
+#         all_docs["body_analysed"] = all_docs["body_analysed"].fillna(
+#             all_docs["observation_valuetext_analysed"]
+#         )
+
+#     return all_docs
 
 
 # def retrieve_pat_docs_mct_epr(

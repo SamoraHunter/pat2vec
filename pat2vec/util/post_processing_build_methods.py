@@ -1,11 +1,11 @@
 from pathlib import Path
-
+import os
 import pandas as pd
 from tqdm import tqdm
 
 from pat2vec.util.post_processing import (
     retrieve_pat_annots_mct_epr,
-    retrieve_pat_docs_mct_epr,
+    #    retrieve_pat_docs_mct_epr,
 )
 
 
@@ -110,49 +110,161 @@ def build_merged_epr_mct_annot_df(all_pat_list, config_obj, overwrite=False):
     return output_file_path
 
 
+# def build_merged_epr_mct_doc_df(all_pat_list, config_obj, overwrite=False):
+#     """
+#     Build a merged DataFrame containing annotations for multiple patients using MCT and EPR data.
+
+#     Parameters:
+#     - config_obj (ConfigObject): An object containing configuration settings, including project name,
+#                                 patient list, etc.
+#     - overwrite (bool): If True, overwrite the existing output file. Default is False.
+
+#     Returns:
+#     File path to output
+
+#     This function creates a directory for merged batches, retrieves annotations for each patient,
+#     and writes the merged annotations to a CSV file named 'annots_mct_epr.csv'.
+#     If the output file already exists and overwrite is False, subsequent batches are appended to it.
+
+#     Example usage:
+#     ```
+#     config = ConfigObject(...)  # Create or load your configuration object
+#     build_merged_epr_mct_annot_df(config, overwrite=True)
+#     ```
+
+#     """
+#     directory_path = config_obj.proj_name + "/" + "merged_batches/"
+#     Path(directory_path).mkdir(parents=True, exist_ok=True)
+
+#     output_file_path = directory_path + "docs_mct_epr.csv"
+
+#     if not overwrite and Path(output_file_path).is_file():
+#         print("Output file already exists. Appending to the existing file.")
+#     else:
+#         for i in tqdm(range(0, len(all_pat_list)), total=len(all_pat_list)):
+#             current_pat_idcode = all_pat_list[i]
+#             try:
+#                 all_docs = retrieve_pat_docs_mct_epr(current_pat_idcode, config_obj)
+#             except Exception as e:
+#                 print(e, current_pat_idcode)
+
+#             if i == 0:
+#                 # Create the output file and write the first batch directly
+#                 all_docs.to_csv(output_file_path, index=False)
+#             else:
+#                 # Append each result to the output file
+#                 all_docs.to_csv(output_file_path, mode="a", header=False, index=False)
+
+#     return output_file_path
+
+
 def build_merged_epr_mct_doc_df(all_pat_list, config_obj, overwrite=False):
-    """
-    Build a merged DataFrame containing annotations for multiple patients using MCT and EPR data.
-
-    Parameters:
-    - config_obj (ConfigObject): An object containing configuration settings, including project name,
-                                patient list, etc.
-    - overwrite (bool): If True, overwrite the existing output file. Default is False.
-
-    Returns:
-    File path to output
-
-    This function creates a directory for merged batches, retrieves annotations for each patient,
-    and writes the merged annotations to a CSV file named 'annots_mct_epr.csv'.
-    If the output file already exists and overwrite is False, subsequent batches are appended to it.
-
-    Example usage:
-    ```
-    config = ConfigObject(...)  # Create or load your configuration object
-    build_merged_epr_mct_annot_df(config, overwrite=True)
-    ```
-
-    """
     directory_path = config_obj.proj_name + "/" + "merged_batches/"
     Path(directory_path).mkdir(parents=True, exist_ok=True)
 
     output_file_path = directory_path + "docs_mct_epr.csv"
+    file_exists = os.path.isfile(output_file_path)
 
-    if not overwrite and Path(output_file_path).is_file():
+    if not overwrite and file_exists:
         print("Output file already exists. Appending to the existing file.")
     else:
-        for i in tqdm(range(0, len(all_pat_list)), total=len(all_pat_list)):
-            current_pat_idcode = all_pat_list[i]
-            all_annots = retrieve_pat_docs_mct_epr(current_pat_idcode, config_obj)
+        file_exists = False  # Reset to False to trigger overwrite if needed
+        print("Creating a new output file.")
 
-            if i == 0:
-                # Create the output file and write the first batch directly
-                all_annots.to_csv(output_file_path, index=False)
-            else:
-                # Append each result to the output file
-                all_annots.to_csv(output_file_path, mode="a", header=False, index=False)
+    for i in tqdm(range(0, len(all_pat_list)), total=len(all_pat_list)):
+        current_pat_idcode = all_pat_list[i]
+        try:
+            all_docs = retrieve_pat_docs_mct_epr(current_pat_idcode, config_obj)
+        except Exception as e:
+            print("Error retrieving patient documents for:", current_pat_idcode)
+            print(e)
+            continue  # Skip to the next patient in case of an error
+
+        if file_exists:
+            # Read the existing columns from the file
+            existing_columns = pd.read_csv(output_file_path, nrows=0).columns
+            # Ensure the new DataFrame has the same column order
+            all_docs = all_docs.reindex(columns=existing_columns)
+
+        # Write or append the DataFrame to the CSV
+        all_docs.to_csv(
+            output_file_path,
+            mode="a" if file_exists else "w",
+            header=not file_exists,
+            index=False,
+        )
+
+        # After the first successful write, set file_exists to True
+        file_exists = True
 
     return output_file_path
+
+
+def retrieve_pat_docs_mct_epr(
+    client_idcode,
+    config_obj,
+    columns_epr=None,
+    columns_mct=None,
+    columns_to=None,
+    columns_report=None,
+    merge_columns=True,
+):
+    pre_document_batch_path = config_obj.pre_document_batch_path
+    pre_document_batch_path_mct = config_obj.pre_document_batch_path_mct
+    pre_textual_obs_document_batch_path = config_obj.pre_textual_obs_document_batch_path
+    pre_document_batch_path_reports = config_obj.pre_document_batch_path_reports
+
+    epr_file_path = f"{pre_document_batch_path}/{client_idcode}.csv"
+    mct_file_path = f"{pre_document_batch_path_mct}/{client_idcode}.csv"
+    textual_obs_files_path = (
+        f"{pre_textual_obs_document_batch_path}/{client_idcode}.csv"
+    )
+    report_file_path = f"{pre_document_batch_path_reports}/{client_idcode}.csv"
+
+    dfs = []
+    if os.path.exists(epr_file_path):
+        dfa = pd.read_csv(epr_file_path, usecols=columns_epr)
+        dfa["document_batch_source"] = "epr"
+        dfs.append(dfa)
+
+    if os.path.exists(mct_file_path):
+        dfa_mct = pd.read_csv(mct_file_path, usecols=columns_mct)
+        dfa_mct["document_batch_source"] = "mct"
+        dfs.append(dfa_mct)
+
+    if os.path.exists(textual_obs_files_path):
+        dfa_to = pd.read_csv(textual_obs_files_path, usecols=columns_to)
+        dfa_to["document_batch_source"] = "textual_obs"
+        dfs.append(dfa_to)
+
+    if os.path.exists(report_file_path):
+        dfr = pd.read_csv(report_file_path, usecols=columns_report)
+        dfr["document_batch_source"] = "report"
+        dfs.append(dfr)
+
+    if not dfs:
+        return pd.DataFrame()  # Return an empty DataFrame if no data was loaded
+
+    all_docs = pd.concat(dfs, ignore_index=True)
+
+    if merge_columns and not all_docs.empty:
+        all_docs["updatetime"] = all_docs["updatetime"].fillna(
+            all_docs["observationdocument_recordeddtm"]
+        )
+        all_docs["observationdocument_recordeddtm"] = all_docs[
+            "observationdocument_recordeddtm"
+        ].fillna(all_docs["updatetime"])
+        all_docs["document_guid"] = all_docs["document_guid"].fillna(
+            all_docs["observation_guid"]
+        )
+        all_docs["document_description"] = all_docs["document_description"].fillna(
+            all_docs["obscatalogmasteritem_displayname"]
+        )
+        all_docs["body_analysed"] = all_docs["body_analysed"].fillna(
+            all_docs["observation_valuetext_analysed"]
+        )
+
+    return all_docs.reset_index(drop=True)
 
 
 def join_docs_to_annots(annots_df, docs_temp, drop_duplicates=True):
