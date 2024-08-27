@@ -1119,18 +1119,35 @@ def build_ipw_dataframe(
     return df
 
 
-
-def retrieve_pat_annots_mct_epr(client_idcode, config_obj, columns_epr=None, columns_mct=None, columns_to=None, columns_report=None, merge_columns=True):
+def retrieve_pat_annots_mct_epr(
+    client_idcode,
+    config_obj,
+    columns_epr=None,
+    columns_mct=None,
+    columns_to=None,
+    columns_report=None,
+    merge_columns=True,
+):
     # Define file paths based on the client_idcode and config paths
     pre_document_annotation_batch_path = config_obj.pre_document_annotation_batch_path
-    pre_document_annotation_batch_path_mct = config_obj.pre_document_annotation_batch_path_mct
-    pre_textual_obs_annotation_batch_path = config_obj.pre_textual_obs_annotation_batch_path
-    pre_document_annotation_batch_path_reports = config_obj.pre_document_annotation_batch_path_reports
+    pre_document_annotation_batch_path_mct = (
+        config_obj.pre_document_annotation_batch_path_mct
+    )
+    pre_textual_obs_annotation_batch_path = (
+        config_obj.pre_textual_obs_annotation_batch_path
+    )
+    pre_document_annotation_batch_path_reports = (
+        config_obj.pre_document_annotation_batch_path_reports
+    )
 
     epr_file_path = f"{pre_document_annotation_batch_path}/{client_idcode}.csv"
     mct_file_path = f"{pre_document_annotation_batch_path_mct}/{client_idcode}.csv"
-    textual_obs_files_path = f"{pre_textual_obs_annotation_batch_path}/{client_idcode}.csv"
-    report_file_path = f"{pre_document_annotation_batch_path_reports}/{client_idcode}.csv"
+    textual_obs_files_path = (
+        f"{pre_textual_obs_annotation_batch_path}/{client_idcode}.csv"
+    )
+    report_file_path = (
+        f"{pre_document_annotation_batch_path_reports}/{client_idcode}.csv"
+    )
 
     # Initialize DataFrames
     dfa = pd.DataFrame()
@@ -1141,35 +1158,66 @@ def retrieve_pat_annots_mct_epr(client_idcode, config_obj, columns_epr=None, col
     # Load data if files exist
     if os.path.exists(epr_file_path):
         dfa = pd.read_csv(epr_file_path, usecols=columns_epr)
-        dfa['annotation_batch_source'] = 'epr'
+        dfa["annotation_batch_source"] = "epr"
 
     if os.path.exists(mct_file_path):
         dfa_mct = pd.read_csv(mct_file_path, usecols=columns_mct)
-        dfa_mct['annotation_batch_source'] = 'mct'
+        dfa_mct["annotation_batch_source"] = "mct"
 
     if os.path.exists(textual_obs_files_path):
         dfa_to = pd.read_csv(textual_obs_files_path, usecols=columns_to)
-        dfa_to['annotation_batch_source'] = 'textual_obs'
+        dfa_to["annotation_batch_source"] = "textual_obs"
 
     if os.path.exists(report_file_path):
         dfr = pd.read_csv(report_file_path, usecols=columns_report)
-        dfr['annotation_batch_source'] = 'report'
+        dfr["annotation_batch_source"] = "report"
 
     # Concatenate all dataframes
     all_annots = pd.concat([dfa, dfa_mct, dfa_to, dfr], ignore_index=True)
 
     # Merge columns if required
     if merge_columns and not all_annots.empty:
-        all_annots["updatetime"] = all_annots["updatetime"].fillna(all_annots["observationannotation_recordeddtm"])
-        all_annots["observationannotation_recordeddtm"] = all_annots["observationannotation_recordeddtm"].fillna(all_annots["updatetime"])
+        if "observationannotation_recordeddtm" in all_annots.columns:
+            all_annots["updatetime"] = all_annots["updatetime"].fillna(
+                all_annots["observationannotation_recordeddtm"]
+            )
 
-        # Merge observation_guid to annotation_guid
-        all_annots["annotation_guid"] = all_annots["annotation_guid"].fillna(all_annots["observation_guid"])
+            all_annots["observationannotation_recordeddtm"] = all_annots[
+                "observationannotation_recordeddtm"
+            ].fillna(all_annots["updatetime"])
 
-        # Add obscatalogmasteritem_displayname to annotation_description
-        all_annots["annotation_description"] = all_annots["annotation_description"].fillna(all_annots["obscatalogmasteritem_displayname"])
+        if "basicobs_entered" in all_annots.columns:
 
-        all_annots["body_analysed"] = all_annots["body_analysed"].fillna(all_annots["observation_valuetext_analysed"])
+            all_annots["updatetime"] = all_annots["updatetime"].fillna(
+                all_annots["basicobs_entered"]
+            )
+
+        if "observationdocument_recordeddtm" in all_annots.columns:
+
+            all_annots["updatetime"] = all_annots["updatetime"].fillna(
+                all_annots["observationdocument_recordeddtm"]
+            )
+
+        if "basicobs_guid" in all_annots.columns:
+            # Merge observation_guid to document_guid
+            all_annots["document_guid"] = all_annots["document_guid"].fillna(
+                all_annots["basicobs_guid"]
+            )
+        if "observation_guid" in all_annots.columns:
+            all_annots["document_guid"] = all_annots["document_guid"].fillna(
+                all_annots["observation_guid"]
+            )
+
+        if "obscatalogmasteritem_displayname" in all_annots.columns:
+            # Add obscatalogmasteritem_displayname to annotation_description
+            all_annots["annotation_description"] = all_annots[
+                "annotation_description"
+            ].fillna(all_annots["obscatalogmasteritem_displayname"])
+
+        if "observation_valuetext_analysed" in all_annots.columns:
+            all_annots["body_analysed"] = all_annots["body_analysed"].fillna(
+                all_annots["observation_valuetext_analysed"]
+            )
 
     return all_annots
 
