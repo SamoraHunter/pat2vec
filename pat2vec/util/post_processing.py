@@ -1219,6 +1219,8 @@ def retrieve_pat_annots_mct_epr(
                 all_annots["observation_valuetext_analysed"]
             )
 
+
+
     return all_annots
 
 
