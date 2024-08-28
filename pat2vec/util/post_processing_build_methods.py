@@ -248,21 +248,16 @@ def retrieve_pat_docs_mct_epr(
     all_docs = pd.concat(dfs, ignore_index=True)
 
     if merge_columns and not all_docs.empty:
-        all_docs["updatetime"] = all_docs["updatetime"].fillna(
-            all_docs["observationdocument_recordeddtm"]
-        )
-        all_docs["observationdocument_recordeddtm"] = all_docs[
-            "observationdocument_recordeddtm"
-        ].fillna(all_docs["updatetime"])
-        all_docs["document_guid"] = all_docs["document_guid"].fillna(
-            all_docs["observation_guid"]
-        )
-        all_docs["document_description"] = all_docs["document_description"].fillna(
-            all_docs["obscatalogmasteritem_displayname"]
-        )
-        all_docs["body_analysed"] = all_docs["body_analysed"].fillna(
-            all_docs["observation_valuetext_analysed"]
-        )
+
+        for col1, col2 in [
+            ("updatetime", "observationdocument_recordeddtm"),
+            ("observationdocument_recordeddtm", "updatetime"),
+            ("document_guid", "observation_guid"),
+            ("document_description", "obscatalogmasteritem_displayname"),
+            ("body_analysed", "observation_valuetext_analysed"),
+        ]:
+            if col1 in all_docs.columns and col2 in all_docs.columns:
+                all_docs[col1] = all_docs[col1].fillna(all_docs[col2])
 
     return all_docs.reset_index(drop=True)
 
