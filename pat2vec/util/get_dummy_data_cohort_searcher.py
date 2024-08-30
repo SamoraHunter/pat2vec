@@ -618,10 +618,12 @@ def generate_basic_observations_data(
         "order_guid": [f"order_{i}" for i in range(num_rows)],
         "order_name": [None for i in range(num_rows)],
         "order_summaryline": [
-            maybe_nan(fake.sentence() for _ in range(num_rows)) for i in range(num_rows)
+            maybe_nan([fake.sentence() for _ in range(num_rows)])
+            for i in range(num_rows)
         ],
         "order_holdreasontext": [
-            maybe_nan(fake.sentence() for _ in range(num_rows)) for i in range(num_rows)
+            maybe_nan([fake.sentence() for _ in range(num_rows)])
+            for i in range(num_rows)
         ],
         "order_entered": ["{np.nan}" for i in range(num_rows)],
         "clientvisit_visitidcode": ["{np.nan}" for i in range(num_rows)],
@@ -640,7 +642,7 @@ def generate_basic_observations_data(
     }
 
     df = pd.DataFrame(data)
-    print(type(df))
+
     return df
 
 
@@ -694,7 +696,8 @@ def generate_basic_observations_textual_obs_data(
             for _ in range(num_rows)
         ],
         "textualObs": [
-            maybe_nan(fake.sentence() for _ in range(num_rows)) for i in range(num_rows)
+            maybe_nan([fake.sentence() for _ in range(num_rows)])
+            for i in range(num_rows)
         ],
     }
 
@@ -832,6 +835,7 @@ def cohort_searcher_with_terms_and_search_dummy(
         if verbose:
             print("Generating text data for 'basic_observations, reports'")
         print("Generating text data for 'basic_observations, reports'")
+
         probabilities = [0.7, 0.1, 0.05, 0.05, 0.05]  # Adjust as needed
         num_rows = random.choices(range(1, 6), probabilities)[0]
         df = generate_observations_Reports_text_data(
