@@ -1109,12 +1109,16 @@ def build_ipw_dataframe(
 
         df = pd.concat([df, res], ignore_index=True)
 
-    df["updatetime"] = df["updatetime"].fillna(df["observationdocument_recordeddtm"])
+    if "observationdocument_recordeddtm" in df.columns:
+        df["updatetime"] = df["updatetime"].fillna(
+            df["observationdocument_recordeddtm"]
+        )
 
-    # Fill missing values in 'observationdocument_recordeddtm' column with values from 'updatetime'
-    df["observationdocument_recordeddtm"] = df[
-        "observationdocument_recordeddtm"
-    ].fillna(df["updatetime"])
+        if "updatetime" in df.columns:
+            # Fill missing values in 'observationdocument_recordeddtm' column with values from 'updatetime'
+            df["observationdocument_recordeddtm"] = df[
+                "observationdocument_recordeddtm"
+            ].fillna(df["updatetime"])
 
     return df
 
