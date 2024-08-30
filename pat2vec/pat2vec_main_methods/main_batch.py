@@ -322,14 +322,17 @@ def main_batch(
                     patient_vector.append(df_pat_target)
 
                 if main_options.get("textual_obs"):
+
                     update_pbar(
                         p_bar_entry, start_time, 1, "textual_obs", t, config_obj
                     )
+
                     df_pat_target = get_current_pat_textual_obs_annotations(
-                        current_pat_client_id_code,
-                        target_date_range,
-                        batch_textual_obs_annotations,
+                        current_pat_client_id_code=current_pat_client_id_code,
+                        target_date_range=target_date_range,
+                        textual_obs_annotations=batch_textual_obs_annotations,
                         config_obj=config_obj,
+                        t=t,
                         cohort_searcher_with_terms_and_search=cohort_searcher_with_terms_and_search,
                     )
                     patient_vector.append(df_pat_target)
