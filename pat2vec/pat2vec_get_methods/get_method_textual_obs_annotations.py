@@ -134,4 +134,4 @@ def get_current_pat_textual_obs_annotations(
     if config_obj.verbosity >= 6:
         display(processed_annotations)
 
-    return processed_annotations
+    return processed_annotations  # Return the processed annotation vector
