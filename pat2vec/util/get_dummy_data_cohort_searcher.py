@@ -197,8 +197,14 @@ def generate_diagnostic_orders_data(
         "order_guid": [f"order_{i}" for i in range(num_rows)],
         "client_idcode": [random.choice(entered_list) for _ in range(num_rows)],
         "order_name": [fake.random_element(diagnostic_names) for _ in range(num_rows)],
-        "order_summaryline": [fake.sentence() for _ in range(num_rows)],
-        "order_holdreasontext": [fake.sentence() for _ in range(num_rows)],
+        "order_summaryline": [
+            maybe_nan(" ".join(fake.sentence() for _ in range(num_rows)))
+            for i in range(num_rows)
+        ],
+        "order_holdreasontext": [
+            maybe_nan(" ".join(fake.sentence() for _ in range(num_rows)))
+            for i in range(num_rows)
+        ],
         "order_entered": [
             datetime(
                 random.randint(global_start_year, global_end_year),
@@ -260,9 +266,15 @@ def generate_drug_orders_data(
         # New value for drug_name
         "order_name": [fake.random_element(drug_names) for _ in range(num_rows)],
         # New value for drug_description
-        "order_summaryline": [fake.sentence() for _ in range(num_rows)],
+        "order_summaryline": [
+            maybe_nan(" ".join(fake.sentence() for _ in range(num_rows)))
+            for i in range(num_rows)
+        ],
         # New value for dosage
-        "order_holdreasontext": [fake.sentence() for _ in range(num_rows)],
+        "order_holdreasontext": [
+            maybe_nan(" ".join(fake.sentence() for _ in range(num_rows)))
+            for i in range(num_rows)
+        ],
         "order_entered": [
             datetime(
                 random.randint(global_start_year, global_end_year),
@@ -618,11 +630,11 @@ def generate_basic_observations_data(
         "order_guid": [f"order_{i}" for i in range(num_rows)],
         "order_name": [None for i in range(num_rows)],
         "order_summaryline": [
-            maybe_nan([fake.sentence() for _ in range(num_rows)])
+            maybe_nan(" ".join(fake.sentence() for _ in range(num_rows)))
             for i in range(num_rows)
         ],
         "order_holdreasontext": [
-            maybe_nan([fake.sentence() for _ in range(num_rows)])
+            maybe_nan(" ".join(fake.sentence() for _ in range(num_rows)))
             for i in range(num_rows)
         ],
         "order_entered": ["{np.nan}" for i in range(num_rows)],
@@ -696,13 +708,13 @@ def generate_basic_observations_textual_obs_data(
             for _ in range(num_rows)
         ],
         "textualObs": [
-            maybe_nan([fake.sentence() for _ in range(num_rows)])
+            maybe_nan(" ".join(fake.sentence() for _ in range(num_rows)))
             for i in range(num_rows)
         ],
     }
 
     df = pd.DataFrame(data)
-    print(type(df))
+
     return df
 
 
