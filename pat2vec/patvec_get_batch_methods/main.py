@@ -1157,7 +1157,7 @@ def get_pat_batch_textual_obs_docs(
     overwrite_stored_pat_observations = config_obj.overwrite_stored_pat_observations
     store_pat_batch_observations = config_obj.store_pat_batch_observations
 
-    search_term = "report"
+    # search_term = "report"
 
     bloods_time_field = config_obj.bloods_time_field
 
@@ -1208,6 +1208,11 @@ def get_pat_batch_textual_obs_docs(
                 search_string=f""
                 + f"{bloods_time_field}:[{global_start_year}-{global_start_month}-{global_start_day} TO {global_end_year}-{global_end_month}-{global_end_day}]",
             )
+
+            # Drop rows with no textualObs
+            batch_target = batch_target.dropna(subset=["textualObs"])
+            # Drop rows with empty string in textualObs
+            batch_target = batch_target[batch_target["textualObs"] != ""]
 
             # batch_target = batch_target.rename(columns={'textualObs': 'body_analysed'})
             # batch_target["body_analysed"] = (

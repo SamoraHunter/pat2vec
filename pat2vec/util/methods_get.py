@@ -314,6 +314,8 @@ def filter_dataframe_by_timestamp(
         df[timestamp_string], utc=True, errors="coerce"
     )
 
+    df = df.dropna(subset=[timestamp_string])
+
     # Ensure start date is earlier than end date
     start_datetime = pd.Timestamp(
         datetime(start_year, int(start_month), int(start_day)), tz="UTC"
