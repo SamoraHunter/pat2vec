@@ -310,7 +310,9 @@ def filter_dataframe_by_timestamp(
 ):
 
     # Convert timestamp column to datetime format
-    df[timestamp_string] = pd.to_datetime(df[timestamp_string], utc=True)
+    df[timestamp_string] = pd.to_datetime(
+        df[timestamp_string], utc=True, errors="coerce"
+    )
 
     # Ensure start date is earlier than end date
     start_datetime = pd.Timestamp(
