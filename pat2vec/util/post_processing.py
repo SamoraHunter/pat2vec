@@ -1203,10 +1203,15 @@ def retrieve_pat_annots_mct_epr(
             )
 
         if "basicobs_guid" in all_annots.columns:
-            # Merge observation_guid to document_guid
-            all_annots["document_guid"] = all_annots["document_guid"].fillna(
-                all_annots["basicobs_guid"]
-            )
+            
+            if("document_guid" in all_annots.columns):
+                # Merge observation_guid to document_guid
+                all_annots["document_guid"] = all_annots["document_guid"].fillna(
+                    all_annots["basicobs_guid"]
+                )
+            else:
+                all_annots["document_guid"] = all_annots["basicobs_guid"]
+                
         if "observation_guid" in all_annots.columns:
             all_annots["document_guid"] = all_annots["document_guid"].fillna(
                 all_annots["observation_guid"]
