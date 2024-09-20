@@ -158,6 +158,49 @@ def build_merged_epr_mct_annot_df(all_pat_list, config_obj, overwrite=False):
 #     return output_file_path
 
 
+def build_merged_bloods(all_pat_list, config_obj, overwrite=False):
+
+    directory_path = config_obj.proj_name + "/" + "merged_batches/"
+    Path(directory_path).mkdir(parents=True, exist_ok=True)
+
+    output_file_path = directory_path + "bloods_batches.csv"
+    file_exists = os.path.isfile(output_file_path)
+
+    if not overwrite and file_exists:
+        print("Output file already exists. Appending to the existing file.")
+    else:
+        file_exists = False  # Reset to False to trigger overwrite if needed
+        print("Creating a new output file.")
+
+    for i in tqdm(range(0, len(all_pat_list)), total=len(all_pat_list)):
+        current_pat_idcode = all_pat_list[i]
+        try:
+            all_bloods = retrieve_pat_bloods(current_pat_idcode, config_obj)
+        except Exception as e:
+            print("Error retrieving patient bloods for:", current_pat_idcode)
+            print(e)
+            continue  # Skip to the next patient in case of an error
+
+        if file_exists:
+            # Read the existing columns from the file
+            existing_columns = pd.read_csv(output_file_path, nrows=0).columns
+            # Ensure the new DataFrame has the same column order
+            all_bloods = all_bloods.reindex(columns=existing_columns)
+
+        # Write or append the DataFrame to the CSV
+        all_bloods.to_csv(
+            output_file_path,
+            mode="a" if file_exists else "w",
+            header=not file_exists,
+            index=False,
+        )
+
+        # After the first successful write, set file_exists to True
+        file_exists = True
+
+    return output_file_path
+
+
 def build_merged_epr_mct_doc_df(all_pat_list, config_obj, overwrite=False):
     directory_path = config_obj.proj_name + "/" + "merged_batches/"
     Path(directory_path).mkdir(parents=True, exist_ok=True)
@@ -198,6 +241,35 @@ def build_merged_epr_mct_doc_df(all_pat_list, config_obj, overwrite=False):
         file_exists = True
 
     return output_file_path
+
+
+def retrieve_pat_bloods(client_idcode, config_obj):
+    """
+    Retrieve bloods data for the given client_idcode.
+
+    Parameters
+    ----------
+    client_idcode : str
+        Unique identifier for the patient.
+    config_obj : ConfigObject
+        Configuration object containing necessary paths and parameters.
+
+    Returns
+    -------
+    pat_bloods : pd.DataFrame
+        Bloods data for the given client_idcode, if available.
+    """
+    pre_bloods_batch_path = config_obj.pre_bloods_batch_path
+
+    pat_bloods_path = f"{pre_bloods_batch_path}/{client_idcode}.csv"
+
+    try:
+        pat_bloods = pd.read_csv(pat_bloods_path)
+    except Exception as e:
+        print(e)
+        pat_bloods = pd.DataFrame()
+
+    return pat_bloods
 
 
 def retrieve_pat_docs_mct_epr(
