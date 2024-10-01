@@ -4,6 +4,8 @@
 
 # Ignore log files
 *.log
+requirements.in
+notebooks/requirements.in
 
 # Ignore temporary files
 *.tmp
