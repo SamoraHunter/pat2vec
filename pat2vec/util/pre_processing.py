@@ -39,6 +39,8 @@ def get_treatment_docs_by_iterative_multi_term_cohort_searcher_no_terms_fuzzy(
     overwrite_search_term=None,
     append=False,
     verbose=0,
+    mct=True,
+    textual_obs=True
 ):
     """
     This function takes a list of terms, runs iterative_multi_term_cohort_searcher_no_terms_fuzzy
@@ -60,6 +62,8 @@ def get_treatment_docs_by_iterative_multi_term_cohort_searcher_no_terms_fuzzy(
     # output_path = os.join(pat2vec_obj.proj_name, pat2vec_obj.treatment_doc_filename)
     output_path = os.path.join(pat2vec_obj.treatment_doc_filename)
 
+    
+
     # create function that takes a list of terms, runs iterative_multi_term_cohort_searcher_no_terms_fuzzy and returns terms
 
     if pat2vec_obj.config_obj.lookback == False:
@@ -73,7 +77,7 @@ def get_treatment_docs_by_iterative_multi_term_cohort_searcher_no_terms_fuzzy(
         global_end_year = pat2vec_obj.config_obj.global_end_year
     else:
         if verbose >= 1:
-            print("Using global end date.")
+            print("Using global end date. as start")
         global_start_day = pat2vec_obj.config_obj.global_end_day
         global_start_month = pat2vec_obj.config_obj.global_end_month
         global_start_year = pat2vec_obj.config_obj.global_start_year
@@ -145,6 +149,10 @@ def get_treatment_docs_by_iterative_multi_term_cohort_searcher_no_terms_fuzzy(
     else:
         if verbose >= 1:
             print("Running in live mode, doing real search.")
+
+        print("epr:", global_start_day, global_start_month, global_start_year,
+        global_end_day, global_end_month, global_end_year )
+
         search_results = iterative_multi_term_cohort_searcher_no_terms_fuzzy(
             term_list,
             output_path,
@@ -156,6 +164,7 @@ def get_treatment_docs_by_iterative_multi_term_cohort_searcher_no_terms_fuzzy(
             end_year=global_end_year,
             debug=False,
             overwrite=overwrite,
+            
         )
 
     if (os.path.exists(output_path) and overwrite) or os.path.exists(
@@ -182,6 +191,49 @@ def get_treatment_docs_by_iterative_multi_term_cohort_searcher_no_terms_fuzzy(
             print("treatment docs already exist, reading and returning")
 
         search_results = pd.read_csv(output_path)
+
+    if(mct):
+        print("mct:", global_start_day, global_start_month, global_start_year,
+        global_end_day, global_end_month, global_end_year )
+
+        docs = iterative_multi_term_cohort_searcher_no_terms_fuzzy_mct(term_list,
+        output_path,
+        start_day=global_start_day,
+        start_month=global_start_month,
+        start_year=global_start_year,
+        end_day=global_end_day,
+        end_month=global_end_month,
+        end_year=global_end_year,
+        append=True,
+        #debug=debug,
+        #uuid_column_name=uuid_column_name
+        )
+
+        search_results = pd.concat([search_results, docs], axis=1)
+
+        if not textual_obs:
+
+
+            return search_results
+
+    if textual_obs:
+        docs = iterative_multi_term_cohort_searcher_no_terms_fuzzy_textual_obs(term_list,
+        output_path,
+        start_day=global_start_day,
+        start_month=global_start_month,
+        start_year=global_start_year,
+        end_day=global_end_day,
+        end_month=global_end_month,
+        end_year=global_end_year,
+        append=True,
+        #debug=debug,
+        #uuid_column_name=uuid_column_name
+        )
+
+        search_results = pd.concat([search_results, docs], axis=1)
+
+        return search_results
+
 
     return search_results
 
