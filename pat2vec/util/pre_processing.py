@@ -40,7 +40,7 @@ def get_treatment_docs_by_iterative_multi_term_cohort_searcher_no_terms_fuzzy(
     append=False,
     verbose=0,
     mct=True,
-    textual_obs=True
+    textual_obs=True,
 ):
     """
     This function takes a list of terms, runs iterative_multi_term_cohort_searcher_no_terms_fuzzy
@@ -61,8 +61,6 @@ def get_treatment_docs_by_iterative_multi_term_cohort_searcher_no_terms_fuzzy(
         )
     # output_path = os.join(pat2vec_obj.proj_name, pat2vec_obj.treatment_doc_filename)
     output_path = os.path.join(pat2vec_obj.treatment_doc_filename)
-
-    
 
     # create function that takes a list of terms, runs iterative_multi_term_cohort_searcher_no_terms_fuzzy and returns terms
 
@@ -132,26 +130,22 @@ def get_treatment_docs_by_iterative_multi_term_cohort_searcher_no_terms_fuzzy(
                     print(search_results)
 
         search_results = pd.concat(results_holder, ignore_index=True)
-        # search_results = cohort_searcher_with_terms_and_search_dummy(
-        #     "epr_documents",
-        #     pat2vec_obj.fields_list,
-        #     pat2vec_obj.term_name,
-        #     pat2vec_obj.entered_list,
-        #     pat2vec_obj.search_string,
-        #     global_start_day,
-        #     global_start_month,
-        #     global_start_year,
-        #     global_end_day,
-        #     global_end_month,
-        #     global_end_year,
-        #     search_string=f"updatetime:[{global_start_year}-{global_start_month}-{global_start_day} TO {global_end_year}-{global_end_month}-{global_end_day}]",
-        # )
+
     else:
         if verbose >= 1:
             print("Running in live mode, doing real search.")
 
-        print("epr:", global_start_day, global_start_month, global_start_year,
-        global_end_day, global_end_month, global_end_year )
+        print(
+            "epr:",
+            global_start_day,
+            global_start_month,
+            global_start_year,
+            global_end_day,
+            global_end_month,
+            global_end_year,
+            "lookback: ",
+            pat2vec_obj.config_obj.lookback,
+        )
 
         search_results = iterative_multi_term_cohort_searcher_no_terms_fuzzy(
             term_list,
@@ -164,7 +158,6 @@ def get_treatment_docs_by_iterative_multi_term_cohort_searcher_no_terms_fuzzy(
             end_year=global_end_year,
             debug=False,
             overwrite=overwrite,
-            
         )
 
     if (os.path.exists(output_path) and overwrite) or os.path.exists(
@@ -192,48 +185,67 @@ def get_treatment_docs_by_iterative_multi_term_cohort_searcher_no_terms_fuzzy(
 
         search_results = pd.read_csv(output_path)
 
-    if(mct):
-        print("mct:", global_start_day, global_start_month, global_start_year,
-        global_end_day, global_end_month, global_end_year )
-
-        docs = iterative_multi_term_cohort_searcher_no_terms_fuzzy_mct(term_list,
-        output_path,
-        start_day=global_start_day,
-        start_month=global_start_month,
-        start_year=global_start_year,
-        end_day=global_end_day,
-        end_month=global_end_month,
-        end_year=global_end_year,
-        append=True,
-        #debug=debug,
-        #uuid_column_name=uuid_column_name
+    if mct:
+        print(
+            "mct:",
+            global_start_day,
+            global_start_month,
+            global_start_year,
+            global_end_day,
+            global_end_month,
+            global_end_year,
         )
 
-        search_results = pd.concat([search_results, docs], axis=1)
+        docs = iterative_multi_term_cohort_searcher_no_terms_fuzzy_mct(
+            term_list,
+            output_path,
+            start_day=global_start_day,
+            start_month=global_start_month,
+            start_year=global_start_year,
+            end_day=global_end_day,
+            end_month=global_end_month,
+            end_year=global_end_year,
+            append=True,
+            # debug=debug,
+            # uuid_column_name=uuid_column_name
+        )
+
+        search_results = pd.concat([search_results, docs], axis=0)
+
+        # merge document column to fill body_analysed nan with observation_valuetext_analysed
+
+        search_results["body_analysed"] = search_results["body_analysed"].fillna(
+            search_results["observation_valuetext_analysed"]
+        )
 
         if not textual_obs:
-
 
             return search_results
 
     if textual_obs:
-        docs = iterative_multi_term_cohort_searcher_no_terms_fuzzy_textual_obs(term_list,
-        output_path,
-        start_day=global_start_day,
-        start_month=global_start_month,
-        start_year=global_start_year,
-        end_day=global_end_day,
-        end_month=global_end_month,
-        end_year=global_end_year,
-        append=True,
-        #debug=debug,
-        #uuid_column_name=uuid_column_name
+        docs = iterative_multi_term_cohort_searcher_no_terms_fuzzy_textual_obs(
+            term_list,
+            output_path,
+            start_day=global_start_day,
+            start_month=global_start_month,
+            start_year=global_start_year,
+            end_day=global_end_day,
+            end_month=global_end_month,
+            end_year=global_end_year,
+            append=True,
+            # debug=debug,
+            # uuid_column_name=uuid_column_name
         )
 
-        search_results = pd.concat([search_results, docs], axis=1)
+        search_results = pd.concat([search_results, docs], axis=0)
+
+        # merge document column to fill body_analysed nan with textualObs
+
+        search_results["body_analysed"] = search_results["body_analysed"].fillna(
+            search_results["textualObs"]
+        )
 
         return search_results
-
 
     return search_results
 
