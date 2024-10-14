@@ -177,6 +177,7 @@ class config_class:
         filter_split_notes=True,
         client_idcode_term_name="client_idcode.keyword",
         sanitize_pat_list=True,
+        calculate_vectors=True,
     ):
 
         # Configure logging
@@ -219,6 +220,8 @@ class config_class:
 
         # # Now you can use the logger to log messages within the class
         # self.logger.info("Initialized config_pat2vec")
+
+        self.calculate_vectors = calculate_vectors  # Calculate vectors for each patient else just extract batches
 
         self.sanitize_pat_list = (
             sanitize_pat_list  # Enforce all characters capitalized in patient list.

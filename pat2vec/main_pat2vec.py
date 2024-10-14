@@ -991,34 +991,37 @@ class main:
                             )
 
                         else:
-                            main_batch(
-                                all_patient_list[i],
-                                date_list[j],
-                                batch_demo=batch_demo,
-                                batch_smoking=batch_smoking,
-                                batch_core_02=batch_core_02,
-                                batch_bednumber=batch_bednumber,
-                                batch_vte=batch_vte,
-                                batch_hospsite=batch_hospsite,
-                                batch_resus=batch_resus,
-                                batch_news=batch_news,
-                                batch_bmi=batch_bmi,
-                                batch_diagnostics=batch_diagnostics,
-                                batch_epr=batch_epr,
-                                batch_mct=batch_mct,
-                                batch_bloods=batch_bloods,
-                                batch_drugs=batch_drugs,
-                                batch_epr_docs_annotations=batch_epr_docs_annotations,
-                                batch_epr_docs_annotations_mct=batch_epr_docs_annotations_mct,
-                                batch_report_docs_annotations=batch_reports_docs_annotations,
-                                batch_textual_obs_annotations=batch_textual_obs_annotations,
-                                batch_appointments=batch_appointments,
-                                config_obj=self.config_obj,
-                                stripped_list_start=stripped_list_start,
-                                t=self.t,
-                                cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search,
-                                cat=self.cat,
-                            )
+                            if self.config_obj.calculate_vectors:
+                                main_batch(
+                                    all_patient_list[i],
+                                    date_list[j],
+                                    batch_demo=batch_demo,
+                                    batch_smoking=batch_smoking,
+                                    batch_core_02=batch_core_02,
+                                    batch_bednumber=batch_bednumber,
+                                    batch_vte=batch_vte,
+                                    batch_hospsite=batch_hospsite,
+                                    batch_resus=batch_resus,
+                                    batch_news=batch_news,
+                                    batch_bmi=batch_bmi,
+                                    batch_diagnostics=batch_diagnostics,
+                                    batch_epr=batch_epr,
+                                    batch_mct=batch_mct,
+                                    batch_bloods=batch_bloods,
+                                    batch_drugs=batch_drugs,
+                                    batch_epr_docs_annotations=batch_epr_docs_annotations,
+                                    batch_epr_docs_annotations_mct=batch_epr_docs_annotations_mct,
+                                    batch_report_docs_annotations=batch_reports_docs_annotations,
+                                    batch_textual_obs_annotations=batch_textual_obs_annotations,
+                                    batch_appointments=batch_appointments,
+                                    config_obj=self.config_obj,
+                                    stripped_list_start=stripped_list_start,
+                                    t=self.t,
+                                    cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search,
+                                    cat=self.cat,
+                                )
+                            else:
+                                pass
 
                 except Exception as e:
                     print(e)
