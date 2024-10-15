@@ -213,10 +213,10 @@ def get_treatment_docs_by_iterative_multi_term_cohort_searcher_no_terms_fuzzy(
         search_results = pd.concat([search_results, docs], axis=0)
 
         # merge document column to fill body_analysed nan with observation_valuetext_analysed
-
-        search_results["body_analysed"] = search_results["body_analysed"].fillna(
-            search_results["observation_valuetext_analysed"]
-        )
+        if "observation_valuetext_analysed" in search_results.columns:
+            search_results["body_analysed"] = search_results["body_analysed"].fillna(
+                search_results["observation_valuetext_analysed"]
+            )
 
         if not textual_obs:
 
@@ -240,10 +240,10 @@ def get_treatment_docs_by_iterative_multi_term_cohort_searcher_no_terms_fuzzy(
         search_results = pd.concat([search_results, docs], axis=0)
 
         # merge document column to fill body_analysed nan with textualObs
-
-        search_results["body_analysed"] = search_results["body_analysed"].fillna(
-            search_results["textualObs"]
-        )
+        if "textualObs" in search_results.columns:
+            search_results["body_analysed"] = search_results["body_analysed"].fillna(
+                search_results["textualObs"]
+            )
 
         return search_results
 
