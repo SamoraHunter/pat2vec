@@ -41,6 +41,8 @@ def get_treatment_docs_by_iterative_multi_term_cohort_searcher_no_terms_fuzzy(
     verbose=0,
     mct=True,
     textual_obs=True,
+    additional_filters=None,
+    all_fields=False,
 ):
     """
     This function takes a list of terms, runs iterative_multi_term_cohort_searcher_no_terms_fuzzy
@@ -54,6 +56,13 @@ def get_treatment_docs_by_iterative_multi_term_cohort_searcher_no_terms_fuzzy(
 
     overwrite:
         Whether to overwrite the output file if it already exists. Default is False.
+
+    additional_filters:
+        A list of additional filters to apply to the search.
+
+    all_fields:
+        Whether to include and return all fields in the search.
+
     """
     if verbose >= 1:
         print(
@@ -110,6 +119,18 @@ def get_treatment_docs_by_iterative_multi_term_cohort_searcher_no_terms_fuzzy(
                     if verbose >= 1:
                         print("overwrite_search_term: ", overwrite_search_term)
 
+                search_string = (
+                    term_to_search
+                    + " AND "
+                    + " "
+                    + f"updatetime:[{global_start_year}-{global_start_month}-{global_start_day} TO {global_end_year}-{global_end_month}-{global_end_day}]"
+                )
+
+                if additional_filters:
+                    search_string += " " + " ".join(additional_filters)
+
+                print("search_string", search_string)
+
                 search_results = cohort_searcher_with_terms_and_search_dummy(
                     index_name="epr_documents",
                     fields_list="""client_idcode document_guid document_description body_analysed updatetime clientvisit_visitidcode""".split(),
@@ -117,10 +138,7 @@ def get_treatment_docs_by_iterative_multi_term_cohort_searcher_no_terms_fuzzy(
                     entered_list=generate_uuid_list(
                         random.randint(0, 10), random.choice(["P", "V"])
                     ),
-                    search_string=term_to_search
-                    + " AND "
-                    + " "
-                    + f"updatetime:[{global_start_year}-{global_start_month}-{global_start_day} TO {global_end_year}-{global_end_month}-{global_end_day}]",
+                    search_string=search_string,
                 )
                 results_holder.append(search_results)
 
@@ -158,6 +176,8 @@ def get_treatment_docs_by_iterative_multi_term_cohort_searcher_no_terms_fuzzy(
             end_year=global_end_year,
             debug=False,
             overwrite=overwrite,
+            additional_filters=additional_filters,
+            all_fields=all_fields,
         )
 
     if (os.path.exists(output_path) and overwrite) or os.path.exists(
@@ -169,11 +189,13 @@ def get_treatment_docs_by_iterative_multi_term_cohort_searcher_no_terms_fuzzy(
             os.makedirs(output_directory)
 
         # Save the DataFrame to CSV
-        search_results.to_csv(output_path, index=False)
+        search_results.to_csv(output_path, index=False, escapechar="\\")
     elif os.path.exists(output_path) and append:
         if verbose >= 1:
             print("treatment docs already exist, appending...")
-            search_results.to_csv(output_path, index=False, mode="a", header=False)
+            search_results.to_csv(
+                output_path, index=False, mode="a", header=False, escapechar="\\"
+            )
 
     elif os.path.exists(output_path) and not overwrite:
         if verbose >= 1:
@@ -206,6 +228,8 @@ def get_treatment_docs_by_iterative_multi_term_cohort_searcher_no_terms_fuzzy(
             end_month=global_end_month,
             end_year=global_end_year,
             append=True,
+            additional_filters=additional_filters,
+            all_fields=all_fields,
             # debug=debug,
             # uuid_column_name=uuid_column_name
         )
@@ -233,6 +257,8 @@ def get_treatment_docs_by_iterative_multi_term_cohort_searcher_no_terms_fuzzy(
             end_month=global_end_month,
             end_year=global_end_year,
             append=True,
+            additional_filters=additional_filters,
+            all_fields=all_fields,
             # debug=debug,
             # uuid_column_name=uuid_column_name
         )
@@ -274,3 +300,110 @@ def draw_document_samples(df: pd.DataFrame, n: int) -> pd.DataFrame:
             )
             sampled_df = pd.concat([sampled_df, term_df.iloc[sampled_indices]])
     return sampled_df
+
+
+def demo_to_latest(demo_df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Returns the latest record for each unique 'client_idcode' in the DataFrame.
+    """
+    demo_df["updatetime"] = pd.to_datetime(demo_df["updatetime"], utc=True)
+    latest_demo_df = demo_df.loc[
+        demo_df.groupby("client_idcode")["updatetime"].idxmax()
+    ]
+    return latest_demo_df
+
+
+def calculate_age_append(df):
+    """
+    Calculate the age of clients in the given DataFrame. #input demo_df
+
+    Parameters:
+    df (pd.DataFrame): DataFrame containing client data.
+
+    Returns:
+    pd.DataFrame: DataFrame with an additional 'age' column.
+    """
+    # Drop rows with missing 'client_dob' values
+    df.dropna(subset=["client_dob"], inplace=True)
+
+    # Ensure 'client_dob' is in datetime format and remove timezone
+    df["client_dob"] = pd.to_datetime(df["client_dob"], errors="coerce", utc=True)
+    df.dropna(subset=["client_dob"], inplace=True)
+    df["client_dob"] = df["client_dob"].dt.tz_localize(None)
+
+    # Drop duplicates based on 'client_idcode'
+    # df = df.drop_duplicates(subset=["client_idcode"])
+
+    # Get the current date as a timezone-naive datetime object
+    time_now = datetime.now()
+
+    # Calculate the age by subtracting the date of birth from the current date
+    df["age"] = (time_now - df["client_dob"]).dt.days // 365
+
+    return df
+
+
+def search_cohort(
+    patlist,
+    pat2vec_obj,
+    start_year,
+    start_month,
+    start_day,
+    end_year,
+    end_month,
+    end_day,
+    additional_filters=None,
+):
+    """
+    Searches for a cohort of patients based on the given parameters.
+
+    Parameters:
+    patlist (list): List of patient IDs.
+    pat2vec_obj pat2vec object with config obj configured.
+    start_year (str): Start year for the search.
+    start_month (str): Start month for the search.
+    start_day (str): Start day for the search.
+    end_year (str): End year for the search.
+    end_month (str): End month for the search.
+    end_day (str): End day for the search.
+    additional_filters (list): List of additional filter strings to append to the search string.
+
+    Returns:
+    pd.DataFrame: DataFrame containing the search results.
+    """
+    search_string = f"updatetime:[{start_year}-{start_month}-{start_day} TO {end_year}-{end_month}-{end_day}]"
+
+    if additional_filters:
+        search_string += " " + " ".join(additional_filters)
+
+    print("search_string", search_string)
+
+    demo_df = pat2vec_obj.cohort_searcher_with_terms_and_search(
+        index_name="epr_documents",
+        fields_list=[
+            "client_idcode",
+            "client_firstname",
+            "client_lastname",
+            "client_dob",
+            "client_gendercode",
+            "client_racecode",
+            "client_deceaseddtm",
+            "updatetime",
+        ],
+        term_name=pat2vec_obj.config_obj.client_idcode_term_name,
+        entered_list=patlist,
+        search_string=search_string,
+    )
+    return demo_df
+
+
+# start_year = '1995'
+# start_month = '01'
+# start_day = '01'
+# end_year = '2024'
+# end_month = '01'
+# end_day = '01'
+
+# additional_filters = ["AND client_dob: {now-18y TO *}"]
+
+# demo_df = search_cohort(patlist, start_year, start_month, start_day, end_year, end_month, end_day, additional_filters)
