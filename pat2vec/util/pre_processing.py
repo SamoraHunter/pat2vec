@@ -242,6 +242,12 @@ def get_treatment_docs_by_iterative_multi_term_cohort_searcher_no_terms_fuzzy(
                 search_results["observation_valuetext_analysed"]
             )
 
+        # merge time column to fill updatetime nan with observation_datetime
+        if "basicobs_entered" in search_results.columns:
+            search_results["updatetime"] = search_results["updatetime"].fillna(
+                search_results["basicobs_entered"]  # bloods time field
+            )
+
         if not textual_obs:
 
             return search_results
@@ -269,6 +275,12 @@ def get_treatment_docs_by_iterative_multi_term_cohort_searcher_no_terms_fuzzy(
         if "textualObs" in search_results.columns:
             search_results["body_analysed"] = search_results["body_analysed"].fillna(
                 search_results["textualObs"]
+            )
+
+        # merge time column to fill updatetime nan with observation_datetime
+        if "basicobs_entered" in search_results.columns:
+            search_results["updatetime"] = search_results["updatetime"].fillna(
+                search_results["observationdocument_recordeddtm"]  # bloods time field
             )
 
         return search_results
