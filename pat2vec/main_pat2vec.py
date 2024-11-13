@@ -750,7 +750,9 @@ class main:
                 if type(batch_epr_docs_annotations) == None:
                     if self.config_obj.verbosity > 2:
                         print(f"batch_epr_docs_annotations empty")
-                    batch_epr_docs_annotations = empty_return
+                    batch_epr_docs_annotations = (
+                        empty_return_epr  # catch, was empty_return
+                    )
             else:
                 batch_epr_docs_annotations = empty_return_epr
 
@@ -875,14 +877,29 @@ class main:
 
                 if self.config_obj.main_options.get("annotations", True):
                     target_column_string = "updatetime"
-                    batch_epr_docs_annotations[target_column_string] = pd.to_datetime(
-                        batch_epr_docs_annotations[target_column_string],
-                        errors="coerce",
-                        utc=True,
-                    )
-                    batch_epr_docs_annotations.dropna(
-                        subset=[target_column_string], inplace=True
-                    )
+                    try:
+                        batch_epr_docs_annotations[target_column_string] = (
+                            pd.to_datetime(
+                                batch_epr_docs_annotations[target_column_string],
+                                errors="coerce",
+                                utc=True,
+                            )
+                        )
+                    except Exception as e:
+                        print(e)
+                        print(type(batch_epr_docs_annotations))
+                        print(batch_epr_docs_annotations.columns)
+                        print(batch_epr_docs_annotations)
+
+                    try:
+                        batch_epr_docs_annotations.dropna(
+                            subset=[target_column_string], inplace=True
+                        )
+                    except Exception as e:
+                        print(e)
+                        print(type(batch_epr_docs_annotations))
+                        print(batch_epr_docs_annotations.columns)
+                        print(batch_epr_docs_annotations)
                 # batch_epr_docs_annotations.dropna(subset=['body_analysed'], inplace=True)
 
                 if self.config_obj.main_options.get("annotations_mrc", True):
