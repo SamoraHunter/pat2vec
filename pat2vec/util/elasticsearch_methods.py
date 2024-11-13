@@ -9,47 +9,53 @@ from tqdm import tqdm
 from elasticsearch.helpers import BulkIndexError
 
 
-def ingest_data_to_elasticsearch(temp_df, index_name, index_mapping=None):
+from getpass import getpass
+import pandas as pd
+from credentials import *
+from elasticsearch import Elasticsearch
+from elasticsearch.helpers import bulk
+from IPython.display import display
+from tqdm import tqdm
+import numpy as np
+from elasticsearch.helpers import BulkIndexError
+
+from elasticsearch import Elasticsearch, helpers
+
+
+def ingest_data_to_elasticsearch(
+    temp_df, index_name, index_mapping=None, replace_index=False
+):
     """
-    Function to ingest data from a DataFrame into Elasticsearch.
+    Function to ingest data from a DataFrame into Elasticsearch with error handling.
 
     Parameters:
         temp_df (DataFrame): The DataFrame containing the data to be ingested.
         index_name (str): Name of the Elasticsearch index.
+        index_mapping (dict, optional): Mapping for the index.
+        replace_index (bool, optional): Whether to replace the index if it exists.
 
     Returns:
-        tuple: A tuple containing the number of successfully ingested documents and the number of failed documents.
+        dict: A summary containing the number of successful and failed operations.
     """
 
-    print(host_name, port, scheme, username)
+    # Set default index mapping if none is provided
+    index_mapping = index_mapping or {
+        "settings": {
+            "number_of_shards": 1,
+            "number_of_replicas": 1,
+            "index.mapping.ignore_malformed": True,
+            "index.mapping.total_fields.limit": 100000,
+        }
+    }
 
-    # Elastic cannot handle nan
-    temp_df.fillna("", inplace=True)
-
-    if "updatetime" in temp_df.columns:
-        temp_df["updatetime"] = pd.to_datetime(temp_df["updatetime"], format="ISO8601")
-
-    if "observationdocument_recordeddtm" in temp_df.columns:
-        temp_df["observationdocument_recordeddtm"] = pd.to_datetime(
-            temp_df["observationdocument_recordeddtm"], format="ISO8601"
-        )
-
-    for column in temp_df.columns:
-        if pd.api.types.is_datetime64_any_dtype(temp_df[column]):
-            # If it's a datetime column, convert it to ISO 8601 format
-            temp_df[column] = (
-                temp_df[column].dt.strftime("%Y-%m-%dT%H:%M:%S%z")
-                if temp_df[column].dt.tz is not None
-                else temp_df[column].dt.strftime("%Y-%m-%d")
-            )
-
-    # Connect to Elasticsearch
+    # Initialize Elasticsearch client
     es = Elasticsearch(
         [{"host": host_name, "port": port, "scheme": scheme}],
         verify_certs=False,
         http_auth=(username, password),
     )
 
+    # Check connection
     try:
         if not es.ping():
             raise ConnectionError("Elasticsearch server not reachable.")
@@ -57,42 +63,95 @@ def ingest_data_to_elasticsearch(temp_df, index_name, index_mapping=None):
         print(f"Error connecting to Elasticsearch: {e}")
         raise
 
+    # Replace index if requested
+    if es.indices.exists(index=index_name) and replace_index:
+        response = es.indices.delete(index=index_name)
+        print(f"Index {index_name} deleted successfully.")
+        print(response)
+
     # Create the index if it does not exist
     if not es.indices.exists(index=index_name):
         try:
-            es.indices.create(index=index_name, body=mapping, ignore=400)
+            es.indices.create(index=index_name, body=index_mapping)
+            print(f"Index {index_name} created successfully.")
         except Exception as e:
             print(f"Error creating index: {e}")
             raise
 
-    # Convert DataFrame to JSON format
+    # Prepare documents for bulk indexing
     docs = temp_df.to_dict(orient="records")
-
-    # Ingest data into Elasticsearch
     actions = [
         {"_op_type": "index", "_index": index_name, "_source": doc} for doc in docs
     ]
 
+    success_count = 0
+    failed_docs = []
+    problematic_fields = {}
+
     try:
-        success, failed = bulk(es, actions)
-        print(
-            f"Successfully ingested {success} documents, failed to ingest {failed} documents."
-        )
+        for ok, result in helpers.streaming_bulk(es, actions):
+            if not ok:
+                failed_docs.append(result)
 
-        # If there are failed documents, print detailed error information
-        if failed:
+                # Extract error details
+                error_info = result.get("index", {}).get("error", {})
+                doc_id = result.get("index", {}).get("_id", "N/A")
+                field_name = (
+                    error_info.get("reason", "").split("field [")[1].split("]")[0]
+                    if "field [" in error_info.get("reason", "")
+                    else "Unknown"
+                )
+
+                # Log problematic field
+                if field_name not in problematic_fields:
+                    problematic_fields[field_name] = []
+                problematic_fields[field_name].append(
+                    error_info.get("reason", "Unknown")
+                )
+
+            else:
+                success_count += 1
+
+        print(f"Successfully ingested {success_count} documents.")
+        print(f"Failed to ingest {len(failed_docs)} documents.")
+
+        # Log details of failed documents
+        if failed_docs:
             print("\nDetails of failed documents:")
-            for doc_info in failed:
-                print(f"Error for document: {doc_info['index']}")
-                print(f"Reason: {doc_info['indexing']['error']}")
+            for fail in failed_docs:
+                error_info = fail.get("index", {}).get("error", {})
+                doc_id = fail.get("index", {}).get("_id", "N/A")
+                print(f"Failed Document ID: {doc_id}")
+                print(f"Error Type: {error_info.get('type', 'Unknown')}")
+                print(f"Error Reason: {error_info.get('reason', 'Unknown')}")
 
-        return success, failed
+            # Log problematic fields summary
+            print("\nProblematic fields summary:")
+            for field, issues in problematic_fields.items():
+                print(f"Field: {field}")
+                for issue in set(issues):
+                    print(f"  - {issue}")
 
-    except BulkIndexError as e:
-        print(e.errors)
+        return {"success": success_count, "failed": len(failed_docs)}
+
+    except BulkIndexError as bulk_error:
+        # Handle BulkIndexError and log detailed information
+        print(f"BulkIndexError: {bulk_error}")
+        failed_docs = bulk_error.errors
+
+        # Log failed documents
+        print("\nDetailed failure report:")
+        for error in failed_docs:
+            error_info = error.get("index", {}).get("error", {})
+            doc_id = error.get("index", {}).get("_id", "N/A")
+            print(f"Failed Document ID: {doc_id}")
+            print(f"Error Type: {error_info.get('type', 'Unknown')}")
+            print(f"Error Reason: {error_info.get('reason', 'Unknown')}")
+
+        return {"success": success_count, "failed": len(failed_docs)}
 
     except Exception as e:
-        print(f"Error bulk indexing: {e}")
+        print(f"Unexpected error during bulk ingestion: {e}")
         raise
 
 
