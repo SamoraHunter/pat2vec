@@ -4,9 +4,11 @@ import random
 import re
 import sys
 from typing import List
-
+import re
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.cluster import KMeans
+from collections import Counter
 import pandas as pd
-
 from notebooks.test_files.read_test_file import read_test_data
 
 
@@ -238,6 +240,89 @@ def get_all_patients_list(config_obj):
         hospital_ids=all_patient_list, config_obj=config_obj
     )
 
+    analyze_client_codes(all_patient_list)
+
     # Propensity score matching here or in super function?
 
     return all_patient_list
+
+
+def analyze_client_codes(client_idcode_list, min_val=3):
+    """
+    Analyze and cluster client ID codes based on their structure.
+
+    Parameters:
+    - client_idcode_list (list): List of client ID codes.
+
+    Returns:
+    - dict: A dictionary with keys 'valid_codes', 'invalid_codes', and 'clusters', each containing the corresponding data.
+    - Prints warnings and sample invalid codes if the number of invalid codes is significant.
+    """
+    # Step 1: Separate valid and invalid codes based on the expected pattern
+    expected_pattern = r"^[A-Z]\d{6}$"
+    valid_codes = [
+        code for code in client_idcode_list if re.match(expected_pattern, code)
+    ]
+    invalid_codes = [
+        code for code in client_idcode_list if not re.match(expected_pattern, code)
+    ]
+
+    # Display warnings for large numbers of invalid codes
+    if len(invalid_codes) > len(client_idcode_list) * 0.0001:  # If >10% are invalid
+        print(
+            f"Warning: invalid codes ({len(invalid_codes)} out of {len(client_idcode_list)})"
+        )
+        print(
+            "Sample invalid codes:", invalid_codes[:15]
+        )  # Show a sample of invalid codes
+
+    # Step 2: Extract features for valid codes
+    def extract_features(code):
+        prefix = code[0]  # First character
+        digit_sum = sum(int(digit) for digit in code[1:])  # Sum of digits
+        return f"{prefix}-{digit_sum}"  # Feature combining prefix and digit sum
+
+    features = [extract_features(code) for code in valid_codes]
+
+    # Vectorize the features for clustering
+    vectorizer = CountVectorizer()
+    X = vectorizer.fit_transform(features)
+
+    # Perform clustering on valid codes
+    n_clusters = min(
+        min_val, len(valid_codes)
+    )  # At most 3 clusters, or fewer if not enough codes
+    if n_clusters > 1:
+        kmeans = KMeans(n_clusters=n_clusters, random_state=42)
+        clusters = kmeans.fit_predict(X)
+
+        # Group codes by clusters
+        cluster_dict = {}
+        for i, label in enumerate(clusters):
+            cluster_dict.setdefault(label, []).append(valid_codes[i])
+
+        # Check cluster sizes
+        cluster_sizes = Counter(clusters)
+
+        print("\nDiscovered Clusters:")
+        for cluster, codes in cluster_dict.items():
+            print(f"Cluster {cluster}: {codes}")
+        print("\nCluster sizes:", dict(cluster_sizes))
+    else:
+        cluster_dict = {0: valid_codes}
+        print(
+            "Insufficient valid codes for clustering. All valid codes grouped in a single cluster."
+        )
+
+    # Step 3: Return results as a dictionary
+    return {
+        "valid_codes": valid_codes,
+        "invalid_codes": invalid_codes,
+        "clusters": cluster_dict,
+    }
+
+
+# # Example usage
+# client_idcodes = ["A123456", "B654321", "Z000000", "INVALID1", "A12345"]  # Example input
+# result = analyze_client_codes(client_idcodes)
+# print("\nAnalysis Results:", result)
