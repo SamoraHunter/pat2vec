@@ -9,6 +9,7 @@ from multiprocessing import Pool, cpu_count
 from pathlib import Path
 import time
 from typing import Dict, List, Optional, Union
+import matplotlib.pyplot as plt
 
 import pandas as pd
 from IPython.display import display
@@ -1203,15 +1204,15 @@ def retrieve_pat_annots_mct_epr(
             )
 
         if "basicobs_guid" in all_annots.columns:
-            
-            if("document_guid" in all_annots.columns):
+
+            if "document_guid" in all_annots.columns:
                 # Merge observation_guid to document_guid
                 all_annots["document_guid"] = all_annots["document_guid"].fillna(
                     all_annots["basicobs_guid"]
                 )
             else:
                 all_annots["document_guid"] = all_annots["basicobs_guid"]
-                
+
         if "observation_guid" in all_annots.columns:
             all_annots["document_guid"] = all_annots["document_guid"].fillna(
                 all_annots["observation_guid"]
@@ -2156,3 +2157,56 @@ def collapse_df_to_mean(
                 pd.DataFrame([row_data]).to_csv(
                     output_filename, mode="a", index=False, header=False
                 )
+
+
+def plot_missing_pattern_bloods(dfb):
+    """
+    Plots the number of missing client_idcodes for the top 50 most frequent
+    'basicobs_itemname_analysed' values in the given dataframe dfb.
+
+    Parameters:
+    dfb (pd.DataFrame): DataFrame containing the columns 'client_idcode' and 'basicobs_itemname_analysed'.
+    """
+
+    # Step 1: Identify the top 50 basicobs_itemname_analysed by frequency
+    top_items = dfb["basicobs_itemname_analysed"].value_counts().nlargest(50).index
+
+    # Filter the data for these top items
+    filtered_dfb = dfb[dfb["basicobs_itemname_analysed"].isin(top_items)]
+
+    # Step 2: Group by basicobs_itemname_analysed and get the unique client_idcodes
+    clients_per_item = filtered_dfb.groupby("basicobs_itemname_analysed")[
+        "client_idcode"
+    ].apply(set)
+
+    # Get all unique client_idcodes
+    all_clients = set(dfb["client_idcode"])
+
+    # Step 3: Calculate missing client_idcodes for each top basicobs_itemname_analysed
+    missing_clients_counts = {
+        item: len(all_clients - clients) for item, clients in clients_per_item.items()
+    }
+
+    # Convert to DataFrame for plotting
+    missing_clients_df = pd.DataFrame(
+        list(missing_clients_counts.items()),
+        columns=["basicobs_itemname_analysed", "missing_client_count"],
+    ).sort_values(by="missing_client_count", ascending=False)
+
+    # Step 4: Plot the results
+    plt.figure(figsize=(10, 8))
+    plt.barh(
+        missing_clients_df["basicobs_itemname_analysed"],
+        missing_clients_df["missing_client_count"],
+        color="skyblue",
+    )
+    plt.xlabel("Number of Missing Client ID Codes")
+    plt.ylabel("Basicobs Item Name Analysed")
+    plt.title("Missing Client ID Codes per Top 50 Basicobs Item Names")
+    plt.gca().invert_yaxis()  # Invert y-axis for better readability
+    plt.tight_layout()
+    plt.show()
+
+
+# Example usage:
+# plot_missing_pattern_bloods(dfb)
