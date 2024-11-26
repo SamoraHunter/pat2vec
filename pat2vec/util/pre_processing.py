@@ -43,6 +43,9 @@ def get_treatment_docs_by_iterative_multi_term_cohort_searcher_no_terms_fuzzy(
     textual_obs=True,
     additional_filters=None,
     all_fields=False,
+    method="fuzzy",  # fuzzy | phrase | exact
+    fuzzy=2,  # int char order?
+    slop=1,  # int word order tolerance
 ):
     """
     This function takes a list of terms, runs iterative_multi_term_cohort_searcher_no_terms_fuzzy
@@ -178,6 +181,9 @@ def get_treatment_docs_by_iterative_multi_term_cohort_searcher_no_terms_fuzzy(
             overwrite=overwrite,
             additional_filters=additional_filters,
             all_fields=all_fields,
+            method=method,
+            fuzzy=fuzzy,
+            slop=slop,
         )
 
     if (os.path.exists(output_path) and overwrite) or os.path.exists(
@@ -232,6 +238,9 @@ def get_treatment_docs_by_iterative_multi_term_cohort_searcher_no_terms_fuzzy(
             all_fields=all_fields,
             # debug=debug,
             # uuid_column_name=uuid_column_name
+            method=method,
+            fuzzy=fuzzy,
+            slop=slop,
         )
 
         search_results = pd.concat([search_results, docs], axis=0)
@@ -267,6 +276,9 @@ def get_treatment_docs_by_iterative_multi_term_cohort_searcher_no_terms_fuzzy(
             all_fields=all_fields,
             # debug=debug,
             # uuid_column_name=uuid_column_name
+            method=method,
+            fuzzy=fuzzy,
+            slop=slop,
         )
 
         search_results = pd.concat([search_results, docs], axis=0)
