@@ -122,3 +122,70 @@ def sample_by_terms(
 
 #     # Display sampled rows
 #     display(result)
+
+
+def coerce_document_df_to_medcat_trainer_input(
+    df, text_column_value="body_analysed", name_value="_id"
+):
+    """
+    Prepares a DataFrame for MedCAT trainer input by renaming specified columns and ensuring unique names.
+
+    Parameters:
+        df (pd.DataFrame): Input DataFrame.
+        text_column_value (str): Name of the column to use for text data (default is 'body_analysed').
+        name_value (str): Name of the column to use for the name data (default is '_id').
+
+    Returns:
+        pd.DataFrame: A new DataFrame with columns renamed to 'name' and 'text'.
+    """
+    # Clean column names to avoid issues with whitespace
+    df.columns = df.columns.str.strip()
+
+    # Check for the existence of required columns
+    if name_value not in df.columns or text_column_value not in df.columns:
+        raise KeyError(
+            f"Expected columns '{name_value}' or '{text_column_value}' are missing from the DataFrame"
+        )
+
+    print("Columns before renaming:", df.columns.tolist())
+
+    # Rename columns
+    rename_mapping = {name_value: "name", text_column_value: "text"}
+    df.rename(columns=rename_mapping, inplace=True)
+
+    # Check if renaming succeeded
+    if "name" not in df.columns or "text" not in df.columns:
+        raise KeyError(
+            "Renaming failed: 'name' or 'text' column is missing after rename"
+        )
+
+    # Ensure unique values in the 'name' column
+    def make_unique(series):
+        seen = {}
+        result = []
+        for value in series:
+            if value not in seen:
+                seen[value] = 0
+            else:
+                # print warning about duplicate values in the 'name' column
+                print(
+                    f"Warning: Duplicate value '{value}' found in 'name' column. Renaming to '{value}_{seen[value]}'"
+                )
+
+                seen[value] += 1
+            unique_value = f"{value}_{seen[value]}" if seen[value] > 0 else value
+
+            result.append(unique_value)
+        return result
+
+    df["name"] = make_unique(df["name"])
+
+    # Select the renamed columns and return a copy
+    df = df[["name", "text"]].copy()
+
+    print("Columns after processing:", df.columns.tolist())
+
+    return df
+
+
+# coerce_document_df_to_medcat_trainer_input(df=result, text_column_value='body_analysed', name_value='_id').to_csv('ultrasounds_sample_strat.csv', index=False)
