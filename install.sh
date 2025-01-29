@@ -17,13 +17,9 @@ echo "Pip upgrade completed."
 
 # Install requirements
 echo "Installing requirements..."
-while IFS= read -r package; do
-    pip install "$package" || {
-        echo "Failed to install package: $package"
-        echo "Continuing with the next package..."
-    }
-done < "$REQUIREMENTS_FILE"
+pip install -r "$REQUIREMENTS_FILE"
 echo "Requirements installation completed."
+
 
 # Install ipykernel
 pip install ipykernel
