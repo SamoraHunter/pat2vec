@@ -2,7 +2,7 @@
 
 # Set paths
 VENV_DIR="$(pwd)/pat2vec_env"
-REQUIREMENTS_FILE="$(pwd)/requirements.txt"
+REQUIREMENTS_FILE="$(pwd)/requirements_proxy.txt"
 
 # Create virtual environment
 python3 -m venv "$VENV_DIR"
@@ -17,17 +17,9 @@ echo "Pip upgrade completed."
 
 # Install requirements
 echo "Installing requirements..."
-while IFS= read -r package; do
-    # Skip empty lines, lines starting with '#', and indented lines
-    if [[ -z "$package" || "$package" =~ ^# || "$package" =~ ^[[:space:]] ]]; then
-        continue
-    fi
-    
-    pip install --trusted-host dh-cap02 -i http://dh-cap02:8000/mirrors/pat2vec "$package" || {
-        echo "Failed to install package: $package"
-        echo "Continuing with the next package..."
-    }
-done < "$REQUIREMENTS_FILE"
+
+pip install --trusted-host dh-cap02 -i http://dh-cap02:8000/mirrors/pat2vec -r "$REQUIREMENTS_FILE"
+
 echo "Requirements installation completed."
 
 # Install ipykernel
