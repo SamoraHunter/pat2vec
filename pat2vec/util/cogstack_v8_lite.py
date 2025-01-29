@@ -14,16 +14,18 @@ from tqdm.notebook import tqdm
 warnings.filterwarnings("ignore")
 import csv
 import multiprocessing
+import unittest
 from multiprocessing import Pool
 from os.path import exists
+import os
 
 from credentials import *
 
-print("refreshed")
+print("Refreshed!")
 
 
 class CogStack(object):
-    print("refreshed!")
+    print("refreshed .")
     """
     :param hosts: List of CogStack host names
     :param username: basic_auth username
@@ -789,11 +791,15 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy(
     treatment_doc_filename,
     start_year,
     start_month,
+    start_day,
     end_year,
     end_month,
+    end_day,
     overwrite=True,
     debug=False,
     uuid_column_name="client_idcode",
+    additional_filters=None,
+    all_fields=False,
 ):
     if not terms_list:
         print("Terms list is empty. Exiting.")
@@ -808,14 +814,100 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy(
 
         for term in tqdm(terms_list):
             # Modify the search string for each term
-            search_string = f'"{term}" AND updatetime:[{start_year}-{start_month} TO {end_year}-{end_month}]'
+            search_string = f'"{term}" AND updatetime:[{start_year}-{start_month}-{start_day} TO {end_year}-{end_month}-{end_day}]'
+
+            if additional_filters:
+                search_string += " " + " ".join(additional_filters)
+
+            print("search_string", search_string)
+
+            all_field_list = [
+                "client_dob",
+                "body_analysed",
+                "client_firstname",
+                "client_gendercode",
+                "client_idcode",
+                "clientvisit_currentlocation_analysed",
+                "clientvisit_serviceguid",
+                "document_dateadded",
+                "document_description",
+                "document_guid",
+                "updatetime",
+                # "_id",
+                # "_index",
+                # "_score",
+                "client_applicsource",
+                "client_build",
+                "client_cityofbirth",
+                "client_createdby",
+                "client_createdwhen",
+                "client_deceaseddtm",
+                "client_displayname",
+                "client_guid",
+                "client_languagecode",
+                "client_lastname",
+                "client_maritalstatuscode",
+                "client_middlename",
+                "client_racecode",
+                "client_religioncode",
+                "client_siteid",
+                "client_title",
+                "client_touchedby",
+                "client_touchedwhen",
+                "client_universalnumber",
+                "clientaddress_city",
+                "clientaddress_line1",
+                "clientaddress_line2",
+                "clientaddress_line3",
+                "clientaddress_postalcode",
+                "clientaddress_typecode",
+                "clientvisit_admitdtm",
+                "clientvisit_applicsource",
+                "clientvisit_build",
+                "clientvisit_carelevelcode",
+                "clientvisit_chartguid",
+                "clientvisit_clientdisplayname_analysed",
+                "clientvisit_closedtm",
+                "clientvisit_createdby",
+                "clientvisit_createdwhen",
+                "clientvisit_currentlocationguid",
+                "clientvisit_dischargedisposition",
+                "clientvisit_dischargedtm",
+                "clientvisit_dischargelocation",
+                "clientvisit_guid",
+                "clientvisit_idcode",
+                "clientvisit_internalvisitstatus",
+                "clientvisit_providerdisplayname_analysed",
+                "clientvisit_siteid",
+                "clientvisit_touchedby",
+                "clientvisit_touchedwhen",
+                "clientvisit_typecode",
+                "clientvisit_visitidcode",
+                "clientvisit_visitstatus",
+                "clientvisit_visittypecarelevelguid",
+                "document_clientguid",
+                "document_clientvisitguid",
+                "document_datecreated",
+                "document_definitionguid",
+                "document_filename",
+                "documentoutput_doc_dob",
+                "primarykeyfieldvalue",
+            ]
+            all_field_list = list(set(all_field_list))
+
+            if all_fields == True:
+                field_list = all_field_list
+            else:
+                field_list = "client_idcode document_guid document_description body_analysed updatetime clientvisit_visitidcode".split()
 
             # Perform the search
             term_docs = cohort_searcher_no_terms_fuzzy(
                 index_name="epr_documents",
-                fields_list="client_idcode document_guid document_description body_analysed updatetime clientvisit_visitidcode".split(),
+                fields_list=field_list,
                 search_string=search_string,
             )
+
+            term_docs["search_term"] = term
 
             if debug:
                 print(term, len(term_docs))
@@ -835,3 +927,464 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy(
             )
 
     return docs
+
+
+def iterative_multi_term_cohort_searcher_no_terms_fuzzy_mct(
+    terms_list,
+    treatment_doc_filename,
+    start_year,
+    start_month,
+    start_day,
+    end_year,
+    end_month,
+    end_day,
+    append=True,
+    debug=True,
+    uuid_column_name="client_idcode",
+    additional_filters=None,
+    all_fields=False,
+):
+    print(
+        "iterative_multi_term_cohort_searcher_no_terms_fuzzy_mct",
+        start_day,
+        start_month,
+        start_year,
+        end_day,
+        end_month,
+        end_year,
+    )
+    if not terms_list:
+        print("Terms list is empty. Exiting.")
+        return (
+            pd.DataFrame()
+        )  # Ensure it returns an empty DataFrame if terms_list is empty
+
+    file_exists = exists(treatment_doc_filename)
+
+    if file_exists and not append:
+        docs = pd.read_csv(treatment_doc_filename)
+        print(f"Loaded existing file: {treatment_doc_filename}")
+        return docs  # Ensure the function returns the loaded data
+
+    else:
+        if file_exists and not append:
+            docs_prev = pd.read_csv(treatment_doc_filename)
+            print(f"Loaded existing file and append: {treatment_doc_filename}")
+
+        all_docs = []
+
+        for term in tqdm(terms_list):
+            # Modify the search string for each term
+
+            search_string = f'obscatalogmasteritem_displayname:("AoMRC_ClinicalSummary_FT") AND observation_valuetext_analysed:("{term}") AND observationdocument_recordeddtm:[{start_year}-{start_month}-{start_day} TO {end_year}-{end_month}-{end_day}]'
+
+            if additional_filters:
+                search_string += " " + " ".join(additional_filters)
+
+            print("Search String", search_string)
+
+            all_field_list = [
+                "client_dob",
+                "observation_valuetext_analysed",
+                # "_id",
+                "client_idcode",
+                "clientvisit_admitdtm",
+                "clientvisit_typecode",
+                "obscatalogmasteritem_displayname",
+                "observation_analysed",
+                "observationdocument_displaysequence",
+                "observationdocument_obsmasteritemguid",
+                "observationdocument_recordeddtm",
+                "scmobsfslistvalues_value_analysed",
+                # "_index",
+                # "_score",
+                "client_applicsource",
+                "client_build",
+                "client_cityofbirth",
+                "client_createdby",
+                "client_createdwhen",
+                "client_deceaseddtm",
+                "client_displayname",
+                "client_firstname",
+                "client_gendercode",
+                "client_guid",
+                "client_languagecode",
+                "client_lastname",
+                "client_maritalstatuscode",
+                "client_middlename",
+                "client_racecode",
+                "client_religioncode",
+                "client_siteid",
+                "client_title",
+                "client_touchedby",
+                "client_touchedwhen",
+                "client_universalnumber",
+                "clientaddress_city",
+                "clientaddress_line1",
+                "clientaddress_line2",
+                "clientaddress_line3",
+                "clientaddress_postalcode",
+                "clientdocument_chartguid",
+                "clientdocument_clientguid",
+                "clientdocument_clientvisitguid",
+                "clientvisit_applicsource",
+                "clientvisit_build",
+                "clientvisit_carelevelcode",
+                "clientvisit_chartguid",
+                "clientvisit_clientdisplayname_analysed",
+                "clientvisit_closedtm",
+                "clientvisit_createdby",
+                "clientvisit_createdwhen",
+                "clientvisit_currentlocation_analysed",
+                "clientvisit_currentlocationguid",
+                "clientvisit_dischargedisposition",
+                "clientvisit_dischargedtm",
+                "clientvisit_dischargelocation",
+                "clientvisit_guid",
+                "clientvisit_idcode",
+                "clientvisit_internalvisitstatus",
+                "clientvisit_planneddischargedtm",
+                "clientvisit_providerdisplayname_analysed",
+                "clientvisit_serviceguid",
+                "clientvisit_siteid",
+                "clientvisit_touchedby",
+                "clientvisit_touchedwhen",
+                "clientvisit_visitidcode",
+                "clientvisit_visitstatus",
+                "clientvisit_visittypecarelevelguid",
+                "obscatalogmasteritem_calculationtype",
+                "obscatalogmasteritem_datatype",
+                "obscatalogmasteritem_fluidbalancetype",
+                "obscatalogmasteritem_hasnumericequiv",
+                "obscatalogmasteritem_includeintotals",
+                "obscatalogmasteritem_isoutcome",
+                "obscatalogmasteritem_numdecimalsout",
+                "obscatalogmasteritem_showabsolutevalue",
+                "obscatalogmasteritem_unitofmeasure",
+                "obscatalogmasteritem_usenumericseparator",
+                "observation_guid",
+                "observation_isclientcharacteristic",
+                "observation_isgenericitem",
+                "observation_obsitemguid",
+                "observation_recordedproviderguid",
+                "observation_statustype",
+                "observation_userguid",
+                "observationdocument_active",
+                "observationdocument_createdwhen",
+                "observationdocument_entered",
+                "observationdocument_hascomment",
+                "observationdocument_historyseqnum",
+                "observationdocument_obssetguid",
+                "observationdocument_originalobsguid",
+                "observationdocument_ownerguid",
+                "observationdocument_ownertype",
+                "observationdocument_siteid",
+            ]
+
+            all_field_list = list(set(all_field_list))
+
+            if all_fields == True:
+                field_list = all_field_list
+            else:
+                field_list = """observation_guid client_idcode obscatalogmasteritem_displayname
+                                observation_valuetext_analysed observationdocument_recordeddtm 
+                                clientvisit_visitidcode""".split()
+
+            # Perform the search
+            term_docs = cohort_searcher_no_terms_fuzzy(
+                index_name="observations",
+                fields_list=field_list,
+                search_string=search_string,
+            )
+
+            # Check if term_docs is empty and log if necessary
+            if term_docs is None or term_docs.empty:
+                print(f"No results found for term: {term}")
+            else:
+                print(f"Found {len(term_docs)} documents for term: {term}")
+                term_docs["search_term"] = term
+                all_docs.append(term_docs)
+
+        # If no documents were found for any term, return an empty DataFrame
+        if not all_docs:
+            print("No documents were found for any of the terms.")
+            docs_prev = pd.read_csv(treatment_doc_filename)
+            print(f"Loaded existing file and no docs found: {treatment_doc_filename}")
+
+            return docs_prev  # Return docs from previous step
+            # return pd.DataFrame()  # Return an empty DataFrame explicitly if nothing was found
+
+        # Concatenate the results for all terms
+        docs = pd.concat(all_docs, ignore_index=True)
+        print(f"Total documents found: {len(docs)}")
+
+        # Drop duplicate rows
+        docs = docs.drop_duplicates()
+
+        if os.path.exists(treatment_doc_filename):
+            # Load the existing CSV
+            existing_data = pd.read_csv(treatment_doc_filename)
+            print(f"Loaded existing data from: {treatment_doc_filename}")
+
+            # Align the columns by using the union of both the existing and new columns
+            combined_columns = existing_data.columns.union(docs.columns)
+
+            # Reindex both the existing data and new data to have the same columns
+            existing_data = existing_data.reindex(columns=combined_columns)
+            docs = docs.reindex(columns=combined_columns)
+
+            # Drop any duplicate columns (if any)
+            existing_data = existing_data.loc[:, ~existing_data.columns.duplicated()]
+            docs = docs.loc[:, ~docs.columns.duplicated()]
+
+            # Append the new data to the existing data
+            updated_data = pd.concat([existing_data, docs], ignore_index=True)
+
+            # Save the updated data back to the CSV
+            updated_data.to_csv(treatment_doc_filename, index=False)
+            print(f"Updated data saved to: {treatment_doc_filename}")
+        else:
+            # If the file does not exist, save the new data as a new CSV
+            docs.to_csv(treatment_doc_filename, mode="w", index=False)
+            print(f"New data saved to: {treatment_doc_filename}")
+
+        if debug:
+            print(
+                f"n_unique {uuid_column_name} : {len(docs[uuid_column_name].unique())}/{len(docs)}"
+            )
+
+    return docs  # Return the final docs DataFrame
+
+
+def iterative_multi_term_cohort_searcher_no_terms_fuzzy_textual_obs(
+    terms_list,
+    treatment_doc_filename,
+    start_year,
+    start_month,
+    start_day,
+    end_year,
+    end_month,
+    end_day,
+    append=True,
+    debug=True,
+    uuid_column_name="client_idcode",
+    bloods_time_field="basicobs_entered",
+    additional_filters=None,
+    all_fields=False,
+):
+    print(
+        "iterative_multi_term_cohort_searcher_no_terms_fuzzy_textual_obs",
+        start_day,
+        start_month,
+        start_year,
+        end_day,
+        end_month,
+        end_year,
+    )
+    if not terms_list:
+        print("Terms list is empty. Exiting.")
+        return (
+            pd.DataFrame()
+        )  # Ensure it returns an empty DataFrame if terms_list is empty
+
+    file_exists = exists(treatment_doc_filename)
+
+    if file_exists and not append:
+        docs = pd.read_csv(treatment_doc_filename)
+        print(f"Loaded existing file: {treatment_doc_filename}")
+        return docs  # Ensure the function returns the loaded data
+
+    else:
+        if file_exists and not append:
+            docs_prev = pd.read_csv(treatment_doc_filename)
+            print(f"Loaded existing file and append: {treatment_doc_filename}")
+
+        all_docs = []
+
+        for term in tqdm(terms_list):
+            # Modify the search string for each term
+
+            # search_string = f'obscatalogmasteritem_displayname:("AoMRC_ClinicalSummary_FT") AND observation_valuetext_analysed:("{term}") AND observationdocument_recordeddtm:[{start_year}-{start_month}-{start_day} TO {end_year}-{end_month}-{end_day}]'
+
+            search_string = (
+                f"{bloods_time_field}:[{start_year}-{start_month}-{start_day} TO {end_year}-{end_month}-{end_day}]",
+            )
+
+            search_string = f"textualObs:({term})"
+
+            if additional_filters:
+                search_string += " " + " ".join(additional_filters)
+
+            print("Search String", search_string)
+
+            all_field_list = [
+                "client_dob",
+                "basicobs_createdwhen",
+                "basicobs_entered",
+                "basicobs_guid",
+                "basicobs_itemname_analysed",
+                "basicobs_masterguid",
+                "basicobs_orderguid",
+                "basicobs_value_analysed",
+                "basicobs_value_numeric",
+                "client_idcode",
+                "textualObs",
+                # "_id",
+                # "_index",
+                # "_score",
+                "basicobs_abnormalitycode",
+                "basicobs_arrivaldtm",
+                "basicobs_build",
+                "basicobs_chartguid",
+                "basicobs_createdby",
+                "basicobs_referencelowerlimit",
+                "basicobs_referenceupperlimit",
+                "basicobs_resultitemguid",
+                "basicobs_siteid",
+                "basicobs_touchedby",
+                "basicobs_touchedwhen",
+                "basicobs_typecode",
+                "basicobs_unitofmeasure",
+                "client_applicsource",
+                "client_build",
+                "client_cityofbirth",
+                "client_createdby",
+                "client_createdwhen",
+                "client_deceaseddtm",
+                "client_displayname",
+                "client_firstname",
+                "client_gendercode",
+                "client_guid",
+                "client_languagecode",
+                "client_lastname",
+                "client_maritalstatuscode",
+                "client_middlename",
+                "client_racecode",
+                "client_religioncode",
+                "client_siteid",
+                "client_title",
+                "client_touchedby",
+                "client_touchedwhen",
+                "client_universalnumber",
+                "clientvisit_admitdtm",
+                "clientvisit_applicsource",
+                "clientvisit_build",
+                "clientvisit_carelevelcode",
+                "clientvisit_chartguid",
+                "clientvisit_clientdisplayname_analysed",
+                "clientvisit_closedtm",
+                "clientvisit_createdby",
+                "clientvisit_createdwhen",
+                "clientvisit_currentlocation_analysed",
+                "clientvisit_currentlocationguid",
+                "clientvisit_dischargedisposition",
+                "clientvisit_dischargedtm",
+                "clientvisit_dischargelocation",
+                "clientvisit_guid",
+                "clientvisit_idcode",
+                "clientvisit_internalvisitstatus",
+                "clientvisit_planneddischargedtm",
+                "clientvisit_providerdisplayname_analysed",
+                "clientvisit_serviceguid",
+                "clientvisit_siteid",
+                "clientvisit_touchedby",
+                "clientvisit_touchedwhen",
+                "clientvisit_typecode",
+                "clientvisit_visitidcode",
+                "clientvisit_visitstatus",
+                "clientvisit_visittypecarelevelguid",
+                "document_age",
+                "updatetime",
+            ]
+
+            all_field_list = list(set(all_field_list))
+
+            if all_fields == True:
+                field_list = all_field_list
+            else:
+                field_list = [
+                    "client_idcode",
+                    "basicobs_itemname_analysed",
+                    "basicobs_value_numeric",
+                    "basicobs_value_analysed",
+                    "basicobs_entered",
+                    "clientvisit_serviceguid",
+                    "basicobs_guid",
+                    "updatetime",
+                    "textualObs",
+                ]
+
+            # Perform the search
+            term_docs = cohort_searcher_no_terms_fuzzy(
+                index_name="basic_observations",
+                fields_list=field_list,
+                search_string=search_string,
+            )
+
+            # Check if term_docs is empty and log if necessary
+            if term_docs is None or term_docs.empty:
+                print(f"No results found for term: {term}")
+            else:
+                print(f"Found {len(term_docs)} documents for term: {term}")
+                term_docs["search_term"] = term
+                all_docs.append(term_docs)
+
+        # If no documents were found for any term, return an empty DataFrame
+        if not all_docs:
+            print("No documents were found for any of the terms.")
+            docs_prev = pd.read_csv(treatment_doc_filename)
+            print(f"Loaded existing file and no docs found: {treatment_doc_filename}")
+
+            return docs_prev  # Return docs from previous step
+            # return pd.DataFrame()  # Return an empty DataFrame explicitly if nothing was found
+
+        # Concatenate the results for all terms
+        docs = pd.concat(all_docs, ignore_index=True)
+        print(f"Total documents found: {len(docs)}")
+
+        # Drop duplicate rows
+        docs = docs.drop_duplicates()
+
+        # Handle textual obs filtering
+
+        # Drop rows with no textualObs
+        docs = docs.dropna(subset=["textualObs"])
+
+        # Drop rows with empty string in textualObs
+        docs = docs[docs["textualObs"] != ""]
+
+        docs["body_analysed"] = docs["textualObs"].astype(str)
+
+        if os.path.exists(treatment_doc_filename):
+            # Load the existing CSV
+            existing_data = pd.read_csv(treatment_doc_filename)
+            print(f"Loaded existing data from: {treatment_doc_filename}")
+
+            # Align the columns by using the union of both the existing and new columns
+            combined_columns = existing_data.columns.union(docs.columns)
+
+            # Reindex both the existing data and new data to have the same columns
+            existing_data = existing_data.reindex(columns=combined_columns)
+            docs = docs.reindex(columns=combined_columns)
+
+            # Drop any duplicate columns (if any)
+            existing_data = existing_data.loc[:, ~existing_data.columns.duplicated()]
+            docs = docs.loc[:, ~docs.columns.duplicated()]
+
+            # Append the new data to the existing data
+            updated_data = pd.concat([existing_data, docs], ignore_index=True)
+
+            # Save the updated data back to the CSV
+            updated_data.to_csv(treatment_doc_filename, index=False)
+            print(f"Updated data saved to: {treatment_doc_filename}")
+        else:
+            # If the file does not exist, save the new data as a new CSV
+            docs.to_csv(treatment_doc_filename, mode="w", index=False)
+            print(f"New data saved to: {treatment_doc_filename}")
+
+        if debug:
+            print(
+                f"n_unique {uuid_column_name} : {len(docs[uuid_column_name].unique())}/{len(docs)}"
+            )
+
+    return docs  # Return the final docs DataFrame
