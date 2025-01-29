@@ -240,7 +240,10 @@ def get_all_patients_list(config_obj):
         hospital_ids=all_patient_list, config_obj=config_obj
     )
 
-    analyze_client_codes(all_patient_list)
+    try:
+        analyze_client_codes(all_patient_list)
+    except Exception as e:
+        print(f"Error analyzing client codes: {e}")
 
     # Propensity score matching here or in super function?
 
