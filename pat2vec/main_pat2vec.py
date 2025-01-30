@@ -132,6 +132,8 @@ class main:
                     cohort_searcher_with_terms_and_search
                 )
         else:
+            if self.config_obj.verbosity > 0:
+                print("Warning cohort_searcher_with_terms_and_search disabled")
             self.cohort_searcher_with_terms_and_search = None
 
         if self.verbosity > 0:
@@ -325,7 +327,7 @@ class main:
 
                 if (
                     type(self.config_obj.patient_dict.get(all_patient_list[i])[1])
-                    is not "datetime64[ns]"
+                    != "datetime64[ns]"
                 ):
                     try:
                         # print("forcing end date datetime")
@@ -347,7 +349,7 @@ class main:
 
                 if (
                     type(self.config_obj.patient_dict.get(all_patient_list[i])[0])
-                    is not "datetime64[ns]"
+                    != "datetime64[ns]"
                 ):
                     try:
                         # print("forcing start date datetime")
