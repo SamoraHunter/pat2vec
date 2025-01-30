@@ -185,6 +185,8 @@ def get_treatment_docs_by_iterative_multi_term_cohort_searcher_no_terms_fuzzy(
             fuzzy=fuzzy,
             slop=slop,
         )
+    if(verbose >8):
+        print("search_results: ", search_results.head())
 
     if (os.path.exists(output_path) and overwrite) or os.path.exists(
         output_path
