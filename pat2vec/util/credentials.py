@@ -1,5 +1,6 @@
 from typing import List
 
+print("imported dummy credential file: this should be placed in gloabl_files")
 # CogStack login details
 # Any questions on what these details are please contact your local CogStack administrator.
 
