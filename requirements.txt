@@ -149,7 +149,7 @@ comm==0.2.2
     #   -r temp-requirements.txt
     #   ipykernel
     #   ipywidgets
-confection==0.1.5
+confection
     # via
     #   -r temp-requirements.txt
     #   thinc
@@ -213,7 +213,6 @@ elasticsearch==8.17.0
     #   -r temp-requirements.txt
     #   eland
 en-core-web-md @ https://github.com/explosion/spacy-models/releases/download/en_core_web_md-3.6.0/en_core_web_md-3.6.0-py3-none-any.whl
-    # via -r temp-requirements.txt
 
 et-xmlfile==2.0.0
     # via
@@ -604,7 +603,7 @@ notebook-shim==0.2.4
     #   notebook
 numba==0.61.0
     # via -r temp-requirements.txt
-numpy==1.26.4
+numpy==1.25.2
     # via
     #   -r temp-requirements.txt
     #   accelerate
@@ -851,7 +850,7 @@ pydantic-core==2.27.2
     # via
     #   -r temp-requirements.txt
     #   pydantic
-pydantic-settings==2.7.1
+#pydantic-settings
     # via -r temp-requirements.txt
 pydot==3.0.4
     # via -r temp-requirements.txt
@@ -888,7 +887,7 @@ python-dateutil==2.9.0.post0
     #   pandas
     #   pendulum
     #   time-machine
-python-dotenv==1.0.1
+python-dotenv
     # via
     #   -r temp-requirements.txt
     #   pydantic-settings
@@ -994,7 +993,7 @@ safetensors==0.5.2
     #   transformers
 scikit-learn==1.6.1
     # via -r temp-requirements.txt
-scipy==1.15.1
+scipy
     # via
     #   -r temp-requirements.txt
     #   autograd-gamma
@@ -1086,7 +1085,7 @@ terminado==0.18.1
     #   -r temp-requirements.txt
     #   jupyter-server
     #   jupyter-server-terminals
-thinc==8.1.12
+thinc
     # via
     #   -r temp-requirements.txt
     #   spacy
@@ -1230,7 +1229,7 @@ wcwidth==0.2.13
     # via
     #   -r temp-requirements.txt
     #   prompt-toolkit
-weasel==0.4.1
+weasel
     # via -r temp-requirements.txt
 webcolors==24.11.1
     # via
@@ -1277,7 +1276,7 @@ yarl==1.18.3
     # via
     #   -r temp-requirements.txt
     #   aiohttp
-#ydata-profiling==4.12.2 # cannot be resolved
+#ydata-profiling==4.12.2 #cannot be resolved with medcat
     # via -r temp-requirements.txt
 zipp==3.21.0
     # via
