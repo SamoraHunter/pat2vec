@@ -40,6 +40,8 @@ See requirements.txt
 ### Windows:
 
 1. **Clone the repository:**
+    cd to gloabl_files
+   
     ```shell
     git clone https://github.com/SamoraHunter/pat2vec.git
     cd pat2vec
@@ -50,7 +52,7 @@ See requirements.txt
     install.bat
     ```
 
-2. **Add the `pat2vec` directory to the Python path:**
+3. **Add the `pat2vec` directory to the Python path:**
 
    Before importing `pat2vec` in your Python script, add the following lines to the script, replacing `/path/to/pat2vec` with the actual path to the `pat2vec` directory inside your project:
    
@@ -59,13 +61,62 @@ See requirements.txt
     sys.path.append('/path/to/pat2vec')
     ```
 
-3. **Import `pat2vec` in your Python script:**
+4. **Import `pat2vec` in your Python script:**
 
     ```python
     import pat2vec
     ```
 
 ### Unix/Linux:
+
+### **Option 1: Install All Requirements Automatically**  
+This option installs `pat2vec` along with its dependencies, including:  
+- `pat2vec_env` (virtual environment)  
+- `snomed_methods`  
+- `cogstack_search_methods`  
+- `clinical_note_splitter`  
+
+Before running the installation, ensure you:  
+- Place the **model pack** in the appropriate directory  gloabl_files/medcat_models/%modelpack%.zip
+- Populate the **credentials file**  under gloabl_files/credentials.py
+- *(Optional)* Add a **SNOMED file** if needed  gloabl_files/.. 'snomed', 'SnomedCT_InternationalRF2_PRODUCTION_20231101T120000Z', 'SnomedCT_InternationalRF2_PRODUCTION_20231101T120000Z', 'Full', 'Terminology', 'sct2_StatedRelationship_Full_INT_20231101.txt'
+
+### **Installation Steps:**  
+
+1. Copy the `install_pat2vec.sh` file to your installation directory.  
+2. Grant execution permissions:  
+   ```sh
+   chmod +x install_pat2vec.sh
+   ```  
+3. Run the installation using one of the following options:  
+
+   - **Standard installation:**  
+     ```sh
+     ./install_pat2vec.sh
+     ```  
+   - **Installation with proxy mirror support:**  
+     ```sh
+     ./install_pat2vec.sh --proxy
+     ```  
+   - **Install to a specific directory:**  
+     ```sh
+     ./install_pat2vec.sh --directory /path/to/install
+     ```  
+   - **Skip cloning repositories (if already cloned manually):**  
+     ```sh
+     ./install_pat2vec.sh --no-clone
+     ```  
+
+### **Repositories Installed by This Script:**  
+The script will clone the following repositories:  
+- [`pat2vec`](https://github.com/SamoraHunter/pat2vec.git)  
+- [`snomed_methods`](https://github.com/SamoraHunter/snomed_methods.git)  
+- [`cogstack_search_methods`](https://github.com/SamoraHunter/cogstack_search_methods.git)  
+- [`clinical_note_splitter`](https://github.com/SamoraHunter/clinical_note_splitter.git)  
+
+---
+
+## **Option 2: Manual Installation**
 
 1. **Clone the repository:**
     ```shell
@@ -106,7 +157,7 @@ See requirements.txt
 - gloabl_files/
     - medcat_models/
         - modelpack.zip
-    - SNOMED_methods/snomed_methods_v1.py**
+    - snomed_methods/snomed_methods_v1.py**
     - pat2vec/
     - pat2vec_projects/
         - project_01/
@@ -120,7 +171,11 @@ See requirements.txt
 
 - Run all
 
-- Examine example_usage.ipynb for additional functionality and usecases. 
+- Examine example_usage.ipynb for additional functionality and use cases.
+
+- open example_usage.ipynb and hit run all.
+
+- If testing in a live environment ensure the testing flag is set to False in the config_obj.
 
 ## Contributing
 Contributions are welcome! Please see the contributing guidelines for more information.
