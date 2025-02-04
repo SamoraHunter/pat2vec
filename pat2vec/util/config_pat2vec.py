@@ -376,9 +376,9 @@ class config_class:
         if start_time == None:
             self.start_time = datetime.now()
 
-        self.drug_time_field = "order_performeddtm"  # alt #order_createdwhen
+        self.drug_time_field = "order_createdwhen"  # order_createdwhen: none missing, #"order_performeddtm" order performed empty for medication  # alt #order_createdwhen
 
-        self.diagnostic_time_field = "order_performeddtm"  # alt #order_createdwhen
+        self.diagnostic_time_field = "order_createdwhen"  # order_createdwhen: none missing, #"order_performeddtm" order performed empty for medication  # alt #order_createdwhen
 
         self.appointments_time_field = "AppointmentDateTime"  # alt #DateModified
 
