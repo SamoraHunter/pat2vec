@@ -94,6 +94,8 @@ class main:
 
         self.config_obj = config_obj
 
+        self.cs = cs  # make cogstack v8 cs object available
+
         individual_patient_window_controls_method = (
             config_obj.individual_patient_window_controls_method
         )
