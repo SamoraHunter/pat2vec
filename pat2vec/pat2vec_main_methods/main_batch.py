@@ -88,10 +88,11 @@ def main_batch(
             "t cannot be None. Please provide a valid configuration. (main_batch)"
         )
 
-    if cat is None:
-        raise ValueError(
-            "cat cannot be None. Please provide a valid configuration. (main_batch)"
-        )
+    if main_options.get("annotations") or main_options.get("annotations_mrc"):
+        if cat is None:
+            raise ValueError(
+                "cat cannot be None with annotations or annotations_mrc. Please provide a valid configuration. (main_batch)"
+            )
 
     current_pat_client_id_code = str(current_pat_client_id_code)
 
