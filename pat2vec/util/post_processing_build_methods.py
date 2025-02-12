@@ -383,3 +383,241 @@ def get_annots_joined_to_docs(config_obj, pat2vec_obj):
     res = join_docs_to_annots(annots_df, docs_temp, drop_duplicates=True)
 
     return res
+
+
+def merge_demographics_csv(all_pat_list, config_obj, overwrite=False):
+    """
+    Merge all CSV files in the demographics folder that match the patient list.
+
+    Parameters:
+    - all_pat_list (list): List of patient IDs to include.
+    - config_obj (ConfigObject): Configuration object containing project settings.
+    - overwrite (bool): If True, overwrite the existing output file. Default is False.
+
+    Returns:
+    - File path to the merged output CSV.
+    """
+    directory_path = os.path.join(config_obj.proj_name, "merged_batches")
+    Path(directory_path).mkdir(parents=True, exist_ok=True)
+
+    output_file_path = os.path.join(directory_path, "merged_demographics.csv")
+    demographics_folder = config_obj.pre_demo_batch_path
+
+    if not overwrite and Path(output_file_path).is_file():
+        print("Output file already exists. Overwrite is set to False.")
+        return output_file_path
+
+    merged_df = pd.DataFrame()
+
+    for pat_id in tqdm(all_pat_list, total=len(all_pat_list)):
+        file_path = os.path.join(demographics_folder, f"{pat_id}.csv")
+        if os.path.isfile(file_path):
+            df = pd.read_csv(file_path)
+            merged_df = pd.concat([merged_df, df], ignore_index=True)
+        else:
+            print(f"Warning: File {file_path} not found.")
+
+    merged_df.to_csv(output_file_path, index=False)
+    print(f"Merged CSV saved to {output_file_path}")
+    return output_file_path
+
+
+def merge_bmi_csv(all_pat_list, config_obj, overwrite=False):
+    """
+    Merge all CSV files in the BMI folder that match the patient list.
+
+    Parameters:
+    - all_pat_list (list): List of patient IDs to include.
+    - config_obj (ConfigObject): Configuration object containing project settings.
+    - overwrite (bool): If True, overwrite the existing output file. Default is False.
+
+    Returns:
+    - File path to the merged output CSV.
+    """
+    directory_path = os.path.join(config_obj.proj_name, "merged_batches")
+    Path(directory_path).mkdir(parents=True, exist_ok=True)
+
+    output_file_path = os.path.join(directory_path, "merged_bmi.csv")
+    bmi_folder = config_obj.pre_bmi_batch_path
+
+    if not overwrite and Path(output_file_path).is_file():
+        print("Output file already exists. Overwrite is set to False.")
+        return output_file_path
+
+    merged_df = pd.DataFrame()
+
+    for pat_id in tqdm(all_pat_list, total=len(all_pat_list)):
+        file_path = os.path.join(bmi_folder, f"{pat_id}.csv")
+        if os.path.isfile(file_path):
+            df = pd.read_csv(file_path)
+            merged_df = pd.concat([merged_df, df], ignore_index=True)
+        else:
+            print(f"Warning: File {file_path} not found.")
+
+    merged_df.to_csv(output_file_path, index=False)
+    print(f"Merged CSV saved to {output_file_path}")
+    return output_file_path
+
+
+def merge_news_csv(all_pat_list, config_obj, overwrite=False):
+    """
+    Merge all CSV files in the News folder that match the patient list.
+
+    Parameters:
+    - all_pat_list (list): List of patient IDs to include.
+    - config_obj (ConfigObject): Configuration object containing project settings.
+    - overwrite (bool): If True, overwrite the existing output file. Default is False.
+
+    Returns:
+    - File path to the merged output CSV.
+    """
+    directory_path = os.path.join(config_obj.proj_name, "merged_batches")
+    Path(directory_path).mkdir(parents=True, exist_ok=True)
+
+    output_file_path = os.path.join(directory_path, "merged_news.csv")
+    news_folder = config_obj.pre_news_batch_path
+
+    if not overwrite and Path(output_file_path).is_file():
+        print("Output file already exists. Overwrite is set to False.")
+        return output_file_path
+
+    merged_df = pd.DataFrame()
+
+    for pat_id in tqdm(all_pat_list, total=len(all_pat_list)):
+        file_path = os.path.join(news_folder, f"{pat_id}.csv")
+        if os.path.isfile(file_path):
+            df = pd.read_csv(file_path)
+            merged_df = pd.concat([merged_df, df], ignore_index=True)
+        else:
+            print(f"Warning: File {file_path} not found.")
+
+    merged_df.to_csv(output_file_path, index=False)
+    print(f"Merged CSV saved to {output_file_path}")
+    return output_file_path
+
+
+def merge_diagnostics_csv(all_pat_list, config_obj, overwrite=False):
+    """
+    Merge all CSV files in the Diagnostics folder that match the patient list.
+
+    Parameters:
+    - all_pat_list (list): List of patient IDs to include.
+    - config_obj (ConfigObject): Configuration object containing project settings.
+    - overwrite (bool): If True, overwrite the existing output file. Default is False.
+
+    Returns:
+    - File path to the merged output CSV.
+    """
+    directory_path = os.path.join(config_obj.proj_name, "merged_batches")
+    Path(directory_path).mkdir(parents=True, exist_ok=True)
+
+    output_file_path = os.path.join(directory_path, "merged_diagnostics.csv")
+    diagnostics_folder = config_obj.pre_diagnostics_batch_path
+
+    if not overwrite and Path(output_file_path).is_file():
+        print("Output file already exists. Overwrite is set to False.")
+        return output_file_path
+
+    merged_df = pd.DataFrame()
+
+    for pat_id in tqdm(all_pat_list, total=len(all_pat_list)):
+        file_path = os.path.join(diagnostics_folder, f"{pat_id}.csv")
+        if os.path.isfile(file_path):
+            df = pd.read_csv(file_path)
+            merged_df = pd.concat([merged_df, df], ignore_index=True)
+        else:
+            print(f"Warning: File {file_path} not found.")
+
+    merged_df.to_csv(output_file_path, index=False)
+    print(f"Merged CSV saved to {output_file_path}")
+    return output_file_path
+
+
+def merge_drugs_csv(all_pat_list, config_obj, overwrite=False):
+    """
+    Merge all CSV files in the Drugs folder that match the patient list.
+
+    Parameters:
+    - all_pat_list (list): List of patient IDs to include.
+    - config_obj (ConfigObject): Configuration object containing project settings.
+    - overwrite (bool): If True, overwrite the existing output file. Default is False.
+
+    Returns:
+    - File path to the merged output CSV.
+    """
+    # Define the directory for saving the merged file
+    directory_path = os.path.join(config_obj.proj_name, "merged_batches")
+    Path(directory_path).mkdir(parents=True, exist_ok=True)
+
+    output_file_path = os.path.join(directory_path, "merged_drugs.csv")
+    drugs_folder = config_obj.pre_drugs_batch_path
+
+    # If overwrite is False and the file already exists, return early
+    if not overwrite and Path(output_file_path).is_file():
+        print("Output file already exists. Overwrite is set to False.")
+        return output_file_path
+
+    # Initialize an empty DataFrame to store merged data
+    merged_df = pd.DataFrame()
+
+    # Loop through the patient IDs and merge the data
+    for pat_id in tqdm(all_pat_list, total=len(all_pat_list)):
+        file_path = os.path.join(drugs_folder, f"{pat_id}.csv")
+
+        if os.path.isfile(file_path):
+            df = pd.read_csv(file_path)
+            merged_df = pd.concat([merged_df, df], ignore_index=True)
+        else:
+            print(f"Warning: File {file_path} not found.")
+
+    # Save the merged DataFrame to a CSV file
+    merged_df.to_csv(output_file_path, index=False)
+    print(f"Merged CSV saved to {output_file_path}")
+
+    # Return the path to the merged CSV
+    return output_file_path
+
+
+def merge_appointments_csv(all_pat_list, config_obj, overwrite=False):
+    """
+    Merge all CSV files in the Appointments folder that match the patient list.
+
+    Parameters:
+    - all_pat_list (list): List of patient IDs to include.
+    - config_obj (ConfigObject): Configuration object containing project settings.
+    - overwrite (bool): If True, overwrite the existing output file. Default is False.
+
+    Returns:
+    - File path to the merged output CSV.
+    """
+    # Define the directory for saving the merged file
+    directory_path = os.path.join(config_obj.proj_name, "merged_batches")
+    Path(directory_path).mkdir(parents=True, exist_ok=True)
+
+    output_file_path = os.path.join(directory_path, "merged_appointments.csv")
+    appointments_folder = config_obj.pre_appointments_batch_path
+
+    # If overwrite is False and the file already exists, return early
+    if not overwrite and Path(output_file_path).is_file():
+        print("Output file already exists. Overwrite is set to False.")
+        return output_file_path
+
+    # Initialize an empty DataFrame to store merged data
+    merged_df = pd.DataFrame()
+
+    # Loop through the patient IDs and merge the data
+    for pat_id in tqdm(all_pat_list, total=len(all_pat_list)):
+        file_path = os.path.join(appointments_folder, f"{pat_id}.csv")
+
+        if os.path.isfile(file_path):
+            df = pd.read_csv(file_path)
+            merged_df = pd.concat([merged_df, df], ignore_index=True)
+        else:
+            print(f"Warning: File {file_path} not found.")
+
+    # Save the merged DataFrame to a CSV file
+    merged_df.to_csv(output_file_path, index=False)
+    print(f"Merged CSV saved to {output_file_path}")
+
+    # Return the path to the merged CSV
+    return output_file_path
