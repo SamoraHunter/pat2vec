@@ -216,6 +216,17 @@ def generate_diagnostic_orders_data(
             )
             for _ in range(num_rows)
         ],
+        "order_createdwhen": [
+            datetime(
+                random.randint(global_start_year, global_end_year),
+                random.randint(global_start_month, global_end_month),
+                random.randint(1, 28),
+                random.randint(0, 23),
+                random.randint(0, 59),
+                random.randint(0, 59),
+            )
+            for _ in range(num_rows)
+        ],
         "clientvisit_visitidcode": [f"visit_{i}" for i in range(num_rows)],
         "_id": ["{i}" for i in range(num_rows)],
         "_index": ["{np.nan}" for _ in range(num_rows)],
@@ -276,6 +287,17 @@ def generate_drug_orders_data(
             for i in range(num_rows)
         ],
         "order_entered": [
+            datetime(
+                random.randint(global_start_year, global_end_year),
+                random.randint(global_start_month, global_end_month),
+                random.randint(1, 28),
+                random.randint(0, 23),
+                random.randint(0, 59),
+                random.randint(0, 59),
+            )
+            for _ in range(num_rows)
+        ],
+        "order_createdwhen": [
             datetime(
                 random.randint(global_start_year, global_end_year),
                 random.randint(global_start_month, global_end_month),
