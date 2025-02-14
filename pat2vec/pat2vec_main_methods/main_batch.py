@@ -89,10 +89,10 @@ def main_batch(
         )
 
     if (
-        main_options.get("annotations")
-        or main_options.get("annotations_mrc")
-        or main_options.get("annotations_reports")
-        or main_options.get("textual_obs")
+        config_obj.main_options.get("annotations")
+        or config_obj.main_options.get("annotations_mrc")
+        or config_obj.main_options.get("annotations_reports")
+        or config_obj.main_options.get("textual_obs")
     ):
         if cat is None:
             raise ValueError(
