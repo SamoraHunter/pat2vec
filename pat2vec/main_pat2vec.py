@@ -7,7 +7,7 @@ import traceback
 from datetime import datetime
 from multiprocessing import Pool
 import pandas as pd
-from cogstack_search_methods.cogstack_v8_lite import *
+from pat2vec.util.cogstack_v8_lite import *
 from colorama import Back, Fore, Style
 from credentials import *
 from tqdm import trange
