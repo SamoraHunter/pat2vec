@@ -3,33 +3,19 @@
 # takes pat2vec_obj
 
 import os
-from cogstack_search_methods.cogstack_v8_lite import *
+import random
+
+from pat2vec.util.cogstack_v8_lite import (
+    iterative_multi_term_cohort_searcher_no_terms_fuzzy,
+    iterative_multi_term_cohort_searcher_no_terms_fuzzy_mct,
+    iterative_multi_term_cohort_searcher_no_terms_fuzzy_textual_obs,
+)
 from pat2vec.util.get_dummy_data_cohort_searcher import (
     cohort_searcher_with_terms_and_search_dummy,
+    generate_uuid_list,
 )
 import pandas as pd
 import numpy as np
-
-import random
-import string
-
-
-def generate_uuid(prefix, length=7):
-    """Generate a UUID-like string."""
-    if prefix not in ("P", "V"):
-        raise ValueError("Prefix must be 'P' or 'V'")
-
-    # Generate random characters for the rest of the string
-    chars = string.ascii_uppercase + string.digits
-    random_chars = "".join(random.choices(chars, k=length))
-
-    return f"{prefix}{random_chars}"
-
-
-def generate_uuid_list(n, prefix, length=7):
-    """Generate a list of n UUID-like strings."""
-    uuid_list = [generate_uuid(prefix, length) for _ in range(n)]
-    return uuid_list
 
 
 def get_treatment_docs_by_iterative_multi_term_cohort_searcher_no_terms_fuzzy(
@@ -185,7 +171,7 @@ def get_treatment_docs_by_iterative_multi_term_cohort_searcher_no_terms_fuzzy(
             fuzzy=fuzzy,
             slop=slop,
         )
-    if(verbose >8):
+    if verbose > 8:
         print("search_results: ", search_results.head())
 
     if (os.path.exists(output_path) and overwrite) or os.path.exists(
@@ -243,6 +229,7 @@ def get_treatment_docs_by_iterative_multi_term_cohort_searcher_no_terms_fuzzy(
             method=method,
             fuzzy=fuzzy,
             slop=slop,
+            testing=pat2vec_obj.config_obj.testing,
         )
 
         search_results = pd.concat([search_results, docs], axis=0)
@@ -264,6 +251,7 @@ def get_treatment_docs_by_iterative_multi_term_cohort_searcher_no_terms_fuzzy(
             return search_results
 
     if textual_obs:
+
         docs = iterative_multi_term_cohort_searcher_no_terms_fuzzy_textual_obs(
             term_list,
             output_path,
@@ -281,6 +269,7 @@ def get_treatment_docs_by_iterative_multi_term_cohort_searcher_no_terms_fuzzy(
             method=method,
             fuzzy=fuzzy,
             slop=slop,
+            testing=pat2vec_obj.config_obj.testing,
         )
 
         search_results = pd.concat([search_results, docs], axis=0)

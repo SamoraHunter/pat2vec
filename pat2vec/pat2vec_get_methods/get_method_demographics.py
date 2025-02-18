@@ -3,7 +3,7 @@ import sys
 
 import numpy as np
 import pandas as pd
-from cogstack_search_methods.cogstack_v8_lite import append_age_at_record_series
+from pat2vec.util.cogstack_v8_lite import append_age_at_record_series
 from IPython.display import display
 
 # from COGStats import EthnicityAbstractor

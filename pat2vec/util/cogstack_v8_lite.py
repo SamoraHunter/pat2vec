@@ -1,4 +1,5 @@
 import getpass
+import random
 import warnings
 from collections import defaultdict
 from datetime import date, datetime, timedelta
@@ -19,9 +20,22 @@ from multiprocessing import Pool
 from os.path import exists
 import os
 
+# add one level up to path with sys.path for importing actual credentials
+import sys
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+# from .pre_processing import generate_uuid_list
+
+from .get_dummy_data_cohort_searcher import (
+    cohort_searcher_with_terms_and_search_dummy,
+    generate_uuid_list,
+)
+
 from credentials import *
 
-print("Refreshed!")
+print(f"Imported cogstack_v8_lite from pat2vec.util")
+print(f"Username: %s" % username)
 
 
 class CogStack(object):
@@ -41,17 +55,13 @@ class CogStack(object):
         hosts: List,
         username: str = None,
         password: str = None,
-        api_username: str = None,
-        api_password: str = None,
         api=False,
+        api_key: str = None,
     ):
 
         if api:
-            api_username, api_password = self._check_api_auth_details(
-                api_username, api_password
-            )
             self.elastic = elasticsearch.Elasticsearch(
-                hosts=hosts, api_key=(api_username, api_password), verify_certs=False
+                hosts=hosts, api_key=api_key, verify_certs=False
             )
         else:
             username, password = self._check_auth_details(username, password)
@@ -270,27 +280,27 @@ def set_index_safe_wrapper(df):
         return df
 
 
-def cohort_searcher_no_terms_fuzzy(index_name, fields_list, search_string, fuzzy=2):
-    # Construct a fuzzy query by modifying the "query_string" section
-    query = {
-        "from": 0,
-        "size": 10000,
-        "query": {
-            "bool": {
-                "must": [
-                    {
-                        "query_string": {
-                            "query": search_string,
-                            "fuzziness": fuzzy,  # Set the fuzziness value
-                        }
-                    }
-                ]
-            }
-        },
-        "_source": fields_list,
-    }
-    df = cs.cogstack2df(query=query, index=index_name, column_headers=fields_list)
-    return df
+# def cohort_searcher_no_terms_fuzzy(index_name, fields_list, search_string, fuzzy=2):
+#     # Construct a fuzzy query by modifying the "query_string" section
+#     query = {
+#         "from": 0,
+#         "size": 10000,
+#         "query": {
+#             "bool": {
+#                 "must": [
+#                     {
+#                         "query_string": {
+#                             "query": search_string,
+#                             "fuzziness": fuzzy,  # Set the fuzziness value
+#                         }
+#                     }
+#                 ]
+#             }
+#         },
+#         "_source": fields_list,
+#     }
+#     df = cs.cogstack2df(query=query, index=index_name, column_headers=fields_list)
+#     return df
 
 
 def cohort_searcher_with_terms_no_search(
@@ -800,6 +810,9 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy(
     uuid_column_name="client_idcode",
     additional_filters=None,
     all_fields=False,
+    method="fuzzy",
+    fuzzy=2,
+    slop=1,
 ):
     if not terms_list:
         print("Terms list is empty. Exiting.")
@@ -808,6 +821,9 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy(
     file_exists = exists(treatment_doc_filename)
 
     if file_exists and not overwrite:
+        print(
+            f"file_exists and not overwrite, reading docs from {treatment_doc_filename}"
+        )
         docs = pd.read_csv(treatment_doc_filename)
     else:
         all_docs = []
@@ -900,11 +916,15 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy(
             else:
                 field_list = "client_idcode document_guid document_description body_analysed updatetime clientvisit_visitidcode".split()
 
+            # method="fuzzy", fuzzy=2, slop=1
             # Perform the search
             term_docs = cohort_searcher_no_terms_fuzzy(
                 index_name="epr_documents",
                 fields_list=field_list,
                 search_string=search_string,
+                method=method,
+                fuzzy=fuzzy,
+                slop=slop,
             )
 
             term_docs["search_term"] = term
@@ -920,7 +940,13 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy(
         docs = docs.drop_duplicates()
 
         # Save the results to a temporary CSV
-        docs.to_csv(treatment_doc_filename, index=False)
+        docs.to_csv(
+            treatment_doc_filename,
+            index=False,
+            escapechar="\\",  # Set backslash as escape character
+            doublequote=True,  # Use double quotes to escape quotes
+            encoding="utf-8",
+        )  # Explicitly set encoding)
         if debug:
             print(
                 f"n_unique {uuid_column_name} : {len(docs[uuid_column_name].unique())}/{len(docs)}"
@@ -943,6 +969,10 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy_mct(
     uuid_column_name="client_idcode",
     additional_filters=None,
     all_fields=False,
+    method="fuzzy",
+    fuzzy=2,
+    slop=1,
+    testing=False,
 ):
     print(
         "iterative_multi_term_cohort_searcher_no_terms_fuzzy_mct",
@@ -1090,12 +1120,28 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy_mct(
                                 observation_valuetext_analysed observationdocument_recordeddtm 
                                 clientvisit_visitidcode""".split()
 
-            # Perform the search
-            term_docs = cohort_searcher_no_terms_fuzzy(
-                index_name="observations",
-                fields_list=field_list,
-                search_string=search_string,
-            )
+            if testing == True:
+                term_docs = cohort_searcher_with_terms_and_search_dummy(
+                    index_name="observations",
+                    fields_list=field_list,
+                    term_name="client_idcode",
+                    entered_list=generate_uuid_list(
+                        random.randint(0, 10), random.choice(["P", "V"])
+                    ),
+                    search_string=search_string,
+                )
+
+            else:
+
+                # Perform the search
+                term_docs = cohort_searcher_no_terms_fuzzy(
+                    index_name="observations",
+                    fields_list=field_list,
+                    search_string=search_string,
+                    method=method,
+                    fuzzy=fuzzy,
+                    slop=slop,
+                )
 
             # Check if term_docs is empty and log if necessary
             if term_docs is None or term_docs.empty:
@@ -1145,7 +1191,14 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy_mct(
             print(f"Updated data saved to: {treatment_doc_filename}")
         else:
             # If the file does not exist, save the new data as a new CSV
-            docs.to_csv(treatment_doc_filename, mode="w", index=False)
+            docs.to_csv(
+                treatment_doc_filename,
+                mode="w",
+                index=False,
+                escapechar="\\",  # Set backslash as escape character
+                doublequote=True,  # Use double quotes to escape quotes
+                encoding="utf-8",
+            )  # Explicitly set encoding)
             print(f"New data saved to: {treatment_doc_filename}")
 
         if debug:
@@ -1171,6 +1224,10 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy_textual_obs(
     bloods_time_field="basicobs_entered",
     additional_filters=None,
     all_fields=False,
+    method="fuzzy",
+    fuzzy=2,
+    slop=1,
+    testing=False,
 ):
     print(
         "iterative_multi_term_cohort_searcher_no_terms_fuzzy_textual_obs",
@@ -1211,6 +1268,12 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy_textual_obs(
             )
 
             search_string = f"textualObs:({term})"
+
+            search_string = (
+                f"textualObs:({term}) AND "
+                + f"{bloods_time_field}:[{start_year}-{start_month}-{start_day} TO {end_year}-{end_month}-{end_day}]",
+            )
+            search_string = str(search_string)
 
             if additional_filters:
                 search_string += " " + " ".join(additional_filters)
@@ -1314,12 +1377,27 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy_textual_obs(
                     "textualObs",
                 ]
 
-            # Perform the search
-            term_docs = cohort_searcher_no_terms_fuzzy(
-                index_name="basic_observations",
-                fields_list=field_list,
-                search_string=search_string,
-            )
+            if testing == False:
+                # Perform the search
+                term_docs = cohort_searcher_no_terms_fuzzy(
+                    index_name="basic_observations",
+                    fields_list=field_list,
+                    search_string=search_string,
+                    method=method,
+                    fuzzy=fuzzy,
+                    slop=slop,
+                )
+            else:
+
+                term_docs = cohort_searcher_with_terms_and_search_dummy(
+                    index_name="basic_observations",
+                    fields_list=field_list,
+                    term_name="client_idcode",
+                    entered_list=generate_uuid_list(
+                        random.randint(0, 10), random.choice(["P", "V"])
+                    ),
+                    search_string=search_string,
+                )
 
             # Check if term_docs is empty and log if necessary
             if term_docs is None or term_docs.empty:
@@ -1379,7 +1457,14 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy_textual_obs(
             print(f"Updated data saved to: {treatment_doc_filename}")
         else:
             # If the file does not exist, save the new data as a new CSV
-            docs.to_csv(treatment_doc_filename, mode="w", index=False)
+            docs.to_csv(
+                treatment_doc_filename,
+                mode="w",
+                index=False,
+                escapechar="\\",  # Set backslash as escape character
+                doublequote=True,  # Use double quotes to escape quotes
+                encoding="utf-8",
+            )  # Explicitly set encoding))
             print(f"New data saved to: {treatment_doc_filename}")
 
         if debug:
@@ -1388,3 +1473,89 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy_textual_obs(
             )
 
     return docs  # Return the final docs DataFrame
+
+
+def cohort_searcher_no_terms_fuzzy(
+    index_name, fields_list, search_string, method="fuzzy", fuzzy=2, slop=1
+):
+    """
+    Search Elasticsearch using different query methods: fuzzy, exact, or phrase (with slop and fuzziness).
+
+    Parameters:
+    - index_name (str): The name of the Elasticsearch index.
+    - fields_list (list): List of fields to retrieve in the response.
+    - search_string (str): The search string to query.
+    - method (str): The search method ("fuzzy", "exact", or "phrase"). Defaults to "fuzzy".
+    - fuzzy (int): The fuzziness level for fuzzy matching. Only used if method="fuzzy" or "phrase".
+    - slop (int): The slop value for phrase searches, allowing word reordering. Only used if method="phrase".
+
+    Returns:
+    - DataFrame: A DataFrame containing the search results.
+    """
+    if method == "fuzzy":
+        # Fuzzy query
+        query = {
+            "from": 0,
+            "size": 10000,
+            "query": {
+                "bool": {
+                    "must": [
+                        {
+                            "query_string": {
+                                "fields": ["*"],  # Search across all fields by default
+                                "query": search_string,
+                                "fuzziness": fuzzy,  # Set fuzziness level
+                            }
+                        }
+                    ]
+                }
+            },
+            "_source": fields_list,
+        }
+    elif method == "exact":
+        # Exact match query using keyword fields
+        query = {
+            "from": 0,
+            "size": 10000,
+            "query": {
+                "term": {
+                    f"{fields_list[0]}.keyword": search_string  # Exact match on the first field in the list
+                }
+            },
+            "_source": fields_list,
+        }
+    elif method == "phrase":
+        # Phrase match query with slop and fuzziness for typos
+        query = {
+            "from": 0,
+            "size": 10000,
+            "query": {
+                "bool": {
+                    "must": [
+                        {
+                            "match": {
+                                "_all": {  # Fuzzy matching to allow typos
+                                    "query": search_string,
+                                    "fuzziness": fuzzy,  # Allow typos
+                                }
+                            }
+                        },
+                        {
+                            "match_phrase": {
+                                "_all": {  # Ensure phrase-like behavior with word proximity
+                                    "query": search_string,
+                                    "slop": slop,  # Allow slight reordering of words
+                                }
+                            }
+                        },
+                    ]
+                }
+            },
+            "_source": fields_list,
+        }
+    else:
+        raise ValueError("Invalid method. Choose from 'fuzzy', 'exact', or 'phrase'.")
+
+    # Execute the query and return the results as a DataFrame
+    df = cs.cogstack2df(query=query, index=index_name, column_headers=fields_list)
+    return df

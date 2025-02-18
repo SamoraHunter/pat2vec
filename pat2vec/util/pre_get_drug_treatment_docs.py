@@ -1,8 +1,14 @@
+import random
 import pandas as pd
 from pat2vec.util.cogstack_v8_lite import cohort_searcher_no_terms_fuzzy
 from typing import List, Optional, Union
 from fuzzywuzzy import fuzz
 import os
+
+from pat2vec.util.get_dummy_data_cohort_searcher import (
+    cohort_searcher_with_terms_and_search_dummy,
+)
+from pat2vec.util.pre_processing import generate_uuid_list
 
 # Functions to get cohort by drug order name.
 # Example: I want the records of everyone who has an order of these three drugs...
@@ -246,13 +252,26 @@ def get_treatment_records_by_drug_order_name(
         print(f"[INFO] Searching in columns: {column_fields_to_match}")
         print(f"[INFO] Date range: {start_date} to {end_date}")
 
-    # Perform search in the 'order' index
-    drug_treatment_docs = cohort_searcher_no_terms_fuzzy(
-        index_name="order",
-        fields_list=all_fields_list if all_fields else field_list,
-        search_string=f'order_typecode:"medication" AND "{term}" '
-        f"AND {drug_time_field}:[{start_date} TO {end_date}]",
-    )
+    if pat2vec_obj.testing == False:
+        # Perform search in the 'order' index
+        drug_treatment_docs = cohort_searcher_no_terms_fuzzy(
+            index_name="order",
+            fields_list=all_fields_list if all_fields else field_list,
+            search_string=f'order_typecode:"medication" AND "{term}" '
+            f"AND {drug_time_field}:[{start_date} TO {end_date}]",
+        )
+    else:
+
+        drug_treatment_docs = cohort_searcher_with_terms_and_search_dummy(
+            index_name="order",
+            fields_list=field_list,
+            term_name=pat2vec_obj.config_obj.client_idcode_term_name,
+            entered_list=generate_uuid_list(
+                random.randint(0, 10), random.choice(["P", "V"])
+            ),
+            search_string=f'order_typecode:"medication" AND "{term}" '
+            f"AND {drug_time_field}:[{start_date} TO {end_date}]",
+        )
 
     if drug_treatment_docs.empty:
         if verbose >= 1:

@@ -1257,3 +1257,25 @@ def get_patient_timeline_dummy(
     except KeyError:
         print("KeyError: 'body_analysed' column doesn't exist in the DataFrame!")
         return None
+
+
+import random
+import string
+
+
+def generate_uuid(prefix, length=7):
+    """Generate a UUID-like string."""
+    if prefix not in ("P", "V"):
+        raise ValueError("Prefix must be 'P' or 'V'")
+
+    # Generate random characters for the rest of the string
+    chars = string.ascii_uppercase + string.digits
+    random_chars = "".join(random.choices(chars, k=length))
+
+    return f"{prefix}{random_chars}"
+
+
+def generate_uuid_list(n, prefix, length=7):
+    """Generate a list of n UUID-like strings."""
+    uuid_list = [generate_uuid(prefix, length) for _ in range(n)]
+    return uuid_list
