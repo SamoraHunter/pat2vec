@@ -252,7 +252,7 @@ def get_treatment_records_by_drug_order_name(
         print(f"[INFO] Searching in columns: {column_fields_to_match}")
         print(f"[INFO] Date range: {start_date} to {end_date}")
 
-    if pat2vec_obj.testing == False:
+    if pat2vec_obj.config_obj.testing == False:
         # Perform search in the 'order' index
         drug_treatment_docs = cohort_searcher_no_terms_fuzzy(
             index_name="order",
