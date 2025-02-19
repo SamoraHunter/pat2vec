@@ -83,6 +83,8 @@ clone_repositories() {
     local repos=(
         "https://github.com/SamoraHunter/cogstack_search_methods.git"
         "https://github.com/SamoraHunter/clinical_note_splitter.git"
+        "https://github.com/SamoraHunter/SNOMED_methods.git"
+        
     )
     
     for repo in "${repos[@]}"; do
