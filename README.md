@@ -21,6 +21,8 @@ Example use case 2: I intend to generate a monthly time series comprising patien
 - CogStack (cogstack_v8_lite) ([cogstack_search_methods](https://github.com/SamoraHunter/cogstack_search_methods))
 - Elasticsearch
 - MedCat https://github.com/CogStack/MedCAT
+- Python >=3.10
+- Python3.10-venv (for install_pat2vec.py)
 
 See requirements.txt
 
