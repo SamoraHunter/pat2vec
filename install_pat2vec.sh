@@ -30,6 +30,30 @@ setup_medcat_models() {
     echo "Place your MedCAT model pack in this directory" > "$GLOBAL_FILES_DIR/medcat_models/put_medcat_modelpack_here.txt"
 }
 
+create_paths_file() {
+    echo "Setting up paths.py file..."
+    local paths_dir="notebooks"
+    local paths_file="$paths_dir/paths.py"
+    
+    # Create notebooks directory if it doesn't exist
+    if [ ! -d "$paths_dir" ]; then
+        echo "Creating notebooks directory..."
+        mkdir -p "$paths_dir" || { echo "ERROR: Failed to create notebooks directory"; return 1; }
+    fi
+    
+    # Create or overwrite paths.py
+    echo "Creating paths.py file..."
+    echo "medcat_path = 'put your model pack path here'" > "$paths_file"
+    
+    if [ $? -eq 0 ]; then
+        echo "paths.py created successfully at: $paths_file"
+        ls -l "$paths_file"  # Verify the file exists and show its details
+    else
+        echo "ERROR: Failed to create paths.py file"
+        return 1
+    fi
+}
+
 copy_credentials() {
     echo "Starting credentials copy process..."
     echo "Target directory: $GLOBAL_FILES_DIR"
@@ -84,7 +108,6 @@ clone_repositories() {
         "https://github.com/SamoraHunter/cogstack_search_methods.git"
         "https://github.com/SamoraHunter/clinical_note_splitter.git"
         "https://github.com/SamoraHunter/snomed_methods.git"
-        
     )
     
     for repo in "${repos[@]}"; do
@@ -125,6 +148,9 @@ fi
 
 # Setup MedCAT models directory in global_files
 setup_medcat_models
+
+# Create paths.py file
+create_paths_file || echo "Warning: Paths file setup encountered issues"
 
 # Copy the credentials if needed
 copy_credentials || echo "Warning: Credentials setup encountered issues"
