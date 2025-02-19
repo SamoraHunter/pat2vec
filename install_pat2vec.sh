@@ -3,7 +3,6 @@
 PROXY_MODE=false
 CLONE_REPOS=true
 FORCE_CLEAN=false
-
 # Store the absolute path to global_files directory (one level up from pat2vec)
 GLOBAL_FILES_DIR="$(dirname "$(pwd)")"
 
@@ -32,10 +31,45 @@ setup_medcat_models() {
 }
 
 copy_credentials() {
+    echo "Starting credentials copy process..."
+    echo "Target directory: $GLOBAL_FILES_DIR"
+    
+    local source_file="$GLOBAL_FILES_DIR/pat2vec/pat2vec/util/credentials.py"
     local target_file="$GLOBAL_FILES_DIR/credentials.py"
-    if [ ! -f "$target_file" ] && [ -f "$GLOBAL_FILES_DIR/pat2vec/util/credentials.py" ]; then
-        cp "$GLOBAL_FILES_DIR/pat2vec/util/credentials.py" "$target_file"
-        echo "Credentials file copied successfully. Make sure you populate this!"
+    
+    echo "Looking for credentials at: $source_file"
+    
+    # Check if source file exists
+    if [ ! -f "$source_file" ]; then
+        echo "ERROR: Source credentials file not found at: $source_file"
+        return 1
+    fi
+    
+    echo "Source file found at: $source_file"
+    
+    # Check if target file already exists
+    if [ -f "$target_file" ]; then
+        echo "Target credentials file already exists at: $target_file"
+        if [ "$FORCE_CLEAN" = true ]; then
+            echo "Force clean enabled, removing existing credentials file..."
+            rm "$target_file" || { echo "ERROR: Failed to remove existing credentials file"; return 1; }
+        else
+            echo "Skipping credentials copy (use -f to force overwrite)"
+            return 0
+        fi
+    fi
+    
+    # Attempt to copy the file
+    echo "Copying credentials file..."
+    cp "$source_file" "$target_file"
+    
+    if [ $? -eq 0 ]; then
+        echo "Credentials file copied successfully to: $target_file"
+        echo "IMPORTANT: Make sure to populate the credentials file with your actual credentials!"
+        ls -l "$target_file"  # Verify the file exists and show its details
+    else
+        echo "ERROR: Failed to copy credentials file"
+        return 1
     fi
 }
 
@@ -91,7 +125,7 @@ fi
 setup_medcat_models
 
 # Copy the credentials if needed
-copy_credentials
+copy_credentials || echo "Warning: Credentials setup encountered issues"
 
 # Run the appropriate pat2vec install script
 if [ "$PROXY_MODE" = true ]; then
