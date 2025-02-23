@@ -168,14 +168,14 @@ class config_class:
         time_window_interval_delta=relativedelta(days=1),
         feature_engineering_arg_dict=None,
         split_clinical_notes=True,
-        lookback=True,
-        add_icd10=False,
-        add_opc4s=False,
-        all_epr_patient_list_path="/home/samorah/_data/gloabl_files/all_client_idcodes_epr_unique.csv",
+        lookback=True,  # look back or forward from the start date
+        add_icd10=False,  # append ICD 10 codes to the output of annotations
+        add_opc4s=False,  # append OPC4s codes to the output of annotations
+        all_epr_patient_list_path="/home/samorah/_data/gloabl_files/all_client_idcodes_epr_unique.csv",  # Used for control patient sampling
         override_medcat_model_path=None,
         data_type_filter_dict=None,
-        filter_split_notes=True,
-        client_idcode_term_name="client_idcode.keyword",
+        filter_split_notes=True,  # Apply global time window to notes post clinical note splitting.
+        client_idcode_term_name="client_idcode.keyword",  # Used for elastic search index keyword search
         sanitize_pat_list=True,
         calculate_vectors=True,
     ):
@@ -604,7 +604,7 @@ class config_class:
             # add logic to prioritise pats from list.
 
             df_old_done = pd.read_csv(
-                "/data/AS/Samora/HFE/HFE/v18/current_pat_lines_parts/current_pat_lines__part_0_merged.csv",
+                "..current_pat_lines__part_0_merged.csv",
                 usecols=[
                     "client_idcode",
                     "Hemochromatosis (disorder)_count_subject_present",
@@ -646,7 +646,7 @@ class config_class:
 
             if self.root_path == None:
 
-                self.root_path = f"/mnt/hdd1/samora/{self.proj_name}/"
+                self.root_path = f"../{self.proj_name}/"
                 print(f"sftp root_path: {self.root_path}")
 
             else:
@@ -684,10 +684,11 @@ class config_class:
             self.current_pat_lines_path = self.current_pat_line_path
 
             if self.remote_dump == False:
-                Path(self.current_pat_annot_path).mkdir(parents=True, exist_ok=True)
-                Path(self.pre_annotation_path_mrc).mkdir(parents=True, exist_ok=True)
+                # Path(self.current_pat_annot_path).mkdir(parents=True, exist_ok=True)
+                # Path(self.pre_annotation_path_mrc).mkdir(parents=True, exist_ok=True)
+                pass  #'deprecated'
 
-            elif root_path == f"/mnt/hdd1/samora/{self.proj_name}/":
+            elif root_path == f"../{self.proj_name}/":
 
                 try:
                     # Test if remote_path exists
