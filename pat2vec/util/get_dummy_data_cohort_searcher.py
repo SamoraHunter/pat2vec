@@ -2,21 +2,28 @@ from datetime import datetime, timedelta
 import logging
 import os
 import pickle
-import random
 import re
 from datetime import datetime, timedelta, timezone
 import string
 from typing import Optional, cast
 import uuid
-
 import numpy as np
 import pandas as pd
 from faker import Faker
 import pytz
 from transformers import pipeline
-
+import random
+import string
 from IPython import display
+import numpy as np
 
+random_state = 42
+Faker.seed(random_state)
+# Set random seed
+np.random.seed(random_state)
+random.seed(random_state)
+
+faker = Faker()
 
 from pat2vec.util.dummy_data_files.dummy_lists import (
     blood_test_names,
@@ -24,8 +31,6 @@ from pat2vec.util.dummy_data_files.dummy_lists import (
     drug_names,
     ethnicity_list,
 )
-
-fake = Faker()
 
 
 def maybe_nan(value, probability=0.2):
@@ -61,7 +66,7 @@ def generate_epr_documents_data(
         "client_idcode": [current_pat_client_id_code for _ in range(num_rows)],
         "document_guid": [str(uuid.uuid4()).split("-")[0] for _ in range(num_rows)],
         "document_description": [f"clinical_note_summary" for i in range(num_rows)],
-        # 'body_analysed': [fake.paragraph() for _ in range(num_rows)],
+        # 'body_analysed': [faker.paragraph() for _ in range(num_rows)],
         "body_analysed": [
             (
                 generate_patient_timeline(current_pat_client_id_code)
@@ -116,11 +121,11 @@ def generate_epr_documents_personal_data(
     """
     current_pat_client_id_code = random.choice(entered_list)
 
-    ethnicity = fake.random_element(ethnicity_list)
+    ethnicity = faker.random_element(ethnicity_list)
 
-    first_name = fake.first_name()
-    last_name = fake.last_name()
-    dob = fake.date_of_birth(minimum_age=18, maximum_age=90).strftime(
+    first_name = faker.first_name()
+    last_name = faker.last_name()
+    dob = faker.date_of_birth(minimum_age=18, maximum_age=90).strftime(
         "%Y-%m-%dT%H:%M:%S"
     )
     gender = random.choice(["male", "female"])
@@ -128,7 +133,7 @@ def generate_epr_documents_personal_data(
     # TODO: implement low change of death event, if so use date of death else None
     death_probability = 0.1
     client_deceaseddtm_val = (
-        fake.date_time_this_decade() if random.random() < death_probability else None
+        faker.date_time_this_decade() if random.random() < death_probability else None
     )
 
     data = {
@@ -196,13 +201,13 @@ def generate_diagnostic_orders_data(
     data = {
         "order_guid": [f"order_{i}" for i in range(num_rows)],
         "client_idcode": [random.choice(entered_list) for _ in range(num_rows)],
-        "order_name": [fake.random_element(diagnostic_names) for _ in range(num_rows)],
+        "order_name": [faker.random_element(diagnostic_names) for _ in range(num_rows)],
         "order_summaryline": [
-            maybe_nan(" ".join(fake.sentence() for _ in range(num_rows)))
+            maybe_nan(" ".join(faker.sentence() for _ in range(num_rows)))
             for i in range(num_rows)
         ],
         "order_holdreasontext": [
-            maybe_nan(" ".join(fake.sentence() for _ in range(num_rows)))
+            maybe_nan(" ".join(faker.sentence() for _ in range(num_rows)))
             for i in range(num_rows)
         ],
         "order_entered": [
@@ -275,15 +280,15 @@ def generate_drug_orders_data(
         "order_guid": [f"order_{i}" for i in range(num_rows)],
         "client_idcode": [random.choice(entered_list) for _ in range(num_rows)],
         # New value for drug_name
-        "order_name": [fake.random_element(drug_names) for _ in range(num_rows)],
+        "order_name": [faker.random_element(drug_names) for _ in range(num_rows)],
         # New value for drug_description
         "order_summaryline": [
-            maybe_nan(" ".join(fake.sentence() for _ in range(num_rows)))
+            maybe_nan(" ".join(faker.sentence() for _ in range(num_rows)))
             for i in range(num_rows)
         ],
         # New value for dosage
         "order_holdreasontext": [
-            maybe_nan(" ".join(fake.sentence() for _ in range(num_rows)))
+            maybe_nan(" ".join(faker.sentence() for _ in range(num_rows)))
             for i in range(num_rows)
         ],
         "order_entered": [
@@ -367,7 +372,7 @@ def generate_observations_MRC_text_data(
             )
             for _ in range(num_rows)
         ],
-        # 'observation_valuetext_analysed': [fake.paragraph() for _ in range(num_rows)],
+        # 'observation_valuetext_analysed': [faker.paragraph() for _ in range(num_rows)],
         "observationdocument_recordeddtm": [
             datetime(
                 random.randint(global_start_year, global_end_year),
@@ -413,7 +418,7 @@ def generate_observations_Reports_text_data(
     - pd.DataFrame: Generated DataFrame with specified columns.
     """
     # print("generate_observations_Reports_text_data")
-
+    random.seed(random_state)
     current_pat_client_id_code = random.choice(entered_list)
 
     data = {
@@ -429,7 +434,7 @@ def generate_observations_Reports_text_data(
             )
             for _ in range(num_rows)
         ],
-        # 'observation_valuetext_analysed': [fake.paragraph() for _ in range(num_rows)],
+        # 'observation_valuetext_analysed': [faker.paragraph() for _ in range(num_rows)],
         "updatetime": [
             datetime(
                 random.randint(global_start_year, global_end_year),
@@ -477,14 +482,15 @@ def generate_appointments_data(
     """
 
     data = {
-        "Popular": [fake.random_number(digits=3) for _ in range(num_rows)],
+        "Popular": [faker.random_number(digits=3) for _ in range(num_rows)],
         "AppointmentType": [
-            fake.random_element(["Type A", "Type B", "Type C"]) for _ in range(num_rows)
+            faker.random_element(["Type A", "Type B", "Type C"])
+            for _ in range(num_rows)
         ],
-        "AttendanceReference": [fake.random_number(digits=6) for _ in range(num_rows)],
-        "ClinicCode": [fake.random_number(digits=4) for _ in range(num_rows)],
-        "ClinicDesc": [fake.word() for _ in range(num_rows)],
-        "Consultant": [fake.name() for _ in range(num_rows)],
+        "AttendanceReference": [faker.random_number(digits=6) for _ in range(num_rows)],
+        "ClinicCode": [faker.random_number(digits=4) for _ in range(num_rows)],
+        "ClinicDesc": [faker.word() for _ in range(num_rows)],
+        "Consultant": [faker.name() for _ in range(num_rows)],
         "DateModified": [
             datetime(
                 random.randint(global_start_year, global_end_year),
@@ -497,11 +503,11 @@ def generate_appointments_data(
             )
             for _ in range(num_rows)
         ],
-        "DNA": [fake.random_element(["Y", "N"]) for _ in range(num_rows)],
-        "HospitalID": [fake.random_number(digits=5) for _ in range(num_rows)],
-        "PatNHSNo": [fake.random_number(digits=10) for _ in range(num_rows)],
+        "DNA": [faker.random_element(["Y", "N"]) for _ in range(num_rows)],
+        "HospitalID": [faker.random_number(digits=5) for _ in range(num_rows)],
+        "PatNHSNo": [faker.random_number(digits=10) for _ in range(num_rows)],
         "Specialty": [
-            fake.random_element(["Specialty A", "Specialty B", "Specialty C"])
+            faker.random_element(["Specialty A", "Specialty B", "Specialty C"])
             for _ in range(num_rows)
         ],
         "_id": [str(i) for i in range(num_rows)],
@@ -519,27 +525,29 @@ def generate_appointments_data(
             )
             for _ in range(num_rows)
         ],
-        "Attended": [fake.random_element([0, 1]) for _ in range(num_rows)],
-        "CancDesc": [fake.sentence() for _ in range(num_rows)],
-        "CancRefNo": [fake.random_number(digits=8) for _ in range(num_rows)],
-        "ConsultantCode": [fake.random_number(digits=4) for _ in range(num_rows)],
-        "DateCreated": [fake.date_time_this_year() for _ in range(num_rows)],
+        "Attended": [faker.random_element([0, 1]) for _ in range(num_rows)],
+        "CancDesc": [faker.sentence() for _ in range(num_rows)],
+        "CancRefNo": [faker.random_number(digits=8) for _ in range(num_rows)],
+        "ConsultantCode": [faker.random_number(digits=4) for _ in range(num_rows)],
+        "DateCreated": [faker.date_time_this_year() for _ in range(num_rows)],
         "Ethnicity": [
-            fake.random_element(["Ethnicity A", "Ethnicity B", "Ethnicity C"])
+            faker.random_element(["Ethnicity A", "Ethnicity B", "Ethnicity C"])
             for _ in range(num_rows)
         ],
-        "Gender": [fake.random_element(["Male", "Female"]) for _ in range(num_rows)],
-        "NHSNoStatusCode": [fake.random_number(digits=2) for _ in range(num_rows)],
-        "NotSpec": [fake.random_element(["Y", "N"]) for _ in range(num_rows)],
-        "PatDateOfBirth": [fake.date_of_birth() for _ in range(num_rows)],
-        "PatForename": [fake.first_name() for _ in range(num_rows)],
-        "PatPostCode": [fake.postcode() for _ in range(num_rows)],
-        "PatSurname": [fake.last_name() for _ in range(num_rows)],
-        "PiMsPatRefNo": [fake.random_number(digits=6) for _ in range(num_rows)],
-        "Primarykeyfieldname": [fake.word() for _ in range(num_rows)],
-        "Primarykeyfieldvalue": [fake.random_number(digits=4) for _ in range(num_rows)],
-        "SessionCode": [fake.random_number(digits=3) for _ in range(num_rows)],
-        "SpecialtyCode": [fake.random_number(digits=4) for _ in range(num_rows)],
+        "Gender": [faker.random_element(["Male", "Female"]) for _ in range(num_rows)],
+        "NHSNoStatusCode": [faker.random_number(digits=2) for _ in range(num_rows)],
+        "NotSpec": [faker.random_element(["Y", "N"]) for _ in range(num_rows)],
+        "PatDateOfBirth": [faker.date_of_birth() for _ in range(num_rows)],
+        "PatForename": [faker.first_name() for _ in range(num_rows)],
+        "PatPostCode": [faker.postcode() for _ in range(num_rows)],
+        "PatSurname": [faker.last_name() for _ in range(num_rows)],
+        "PiMsPatRefNo": [faker.random_number(digits=6) for _ in range(num_rows)],
+        "Primarykeyfieldname": [faker.word() for _ in range(num_rows)],
+        "Primarykeyfieldvalue": [
+            faker.random_number(digits=4) for _ in range(num_rows)
+        ],
+        "SessionCode": [faker.random_number(digits=3) for _ in range(num_rows)],
+        "SpecialtyCode": [faker.random_number(digits=4) for _ in range(num_rows)],
     }
 
     df = pd.DataFrame(data)
@@ -580,7 +588,7 @@ def generate_observations_data(
         "observation_valuetext_analysed": [
             random.uniform(0, 100) for _ in range(num_rows)
         ],
-        # 'observation_valuetext_analysed': [fake.paragraph() for _ in range(num_rows)],
+        # 'observation_valuetext_analysed': [faker.paragraph() for _ in range(num_rows)],
         "observationdocument_recordeddtm": [
             datetime(
                 random.randint(global_start_year, global_end_year),
@@ -625,12 +633,13 @@ def generate_basic_observations_data(
     - pd.DataFrame: Generated DataFrame with specified columns.
     """
     # print("generate_basic_observations_data")
+    random.seed(random_state)
     current_pat_client_id_code = random.choice(entered_list)
 
     data = {
         "client_idcode": [current_pat_client_id_code] * num_rows,
         "basicobs_itemname_analysed": [
-            fake.random_element(blood_test_names) for _ in range(num_rows)
+            faker.random_element(blood_test_names) for _ in range(num_rows)
         ],
         "basicobs_value_numeric": [random.uniform(1, 100) for _ in range(num_rows)],
         "basicobs_entered": [
@@ -652,11 +661,11 @@ def generate_basic_observations_data(
         "order_guid": [f"order_{i}" for i in range(num_rows)],
         "order_name": [None for i in range(num_rows)],
         "order_summaryline": [
-            maybe_nan(" ".join(fake.sentence() for _ in range(num_rows)))
+            maybe_nan(" ".join(faker.sentence() for _ in range(num_rows)))
             for i in range(num_rows)
         ],
         "order_holdreasontext": [
-            maybe_nan(" ".join(fake.sentence() for _ in range(num_rows)))
+            maybe_nan(" ".join(faker.sentence() for _ in range(num_rows)))
             for i in range(num_rows)
         ],
         "order_entered": ["{np.nan}" for i in range(num_rows)],
@@ -695,10 +704,10 @@ def generate_basic_observations_textual_obs_data(
     data = {
         "client_idcode": [current_pat_client_id_code] * num_rows,
         "basicobs_itemname_analysed": [
-            fake.random_element(blood_test_names) for _ in range(num_rows)
+            faker.random_element(blood_test_names) for _ in range(num_rows)
         ],
         "basicobs_value_numeric": [random.uniform(1, 100) for _ in range(num_rows)],
-        "basicobs_value_analysed": [fake.sentence() for _ in range(num_rows)],
+        "basicobs_value_analysed": [faker.sentence() for _ in range(num_rows)],
         "basicobs_entered": [
             datetime(
                 random.randint(global_start_year, global_end_year),
@@ -730,7 +739,7 @@ def generate_basic_observations_textual_obs_data(
             for _ in range(num_rows)
         ],
         "textualObs": [
-            maybe_nan(" ".join(fake.sentence() for _ in range(num_rows)))
+            maybe_nan(" ".join(faker.sentence() for _ in range(num_rows)))
             for i in range(num_rows)
         ],
     }
@@ -1058,9 +1067,6 @@ def generate_patient_timeline(client_idcode):
     return patient_timeline
 
 
-faker = Faker()
-
-
 def generate_patient_timeline_faker(client_idcode):
 
     probabilities = [0.7, 0.1, 0.05, 0.05, 0.05]  # Adjust as needed
@@ -1120,6 +1126,7 @@ def extract_search_term_obscatalogmasteritem_displayname(search_string):
 
 
 def random_sample(pickled_dict, sample_size):
+    random.seed(random_state)
     keys = list(pickled_dict["entities"].keys())
     sample_keys = random.sample(keys, min(sample_size, len(keys)))
     sample = {"entities": {key: pickled_dict["entities"][key] for key in sample_keys}}
@@ -1244,7 +1251,7 @@ def get_patient_timeline_dummy(
         return None
 
     # Get a random row from the DataFrame, we don't care which one we get
-    sample: pd.DataFrame = df.sample(1)
+    sample: pd.DataFrame = df.sample(1, random_state=random_state)
 
     # Check if we got a valid row
     if len(sample) == 0:
@@ -1257,10 +1264,6 @@ def get_patient_timeline_dummy(
     except KeyError:
         print("KeyError: 'body_analysed' column doesn't exist in the DataFrame!")
         return None
-
-
-import random
-import string
 
 
 def generate_uuid(prefix, length=7):

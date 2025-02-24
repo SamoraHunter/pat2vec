@@ -5,6 +5,10 @@
 import os
 import random
 
+random_state = 42
+
+random.seed(random_state)
+
 from pat2vec.util.cogstack_v8_lite import (
     iterative_multi_term_cohort_searcher_no_terms_fuzzy,
     iterative_multi_term_cohort_searcher_no_terms_fuzzy_mct,
@@ -93,7 +97,7 @@ def get_treatment_docs_by_iterative_multi_term_cohort_searcher_no_terms_fuzzy(
         print("Global End Date:", global_end_day, global_end_month, global_end_year)
 
     if pat2vec_obj.config_obj.testing == True:
-
+        random.seed(random_state)
         if verbose >= 1:
             print("Running in testing mode, doing dummy search.")
         results_holder = []

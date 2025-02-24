@@ -1,36 +1,76 @@
-client_idcode,document_guid,document_description,body_analysed,updatetime,clientvisit_visitidcode
-P0IFD0TV,941dca6f,clinical_note_summary,"Patient Demographics:\client_idcode: C42YFKJFP\client_idcode: 75.0
+_id,_index,_score,basicobs_entered,basicobs_guid,basicobs_itemname_analysed,basicobs_value_analysed,basicobs_value_numeric,body_analysed,client_idcode,clientvisit_serviceguid,clientvisit_visitidcode,document_description,document_guid,obscatalogmasteritem_displayname,observation_guid,observation_valuetext_analysed,observationdocument_recordeddtm,search_term,textualObs,updatetime
+,,,,,,,,"Patient Demographics:\\client_idcode: O1VSMADO8\\client_idcode: 36.0
 Gender: Female
-DOB: 1949-05-03
+DOB: 1988-04-23
 
 Clinical Note Timeline:
 
-Entered on - 2014-11-10 15:42:32 UTC:
-Patient presented with: I have had this for the past 8 years or so. It was an awesome and healthy morning experience. I took the bus to work (a couple of times after it had been raining that day) and I'm sure it
-",2023-04-17 19:01:35,d3294d80
-VF8MDD4V,a0b66d09,clinical_note_summary,"Patient Demographics:\client_idcode: RVB6TERR4\client_idcode: 80.0
-Gender: Male
-DOB: 1944-05-04
+Entered on - 2005-08-27 19:35:10 UTC:
+Patient presented with: 2"" x 1"" acrylic head
+
+Directional locking knob with 4"" plywood (padded by the manufacturer)
+
+6"" x 4"" plywood (padded by the manufacturer)
+
+6
+",P0IFD0TV,,436345d1,clinical_note_summary,c7ec7a83,,,,,,,2001-04-17 19:01:35
+,,,,,,,,"Patient Demographics:\\client_idcode: O1VSMADO8\\client_idcode: 36.0
+Gender: Female
+DOB: 1988-04-23
 
 Clinical Note Timeline:
 
-Entered on - 2018-09-19 18:38:05 UTC:
-Patient presented with: A total of 32 patients who are currently active or with previous lung cancer. A total of 40 patients who are currently active or with previous lung cancer were randomized to receive either 2 mg/kg of oral aspirin, 2 mg/
-",2023-02-02 21:14:49,ec9f6469
-PYZYCWTI,00d1bb06,clinical_note_summary,"Patient Demographics:\client_idcode: EAO4N5PP3\client_idcode: 94.0
-Gender: Male
-DOB: 1930-05-08
+Entered on - 2005-08-27 19:35:10 UTC:
+Patient presented with: 2"" x 1"" acrylic head
+
+Directional locking knob with 4"" plywood (padded by the manufacturer)
+
+6"" x 4"" plywood (padded by the manufacturer)
+
+6
+",VF8MDD4V,,14c7eebf,clinical_note_summary,985355e2,,,,,,,2013-04-23 02:02:42
+,,,,,,,,"Patient Demographics:\\client_idcode: O1VSMADO8\\client_idcode: 36.0
+Gender: Female
+DOB: 1988-04-23
 
 Clinical Note Timeline:
 
-Entered on - 2005-04-07 10:58:49 UTC:
-Patient presented with:
+Entered on - 2005-08-27 19:35:10 UTC:
+Patient presented with: 2"" x 1"" acrylic head
 
-Fertilizing tube feeding;
+Directional locking knob with 4"" plywood (padded by the manufacturer)
 
-Pulse of stimulation
+6"" x 4"" plywood (padded by the manufacturer)
 
-Prevalence of allergic rhinitis at each cycle (5%)
+6
+",V945NQ4F,,bd1b274b,clinical_note_summary,18179d40,,,,,,,2002-01-26 10:25:17
+,,,,,,,,"Patient Demographics:\\client_idcode: O1VSMADO8\\client_idcode: 36.0
+Gender: Female
+DOB: 1988-04-23
 
-Admission of children to an oral/nasal nasal test
-",2023-07-21 14:09:16,31ca19ea
+Clinical Note Timeline:
+
+Entered on - 2005-08-27 19:35:10 UTC:
+Patient presented with: 2"" x 1"" acrylic head
+
+Directional locking knob with 4"" plywood (padded by the manufacturer)
+
+6"" x 4"" plywood (padded by the manufacturer)
+
+6
+",V945NQ4F,,e9ba0056,clinical_note_summary,9a35f102,,,,,,,1997-04-19 22:20:13
+{i},{np.nan},{np.nan},,,,,,,VC58DRC1,,visit_0,,,AoMRC_ClinicalSummary_FT,obs_0,"Patient Demographics:
+client_idcode: VC58DRC1
+Age: 43.1
+Gender: Female
+DOB: 1982-03-07
+
+Clinical Note Timeline:
+
+Entered on - 2008-08-25 06:45:18 UTC:
+Agent every development say quality throughout beautiful instead ahead despite measure.
+
+Entered on - 2008-09-15 06:45:18 UTC:
+Night respond red information last everything thank serve civil.
+",2006-08-17 14:07:15,myeloma,,
+,,,2022-12-02T21:41:41,obs_0,PFA-100,Everyone democratic shake bill here grow.,41.69912532892407,Page southern role movie win her.,P64CIYHE,{np.nan},,,,,,,,myeloma,Page southern role movie win her.,1998-01-13T23:21:51
