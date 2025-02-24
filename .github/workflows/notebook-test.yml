@@ -17,8 +17,8 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install -r pat2vec/requirements.txt
+          pip install -r requirements.txt
           pip install pytest nbconvert nbformat
 
       - name: Run notebook test
-        run: pytest pat2vec/notebooks/test_notebook.py
+        run: pytest notebooks/test_notebook.py
