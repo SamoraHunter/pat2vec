@@ -23,6 +23,9 @@ import os
 # add one level up to path with sys.path for importing actual credentials
 import sys
 
+random_state = 42
+random.seed(random_state)
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # from .pre_processing import generate_uuid_list
