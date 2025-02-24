@@ -1,0 +1,24 @@
+name: Notebook Test
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          pip install -r pat2vec/requirements.txt
+          pip install pytest nbconvert nbformat
+
+      - name: Run notebook test
+        run: pytest pat2vec/notebooks/test_notebook.py
