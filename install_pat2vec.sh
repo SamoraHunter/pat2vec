@@ -175,4 +175,3 @@ else
 fi
 
 echo "Installation completed successfully!"
-echo "Press Enter to exit..."; read
