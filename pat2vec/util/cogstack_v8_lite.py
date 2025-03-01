@@ -66,6 +66,10 @@ password = "your_real_password"
     with open(credentials_file, "w") as f:
         f.write(content)
 
+    import sys
+
+    sys.path.append(credentials_dir)
+
     print(f"Credentials file created at: {credentials_file}")
     print("Please update the file with your actual credentials.")
 
@@ -79,6 +83,7 @@ except ImportError as e:
     )
     # Run the routine
     create_credentials_file()
+
     from credentials import *
 
 
