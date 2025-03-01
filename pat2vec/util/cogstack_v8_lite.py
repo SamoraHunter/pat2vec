@@ -79,6 +79,7 @@ except ImportError as e:
     )
     # Run the routine
     create_credentials_file()
+    from credentials import *
 
 
 print(f"Imported cogstack_v8_lite from pat2vec.util")
