@@ -35,6 +35,41 @@ from .get_dummy_data_cohort_searcher import (
     generate_uuid_list,
 )
 
+import os
+from pathlib import Path
+
+
+def create_credentials_file():
+    # Define the path to the credentials file (two levels up)
+    base_dir = (
+        Path(__file__).resolve().parent.parent.parent.parent
+    )  # Go up three levels
+    credentials_dir = base_dir / "gloabl_files"  # Note: Spelling matches your example
+    credentials_file = credentials_dir / "credentials.py"
+
+    # Create the directory if it doesn't exist
+    credentials_dir.mkdir(parents=True, exist_ok=True)
+
+    # Define the content for the credentials file
+    content = """# Elasticsearch credentials
+hosts = [
+    "https://your-actual-elasticsearch-host:9200"
+]  # List of real Elasticsearch URLs
+
+# Choose either HTTP auth or API key (comment out what you're not using)
+username = "your_real_username"
+password = "your_real_password"
+# api_key = "your_real_api_key"
+"""
+
+    # Write the content to the file
+    with open(credentials_file, "w") as f:
+        f.write(content)
+
+    print(f"Credentials file created at: {credentials_file}")
+    print("Please update the file with your actual credentials.")
+
+
 try:
     from credentials import *
 except ImportError as e:
@@ -42,14 +77,9 @@ except ImportError as e:
     print(
         "WARNING: No credentials file found, place credentials in gloabl_files/credentials.py"
     )
-    hosts: List[str] = [  # Dummy Elasticsearch URL
-        "https://localhost:9200"
-    ]  # This is a list of your CogStack ElasticSearch instances.
+    # Run the routine
+    create_credentials_file()
 
-    # These are your login details (either via http_auth or API) Should be in str format
-    username = "dummy_user"  # Warning, copy this file to gloabl_files before inputting credentials
-    password = "dummy_password"
-    api_key = "dummy_api_key"
 
 print(f"Imported cogstack_v8_lite from pat2vec.util")
 print(f"Username: %s" % username)
