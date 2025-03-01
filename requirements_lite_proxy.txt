@@ -8,3 +8,4 @@ faker
 fuzzywuzzy
 pytest
 nbformat
+nbconvert
