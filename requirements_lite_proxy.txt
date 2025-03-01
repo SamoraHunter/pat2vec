@@ -1,0 +1,9 @@
+en-core-web-md @ https://github.com/explosion/spacy-models/releases/download/en_core_web_md-3.6.0/en_core_web_md-3.6.0-py3-none-any.whl
+medcat==1.14.0
+paramiko
+colorama
+elasticsearch==8.17.0
+eland==8.17.0
+faker
+fuzzywuzzy
+pytest

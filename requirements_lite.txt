@@ -1,0 +1,8 @@
+medcat==1.14.0
+paramiko
+colorama
+elasticsearch==8.17.0
+eland==8.17.0
+faker
+fuzzywuzzy
+pytest
