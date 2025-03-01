@@ -37,7 +37,7 @@ from .get_dummy_data_cohort_searcher import (
 
 try:
     from credentials import *
-except Exception as e:
+except ImportError as e:
     print(e)
     print(
         "WARNING: No credentials file found, place credentials in gloabl_files/credentials.py"
