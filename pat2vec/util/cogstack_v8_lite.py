@@ -35,7 +35,21 @@ from .get_dummy_data_cohort_searcher import (
     generate_uuid_list,
 )
 
-from credentials import *
+try:
+    from credentials import *
+except Exception as e:
+    print(e)
+    print(
+        "WARNING: No credentials file found, place credentials in gloabl_files/credentials.py"
+    )
+    hosts: List[str] = [  # Dummy Elasticsearch URL
+        "https://localhost:9200"
+    ]  # This is a list of your CogStack ElasticSearch instances.
+
+    # These are your login details (either via http_auth or API) Should be in str format
+    username = "dummy_user"  # Warning, copy this file to gloabl_files before inputting credentials
+    password = "dummy_password"
+    api_key = "dummy_api_key"
 
 print(f"Imported cogstack_v8_lite from pat2vec.util")
 print(f"Username: %s" % username)
