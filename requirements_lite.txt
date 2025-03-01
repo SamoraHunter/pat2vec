@@ -6,3 +6,4 @@ eland==8.17.0
 faker
 fuzzywuzzy
 pytest
+nbformat
