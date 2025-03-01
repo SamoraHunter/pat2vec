@@ -3,6 +3,7 @@
 PROXY_MODE=false
 CLONE_REPOS=true
 FORCE_CLEAN=false
+INSTALL_MODE="lite"  # Default to lite installation
 # Store the absolute path to global_files directory (one level up from pat2vec)
 GLOBAL_FILES_DIR="$(dirname "$(pwd)")"
 
@@ -13,6 +14,7 @@ show_help() {
     echo "  -p, --proxy          Install with proxy support"
     echo "  --no-clone           Skip git clone operations"
     echo "  -f, --force          Remove existing files and perform fresh install"
+    echo "  -a, --all            Install all components (overrides default lite installation)"
 }
 
 setup_medcat_models() {
@@ -130,6 +132,7 @@ while [[ $# -gt 0 ]]; do
         -p|--proxy) PROXY_MODE=true; shift;;
         --no-clone) CLONE_REPOS=false; shift;;
         -f|--force) FORCE_CLEAN=true; shift;;
+        -a|--all) INSTALL_MODE="all"; shift;;
         -h|--help) show_help; exit 0;;
         *) echo "Unknown option: $1"; show_help; exit 1;;
     esac
@@ -156,21 +159,41 @@ create_paths_file || echo "Warning: Paths file setup encountered issues"
 copy_credentials || echo "Warning: Credentials setup encountered issues"
 
 # Run the appropriate pat2vec install script
-if [ "$PROXY_MODE" = true ]; then
-    if [ -f "install_proxy.sh" ]; then
-        chmod +x install_proxy.sh
-        ./install_proxy.sh
+if [ "$INSTALL_MODE" == "all" ]; then
+    if [ "$PROXY_MODE" = true ]; then
+        if [ -f "install_proxy.sh" ]; then
+            chmod +x install_proxy.sh
+            ./install_proxy.sh
+        else
+            echo "Error: install_proxy.sh not found"
+            exit 1
+        fi
     else
-        echo "Error: install_proxy.sh not found"
-        exit 1
+        if [ -f "install.sh" ]; then
+            chmod +x install.sh
+            ./install.sh
+        else
+            echo "Error: install.sh not found"
+            exit 1
+        fi
     fi
 else
-    if [ -f "install.sh" ]; then
-        chmod +x install.sh
-        ./install.sh
+    if [ "$PROXY_MODE" = true ]; then
+        if [ -f "install_lite_proxy.sh" ]; then
+            chmod +x install_lite_proxy.sh
+            ./install_lite_proxy.sh
+        else
+            echo "Error: install_lite_proxy.sh not found"
+            exit 1
+        fi
     else
-        echo "Error: install.sh not found"
-        exit 1
+        if [ -f "install_lite.sh" ]; then
+            chmod +x install_lite.sh
+            ./install_lite.sh
+        else
+            echo "Error: install_lite.sh not found"
+            exit 1
+        fi
     fi
 fi
 
