@@ -1,4 +1,4 @@
-en-core-web-md @ https://github.com/explosion/spacy-models/releases/download/en_core_web_md-3.6.0/en_core_web_md-3.6.0-py3-none-any.whl
+en-core-web-md @ http://dh-cap02:8000/mirrors/pat2vec/en-core-web-md/en_core_web_md-3.6.0-py3-none-any.whl # hypenated path for _ in actual dir
 medcat==1.14.0
 paramiko
 colorama
