@@ -21,7 +21,7 @@ jobs:
           apt-get update
           apt-get install -y python3.10 python3.10-venv python3.10-distutils
 
-          # Ensure python3.10 is the default
+          # Set Python 3.10 as default
           ln -sf /usr/bin/python3.10 /usr/local/bin/python
           ln -sf /usr/bin/python3.10 /usr/local/bin/python3
 
@@ -40,41 +40,23 @@ jobs:
           echo "SSL_CERT_FILE=" >> $GITHUB_ENV
           echo "GIT_SSL_NO_VERIFY=true" >> $GITHUB_ENV
 
-      - name: Clone pat2vec repository
-        run: |
-          pwd
-          mkdir -p global_files
-          cd global_files
-          git -c http.sslVerify=false clone https://github.com/SamoraHunter/pat2vec.git
-
       - name: Setup pat2vec
         run: |
-          pwd
-          cd global_files/pat2vec
-          pwd
+          cd $GITHUB_WORKSPACE
           sed -i 's/apt-get install/apt-get install -y/g' install_pat2vec.sh
           sed -i 's/pip install/pip install --trusted-host pypi.org --trusted-host files.pythonhosted.org/g' install_pat2vec.sh
-          bash install_pat2vec.sh 
+          bash install_pat2vec.sh --proxy
 
-      - name: Locate and Activate pat2vec Environment
+      - name: Debug virtual environment
         run: |
-          # Locate the virtual environment directory
-          VENV_PATH=$(find global_files/pat2vec -type d -name "pat2vec_env")
-          echo "VIRTUAL_ENV=$VENV_PATH" >> $GITHUB_ENV
-          echo "$VENV_PATH/bin" >> $GITHUB_PATH
-
-          echo "Using virtual environment at: $VENV_PATH"
-
-          # Ensure activation and check Python version
-          source $VENV_PATH/bin/activate
+          VENV_PATH=$(find $GITHUB_WORKSPACE -type d -name "pat2vec_env")
+          echo "VENV_PATH=$VENV_PATH" >> $GITHUB_ENV
+          source "$VENV_PATH/bin/activate"
           which python
           python --version
-
 
       - name: Run notebook test
         run: |
-          pwd
-          source $VIRTUAL_ENV/bin/activate
-          which python
-          python --version
+          cd $GITHUB_WORKSPACE
+          source "$VENV_PATH/bin/activate"
           pytest notebooks/test_notebook.py
