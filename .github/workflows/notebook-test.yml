@@ -1,28 +1,80 @@
 name: Notebook Test
+
 on: [push, pull_request]
+
 jobs:
   test:
     runs-on: ubuntu-latest
+    env:
+      DEBIAN_FRONTEND: noninteractive
+
     steps:
       - name: Check out repository
         uses: actions/checkout@v3
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.10'
-      - name: Create global_files directory and install pat2vec
+
+      - name: Install Python 3.10 and Git
         run: |
+          apt-get update
+          apt-get install -y gnupg lsb-release software-properties-common curl git
+
+          echo "deb [trusted=yes] http://ppa.launchpadcontent.net/deadsnakes/ppa/ubuntu $(lsb_release -cs) main" | tee /etc/apt/sources.list.d/deadsnakes-ppa.list
+          apt-get update
+          apt-get install -y python3.10 python3.10-venv python3.10-distutils
+
+          # Ensure python3.10 is the default
+          ln -sf /usr/bin/python3.10 /usr/local/bin/python
+          ln -sf /usr/bin/python3.10 /usr/local/bin/python3
+
+          curl -sS https://bootstrap.pypa.io/get-pip.py | python3.10
+          python3.10 -m ensurepip --upgrade
+          ln -sf /usr/local/bin/pip3.10 /usr/local/bin/pip
+          ln -sf /usr/local/bin/pip3.10 /usr/local/bin/pip3
+
+          python --version
+          pip --version
+
+      - name: Set environment variables
+        run: |
+          echo "PYTHONHTTPSVERIFY=0" >> $GITHUB_ENV
+          echo "CURL_CA_BUNDLE=" >> $GITHUB_ENV
+          echo "SSL_CERT_FILE=" >> $GITHUB_ENV
+          echo "GIT_SSL_NO_VERIFY=true" >> $GITHUB_ENV
+
+      - name: Clone pat2vec repository
+        run: |
+          pwd
           mkdir -p global_files
           cd global_files
-          git clone https://github.com/SamoraHunter/pat2vec.git
-          cd pat2vec
-          chmod +x install_pat2vec.sh
-          ./install_pat2vec.sh
-      - name: Find and activate virtual environment
+          git -c http.sslVerify=false clone https://github.com/SamoraHunter/pat2vec.git
+
+      - name: Setup pat2vec
         run: |
-          # Find where the venv was actually created
-          find . -name "activate" | grep pat2vec_env
-          # The command below assumes the venv is in the pat2vec directory
-          source ./global_files/pat2vec/pat2vec_env/bin/activate
-          pip install pytest nbconvert nbformat
+          pwd
+          cd global_files/pat2vec
+          pwd
+          sed -i 's/apt-get install/apt-get install -y/g' install_pat2vec.sh
+          sed -i 's/pip install/pip install --trusted-host pypi.org --trusted-host files.pythonhosted.org/g' install_pat2vec.sh
+          bash install_pat2vec.sh 
+
+      - name: Locate and Activate pat2vec Environment
+        run: |
+          # Locate the virtual environment directory
+          VENV_PATH=$(find global_files/pat2vec -type d -name "pat2vec_env")
+          echo "VIRTUAL_ENV=$VENV_PATH" >> $GITHUB_ENV
+          echo "$VENV_PATH/bin" >> $GITHUB_PATH
+
+          echo "Using virtual environment at: $VENV_PATH"
+
+          # Ensure activation and check Python version
+          source $VENV_PATH/bin/activate
+          which python
+          python --version
+
+
+      - name: Run notebook test
+        run: |
+          pwd
+          source $VIRTUAL_ENV/bin/activate
+          which python
+          python --version
           pytest notebooks/test_notebook.py
