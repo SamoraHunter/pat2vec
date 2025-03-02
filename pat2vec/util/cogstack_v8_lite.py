@@ -83,8 +83,17 @@ except ImportError as e:
     )
     # Run the routine
     create_credentials_file()
-
-    from credentials import *
+    try:
+        from credentials import *
+    except ImportError as e:
+        print(e)
+        print(
+            "WARNING: No credentials file found, place credentials in gloabl_files/credentials.py"
+        )
+        username = ""
+        password = ""
+        api_key = ""
+        hosts = ["https://your-actual-elasticsearch-host:9200"]
 
 
 print(f"Imported cogstack_v8_lite from pat2vec.util")
