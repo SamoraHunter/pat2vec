@@ -90,8 +90,8 @@ except ImportError as e:
         print(
             "WARNING: No credentials file found, place credentials in gloabl_files/credentials.py"
         )
-        username = ""
-        password = ""
+        username = "dummy username"
+        password = "dummy password"
         api_key = ""
         hosts = ["https://your-actual-elasticsearch-host:9200"]
 
