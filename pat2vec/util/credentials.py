@@ -10,14 +10,16 @@ hosts: List[str] = [  # Dummy Elasticsearch URL
 ]  # This is a list of your CogStack ElasticSearch instances.
 
 # These are your login details (either via http_auth or API) Should be in str format
-username = 'dummy_user' # Warning, copy this file to gloabl_files before inputting credentials
-password = getpass.getpass(prompt='Enter your password for username:{}'.format(username))
+username = (
+    "dummy_user"  # Warning, copy this file to gloabl_files before inputting credentials
+)
+password = "dummy_password"  # getpass.getpass(prompt='Enter your password for username:{}'.format(username))
 
-host_name = 'localhost'
+host_name = "localhost"
 
-port = '9200'
+port = "9200"
 
-scheme = 'https'
+scheme = "https"
 
 # NLM authentication
 # The UMLS REST API requires a UMLS account for the authentication described below.
