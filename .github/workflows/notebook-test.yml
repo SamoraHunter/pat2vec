@@ -17,14 +17,35 @@ jobs:
         run: | 
           apt-get update && apt-get install sudo -y 
 
+      - name: Set timezone to UTC
+        run: |
+          export DEBIAN_FRONTEND=noninteractive
+          if [ -n "$ACT" ]; then
+            ln -fs /usr/share/zoneinfo/Etc/UTC /etc/localtime
+            echo "Etc/UTC" > /etc/timezone
+            apt-get update
+            apt-get install -y tzdata
+            dpkg-reconfigure -f noninteractive tzdata
+          else
+            sudo ln -fs /usr/share/zoneinfo/Etc/UTC /etc/localtime
+            echo "Etc/UTC" | sudo tee /etc/timezone
+            sudo apt-get update
+            sudo apt-get install -y tzdata
+            sudo dpkg-reconfigure -f noninteractive tzdata
+          fi
+
+
+
+
       - name: Install Python 3.10 and Git
         run: |
-          apt-get update
-          apt-get install -y gnupg lsb-release software-properties-common curl git
+          export DEBIAN_FRONTEND=noninteractive
+          sudo apt-get update
+          sudo apt-get install -y gnupg lsb-release software-properties-common curl git
 
           echo "deb [trusted=yes] http://ppa.launchpadcontent.net/deadsnakes/ppa/ubuntu $(lsb_release -cs) main" | tee /etc/apt/sources.list.d/deadsnakes-ppa.list
-          apt-get update
-          apt-get install -y python3.10 python3.10-venv python3.10-distutils
+          sudo apt-get update
+          sudo apt-get install -y python3.10 python3.10-venv python3.10-distutils
 
           # Set Python 3.10 as default
           ln -sf /usr/bin/python3.10 /usr/local/bin/python
