@@ -17,6 +17,11 @@ jobs:
         run: | 
           apt-get update && apt-get install sudo -y 
 
+      - name: Install ping utility
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y iputils-ping
+
       - name: Set timezone to UTC
         run: |
           export DEBIAN_FRONTEND=noninteractive
@@ -66,12 +71,29 @@ jobs:
           echo "SSL_CERT_FILE=" >> $GITHUB_ENV
           echo "GIT_SSL_NO_VERIFY=true" >> $GITHUB_ENV
 
+          
+
       - name: Setup pat2vec
         run: |
+
+          
+
           cd $GITHUB_WORKSPACE
           sed -i 's/apt-get install/apt-get install -y/g' install_pat2vec.sh
           sed -i 's/pip install/pip install --trusted-host pypi.org --trusted-host files.pythonhosted.org/g' install_pat2vec.sh
-          bash install_pat2vec.sh --proxy
+
+          if ping -c 1 dh-cap02 &> /dev/null; then
+            echo "mirror Server is available"
+            echo "::set-output name=server_available::true"
+            echo "install_pat2vec.sh --proxy"
+            bash install_pat2vec.sh --proxy
+          else
+            echo "mirror Server is not available"
+            echo "::set-output name=server_available::false"
+            echo "install_pat2vec.sh"
+            bash install_pat2vec.sh 
+          fi
+          
 
       - name: Debug virtual environment
         run: |
