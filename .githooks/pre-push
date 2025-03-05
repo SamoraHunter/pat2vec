@@ -1,0 +1,26 @@
+#!/bin/sh
+# .githooks/pre-push
+
+# Navigate to the repository root (relative to the hook location)
+cd "$(dirname "$0")/.."
+
+# Activate the virtual environment (if needed)
+VENV_PATH=$(find . -type d -name "pat2vec_env")
+if [ -n "$VENV_PATH" ]; then
+  source "$VENV_PATH/bin/activate"
+else
+  echo "Virtual environment not found. Exiting."
+  exit 1
+fi
+
+# Run the same test command as in the GitHub Actions workflow
+pytest notebooks/test_notebook.py
+
+# Check the exit status of the test command
+if [ $? -ne 0 ]; then
+  echo "Tests failed. Push aborted."
+  exit 1
+fi
+
+# If tests pass, allow the push
+exit 0
