@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # .githooks/pre-push
 
 # Navigate to the repository root (relative to the hook location)
