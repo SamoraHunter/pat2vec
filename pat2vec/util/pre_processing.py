@@ -183,8 +183,11 @@ def get_treatment_docs_by_iterative_multi_term_cohort_searcher_no_terms_fuzzy(
     ) == False:
         output_directory = os.path.dirname(output_path)
         # Check if the directory exists, if not, create it
-        if not os.path.exists(output_directory):
-            os.makedirs(output_directory)
+        try:
+            if not os.path.exists(output_directory):
+                os.makedirs(output_directory)
+        except Exception as e:
+            print(e)
 
         # Save the DataFrame to CSV
         search_results.to_csv(output_path, index=False, escapechar="\\")
