@@ -815,6 +815,10 @@ def copy_files_and_dirs(
 from typing import Dict, List, Union, Optional
 import pandas as pd
 
+# pre_textual_obs_document_batch_path
+
+# pre_textual_obs_annotation_batch_path
+
 
 def get_pat_ipw_record(
     current_pat_idcode: str,
@@ -823,12 +827,14 @@ def get_pat_ipw_record(
     filter_codes: Optional[List[int]] = None,
     mode: str = "earliest",
     verbose: int = 0,  # Added default verbosity level
+    include_mct: bool = True,  # Boolean argument to include MCT
+    include_textual_obs: bool = True,  # Boolean argument to include textual_obs
 ) -> pd.DataFrame:
     """
     Retrieve patient IPW record.
 
     This function retrieves the earliest relevant records, based on the filter_codes,
-    from the EPR and MCT annotation dataframes.
+    from the EPR, MCT, and textual_obs annotation dataframes.
 
     Parameters:
     - current_pat_idcode (str): Patient ID code.
@@ -836,6 +842,8 @@ def get_pat_ipw_record(
     - annot_filter_arguments (Optional[YourFilterArgType]): Annotation filter arguments (default: None).
     - filter_codes (Optional[int]): Filter codes (default: None).
     - verbose (int): Verbosity level for printing messages (default: 1).
+    - include_mct (bool): Whether to include MCT annotations (default: True).
+    - include_textual_obs (bool): Whether to include textual_obs annotations (default: True).
 
     Returns:
     pd.DataFrame: DataFrame containing the earliest relevant records.
@@ -852,10 +860,15 @@ def get_pat_ipw_record(
     pre_document_annotation_batch_path_mct = (
         config_obj.pre_document_annotation_batch_path_mct
     )
+    pre_textual_obs_document_batch_path = config_obj.pre_textual_obs_document_batch_path
+    pre_textual_obs_annotation_batch_path = (
+        config_obj.pre_textual_obs_annotation_batch_path
+    )
 
     # Initialize dataframes
     fsr = pd.DataFrame()  # Filters DataFrame
     fsr_mct = pd.DataFrame()  # Filters MCT DataFrame
+    fsr_textual_obs = pd.DataFrame()  # Filters textual_obs DataFrame
 
     # Read EPR annotations
     if verbose > 10:
@@ -914,79 +927,154 @@ def get_pat_ipw_record(
             n_rows=1,
         )
 
-    # Read MCT annotations
-    if verbose > 10:
-        print("Reading MCT annotations...")
-    dfa_mct = pd.read_csv(
-        f"{pre_document_annotation_batch_path_mct}/{current_pat_idcode}.csv"
-    )
-
-    # Drop NaNs in columns that are necessary for filtering
-    necessary_columns_mct = [
-        "client_idcode",
-        "observationdocument_recordeddtm",
-        "pretty_name",
-        "cui",
-        "type_ids",
-        "types",
-        "source_value",
-        "detected_name",
-        "acc",
-        "id",
-        "Time_Value",
-        "Time_Confidence",
-        "Presence_Value",
-        "Presence_Confidence",
-        "Subject_Value",
-        "Subject_Confidence",
-    ]
-
-    if verbose > 11:
-        print(f"Dropping NaNs in columns: {necessary_columns_mct}...")
-    dfa_mct = dfa_mct.dropna(subset=necessary_columns_mct)
-
-    if verbose > 12:
-        print("Sample of filtered MCT DataFrame:")
-        display(dfa_mct.head())
-
-    # Apply annotation filter if provided
-    if annot_filter_arguments is not None:
+    # Read MCT annotations if include_mct is True
+    if include_mct:
         if verbose > 10:
-            print("Filtering MCT annotations...")
-        dfa_mct = filter_annot_dataframe2(dfa_mct, annot_filter_arguments)
-
-    # Filter based on filter_codes if provided
-    if len(dfa_mct) > 0:
-        if verbose > 10:
-            print("Filtering MCT annotations based on filter_codes...")
-        fsr_mct = filter_and_select_rows(
-            dfa_mct,
-            filter_codes,
-            verbosity=verbose > 0,
-            time_column="observationdocument_recordeddtm",
-            filter_column="cui",
-            mode=mode,
-            n_rows=1,
+            print("Reading MCT annotations...")
+        dfa_mct = pd.read_csv(
+            f"{pre_document_annotation_batch_path_mct}/{current_pat_idcode}.csv"
         )
 
-    if not fsr.empty and not fsr_mct.empty:
-        # Compare EPR and MCT earliest dates and select earliest
+        # Drop NaNs in columns that are necessary for filtering
+        necessary_columns_mct = [
+            "client_idcode",
+            "observationdocument_recordeddtm",
+            "pretty_name",
+            "cui",
+            "type_ids",
+            "types",
+            "source_value",
+            "detected_name",
+            "acc",
+            "id",
+            "Time_Value",
+            "Time_Confidence",
+            "Presence_Value",
+            "Presence_Confidence",
+            "Subject_Value",
+            "Subject_Confidence",
+        ]
+
+        if verbose > 11:
+            print(f"Dropping NaNs in columns: {necessary_columns_mct}...")
+        dfa_mct = dfa_mct.dropna(subset=necessary_columns_mct)
+
+        if verbose > 12:
+            print("Sample of filtered MCT DataFrame:")
+            display(dfa_mct.head())
+
+        # Apply annotation filter if provided
+        if annot_filter_arguments is not None:
+            if verbose > 10:
+                print("Filtering MCT annotations...")
+            dfa_mct = filter_annot_dataframe2(dfa_mct, annot_filter_arguments)
+
+        # Filter based on filter_codes if provided
+        if len(dfa_mct) > 0:
+            if verbose > 10:
+                print("Filtering MCT annotations based on filter_codes...")
+            fsr_mct = filter_and_select_rows(
+                dfa_mct,
+                filter_codes,
+                verbosity=verbose > 0,
+                time_column="observationdocument_recordeddtm",
+                filter_column="cui",
+                mode=mode,
+                n_rows=1,
+            )
+
+    # Read textual_obs annotations if include_textual_obs is True
+    if include_textual_obs:
         if verbose > 10:
-            print("Comparing EPR and MCT earliest dates...")
-        earliest_df = (
-            fsr
-            if fsr["updatetime"].min()
-            < fsr_mct["observationdocument_recordeddtm"].min()
-            else fsr_mct
+            print("Reading textual_obs annotations...")
+        dfa_textual_obs = pd.read_csv(
+            f"{pre_textual_obs_annotation_batch_path}/{current_pat_idcode}.csv"
         )
-    elif not fsr.empty:
-        earliest_df = fsr
-    elif not fsr_mct.empty:
-        earliest_df = fsr_mct
+
+        # Drop NaNs in columns that are necessary for filtering
+        necessary_columns_textual_obs = [
+            "client_idcode",
+            "basicobs_entered",
+            "pretty_name",
+            "cui",
+            "type_ids",
+            "types",
+            "source_value",
+            "detected_name",
+            "acc",
+            "id",
+            "Time_Value",
+            "Time_Confidence",
+            "Presence_Value",
+            "Presence_Confidence",
+            "Subject_Value",
+            "Subject_Confidence",
+        ]
+
+        if verbose > 11:
+            print(f"Dropping NaNs in columns: {necessary_columns_textual_obs}...")
+        dfa_textual_obs = dfa_textual_obs.dropna(subset=necessary_columns_textual_obs)
+
+        if verbose > 12:
+            print("Sample of filtered textual_obs DataFrame:")
+            display(dfa_textual_obs.head())
+
+        # Apply annotation filter if provided
+        if annot_filter_arguments is not None:
+            if verbose > 10:
+                print("Filtering textual_obs annotations...")
+            dfa_textual_obs = filter_annot_dataframe2(
+                dfa_textual_obs, annot_filter_arguments
+            )
+
+        # Filter based on filter_codes if provided
+        if len(dfa_textual_obs) > 0:
+            if verbose > 10:
+                print("Filtering textual_obs annotations based on filter_codes...")
+            fsr_textual_obs = filter_and_select_rows(
+                dfa_textual_obs,
+                filter_codes,
+                verbosity=verbose > 0,
+                time_column="basicobs_entered",
+                filter_column="cui",
+                mode=mode,
+                n_rows=1,
+            )
+
+    # Combine results from EPR, MCT, and textual_obs
+    dfs_to_compare = []
+    if not fsr.empty:
+        fsr["source"] = "EPR"
+        dfs_to_compare.append(fsr)
+    if include_mct and not fsr_mct.empty:
+        fsr_mct["source"] = "MCT"
+        dfs_to_compare.append(fsr_mct)
+    if include_textual_obs and not fsr_textual_obs.empty:
+        fsr_textual_obs["source"] = "textual_obs"
+        dfs_to_compare.append(fsr_textual_obs)
+
+    # Standardize the timestamp column name to 'updatetime' for comparison
+    for df in dfs_to_compare:
+        if "observationdocument_recordeddtm" in df.columns:
+            df.rename(
+                columns={"observationdocument_recordeddtm": "updatetime"}, inplace=True
+            )
+        elif "basicobs_entered" in df.columns:
+            # handle existing updatetime we need to drop as we use basic obs entered for time here
+            if "updatetime" in df.columns:
+                df.drop(columns=["updatetime"], axis=1, inplace=True)
+
+            df.rename(columns={"basicobs_entered": "updatetime"}, inplace=True)
+        elif "updatetime" not in df.columns:
+            raise KeyError("Timestamp column not found in DataFrame.")
+
+    # Find the earliest record among non-empty DataFrames
+    if dfs_to_compare:
+        earliest_df = min(dfs_to_compare, key=lambda df: df.iloc[0]["updatetime"])
     else:
-        # Both DataFrames are empty
+        # All DataFrames are empty
         if verbose > 10:
-            print("Neither EPR nor MCT annotations available...")
+            print("No annotations available from EPR, MCT, or textual_obs...")
         earliest_df = pd.DataFrame(columns=necessary_columns)
         earliest_df["client_idcode"] = [current_pat_idcode]
         start_datetime = datetime(
@@ -1004,8 +1092,6 @@ def get_pat_ipw_record(
             earliest_df["updatetime"] = [start_datetime]
         else:
             earliest_df["updatetime"] = [end_datetime]
-
-        # set global dates here?
 
     earliest_df = earliest_df.copy()
 
