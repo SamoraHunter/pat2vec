@@ -1173,7 +1173,12 @@ def filter_and_update_csv(
 
 
 def build_ipw_dataframe(
-    annot_filter_arguments=None, filter_codes=None, config_obj=None, mode="earliest"
+    annot_filter_arguments=None,
+    filter_codes=None,
+    config_obj=None,
+    mode="earliest",
+    include_mct=True,
+    include_textual_obs=True,
 ):
 
     df = pd.DataFrame()
@@ -1192,6 +1197,8 @@ def build_ipw_dataframe(
             filter_codes=filter_codes,
             config_obj=config_obj,
             mode=mode,
+            include_mct=include_mct,  # Boolean argument to include MCT
+            include_textual_obs=include_textual_obs,  # Boolean argument to include textual_obs
         )
 
         df = pd.concat([df, res], ignore_index=True)
