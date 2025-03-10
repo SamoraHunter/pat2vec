@@ -178,6 +178,7 @@ class config_class:
         client_idcode_term_name="client_idcode.keyword",  # Used for elastic search index keyword search
         sanitize_pat_list=True,
         calculate_vectors=True,
+        prefetch_pat_batches=True,
     ):
 
         # Configure logging
@@ -220,6 +221,8 @@ class config_class:
 
         # # Now you can use the logger to log messages within the class
         # self.logger.info("Initialized config_pat2vec")
+
+        self.prefetch_pat_batches = prefetch_pat_batches
 
         self.calculate_vectors = calculate_vectors  # Calculate vectors for each patient else just extract batches
 
@@ -554,6 +557,10 @@ class config_class:
                 self.root_path, f"current_pat_appointments_batches{self.suffix}/"
             )
 
+            self.pre_merged_input_batches_path = os.path.join(
+                self.root_path, f"merged_input_pat_batches{self.suffix}/"
+            )
+
             self.output_folder = "outputs"
 
             self.PathsClass_instance = PathsClass(
@@ -723,10 +730,10 @@ class config_class:
             print("looking forward with ", self.time_window_interval_delta)
 
         self.model_paths = {
-            "aliencat": "/home/aliencat/samora/HFE/HFE/medcat_models/medcat_model_pack_316666b47dfaac07.zip",
-            "dgx": "/data/AS/Samora/HFE/HFE/v18/medcat_models/20230328_trained_model_hfe_redone/medcat_model_pack_316666b47dfaac07",
-            "dhcap": "/home/jovyan/work/medcat_models/medcat_model_pack_316666b47dfaac07.zip",
-            "dhcap02": "/home/cogstack/samora/_data/medcat_models/medcat_model_pack_316666b47dfaac07.zip",
+            "aliencat": "../medcat_model_pack_316666b47dfaac07.zip",
+            "dgx": "../medcat_models/20230328_trained_model_hfe_redone/medcat_model_pack_316666b47dfaac07",
+            "dhcap": "../medcat_model_pack_316666b47dfaac07.zip",
+            "dhcap02": "../medcat_model_pack_316666b47dfaac07.zip",
             "override_medcat_model_path": None,
         }
 

@@ -28,6 +28,7 @@ class PathsClass:
             f"current_pat_appointments_batches{self.suffix}/",
             f"current_pat_textual_obs_document_batches{self.suffix}/",
             f"current_pat_textual_obs_annotation_batches{self.suffix}/",
+            f"merged_input_pat_batches{self.suffix}/",
             output_folder,
         ]
 

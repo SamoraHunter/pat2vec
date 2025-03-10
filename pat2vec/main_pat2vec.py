@@ -7,6 +7,10 @@ import traceback
 from datetime import datetime
 from multiprocessing import Pool
 import pandas as pd
+from pat2vec.patvec_get_batch_methods.get_merged_batches import (
+    get_merged_pat_batch_bloods,
+    split_and_save_csv,
+)
 from pat2vec.util.cogstack_v8_lite import *
 from colorama import Back, Fore, Style
 from credentials import *
@@ -226,6 +230,25 @@ class main:
         # self.date_list = config_obj.date_list
 
         self.n_pat_lines = config_obj.n_pat_lines
+
+        if self.config_obj.prefetch_pat_batches:
+            if self.config_obj.verbosity > 0:
+
+                if self.config_obj.main_options.get("bloods", True):
+
+                    dfb = get_merged_pat_batch_bloods(
+                        client_idcode_list=self.all_patient_list,
+                        search_term=None,
+                        config_obj=self.config_obj,
+                        cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search,
+                    )
+
+                    split_and_save_csv(
+                        df=dfb,
+                        client_idcode_column="client_idcode",
+                        save_folder=self.config_obj.pre_bloods_batch_path,
+                        num_processes=None,
+                    )
 
     # ------------------------------------begin main----------------------------------
 

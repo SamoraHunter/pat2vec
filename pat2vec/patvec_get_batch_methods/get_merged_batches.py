@@ -1,5 +1,7 @@
 import os
 import pandas as pd
+from multiprocessing import Pool, cpu_count
+from functools import partial
 
 from pat2vec.util.filter_methods import filter_dataframe_by_fuzzy_terms
 from pat2vec.util.filter_methods import (
@@ -8,9 +10,6 @@ from pat2vec.util.filter_methods import (
     apply_data_type_mct_docs_filters,
     filter_dataframe_by_fuzzy_terms,
 )
-
-import pandas as pd
-import os
 
 
 def verify_split_data_concatenated(original_df, client_idcode_column, save_folder):
@@ -79,12 +78,6 @@ def verify_split_data_individual(original_df, client_idcode_column, save_folder)
     print("Verification successful: All CSVs match the original DataFrame.")
 
 
-import pandas as pd
-import os
-from multiprocessing import Pool, cpu_count
-from functools import partial
-
-
 def save_group(client_idcode_group, save_folder):
     """Helper function to save a single group to CSV."""
     client_idcode, group = client_idcode_group
@@ -129,7 +122,7 @@ def split_and_save_csv(df, client_idcode_column, save_folder, num_processes=None
 # split_and_save_csv(df, 'client_idcode', 'client_data', num_processes=4)
 
 
-def get_pat_batch_bloods(
+def get_merged_pat_batch_bloods(
     client_idcode_list,
     search_term,
     config_obj=None,
@@ -177,7 +170,10 @@ def get_pat_batch_bloods(
     bloods_time_field = config_obj.bloods_time_field
 
     # Define the output directory using config_obj.proj_name
-    input_directory = os.path.join(config_obj.proj_name, "merged_input_batches")
+    input_directory = os.path.join(config_obj.proj_name, "merged_input_pat_batches")
+
+    input_directory = config_obj.pre_merged_input_batches_path
+
     os.makedirs(input_directory, exist_ok=True)  # Ensure the directory exists
 
     # Define the path for the merged batches output
@@ -236,7 +232,8 @@ def get_pat_batch_bloods(
         # Save the merged DataFrame to the dynamically constructed directory
         if store_pat_batch_observations or overwrite_stored_pat_observations:
             batch_target.to_csv(merged_batches_path, index=False)
-            print(f"Merged batches saved to {merged_batches_path}")
+            if config_obj.verbosity >= 1:
+                print(f"Merged batches saved to {merged_batches_path}")
 
         return batch_target
 

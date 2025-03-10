@@ -1188,7 +1188,7 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy_mct(
                     fields_list=field_list,
                     term_name="client_idcode",
                     entered_list=generate_uuid_list(
-                        random.randint(0, 10), random.choice(["P", "V"])
+                        random.randint(2, 10), random.choice(["P", "V"])
                     ),
                     search_string=search_string,
                 )
@@ -1456,7 +1456,7 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy_textual_obs(
                     fields_list=field_list,
                     term_name="client_idcode",
                     entered_list=generate_uuid_list(
-                        random.randint(0, 10), random.choice(["P", "V"])
+                        random.randint(2, 10), random.choice(["P", "V"])
                     ),
                     search_string=search_string,
                 )
