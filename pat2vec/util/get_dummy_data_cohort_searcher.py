@@ -60,41 +60,57 @@ def generate_epr_documents_data(
     Returns:
     - pd.DataFrame: Generated DataFrame with specified columns.
     """
-    current_pat_client_id_code = random.choice(entered_list)
 
-    data = {
-        "client_idcode": [current_pat_client_id_code for _ in range(num_rows)],
-        "document_guid": [str(uuid.uuid4()).split("-")[0] for _ in range(num_rows)],
-        "document_description": [f"clinical_note_summary" for i in range(num_rows)],
-        # 'body_analysed': [faker.paragraph() for _ in range(num_rows)],
-        "body_analysed": [
-            (
-                generate_patient_timeline(current_pat_client_id_code)
-                if use_GPT
-                else
-                # generate_patient_timeline_faker(current_pat_client_id_code)
-                get_patient_timeline_dummy(current_pat_client_id_code)
-            )
-            for _ in range(num_rows)
-        ],
-        "updatetime": [
-            datetime(
-                random.randint(global_start_year, global_end_year),
-                random.randint(global_start_month, global_end_month),
-                random.randint(1, 28),
-                random.randint(0, 23),
-                random.randint(0, 59),
-                random.randint(0, 59),
-            )
-            for _ in range(num_rows)
-        ],
-        "clientvisit_visitidcode": [
-            str(uuid.uuid4()).split("-")[0] for _ in range(num_rows)
-        ],
-    }
+    print(f"entered_list: {entered_list}")
+    print(f"num_rows: {num_rows}")
 
-    df = pd.DataFrame(data)
-    return df
+    df_holder_list = []
+
+    for i in range(0, len(entered_list)):
+
+        current_pat_client_id_code = entered_list[i]
+
+        data = {
+            "client_idcode": [current_pat_client_id_code for _ in range(num_rows)],
+            "document_guid": [str(uuid.uuid4()).split("-")[0] for _ in range(num_rows)],
+            "document_description": [f"clinical_note_summary" for i in range(num_rows)],
+            # "body_analysed": [faker.paragraph() for _ in range(num_rows)],
+            "body_analysed": [
+                (
+                    generate_patient_timeline(current_pat_client_id_code)
+                    if use_GPT
+                    else
+                    # generate_patient_timeline_faker(current_pat_client_id_code)
+                    get_patient_timeline_dummy(current_pat_client_id_code)
+                )
+                for _ in range(num_rows)
+            ],
+            "updatetime": [
+                datetime(
+                    random.randint(global_start_year, global_end_year),
+                    random.randint(global_start_month, global_end_month),
+                    random.randint(1, 28),
+                    random.randint(0, 23),
+                    random.randint(0, 59),
+                    random.randint(0, 59),
+                )
+                for _ in range(num_rows)
+            ],
+            "clientvisit_visitidcode": [
+                str(uuid.uuid4()).split("-")[0] for _ in range(num_rows)
+            ],
+        }
+
+        df = pd.DataFrame(data)
+        df_holder_list.append(df)
+
+    try:
+        # print(f"Number of DataFrames in df_holder_list: {len(df_holder_list)}")
+        df = pd.concat(df_holder_list, axis=0, ignore_index=True)
+        return df
+    except Exception as e:
+        print(e)
+        raise e
 
 
 def generate_epr_documents_personal_data(
@@ -119,59 +135,68 @@ def generate_epr_documents_personal_data(
     Returns:
     - pd.DataFrame: Generated DataFrame with linked personal information.
     """
-    current_pat_client_id_code = random.choice(entered_list)
+    df_holder_list = []
 
-    ethnicity = faker.random_element(ethnicity_list)
+    for i in range(0, len(entered_list)):
 
-    first_name = faker.first_name()
-    last_name = faker.last_name()
-    dob = faker.date_of_birth(minimum_age=18, maximum_age=90).strftime(
-        "%Y-%m-%dT%H:%M:%S"
-    )
-    gender = random.choice(["male", "female"])
+        current_pat_client_id_code = entered_list[i]
 
-    # TODO: implement low change of death event, if so use date of death else None
-    death_probability = 0.1
-    client_deceaseddtm_val = (
-        faker.date_time_this_decade() if random.random() < death_probability else None
-    )
+        ethnicity = faker.random_element(ethnicity_list)
 
-    data = {
-        "client_idcode": [current_pat_client_id_code] * num_rows,
-        "client_firstname": [maybe_nan(first_name) for _ in range(num_rows)],
-        "client_lastname": [maybe_nan(last_name) for _ in range(num_rows)],
-        "client_dob": [maybe_nan(dob) for _ in range(num_rows)],
-        "client_gendercode": [maybe_nan(gender) for _ in range(num_rows)],
-        "client_racecode": [maybe_nan(ethnicity) for _ in range(num_rows)],
-        "client_deceaseddtm": [
-            maybe_nan(client_deceaseddtm_val) for _ in range(num_rows)
-        ],
-        "updatetime": [
-            datetime(
-                random.randint(global_start_year, global_end_year),
-                random.randint(global_start_month, global_end_month),
-                random.randint(1, 28),
-                random.randint(0, 23),
-                random.randint(0, 59),
-                random.randint(0, 59),
-                tzinfo=timezone.utc,
-            ).strftime("%Y-%m-%d")
-            for _ in range(num_rows)
-        ],
-    }
-    if num_rows == 0:
+        first_name = faker.first_name()
+        last_name = faker.last_name()
+        dob = faker.date_of_birth(minimum_age=18, maximum_age=90).strftime(
+            "%Y-%m-%dT%H:%M:%S"
+        )
+        gender = random.choice(["male", "female"])
+
+        # TODO: implement low change of death event, if so use date of death else None
+        death_probability = 0.1
+        client_deceaseddtm_val = (
+            faker.date_time_this_decade()
+            if random.random() < death_probability
+            else None
+        )
+
         data = {
-            "client_idcode": [current_pat_client_id_code],
-            "client_firstname": [np.nan],
-            "client_lastname": [np.nan],
-            "client_dob": [np.nan],
-            "client_gendercode": [np.nan],
-            "client_racecode": [np.nan],
-            "client_deceaseddtm": [np.nan],
-            "updatetime": [np.nan],
+            "client_idcode": [current_pat_client_id_code] * num_rows,
+            "client_firstname": [maybe_nan(first_name) for _ in range(num_rows)],
+            "client_lastname": [maybe_nan(last_name) for _ in range(num_rows)],
+            "client_dob": [maybe_nan(dob) for _ in range(num_rows)],
+            "client_gendercode": [maybe_nan(gender) for _ in range(num_rows)],
+            "client_racecode": [maybe_nan(ethnicity) for _ in range(num_rows)],
+            "client_deceaseddtm": [
+                maybe_nan(client_deceaseddtm_val) for _ in range(num_rows)
+            ],
+            "updatetime": [
+                datetime(
+                    random.randint(global_start_year, global_end_year),
+                    random.randint(global_start_month, global_end_month),
+                    random.randint(1, 28),
+                    random.randint(0, 23),
+                    random.randint(0, 59),
+                    random.randint(0, 59),
+                    tzinfo=timezone.utc,
+                ).strftime("%Y-%m-%d")
+                for _ in range(num_rows)
+            ],
         }
+        if num_rows == 0:
+            data = {
+                "client_idcode": [current_pat_client_id_code],
+                "client_firstname": [np.nan],
+                "client_lastname": [np.nan],
+                "client_dob": [np.nan],
+                "client_gendercode": [np.nan],
+                "client_racecode": [np.nan],
+                "client_deceaseddtm": [np.nan],
+                "updatetime": [np.nan],
+            }
 
-    df = pd.DataFrame(data)
+        df = pd.DataFrame(data)
+        df_holder_list.append(df)
+
+    df = pd.concat(df_holder_list)
     return df
 
 
@@ -198,58 +223,69 @@ def generate_diagnostic_orders_data(
     - pd.DataFrame: Generated DataFrame with specified columns.
     """
 
-    data = {
-        "order_guid": [f"order_{i}" for i in range(num_rows)],
-        "client_idcode": [random.choice(entered_list) for _ in range(num_rows)],
-        "order_name": [faker.random_element(diagnostic_names) for _ in range(num_rows)],
-        "order_summaryline": [
-            maybe_nan(" ".join(faker.sentence() for _ in range(num_rows)))
-            for i in range(num_rows)
-        ],
-        "order_holdreasontext": [
-            maybe_nan(" ".join(faker.sentence() for _ in range(num_rows)))
-            for i in range(num_rows)
-        ],
-        "order_entered": [
-            datetime(
-                random.randint(global_start_year, global_end_year),
-                random.randint(global_start_month, global_end_month),
-                random.randint(1, 28),
-                random.randint(0, 23),
-                random.randint(0, 59),
-                random.randint(0, 59),
-            )
-            for _ in range(num_rows)
-        ],
-        "order_createdwhen": [
-            datetime(
-                random.randint(global_start_year, global_end_year),
-                random.randint(global_start_month, global_end_month),
-                random.randint(1, 28),
-                random.randint(0, 23),
-                random.randint(0, 59),
-                random.randint(0, 59),
-            )
-            for _ in range(num_rows)
-        ],
-        "clientvisit_visitidcode": [f"visit_{i}" for i in range(num_rows)],
-        "_id": ["{i}" for i in range(num_rows)],
-        "_index": ["{np.nan}" for _ in range(num_rows)],
-        "_score": ["{np.nan}" for _ in range(num_rows)],
-        "order_performeddtm": [
-            datetime(
-                random.randint(global_start_year, global_end_year),
-                random.randint(global_start_month, global_end_month),
-                random.randint(1, 28),
-                random.randint(0, 23),
-                random.randint(0, 59),
-                random.randint(0, 59),
-            )
-            for _ in range(num_rows)
-        ],
-    }
-    # print("generate_diagnostic_orders_data")
-    df = pd.DataFrame(data)
+    df_holder_list = []
+
+    for i in range(0, len(entered_list)):
+
+        current_pat_client_id_code = entered_list[i]
+
+        data = {
+            "order_guid": [f"order_{i}" for i in range(num_rows)],
+            "client_idcode": [current_pat_client_id_code for _ in range(num_rows)],
+            "order_name": [
+                faker.random_element(diagnostic_names) for _ in range(num_rows)
+            ],
+            "order_summaryline": [
+                maybe_nan(" ".join(faker.sentence() for _ in range(num_rows)))
+                for i in range(num_rows)
+            ],
+            "order_holdreasontext": [
+                maybe_nan(" ".join(faker.sentence() for _ in range(num_rows)))
+                for i in range(num_rows)
+            ],
+            "order_entered": [
+                datetime(
+                    random.randint(global_start_year, global_end_year),
+                    random.randint(global_start_month, global_end_month),
+                    random.randint(1, 28),
+                    random.randint(0, 23),
+                    random.randint(0, 59),
+                    random.randint(0, 59),
+                )
+                for _ in range(num_rows)
+            ],
+            "order_createdwhen": [
+                datetime(
+                    random.randint(global_start_year, global_end_year),
+                    random.randint(global_start_month, global_end_month),
+                    random.randint(1, 28),
+                    random.randint(0, 23),
+                    random.randint(0, 59),
+                    random.randint(0, 59),
+                )
+                for _ in range(num_rows)
+            ],
+            "clientvisit_visitidcode": [f"visit_{i}" for i in range(num_rows)],
+            "_id": ["{i}" for i in range(num_rows)],
+            "_index": ["{np.nan}" for _ in range(num_rows)],
+            "_score": ["{np.nan}" for _ in range(num_rows)],
+            "order_performeddtm": [
+                datetime(
+                    random.randint(global_start_year, global_end_year),
+                    random.randint(global_start_month, global_end_month),
+                    random.randint(1, 28),
+                    random.randint(0, 23),
+                    random.randint(0, 59),
+                    random.randint(0, 59),
+                )
+                for _ in range(num_rows)
+            ],
+        }
+        # print("generate_diagnostic_orders_data")
+        df = pd.DataFrame(data)
+        df_holder_list.append(df)
+
+    df = pd.concat(df_holder_list)
     return df
 
 
@@ -276,61 +312,69 @@ def generate_drug_orders_data(
     - pd.DataFrame: Generated DataFrame with specified columns.
     """
     # print("generate_drug_orders_data")
-    data = {
-        "order_guid": [f"order_{i}" for i in range(num_rows)],
-        "client_idcode": [random.choice(entered_list) for _ in range(num_rows)],
-        # New value for drug_name
-        "order_name": [faker.random_element(drug_names) for _ in range(num_rows)],
-        # New value for drug_description
-        "order_summaryline": [
-            maybe_nan(" ".join(faker.sentence() for _ in range(num_rows)))
-            for i in range(num_rows)
-        ],
-        # New value for dosage
-        "order_holdreasontext": [
-            maybe_nan(" ".join(faker.sentence() for _ in range(num_rows)))
-            for i in range(num_rows)
-        ],
-        "order_entered": [
-            datetime(
-                random.randint(global_start_year, global_end_year),
-                random.randint(global_start_month, global_end_month),
-                random.randint(1, 28),
-                random.randint(0, 23),
-                random.randint(0, 59),
-                random.randint(0, 59),
-            )
-            for _ in range(num_rows)
-        ],
-        "order_createdwhen": [
-            datetime(
-                random.randint(global_start_year, global_end_year),
-                random.randint(global_start_month, global_end_month),
-                random.randint(1, 28),
-                random.randint(0, 23),
-                random.randint(0, 59),
-                random.randint(0, 59),
-            )
-            for _ in range(num_rows)
-        ],
-        "clientvisit_visitidcode": [f"visit_{i}" for i in range(num_rows)],
-        "_id": ["{i}" for i in range(num_rows)],
-        "_index": ["{np.nan}" for i in range(num_rows)],
-        "_score": ["{np.nan}" for i in range(num_rows)],
-        "order_performeddtm": [
-            datetime(
-                random.randint(global_start_year, global_end_year),
-                random.randint(global_start_month, global_end_month),
-                random.randint(1, 28),
-                random.randint(0, 23),
-                random.randint(0, 59),
-                random.randint(0, 59),
-            )
-            for _ in range(num_rows)
-        ],
-    }
+    df_holder_list = []
 
-    df = pd.DataFrame(data)
+    for i in range(0, len(entered_list)):
+
+        current_pat_client_id_code = entered_list[i]
+        data = {
+            "order_guid": [f"order_{i}" for i in range(num_rows)],
+            "client_idcode": [current_pat_client_id_code for _ in range(num_rows)],
+            # New value for drug_name
+            "order_name": [faker.random_element(drug_names) for _ in range(num_rows)],
+            # New value for drug_description
+            "order_summaryline": [
+                maybe_nan(" ".join(faker.sentence() for _ in range(num_rows)))
+                for i in range(num_rows)
+            ],
+            # New value for dosage
+            "order_holdreasontext": [
+                maybe_nan(" ".join(faker.sentence() for _ in range(num_rows)))
+                for i in range(num_rows)
+            ],
+            "order_entered": [
+                datetime(
+                    random.randint(global_start_year, global_end_year),
+                    random.randint(global_start_month, global_end_month),
+                    random.randint(1, 28),
+                    random.randint(0, 23),
+                    random.randint(0, 59),
+                    random.randint(0, 59),
+                )
+                for _ in range(num_rows)
+            ],
+            "order_createdwhen": [
+                datetime(
+                    random.randint(global_start_year, global_end_year),
+                    random.randint(global_start_month, global_end_month),
+                    random.randint(1, 28),
+                    random.randint(0, 23),
+                    random.randint(0, 59),
+                    random.randint(0, 59),
+                )
+                for _ in range(num_rows)
+            ],
+            "clientvisit_visitidcode": [f"visit_{i}" for i in range(num_rows)],
+            "_id": ["{i}" for i in range(num_rows)],
+            "_index": ["{np.nan}" for i in range(num_rows)],
+            "_score": ["{np.nan}" for i in range(num_rows)],
+            "order_performeddtm": [
+                datetime(
+                    random.randint(global_start_year, global_end_year),
+                    random.randint(global_start_month, global_end_month),
+                    random.randint(1, 28),
+                    random.randint(0, 23),
+                    random.randint(0, 59),
+                    random.randint(0, 59),
+                )
+                for _ in range(num_rows)
+            ],
+        }
+
+        df = pd.DataFrame(data)
+        df_holder_list.append(df)
+
+    df = pd.concat(df_holder_list)
     return df
 
 
@@ -358,39 +402,46 @@ def generate_observations_MRC_text_data(
     - pd.DataFrame: Generated DataFrame with specified columns.
     """
 
-    current_pat_client_id_code = random.choice(entered_list)
+    df_holder_list = []
 
-    data = {
-        "observation_guid": [f"obs_{i}" for i in range(num_rows)],
-        "client_idcode": [current_pat_client_id_code for _ in range(num_rows)],
-        "obscatalogmasteritem_displayname": "AoMRC_ClinicalSummary_FT",
-        "observation_valuetext_analysed": [
-            (
-                generate_patient_timeline(current_pat_client_id_code)
-                if use_GPT
-                else generate_patient_timeline_faker(current_pat_client_id_code)
-            )
-            for _ in range(num_rows)
-        ],
-        # 'observation_valuetext_analysed': [faker.paragraph() for _ in range(num_rows)],
-        "observationdocument_recordeddtm": [
-            datetime(
-                random.randint(global_start_year, global_end_year),
-                random.randint(global_start_month, global_end_month),
-                random.randint(1, 28),
-                random.randint(0, 23),
-                random.randint(0, 59),
-                random.randint(0, 59),
-            )
-            for _ in range(num_rows)
-        ],
-        "clientvisit_visitidcode": [f"visit_{i}" for i in range(num_rows)],
-        "_id": ["{i}" for i in range(num_rows)],
-        "_index": ["{np.nan}" for i in range(num_rows)],
-        "_score": ["{np.nan}" for i in range(num_rows)],
-    }
+    for i in range(0, len(entered_list)):
 
-    df = pd.DataFrame(data)
+        current_pat_client_id_code = entered_list[i]
+
+        data = {
+            "observation_guid": [f"obs_{i}" for i in range(num_rows)],
+            "client_idcode": [current_pat_client_id_code for _ in range(num_rows)],
+            "obscatalogmasteritem_displayname": "AoMRC_ClinicalSummary_FT",
+            "observation_valuetext_analysed": [
+                (
+                    generate_patient_timeline(current_pat_client_id_code)
+                    if use_GPT
+                    else generate_patient_timeline_faker(current_pat_client_id_code)
+                )
+                for _ in range(num_rows)
+            ],
+            # 'observation_valuetext_analysed': [faker.paragraph() for _ in range(num_rows)],
+            "observationdocument_recordeddtm": [
+                datetime(
+                    random.randint(global_start_year, global_end_year),
+                    random.randint(global_start_month, global_end_month),
+                    random.randint(1, 28),
+                    random.randint(0, 23),
+                    random.randint(0, 59),
+                    random.randint(0, 59),
+                )
+                for _ in range(num_rows)
+            ],
+            "clientvisit_visitidcode": [f"visit_{i}" for i in range(num_rows)],
+            "_id": ["{i}" for i in range(num_rows)],
+            "_index": ["{np.nan}" for i in range(num_rows)],
+            "_score": ["{np.nan}" for i in range(num_rows)],
+        }
+
+        df = pd.DataFrame(data)
+        df_holder_list.append(df)
+
+    df = pd.concat(df_holder_list)
     return df
 
 
@@ -419,41 +470,48 @@ def generate_observations_Reports_text_data(
     """
     # print("generate_observations_Reports_text_data")
     random.seed(random_state)
-    current_pat_client_id_code = random.choice(entered_list)
+    df_holder_list = []
 
-    data = {
-        "basicobs_guid": [f"obs_{i}" for i in range(num_rows)],
-        "client_idcode": [current_pat_client_id_code for _ in range(num_rows)],
-        "basicobs_itemname_analysed": "Report",
-        "basicobs_value_analysed": "",
-        "textualObs": [
-            (
-                generate_patient_timeline(current_pat_client_id_code)
-                if use_GPT
-                else generate_patient_timeline_faker(current_pat_client_id_code)
-            )
-            for _ in range(num_rows)
-        ],
-        # 'observation_valuetext_analysed': [faker.paragraph() for _ in range(num_rows)],
-        "updatetime": [
-            datetime(
-                random.randint(global_start_year, global_end_year),
-                random.randint(global_start_month, global_end_month),
-                random.randint(1, 28),
-                random.randint(0, 23),
-                random.randint(0, 59),
-                random.randint(0, 59),
-            )
-            for _ in range(num_rows)
-        ],
-        "clientvisit_visitidcode": [f"visit_{i}" for i in range(num_rows)],
-        "_id": ["{i}" for i in range(num_rows)],
-        "_index": ["{np.nan}" for i in range(num_rows)],
-        "_score": ["{np.nan}" for i in range(num_rows)],
-    }
+    for i in range(0, len(entered_list)):
 
-    df = pd.DataFrame(data)
-    # display(df)
+        current_pat_client_id_code = entered_list[i]
+
+        data = {
+            "basicobs_guid": [f"obs_{i}" for i in range(num_rows)],
+            "client_idcode": [current_pat_client_id_code for _ in range(num_rows)],
+            "basicobs_itemname_analysed": "Report",
+            "basicobs_value_analysed": "",
+            "textualObs": [
+                (
+                    generate_patient_timeline(current_pat_client_id_code)
+                    if use_GPT
+                    else generate_patient_timeline_faker(current_pat_client_id_code)
+                )
+                for _ in range(num_rows)
+            ],
+            # 'observation_valuetext_analysed': [faker.paragraph() for _ in range(num_rows)],
+            "updatetime": [
+                datetime(
+                    random.randint(global_start_year, global_end_year),
+                    random.randint(global_start_month, global_end_month),
+                    random.randint(1, 28),
+                    random.randint(0, 23),
+                    random.randint(0, 59),
+                    random.randint(0, 59),
+                )
+                for _ in range(num_rows)
+            ],
+            "clientvisit_visitidcode": [f"visit_{i}" for i in range(num_rows)],
+            "_id": ["{i}" for i in range(num_rows)],
+            "_index": ["{np.nan}" for i in range(num_rows)],
+            "_score": ["{np.nan}" for i in range(num_rows)],
+        }
+
+        df = pd.DataFrame(data)
+        # display(df)
+        df_holder_list.append(df)
+
+    df = pd.concat(df_holder_list)
 
     return df
 
@@ -480,77 +538,90 @@ def generate_appointments_data(
     Returns:
     - pd.DataFrame: Generated DataFrame with specified columns.
     """
+    df_holder_list = []
 
-    data = {
-        "Popular": [faker.random_number(digits=3) for _ in range(num_rows)],
-        "AppointmentType": [
-            faker.random_element(["Type A", "Type B", "Type C"])
-            for _ in range(num_rows)
-        ],
-        "AttendanceReference": [faker.random_number(digits=6) for _ in range(num_rows)],
-        "ClinicCode": [faker.random_number(digits=4) for _ in range(num_rows)],
-        "ClinicDesc": [faker.word() for _ in range(num_rows)],
-        "Consultant": [faker.name() for _ in range(num_rows)],
-        "DateModified": [
-            datetime(
-                random.randint(global_start_year, global_end_year),
-                random.randint(global_start_month, global_end_month),
-                random.randint(1, 28),
-                random.randint(0, 23),
-                random.randint(0, 59),
-                random.randint(0, 59),
-                tzinfo=pytz.utc,
-            )
-            for _ in range(num_rows)
-        ],
-        "DNA": [faker.random_element(["Y", "N"]) for _ in range(num_rows)],
-        "HospitalID": [faker.random_number(digits=5) for _ in range(num_rows)],
-        "PatNHSNo": [faker.random_number(digits=10) for _ in range(num_rows)],
-        "Specialty": [
-            faker.random_element(["Specialty A", "Specialty B", "Specialty C"])
-            for _ in range(num_rows)
-        ],
-        "_id": [str(i) for i in range(num_rows)],
-        "_index": [str(None) for _ in range(num_rows)],
-        "_score": [str(None) for _ in range(num_rows)],
-        "AppointmentDateTime": [
-            datetime(
-                random.randint(global_start_year, global_end_year),
-                random.randint(global_start_month, global_end_month),
-                random.randint(1, 28),
-                random.randint(0, 23),
-                random.randint(0, 59),
-                random.randint(0, 59),
-                tzinfo=pytz.utc,
-            )
-            for _ in range(num_rows)
-        ],
-        "Attended": [faker.random_element([0, 1]) for _ in range(num_rows)],
-        "CancDesc": [faker.sentence() for _ in range(num_rows)],
-        "CancRefNo": [faker.random_number(digits=8) for _ in range(num_rows)],
-        "ConsultantCode": [faker.random_number(digits=4) for _ in range(num_rows)],
-        "DateCreated": [faker.date_time_this_year() for _ in range(num_rows)],
-        "Ethnicity": [
-            faker.random_element(["Ethnicity A", "Ethnicity B", "Ethnicity C"])
-            for _ in range(num_rows)
-        ],
-        "Gender": [faker.random_element(["Male", "Female"]) for _ in range(num_rows)],
-        "NHSNoStatusCode": [faker.random_number(digits=2) for _ in range(num_rows)],
-        "NotSpec": [faker.random_element(["Y", "N"]) for _ in range(num_rows)],
-        "PatDateOfBirth": [faker.date_of_birth() for _ in range(num_rows)],
-        "PatForename": [faker.first_name() for _ in range(num_rows)],
-        "PatPostCode": [faker.postcode() for _ in range(num_rows)],
-        "PatSurname": [faker.last_name() for _ in range(num_rows)],
-        "PiMsPatRefNo": [faker.random_number(digits=6) for _ in range(num_rows)],
-        "Primarykeyfieldname": [faker.word() for _ in range(num_rows)],
-        "Primarykeyfieldvalue": [
-            faker.random_number(digits=4) for _ in range(num_rows)
-        ],
-        "SessionCode": [faker.random_number(digits=3) for _ in range(num_rows)],
-        "SpecialtyCode": [faker.random_number(digits=4) for _ in range(num_rows)],
-    }
+    for i in range(0, len(entered_list)):
 
-    df = pd.DataFrame(data)
+        current_pat_client_id_code = entered_list[i]
+
+        data = {
+            "Popular": [faker.random_number(digits=3) for _ in range(num_rows)],
+            "AppointmentType": [
+                faker.random_element(["Type A", "Type B", "Type C"])
+                for _ in range(num_rows)
+            ],
+            "AttendanceReference": [
+                faker.random_number(digits=6) for _ in range(num_rows)
+            ],
+            "ClinicCode": [faker.random_number(digits=4) for _ in range(num_rows)],
+            "ClinicDesc": [faker.word() for _ in range(num_rows)],
+            "Consultant": [faker.name() for _ in range(num_rows)],
+            "DateModified": [
+                datetime(
+                    random.randint(global_start_year, global_end_year),
+                    random.randint(global_start_month, global_end_month),
+                    random.randint(1, 28),
+                    random.randint(0, 23),
+                    random.randint(0, 59),
+                    random.randint(0, 59),
+                    tzinfo=pytz.utc,
+                )
+                for _ in range(num_rows)
+            ],
+            "DNA": [faker.random_element(["Y", "N"]) for _ in range(num_rows)],
+            "HospitalID": [current_pat_client_id_code for _ in range(num_rows)],
+            "PatNHSNo": [faker.random_number(digits=10) for _ in range(num_rows)],
+            "Specialty": [
+                faker.random_element(["Specialty A", "Specialty B", "Specialty C"])
+                for _ in range(num_rows)
+            ],
+            "_id": [str(i) for i in range(num_rows)],
+            "_index": [str(None) for _ in range(num_rows)],
+            "_score": [str(None) for _ in range(num_rows)],
+            "AppointmentDateTime": [
+                datetime(
+                    random.randint(global_start_year, global_end_year),
+                    random.randint(global_start_month, global_end_month),
+                    random.randint(1, 28),
+                    random.randint(0, 23),
+                    random.randint(0, 59),
+                    random.randint(0, 59),
+                    tzinfo=pytz.utc,
+                )
+                for _ in range(num_rows)
+            ],
+            "Attended": [faker.random_element([0, 1]) for _ in range(num_rows)],
+            "CancDesc": [faker.sentence() for _ in range(num_rows)],
+            "CancRefNo": [faker.random_number(digits=8) for _ in range(num_rows)],
+            "ConsultantCode": [faker.random_number(digits=4) for _ in range(num_rows)],
+            "DateCreated": [faker.date_time_this_year() for _ in range(num_rows)],
+            "Ethnicity": [
+                faker.random_element(["Ethnicity A", "Ethnicity B", "Ethnicity C"])
+                for _ in range(num_rows)
+            ],
+            "Gender": [
+                faker.random_element(["Male", "Female"]) for _ in range(num_rows)
+            ],
+            "NHSNoStatusCode": [faker.random_number(digits=2) for _ in range(num_rows)],
+            "NotSpec": [faker.random_element(["Y", "N"]) for _ in range(num_rows)],
+            "PatDateOfBirth": [faker.date_of_birth() for _ in range(num_rows)],
+            "PatForename": [faker.first_name() for _ in range(num_rows)],
+            "PatPostCode": [faker.postcode() for _ in range(num_rows)],
+            "PatSurname": [faker.last_name() for _ in range(num_rows)],
+            "PiMsPatRefNo": [faker.random_number(digits=6) for _ in range(num_rows)],
+            "Primarykeyfieldname": [faker.word() for _ in range(num_rows)],
+            "Primarykeyfieldvalue": [
+                faker.random_number(digits=4) for _ in range(num_rows)
+            ],
+            "SessionCode": [faker.random_number(digits=3) for _ in range(num_rows)],
+            "SpecialtyCode": [faker.random_number(digits=4) for _ in range(num_rows)],
+        }
+
+        df = pd.DataFrame(data)
+
+        df_holder_list.append(df)
+
+    df = pd.concat(df_holder_list, ignore_index=True)
 
     return df
 
@@ -579,34 +650,41 @@ def generate_observations_data(
     - pd.DataFrame: Generated DataFrame with specified columns.
     """
 
-    current_pat_client_id_code = random.choice(entered_list)
+    df_holder_list = []
 
-    data = {
-        "observation_guid": [f"obs_{i}" for i in range(num_rows)],
-        "client_idcode": [current_pat_client_id_code for _ in range(num_rows)],
-        "obscatalogmasteritem_displayname": [search_term],
-        "observation_valuetext_analysed": [
-            random.uniform(0, 100) for _ in range(num_rows)
-        ],
-        # 'observation_valuetext_analysed': [faker.paragraph() for _ in range(num_rows)],
-        "observationdocument_recordeddtm": [
-            datetime(
-                random.randint(global_start_year, global_end_year),
-                random.randint(global_start_month, global_end_month),
-                random.randint(1, 28),
-                random.randint(0, 23),
-                random.randint(0, 59),
-                random.randint(0, 59),
-            )
-            for _ in range(num_rows)
-        ],
-        "clientvisit_visitidcode": [f"visit_{i}" for i in range(num_rows)],
-        "_id": ["{i}" for i in range(num_rows)],
-        "_index": ["{np.nan}" for i in range(num_rows)],
-        "_score": ["{np.nan}" for i in range(num_rows)],
-    }
+    for i in range(0, len(entered_list)):
 
-    df = pd.DataFrame(data)
+        current_pat_client_id_code = entered_list[i]
+
+        data = {
+            "observation_guid": [f"obs_{i}" for i in range(num_rows)],
+            "client_idcode": [current_pat_client_id_code for _ in range(num_rows)],
+            "obscatalogmasteritem_displayname": [search_term],
+            "observation_valuetext_analysed": [
+                random.uniform(0, 100) for _ in range(num_rows)
+            ],
+            # 'observation_valuetext_analysed': [faker.paragraph() for _ in range(num_rows)],
+            "observationdocument_recordeddtm": [
+                datetime(
+                    random.randint(global_start_year, global_end_year),
+                    random.randint(global_start_month, global_end_month),
+                    random.randint(1, 28),
+                    random.randint(0, 23),
+                    random.randint(0, 59),
+                    random.randint(0, 59),
+                )
+                for _ in range(num_rows)
+            ],
+            "clientvisit_visitidcode": [f"visit_{i}" for i in range(num_rows)],
+            "_id": ["{i}" for i in range(num_rows)],
+            "_index": ["{np.nan}" for i in range(num_rows)],
+            "_score": ["{np.nan}" for i in range(num_rows)],
+        }
+
+        df = pd.DataFrame(data)
+        df_holder_list.append(df)
+
+    df = pd.concat(df_holder_list, ignore_index=True)
     return df
 
 
@@ -634,58 +712,64 @@ def generate_basic_observations_data(
     """
     # print("generate_basic_observations_data")
     random.seed(random_state)
-    current_pat_client_id_code = random.choice(entered_list)
+    df_holder_list = []
 
-    data = {
-        "client_idcode": [current_pat_client_id_code] * num_rows,
-        "basicobs_itemname_analysed": [
-            faker.random_element(blood_test_names) for _ in range(num_rows)
-        ],
-        "basicobs_value_numeric": [random.uniform(1, 100) for _ in range(num_rows)],
-        "basicobs_entered": [
-            datetime(
-                random.randint(global_start_year, global_end_year),
-                random.randint(global_start_month, global_end_month),
-                random.randint(1, 28),
-                random.randint(0, 23),
-                random.randint(0, 59),
-                random.randint(0, 59),
-                tzinfo=timezone.utc,
-            ).strftime("%Y-%m-%dT%H:%M:%S")
-            for _ in range(num_rows)
-        ],
-        "clientvisit_serviceguid": [f"service_{i}" for i in range(num_rows)],
-        "_id": [None for i in range(num_rows)],
-        "_index": [None for i in range(num_rows)],
-        "_score": [None for i in range(num_rows)],
-        "order_guid": [f"order_{i}" for i in range(num_rows)],
-        "order_name": [None for i in range(num_rows)],
-        "order_summaryline": [
-            maybe_nan(" ".join(faker.sentence() for _ in range(num_rows)))
-            for i in range(num_rows)
-        ],
-        "order_holdreasontext": [
-            maybe_nan(" ".join(faker.sentence() for _ in range(num_rows)))
-            for i in range(num_rows)
-        ],
-        "order_entered": ["{np.nan}" for i in range(num_rows)],
-        "clientvisit_visitidcode": ["{np.nan}" for i in range(num_rows)],
-        "updatetime": [
-            datetime(
-                random.randint(global_start_year, global_end_year),
-                random.randint(global_start_month, global_end_month),
-                random.randint(1, 28),
-                random.randint(0, 23),
-                random.randint(0, 59),
-                random.randint(0, 59),
-                tzinfo=timezone.utc,
-            ).strftime("%Y-%m-%dT%H:%M:%S")
-            for _ in range(num_rows)
-        ],
-    }
+    for i in range(0, len(entered_list)):
 
-    df = pd.DataFrame(data)
+        current_pat_client_id_code = entered_list[i]
 
+        data = {
+            "client_idcode": [current_pat_client_id_code] * num_rows,
+            "basicobs_itemname_analysed": [
+                faker.random_element(blood_test_names) for _ in range(num_rows)
+            ],
+            "basicobs_value_numeric": [random.uniform(1, 100) for _ in range(num_rows)],
+            "basicobs_entered": [
+                datetime(
+                    random.randint(global_start_year, global_end_year),
+                    random.randint(global_start_month, global_end_month),
+                    random.randint(1, 28),
+                    random.randint(0, 23),
+                    random.randint(0, 59),
+                    random.randint(0, 59),
+                    tzinfo=timezone.utc,
+                ).strftime("%Y-%m-%dT%H:%M:%S")
+                for _ in range(num_rows)
+            ],
+            "clientvisit_serviceguid": [f"service_{i}" for i in range(num_rows)],
+            "_id": [None for i in range(num_rows)],
+            "_index": [None for i in range(num_rows)],
+            "_score": [None for i in range(num_rows)],
+            "order_guid": [f"order_{i}" for i in range(num_rows)],
+            "order_name": [None for i in range(num_rows)],
+            "order_summaryline": [
+                maybe_nan(" ".join(faker.sentence() for _ in range(num_rows)))
+                for i in range(num_rows)
+            ],
+            "order_holdreasontext": [
+                maybe_nan(" ".join(faker.sentence() for _ in range(num_rows)))
+                for i in range(num_rows)
+            ],
+            "order_entered": ["{np.nan}" for i in range(num_rows)],
+            "clientvisit_visitidcode": ["{np.nan}" for i in range(num_rows)],
+            "updatetime": [
+                datetime(
+                    random.randint(global_start_year, global_end_year),
+                    random.randint(global_start_month, global_end_month),
+                    random.randint(1, 28),
+                    random.randint(0, 23),
+                    random.randint(0, 59),
+                    random.randint(0, 59),
+                    tzinfo=timezone.utc,
+                ).strftime("%Y-%m-%dT%H:%M:%S")
+                for _ in range(num_rows)
+            ],
+        }
+
+        df = pd.DataFrame(data)
+        df_holder_list.append(df)
+
+    df = pd.concat(df_holder_list, ignore_index=True)
     return df
 
 
@@ -699,52 +783,59 @@ def generate_basic_observations_textual_obs_data(
 ):
 
     # print("generate_basic_observations_textual_obs_data")
-    current_pat_client_id_code = random.choice(entered_list)
+    df_holder_list = []
 
-    data = {
-        "client_idcode": [current_pat_client_id_code] * num_rows,
-        "basicobs_itemname_analysed": [
-            faker.random_element(blood_test_names) for _ in range(num_rows)
-        ],
-        "basicobs_value_numeric": [random.uniform(1, 100) for _ in range(num_rows)],
-        "basicobs_value_analysed": [faker.sentence() for _ in range(num_rows)],
-        "basicobs_entered": [
-            datetime(
-                random.randint(global_start_year, global_end_year),
-                random.randint(global_start_month, global_end_month),
-                random.randint(1, 28),
-                random.randint(0, 23),
-                random.randint(0, 59),
-                random.randint(0, 59),
-                tzinfo=timezone.utc,
-            ).strftime("%Y-%m-%dT%H:%M:%S")
-            for _ in range(num_rows)
-        ],
-        "clientvisit_serviceguid": [f"service_{i}" for i in range(num_rows)],
-        "_id": [None for i in range(num_rows)],
-        "_index": [None for i in range(num_rows)],
-        "_score": [None for i in range(num_rows)],
-        "basicobs_guid": [f"obs_{i}" for i in range(num_rows)],
-        "clientvisit_serviceguid": ["{np.nan}" for i in range(num_rows)],
-        "updatetime": [
-            datetime(
-                random.randint(global_start_year, global_end_year),
-                random.randint(global_start_month, global_end_month),
-                random.randint(1, 28),
-                random.randint(0, 23),
-                random.randint(0, 59),
-                random.randint(0, 59),
-                tzinfo=timezone.utc,
-            ).strftime("%Y-%m-%dT%H:%M:%S")
-            for _ in range(num_rows)
-        ],
-        "textualObs": [
-            maybe_nan(" ".join(faker.sentence() for _ in range(num_rows)))
-            for i in range(num_rows)
-        ],
-    }
+    for i in range(0, len(entered_list)):
 
-    df = pd.DataFrame(data)
+        current_pat_client_id_code = entered_list[i]
+
+        data = {
+            "client_idcode": [current_pat_client_id_code] * num_rows,
+            "basicobs_itemname_analysed": [
+                faker.random_element(blood_test_names) for _ in range(num_rows)
+            ],
+            "basicobs_value_numeric": [random.uniform(1, 100) for _ in range(num_rows)],
+            "basicobs_value_analysed": [faker.sentence() for _ in range(num_rows)],
+            "basicobs_entered": [
+                datetime(
+                    random.randint(global_start_year, global_end_year),
+                    random.randint(global_start_month, global_end_month),
+                    random.randint(1, 28),
+                    random.randint(0, 23),
+                    random.randint(0, 59),
+                    random.randint(0, 59),
+                    tzinfo=timezone.utc,
+                ).strftime("%Y-%m-%dT%H:%M:%S")
+                for _ in range(num_rows)
+            ],
+            "clientvisit_serviceguid": [f"service_{i}" for i in range(num_rows)],
+            "_id": [None for i in range(num_rows)],
+            "_index": [None for i in range(num_rows)],
+            "_score": [None for i in range(num_rows)],
+            "basicobs_guid": [f"obs_{i}" for i in range(num_rows)],
+            "clientvisit_serviceguid": ["{np.nan}" for i in range(num_rows)],
+            "updatetime": [
+                datetime(
+                    random.randint(global_start_year, global_end_year),
+                    random.randint(global_start_month, global_end_month),
+                    random.randint(1, 28),
+                    random.randint(0, 23),
+                    random.randint(0, 59),
+                    random.randint(0, 59),
+                    tzinfo=timezone.utc,
+                ).strftime("%Y-%m-%dT%H:%M:%S")
+                for _ in range(num_rows)
+            ],
+            "textualObs": [
+                maybe_nan(" ".join(faker.sentence() for _ in range(num_rows)))
+                for i in range(num_rows)
+            ],
+        }
+
+        df = pd.DataFrame(data)
+        df_holder_list.append(df)
+
+    df = pd.concat(df_holder_list, ignore_index=True)
 
     return df
 
