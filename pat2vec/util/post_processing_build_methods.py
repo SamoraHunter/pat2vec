@@ -193,6 +193,7 @@ def build_merged_bloods(all_pat_list, config_obj, overwrite=False):
             mode="a" if file_exists else "w",
             header=not file_exists,
             index=False,
+            float_format="%.6f",
         )
 
         # After the first successful write, set file_exists to True
