@@ -82,8 +82,8 @@ def save_group(client_idcode_group, save_folder):
     """Helper function to save a single group to CSV."""
     client_idcode, group = client_idcode_group
     file_path = os.path.join(save_folder, f"{client_idcode}.csv")
-    group.to_csv(file_path, index=False)
-    print(f"Saved {file_path}")  # Optional: Might print out of order in multiprocessing
+    group.to_csv(file_path, index=False, float_format="%.6f")
+    # print(f"Saved {file_path}")  # Optional: Might print out of order in multiprocessing
 
 
 def split_and_save_csv(df, client_idcode_column, save_folder, num_processes=None):
@@ -239,4 +239,120 @@ def get_merged_pat_batch_bloods(
 
     except Exception as e:
         print(f"Error retrieving batch blood test-related observations: {e}")
+        return pd.DataFrame()  # Return an empty DataFrame in case of error
+
+
+def get_merged_pat_batch_drugs(
+    client_idcode_list,
+    config_obj=None,
+    cohort_searcher_with_terms_and_search=None,
+):
+    """
+    Retrieve and merge batch drug orders for a list of patients based on the given parameters.
+
+    Args:
+        client_idcode_list (list): A list of client ID codes for the patients.
+        config_obj (ConfigObject): An object containing global start and end year/month.
+        cohort_searcher_with_terms_and_search (function): A function for searching a cohort with terms.
+
+    Returns:
+        pd.DataFrame: Merged batch of drug orders for all patients.
+
+    Raises:
+        ValueError: If config_obj is None or missing required attributes.
+    """
+
+    if config_obj is None or not all(
+        hasattr(config_obj, attr)
+        for attr in [
+            "global_start_year",
+            "global_start_month",
+            "global_end_year",
+            "global_end_month",
+            "pre_merged_input_batches_path",
+            "proj_name",  # Ensure proj_name is available in config_obj
+        ]
+    ):
+        raise ValueError("Invalid or missing configuration object.")
+
+    overwrite_stored_pat_observations = config_obj.overwrite_stored_pat_observations
+    store_pat_batch_observations = config_obj.store_pat_batch_observations
+
+    global_start_year = config_obj.global_start_year
+    global_start_month = config_obj.global_start_month
+    global_end_year = config_obj.global_end_year
+    global_end_month = config_obj.global_end_month
+    global_start_day = config_obj.global_start_day
+    global_end_day = config_obj.global_end_day
+
+    drug_time_field = config_obj.drug_time_field  # Ensure this is defined in config_obj
+
+    # Define the output directory using config_obj.pre_merged_input_batches_path
+    input_directory = config_obj.pre_merged_input_batches_path
+    os.makedirs(input_directory, exist_ok=True)  # Ensure the directory exists
+
+    # Define the path for the merged batches output
+    merged_batches_path = os.path.join(input_directory, "merged_drugs_batches.csv")
+
+    # Check if the merged file already exists and overwrite is not enabled
+    if not overwrite_stored_pat_observations and os.path.exists(merged_batches_path):
+        print(
+            f"Merged batches file already exists at {merged_batches_path}. Loading from disk."
+        )
+        return pd.read_csv(merged_batches_path)
+
+    try:
+        # Retrieve batch drug orders for all clients in one go
+        batch_target = cohort_searcher_with_terms_and_search(
+            index_name="order",
+            fields_list=[
+                "client_idcode",
+                "order_guid",
+                "order_name",
+                "order_summaryline",
+                "order_holdreasontext",
+                "order_entered",
+                "clientvisit_visitidcode",
+                "order_performeddtm",
+                "order_createdwhen",
+            ],
+            term_name=config_obj.client_idcode_term_name,
+            entered_list=client_idcode_list,  # Pass the entire list of client IDs
+            search_string='order_typecode:"medication" AND '
+            + f"{drug_time_field}:[{global_start_year}-{global_start_month}-{global_start_day} TO {global_end_year}-{global_end_month}-{global_end_day}]",
+        )
+
+        # Apply data type filters if specified
+        if config_obj.data_type_filter_dict is not None:
+            if (
+                config_obj.data_type_filter_dict.get("filter_term_lists").get("drugs")
+                is not None
+            ):
+                if config_obj.verbosity >= 1:
+                    print(
+                        "Applying doc type filter to drugs",
+                        config_obj.data_type_filter_dict,
+                    )
+
+                filter_term_list = config_obj.data_type_filter_dict.get(
+                    "filter_term_lists"
+                ).get("drugs")
+
+                batch_target = filter_dataframe_by_fuzzy_terms(
+                    batch_target,
+                    filter_term_list,
+                    column_name="order_name",  # Adjust column name for drugs
+                    verbose=config_obj.verbosity,
+                )
+
+        # Save the merged DataFrame to the dynamically constructed directory
+        if store_pat_batch_observations or overwrite_stored_pat_observations:
+            batch_target.to_csv(merged_batches_path, index=False)
+            if config_obj.verbosity >= 1:
+                print(f"Merged batches saved to {merged_batches_path}")
+
+        return batch_target
+
+    except Exception as e:
+        print(f"Error retrieving batch drug orders: {e}")
         return pd.DataFrame()  # Return an empty DataFrame in case of error
