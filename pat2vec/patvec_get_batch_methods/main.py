@@ -68,7 +68,11 @@ def get_pat_batch_obs(
     existence_check = exist_check(batch_obs_target_path, config_obj)
 
     try:
-        if config_obj.store_pat_batch_observations or existence_check is False:
+        if (
+            config_obj.store_pat_batch_observations
+            and not existence_check
+            or existence_check is False
+        ):
             batch_target = cohort_searcher_with_terms_and_search(
                 index_name="observations",
                 fields_list="""observation_guid client_idcode	obscatalogmasteritem_displayname
@@ -146,7 +150,11 @@ def get_pat_batch_news(
     existence_check = exist_check(batch_obs_target_path, config_obj)
 
     try:
-        if config_obj.store_pat_batch_observations or existence_check is False:
+        if (
+            config_obj.store_pat_batch_observations
+            and not existence_check
+            or existence_check is False
+        ):
             batch_target = cohort_searcher_with_terms_and_search(
                 index_name="observations",
                 fields_list="""observation_guid client_idcode obscatalogmasteritem_displayname
@@ -218,7 +226,11 @@ def get_pat_batch_bmi(
     existence_check = exist_check(batch_obs_target_path, config_obj)
 
     try:
-        if config_obj.store_pat_batch_observations or existence_check is False:
+        if (
+            config_obj.store_pat_batch_observations
+            and not existence_check
+            or existence_check is False
+        ):
             batch_target = cohort_searcher_with_terms_and_search(
                 index_name="observations",
                 fields_list="""observation_guid client_idcode obscatalogmasteritem_displayname
@@ -484,7 +496,11 @@ def get_pat_batch_diagnostics(
     existence_check = exist_check(batch_obs_target_path, config_obj)
 
     try:
-        if config_obj.store_pat_batch_observations or existence_check is False:
+        if (
+            config_obj.store_pat_batch_observations
+            and not existence_check
+            or existence_check is False
+        ):
             batch_target = cohort_searcher_with_terms_and_search(
                 index_name="order",
                 fields_list="""client_idcode order_guid order_name order_summaryline order_holdreasontext order_entered clientvisit_visitidcode order_performeddtm order_createdwhen""".split(),
@@ -577,7 +593,11 @@ def get_pat_batch_epr_docs(
 
     try:
 
-        if overwrite_stored_pat_docs or existence_check is False:
+        if (
+            overwrite_stored_pat_docs
+            and not existence_check
+            or existence_check is False
+        ):
 
             batch_target = cohort_searcher_with_terms_and_search(
                 index_name="epr_documents",
@@ -1012,7 +1032,11 @@ def get_pat_batch_demo(
     existence_check = exist_check(batch_obs_target_path, config_obj)
 
     try:
-        if config_obj.store_pat_batch_observations or existence_check is False:
+        if (
+            config_obj.store_pat_batch_observations
+            and not existence_check
+            or existence_check is False
+        ):
             batch_target = cohort_searcher_with_terms_and_search(
                 index_name="epr_documents",
                 fields_list=[
@@ -1101,7 +1125,11 @@ def get_pat_batch_reports(
     existence_check = exist_check(batch_obs_target_path, config_obj)
 
     try:
-        if store_pat_batch_observations or existence_check is False:
+        if (
+            store_pat_batch_observations
+            and not existence_check
+            or existence_check is False
+        ):
 
             batch_target = cohort_searcher_with_terms_and_search(
                 index_name="basic_observations",
@@ -1196,7 +1224,11 @@ def get_pat_batch_textual_obs_docs(
     existence_check = exist_check(batch_obs_target_path, config_obj)
 
     try:
-        if store_pat_batch_observations or existence_check is False:
+        if (
+            store_pat_batch_observations
+            and not existence_check
+            or existence_check is False
+        ):
 
             batch_target = cohort_searcher_with_terms_and_search(
                 index_name="basic_observations",
@@ -1277,7 +1309,11 @@ def get_pat_batch_appointments(
     existence_check = exist_check(appointments_target_path, config_obj)
 
     try:
-        if config_obj.store_pat_batch_observations or existence_check is False:
+        if (
+            config_obj.store_pat_batch_observations
+            and not existence_check
+            or existence_check is False
+        ):
             batch_target = cohort_searcher_with_terms_and_search(
                 index_name="pims_apps*",
                 fields_list=[
