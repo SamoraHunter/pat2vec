@@ -297,7 +297,11 @@ def get_pat_batch_bloods(
     bloods_time_field = config_obj.bloods_time_field
 
     try:
-        if store_pat_batch_observations or existence_check is False:
+        if (
+            store_pat_batch_observations
+            and not existence_check
+            or existence_check is False
+        ):
 
             batch_target = cohort_searcher_with_terms_and_search(
                 index_name="basic_observations",
@@ -403,7 +407,11 @@ def get_pat_batch_drugs(
 
     try:
 
-        if config_obj.store_pat_batch_observations or existence_check is False:
+        if (
+            config_obj.store_pat_batch_observations
+            and not existence_check
+            or existence_check is False
+        ):
             batch_target = cohort_searcher_with_terms_and_search(
                 index_name="order",
                 fields_list="""client_idcode order_guid order_name order_summaryline order_holdreasontext order_entered clientvisit_visitidcode order_performeddtm order_createdwhen""".split(),
