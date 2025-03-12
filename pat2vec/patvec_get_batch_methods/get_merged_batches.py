@@ -85,6 +85,13 @@ def save_group(client_idcode_group, save_folder):
     """Helper function to save a single group to CSV."""
     client_idcode, group = client_idcode_group
     file_path = os.path.join(save_folder, f"{client_idcode}.csv")
+
+    # Check if the file already exists
+    if os.path.exists(file_path):
+        # print(f"File {file_path} already exists. Skipping save.")
+        return
+
+    # Save the group to CSV
     group.to_csv(file_path, index=False, float_format="%.6f")
     # print(f"Saved {file_path}")  # Optional: Might print out of order in multiprocessing
 
@@ -485,10 +492,6 @@ def get_merged_pat_batch_diagnostics(
     except Exception as e:
         print(f"Error retrieving batch diagnostic orders: {e}")
         return pd.DataFrame()  # Return an empty DataFrame in case of error
-
-
-import os
-import pandas as pd
 
 
 def get_merged_pat_batch_mct_docs(
