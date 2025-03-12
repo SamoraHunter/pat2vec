@@ -571,6 +571,11 @@ def get_merged_pat_batch_mct_docs(
         # Apply data type filters for MCT documents
         batch_target = apply_data_type_mct_docs_filters(config_obj, batch_target)
 
+        # larger batches returned as lists...
+        if isinstance(batch_target, list) and len(batch_target) == 1:
+
+            batch_target = batch_target[0]
+
         # Drop rows with NaN values in critical columns
         col_list_drop_nan = [
             "observation_valuetext_analysed",
