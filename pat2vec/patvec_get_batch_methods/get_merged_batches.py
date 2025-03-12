@@ -572,7 +572,7 @@ def get_merged_pat_batch_mct_docs(
         batch_target = apply_data_type_mct_docs_filters(config_obj, batch_target)
 
         # larger batches returned as lists...
-        if isinstance(batch_target, list) and len(batch_target) == 1:
+        if isinstance(batch_target, list) and len(batch_target) >= 1:
 
             batch_target = batch_target[0]
 
@@ -718,7 +718,7 @@ def get_merged_pat_batch_epr_docs(
                     debug=config_obj.verbosity > 5,
                 )
         # larger batches returned as lists...
-        if isinstance(batch_target, list) and len(batch_target) == 1:
+        if isinstance(batch_target, list) and len(batch_target) >= 1:
 
             batch_target = batch_target[0]
 
