@@ -712,6 +712,10 @@ def get_merged_pat_batch_epr_docs(
                     text_column="body_analysed",
                     debug=config_obj.verbosity > 5,
                 )
+        # larger batches returned as lists...
+        if type(batch_target) == list:
+            assert len(batch_target) == 1
+            batch_target = batch_target[0]
 
         # Drop rows with NaN values in critical columns
         col_list_drop_nan = ["body_analysed", "updatetime", "client_idcode"]
