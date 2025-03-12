@@ -713,8 +713,8 @@ def get_merged_pat_batch_epr_docs(
                     debug=config_obj.verbosity > 5,
                 )
         # larger batches returned as lists...
-        if type(batch_target) == list:
-            assert len(batch_target) == 1
+        if isinstance(batch_target, list) and len(batch_target) == 1:
+
             batch_target = batch_target[0]
 
         # Drop rows with NaN values in critical columns
