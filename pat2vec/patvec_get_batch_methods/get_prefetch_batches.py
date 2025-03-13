@@ -1,9 +1,15 @@
 from pat2vec.patvec_get_batch_methods.get_merged_batches import (
+    get_merged_pat_batch_appointments,
     get_merged_pat_batch_bloods,
+    get_merged_pat_batch_demo,
     get_merged_pat_batch_diagnostics,
     get_merged_pat_batch_drugs,
     get_merged_pat_batch_epr_docs,
     get_merged_pat_batch_mct_docs,
+    get_merged_pat_batch_news,
+    get_merged_pat_batch_obs,
+    get_merged_pat_batch_reports,
+    get_merged_pat_batch_textual_obs_docs,
     split_and_save_csv,
 )
 import tqdm
@@ -71,6 +77,83 @@ def prefetch_batches(pat2vec_obj=None):
             save_path_attr="pre_document_batch_path_mct",
             requires_search_term=True,
         ),
+        BatchConfig(
+            name="textual_obs",
+            enabled_option="textual_obs",
+            get_function=get_merged_pat_batch_textual_obs_docs,
+            save_path_attr="pre_textual_obs_document_batch_path",
+            requires_search_term=True,
+        ),
+        BatchConfig(
+            name="CORE_SmokingStatus",
+            enabled_option="smoking_status",
+            get_function=get_merged_pat_batch_obs,
+            save_path_attr="pre_misc_batch_path",
+            requires_search_term="CORE_SmokingStatus",
+        ),
+        BatchConfig(
+            name="CORE_SpO2",
+            enabled_option="core_02",
+            get_function=get_merged_pat_batch_obs,
+            save_path_attr="pre_misc_batch_path",
+            requires_search_term="CORE_SpO2",
+        ),
+        BatchConfig(
+            name="CORE_BedNumber3",
+            enabled_option="bed",
+            get_function=get_merged_pat_batch_obs,
+            save_path_attr="pre_misc_batch_path",
+            requires_search_term="CORE_BedNumber3",
+        ),
+        BatchConfig(
+            name="CORE_VTE_STATUS",
+            enabled_option="vte_status",
+            get_function=get_merged_pat_batch_obs,
+            save_path_attr="pre_misc_batch_path",
+            requires_search_term="CORE_VTE_STATUS",
+        ),
+        BatchConfig(
+            name="CORE_HospitalSite",
+            enabled_option="hosp_site",
+            get_function=get_merged_pat_batch_obs,
+            save_path_attr="pre_misc_batch_path",
+            requires_search_term="CORE_HospitalSite",
+        ),
+        BatchConfig(
+            name="CORE_RESUS_STATUS",
+            enabled_option="core_resus",
+            get_function=get_merged_pat_batch_obs,
+            save_path_attr="pre_misc_batch_path",
+            requires_search_term="CORE_RESUS_STATUS",
+        ),
+        BatchConfig(
+            name="news",
+            enabled_option="news",
+            get_function=get_merged_pat_batch_news,
+            save_path_attr="pre_news_batch_path",
+            requires_search_term=True,
+        ),
+        BatchConfig(
+            name="annotations_reports",
+            enabled_option="annotations_reports",
+            get_function=get_merged_pat_batch_reports,
+            save_path_attr="pre_report_batch_path",
+            requires_search_term=True,
+        ),
+        BatchConfig(
+            name="appointments",
+            enabled_option="appointments",
+            get_function=get_merged_pat_batch_appointments,
+            save_path_attr="pre_appointments_batch_path",
+            requires_search_term=True,
+        ),
+        BatchConfig(
+            name="demo",
+            enabled_option="demo",
+            get_function=get_merged_pat_batch_demo,
+            save_path_attr="pre_demo_batch_path",
+            requires_search_term=True,
+        ),
     ]
 
     # Get enabled batch configs
@@ -95,7 +178,7 @@ def prefetch_batches(pat2vec_obj=None):
 
             # Add search_term if required
             if config.requires_search_term:
-                func_kwargs["search_term"] = None
+                func_kwargs["search_term"] = config.requires_search_term
 
             # Get batch data
             df = config.get_function(**func_kwargs)

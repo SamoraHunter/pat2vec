@@ -765,3 +765,688 @@ def get_merged_pat_batch_epr_docs(
     except Exception as e:
         print(f"Error retrieving batch EPR documents: {e}")
         raise UnboundLocalError("Error retrieving batch EPR documents.")
+
+
+def get_merged_pat_batch_textual_obs_docs(
+    client_idcode_list,
+    search_term,
+    config_obj=None,
+    cohort_searcher_with_terms_and_search=None,
+):
+    """
+    Retrieve and merge batch textual observations for a list of patients based on the given parameters.
+
+    Args:
+        client_idcode_list (list): A list of client ID codes for the patients.
+        search_term (str): The term used for searching textual observations.
+        config_obj (ConfigObject): An object containing global start and end year/month.
+        cohort_searcher_with_terms_and_search (function): A function for searching a cohort with terms.
+
+    Returns:
+        pd.DataFrame: Merged batch of textual observations for all patients.
+
+    Raises:
+        ValueError: If config_obj is None or missing required attributes.
+    """
+
+    if config_obj is None or not all(
+        hasattr(config_obj, attr)
+        for attr in [
+            "global_start_year",
+            "global_start_month",
+            "global_end_year",
+            "global_end_month",
+            "pre_merged_input_batches_path",
+            "proj_name",  # Ensure proj_name is available in config_obj
+        ]
+    ):
+        raise ValueError("Invalid or missing configuration object.")
+
+    overwrite_stored_pat_observations = config_obj.overwrite_stored_pat_observations
+    store_pat_batch_observations = config_obj.store_pat_batch_observations
+
+    bloods_time_field = config_obj.bloods_time_field
+
+    # Define the output directory using config_obj.pre_merged_input_batches_path
+    input_directory = config_obj.pre_merged_input_batches_path
+    os.makedirs(input_directory, exist_ok=True)  # Ensure the directory exists
+
+    # Define the path for the merged batches output
+    merged_batches_path = os.path.join(
+        input_directory, "merged_textual_obs_batches.csv"
+    )
+
+    # Check if the merged file already exists and overwrite is not enabled
+    if not overwrite_stored_pat_observations and os.path.exists(merged_batches_path):
+        print(
+            f"Merged batches file already exists at {merged_batches_path}. Loading from disk."
+        )
+        return pd.read_csv(merged_batches_path)
+
+    global_start_year = config_obj.global_start_year
+    global_start_month = config_obj.global_start_month
+    global_end_year = config_obj.global_end_year
+    global_end_month = config_obj.global_end_month
+    global_start_day = config_obj.global_start_day
+    global_end_day = config_obj.global_end_day
+
+    try:
+        # Retrieve batch textual observations for all clients in one go
+        batch_target = cohort_searcher_with_terms_and_search(
+            index_name="basic_observations",
+            fields_list=[
+                "client_idcode",
+                "basicobs_itemname_analysed",
+                "basicobs_value_numeric",
+                "basicobs_value_analysed",
+                "basicobs_entered",
+                "clientvisit_serviceguid",
+                "basicobs_guid",
+                "updatetime",
+                "textualObs",
+            ],
+            term_name=config_obj.client_idcode_term_name,
+            entered_list=client_idcode_list,  # Pass the entire list of client IDs
+            search_string=f"{bloods_time_field}:[{global_start_year}-{global_start_month}-{global_start_day} TO {global_end_year}-{global_end_month}-{global_end_day}]",
+        )
+
+        # larger batches returned as lists...
+        if isinstance(batch_target, list) and len(batch_target) >= 1:
+
+            batch_target = batch_target[0]
+
+        # Drop rows with no textualObs
+        batch_target = batch_target.dropna(subset=["textualObs"])
+        # Drop rows with empty string in textualObs
+        batch_target = batch_target[batch_target["textualObs"] != ""]
+
+        # Combine textualObs and basicobs_value_analysed into body_analysed
+        batch_target["body_analysed"] = batch_target["textualObs"].astype(str)
+
+        # Save the merged DataFrame to the dynamically constructed directory
+        if store_pat_batch_observations or overwrite_stored_pat_observations:
+            batch_target.to_csv(merged_batches_path, index=False)
+            if config_obj.verbosity >= 1:
+                print(f"Merged batches saved to {merged_batches_path}")
+
+        return batch_target
+
+    except Exception as e:
+        print(f"Error retrieving batch textual observations: {e}")
+        return pd.DataFrame()  # Return an empty DataFrame in case of error
+
+
+def get_merged_pat_batch_appointments(
+    client_idcode_list,
+    search_term,
+    config_obj=None,
+    cohort_searcher_with_terms_and_search=None,
+):
+    """
+    Retrieve and merge batch appointments for a list of patients based on the given parameters.
+
+    Args:
+        client_idcode_list (list): A list of client ID codes for the patients.
+        search_term (str): The term used for searching appointments.
+        config_obj (ConfigObject): An object containing global start and end year/month.
+        cohort_searcher_with_terms_and_search (function): A function for searching a cohort with terms.
+
+    Returns:
+        pd.DataFrame: Merged batch of appointments for all patients.
+
+    Raises:
+        ValueError: If config_obj is None or missing required attributes.
+    """
+
+    if config_obj is None or not all(
+        hasattr(config_obj, attr)
+        for attr in [
+            "global_start_year",
+            "global_start_month",
+            "global_end_year",
+            "global_end_month",
+            "pre_merged_input_batches_path",
+            "proj_name",  # Ensure proj_name is available in config_obj
+        ]
+    ):
+        raise ValueError("Invalid or missing configuration object.")
+
+    global_start_year = config_obj.global_start_year
+    global_start_month = config_obj.global_start_month
+    global_end_year = config_obj.global_end_year
+    global_end_month = config_obj.global_end_month
+    global_start_day = config_obj.global_start_day
+    global_end_day = config_obj.global_end_day
+
+    appointments_time_field = config_obj.appointments_time_field
+
+    # Define the output directory using config_obj.pre_merged_input_batches_path
+    input_directory = config_obj.pre_merged_input_batches_path
+    os.makedirs(input_directory, exist_ok=True)  # Ensure the directory exists
+
+    # Define the path for the merged batches output
+    merged_batches_path = os.path.join(
+        input_directory, "merged_appointments_batches.csv"
+    )
+
+    # Check if the merged file already exists and overwrite is not enabled
+    if not config_obj.overwrite_stored_pat_observations and os.path.exists(
+        merged_batches_path
+    ):
+        print(
+            f"Merged batches file already exists at {merged_batches_path}. Loading from disk."
+        )
+        return pd.read_csv(merged_batches_path)
+
+    try:
+        # Retrieve batch appointments for all clients in one go
+        batch_target = cohort_searcher_with_terms_and_search(
+            index_name="pims_apps*",
+            fields_list=[
+                "Popular",
+                "AppointmentType",
+                "AttendanceReference",
+                "ClinicCode",
+                "ClinicDesc",
+                "Consultant",
+                "DateModified",
+                "DNA",
+                "HospitalID",
+                "PatNHSNo",
+                "Specialty",
+                "AppointmentDateTime",
+                "Attended",
+                "CancDesc",
+                "CancRefNo",
+                "ConsultantCode",
+                "DateCreated",
+                "Ethnicity",
+                "Gender",
+                "NHSNoStatusCode",
+                "NotSpec",
+                "PatDateOfBirth",
+                "PatForename",
+                "PatPostCode",
+                "PatSurname",
+                "PiMsPatRefNo",
+                "Primarykeyfieldname",
+                "Primarykeyfieldvalue",
+                "SessionCode",
+                "SpecialtyCode",
+            ],
+            term_name="HospitalID.keyword",  # alt HospitalID.keyword #warn non case
+            entered_list=client_idcode_list,  # Pass the entire list of client IDs
+            search_string=f"{appointments_time_field}:[{global_start_year}-{global_start_month}-{global_start_day} TO {global_end_year}-{global_end_month}-{global_end_day}]",
+        )
+
+        # Save the merged DataFrame to the dynamically constructed directory
+        if (
+            config_obj.store_pat_batch_docs
+            or config_obj.overwrite_stored_pat_observations
+        ):
+            batch_target.to_csv(merged_batches_path, index=False)
+            if config_obj.verbosity >= 1:
+                print(f"Merged batches saved to {merged_batches_path}")
+
+        return batch_target
+
+    except Exception as e:
+        print(f"Error retrieving batch appointments: {e}")
+        return pd.DataFrame()  # Return an empty DataFrame in case of error
+
+
+def get_merged_pat_batch_demo(
+    client_idcode_list,
+    search_term,
+    config_obj=None,
+    cohort_searcher_with_terms_and_search=None,
+):
+    """
+    Retrieve and merge batch demographic information for a list of patients based on the given parameters.
+
+    Args:
+        client_idcode_list (list): A list of client ID codes for the patients.
+        search_term (str): The term used for searching demographic information.
+        config_obj (ConfigObject): An object containing global start and end year/month.
+        cohort_searcher_with_terms_and_search (function): A function for searching a cohort with terms.
+
+    Returns:
+        pd.DataFrame: Merged batch of demographic information for all patients.
+
+    Raises:
+        ValueError: If config_obj is None or missing required attributes.
+    """
+
+    if config_obj is None or not all(
+        hasattr(config_obj, attr)
+        for attr in [
+            "global_start_year",
+            "global_start_month",
+            "global_end_year",
+            "global_end_month",
+            "pre_merged_input_batches_path",
+            "proj_name",  # Ensure proj_name is available in config_obj
+        ]
+    ):
+        raise ValueError("Invalid or missing configuration object.")
+
+    global_start_year = config_obj.global_start_year
+    global_start_month = config_obj.global_start_month
+    global_end_year = config_obj.global_end_year
+    global_end_month = config_obj.global_end_month
+    global_start_day = config_obj.global_start_day
+    global_end_day = config_obj.global_end_day
+
+    # Define the output directory using config_obj.pre_merged_input_batches_path
+    input_directory = config_obj.pre_merged_input_batches_path
+    os.makedirs(input_directory, exist_ok=True)  # Ensure the directory exists
+
+    # Define the path for the merged batches output
+    merged_batches_path = os.path.join(input_directory, "merged_demo_batches.csv")
+
+    # Check if the merged file already exists and overwrite is not enabled
+    if not config_obj.overwrite_stored_pat_observations and os.path.exists(
+        merged_batches_path
+    ):
+        print(
+            f"Merged batches file already exists at {merged_batches_path}. Loading from disk."
+        )
+        return pd.read_csv(merged_batches_path)
+
+    try:
+        # Retrieve batch demographic information for all clients in one go
+        batch_target = cohort_searcher_with_terms_and_search(
+            index_name="epr_documents",
+            fields_list=[
+                "client_idcode",
+                "client_firstname",
+                "client_lastname",
+                "client_dob",
+                "client_gendercode",
+                "client_racecode",
+                "client_deceaseddtm",
+                "updatetime",
+            ],
+            term_name=config_obj.client_idcode_term_name,
+            entered_list=client_idcode_list,  # Pass the entire list of client IDs
+            search_string=f"updatetime:[{global_start_year}-{global_start_month}-{global_start_day} TO {global_end_year}-{global_end_month}-{global_end_day}]",
+        )
+
+        # Save the merged DataFrame to the dynamically constructed directory
+        if (
+            config_obj.store_pat_batch_docs
+            or config_obj.overwrite_stored_pat_observations
+        ):
+            batch_target.to_csv(merged_batches_path, index=False)
+            if config_obj.verbosity >= 1:
+                print(f"Merged batches saved to {merged_batches_path}")
+
+        return batch_target
+
+    except Exception as e:
+        print(f"Error retrieving batch demographic information: {e}")
+        return pd.DataFrame()  # Return an empty DataFrame in case of error
+
+
+def get_merged_pat_batch_bmi(
+    client_idcode_list,
+    search_term,
+    config_obj=None,
+    cohort_searcher_with_terms_and_search=None,
+):
+    """
+    Retrieve and merge batch BMI-related observations for a list of patients based on the given parameters.
+
+    Args:
+        client_idcode_list (list): A list of client ID codes for the patients.
+        search_term (str): The term used for searching BMI-related observations.
+        config_obj (ConfigObject): An object containing global start and end year/month.
+        cohort_searcher_with_terms_and_search (function): A function for searching a cohort with terms.
+
+    Returns:
+        pd.DataFrame: Merged batch of BMI-related observations for all patients.
+
+    Raises:
+        ValueError: If config_obj is None or missing required attributes.
+    """
+
+    if config_obj is None or not all(
+        hasattr(config_obj, attr)
+        for attr in [
+            "global_start_year",
+            "global_start_month",
+            "global_end_year",
+            "global_end_month",
+            "pre_merged_input_batches_path",
+            "proj_name",  # Ensure proj_name is available in config_obj
+        ]
+    ):
+        raise ValueError("Invalid or missing configuration object.")
+
+    global_start_year = config_obj.global_start_year
+    global_start_month = config_obj.global_start_month
+    global_end_year = config_obj.global_end_year
+    global_end_month = config_obj.global_end_month
+    global_start_day = config_obj.global_start_day
+    global_end_day = config_obj.global_end_day
+
+    # Define the output directory using config_obj.pre_merged_input_batches_path
+    input_directory = config_obj.pre_merged_input_batches_path
+    os.makedirs(input_directory, exist_ok=True)  # Ensure the directory exists
+
+    # Define the path for the merged batches output
+    merged_batches_path = os.path.join(input_directory, "merged_bmi_batches.csv")
+
+    # Check if the merged file already exists and overwrite is not enabled
+    if not config_obj.overwrite_stored_pat_observations and os.path.exists(
+        merged_batches_path
+    ):
+        print(
+            f"Merged batches file already exists at {merged_batches_path}. Loading from disk."
+        )
+        return pd.read_csv(merged_batches_path)
+
+    try:
+        # Retrieve batch BMI-related observations for all clients in one go
+        batch_target = cohort_searcher_with_terms_and_search(
+            index_name="observations",
+            fields_list="""observation_guid client_idcode obscatalogmasteritem_displayname
+                            observation_valuetext_analysed observationdocument_recordeddtm 
+                            clientvisit_visitidcode""".split(),
+            term_name=config_obj.client_idcode_term_name,
+            entered_list=client_idcode_list,  # Pass the entire list of client IDs
+            search_string=f'obscatalogmasteritem_displayname:("OBS BMI" OR "OBS Weight" OR "OBS height") AND '
+            f"observationdocument_recordeddtm:[{global_start_year}-{global_start_month}-{global_start_day} TO {global_end_year}-{global_end_month}-{global_end_day}]",
+        )
+
+        # Save the merged DataFrame to the dynamically constructed directory
+        if (
+            config_obj.store_pat_batch_docs
+            or config_obj.overwrite_stored_pat_observations
+        ):
+            batch_target.to_csv(merged_batches_path, index=False)
+            if config_obj.verbosity >= 1:
+                print(f"Merged batches saved to {merged_batches_path}")
+
+        return batch_target
+
+    except Exception as e:
+        print(f"Error retrieving batch BMI-related observations: {e}")
+        return pd.DataFrame()  # Return an empty DataFrame in case of error
+
+
+def get_merged_pat_batch_obs(
+    client_idcode_list,
+    search_term,
+    config_obj=None,
+    cohort_searcher_with_terms_and_search=None,
+):
+    """
+    Retrieve and merge batch observations for a list of patients based on the given parameters.
+
+    Args:
+        client_idcode_list (list): A list of client ID codes for the patients.
+        search_term (str): The term used for searching observations.
+        config_obj (ConfigObject): An object containing global start and end year/month.
+        cohort_searcher_with_terms_and_search (function): A function for searching a cohort with terms.
+
+    Returns:
+        pd.DataFrame: Merged batch of observations for all patients.
+
+    Raises:
+        ValueError: If config_obj is None or missing required attributes.
+    """
+
+    if config_obj is None or not all(
+        hasattr(config_obj, attr)
+        for attr in [
+            "global_start_year",
+            "global_start_month",
+            "global_end_year",
+            "global_end_month",
+            "pre_merged_input_batches_path",
+            "proj_name",  # Ensure proj_name is available in config_obj
+        ]
+    ):
+        raise ValueError("Invalid or missing configuration object.")
+
+    global_start_year = config_obj.global_start_year
+    global_start_month = config_obj.global_start_month
+    global_end_year = config_obj.global_end_year
+    global_end_month = config_obj.global_end_month
+    global_start_day = config_obj.global_start_day
+    global_end_day = config_obj.global_end_day
+
+    # Define the output directory using config_obj.pre_merged_input_batches_path
+    input_directory = config_obj.pre_merged_input_batches_path
+    os.makedirs(input_directory, exist_ok=True)  # Ensure the directory exists
+
+    # Define the path for the merged batches output
+    merged_batches_path = os.path.join(
+        input_directory, f"merged_{search_term}_batches.csv"
+    )
+
+    # Check if the merged file already exists and overwrite is not enabled
+    if not config_obj.overwrite_stored_pat_observations and os.path.exists(
+        merged_batches_path
+    ):
+        print(
+            f"Merged batches file already exists at {merged_batches_path}. Loading from disk."
+        )
+        return pd.read_csv(merged_batches_path)
+
+    try:
+        # Retrieve batch observations for all clients in one go
+        batch_target = cohort_searcher_with_terms_and_search(
+            index_name="observations",
+            fields_list="""observation_guid client_idcode obscatalogmasteritem_displayname
+                            observation_valuetext_analysed observationdocument_recordeddtm 
+                            clientvisit_visitidcode""".split(),
+            term_name=config_obj.client_idcode_term_name,
+            entered_list=client_idcode_list,  # Pass the entire list of client IDs
+            search_string=f'obscatalogmasteritem_displayname:("{search_term}") AND '
+            f"observationdocument_recordeddtm:[{global_start_year}-{global_start_month}-{global_start_day} TO {global_end_year}-{global_end_month}-{global_end_day}]",
+        )
+
+        # Save the merged DataFrame to the dynamically constructed directory
+        if (
+            config_obj.store_pat_batch_docs
+            or config_obj.overwrite_stored_pat_observations
+        ):
+            batch_target.to_csv(merged_batches_path, index=False)
+            if config_obj.verbosity >= 1:
+                print(f"Merged batches saved to {merged_batches_path}")
+
+        return batch_target
+
+    except Exception as e:
+        print(f"Error retrieving batch observations: {e}")
+        return pd.DataFrame()  # Return an empty DataFrame in case of error
+
+
+def get_merged_pat_batch_news(
+    client_idcode_list,
+    search_term,
+    config_obj=None,
+    cohort_searcher_with_terms_and_search=None,
+):
+    """
+    Retrieve and merge batch NEWS observations for a list of patients based on the given parameters.
+
+    Args:
+        client_idcode_list (list): A list of client ID codes for the patients.
+        search_term (str): The term used for searching NEWS observations.
+        config_obj (ConfigObject): An object containing global start and end year/month.
+        cohort_searcher_with_terms_and_search (function): A function for searching a cohort with terms.
+
+    Returns:
+        pd.DataFrame: Merged batch of NEWS observations for all patients.
+
+    Raises:
+        ValueError: If config_obj is None or missing required attributes.
+    """
+
+    if config_obj is None or not all(
+        hasattr(config_obj, attr)
+        for attr in [
+            "global_start_year",
+            "global_start_month",
+            "global_end_year",
+            "global_end_month",
+            "pre_merged_input_batches_path",
+            "proj_name",  # Ensure proj_name is available in config_obj
+        ]
+    ):
+        raise ValueError("Invalid or missing configuration object.")
+
+    global_start_year = config_obj.global_start_year
+    global_start_month = config_obj.global_start_month
+    global_end_year = config_obj.global_end_year
+    global_end_month = config_obj.global_end_month
+    global_start_day = config_obj.global_start_day
+    global_end_day = config_obj.global_end_day
+
+    # Define the output directory using config_obj.pre_merged_input_batches_path
+    input_directory = config_obj.pre_merged_input_batches_path
+    os.makedirs(input_directory, exist_ok=True)  # Ensure the directory exists
+
+    # Define the path for the merged batches output
+    merged_batches_path = os.path.join(input_directory, "merged_news_batches.csv")
+
+    # Check if the merged file already exists and overwrite is not enabled
+    if not config_obj.overwrite_stored_pat_observations and os.path.exists(
+        merged_batches_path
+    ):
+        print(
+            f"Merged batches file already exists at {merged_batches_path}. Loading from disk."
+        )
+        return pd.read_csv(merged_batches_path)
+
+    try:
+        # Retrieve batch NEWS observations for all clients in one go
+        batch_target = cohort_searcher_with_terms_and_search(
+            index_name="observations",
+            fields_list="""observation_guid client_idcode obscatalogmasteritem_displayname
+                            observation_valuetext_analysed observationdocument_recordeddtm 
+                            clientvisit_visitidcode""".split(),
+            term_name=config_obj.client_idcode_term_name,
+            entered_list=client_idcode_list,  # Pass the entire list of client IDs
+            search_string=f'obscatalogmasteritem_displayname:("NEWS" OR "NEWS2") AND '
+            f"observationdocument_recordeddtm:[{global_start_year}-{global_start_month}-{global_start_day} TO {global_end_year}-{global_end_month}-{global_end_day}]",
+        )
+
+        # Save the merged DataFrame to the dynamically constructed directory
+        if (
+            config_obj.store_pat_batch_docs
+            or config_obj.overwrite_stored_pat_observations
+        ):
+            batch_target.to_csv(merged_batches_path, index=False)
+            if config_obj.verbosity >= 1:
+                print(f"Merged batches saved to {merged_batches_path}")
+
+        return batch_target
+
+    except Exception as e:
+        print(f"Error retrieving batch NEWS observations: {e}")
+        return pd.DataFrame()  # Return an empty DataFrame in case of error
+
+
+def get_merged_pat_batch_reports(
+    client_idcode_list,
+    search_term,
+    config_obj=None,
+    cohort_searcher_with_terms_and_search=None,
+):
+    """
+    Retrieve and merge batch reports for a list of patients based on the given parameters.
+    Filter reports with doc type filter arg set in config: KHMDC >>>> retrieves KHMDC reports.
+
+    Args:
+        client_idcode_list (list): A list of client ID codes for the patients.
+        search_term (str): The term used for searching report-related observations.
+        config_obj (ConfigObject): An object containing global start and end year/month.
+        cohort_searcher_with_terms_and_search (function): A function for searching a cohort with terms.
+
+    Returns:
+        pd.DataFrame: Merged batch of report-related observations for all patients.
+
+    Raises:
+        ValueError: If config_obj is None or missing required attributes.
+    """
+
+    if config_obj is None or not all(
+        hasattr(config_obj, attr)
+        for attr in [
+            "global_start_year",
+            "global_start_month",
+            "global_end_year",
+            "global_end_month",
+            "pre_merged_input_batches_path",
+            "proj_name",  # Ensure proj_name is available in config_obj
+        ]
+    ):
+        raise ValueError("Invalid or missing configuration object.")
+
+    overwrite_stored_pat_observations = config_obj.overwrite_stored_pat_observations
+    store_pat_batch_observations = config_obj.store_pat_batch_observations
+
+    global_start_year = config_obj.global_start_year
+    global_start_month = config_obj.global_start_month
+    global_end_year = config_obj.global_end_year
+    global_end_month = config_obj.global_end_month
+    global_start_day = config_obj.global_start_day
+    global_end_day = config_obj.global_end_day
+
+    # Define the output directory using config_obj.pre_merged_input_batches_path
+    input_directory = config_obj.pre_merged_input_batches_path
+    os.makedirs(input_directory, exist_ok=True)  # Ensure the directory exists
+
+    # Define the path for the merged batches output
+    merged_batches_path = os.path.join(input_directory, "merged_reports_batches.csv")
+
+    # Check if the merged file already exists and overwrite is not enabled
+    if not overwrite_stored_pat_observations and os.path.exists(merged_batches_path):
+        print(
+            f"Merged batches file already exists at {merged_batches_path}. Loading from disk."
+        )
+        return pd.read_csv(merged_batches_path)
+
+    try:
+        # Retrieve batch reports for all clients in one go
+        batch_target = cohort_searcher_with_terms_and_search(
+            index_name="basic_observations",
+            fields_list=[
+                "client_idcode",
+                "updatetime",
+                "textualObs",
+                "basicobs_guid",
+                "basicobs_value_analysed",
+                "basicobs_itemname_analysed",
+            ],
+            term_name=config_obj.client_idcode_term_name,
+            entered_list=client_idcode_list,  # Pass the entire list of client IDs
+            search_string=f"basicobs_itemname_analysed:{search_term} AND "
+            f"updatetime:[{global_start_year}-{global_start_month}-{global_start_day} TO {global_end_year}-{global_end_month}-{global_end_day}]",
+        )
+
+        if isinstance(batch_target, list) and len(batch_target) >= 1:
+
+            batch_target = batch_target[0]
+        # Combine textualObs and basicobs_value_analysed into body_analysed
+        batch_target["body_analysed"] = (
+            batch_target["textualObs"].astype(str)
+            + "\n"
+            + batch_target["basicobs_value_analysed"].astype(str)
+        )
+
+        # Save the merged DataFrame to the dynamically constructed directory
+        if store_pat_batch_observations or overwrite_stored_pat_observations:
+            batch_target.to_csv(merged_batches_path, index=False)
+            if config_obj.verbosity >= 1:
+                print(f"Merged batches saved to {merged_batches_path}")
+
+        return batch_target
+
+    except Exception as e:
+        print(f"Error retrieving batch reports: {e}")
+        return pd.DataFrame()  # Return an empty DataFrame in case of error
