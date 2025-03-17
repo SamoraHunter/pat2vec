@@ -368,10 +368,6 @@ def get_merged_pat_batch_drugs(
         return pd.DataFrame()  # Return an empty DataFrame in case of error
 
 
-import os
-import pandas as pd
-
-
 def get_merged_pat_batch_diagnostics(
     client_idcode_list,
     config_obj=None,
@@ -571,11 +567,6 @@ def get_merged_pat_batch_mct_docs(
         # Apply data type filters for MCT documents
         batch_target = apply_data_type_mct_docs_filters(config_obj, batch_target)
 
-        # larger batches returned as lists...
-        if isinstance(batch_target, list) and len(batch_target) >= 1:
-
-            batch_target = batch_target[0]
-
         # Drop rows with NaN values in critical columns
         col_list_drop_nan = [
             "observation_valuetext_analysed",
@@ -717,10 +708,6 @@ def get_merged_pat_batch_epr_docs(
                     text_column="body_analysed",
                     debug=config_obj.verbosity > 5,
                 )
-        # larger batches returned as lists...
-        if isinstance(batch_target, list) and len(batch_target) >= 1:
-
-            batch_target = batch_target[0]
 
         # Drop rows with NaN values in critical columns
         col_list_drop_nan = ["body_analysed", "updatetime", "client_idcode"]
@@ -849,11 +836,6 @@ def get_merged_pat_batch_textual_obs_docs(
             entered_list=client_idcode_list,  # Pass the entire list of client IDs
             search_string=f"{bloods_time_field}:[{global_start_year}-{global_start_month}-{global_start_day} TO {global_end_year}-{global_end_month}-{global_end_day}]",
         )
-
-        # larger batches returned as lists...
-        if isinstance(batch_target, list) and len(batch_target) >= 1:
-
-            batch_target = batch_target[0]
 
         # Drop rows with no textualObs
         batch_target = batch_target.dropna(subset=["textualObs"])
@@ -1429,9 +1411,6 @@ def get_merged_pat_batch_reports(
             f"updatetime:[{global_start_year}-{global_start_month}-{global_start_day} TO {global_end_year}-{global_end_month}-{global_end_day}]",
         )
 
-        if isinstance(batch_target, list) and len(batch_target) >= 1:
-
-            batch_target = batch_target[0]
         # Combine textualObs and basicobs_value_analysed into body_analysed
         batch_target["body_analysed"] = (
             batch_target["textualObs"].astype(str)

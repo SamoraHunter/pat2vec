@@ -96,7 +96,7 @@ except ImportError as e:
         hosts = ["https://your-actual-elasticsearch-host:9200"]
 
 
-print(f"Imported cogstack_v8_lite from pat2vec.util")
+print(f"Imported cogstack_v8_lite from pat2vec.util .")
 print(f"Username: %s" % username)
 
 
@@ -258,10 +258,17 @@ def list_chunker(entered_list):
     return chunks
 
 
+# Use a generator to yield DataFrames one by one
+def dataframe_generator(list_of_dfs):
+    for df in list_of_dfs:
+        yield df
+
+
 def cohort_searcher_with_terms_and_search(
     index_name, fields_list, term_name, entered_list, search_string
 ):
     if len(entered_list) >= 10000:
+        print("cohort_searcher_with_terms_and_search list chunking")
         results = []
         chunked_list = list_chunker(entered_list)
         for mini_list in chunked_list:
@@ -285,7 +292,16 @@ def cohort_searcher_with_terms_and_search(
 
         except Exception as e:
             print(e)
+            raise e
+            print(e)
             return results
+
+        try:
+            # Concatenate DataFrames using the generator
+            merged_df = pd.concat(dataframe_generator(results), ignore_index=True)
+            merged_df = merged_df.set_index("_id")
+        except Exception as e:
+            raise e
 
         return merged_df
     else:
