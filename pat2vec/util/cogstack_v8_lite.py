@@ -268,7 +268,7 @@ def cohort_searcher_with_terms_and_search(
     index_name, fields_list, term_name, entered_list, search_string
 ):
     if len(entered_list) >= 10000:
-        print("cohort_searcher_with_terms_and_search list chunking")
+
         results = []
         chunked_list = list_chunker(entered_list)
         for mini_list in chunked_list:
