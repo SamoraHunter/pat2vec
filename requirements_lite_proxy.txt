@@ -9,3 +9,4 @@ fuzzywuzzy
 pytest
 nbformat
 nbconvert
+nbstripout
