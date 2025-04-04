@@ -178,7 +178,7 @@ class config_class:
         client_idcode_term_name="client_idcode.keyword",  # Used for elastic search index keyword search
         sanitize_pat_list=True,
         calculate_vectors=True,
-        prefetch_pat_batches=True,
+        prefetch_pat_batches=False,
     ):
 
         # Configure logging
