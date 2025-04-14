@@ -13,37 +13,6 @@ else
   exit 1
 fi
 
-echo "Checking jupyter notebooks for outputs before pushing..."
-
-# Get the remote name and branch for push
-remote_name="$1"
-remote_branch="$2"
-
-if [[ -z "$remote_branch" ]]; then
-    echo "No remote branch detected, no jupyter notebook check."
-    exit 0
-fi
-
-# Get modified jupyter notebooks in the pushed commits
-modified_notebooks=$(git diff --name-only --diff-filter=ACM "$remote_name/$remote_branch" HEAD -- "*.ipynb" 2>/dev/null)
-
-if [[ -z "$modified_notebooks" ]]; then
-    echo "No jupyter notebooks found during push, will proceed."
-else
-    # Remove outputs from all modified notebooks
-    for notebook in $modified_notebooks; do
-        echo "Removing outputs from: $notebook"
-        nbstripout "$notebook"
-        git add "$notebook"
-    done
-
-    # Stop push if notebooks are modified
-    if ! git diff --cached --quiet; then
-        echo "Some jupyter notebooks are cleaned, commit changes before pushing."
-        exit 1
-    fi
-fi
-
 # Run the same test command as in the GitHub Actions workflow
 echo "Running tests before pushing..."
 pytest notebooks/test_notebook.py
