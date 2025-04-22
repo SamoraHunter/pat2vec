@@ -1,10 +1,10 @@
 #!/bin/bash
 # .githooks/pre-commit
 
-# Navigate to the repository root (relative to the hook location)
-cd "$(dirname "$0")/.."
+# Navigate to the repository root
+cd "$(dirname "$0")/.." || exit 1
 
-# Activate the virtual environment (if needed)
+# Activate virtual environment
 VENV_PATH=$(find . -type d -name "pat2vec_env")
 if [ -n "$VENV_PATH" ]; then
   source "$VENV_PATH/bin/activate"
@@ -13,34 +13,50 @@ else
   exit 1
 fi
 
-# Allowed origin (internal repo address)
-ALLOWED_ORIGIN="kch-cap.kingsch.nhs.uk"
-
-# Get the remote origin URL
+# Configuration
+INTERNAL_DOMAIN="https://kch-cap.kingsch.nhs.uk:3000"
 REMOTE_ORIGIN=$(git remote get-url origin)
+STRIP_OUTPUTS=true
 
-echo "Checking jupyter notebooks for outputs..."
-echo "Repository origin: $REMOTE_ORIGIN"
+# Determine if we should strip outputs
+if [[ "$REMOTE_ORIGIN" == *"$INTERNAL_DOMAIN"* ]]; then
+    STRIP_OUTPUTS=false
+    echo "Internal repository detected - allowing notebook outputs"
+else
+    echo "External repository detected - will enforce no outputs in notebooks"
+fi
 
-# Get modified jupyter notebooks
-modified_notebooks=$(git diff --cached --name-only --diff-filter=AM -- "*.ipynb" | sort -u)
+# Get modified notebooks
+modified_notebooks=$(git diff --cached --name-only --diff-filter=AM -- "*.ipynb")
 
 if [ -z "$modified_notebooks" ]; then
-    echo "No jupyter notebooks found during commit, will proceed."
+    echo "No notebooks modified - proceeding with commit"
     exit 0
 fi
 
-# Check if the origin matches the allowed origin
-if [[ "$REMOTE_ORIGIN" != *"$ALLOWED_ORIGIN"* ]]; then
-    echo "External repository detected - stripping notebook outputs..."
-    # Remove outputs and some metadata from modified notebooks
+# Check for outputs if needed
+if $STRIP_OUTPUTS; then
     for notebook in $modified_notebooks; do
-        echo "Removing outputs and some metadata from: $notebook"
-        nbstripout "$notebook"
-        git add "$notebook"
+        echo "Checking $notebook for outputs"
+        
+        # Check if notebook has outputs
+        if jq -e '.cells[].outputs | select(length > 0)' "$notebook" >/dev/null; then
+            echo "ERROR: Notebook contains outputs: $notebook"
+            echo "Please clear all outputs before committing to external repository"
+            echo "You can clear outputs with:"
+            echo "  nbstripout $notebook"
+            echo "  git add $notebook"
+            exit 1
+        fi
+        
+        # Check for execution count
+        if jq -e '.cells[].execution_count | select(. != null)' "$notebook" >/dev/null; then
+            echo "ERROR: Notebook contains execution counts: $notebook"
+            echo "Please clear all execution counts before committing"
+            exit 1
+        fi
     done
-else
-    echo "Internal repository detected - allowing notebook outputs."
 fi
 
+# If we get here, everything is fine
 exit 0
