@@ -13,20 +13,34 @@ else
   exit 1
 fi
 
+# Allowed origin (internal repo address)
+ALLOWED_ORIGIN="kch-cap.kingsch.nhs.uk"
+
+# Get the remote origin URL
+REMOTE_ORIGIN=$(git remote get-url origin)
+
 echo "Checking jupyter notebooks for outputs..."
+echo "Repository origin: $REMOTE_ORIGIN"
 
 # Get modified jupyter notebooks
 modified_notebooks=$(git diff --cached --name-only --diff-filter=AM -- "*.ipynb" | sort -u)
 
 if [ -z "$modified_notebooks" ]; then
     echo "No jupyter notebooks found during commit, will proceed."
-else
+    exit 0
+fi
+
+# Check if the origin matches the allowed origin
+if [[ "$REMOTE_ORIGIN" != *"$ALLOWED_ORIGIN"* ]]; then
+    echo "External repository detected - stripping notebook outputs..."
     # Remove outputs and some metadata from modified notebooks
     for notebook in $modified_notebooks; do
         echo "Removing outputs and some metadata from: $notebook"
         nbstripout "$notebook"
         git add "$notebook"
     done
+else
+    echo "Internal repository detected - allowing notebook outputs."
 fi
 
 exit 0
