@@ -1,10 +1,10 @@
 #!/bin/bash
 # .githooks/pre-commit
 
-# Navigate to the repository root
-cd "$(dirname "$0")/.." || exit 1
+# Navigate to the repository root (relative to the hook location)
+cd "$(dirname "$0")/.."
 
-# Activate virtual environment
+# Activate the virtual environment (if needed)
 VENV_PATH=$(find . -type d -name "pat2vec_env")
 if [ -n "$VENV_PATH" ]; then
   source "$VENV_PATH/bin/activate"
@@ -13,50 +13,20 @@ else
   exit 1
 fi
 
-# Configuration
-INTERNAL_DOMAIN="https://kch-cap.kingsch.nhs.uk:3000"
-REMOTE_ORIGIN=$(git remote get-url origin)
-STRIP_OUTPUTS=true
+echo "Checking jupyter notebooks for outputs..."
 
-# Determine if we should strip outputs
-if [[ "$REMOTE_ORIGIN" == *"$INTERNAL_DOMAIN"* ]]; then
-    STRIP_OUTPUTS=false
-    echo "Internal repository detected - allowing notebook outputs"
-else
-    echo "External repository detected - will enforce no outputs in notebooks"
-fi
-
-# Get modified notebooks
-modified_notebooks=$(git diff --cached --name-only --diff-filter=AM -- "*.ipynb")
+# Get modified jupyter notebooks
+modified_notebooks=$(git diff --cached --name-only --diff-filter=AM -- "*.ipynb" | sort -u)
 
 if [ -z "$modified_notebooks" ]; then
-    echo "No notebooks modified - proceeding with commit"
-    exit 0
-fi
-
-# Check for outputs if needed
-if $STRIP_OUTPUTS; then
+    echo "No jupyter notebooks found during commit, will proceed."
+else
+    # Remove outputs and some metadata from modified notebooks
     for notebook in $modified_notebooks; do
-        echo "Checking $notebook for outputs"
-        
-        # Check if notebook has outputs
-        if jq -e '.cells[].outputs | select(length > 0)' "$notebook" >/dev/null; then
-            echo "ERROR: Notebook contains outputs: $notebook"
-            echo "Please clear all outputs before committing to external repository"
-            echo "You can clear outputs with:"
-            echo "  nbstripout $notebook"
-            echo "  git add $notebook"
-            exit 1
-        fi
-        
-        # Check for execution count
-        if jq -e '.cells[].execution_count | select(. != null)' "$notebook" >/dev/null; then
-            echo "ERROR: Notebook contains execution counts: $notebook"
-            echo "Please clear all execution counts before committing"
-            exit 1
-        fi
+        echo "Removing outputs and some metadata from: $notebook"
+        nbstripout "$notebook"
+        git add "$notebook"
     done
 fi
 
-# If we get here, everything is fine
 exit 0
