@@ -1291,3 +1291,4 @@ zope-interface==7.2
 # setuptools
 pytest
 nbstripout
+nbmake

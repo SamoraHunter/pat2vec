@@ -110,6 +110,7 @@ jobs:
 
       - name: Run notebook test
         run: |
+          set -e
           cd $GITHUB_WORKSPACE
           source "$VENV_PATH/bin/activate"
-          pytest notebooks/test_notebook.py
+          pytest --nbmake --nbmake-timeout=1200 notebooks/test_notebook.py
