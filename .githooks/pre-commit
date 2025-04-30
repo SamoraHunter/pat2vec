@@ -5,7 +5,7 @@
 # start templated
 INSTALL_PYTHON=/mnt/data/samorah/gloabl_files/pat2vec/pat2vec_env/bin/python
 ARGS=(hook-impl --config=.pre-commit-config.yaml --hook-type=pre-commit)
-# end templated
+# end templated t
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
 ARGS+=(--hook-dir "$HERE" -- "$@")
