@@ -1292,5 +1292,8 @@ zope-interface==7.2
 # The following packages are considered to be unsafe in a requirements file:
 # setuptools
 pytest
+nbformat
+nbconvert
 nbstripout
 pre-commit
+nbmake
