@@ -519,3 +519,57 @@ def parse_medcat_trainer_project_json(json_path):
     print(f"Final DataFrame shape: {df_final.shape}")
     print("\nColumns available:")
     print(df_final.columns.tolist())
+
+
+def create_ner_results_dataframe(
+    fps, fns, tps, cui_prec, cui_rec, cui_f1, cui_counts, cat=None
+):
+    """
+    Creates a Pandas DataFrame from NER evaluation dictionaries.
+
+    Args:
+        fps (dict): Dictionary of false positives with CUI as keys.
+        fns (dict): Dictionary of false negatives with CUI as keys.
+        tps (dict): Dictionary of true positives with CUI as keys.
+        cui_prec (dict): Dictionary of CUI-based precision with CUI as keys.
+        cui_rec (dict): Dictionary of CUI-based recall with CUI as keys.
+        cui_f1 (dict): Dictionary of CUI-based F1-score with CUI as keys.
+        cui_counts (dict): Dictionary of CUI counts with CUI as keys.
+        if cat object passed, will add preferred name
+
+    Returns:
+        pandas.DataFrame: DataFrame with CUI as index and columns for
+                          fps, fns, tps, cui_prec, cui_rec, cui_f1, cui_counts and optionally a cat medcat object.
+    """
+    all_cuis = (
+        set(fps.keys())
+        | set(fns.keys())
+        | set(tps.keys())
+        | set(cui_prec.keys())
+        | set(cui_rec.keys())
+        | set(cui_f1.keys())
+        | set(cui_counts.keys())
+    )
+
+    df = pd.DataFrame(index=list(all_cuis))
+    df["fps"] = pd.Series(fps)
+    df["fns"] = pd.Series(fns)
+    df["tps"] = pd.Series(tps)
+    df["cui_prec"] = pd.Series(cui_prec)
+    df["cui_rec"] = pd.Series(cui_rec)
+    df["cui_f1"] = pd.Series(cui_f1)
+    df["cui_counts"] = pd.Series(cui_counts)
+
+    if cat:
+        df["cui_name"] = (
+            pd.Series(df.index)
+            .apply(lambda cui: cat.cdb.cui2preferred_name.get(cui))
+            .values
+        )
+
+    return df
+
+
+# Example usage :
+# results_df = create_ner_results_dataframe(fps, fns, tps, cui_prec, cui_rec, cui_f1, cui_counts,)
+# results_df
