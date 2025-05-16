@@ -8,6 +8,8 @@ import textwrap
 from IPython.display import clear_output
 from typing import List, Union
 from ast import literal_eval
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 
 def medcat_trainer_export_to_df(file_path: str) -> pd.DataFrame:
@@ -573,3 +575,103 @@ def create_ner_results_dataframe(
 # Example usage :
 # results_df = create_ner_results_dataframe(fps, fns, tps, cui_prec, cui_rec, cui_f1, cui_counts,)
 # results_df
+
+
+def plot_ner_results(results_df):
+    """
+    Generates several plots to visualize NER evaluation results.
+
+    Args:
+        results_df (pd.DataFrame): DataFrame containing NER evaluation metrics
+                                    with columns 'cui_name', 'cui_f1', 'cui_prec',
+                                    'cui_rec', 'fps', 'fns', 'tps', and 'cui_counts'.
+                                    It is assumed that 'cui_name' exists.
+    """
+    if "cui_name" not in results_df.columns:
+        print("Error: 'cui_name' column is required in the DataFrame.")
+        return
+
+    results_df = results_df.sort_values(by="cui_f1")
+
+    # 1. Bar Plot: F1-Score by CUI Name
+    plt.figure(figsize=(12, 6))
+    sns.barplot(x="cui_name", y="cui_f1", data=results_df)
+    plt.title("F1-Score by CUI Name")
+    plt.xticks(rotation=45, ha="right")
+    plt.ylabel("F1-Score")
+    plt.xlabel("CUI Name")
+    plt.tight_layout()
+    plt.show()
+
+    # 2. Scatter Plot: Precision vs. Recall
+    plt.figure(figsize=(8, 6))
+    sns.scatterplot(x="cui_prec", y="cui_rec", data=results_df, hue="cui_name")
+    plt.title("Precision vs. Recall")
+    plt.xlabel("Precision")
+    plt.ylabel("Recall")
+    plt.legend(bbox_to_anchor=(1.05, 1), loc="upper left")
+    plt.tight_layout()
+    plt.show()
+
+    # 3. Bar Plot: Error Analysis (fps, fns, tps)
+    results_df_melted = results_df[["cui_name", "fps", "fns", "tps"]].melt(
+        id_vars="cui_name", var_name="error_type", value_name="count"
+    )
+    plt.figure(figsize=(10, 6))
+    sns.barplot(x="cui_name", y="count", hue="error_type", data=results_df_melted)
+    plt.title("Error Analysis (TP, FP, FN) by CUI Name")
+    plt.xticks(rotation=45, ha="right")
+    plt.ylabel("Count")
+    plt.xlabel("CUI Name")
+    plt.tight_layout()
+    plt.show()
+
+    # 4. Scatter Plot: CUI Counts vs. F1-Score
+    plt.figure(figsize=(8, 6))
+    sns.scatterplot(x="cui_counts", y="cui_f1", data=results_df, hue="cui_name")
+    plt.title("CUI Counts vs. F1-Score")
+    plt.xlabel("CUI Counts")
+    plt.ylabel("F1-Score")
+    plt.legend(bbox_to_anchor=(1.05, 1), loc="upper left")
+    plt.tight_layout()
+    plt.show()
+
+    # --- Additional Plots ---
+
+    # 5. Pair Plot of Performance Metrics
+    performance_metrics = results_df[["cui_prec", "cui_rec", "cui_f1"]]
+    plt.figure(figsize=(8, 8))
+    sns.pairplot(performance_metrics)
+    plt.suptitle("Pair Plot of Precision, Recall, and F1-Score", y=1.02)
+    plt.tight_layout()
+    plt.show()
+
+    # 6. Distribution of F1-Scores
+    plt.figure(figsize=(8, 6))
+    sns.histplot(results_df["cui_f1"], kde=True)
+    plt.title("Distribution of F1-Scores")
+    plt.xlabel("F1-Score")
+    plt.ylabel("Frequency")
+    plt.tight_layout()
+    plt.show()
+
+    # 7. Scatter Plot: F1-Score vs. CUI Counts (Size indicates another metric)
+    plt.figure(figsize=(10, 7))
+    sns.scatterplot(
+        x="cui_counts",
+        y="cui_f1",
+        data=results_df,
+        hue="cui_name",
+        size="tps",
+        alpha=0.7,
+    )
+    plt.title("F1-Score vs. CUI Counts (Size by True Positives)")
+    plt.xlabel("CUI Counts")
+    plt.ylabel("F1-Score")
+    plt.legend(bbox_to_anchor=(1.05, 1), loc="upper left")
+    plt.tight_layout()
+    plt.show()
+
+
+# Example usage (assuming you have your results_df):
+# plot_ner_results(results_df)
