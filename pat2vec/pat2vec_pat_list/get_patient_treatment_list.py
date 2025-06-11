@@ -1,8 +1,6 @@
-import os
 import pickle
 import random
 import re
-import sys
 from typing import List
 import re
 from sklearn.feature_extraction.text import CountVectorizer
@@ -77,8 +75,6 @@ def extract_treatment_id_list_from_docs(config_obj):
                 print("best_match_column: None, attempting default client_idcode")
             config_obj.patient_id_column_name = "client_idcode"
 
-            # raise ValueError("Unable to automatically determine patient ID column.")
-
     # drop the nan in column
     docs[config_obj.patient_id_column_name].dropna(inplace=True)
 
@@ -138,6 +134,18 @@ def generate_control_list(
 
 
 def sanitize_hospital_ids(hospital_ids, config_obj):
+    """
+    Sanitizes a list of hospital IDs by converting them to uppercase and checking their format.
+
+    Parameters:
+    - hospital_ids (List[str]): A list of hospital IDs to be sanitized.
+    - config_obj (object): An object containing configuration parameters.
+        - verbosity (int): The level of verbosity.
+        - sanitize_pat_list (bool): A flag indicating whether to sanitize the list of hospital IDs.
+
+    Returns:
+    - List[str]: The sanitized list of hospital IDs.
+    """
     valid_format = re.compile(
         r"^[A-Z]\d{6}$"
     )  # Regular expression for one uppercase letter followed by 6 digits
