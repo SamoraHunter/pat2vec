@@ -1,10 +1,6 @@
 from datetime import datetime, timezone
-
-import numpy as np
 import pandas as pd
 from IPython.display import display
-from scipy import stats
-
 from pat2vec.util.methods_get import (
     convert_date,
     filter_dataframe_by_timestamp,
@@ -102,15 +98,9 @@ def get_current_pat_diagnostics(
 
     df_unique.reset_index(inplace=True)
 
-    filtered_list = []
-
     obs_columns_list = order_name_list
 
     obs_columns_set = list(set(obs_columns_list))
-
-    filtered_column_list = filtered_list
-
-    # print("Building obs_columns_set_columns_for_df")
 
     obs_columns_set_columns_for_df = []
     for i in range(0, len(obs_columns_set)):
@@ -155,8 +145,6 @@ def get_current_pat_diagnostics(
 
     else:
         today = datetime.today()
-
-    clients_id = current_pat_client_id_code
 
     df_unique_filtered = df_unique.copy()
 
