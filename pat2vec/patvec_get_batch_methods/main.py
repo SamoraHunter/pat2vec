@@ -1,5 +1,4 @@
 import os
-
 import pandas as pd
 from clinical_note_splitter.clinical_notes_splitter import split_and_append_chunks
 from IPython.display import display
@@ -76,7 +75,7 @@ def get_pat_batch_obs(
             batch_target = cohort_searcher_with_terms_and_search(
                 index_name="observations",
                 fields_list="""observation_guid client_idcode	obscatalogmasteritem_displayname
-                                observation_valuetext_analysed observationdocument_recordeddtm 
+                                observation_valuetext_analysed observationdocument_recordeddtm
                                 clientvisit_visitidcode""".split(),
                 term_name=config_obj.client_idcode_term_name,
                 entered_list=[current_pat_client_id_code],
@@ -158,7 +157,7 @@ def get_pat_batch_news(
             batch_target = cohort_searcher_with_terms_and_search(
                 index_name="observations",
                 fields_list="""observation_guid client_idcode obscatalogmasteritem_displayname
-                                observation_valuetext_analysed observationdocument_recordeddtm 
+                                observation_valuetext_analysed observationdocument_recordeddtm
                                 clientvisit_visitidcode""".split(),
                 term_name=config_obj.client_idcode_term_name,
                 entered_list=[current_pat_client_id_code],
@@ -234,7 +233,7 @@ def get_pat_batch_bmi(
             batch_target = cohort_searcher_with_terms_and_search(
                 index_name="observations",
                 fields_list="""observation_guid client_idcode obscatalogmasteritem_displayname
-                                observation_valuetext_analysed observationdocument_recordeddtm 
+                                observation_valuetext_analysed observationdocument_recordeddtm
                                 clientvisit_visitidcode""".split(),
                 term_name=config_obj.client_idcode_term_name,
                 entered_list=[current_pat_client_id_code],
@@ -669,11 +668,6 @@ def get_pat_batch_epr_docs(
                 if config_obj.verbosity >= 3:
                     print("get_epr_docs_postdropna", len(batch_target))
 
-                # #handle non datetime obs recorded
-                # batch_target['updatetime'] = pd.to_datetime(batch_target['updatetime'], errors='coerce')
-                # batch_target.dropna(subset=['updatetime'], inplace=True)
-                # if(config_obj.verbosity >= 3):
-                #     print('get_epr_mct_docs_postdropna on dt col', len(batch_target))
                 if split_clinical_notes_bool:
 
                     batch_target = split_and_append_chunks(batch_target, epr=True)
@@ -718,17 +712,42 @@ def get_pat_batch_epr_docs(
 def get_pat_batch_epr_docs_annotations(
     current_pat_client_id_code, config_obj=None, cat=None, t=None
 ):
+    """
+    Retrieves and processes annotations for a specific patient within a given date range.
 
+    This function is responsible for retrieving annotations for a single patient
+    within a given time range. It takes in a configuration object, a target date
+    range, a DataFrame containing EPR document annotations, and an optional cohort
+    searcher and medcat object.
+
+    The function uses the provided configuration to set up parameters such as start
+    time and verbosity level. It then filters the batch_epr_docs_annotations DataFrame
+    based on the target_date_range. If filtered annotations exist, it calculates
+    pretty name count features and returns the resulting DataFrame. If not, it creates
+    a DataFrame with the client_idcode. The resulting DataFrame is displayed if the
+    verbosity level is 6 or higher.
+
+    Parameters:
+    - current_pat_client_id_code (str): The unique identifier for the patient.
+    - target_date_range (str): The date range in the format '(YYYY,MM,DD)'.
+    - batch_epr_docs_annotations (pd.DataFrame): DataFrame containing EPR document annotations.
+    - config_obj (ConfigObject): Configuration object with settings and parameters.
+    - t (obj, optional): Placeholder for a progress bar object.
+    - cohort_searcher_with_terms_and_search (obj, optional): Placeholder for a cohort searcher object from cogstack search functions.
+    - cat (obj, optional): Placeholder for a medcat object with the model used to annotate.
+
+    Returns:
+    - pd.DataFrame: DataFrame containing processed annotations for the specified patient.
+
+    Raises:
+    - ValueError: If config_obj is None, a valid configuration must be provided.
+    - TypeError: If batch_epr_docs_annotations is not a pd.DataFrame.
+
+    """
     batch_epr_target_path = os.path.join(
         config_obj.pre_document_batch_path, str(current_pat_client_id_code) + ".csv"
     )
 
-    # print(batch_epr_target_path)
-    # cat = config_obj.cat
-
-    # t = config_obj.t
-
-    # add read existing if exist here..
     pre_document_annotation_batch_path = config_obj.pre_document_annotation_batch_path
 
     current_pat_document_annotation_batch_path = os.path.join(
@@ -736,8 +755,6 @@ def get_pat_batch_epr_docs_annotations(
     )
 
     if exist_check(current_pat_document_annotation_batch_path, config_obj=config_obj):
-
-        # if annotation batch already created, read it
 
         batch_target = pd.read_csv(current_pat_document_annotation_batch_path)
 
@@ -761,14 +778,41 @@ def get_pat_batch_epr_docs_annotations(
 def get_pat_batch_mct_docs_annotations(
     current_pat_client_id_code, config_obj=None, cat=None, t=None
 ):
+    """
+    Retrieves and processes annotations for a specific patient within a given date range.
 
+    This function is responsible for retrieving annotations for a single patient
+    within a given time range. It takes in a configuration object, a target date
+    range, a DataFrame containing mct clinical note document annotations, and an optional cohort
+    searcher and medcat object.
+
+    The function uses the provided configuration to set up parameters such as start
+    time and verbosity level. It then filters the batch_epr_docs_annotations DataFrame
+    based on the target_date_range. If filtered annotations exist, it calculates
+    pretty name count features and returns the resulting DataFrame. If not, it creates
+    a DataFrame with the client_idcode. The resulting DataFrame is displayed if the
+    verbosity level is 6 or higher.
+
+    Parameters:
+    - current_pat_client_id_code (str): The unique identifier for the patient.
+    - target_date_range (str): The date range in the format '(YYYY,MM,DD)'.
+    - batch_epr_docs_annotations (pd.DataFrame): DataFrame containing EPR document annotations.
+    - config_obj (ConfigObject): Configuration object with settings and parameters.
+    - t (obj, optional): Placeholder for a progress bar object.
+    - cohort_searcher_with_terms_and_search (obj, optional): Placeholder for a cohort searcher object from cogstack search functions.
+    - cat (obj, optional): Placeholder for a medcat object with the model used to annotate.
+
+    Returns:
+    - pd.DataFrame: DataFrame containing processed annotations for the specified patient.
+
+    Raises:
+    - ValueError: If config_obj is None, a valid configuration must be provided.
+    - TypeError: If batch_epr_docs_annotations is not a pd.DataFrame.
+
+    """
     batch_epr_target_path_mct = os.path.join(
         config_obj.pre_document_batch_path_mct, str(current_pat_client_id_code) + ".csv"
     )
-
-    # cat = config_obj.cat
-
-    # t = config_obj.t
 
     pre_document_annotation_batch_path_mct = (
         config_obj.pre_document_annotation_batch_path_mct
@@ -806,6 +850,24 @@ def get_pat_batch_mct_docs_annotations(
 def get_pat_batch_textual_obs_annotations(
     current_pat_client_id_code, config_obj=None, cat=None, t=None
 ):
+    """
+    Retrieves and processes batch textual observation annotations for a patient.
+
+    This function checks for the existence of a pre-existing annotation batch for
+    the given patient. If the annotation batch exists, it reads and returns it.
+    If not, it reads the batch of textual observations from a CSV file, filters
+    out any entries with missing or empty textual observations, and generates
+    the annotation batch.
+
+    Parameters:
+        current_pat_client_id_code (str): The client ID code for the current patient.
+        config_obj (ConfigObject, optional): An object containing configuration settings.
+        cat (object, optional): An object for entity recognition.
+        t (object, optional): A progress tracker object.
+
+    Returns:
+        pandas.DataFrame: A DataFrame containing the processed batch textual observation annotations.
+    """
 
     batch_textual_obs_document_path = os.path.join(
         config_obj.pre_textual_obs_document_batch_path,
@@ -848,6 +910,24 @@ def get_pat_batch_textual_obs_annotations(
 def get_pat_batch_reports_docs_annotations(
     current_pat_client_id_code, config_obj=None, cat=None, t=None
 ):
+    """
+    Retrieves and processes batch report annotations for a patient.
+
+    This function checks for the existence of a pre-existing annotation batch for
+    the given patient. If the annotation batch exists, it reads and returns it.
+    If not, it reads the batch of reports from a CSV file, filters
+    out any entries with missing or empty textual observations, and generates
+    the annotation batch.
+
+    Parameters:
+        current_pat_client_id_code (str): The client ID code for the current patient.
+        config_obj (ConfigObject, optional): An object containing configuration settings.
+        cat (object, optional): An object for entity recognition.
+        t (object, optional): A progress tracker object.
+
+    Returns:
+        pandas.DataFrame: A DataFrame containing the processed batch report annotations.
+    """
     batch_reports_target_path_report = os.path.join(
         config_obj.pre_document_batch_path_reports,
         str(current_pat_client_id_code) + ".csv",
@@ -935,7 +1015,7 @@ def get_pat_batch_mct_docs(
             batch_target = cohort_searcher_with_terms_and_search(
                 index_name="observations",
                 fields_list="""observation_guid client_idcode obscatalogmasteritem_displayname
-                                observation_valuetext_analysed observationdocument_recordeddtm 
+                                observation_valuetext_analysed observationdocument_recordeddtm
                                 clientvisit_visitidcode""".split(),
                 term_name=config_obj.client_idcode_term_name,
                 entered_list=[current_pat_client_id_code],
@@ -945,7 +1025,7 @@ def get_pat_batch_mct_docs(
             batch_target = apply_data_type_mct_docs_filters(config_obj, batch_target)
 
             if config_obj.store_pat_batch_docs or overwrite_stored_pat_docs:
-                # batch_target.dropna(subset='observation_valuetext_analysed', inplace=True)
+
                 if config_obj.verbosity >= 3:
                     print("get_epr_mct_docs_predropna", len(batch_target))
                 col_list_drop_nan = [
@@ -963,12 +1043,6 @@ def get_pat_batch_mct_docs(
 
                 if config_obj.verbosity >= 3:
                     print("get_epr_mct_docs_postdropna", len(batch_target))
-
-                # #handle non datetime obs recorded
-                # batch_target['observationdocument_recordeddtm'] = pd.to_datetime(batch_target['observationdocument_recordeddtm'], errors='coerce')
-                # batch_target.dropna(subset=['observationdocument_recordeddtm'], inplace=True)
-                # if(config_obj.verbosity >= 3):
-                #     print('get_epr_mct_docs_postdropna on dt col', len(batch_target))
 
                 if split_clinical_notes_bool:
 
@@ -1102,8 +1176,6 @@ def get_pat_batch_reports(
         str(current_pat_client_id_code) + ".csv",
     )
 
-    # os.makedirs(batch_obs_target_path, exist_ok=True)
-
     if config_obj is None or not all(
         hasattr(config_obj, attr)
         for attr in [
@@ -1147,7 +1219,6 @@ def get_pat_batch_reports(
                 f"updatetime:[{global_start_year}-{global_start_month}-{global_start_day} TO {global_end_year}-{global_end_month}-{global_end_day}]",
             )
 
-            # batch_target = batch_target.rename(columns={'textualObs': 'body_analysed'})
             batch_target["body_analysed"] = (
                 batch_target["textualObs"].astype(str)
                 + "\n"
@@ -1193,15 +1264,12 @@ def get_pat_batch_textual_obs_docs(
     overwrite_stored_pat_observations = config_obj.overwrite_stored_pat_observations
     store_pat_batch_observations = config_obj.store_pat_batch_observations
 
-    # search_term = "report"
-
     bloods_time_field = config_obj.bloods_time_field
 
     batch_obs_target_path = os.path.join(
         config_obj.pre_textual_obs_document_batch_path,
         str(current_pat_client_id_code) + ".csv",
     )
-    # os.makedirs(batch_obs_target_path, exist_ok=True)
 
     if config_obj is None or not all(
         hasattr(config_obj, attr)
@@ -1254,12 +1322,6 @@ def get_pat_batch_textual_obs_docs(
             # Drop rows with empty string in textualObs
             batch_target = batch_target[batch_target["textualObs"] != ""]
 
-            # batch_target = batch_target.rename(columns={'textualObs': 'body_analysed'})
-            # batch_target["body_analysed"] = (
-            #     batch_target["textualObs"].astype(str)
-            #     + "\n"
-            #     + batch_target["basicobs_value_analysed"].astype(str)
-            # )
             batch_target["body_analysed"] = batch_target["textualObs"].astype(str)
 
             if config_obj.store_pat_batch_docs or overwrite_stored_pat_observations:
@@ -1282,7 +1344,22 @@ def get_pat_batch_appointments(
     config_obj=None,
     cohort_searcher_with_terms_and_search=None,
 ):
-    """ """
+    """
+    Retrieve batch appointment details for a patient based on the given parameters.
+
+    Args:
+        current_pat_client_id_code (str): The client ID code for the current patient.
+        search_term (str): The term used for searching appointment-related details.
+        config_obj (ConfigObject): An object containing global start and end year/month.
+        cohort_searcher_with_terms_and_search (function): A function for searching a cohort with terms.
+
+    Returns:
+        pandas.DataFrame: Batch of appointment-related details.
+
+    Raises:
+        ValueError: If config_obj is None or missing required attributes.
+    """
+
     if config_obj is None or not all(
         hasattr(config_obj, attr)
         for attr in [
