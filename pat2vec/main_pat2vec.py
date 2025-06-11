@@ -1,7 +1,5 @@
-import logging
 import os
 import random
-import sys
 import time
 import traceback
 from datetime import datetime
@@ -39,7 +37,6 @@ from pat2vec.patvec_get_batch_methods.main import (
 )
 from pat2vec.util import config_pat2vec
 from pat2vec.util.methods_get import (
-    create_folders,
     create_folders_for_pat,
     filter_stripped_list,
     generate_date_list,
@@ -76,30 +73,41 @@ class main:
     ):
 
         # Additional parameters
-        self.aliencat = config_obj.aliencat
-        self.dgx = config_obj.dgx
-        self.dhcap = config_obj.dhcap
-        self.dhcap02 = config_obj.dhcap02
+        """
+        Initialises the main class for the pat2vec pipeline.
+
+        Parameters
+        ----------
+        cogstack : bool, optional
+            Whether to use the cogstack v8 library, search a real elastic cluster, by default True
+        use_filter : bool, optional
+            Whether to use a medcat CUI filter for annotations data, by default False
+        json_filter_path : str, optional
+            Path to json file containing the filter, by default None
+        random_seed_val : int, optional
+            Random seed value for reproducibility, by default 42
+        hostname : str, optional
+            Hostname, by default None
+        config_obj : config_class, optional
+            Config object, by default None
+        """
+        self.aliencat = config_obj.aliencat  # Deprecated environment specific bools
+        self.dgx = config_obj.dgx  # Deprecated environment specific bools
+        self.dhcap = config_obj.dhcap  # Deprecated environment specific bools
+        self.dhcap02 = config_obj.dhcap02  # Deprecated environment specific bools
         self.batch_mode = config_obj.batch_mode
-        self.remote_dump = config_obj.remote_dump
+        self.remote_dump = config_obj.remote_dump  # Deprecated
         self.negated_presence_annotations = config_obj.negated_presence_annotations
         self.store_annot = config_obj.store_annot
-        self.share_sftp = config_obj.share_sftp
-        self.multi_process = config_obj.multi_process
-        self.annot_first = config_obj.annot_first
+        self.share_sftp = config_obj.share_sftp  # Deprecated
+        self.multi_process = config_obj.multi_process  # Deprecated
+        self.annot_first = config_obj.annot_first  # Deprecated
         self.strip_list = config_obj.strip_list
         self.verbosity = config_obj.verbosity
         self.random_seed_val = config_obj.random_seed_val
-        # self.treatment_client_id_list = config_obj.treatment_client_id_list
-        self.hostname = config_obj.hostname
-
+        self.hostname = config_obj.hostname  # Deprecated
         self.config_obj = config_obj
-
         self.cs = cs  # make cogstack v8 cs object available
-
-        individual_patient_window_controls_method = (
-            config_obj.individual_patient_window_controls_method
-        )
 
         if self.config_obj == None:
             print("Init default config on config_pat2vec")
@@ -112,12 +120,8 @@ class main:
         self.pre_annotation_path = config_obj.pre_annotation_path
         self.pre_annotation_path_mrc = config_obj.pre_annotation_path_mrc
         self.proj_name = config_obj.proj_name
-        self.gpu_mem_threshold = config_obj.gpu_mem_threshold
-
+        self.gpu_mem_threshold = config_obj.gpu_mem_threshold  # For medCat
         self.all_patient_list = get_all_patients_list(self.config_obj)
-
-        # create_folders(self.all_patient_list, self.config_obj)
-
         self.current_pat_lines_path = config_obj.current_pat_lines_path
         self.sftp_client = config_obj.sftp_obj
 
@@ -143,7 +147,7 @@ class main:
             print(self.pre_annotation_path)
             print(self.pre_annotation_path_mrc)
 
-        self.use_filter = use_filter
+        self.use_filter = use_filter  # Using a medcat CUI filter for annotations data.
 
         if self.use_filter:
             self.json_filter_path = json_filter_path
@@ -199,8 +203,6 @@ class main:
             )
         ]
 
-        # random.shuffle(self.all_patient_list)
-
         skipped_counter = 0
         self.t = trange(
             len(self.all_patient_list),
@@ -224,8 +226,6 @@ class main:
             self.stripped_list, config_obj=self.config_obj
         )
 
-        # self.date_list = config_obj.date_list
-
         self.n_pat_lines = config_obj.n_pat_lines
 
         if self.config_obj.prefetch_pat_batches:
@@ -234,9 +234,30 @@ class main:
 
             prefetch_batches(pat2vec_obj=self)
 
-    # ------------------------------------begin main----------------------------------
-
     def pat_maker(self, i):
+        """Processes a single patient's data, retrieves relevant batches if enabled in main options, and prepares for further processing.
+
+        This function handles the retrieval of various data batches (e.g., EPR, MCT,
+        smoking status, demographics, etc.) for a given patient. It also manages
+        individual patient time windows if enabled, and performs initial data
+        cleaning by dropping rows with missing timestamps or empty analyzed text.
+
+        Args:
+            i (int): The index of the current patient in `self.all_patient_list`.
+
+        Side Effects:
+            - Updates `self.config_obj.global_start_month`,
+            `self.config_obj.global_start_year`, etc., if individual patient
+            windows are enabled.
+            - Updates `self.config_obj.date_list` if individual patient windows are
+            enabled.
+            - Prints progress and debug information based on `self.config_obj.verbosity` level.
+            - Calls `create_folders_for_pat`, `update_pbar`, and various `get_pat_batch_*` functions.
+
+        Returns:
+            None: This function primarily updates internal states and retrieves data;
+                it does not return any significant value.
+        """
 
         if self.config_obj.verbosity > 3:
             print(f"Processing patient {i} at {self.all_patient_list[i]}...")
@@ -265,8 +286,6 @@ class main:
             skipped_counter = 0
 
         current_pat_client_id_code = str(all_patient_list[i])
-
-        # create_folders(list(current_pat_client_id_code), self.config_obj)
 
         create_folders_for_pat(current_pat_client_id_code, self.config_obj)
 
@@ -821,10 +840,8 @@ class main:
             )
 
             if self.config_obj.verbosity > 3:
-                # ... existing code ...
 
                 print("Batch Sizes:")
-
                 print("EPR:", len(batch_epr))
                 print("MCT:", len(batch_mct))
                 print("Smoking:", len(batch_smoking))
@@ -911,7 +928,6 @@ class main:
                         print(type(batch_epr_docs_annotations))
                         print(batch_epr_docs_annotations.columns)
                         print(batch_epr_docs_annotations)
-                # batch_epr_docs_annotations.dropna(subset=['body_analysed'], inplace=True)
 
                 if self.config_obj.main_options.get("annotations_mrc", True):
                     target_column_string = "observationdocument_recordeddtm"
@@ -1001,6 +1017,8 @@ class main:
                         if self.config_obj.verbosity > 5:
                             print(f"Processing date {date_list[j]} for patient {i}...")
                         if annot_first:
+
+                            # deprecated method
 
                             get_current_pat_annotations_batch_to_file(
                                 all_patient_list[i],
