@@ -1,15 +1,9 @@
-import io
-import logging
 import os
-import sys
 from datetime import datetime, timedelta
-from pathlib import Path
-
 import pandas as pd
 import paramiko
 from dateutil.relativedelta import relativedelta
 from IPython.display import display
-
 from pat2vec.util.current_pat_batch_path_methods import PathsClass
 from pat2vec.util.methods_get import (
     add_offset_column,
@@ -82,6 +76,19 @@ def update_global_start_date(self, start_date):
 
 def get_test_options_dict():
     # contains implemented testing functions, i.e have a dummy data generator implemented.
+    """
+    Returns a dictionary of main options for testing configurations.
+
+    The dictionary contains boolean flags for various features to be enabled
+    or disabled during testing. These options include demographic information,
+    BMI tracking, blood-related information, drug-related information,
+    diagnostic information, and various annotations, among others.
+
+    Returns:
+        dict: A dictionary with keys as option names and values as boolean
+        indicating whether the feature is enabled (True) or disabled (False).
+    """
+
     main_options_dict = {
         # Enable demographic information (Ethnicity mapped to UK census, age, death)
         "demo": True,
@@ -180,47 +187,59 @@ class config_class:
         calculate_vectors=True,
         prefetch_pat_batches=False,
     ):
+        """
+        Initializes the config_class instance with various configuration parameters for data processing and analysis.
 
-        # Configure logging
-        # logging.basicConfig(
-        #     level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
-        # )
+        This constructor sets up paths, time windows, and other settings for handling patient data,
+        including options for local or remote data dumps, MedCAT models, and feature engineering.
 
-        # Test it out
-        # print("This will be logged.")
-
-        # log_folder = "logs"
-        # os.makedirs(log_folder, exist_ok=True)
-
-        # # Create a logger
-        # self.logger = logging.getLogger(__name__)
-
-        # # Create a handler that writes log messages to a file with a timestamp
-        # log_file = (
-        #     f"{log_folder}/logfile_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
-        # )
-        # file_handler = logging.FileHandler(log_file)
-
-        # # Create a formatter to include timestamp in the log messages
-        # formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
-        # file_handler.setFormatter(formatter)
-
-        # # Optionally set the logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
-        # self.logger.setLevel(logging.DEBUG)
-
-        # # Add the file handler to the logger
-        # self.logger.addHandler(file_handler)
-
-        # # Add a StreamHandler to print log messages to the console
-        # console_handler = logging.StreamHandler(sys.stdout)
-        # console_handler.setFormatter(formatter)
-        # self.logger.addHandler(console_handler)
-
-        # # Redirect stdout to both console handler and file handler
-        # sys.stdout = MultiStream([sys.stdout, file_handler.stream])
-
-        # # Now you can use the logger to log messages within the class
-        # self.logger.info("Initialized config_pat2vec")
+        Args:
+            remote_dump (bool): If **True**, data will be dumped to a remote server via SFTP. Defaults to **False**.
+            suffix (str): A suffix to append to output folder names. Defaults to **""**.
+            treatment_doc_filename (str): The filename for treatment documents. Defaults to **'test_files/treatment_docs.csv'**.
+            treatment_control_ratio_n (int): The ratio of treatment to control patients. Defaults to **1**.
+            proj_name (str): The name of the current project, used for creating project-specific folders where patient data batches and vectors are stored. Defaults to **'new_project'**.
+            current_path_dir (str): The current working directory. Defaults to **""**.
+            main_options (dict): A dictionary of boolean options for enabling or disabling various data types, such as demographic information ('demo'), BMI ('bmi'), blood-related information ('bloods'), drug-related information ('drugs'), and diagnostic information ('diagnostics'). It also includes options for 'core_02', 'bed', 'vte_status', 'hosp_site', 'core_resus', 'news', 'smoking', 'annotations' (EPR documents via MedCat), 'annotations_mrc' (MRC annotations via MedCat), 'negated_presence_annotations', 'appointments', 'annotations_reports', and 'textual_obs'. Defaults to `main_options_dict`.
+            start_date (datetime): The starting date for processing. Defaults to **datetime(1995, 1, 1)**.
+            years (int): Number of years to add to the `start_date`. This sets the duration of the time window, which is defined as the `start_date` plus the specified `years`, `months`, and `days`. Defaults to **30**.
+            months (int): Number of months to add to the `start_date`. Defaults to **0**.
+            days (int): Number of days to add to the `start_date`. Defaults to **0**.
+            dgx (bool): Flag for DGX environment. Set to **True** if in this environment; each environment needs specific paths configured. Defaults to **False**.
+            dhcap (bool): Flag for DHCap. Defaults to **False**.
+            dhcap02 (bool): Flag for DHCap02. Defaults to **True**.
+            batch_mode (bool): Flag for batch processing mode. This is currently the **only functioning mode**. Defaults to **True**.
+            store_annot (bool): Flag to store annotations. Partially deprecated. Defaults to **True**.
+            share_sftp (bool): Flag for sharing via SFTP. Partially deprecated. Defaults to **True**.
+            multi_process (bool): Flag for multi-process execution. Deprecated. Defaults to **False**.
+            annot_first (bool): Flag for annotation priority. Deprecated. Defaults to **False**.
+            strip_list (bool): If **True**, this will check for completed patients before starting to avoid redundancy. Defaults to **True**.
+            verbosity (int): Verbosity level for printing debug messages (0-9). Defaults to **0**.
+            random_seed_val (int): Random seed value for reproducibility of controls.
+            testing (bool): Flag for testing mode. If **True**, the system will use dummy data. Defaults to **True**.
+            dummy_medcat_model (bool): Flag for a dummy MedCAT model. Used if `testing` is **True**; this will simulate a MedCAT model. Defaults to **True**.
+            use_controls (bool): If **True**, this will add the desired ratio of controls at random from the global pool, requiring configuration with a master list of patients. Defaults to **False**.
+            medcat (bool): Flag for MedCAT processing. If **True**, MedCAT will load into memory and be used for annotating. Defaults to **False**.
+            start_time (datetime): Current timestamp as the start time for logging and the progress bar. Defaults to `datetime.now()`.
+            patient_id_column_name (str): Column name for patient ID. Setting to **'auto'** will attempt to find it. Example: "client_idcode". Defaults to **'auto'**.
+            annot_filter_options (dict): Dictionary for annotation filtering. Only base annotations meeting this threshold will be included. It includes options for base concept accuracy ('acc'), UMLS list of types for MedCAT filter ('types'), and confidence thresholds for 'Time_Value', 'Presence_Value', and 'Subject_Value'. Defaults to `annot_filter_arguments`.
+            global_start_year (int): Global start year for setting the limits of the time window data can be drawn from. The start should not precede the `start_date` set above. Ensure that the global start year/month/day is before the end year/month/day. Defaults to **1995**.
+            global_start_month (int): Global start month. Defaults to **1**.
+            global_end_year (int): Global end year. Defaults to **2023**.
+            global_end_month (int): Global end month. Defaults to **1**.
+            global_start_day (int): Global start day. Defaults to **1**.
+            global_end_day (int): Global end day. Defaults to **1**.
+            shuffle_pat_list (bool): Flag for shuffling the patient list. Defaults to **False**.
+            time_window_interval_delta (relativedelta): Specifies the time window to collapse each feature vector into (e.g., `years=1` results in one vector per year within the global time window). Defaults to `relativedelta(years=30)`.
+            split_clinical_notes (bool): If **True**, clinical notes will be split by date and treated as individual documents with extracted dates. Requires a note splitter module. Defaults to **True**.
+            lookback (bool): Determines the direction of the time length window. If **True**, it calculates backward in time; otherwise, it calculates forward. This applies when calculating individual patient windows from a table of start dates or from the global start date. Defaults to **False**.
+            add_icd10 (bool): If **True**, appends ICD-10 codes to annotation batches. These can be found under `current_pat_documents_annotations/%client_idcode%.csv`. Defaults to **False**.
+            add_opc4s (bool): Requires `add_icd10` to be **True**. If **True**, appends OPC4S codes to annotation batches. These can be found under `current_pat_documents_annotations/%client_idcode%.csv`. Defaults to **False**.
+            override_medcat_model_path (str, optional): Forces the MedCAT model path. If **None**, it uses the defaults for the environment. Can be set in `paths.py` with `medcat_path = "%path to medcat model pack.zip"`. Defaults to `path_to_medcat_model_pack`.
+            data_type_filter_dict (dict, optional): Dictionary for data type filtering. See examples provided in the configuration. Defaults to **None**.
+            filter_split_notes (bool): If enabled (**True**), the global time window filter will be reapplied after clinical note splitting. This is recommended to enable if `split_clinical_notes` is enabled. Defaults to **True**.
+            prefetch_pat_batches (bool): If enabled (**True**), this will fetch batches for the entire patient list and pre-populate batch folders with individual patient batches. Note that this may lead to out-of-memory issues. Defaults to **False**.
+        """
 
         self.prefetch_pat_batches = prefetch_pat_batches
 
@@ -594,13 +613,6 @@ class config_class:
             f"Number of {m}-day intervals between {start_date} and the calculated end date: {result}"
         )
 
-        # months = [x for x in range(1,4)]
-        # years = [x for x in range(2023, 2024)]
-        # days = [x for x in range(1,32)]
-        # import itertools
-        # combinations = list(itertools.product(years, months, days))
-        # len(combinations)
-
         self.slow_execution_threshold_low = timedelta(seconds=10)
         self.slow_execution_threshold_high = timedelta(seconds=30)
         self.slow_execution_threshold_extreme = timedelta(seconds=60)
@@ -625,18 +637,27 @@ class config_class:
             all_patient_list = priority_list  # + all_patient_list
 
         def update_main_options(self):
+            """
+            Updates the main options by setting any enabled options not present in the
+            test options dictionary to False.
+
+            This is used to ensure that only enabled options that are implemented in the
+            test data are used when running tests.
+
+            Parameters
+            ----------
+            None
+
+            Returns
+            -------
+            None
+            """
             test_options_dict = get_test_options_dict()
             for option, value in self.main_options.items():
                 if value and not test_options_dict[option]:
                     self.main_options[option] = False
 
         if self.testing:
-            # self.treatment_doc_filename = '/home/cogstack/samora/_data/pat2vec_tests/' + \
-            #     treatment_doc_filename
-            # self.treatment_doc_filename = 'test_files/' + \
-            #     treatment_doc_filename
-
-            # self.treatment_doc_filename = fr'{os.getcwd()}\test_files\treatment_docs.csv'
             print("Setting test options")
 
             self.treatment_doc_filename = os.path.join(
@@ -740,7 +761,6 @@ class config_class:
         if self.lookback == True:
             print("Swapping global values")
             # Swapping values
-            # Swapping values
             global_start_year, global_end_year = global_end_year, global_start_year
             global_start_month, global_end_month = global_end_month, global_start_month
             global_start_day, global_end_day = global_end_day, global_start_day
@@ -822,22 +842,11 @@ class config_class:
             start_column_name = self.individual_patient_window_start_column_name
             offset_column_name = start_column_name + "_offset"
 
-            # time_offset = timedelta(days=days, weeks=0, months=months, years=years)
-
-            # from dateutil.relativedelta import relativedelta
-
-            # Your code with relativedelta
-            # time_offset = timedelta(days=days) + relativedelta(months=months, years=years)
-
             if self.lookback:
                 time_offset = -relativedelta(days=days, months=months, years=years)
 
             else:
                 time_offset = relativedelta(days=days, months=months, years=years)
-
-            # print(start_column_name, self.individual_patient_window_start_column_name ,offset_column_name,time_offset )
-
-            # display(self.individual_patient_window_df)
 
             if offset_column_name in self.individual_patient_window_df.columns:
                 print("individual_patient_window already contains offset column")
@@ -846,13 +855,6 @@ class config_class:
                     "if you want to recompute offset, delete offset column from dataframe"
                 )
                 print('using existing offset column: "{}"'.format(offset_column_name))
-
-                # self.individual_patient_window_df = add_offset_column(
-                #     self.individual_patient_window_df,
-                #     start_column_name,
-                #     offset_column_name,
-                #     time_offset,
-                # )
 
                 self.patient_dict = build_patient_dict(
                     dataframe=self.individual_patient_window_df,
@@ -891,8 +893,6 @@ class config_class:
                     time_offset,
                 )
 
-                # display(self.individual_patient_window_df)
-
                 self.patient_dict = build_patient_dict(
                     dataframe=self.individual_patient_window_df,
                     patient_id_column=self.individual_patient_id_column_name,
@@ -902,15 +902,13 @@ class config_class:
 
             if self.lookback == True:
                 # print("skipping reverse")
-                # reverse tuples for elastic search parse
+
                 reversed_patient_dict = {
                     key: tuple(reversed(value))
                     for key, value in self.patient_dict.items()
                 }
                 print("reversed_patient_dict")
                 self.patient_dict = reversed_patient_dict
-
-            # display(self.patient_dict)
 
         if self.verbosity > 1:
 
@@ -933,11 +931,15 @@ class config_class:
                 print(self.data_type_filter_dict)
                 print(self.data_type_filter_dict.keys())
 
-        # finally if lookback, reverse the order of global start and end for elastic search string
-
 
 def swap_start_end(self):
     # Temporary variables to hold start values
+    """
+    Swap the values of start and end dates for all patients in the global and individual patient time windows.
+
+    This method is used to reverse the direction of the time windows, e.g. from forward to backward in time or vice versa.
+    It is used internally in the IndividualPatientWindow class when `lookback` is set to `True`.
+    """
     temp_year = self.global_start_year
     temp_month = self.global_start_month
     temp_day = self.global_start_day
