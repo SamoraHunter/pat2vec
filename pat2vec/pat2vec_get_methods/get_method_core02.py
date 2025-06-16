@@ -79,7 +79,6 @@ def get_core_02(
     ].copy()
 
     # screen and purge dud values
-    # features_data =  features_data[(features_data['observation_valuetext_analysed'].astype(float)<20)& (features_data['observation_valuetext_analysed'].astype(float)>-20)].copy()
     features_data.dropna(inplace=True)
 
     # -----------------------------------------------------------------
@@ -87,8 +86,6 @@ def get_core_02(
     features_data = current_pat_raw[
         current_pat_raw["obscatalogmasteritem_displayname"] == search_term
     ].copy()
-    # features_data =  features_data[(features_data['observation_valuetext_analysed'].astype(float)<20)& (features_data['observation_valuetext_analysed'].astype(float)>-20)].copy()
-    # features_data.dropna(inplace=True)
 
     term = "core_sp_02".lower()
 
@@ -104,7 +101,6 @@ def get_core_02(
         for term in all_terms:
 
             features[f'{term.replace("-", "_").replace("%", "pct")}'] = 1
-            # features[f'{bed_term}'] = 1
 
     if config_obj.verbosity >= 6:
         display(features)

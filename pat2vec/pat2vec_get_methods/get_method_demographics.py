@@ -1,6 +1,3 @@
-import os
-import sys
-
 import numpy as np
 import pandas as pd
 from pat2vec.util.cogstack_v8_lite import append_age_at_record_series
@@ -10,8 +7,6 @@ from IPython.display import display
 # from COGStats import *
 from pat2vec.util.ethnicity_abstractor import EthnicityAbstractor
 from pat2vec.util.methods_get import get_demographics3_batch
-
-# individual elements:
 
 
 def get_demo(current_pat_client_id_code, target_date_range, pat_batch, config_obj=None):
@@ -36,8 +31,6 @@ def get_demo(current_pat_client_id_code, target_date_range, pat_batch, config_ob
         config_obj=config_obj,
     )
     current_pat_demo.reset_index(inplace=True)
-    # print("pre current_pat_demo")
-    # display(current_pat_demo)
     if config_obj.verbosity >= 1:
         print("Get demo: get_demographics3_batch:")
 
@@ -76,8 +69,6 @@ def get_demo(current_pat_client_id_code, target_date_range, pat_batch, config_ob
             current_pat_demo["census_mixed_or_multiple_ethnic_groups"] = np.nan
             current_pat_demo["census_other_ethnic_group"] = np.nan
 
-        # print("post ethnicity")
-        # print(current_pat_demo)
         current_pat_demo.reset_index(inplace=True)
 
         # Select necessary columns
@@ -105,7 +96,7 @@ def get_demo(current_pat_client_id_code, target_date_range, pat_batch, config_ob
         display("error")
         display(current_pat_demo)
         raise Exception("more than one row process ethnicity")
-    # display(current_pat_demo)
+
     exclude_column = "client_idcode"
     current_pat_demo = current_pat_demo.astype(
         {col: "float" for col in current_pat_demo.columns if col != exclude_column}

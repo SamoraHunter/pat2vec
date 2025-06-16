@@ -1,23 +1,24 @@
-import os
-import pickle
-import time
-
-import numpy as np
 import pandas as pd
-import paramiko
 from IPython.display import display
 from IPython.utils import io
 
-from pat2vec.util.methods_annotation import (
-    calculate_pretty_name_count_features,
-    check_pat_document_annotation_complete, filter_annot_dataframe,
-    get_pat_document_annotation_batch)
-from pat2vec.util.methods_get import (dump_results, exist_check,
-                                      filter_dataframe_by_timestamp,
-                                      get_start_end_year_month, update_pbar)
+from pat2vec.util.methods_annotation import calculate_pretty_name_count_features
+from pat2vec.util.methods_get import (
+    filter_dataframe_by_timestamp,
+    get_start_end_year_month,
+    update_pbar,
+)
 
 
-def get_current_pat_report_annotations(current_pat_client_id_code, target_date_range, report_annotations, config_obj=None, t=None, cohort_searcher_with_terms_and_search=None, cat=None):
+def get_current_pat_report_annotations(
+    current_pat_client_id_code,
+    target_date_range,
+    report_annotations,
+    config_obj=None,
+    t=None,
+    cohort_searcher_with_terms_and_search=None,
+    cat=None,
+):
     """
     Retrieves and processes annotations for a specific patient within a given date range.
 
@@ -49,44 +50,63 @@ def get_current_pat_report_annotations(current_pat_client_id_code, target_date_r
     """
     if config_obj is None:
         raise ValueError(
-            "config_obj cannot be None. Please provide a valid configuration.")
+            "config_obj cannot be None. Please provide a valid configuration."
+        )
 
     start_time = config_obj.start_time
 
-    p_bar_entry = 'annotations_report'
+    p_bar_entry = "annotations_report"
     try:
-        update_pbar(current_pat_client_id_code, start_time, 0,
-                    p_bar_entry, t, config_obj, config_obj.skipped_counter)
+        update_pbar(
+            current_pat_client_id_code,
+            start_time,
+            0,
+            p_bar_entry,
+            t,
+            config_obj,
+            config_obj.skipped_counter,
+        )
     except Exception as e:
         print(e)
 
-    start_year, start_month, end_year, end_month, start_day, end_day = get_start_end_year_month(
-        target_date_range, config_obj=config_obj)
+    start_year, start_month, end_year, end_month, start_day, end_day = (
+        get_start_end_year_month(target_date_range, config_obj=config_obj)
+    )
 
     if report_annotations is not None:
 
-        filtered_report_annotations = filter_dataframe_by_timestamp(report_annotations,
-                                                                    start_year,
-                                                                    start_month,
-                                                                    end_year,
-                                                                    end_month,
-                                                                    start_day, end_day, 'updatetime', dropna=True)
+        filtered_report_annotations = filter_dataframe_by_timestamp(
+            report_annotations,
+            start_year,
+            start_month,
+            end_year,
+            end_month,
+            start_day,
+            end_day,
+            "updatetime",
+            dropna=True,
+        )
 
         if len(filtered_report_annotations) > 0:
 
             processed_annotations = calculate_pretty_name_count_features(
-                filtered_report_annotations)
+                filtered_report_annotations
+            )
 
         else:
             if config_obj.verbosity >= 6:
-                print("len(filtered_report_annotations)>0",
-                      len(filtered_report_annotations) > 0)
+                print(
+                    "len(filtered_report_annotations)>0",
+                    len(filtered_report_annotations) > 0,
+                )
             processed_annotations = pd.DataFrame(
-                data=[current_pat_client_id_code], columns=['client_idcode'])
+                data=[current_pat_client_id_code], columns=["client_idcode"]
+            )
 
     else:
         processed_annotations = pd.DataFrame(
-            data=[current_pat_client_id_code], columns=['client_idcode'])
+            data=[current_pat_client_id_code], columns=["client_idcode"]
+        )
 
     if config_obj.verbosity >= 6:
         display(processed_annotations)

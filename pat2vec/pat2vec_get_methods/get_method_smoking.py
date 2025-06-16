@@ -76,8 +76,6 @@ def get_smoking(
     # screen and purge dud values
     features_data.dropna(inplace=True)
 
-    # -----------------------------------------------------------------
-
     features_data = current_pat_raw[
         current_pat_raw["obscatalogmasteritem_displayname"] == search_term
     ].copy()

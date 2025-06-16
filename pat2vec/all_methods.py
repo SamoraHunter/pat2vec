@@ -34,11 +34,13 @@ from pat2vec.pat2vec_get_methods.get_method_pat_annotations import (
 )
 from pat2vec.pat2vec_get_methods.get_method_smoking import get_smoking
 from pat2vec.pat2vec_get_methods.get_method_vte_status import get_vte_status
-from pat2vec.pat2vec_main_methods.main_annotate_only import main_annotate_only
+
+# from pat2vec.pat2vec_main_methods.main_annotate_only import main_annotate_only
 from pat2vec.pat2vec_main_methods.main_batch import main_batch
 from pat2vec.pat2vec_main_methods.main_main import main
-from pat2vec.pat2vec_main_methods.main_multi import main_multi
-from pat2vec.pat2vec_main_methods.main_single_pat import get_single_pat
+
+# from pat2vec.pat2vec_main_methods.main_multi import main_multi
+# from pat2vec.pat2vec_main_methods.main_single_pat import get_single_pat
 from pat2vec.pat2vec_pat_list.get_patient_treatment_list import (
     extract_treatment_id_list_from_docs,
 )
@@ -249,11 +251,11 @@ class pat2vec_methods:
         self.get_current_pat_annotations = get_current_pat_annotations
         self.get_smoking = get_smoking
         self.get_vte_status = get_vte_status
-        self.main_annotate_only = main_annotate_only
+        # self.main_annotate_only = main_annotate_only
         self.main_batch = main_batch
         self.main = main
-        self.main_multi = main_multi
-        self.get_single_pat = get_single_pat
+        # self.main_multi = main_multi
+        # self.get_single_pat = get_single_pat
         self.extract_treatment_id_list_from_docs = extract_treatment_id_list_from_docs
         self.generate_control_list = generate_control_list
         self.get_all_patients_list = get_all_patients_list

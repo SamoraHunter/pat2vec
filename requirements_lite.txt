@@ -10,3 +10,4 @@ nbformat
 nbconvert
 nbstripout
 nbmake
+pre-commit

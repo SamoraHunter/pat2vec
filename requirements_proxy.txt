@@ -1295,4 +1295,5 @@ pytest
 nbformat
 nbconvert
 nbstripout
+pre-commit
 nbmake

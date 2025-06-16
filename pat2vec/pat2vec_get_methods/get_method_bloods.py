@@ -213,15 +213,12 @@ def get_current_pat_bloods(
             df_unique_filtered.at[i, col_name + "_num-tests"] = agg_val
 
         if df_len >= 3:
-            # try:
+
             # median
-            # agg_val = np.median(filtered_df['basicobs_value_numeric'].to_numpy())
             agg_val = filtered_column_values.median()
             df_unique_filtered.at[i, col_name + "_median"] = agg_val
 
             # mode
-            # agg_val = stats.mode(filtered_df['basicobs_value_numeric'].to_numpy(), keepdims=True)[0][0]
-
             agg_val = stats.mode(filtered_column_values)[0][0]
             df_unique_filtered.at[i, col_name + "_mode"] = agg_val
 

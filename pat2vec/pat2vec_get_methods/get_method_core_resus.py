@@ -119,6 +119,3 @@ def get_core_resus(
         display(features)
 
     return features
-
-
-# add negation bool in config, add negation dict for main opts

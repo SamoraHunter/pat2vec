@@ -1,7 +1,6 @@
 import numpy as np
 import pandas as pd
 from IPython.display import display
-
 from pat2vec.util.methods_get import (
     filter_dataframe_by_timestamp,
     get_start_end_year_month,
@@ -79,16 +78,11 @@ def get_hosp_site(
     ].copy()
 
     # screen and purge dud values
-    # features_data =  features_data[(features_data['observation_valuetext_analysed'].astype(float)<20)& (features_data['observation_valuetext_analysed'].astype(float)>-20)].copy()
     features_data.dropna(inplace=True)
-
-    # -----------------------------------------------------------------
 
     features_data = current_pat_raw[
         current_pat_raw["obscatalogmasteritem_displayname"] == search_term
     ].copy()
-    # features_data =  features_data[(features_data['observation_valuetext_analysed'].astype(float)<20)& (features_data['observation_valuetext_analysed'].astype(float)>-20)].copy()
-    # features_data.dropna(inplace=True)
 
     term = "hosp_site".lower()
 
@@ -96,7 +90,7 @@ def get_hosp_site(
         features = pd.DataFrame(
             data=[current_pat_client_id_code], columns=["client_idcode"]
         ).copy()
-        # value_array = features_data['observation_valuetext_analysed'].astype(float)
+
         value_array = features_data["observation_valuetext_analysed"].dropna()
 
         features[f"{term}_dh"] = value_array.str.contains("DH").astype(int)

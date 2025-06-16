@@ -1,6 +1,5 @@
 import time
 import traceback
-
 import pandas as pd
 from pat2vec.pat2vec_get_methods.get_method_appointments import get_appointments
 from pat2vec.pat2vec_get_methods.get_method_report_annotations import (
@@ -20,8 +19,6 @@ from pat2vec.pat2vec_get_methods.get_method_current_pat_annotations_mrc_cs impor
     get_current_pat_annotations_mrc_cs,
 )
 from pat2vec.pat2vec_get_methods.get_method_demographics import get_demo
-
-# from pat2vec_get_methods.get_method_demo import get_demographics3
 from pat2vec.pat2vec_get_methods.get_method_diagnostics import (
     get_current_pat_diagnostics,
 )
@@ -70,9 +67,18 @@ def main_batch(
     cohort_searcher_with_terms_and_search=None,
     cat=None,
 ):
-
-    # global skipped_counter
-    # global start_time
+    """
+    Main method for batch processing patients.
+    For enabled main options, recieves patient data from the datalake in batch form, processes it into a feature vector, and saves it to a location on disk.
+    :param current_pat_client_id_code: The client idcode of the current patient.
+    :param target_date_range: A tuple of start and end dates to retrieve data for.
+    :param config_obj: A pat2vec configuration object.
+    :param stripped_list_start: A list of already processed patient idcodes.
+    :param t: A tqdm progress bar.
+    :param cohort_searcher_with_terms_and_search: A CohortSearcherWithTermsAndSearch object.
+    :param cat: A medcat 'cat' object. cat = CAT.load_model_pack(model_pack_path).
+    :return: None
+    """
     if config_obj is None:
         raise ValueError(
             "config_obj cannot be None. Please provide a valid configuration. (main_batch)"
@@ -153,13 +159,15 @@ def main_batch(
                 if main_options.get("demo"):
                     update_pbar(p_bar_entry, start_time, 0, "demo", t, config_obj)
                     current_pat_demo = get_demo(
-                        current_pat_client_id_code,
-                        target_date_range,
-                        batch_demo,
-                        config_obj=config_obj,
+                        current_pat_client_id_code,  # Current patient client_idcode.
+                        target_date_range,  # Date range tuple.
+                        batch_demo,  # Batch demo data for given global time window.
+                        config_obj=config_obj,  # Pat2vec config object.
                     )
 
-                    patient_vector.append(current_pat_demo)
+                    patient_vector.append(
+                        current_pat_demo
+                    )  # Append demo feature data to current patient vector for this date range.
 
                 if main_options.get("bmi"):
                     update_pbar(p_bar_entry, start_time, 1, "bmi", t, config_obj)
@@ -347,9 +355,6 @@ def main_batch(
                     update_pbar(
                         p_bar_entry, start_time, 3, "appointments", t, config_obj
                     )
-                    # from IPython.display import display
-
-                    # display(batch_appointments)
 
                     df_pat_target = get_appointments(
                         current_pat_client_id_code=current_pat_client_id_code,

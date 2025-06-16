@@ -4,7 +4,6 @@ import warnings
 from collections import defaultdict
 from datetime import date, datetime, timedelta
 from typing import Dict, List
-
 import eland as ed
 import elasticsearch
 import elasticsearch.helpers
@@ -15,10 +14,10 @@ from tqdm.notebook import tqdm
 warnings.filterwarnings("ignore")
 import csv
 import multiprocessing
-import unittest
 from multiprocessing import Pool
 from os.path import exists
 import os
+from pathlib import Path
 
 # add one level up to path with sys.path for importing actual credentials
 import sys
@@ -28,19 +27,37 @@ random.seed(random_state)
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-# from .pre_processing import generate_uuid_list
-
 from .get_dummy_data_cohort_searcher import (
     cohort_searcher_with_terms_and_search_dummy,
     generate_uuid_list,
 )
 
-import os
-from pathlib import Path
-
 
 def create_credentials_file():
     # Define the path to the credentials file (two levels up)
+
+    """
+    Creates a credentials file for Elasticsearch configuration.
+
+    This function defines the path for the credentials file, creates the
+    necessary directory if it doesn't exist, and writes default content
+    for Elasticsearch credentials into the file. The content includes
+    placeholders for Elasticsearch hosts, username, password, and API key.
+    After creating the file, it appends the directory to the system path
+    for module import purposes.
+
+    Note:
+    - The function assumes a specific directory structure and creates
+      directories as necessary up to three levels above the current file.
+    - The credentials file is created with default content that should be
+      updated with actual credentials by the user.
+    - The directory name 'gloabl_files' is used.
+
+    Prints:
+    - Confirmation message with the path to the created credentials file
+      and a prompt to update it with actual credentials.
+    """
+
     base_dir = (
         Path(__file__).resolve().parent.parent.parent.parent
     )  # Go up three levels
@@ -117,7 +134,7 @@ class CogStack(object):
         hosts: List,
         username: str = None,
         password: str = None,
-        api=False,
+        api=True,
         api_key: str = None,
     ):
 
@@ -251,6 +268,16 @@ cs = CogStack(hosts, username, password, api=False)
 
 
 def list_chunker(entered_list):
+    """
+    Splits a list into smaller chunks of a specified size.
+
+    Parameters:
+    entered_list (list): The list to be split into chunks.
+
+    Returns:
+    list: A list of lists, where each sublist contains up to 10000 elements from the original list.
+    """
+
     if len(entered_list) >= 10000:
         chunks = [
             entered_list[x : x + 10000] for x in range(0, len(entered_list), 10000)
@@ -267,6 +294,20 @@ def dataframe_generator(list_of_dfs):
 def cohort_searcher_with_terms_and_search(
     index_name, fields_list, term_name, entered_list, search_string
 ):
+    """
+    Searches for a cohort of documents in the specified index, using the specified search string,
+    and filters the results using the specified term name and list of values.
+
+    Parameters:
+    - index_name (str): The name of the Elasticsearch index to search in.
+    - fields_list (list): The list of fields to return from each document.
+    - term_name (str): The name of the field to filter the results on.
+    - entered_list (list): The list of values to filter the results on.
+    - search_string (str): The search string to apply to the results.
+
+    Returns:
+    - pandas.DataFrame: A DataFrame containing the results of the search, with the specified fields and filtered by the term name and list of values.
+    """
     if len(entered_list) >= 10000:
 
         results = []
@@ -328,24 +369,6 @@ def catch(func, handle=lambda e: e, *args, **kwargs):
         # return handle(e)
 
 
-# +
-# def cohort_searcher_with_terms_no_search(index_name, fields_list, term_name, entered_list):
-#     if len(entered_list) >= 10000:
-#         results = []
-#         chunked_list = list_chunker(entered_list)
-#         for mini_list in chunked_list:
-#             query = {"from": 0, "size": 10000, "query": {"bool": {"filter": {"terms": {term_name: mini_list}}}},"_source": fields_list}
-#             df = cs.cogstack2df(query=query, index=index_name, column_headers=fields_list)
-#             results.append(df)
-#         merged_df = [df.set_index('id') for df in results]
-#         return merged_df
-#     else:
-#         query = {"from": 0, "size": 10000, "query": {"bool": {"filter": {"terms": {term_name: entered_list}}}},"_source": fields_list}
-#         df = cs.cogstack2df(query=query, index=index_name, column_headers=fields_list)
-#         return df
-# -
-
-
 def set_index_safe_wrapper(df):
 
     try:
@@ -358,32 +381,24 @@ def set_index_safe_wrapper(df):
         return df
 
 
-# def cohort_searcher_no_terms_fuzzy(index_name, fields_list, search_string, fuzzy=2):
-#     # Construct a fuzzy query by modifying the "query_string" section
-#     query = {
-#         "from": 0,
-#         "size": 10000,
-#         "query": {
-#             "bool": {
-#                 "must": [
-#                     {
-#                         "query_string": {
-#                             "query": search_string,
-#                             "fuzziness": fuzzy,  # Set the fuzziness value
-#                         }
-#                     }
-#                 ]
-#             }
-#         },
-#         "_source": fields_list,
-#     }
-#     df = cs.cogstack2df(query=query, index=index_name, column_headers=fields_list)
-#     return df
-
-
 def cohort_searcher_with_terms_no_search(
     index_name, fields_list, term_name, entered_list
 ):
+    """
+    Searches a cohort based on specified terms without a search string and returns the results.
+
+    Parameters:
+    index_name (str): The name of the index to search in.
+    fields_list (list): List of fields to be included in the results.
+    term_name (str): The term used for filtering the search.
+    entered_list (list): List of terms to search for within the index.
+
+    Returns:
+    list or pd.DataFrame: If the number of entered terms is greater than or equal to 10000, returns a list of
+    DataFrames with each DataFrame corresponding to a chunk of results. Otherwise, returns a single DataFrame
+    with the results.
+    """
+
     if len(entered_list) >= 10000:
         results = []
         chunked_list = list_chunker(entered_list)
@@ -412,6 +427,18 @@ def cohort_searcher_with_terms_no_search(
 
 
 def cohort_searcher_no_terms(index_name, fields_list, search_string):
+    """
+    Searches the specified Elasticsearch index using a provided search string and returns the results.
+
+    Parameters:
+    - index_name (str): The name of the Elasticsearch index to search in.
+    - fields_list (list): A list of fields to include in the search results.
+    - search_string (str): The search string to use in the query.
+
+    Returns:
+    - pandas.DataFrame: A DataFrame containing the search results with the specified fields.
+    """
+
     query = {
         "from": 0,
         "size": 10000,
@@ -430,6 +457,21 @@ def nearest(
     max_time_before: timedelta = timedelta(weeks=6),
     max_time_after: timedelta = timedelta(weeks=50),
 ):
+    """
+    Finds the nearest date and its corresponding value within a specified time range.
+
+    Parameters:
+    - date (datetime): The reference date to find the nearest date around.
+    - lookup_dates_and_values (pd.DataFrame): DataFrame containing dates and their corresponding values.
+    - date_col (str): The column name for dates in the DataFrame.
+    - value_col (str): The column name for values in the DataFrame.
+    - max_time_before (timedelta, optional): Maximum time before the reference date to consider. Defaults to 6 weeks.
+    - max_time_after (timedelta, optional): Maximum time after the reference date to consider. Defaults to 50 weeks.
+
+    Returns:
+    - The value corresponding to the nearest date within the specified range, or None if no date is found.
+    """
+
     timebefore = date - max_time_before
     timeafter = date + max_time_after
     lookup_dates_and_values = lookup_dates_and_values[
@@ -455,6 +497,26 @@ def matcher(
     before,
     after,
 ):
+    """
+    Function to match a patient template dataframe with a lab results dataframe.
+    For each patient in the template dataframe, it finds the closest lab test result
+    in the specified time range (before and after) for each unique lab test name.
+    The results are then added as new columns to the template dataframe.
+
+    Parameters:
+    - data_template_df (pd.DataFrame): Template dataframe containing patient IDs and dates.
+    - lab_results_df (pd.DataFrame): Lab results dataframe containing patient IDs, dates, test names, and test results.
+    - source_patid_colname (str): Column name for patient IDs in the template dataframe.
+    - source_date_colname (str): Column name for dates in the template dataframe.
+    - result_date_colname (str): Column name for dates in the lab results dataframe.
+    - result_testname (str): Column name for test names in the lab results dataframe.
+    - result_resultname (str): Column name for test results in the lab results dataframe.
+    - before (int): Number of days before the target date to consider.
+    - after (int): Number of days after the target date to consider.
+
+    Returns:
+    - pd.DataFrame: The template dataframe with the added lab test results as new columns.
+    """
     data_template = data_template_df  # Upload the template and inspect then rename cols, remove nulls and reset index
     data_template = data_template.dropna(subset=[source_date_colname]).reset_index(
         drop=True
@@ -603,24 +665,6 @@ def appendAgeAtRecord(dataFrame):
     return dataFrame
 
 
-# +
-# def append_age_at_record_series(series):
-#     """Creates an age at update time column 'ageAtRecord' and computes using clients date of birth and update time"""
-#     def age_at_record(row):
-#         born = datetime.strptime(row['client_dob'].split(".")[0], "%Y-%m-%dT%H:%M:%S").date()
-#         updateTime = row['updatetime'].date()
-
-#         today = updateTime
-#         return today.year - born.year - ((today.month,
-#                                           today.day) < (born.month,
-#                                                         born.day))
-#     #series['age'] = series.apply(age_at_record)
-#     series['age'] = age_at_record(series)
-
-#     return series
-# -
-
-
 def append_age_at_record_series(series):
     def age_at_record(row):
         try:
@@ -646,28 +690,6 @@ def append_age_at_record_series(series):
     series["age"] = age_at_record(series)
 
     return series
-
-
-# +
-# def age_at_record(row):
-#     try:
-#         born = datetime.strptime(row['client_dob'].split(".")[0], "%Y-%m-%dT%H:%M:%S").date()
-#     except Exception as e:
-# #         print(e)
-#         born = datetime.strptime(row['client_dob'].iloc[0].split(".")[0], "%Y-%m-%dT%H:%M:%S").date()
-
-
-#     try:
-#         updateTime = row['updatetime'].date()
-#     except:
-#         updateTime = row['updatetime'].iloc[0].date()
-
-
-#     today = updateTime
-#     return today.year - born.year - ((today.month,
-#                                       today.day) < (born.month,
-#                                                     born.day))
-# -
 
 
 def df_column_uniquify(df):
@@ -750,6 +772,19 @@ def find_date(txt):
 
 
 def split_clinical_notes(clin_note):
+    """
+    Split clinical notes into chunks based on timestamp.
+
+    Parameters
+    ----------
+    clin_note : pandas.DataFrame
+        A dataframe of clinical notes with a column "body_analysed" containing the text of the note.
+
+    Returns
+    -------
+    pandas.DataFrame
+        A dataframe of the processed clinical notes, with each row containing a chunk of a note with a timestamp.
+    """
     extracted = []
     none_found = []
     for index, row in clin_note.iterrows():
@@ -779,6 +814,19 @@ def split_clinical_notes(clin_note):
 
 
 def get_demographics(patlist):
+    """
+    Retrieve demographics information for a list of patients.
+
+    Parameters
+    ----------
+    patlist : list
+        List of patient IDs.
+
+    Returns
+    -------
+    pandas.DataFrame
+        A dataframe of demographics information for the specified patients.
+    """
     demo = cohort_searcher_with_terms_no_search(
         index_name="epr_documents",
         fields_list=[
@@ -802,6 +850,19 @@ def get_demographics(patlist):
 
 
 def get_demographics2(patlist):
+    """
+    Retrieve demographics information for a list of patients.
+
+    Parameters
+    ----------
+    patlist : list
+        List of patient IDs.
+
+    Returns
+    -------
+    pandas.Series
+        A series of demographics information for the specified patients.
+    """
     demo = cohort_searcher_with_terms_no_search(
         index_name="epr_documents",
         fields_list=[
@@ -828,6 +889,27 @@ def get_demographics2(patlist):
 
 
 def pull_and_write(index_name, fields_list, term_name, entered_list, search_string):
+    """
+    Pull data from elasticsearch and write to a file.
+
+    Parameters
+    ----------
+    index_name : str
+        The name of the index to search.
+    fields_list : list
+        The list of fields to retrieve.
+    term_name : str
+        The name of the term to search.
+    entered_list : list
+        The list of values to search for.
+    search_string : str
+        The search string to use.
+
+    Notes
+    -----
+    The file is written in append mode, so if the file already exists, data will be appended to it.
+    The header is not written to the file, so if you want a header, you need to add it manually.
+    """
     print(f"running...{len(entered_list)}")
     file_name = "temp_search_store.csv"
 
@@ -845,6 +927,27 @@ def pull_and_write(index_name, fields_list, term_name, entered_list, search_stri
 def cohort_searcher_with_terms_and_search_multi(
     index_name, fields_list, term_name, entered_list, search_string
 ):
+    """
+    Search a cohort with terms and search string, in parallel.
+
+    Parameters
+    ----------
+    index_name : str
+        The name of the index to search.
+    fields_list : list
+        The list of fields to retrieve.
+    term_name : str
+        The name of the term to search.
+    entered_list : list
+        The list of values to search for.
+    search_string : str
+        The search string to use.
+
+    Returns
+    -------
+    pd.DataFrame
+        The DataFrame containing the results of the search.
+    """
     file_name = "temp_search_store.csv"
     file = open(file_name, "w", newline="")
 
@@ -892,6 +995,49 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy(
     fuzzy=2,
     slop=1,
 ):
+    """
+    Search Elasticsearch index for EPR documents matching multiple search terms.
+
+    Parameters
+    ----------
+    terms_list : list
+        The list of search terms to search for.
+    treatment_doc_filename : str
+        The name of the file to store the results in.
+    start_year : int
+        The start year of the date range to search.
+    start_month : int
+        The start month of the date range to search.
+    start_day : int
+        The start day of the date range to search.
+    end_year : int
+        The end year of the date range to search.
+    end_month : int
+        The end month of the date range to search.
+    end_day : int
+        The end day of the date range to search.
+    overwrite : bool
+        Whether to overwrite the existing file.
+    debug : bool
+        Whether to print debug information.
+    uuid_column_name : str
+        The name of the column containing the UUIDs.
+    additional_filters : list
+        The list of additional filters to apply.
+    all_fields : bool
+        Whether to retrieve all fields.
+    method : str
+        The search method to use (fuzzy, exact, or phrase).
+    fuzzy : int
+        The fuzziness level for fuzzy matching.
+    slop : int
+        The slop value for phrase searches.
+
+    Returns
+    -------
+    pd.DataFrame
+        The DataFrame containing the results of the search.
+    """
     if not terms_list:
         print("Terms list is empty. Exiting.")
         return
@@ -1052,6 +1198,32 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy_mct(
     slop=1,
     testing=False,
 ):
+    """
+    Perform an iterative fuzzy search of the given terms in the patient list mct documents.
+    Searches observations for AoMRC_ClinicalSummary_FT in field.
+
+    :param terms_list: List of terms to search for
+    :param treatment_doc_filename: The filename of the patient list treatment doc CSV
+    :param start_year: The start year of the date range to search
+    :param start_month: The start month of the date range to search
+    :param start_day: The start day of the date range to search
+    :param end_year: The end year of the date range to search
+    :param end_month: The end month of the date range to search
+    :param end_day: The end day of the date range to search
+    :param append: Whether to append the new results to the existing file
+        (default: True)
+    :param debug: Whether to print debug statements (default: True)
+    :param uuid_column_name: The column name for the UUIDs (default: 'client_idcode')
+    :param additional_filters: Additional filters to apply to the search
+        (default: None)
+    :param all_fields: Whether to retrieve all fields from the search (default: False)
+    :param method: The search method to use (default: 'fuzzy')
+    :param fuzzy: The fuzziness parameter for the fuzzy search (default: 2)
+    :param slop: The slop parameter for the fuzzy search (default: 1)
+    :param testing: Whether to perform a dummy search (default: False)
+
+    :return: The resulting DataFrame containing the search results
+    """
     print(
         "iterative_multi_term_cohort_searcher_no_terms_fuzzy_mct",
         start_day,
@@ -1195,7 +1367,7 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy_mct(
                 field_list = all_field_list
             else:
                 field_list = """observation_guid client_idcode obscatalogmasteritem_displayname
-                                observation_valuetext_analysed observationdocument_recordeddtm 
+                                observation_valuetext_analysed observationdocument_recordeddtm
                                 clientvisit_visitidcode""".split()
 
             if testing == True:
@@ -1307,6 +1479,34 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy_textual_obs(
     slop=1,
     testing=False,
 ):
+    """
+    Performs a cohort search for textual observations based on multiple terms within a specified date range.
+    Searches textualObs field in basic_observations.
+
+    Parameters:
+        terms_list (list): List of terms to search for.
+        treatment_doc_filename (str): Filename to load or save the cohort search results.
+        start_year (int): Start year for the date range.
+        start_month (int): Start month for the date range.
+        start_day (int): Start day for the date range.
+        end_year (int): End year for the date range.
+        end_month (int): End month for the date range.
+        end_day (int): End day for the date range.
+        append (bool): Whether to append results to existing file if it exists. Defaults to True.
+        debug (bool): Whether to print debug information. Defaults to True.
+        uuid_column_name (str): Name of the column for UUIDs. Defaults to "client_idcode".
+        bloods_time_field (str): Field name for bloods time. Defaults to "basicobs_entered".
+        additional_filters (list): Additional filter strings to apply to the search. Defaults to None.
+        all_fields (bool): Whether to include all fields in the search results. Defaults to False.
+        method (str): Search method to use. Defaults to "fuzzy".
+        fuzzy (int): Fuzziness level for the search. Defaults to 2.
+        slop (int): Slop value for the search. Defaults to 1.
+        testing (bool): Whether to run in testing mode with dummy data. Defaults to False.
+
+    Returns:
+        pandas.DataFrame: DataFrame containing the search results, or an empty DataFrame if no results are found.
+    """
+
     print(
         "iterative_multi_term_cohort_searcher_no_terms_fuzzy_textual_obs",
         start_day,
@@ -1338,8 +1538,6 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy_textual_obs(
 
         for term in tqdm(terms_list):
             # Modify the search string for each term
-
-            # search_string = f'obscatalogmasteritem_displayname:("AoMRC_ClinicalSummary_FT") AND observation_valuetext_analysed:("{term}") AND observationdocument_recordeddtm:[{start_year}-{start_month}-{start_day} TO {end_year}-{end_month}-{end_day}]'
 
             search_string = (
                 f"{bloods_time_field}:[{start_year}-{start_month}-{start_day} TO {end_year}-{end_month}-{end_day}]",
