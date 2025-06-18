@@ -264,7 +264,24 @@ demo_columns = "client_idcode", "client_firstname", "client_lastname", "client_d
 ******Watcher connected to ES Cluster!******"""
 )
 
-cs = CogStack(hosts, username, password, api=False)
+
+# if api_key defined (from credentials import *) then we assume user wants to use API key authentication
+
+if "api_key" in locals() and api_key:
+    print("Using API key authentication")
+    cs = CogStack(hosts, api_key=api_key, api=True)
+else:
+    print(
+        f"Using basic authentication (active directory or local user), username: {username}"
+    )
+
+    cs = CogStack(hosts, username, password, api=False)
+
+# authentication check
+try:
+    cs.elastic.info()
+except Exception as e:
+    print(e)
 
 
 def list_chunker(entered_list):
