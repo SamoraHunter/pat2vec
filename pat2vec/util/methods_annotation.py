@@ -1,6 +1,5 @@
 import os
 import shutil
-
 import numpy as np
 import pandas as pd
 from IPython.display import display
@@ -78,7 +77,30 @@ def parse_meta_anns(meta_anns):
 def get_pat_document_annotation_batch(
     current_pat_client_idcode, pat_batch, cat=None, config_obj=None, t=None
 ):
+    """
+    Retrieves the annotation batch for the given patient.
 
+    This function annotates the given patient's batch of documents and stores the
+    annotations in a CSV file. It then reads and returns the annotation batch.
+
+    Parameters
+    ----------
+    current_pat_client_idcode : str
+        The client ID code for the current patient.
+    pat_batch : pandas.DataFrame
+        A DataFrame containing the batch of documents for the patient.
+    cat : object, optional
+        An object for entity recognition.
+    config_obj : object, optional
+        An object containing configuration settings.
+    t : object, optional
+        A progress tracker object.
+
+    Returns
+    -------
+    pandas.DataFrame
+        A DataFrame containing the annotation batch for the patient.
+    """
     multi_annots = annot_pat_batch_docs(
         current_pat_client_idcode, pat_batch, cat=cat, config_obj=config_obj, t=t
     )
