@@ -5,7 +5,6 @@ from elasticsearch import Elasticsearch
 from elasticsearch.helpers import bulk
 from IPython.display import display
 from tqdm import tqdm
-import numpy as np
 from elasticsearch.helpers import BulkIndexError
 from elasticsearch import Elasticsearch, helpers
 
@@ -186,6 +185,22 @@ def handle_inconsistent_dtypes(df):
 
 
 def guess_datetime_columns(df, threshold=0.5):
+    """
+    Guess datetime columns in a DataFrame by attempting to parse each value as a datetime.
+
+    Parameters
+    ----------
+    df : pandas.DataFrame
+        The DataFrame to guess datetime columns from.
+    threshold : float, optional
+        The minimum percentage of values in a column that must be parseable as datetime for the column to be considered a datetime column.
+        Defaults to 0.5.
+
+    Returns
+    -------
+    list
+        A list of column names that are likely to be datetime columns.
+    """
     datetime_columns = []
     for column in tqdm(df.columns, desc="Processing Columns"):
         parse_count = 0

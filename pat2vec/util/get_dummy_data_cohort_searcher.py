@@ -34,6 +34,13 @@ from pat2vec.util.dummy_data_files.dummy_lists import (
 
 
 def maybe_nan(value, probability=0.2):
+    """
+    Return the given value with a given probability of being replaced with NaN.
+
+    Parameters:
+    - value: Any value to be returned with a given probability.
+    - probability: Optional probability (default=0.2) to replace the value with NaN.
+    """
     return value if random.random() > probability else np.nan
 
 
@@ -663,7 +670,6 @@ def generate_observations_data(
             "observation_valuetext_analysed": [
                 random.uniform(0, 100) for _ in range(num_rows)
             ],
-            # 'observation_valuetext_analysed': [faker.paragraph() for _ in range(num_rows)],
             "observationdocument_recordeddtm": [
                 datetime(
                     random.randint(global_start_year, global_end_year),
@@ -783,6 +789,20 @@ def generate_basic_observations_textual_obs_data(
 ):
 
     # print("generate_basic_observations_textual_obs_data")
+    """
+    Generate dummy data for the 'basic_observations' index with textual observations.
+
+    Parameters:
+    - num_rows (int): Number of rows to generate.
+    - entered_list (list): List of entered values.
+    - global_start_year (int): Start year for the global date range.
+    - global_start_month (int): Start month for the global date range.
+    - global_end_year (int): End year for the global date range.
+    - global_end_month (int): End month for the global date range.
+
+    Returns:
+    - pd.DataFrame: Generated DataFrame with specified columns.
+    """
     df_holder_list = []
 
     for i in range(0, len(entered_list)):
@@ -841,6 +861,15 @@ def generate_basic_observations_textual_obs_data(
 
 
 def extract_date_range(string):
+    """
+    Extract date range from a string.
+
+    Parameters:
+    - string (str): String of the format "YYYY-MM-DD TO YYYY-MM-DD".
+
+    Returns:
+    - tuple: A tuple of six integers, representing the start year, start month, start day, end year, end month, and end day.
+    """
     pattern = r"(\d+)-(\d+)-(\d+) TO (\d+)-(\d+)-(\d+)"
     match = re.search(pattern, string)
     if match:
@@ -1110,6 +1139,19 @@ def cohort_searcher_with_terms_and_search_dummy(
 def generate_patient_timeline(client_idcode):
 
     # Set the logging level to suppress INFO messages
+    """
+    Generates a random patient timeline with a specified number of entries.
+
+    Parameters:
+        client_idcode (str): The client ID code for the patient.
+
+    Returns:
+        str: A string containing the patient demographics and clinical note timeline.
+
+    Notes:
+        The timestamps are randomly generated between 1995 and the current time.
+        The entry text is generated using the GPT-2 model.
+    """
     logging.getLogger("transformers").setLevel(logging.WARNING)
     generator = pipeline("text-generation", model="gpt2")
 
@@ -1159,7 +1201,15 @@ def generate_patient_timeline(client_idcode):
 
 
 def generate_patient_timeline_faker(client_idcode):
+    """
+    Generates a fake patient timeline with a random number of clinical note summaries.
 
+    Args:
+        client_idcode (str): The client ID code of the patient.
+
+    Returns:
+        str: A fake patient timeline with a random number of clinical note summaries.
+    """
     probabilities = [0.7, 0.1, 0.05, 0.05, 0.05]  # Adjust as needed
 
     # Perform a weighted random selection based on the defined probabilities
@@ -1205,6 +1255,19 @@ def generate_patient_timeline_faker(client_idcode):
 
 def extract_search_term_obscatalogmasteritem_displayname(search_string):
     # Using regular expression to find the part after 'obscatalogmasteritem_displayname:'
+    """
+    Extracts and returns the search term from a given search string that contains
+    'obscatalogmasteritem_displayname' field. The function uses a regular expression
+    to find the term enclosed in parentheses after 'obscatalogmasteritem_displayname:'.
+    It removes any quotes and ignores any part of the term that comes after 'AND' or 'OR'.
+
+    Parameters:
+        search_string (str): The input string containing the search term to be extracted.
+
+    Returns:
+        str: The extracted search term if present, otherwise returns the original search string.
+    """
+
     match = re.search(r"obscatalogmasteritem_displayname:\((.*?)\)", search_string)
     if match:
         # Get the matched group and remove punctuation
@@ -1225,6 +1288,15 @@ def random_sample(pickled_dict, sample_size):
 
 
 def dummy_medcat_annotation_generator():
+    """
+    Loads a sample MedCAT annotation dictionary from a pickle file and returns a random subset of its entities.
+
+    Parameters:
+        None
+
+    Returns:
+        dict: A dictionary containing a random subset of the entities from the sample annotations.
+    """
     pickle_file = os.path.join("test_files", "sample_annotations.pickle")
     # Load the dictionary from the pickle file
     with open(pickle_file, "rb") as f:
@@ -1241,11 +1313,27 @@ class dummy_CAT(object):
         pass
 
     def get_entities(self, text):
+        """
+        Given a text, this function returns a random subset of sample MedCAT annotations.
 
+        Parameters:
+            text (str): The text to annotate.
+
+        Returns:
+            dict: A dictionary containing a random subset of the entities from the sample annotations.
+        """
         return dummy_medcat_annotation_generator()
 
     def get_entities_multi_texts(self, texts):
+        """
+        Given a list of texts, this function returns a list of dictionaries containing a random subset of sample MedCAT annotations for each text in the list.
 
+        Parameters:
+            texts (list): The list of texts to annotate.
+
+        Returns:
+            list: A list of dictionaries containing a random subset of the entities from the sample annotations for each text in the list.
+        """
         result = []
 
         for i in range(0, len(texts)):
@@ -1261,6 +1349,27 @@ def run_generate_patient_timeline_and_append(
     # This function is used to generate a dummy patient timeline text for each client_idcode and
     # append it to an existing CSV file or create a new one if it doesn't exist
     # Check for null pointer references and unhandled exceptions
+
+    """
+    Generates and appends dummy patient timeline texts to a CSV file.
+
+    This function generates a specified number of dummy patient timelines, each associated
+    with a unique client ID code, and appends them to a CSV file. If the CSV file does not
+    already exist, it creates a new one. Each timeline consists of randomly generated demographic
+    and clinical note data.
+
+    Parameters:
+        n (int): The number of patient timelines to generate. Defaults to 10.
+        output_path (str): The file path to the CSV file where the timelines are stored.
+                           Defaults to "test_files/dummy_timeline.csv".
+
+    Returns:
+        None
+
+    Raises:
+        FileNotFoundError: If the output_path does not exist and cannot be created.
+        Exception: For any other unexpected errors during timeline generation or file operations.
+    """
 
     try:
         # Check if the CSV file exists, if not, create a new DataFrame

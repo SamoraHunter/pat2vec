@@ -1,15 +1,33 @@
 import re
+import warnings
 
 
 def extract_nhs_numbers(input_string):
     # Find all occurrences of "NHS" followed by a 10-digit number
+    """
+    Extract all occurrences of "NHS" followed by a 10-digit number from a string.
+
+    Parameters
+    ----------
+    input_string : str
+        The string to search for NHS numbers.
+
+    Returns
+    -------
+    list of str
+        A list of all extracted NHS numbers without spaces.
+
+    Examples
+    --------
+    >>> extract_nhs_numbers("NHS 123 456 7890")
+    ['1234567890']
+    >>> extract_nhs_numbers("NHS 123 456 7890 and NHS 098 765 4321")
+    ['1234567890', '987654321']
+    """
     matches = re.findall(r"NHS\s*(\d{3}\s*\d{3}\s*\d{4})", input_string)
     # Remove spaces from each extracted number
     cleaned_numbers = [re.sub(r"\s+", "", number) for number in matches]
     return cleaned_numbers
-
-
-import warnings
 
 
 def get_search_client_idcode_list_from_nhs_number_list(nhs_numbers, pat2vec_obj):

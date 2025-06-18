@@ -13,8 +13,32 @@ Additionally, if a user explicitly specifies a racial group (e.g., "White"), it 
 
 class EthnicityAbstractor:
     def abstractEthnicity(dataFrame, outputNameString, ethnicityColumnString):
-        """'abstractEthnicity(dataFrame, outputNameString, ethnicityColumnString)'"""
+        """
+        Abstracts ethnicity based on a given column of free text entries in a CSV file.
+        The script is designed to process a column of free text entries in a CSV file under an "ethnicity" field. Its goal is to match these entries with corresponding categories from the UK census.
 
+        It references groups outlined in the style guide provided by https://www.ethnicity-facts-figures.service.gov.uk/style-guide/ethnic-groups. The script doesn't use fuzzy matching, but it allows for handling edge cases by adding specific conditions within the script.
+
+        To improve accuracy, certain country groups have been adjusted to ensure more precise mappings. The script assumes each country contains a single ethnic group for simplicity, categorizing them under the default ethnic group unless the user specifies otherwise (e.g., "Asian Caribbean").
+
+        It's important to note that both the categorization lists and output lists may contain errors and ambiguities, so manual review of the script's outputs is necessary.
+
+        Additionally, if a user explicitly specifies a racial group (e.g., "White"), it takes precedence over the national origin term provided in the entry.
+
+        Parameters
+        ----------
+        dataFrame : pandas.DataFrame
+            The DataFrame containing the column to be abstracted
+        outputNameString : str
+            The string to prefix the output filename with
+        ethnicityColumnString : str
+            The name of the column containing the free text entries to be abstracted
+
+        Returns
+        -------
+        pandas.DataFrame
+            The DataFrame with the abstracted ethnicity column
+        """
         assumeBritishWhite = True
         assumeEnglishWhite = True
         assumeEuropeanWhite = True
