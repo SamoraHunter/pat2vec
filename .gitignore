@@ -2,6 +2,8 @@
 *.o
 *.out
 
+anonymization_key.pkl
+
 # Ignore log files
 *.log
 requirements.in
