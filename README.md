@@ -1,10 +1,21 @@
-# pat2vec
-Converts individual patient data into time interval feature vectors, suitable for filtering and concatenation into a data matrix D for binary classification machine learning tasks.
+# Overview
 
+This tool converts individual patient records into structured time-interval feature vectors, making them suitable for filtering, aggregation, and assembly into a data matrix **D** for binary classification machine learning tasks.
 
-Example use case 1: I aim to compute the mean of n variables for each unique patient, resulting in a single row representing each patient.
+## Example Use Cases
 
-Example use case 2: I intend to generate a monthly time series comprising patient data encompassing biochemistry, demographic details, and textual annotations (MedCat annotations) spanning the last 25 years. Each patient's data begins from a distinct start date (diagnosis date), providing a retrospective view.
+### 1. Patient-Level Aggregation  
+Compute summary statistics (e.g., the mean of *n* variables) for each unique patient, resulting in one row per patient. This is ideal for models requiring a single representation per individual.
+
+### 2. Longitudinal Time Series Construction  
+Generate a monthly time series for each patient that includes:
+
+- Biochemistry results  
+- Demographic attributes  
+- MedCat-derived clinical text annotations  
+
+The time series spans up to 25 years retrospectively, aligned to each patient's diagnosis date, enabling a consistent retrospective view across varying start times.
+
 
 
 
