@@ -1,0 +1,90 @@
+graph TB
+    subgraph "Configuration Layer"
+        A[config_pat2vec] --> B[Main Configuration Object]
+        B --> C[Feature Engineering Args]
+        B --> D[Time Window Settings]
+        B --> E[Data Source Options]
+    end
+    
+    subgraph "Data Sources"
+        F[Cogstack ElasticSearch] --> G[EPR Documents]
+        F --> H[MCT Documents]
+        F --> I[Clinical Observations]
+        F --> J[Blood Results]
+        F --> K[Medications/Drugs]
+        F --> L[Demographics]
+        F --> M[Appointments]
+    end
+    
+    subgraph "NLP Processing"
+        N[MedCat NLP Engine] --> O[CUI Extraction]
+        N --> P[Entity Recognition]
+        N --> Q[Negation Detection]
+        G --> N
+        H --> N
+        I --> N
+    end
+    
+    subgraph "Core Processing Engine"
+        R[main class] --> S[pat_maker function]
+        S --> T[Batch Retrieval Methods]
+        S --> U[Annotation Methods]
+        S --> V[main_batch function]
+        
+        T --> W[get_pat_batch_epr_docs]
+        T --> X[get_pat_batch_mct_docs]
+        T --> Y[get_pat_batch_obs]
+        T --> Z[get_pat_batch_drugs]
+        T --> AA[get_pat_batch_bloods]
+        T --> BB[get_pat_batch_demo]
+        
+        U --> CC[get_pat_batch_epr_docs_annotations]
+        U --> DD[get_pat_batch_mct_docs_annotations]
+        U --> EE[get_pat_batch_textual_obs_annotations]
+    end
+    
+    subgraph "Feature Engineering"
+        V --> FF[Drug Features]
+        V --> GG[Clinical Features]
+        V --> HH[Temporal Features]
+        V --> II[NLP Features]
+        
+        FF --> JJ[Drug Count]
+        FF --> KK[Days Since Last Drug]
+        FF --> LL[Days Between First/Last]
+        
+        GG --> MM[Vital Signs]
+        GG --> NN[Lab Results]
+        GG --> OO[Demographics]
+        
+        HH --> PP[Time Windows]
+        HH --> QQ[Date Ranges]
+        
+        II --> RR[CUI Vectors]
+        II --> SS[Entity Counts]
+        II --> TT[Negation Flags]
+    end
+    
+    subgraph "Output Layer"
+        UU[Patient Vectors] --> VV[CSV Files]
+        UU --> WW[Annotation Files]
+        UU --> XX[Feature Matrices]
+    end
+    
+    B --> R
+    F --> T
+    N --> U
+    O --> II
+    P --> II
+    Q --> II
+    
+    FF --> UU
+    GG --> UU
+    HH --> UU
+    II --> UU
+    
+    style A fill:#e3f2fd
+    style N fill:#fff3e0
+    style R fill:#f3e5f5
+    style V fill:#e8f5e8
+    style UU fill:#c8e6c9
