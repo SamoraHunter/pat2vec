@@ -1,0 +1,98 @@
+flowchart TD
+    A[Initialize pat2vec main class] --> B{Config Setup}
+    B --> C[Load Patient List]
+    B --> D[Initialize MedCat NLP]
+    B --> E[Setup GPU Environment]
+    
+    C --> F[Filter Existing Patient Files]
+    F --> G[Start Patient Processing Loop]
+    
+    G --> H{Individual Patient Window?}
+    H -->|Yes| I[Calculate Patient-Specific Date Range]
+    H -->|No| J[Use Global Date Range]
+    
+    I --> K[Generate Date List for Patient]
+    J --> K
+    
+    K --> L{Patient Already Processed?}
+    L -->|Yes| M[Skip Patient]
+    L -->|No| N[Create Patient Folders]
+    
+    N --> O[Data Batch Retrieval Phase]
+    
+    O --> P[Get EPR Documents]
+    O --> Q[Get MCT Documents]
+    O --> R[Get Textual Observations]
+    O --> S[Get Reports]
+    O --> T[Get Clinical Data]
+    
+    T --> U[Smoking Status]
+    T --> V[Core SpO2]
+    T --> W[Bed Number]
+    T --> X[VTE Status]
+    T --> Y[Hospital Site]
+    T --> Z[RESUS Status]
+    T --> AA[NEWS Scores]
+    T --> BB[BMI Data]
+    T --> CC[Diagnostics]
+    T --> DD[Drugs/Medications]
+    T --> EE[Demographics]
+    T --> FF[Blood Results]
+    T --> GG[Appointments]
+    
+    P --> HH[NLP Annotation Phase]
+    Q --> HH
+    R --> HH
+    S --> HH
+    
+    HH --> II[Annotate EPR Documents]
+    HH --> JJ[Annotate MCT Documents]
+    HH --> KK[Annotate Textual Observations]
+    HH --> LL[Annotate Reports]
+    
+    U --> MM[Data Cleaning Phase]
+    V --> MM
+    W --> MM
+    X --> MM
+    Y --> MM
+    Z --> MM
+    AA --> MM
+    BB --> MM
+    CC --> MM
+    DD --> MM
+    EE --> MM
+    FF --> MM
+    GG --> MM
+    II --> MM
+    JJ --> MM
+    KK --> MM
+    LL --> MM
+    
+    MM --> NN{Drop NA Timestamps?}
+    NN -->|Yes| OO[Clean Timestamp Data]
+    NN -->|No| PP[Keep All Data]
+    
+    OO --> QQ[Time Window Processing Loop]
+    PP --> QQ
+    
+    QQ --> RR{Calculate Vectors?}
+    RR -->|Yes| SS[Call main_batch for Each Date]
+    RR -->|No| TT[Skip Vector Calculation]
+    
+    SS --> UU[Feature Engineering]
+    UU --> VV[Generate Patient Vectors]
+    VV --> WW[Save Results]
+    
+    TT --> XX[Continue to Next Patient]
+    WW --> XX
+    M --> XX
+    
+    XX --> YY{More Patients?}
+    YY -->|Yes| G
+    YY -->|No| ZZ[Pipeline Complete]
+    
+    style A fill:#e1f5fe
+    style ZZ fill:#c8e6c9
+    style HH fill:#fff3e0
+    style MM fill:#f3e5f5
+    style UU fill:#e8f5e8
