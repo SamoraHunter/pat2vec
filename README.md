@@ -1,3 +1,22 @@
+## Table of Contents
+- [Overview](#overview)
+- [Example Use Cases](#example-use-cases)
+  - [1. Patient-Level Aggregation](#1-patient-level-aggregation)
+  - [2. Longitudinal Time Series Construction](#2-longitudinal-time-series-construction)
+- [System Architecture](#system-architecture)
+- [Data Pipeline](#data-pipeline)
+- [Requirements](#requirements)
+- [Features](#features)
+- [Installation](#installation)
+  - [Windows](#windows)
+  - [Unix/Linux](#unixlinux)
+    - [Option 1: Install All Requirements Automatically](#option-1-install-all-requirements-automatically)
+    - [Option 2: Manual Installation](#option-2-manual-installation)
+- [Usage](#usage)
+- [Contributing](#contributing)
+- [License](#license)
+
+
 # Overview
 
 This tool converts individual patient records into structured time-interval feature vectors, making them suitable for filtering, aggregation, and assembly into a data matrix **D** for binary classification machine learning tasks.
@@ -17,15 +36,13 @@ Generate a monthly time series for each patient that includes:
 The time series spans up to 25 years retrospectively, aligned to each patient's diagnosis date, enabling a consistent retrospective view across varying start times.
 
 
+## System Architecture
 
+![Alt text](assets/system_architecture.png)
 
-## Table of Contents
-- [Requirements](#requirements)
-- [Features](#features)
-- [Installation](#installation)
-- [Usage](#usage)
-- [Contributing](#contributing)
-- [License](#license)
+## Data pipeline
+
+![Alt text](assets/data_pipeline.png)
 
 ## Notable requirements:
 
@@ -190,23 +207,10 @@ The script will clone the following repositories:
 
 - If testing in a live environment ensure the testing flag is set to False in the config_obj.
 
-## System Architecture
-
-![Alt text](assets/system_architecture.png)
-
-## Data pipeline
-
-![Alt text](assets/data_pipeline.png)
 
 ## Contributing
 Contributions are welcome! Please see the contributing guidelines for more information.
 
 ## License
 This project is licensed under the MIT License - see the LICENSE file for details
-
-![Slide1](https://github.com/SamoraHunter/pat2vec/assets/44898312/f60dcf43-7fbe-4d96-8f33-9603694641b4)
-
-
-![Slide2](https://github.com/SamoraHunter/pat2vec/assets/44898312/f93f47bb-46ad-4830-a010-4d6880a1bae6)
-
 
