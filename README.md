@@ -190,6 +190,14 @@ The script will clone the following repositories:
 
 - If testing in a live environment ensure the testing flag is set to False in the config_obj.
 
+## System Architecture
+
+![Alt text](assets/system_architecture.png)
+
+## Data pipeline
+
+![Alt text](assets/data_pipeline.png)
+
 ## Contributing
 Contributions are welcome! Please see the contributing guidelines for more information.
 
