@@ -1,0 +1,94 @@
+graph TD
+    A[Main Entry Point] --> B[cohort_searcher_with_terms_and_search_dummy]
+    B --> C{Index Type?}
+    
+    C -->|epr_documents| D[generate_epr_documents_data]
+    C -->|epr_documents + personal| E[generate_epr_documents_personal_data]
+    C -->|observations + AoMRC| F[generate_observations_MRC_text_data]
+    C -->|observations + regular| G[generate_observations_data]
+    C -->|basic_observations + report| H[generate_observations_Reports_text_data]
+    C -->|basic_observations + numeric| I[generate_basic_observations_data]
+    C -->|basic_observations + textual| J[generate_basic_observations_textual_obs_data]
+    C -->|order + medication| K[generate_drug_orders_data]
+    C -->|order + diagnostic| L[generate_diagnostic_orders_data]
+    C -->|pims_apps| M[generate_appointments_data]
+    
+    D --> N[Patient Timeline Generation]
+    E --> O[Personal Data with Demographics]
+    F --> N
+    H --> N
+    
+    N --> P{Use GPT?}
+    P -->|Yes| Q[generate_patient_timeline - GPT2]
+    P -->|No| R[generate_patient_timeline_faker]
+    P -->|Dummy| S[get_patient_timeline_dummy]
+    
+    Q --> T[GPT2 Pipeline]
+    R --> U[Faker Library]
+    S --> V[CSV File Read]
+    
+    T --> W[Generated Timeline Text]
+    U --> W
+    V --> W
+    
+    G --> X[Numeric Observations]
+    I --> Y[Blood Test Data]
+    J --> Z[Textual Observations]
+    K --> AA[Drug Orders]
+    L --> BB[Diagnostic Orders]
+    M --> CC[Appointment Data]
+    
+    O --> DD[Patient Demographics]
+    X --> EE[Clinical Measurements]
+    Y --> FF[Lab Results]
+    Z --> GG[Clinical Notes]
+    AA --> HH[Medication Records]
+    BB --> II[Diagnostic Records]
+    CC --> JJ[Appointment Records]
+    
+    W --> KK[Final DataFrame]
+    DD --> KK
+    EE --> KK
+    FF --> KK
+    GG --> KK
+    HH --> KK
+    II --> KK
+    JJ --> KK
+    
+    KK --> LL[Return to Caller]
+    
+    MM[Utility Functions] --> NN[maybe_nan - Add Missing Values]
+    MM --> OO[extract_date_range - Parse Date Strings]
+    MM --> PP[generate_uuid - Create IDs]
+    MM --> QQ[dummy_CAT - Mock Medical NLP]
+    
+    NN --> KK
+    OO --> B
+    PP --> KK
+    QQ --> RR[Medical Entity Annotations]
+    
+    SS[External Data Sources] --> TT[blood_test_names]
+    SS --> UU[diagnostic_names]
+    SS --> VV[drug_names]
+    SS --> WW[ethnicity_list]
+    
+    TT --> Y
+    UU --> L
+    VV --> K
+    WW --> E
+    
+    XX[Configuration] --> YY[Random State: 42]
+    XX --> ZZ[Faker Seed]
+    XX --> AAA[Probability Distributions]
+    
+    YY --> KK
+    ZZ --> U
+    AAA --> BBB[Weighted Random Selection]
+    BBB --> KK
+    
+    style A fill:#e1f5fe
+    style B fill:#f3e5f5
+    style KK fill:#e8f5e8
+    style N fill:#fff3e0
+    style MM fill:#fce4ec
+    style SS fill:#f1f8e9
