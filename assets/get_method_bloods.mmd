@@ -1,0 +1,36 @@
+flowchart TD
+    A[Start: get_current_pat_bloods] --> B[Get date range using get_start_end_year_month]
+    B --> C[Check batch_mode flag from config_obj]
+
+    C -->|batch_mode True| D[Filter pat_batch DataFrame by timestamp]
+    C -->|batch_mode False| E[Cohort search using cohort_searcher_with_terms_and_search]
+
+    D --> F[Assign datetime column]
+    E --> F[Convert bloods_time_field to datetime]
+
+    F --> G[Get list of unique test names]
+    G --> H[Split DataFrame by test name into dictionary]
+
+    H --> I[Create df_unique with deduplicated client_idcode]
+    I --> J[Prepare columns for aggregation metrics]
+    J --> K[Reindex df_unique with new columns]
+    K --> L[Drop unneeded columns]
+
+    L --> M[Determine current date]
+
+    M --> N[Iterate over each test name]
+    
+    N --> O[If 1 or more records fill mean]
+    N --> P[If 2 or more records fill mean recent earliest days-since-last-test count]
+    N --> Q[If 3 or more records fill median mode std min max extreme flags days-between]
+
+    O --> R[Update df_unique_filtered]
+    P --> R
+    Q --> R
+
+    R --> S[Check verbosity level]
+    S -->|verbosity >=6| T[Display df_unique_filtered]
+    S -->|verbosity <6| U[Skip display]
+
+    T --> V[Return df_unique_filtered]
+    U --> V
