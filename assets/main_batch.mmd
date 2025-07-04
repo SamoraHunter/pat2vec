@@ -1,0 +1,95 @@
+flowchart TD
+    A[Start main_batch] --> B{Validate Config Objects}
+    B -->|Invalid| C[Raise ValueError]
+    B -->|Valid| D{Check if Patient Already Processed}
+    
+    D -->|Already Done| E[Skip Patient - Increment Counter]
+    D -->|Not Processed| F[Initialize Patient Vector]
+    
+    F --> G{Check Main Options}
+    
+    G -->|demo enabled| H[Get Demographics]
+    G -->|bmi enabled| I[Get BMI Features]
+    G -->|bloods enabled| J[Get Blood Results]
+    G -->|drugs enabled| K[Get Drug Data]
+    G -->|diagnostics enabled| L[Get Diagnostics]
+    G -->|annotations enabled| M[Get EPR Annotations]
+    G -->|annotations_mrc enabled| N[Get MRC Annotations]
+    G -->|core_02 enabled| O[Get Core O2 Data]
+    G -->|bed enabled| P[Get Bed Information]
+    G -->|vte_status enabled| Q[Get VTE Status]
+    G -->|hosp_site enabled| R[Get Hospital Site]
+    G -->|core_resus enabled| S[Get Resuscitation Data]
+    G -->|news enabled| T[Get NEWS Scores]
+    G -->|smoking enabled| U[Get Smoking Status]
+    G -->|annotations_reports enabled| V[Get Report Annotations]
+    G -->|textual_obs enabled| W[Get Textual Observations]
+    G -->|appointments enabled| X[Get Appointments]
+    
+    H --> Y[Append to Patient Vector]
+    I --> Y
+    J --> Y
+    K --> Y
+    L --> Y
+    M --> Y
+    N --> Y
+    O --> Y
+    P --> Y
+    Q --> Y
+    R --> Y
+    S --> Y
+    T --> Y
+    U --> Y
+    V --> Y
+    W --> Y
+    X --> Y
+    
+    Y --> Z[Generate Target Date Vector]
+    Z --> AA[Concatenate All Features]
+    AA --> BB[Process DataFrame]
+    BB --> CC[Add Client ID Column]
+    CC --> DD{Remote Dump?}
+    
+    DD -->|Local| EE{Batch Size > 1?}
+    EE -->|Yes| FF[Raise ValueError - Batch Too Large]
+    EE -->|No| GG[Save to Local CSV]
+    
+    DD -->|Remote| HH{Multi Process?}
+    HH -->|Yes| II[Write Remote with Lock]
+    HH -->|No| JJ[Write Remote via SFTP]
+    
+    GG --> KK[Update Progress Bar - Success]
+    II --> KK
+    JJ --> KK
+    
+    KK --> LL[End Successfully]
+    
+    E --> LL
+    C --> MM[End with Error]
+    FF --> MM
+    
+    subgraph "Error Handling"
+        NN[RuntimeError] --> OO[Sleep 1 Hour]
+        PP[General Exception] --> QQ[Log Error Details]
+        QQ --> RR[Re-raise Exception]
+    end
+    
+    subgraph "Progress Tracking"
+        SS[Update Progress Bar]
+        TT[Performance Metrics]
+        UU[Verbosity Logging]
+    end
+    
+    subgraph "Data Sources"
+        VV[Demographics DB]
+        WW[Clinical Data Lake]
+        XX[EPR Documents]
+        YY[Medical Reports]
+        ZZ[Annotations DB]
+    end
+    
+    style A fill:#e1f5fe
+    style LL fill:#c8e6c9
+    style MM fill:#ffcdd2
+    style G fill:#fff3e0
+    style DD fill:#f3e5f5
