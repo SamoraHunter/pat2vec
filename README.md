@@ -5,7 +5,6 @@
   - [2. Longitudinal Time Series Construction](#2-longitudinal-time-series-construction)
 - [System Architecture](#system-architecture)
 - [Data Pipeline](#data-pipeline)
-- [Requirements](#requirements)
 - [Features](#features)
 - [Installation](#installation)
   - [Windows](#windows)
@@ -15,6 +14,7 @@
 - [Usage](#usage)
 - [Contributing](#contributing)
 - [License](#license)
+- [Diagrams](#diagrams)
 
 
 # Overview
@@ -206,6 +206,13 @@ The script will clone the following repositories:
 - open example_usage.ipynb and hit run all.
 
 - If testing in a live environment ensure the testing flag is set to False in the config_obj.
+- 
+## Diagrams
+
+See the [data_pipeline diagram](assets/data_pipeline.png).  
+See the [example_usage diagram](assets/example_usage.png).  
+See the [methods_annotation diagram](assets/methods_annotation.png).  
+See the [system_architecture diagram](assets/system_architecture.png).
 
 
 ## Contributing
