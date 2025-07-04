@@ -1,0 +1,102 @@
+graph TB
+    subgraph "Main Classes"
+        A[MultiStream] --> A1[write method]
+        A --> A2[flush method]
+        
+        B[config_class] --> B1[Patient Data Paths]
+        B --> B2[Time Window Configuration]
+        B --> B3[Data Processing Options]
+        B --> B4[MedCAT Integration]
+        B --> B5[Remote/Local Storage]
+    end
+    
+    subgraph "Configuration Components"
+        B1 --> C1[pre_annotation_path]
+        B1 --> C2[pre_document_batch_path]
+        B1 --> C3[pre_bloods_batch_path]
+        B1 --> C4[pre_drugs_batch_path]
+        B1 --> C5[pre_diagnostics_batch_path]
+        B1 --> C6[pre_appointments_batch_path]
+        
+        B2 --> D1[start_date]
+        B2 --> D2[years/months/days]
+        B2 --> D3[time_window_interval_delta]
+        B2 --> D4[global_start/end dates]
+        
+        B3 --> E1[main_options dict]
+        B3 --> E2[testing mode]
+        B3 --> E3[batch_mode]
+        B3 --> E4[individual_patient_window]
+        
+        B4 --> F1[medcat flag]
+        B4 --> F2[dummy_medcat_model]
+        B4 --> F3[annot_filter_options]
+        
+        B5 --> G1[remote_dump]
+        B5 --> G2[sftp_client]
+        B5 --> G3[root_path]
+    end
+    
+    subgraph "Utility Functions"
+        H[calculate_interval] --> H1[Calculates time intervals]
+        I[update_global_start_date] --> I1[Updates global start date]
+        J[get_test_options_dict] --> J1[Returns test configuration]
+        K[swap_start_end] --> K1[Swaps start/end dates for lookback]
+    end
+    
+    subgraph "Data Types (main_options)"
+        E1 --> L1[demo - Demographics]
+        E1 --> L2[bmi - Body Mass Index]
+        E1 --> L3[bloods - Blood tests]
+        E1 --> L4[drugs - Medications]
+        E1 --> L5[diagnostics - Diagnostic tests]
+        E1 --> L6[annotations - MedCAT annotations]
+        E1 --> L7[appointments - Patient appointments]
+        E1 --> L8[textual_obs - Textual observations]
+    end
+    
+    subgraph "Time Window Processing"
+        D1 --> M1[Base start date]
+        D2 --> M2[Duration specification]
+        D3 --> M3[Interval chunking]
+        D4 --> M4[Global time boundaries]
+        
+        M1 --> N1[generate_date_list]
+        M2 --> N1
+        M3 --> N1
+        M4 --> N1
+        
+        N1 --> O1[date_list array]
+        O1 --> O2[n_pat_lines count]
+    end
+    
+    subgraph "Individual Patient Windows"
+        B --> P1[individual_patient_window_df]
+        P1 --> P2[patient_dict]
+        P2 --> P3[build_patient_dict]
+        P3 --> P4[add_offset_column]
+        
+        K1 --> P2
+    end
+    
+    subgraph "Remote Storage"
+        G1 --> Q1[SSH/SFTP Connection]
+        Q1 --> Q2[paramiko client]
+        Q2 --> Q3[Remote path creation]
+        Q3 --> Q4[Remote file operations]
+    end
+    
+    subgraph "Path Management"
+        R[PathsClass] --> R1[Manages file paths]
+        R1 --> R2[Output folder structure]
+        B --> R
+    end
+    
+    style A fill:#e1f5fe
+    style B fill:#f3e5f5
+    style H fill:#e8f5e8
+    style I fill:#e8f5e8
+    style J fill:#e8f5e8
+    style K fill:#e8f5e8
+    style E1 fill:#fff3e0
+    style B2 fill:#fce4ec
