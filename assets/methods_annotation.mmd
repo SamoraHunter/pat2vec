@@ -1,0 +1,90 @@
+graph TD
+    A[Patient Document Batch] --> B{Check Annotation Complete?}
+    B -->|Yes| C[Load Existing Annotations]
+    B -->|No| D[Process Documents]
+    
+    D --> E[Annotate Patient Batch Documents]
+    E --> F[Extract Medical Entities]
+    F --> G[Parse Meta Annotations]
+    
+    G --> H[Multi-Annotations to DataFrame]
+    H --> I[Create Temporary CSV]
+    I --> J[Process Each Document]
+    
+    J --> K[JSON to DataFrame Conversion]
+    K --> L[Filter NaN Values]
+    L --> M[Append to Temp File]
+    
+    M --> N{Add ICD10 Codes?}
+    N -->|Yes| O[Join ICD10 Codes]
+    N -->|No| P[Save Final CSV]
+    O --> Q{Add OPC4S Codes?}
+    Q -->|Yes| R[Join OPC4S Codes]
+    Q -->|No| P
+    R --> P
+    
+    P --> S[Patient Annotation Batch Complete]
+    
+    subgraph "Document Types"
+        T1[Regular Documents<br/>body_analysed]
+        T2[MCT Documents<br/>observation_valuetext_analysed]
+        T3[Textual Observations<br/>body_analysed]
+        T4[Reports<br/>body_analysed]
+    end
+    
+    subgraph "Entity Extraction"
+        U1[Pretty Name]
+        U2[CUI Code]
+        U3[Type IDs]
+        U4[Source Value]
+        U5[Detected Name]
+        U6[Accuracy Score]
+        U7[Context Similarity]
+        U8[Start/End Positions]
+        U9[ICD10 Codes]
+        U10[SNOMED Codes]
+        U11[Ontologies]
+    end
+    
+    subgraph "Meta Annotations"
+        V1[Time Value/Confidence]
+        V2[Presence Value/Confidence]
+        V3[Subject Value/Confidence]
+    end
+    
+    subgraph "Output Features"
+        W1[Text Sample<br/>±300 chars around entity]
+        W2[Full Document<br/>if requested]
+        W3[Entity Counts by Pretty Name]
+        W4[Filtered Results]
+    end
+    
+    F --> U1
+    F --> U2
+    F --> U3
+    F --> U4
+    F --> U5
+    F --> U6
+    F --> U7
+    F --> U8
+    F --> U9
+    F --> U10
+    F --> U11
+    
+    G --> V1
+    G --> V2
+    G --> V3
+    
+    K --> W1
+    K --> W2
+    
+    S --> X[Filter Annotations]
+    X --> Y[Calculate Features]
+    Y --> W3
+    Y --> W4
+    
+    style A fill:#e1f5fe
+    style S fill:#c8e6c9
+    style F fill:#fff3e0
+    style G fill:#fff3e0
+    style K fill:#f3e5f5
