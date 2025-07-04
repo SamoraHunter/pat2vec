@@ -1,0 +1,92 @@
+flowchart TD
+    A[Setup & Configuration] --> B[Initialize Random Seed]
+    B --> C[Set File Paths]
+    C --> D[Configure System Paths]
+    
+    D --> E[Setup Logger]
+    E --> F[Create Config Object]
+    F --> G[Initialize Pat2Vec Object]
+    
+    G --> H{Authentication Check}
+    H -->|Testing Mode| I[Skip Auth Check]
+    H -->|Production Mode| J[Validate Elasticsearch Credentials]
+    
+    I --> K[Document Search Phase]
+    J --> K
+    
+    K --> L[Define Search Terms]
+    L --> M[Execute Multi-term Document Search]
+    M --> N[Extract Treatment Documents]
+    
+    N --> O{Optional: Drug Treatment Search}
+    O -->|Yes| P[Search Drug Treatment Records]
+    O -->|No| Q[Configure Main Options]
+    P --> Q
+    
+    Q --> R[Set Annotation Filters]
+    R --> S[Configure Data Type Filters]
+    S --> T[Set Time Window Parameters]
+    
+    T --> U[Patient Processing Loop]
+    U --> V[Process Individual Patients]
+    V --> W[Generate Patient Vectors]
+    
+    W --> X[Merge Individual CSV Files]
+    X --> Y[Extract DateTime Stamps]
+    
+    Y --> Z[Build Merged Dataframes]
+    Z --> AA[EPR_MCT Documents]
+    Z --> BB[Annotations]
+    Z --> CC[Drugs]
+    Z --> DD[Diagnostics]
+    Z --> EE[Bloods]
+    Z --> FF[Demographics]
+    Z --> GG[Other Clinical Data Sources]
+    
+    AA --> HH[Post-Processing]
+    BB --> HH
+    CC --> HH
+    DD --> HH
+    EE --> HH
+    FF --> HH
+    GG --> HH
+    
+    HH --> II{Optional: SNOMED Filtering}
+    II -->|Yes| JJ[Apply SNOMED Code Expansion]
+    II -->|No| KK[Build IPW Dataframe]
+    JJ --> KK
+    
+    KK --> LL[Quality Checks & Validation]
+    LL --> MM[Final Output Files]
+    
+    subgraph "Configuration Details"
+        N1[Main Options: - Demographics - BMI - Bloods - Drugs - Diagnostics - Annotations - etc.]
+        N2[Annotation Filters: - Accuracy Threshold - UMLS Types - Time/Presence/Subject - Confidence Levels]
+        N3[Time Windows: - Start/End Dates - Lookback Settings - Interval Deltas]
+    end
+    
+    subgraph "Data Sources"
+        D1[Clinical Notes EPR]
+        D2[Observations MCT]
+        D3[Drug Orders]
+        D4[Diagnostics]
+        D5[Demographics]
+        D6[Bloods Labs]
+        D7[Other Clinical Data]
+    end
+    
+    subgraph "Output Files"
+        O1[Individual Patient Vectors]
+        O2[Merged Patient Dataframe]
+        O3[Document Batches]
+        O4[Annotation Batches]
+        O5[Clinical Data Batches]
+        O6[IPW Dataframes]
+    end
+    
+    style A fill:#e1f5fe
+    style G fill:#f3e5f5
+    style K fill:#fff3e0
+    style U fill:#e8f5e8
+    style Z fill:#fce4ec
+    style MM fill:#e0f2f1
