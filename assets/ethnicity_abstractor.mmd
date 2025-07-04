@@ -1,0 +1,90 @@
+flowchart TD
+    A[Input: DataFrame with Ethnicity Column] --> B[Initialize Configuration Flags]
+    B --> C{assumeBritishWhite?}
+    C -->|Yes| D[Add 'british' to whiteList]
+    C -->|No| E[Skip British assumption]
+    D --> F{assumeEnglishWhite?}
+    E --> F
+    F -->|Yes| G[Add 'english' to whiteList]
+    F -->|No| H[Skip English assumption]
+    G --> I{assumeEuropeanWhite?}
+    H --> I
+    I -->|Yes| J[Add europeanCountries to whiteList]
+    I -->|No| K[Skip European assumption]
+    J --> L{assumeAfricanBlack?}
+    K --> L
+    L -->|Yes| M[Add africanCountries to blackList]
+    L -->|No| N[Skip African assumption]
+    M --> O{assumeAsianAsian?}
+    N --> O
+    O -->|Yes| P[Add asianCountries to asianList]
+    O -->|No| Q[Skip Asian assumption]
+    P --> R{includeNationalitiesForCountries?}
+    Q --> R
+    R -->|Yes| S[Add nationalities to respective lists]
+    R -->|No| T[Skip nationalities]
+    S --> U{edgeCases?}
+    T --> U
+    U -->|Yes| V[Add extra white countries<br/>American, Australian, Canadian]
+    U -->|No| W[Skip edge cases]
+    V --> X[Create copy of DataFrame with census column]
+    W --> X
+    X --> Y[Initialize census column with 'other_ethnic_group']
+    Y --> Z[Start processing each row]
+    Z --> AA[Convert entry to lowercase]
+    AA --> BB[Initialize result as 'other_ethnic_group']
+    BB --> CC[Check against whiteList]
+    CC --> DD{Match found in whiteList?}
+    DD -->|Yes| EE[Set result = 'white']
+    DD -->|No| FF[Check against asianList]
+    EE --> FF
+    FF --> GG{Match found in asianList?}
+    GG -->|Yes| HH[Set result = 'asian_or_asian_british']
+    GG -->|No| II[Check against blackList]
+    HH --> II
+    II --> JJ{Match found in blackList?}
+    JJ -->|Yes| KK[Set result = 'black_african_caribbean_or_black_british']
+    JJ -->|No| LL[Check against otherList]
+    KK --> LL
+    LL --> MM{Match found in otherList?}
+    MM -->|Yes| NN[Set result = 'other_ethnic_group']
+    MM -->|No| OO[Check against mixedList]
+    NN --> OO
+    OO --> PP{Match found in mixedList?}
+    PP -->|Yes| QQ[Set result = 'mixed_or_multiple_ethnic_groups']
+    PP -->|No| RR[Apply explicit keyword checks]
+    QQ --> RR
+    RR --> SS{Contains 'black'?}
+    SS -->|Yes| TT[Override: result = 'black_african_caribbean_or_black_british']
+    SS -->|No| UU{Contains 'white'?}
+    TT --> UU
+    UU -->|Yes| VV[Override: result = 'white']
+    UU -->|No| WW{Contains 'asian'?}
+    VV --> WW
+    WW -->|Yes| XX[Override: result = 'asian_or_asian_british']
+    WW -->|No| YY{Contains 'mix'?}
+    XX --> YY
+    YY -->|Yes| ZZ[Override: result = 'mixed_or_multiple_ethnic_groups']
+    YY -->|No| AAA{Contains 'other'?}
+    ZZ --> AAA
+    AAA -->|Yes| BBB[Override: result = 'other_ethnic_group']
+    AAA -->|No| CCC[Store result in census column]
+    BBB --> CCC
+    CCC --> DDD{More rows to process?}
+    DDD -->|Yes| Z
+    DDD -->|No| EEE[Return DataFrame with abstracted ethnicity]
+    
+    subgraph "Ethnic Categories"
+        FFF[White List:<br/>English, Welsh, Scottish, British, Irish, etc.]
+        GGG[Asian List:<br/>Indian, Pakistani, Bangladeshi, Chinese, etc.]
+        HHH[Black List:<br/>African, Caribbean, Black British, etc.]
+        III[Mixed List:<br/>Mixed, Multiple, Biracial, etc.]
+        JJJ[Other List:<br/>Arab, Not specified, etc.]
+    end
+    
+    subgraph "Country Lists"
+        KKK[African Countries:<br/>Algeria, Angola, Benin, etc.]
+        LLL[Asian Countries:<br/>Afghanistan, Bangladesh, China, etc.]
+        MMM[European Countries:<br/>Albania, Austria, Belgium, etc.]
+        NNN[North/South American Countries:<br/>Canada, USA, Brazil, etc.]
+    end
