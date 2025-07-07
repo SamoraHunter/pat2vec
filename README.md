@@ -3,9 +3,13 @@
 - [Example Use Cases](#example-use-cases)
   - [1. Patient-Level Aggregation](#1-patient-level-aggregation)
   - [2. Longitudinal Time Series Construction](#2-longitudinal-time-series-construction)
-- [System Architecture](#system-architecture)
-- [Data Pipeline](#data-pipeline)
+- [Notable Requirements](#notable-requirements)
 - [Features](#features)
+- [📊 Diagrams](#-diagrams)
+  - [System Architecture & Configuration](#system-architecture--configuration)
+  - [Data Pipelines](#data-pipelines)
+  - [Methods & Post-Processing](#methods--post-processing)
+  - [Feature Extraction](#feature-extraction)
 - [Installation](#installation)
   - [Windows](#windows)
   - [Unix/Linux](#unixlinux)
@@ -14,7 +18,6 @@
 - [Usage](#usage)
 - [Contributing](#contributing)
 - [License](#license)
-- [Diagrams](#diagrams)
 
 
 # Overview
@@ -34,15 +37,6 @@ Generate a monthly time series for each patient that includes:
 - MedCat-derived clinical text annotations  
 
 The time series spans up to 25 years retrospectively, aligned to each patient's diagnosis date, enabling a consistent retrospective view across varying start times.
-
-
-## System Architecture
-
-![Alt text](assets/system_architecture.png)
-
-## Data pipeline
-
-![Alt text](assets/data_pipeline.png)
 
 ## Notable requirements:
 
@@ -64,6 +58,52 @@ See requirements.txt
 - Look back
 - Look forward
 - Individual patient time windows. 
+
+## 📊 Diagrams
+
+This project includes a collection of diagrams illustrating the system architecture, data pipelines, ingestion examples, and method workflows.  
+You can view the Mermaid definitions or the rendered diagrams below.
+
+### 📂 System Architecture & Configuration
+| Diagram | Mermaid | Image |
+|---|---|---|
+| **System Architecture** | [assets/system_architecture.mmd](assets/system_architecture.mmd) | ![System Architecture](assets/system_architecture.png) |
+| **Configuration** | [assets/config.mmd](assets/config.mmd) | ![Configuration](assets/config.svg) |
+
+---
+
+### 🛠️ Data Pipelines
+| Diagram | Mermaid | Image |
+|---|---|---|
+| **Data Pipeline** | [assets/data_pipeline.mmd](assets/data_pipeline.mmd) | ![Data Pipeline](assets/data_pipeline.png) |
+| **Main Batch Processing** | [assets/main_batch.mmd](assets/main_batch.mmd) | ![Main Batch](assets/main_batch.svg) |
+| **Example Ingestion** | [assets/example_ingestion.mmd](assets/example_ingestion.mmd) | <img src="assets/example_ingestion.png" alt="Example Ingestion" width="50"/> |
+
+---
+
+### 🧩 Methods & Post-Processing
+| Diagram | Mermaid | Image |
+|---|---|---|
+| **Methods Annotation** | [assets/methods_annotation.mmd](assets/methods_annotation.mmd) | ![Methods Annotation](assets/methods_annotation.png) |
+| **Post-Processing Build Methods** | [assets/post_processing_build_methods.mmd](assets/post_processing_build_methods.mmd) | ![Post-Processing Build Methods](assets/post_processing_build_methods.svg) |
+
+---
+
+### 🔍 Feature Extraction
+| Diagram | Mermaid | Image |
+|---|---|---|
+| **Ethnicity Abstractor** | [assets/ethnicity_abstractor.mmd](assets/ethnicity_abstractor.mmd) | ![Ethnicity Abstractor](assets/ethnicity_abstractor.svg) |
+| **Get BMI** | [assets/get_bmi.mmd](assets/get_bmi.mmd) | ![Get BMI](assets/get_bmi.svg) |
+| **Get Demographics** | [assets/get_demographics.mmd](assets/get_demographics.mmd) | ![Get Demographics](assets/get_demographics.svg) |
+| **Get Diagnostics** | [assets/get_diagnostics.mmd](assets/get_diagnostics.mmd) | ![Get Diagnostics](assets/get_diagnostics.svg) |
+| **Get Drugs** | [assets/get_drugs.mmd](assets/get_drugs.mmd) | ![Get Drugs](assets/get_drugs.svg) |
+| **Get Smoking** | [assets/get_smoking.mmd](assets/get_smoking.mmd) | ![Get Smoking](assets/get_smoking.svg) |
+| **Get News** | [assets/get_news.mmd](assets/get_news.mmd) | ![Get News](assets/get_news.svg) |
+| **Get Dummy Data Cohort Searcher** | [assets/get_dummy_data_cohort_searcher.mmd](assets/get_dummy_data_cohort_searcher.mmd) | ![Get Dummy Data Cohort Searcher](assets/get_dummy_data_cohort_searcher.svg) |
+| **Get Method Bloods** | [assets/get_method_bloods.mmd](assets/get_method_bloods.mmd) | ![Get Method Bloods](assets/get_method_bloods.svg) |
+| **Get Method Patient Annotations** | [assets/get_method_pat_annotations.mmd](assets/get_method_pat_annotations.mmd) | ![Get Method Patient Annotations](assets/get_method_pat_annotations.svg) |
+| **Get Treatment Docs (No Terms Fuzzy)** | [assets/get_treatment_docs_by_iterative_multi_term_cohort_searcher_no_terms_fuzzy.mmd](assets/get_treatment_docs_by_iterative_multi_term_cohort_searcher_no_terms_fuzzy.mmd) | ![Get Treatment Docs (No Terms Fuzzy)](assets/get_treatment_docs_by_iterative_multi_term_cohort_searcher_no_terms_fuzzy.svg) |
+
 
 ## Installation
 
@@ -207,12 +247,6 @@ The script will clone the following repositories:
 
 - If testing in a live environment ensure the testing flag is set to False in the config_obj.
 - 
-## Diagrams
-
-See the [data_pipeline diagram](assets/data_pipeline.png).  
-See the [example_usage diagram](assets/example_usage.png).  
-See the [methods_annotation diagram](assets/methods_annotation.png).  
-See the [system_architecture diagram](assets/system_architecture.png).
 
 
 ## Contributing
