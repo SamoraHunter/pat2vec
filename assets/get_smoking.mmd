@@ -1,0 +1,49 @@
+flowchart TD
+    A[Start: get_smoking function] --> B[Extract date range parameters]
+    B --> C[Set search_term = 'CORE_SmokingStatus']
+    C --> D{batch_mode?}
+    
+    D -->|Yes| E[Filter pat_batch by timestamp]
+    D -->|No| F[Use cohort_searcher_with_terms_and_search]
+    
+    E --> G[current_pat_raw filtered data]
+    F --> G
+    
+    G --> H{len current_pat_raw == 0?}
+    H -->|Yes| I[Create empty features DataFrame with client_idcode]
+    H -->|No| J[Filter by search_term 'CORE_SmokingStatus']
+    
+    J --> K[Drop NA values]
+    K --> L[Re-filter by search_term]
+    L --> M[Set term = 'smoking_status']
+    
+    M --> N{Has observation_valuetext_analysed data?}
+    N -->|Yes| O[Create features DataFrame]
+    N -->|No| P{config_obj.negate_biochem?}
+    
+    O --> Q[Extract value_array from observations]
+    Q --> R[Check for 'Current Smoker' patterns]
+    R --> S[Check for 'Non-Smoker' patterns]
+    S --> T[Set smoking_status_current and smoking_status_non columns]
+    
+    P -->|Yes| U[Create features with NaN values]
+    P -->|No| V[Create basic features DataFrame]
+    
+    T --> W{config_obj.verbosity >= 6?}
+    U --> W
+    V --> W
+    I --> W
+    
+    W -->|Yes| X[Display features]
+    W -->|No| Y[Return features DataFrame]
+    X --> Y
+    
+    Y --> Z[End]
+    
+    style A fill:#e1f5fe
+    style Z fill:#e8f5e8
+    style D fill:#fff3e0
+    style H fill:#fff3e0
+    style N fill:#fff3e0
+    style P fill:#fff3e0
+    style W fill:#fff3e0

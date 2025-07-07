@@ -1,0 +1,63 @@
+flowchart TD
+    A[Start: get_current_pat_diagnostics] --> B[Extract Parameters]
+    B --> C[Get date range components<br/>start_year, start_month, etc.]
+    
+    C --> D{Batch Mode?}
+    
+    D -->|Yes| E[Filter pat_batch DataFrame<br/>by timestamp]
+    D -->|No| F[Search cohort with terms<br/>using order index]
+    
+    E --> G[Copy diagnostics data]
+    F --> G
+    
+    G --> H{Batch Mode?}
+    H -->|Yes| I[Copy diagnostic_time_field<br/>to datetime column]
+    H -->|No| J[Apply convert_date function<br/>to create datetime column]
+    
+    I --> K[Get unique order names]
+    J --> K
+    
+    K --> L[Create order_name_df_dict<br/>Group data by order_name]
+    
+    L --> M[Create df_unique<br/>Drop duplicates by client_idcode]
+    
+    M --> N[Setup new columns for each order type:<br/>- _num-diagnostic-order<br/>- _days-since-last-diagnostic-order<br/>- _days-between-first-last-diagnostic]
+    
+    N --> O[Drop unnecessary columns<br/>_index, _id, _score, order_guid, etc.]
+    
+    O --> P[Set today's date]
+    
+    P --> Q[Start processing loop<br/>for each order type]
+    
+    Q --> R{Data available<br/>for order type?}
+    
+    R -->|Yes, >= 1 record| S[Calculate num-diagnostic-order<br/>Count of records]
+    R -->|No| V[Continue to next order type]
+    
+    S --> T[Calculate days-since-last-diagnostic-order<br/>today - latest_date]
+    
+    T --> U{>= 2 records?}
+    U -->|Yes| W[Calculate days-between-first-last-diagnostic<br/>earliest - oldest date]
+    U -->|No| X[Continue to next order type]
+    
+    W --> X
+    V --> X
+    X --> Y{More order types?}
+    Y -->|Yes| Q
+    Y -->|No| Z[Clean up: Drop datetime and index columns]
+    
+    Z --> AA{Verbosity >= 6?}
+    AA -->|Yes| BB[Display DataFrame]
+    AA -->|No| CC[Return df_unique_filtered]
+    BB --> CC
+    
+    CC --> DD[End]
+    
+    style A fill:#e1f5fe
+    style DD fill:#e8f5e8
+    style D fill:#fff3e0
+    style H fill:#fff3e0
+    style R fill:#fff3e0
+    style U fill:#fff3e0
+    style Y fill:#fff3e0
+    style AA fill:#fff3e0

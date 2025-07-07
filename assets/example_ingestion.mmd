@@ -1,0 +1,31 @@
+flowchart TD
+    A[Import Libraries] --> B[Setup Path Configuration]
+    B --> C[Import pat2vec Elasticsearch Methods]
+    C --> D[Create Example DataFrame]
+    
+    D --> E[DataFrame with 100 rows:<br/>- id: 1-100<br/>- name: Name_1 to Name_100<br/>- value: Random floats<br/>- timestamp: Daily dates from 2023-01-01]
+    
+    E --> F[Initialize Elasticsearch Index]
+    F --> G[Call ingest_data_to_elasticsearch<br/>with empty DataFrame<br/>replace_index=True]
+    
+    G --> H[Calculate Safe Chunk Parameters]
+    H --> I[max_cells = 100,000<br/>num_columns = 4<br/>chunk_size = 25,000 rows<br/>n_chunks = ceil 100/25000]
+    
+    I --> J[Split DataFrame into Chunks]
+    J --> K[chunks = np.array_split data_in, ceil 100/25000]
+    
+    K --> L[Process Each Chunk]
+    L --> M{For each chunk in chunks}
+    
+    M --> N[Ingest Chunk to Elasticsearch<br/>replace_index=False]
+    N --> O[Progress tracked with tqdm]
+    
+    O --> P{More chunks?}
+    P -->|Yes| M
+    P -->|No| Q[Ingestion Complete]
+    
+    style A fill:#e1f5fe
+    style D fill:#f3e5f5
+    style G fill:#fff3e0
+    style N fill:#e8f5e8
+    style Q fill:#ffebee

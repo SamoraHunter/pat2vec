@@ -1,0 +1,68 @@
+flowchart TD
+    A[Start: get_bmi_features] --> B[Extract date range parameters]
+    B --> C{batch_mode?}
+    
+    C -->|Yes| D[Filter dataframe by timestamp]
+    C -->|No| E[Search cohort with terms<br/>BMI, Weight, Height observations]
+    
+    D --> F[current_pat_raw_bmi]
+    E --> F
+    
+    F --> G{BMI Calculation<br/>records exist?}
+    
+    G -->|No| H[Create empty DataFrame<br/>with client_idcode only]
+    G -->|Yes| I[Filter BMI records<br/>6 < BMI < 200]
+    
+    I --> J{Valid BMI<br/>records?}
+    
+    J -->|Yes| K[Calculate BMI features:<br/>mean, median, std, high, low,<br/>extreme, max, min]
+    J -->|No| L{negate_biochem?}
+    
+    L -->|Yes| M[Set BMI features to NaN]
+    L -->|No| N[Skip BMI features]
+    
+    K --> O[Filter Height records<br/>30 < Height < 300]
+    M --> O
+    N --> O
+    
+    O --> P{Valid Height<br/>records?}
+    
+    P -->|Yes| Q[Calculate Height features:<br/>mean, median, std]
+    P -->|No| R{negate_biochem?}
+    
+    R -->|Yes| S[Set Height features to NaN]
+    R -->|No| T[Skip Height features]
+    
+    Q --> U[Filter Weight records<br/>1 < Weight < 800]
+    S --> U
+    T --> U
+    
+    U --> V{Valid Weight<br/>records?}
+    
+    V -->|Yes| W[Calculate Weight features:<br/>mean, median, std, max, min]
+    V -->|No| X{negate_biochem?}
+    
+    X -->|Yes| Y[Set Weight features to NaN]
+    X -->|No| Z[Skip Weight features]
+    
+    W --> AA{verbosity >= 6?}
+    Y --> AA
+    Z --> AA
+    H --> AA
+    
+    AA -->|Yes| BB[Display DataFrame]
+    AA -->|No| CC[Return bmi_features]
+    
+    BB --> CC
+    
+    style A fill:#e1f5fe
+    style CC fill:#c8e6c9
+    style G fill:#fff3e0
+    style J fill:#fff3e0
+    style P fill:#fff3e0
+    style V fill:#fff3e0
+    style C fill:#f3e5f5
+    style L fill:#f3e5f5
+    style R fill:#f3e5f5
+    style X fill:#f3e5f5
+    style AA fill:#f3e5f5

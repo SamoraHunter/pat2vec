@@ -1,0 +1,83 @@
+flowchart TD
+    A[Start: get_current_pat_drugs] --> B[Initialize Parameters]
+    B --> C{Check batch_mode}
+    
+    C -->|True| D[Filter pat_batch by timestamp]
+    C -->|False| E[Search using cohort_searcher]
+    
+    D --> F[Copy drugs to current_pat_diagnostics]
+    E --> F
+    
+    F --> G{batch_mode?}
+    G -->|True| H[Set datetime = drug_time_field]
+    G -->|False| I[Convert dates using convert_date]
+    
+    H --> J[Get unique order names]
+    I --> J
+    
+    J --> K[Create order_name_df_dict]
+    K --> L[Create df_unique copy]
+    L --> M[Drop duplicates on client_idcode]
+    M --> N[Reset index]
+    
+    N --> O[Build feature columns list]
+    O --> P[Add columns based on drugs_arg_dict]
+    
+    P --> Q{_num-drug-order?}
+    Q -->|Yes| R[Add _num-drug-order column]
+    Q -->|No| S{_days-since-last-drug-order?}
+    R --> S
+    
+    S -->|Yes| T[Add _days-since-last-drug-order column]
+    S -->|No| U{_days-between-first-last-drug?}
+    T --> U
+    
+    U -->|Yes| V[Add _days-between-first-last-drug column]
+    U -->|No| W[Reindex DataFrame with new columns]
+    V --> W
+    
+    W --> X[Drop unnecessary columns]
+    X --> Y[Set today's date]
+    Y --> Z[Initialize loop counter i=0]
+    
+    Z --> AA[For each order name]
+    AA --> BB[Get filtered DataFrame for order]
+    BB --> CC{df_len >= 1?}
+    
+    CC -->|Yes| DD[Calculate aggregated values]
+    CC -->|No| EE[Next order name]
+    
+    DD --> FF{_num-drug-order enabled?}
+    FF -->|Yes| GG[Set count value]
+    FF -->|No| HH{_days-since-last-drug-order enabled?}
+    GG --> HH
+    
+    HH -->|Yes| II[Calculate days since last order]
+    HH -->|No| JJ{_days-between-first-last-drug enabled?}
+    II --> JJ
+    
+    JJ -->|Yes| KK{df_len >= 2?}
+    JJ -->|No| EE
+    KK -->|Yes| LL[Calculate days between first and last]
+    KK -->|No| EE
+    LL --> EE
+    
+    EE --> MM{More order names?}
+    MM -->|Yes| AA
+    MM -->|No| NN[Try to drop datetime column]
+    
+    NN --> OO[Try to drop index column]
+    OO --> PP{verbosity >= 6?}
+    PP -->|Yes| QQ[Display DataFrame]
+    PP -->|No| RR[Return df_unique_filtered]
+    QQ --> RR
+    
+    RR[End: Return processed DataFrame]
+
+    style A fill:#e1f5fe
+    style RR fill:#c8e6c9
+    style C fill:#fff3e0
+    style G fill:#fff3e0
+    style Q fill:#fce4ec
+    style S fill:#fce4ec
+    style U fill:#fce4ec

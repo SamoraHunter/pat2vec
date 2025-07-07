@@ -1,0 +1,54 @@
+flowchart TD
+    A[get_demo] --> B[get_demographics3_batch]
+    B --> C{Demo data empty?}
+    C -->|Yes| Z[Return empty result]
+    C -->|No| D[Reset index]
+    
+    D --> E{DOB available?}
+    E -->|Yes| F[_process_age]
+    E -->|No| G[Set age = NaN]
+    
+    F --> H{Gender available?}
+    G --> H
+    H -->|Yes| I[_process_sex]
+    H -->|No| J[Set male = NaN]
+    
+    I --> K{Death date available?}
+    J --> K
+    K -->|Yes| L[_process_dead]
+    K -->|No| M[Set dead = 0]
+    
+    L --> N{Race code available?}
+    M --> N
+    N -->|Yes| O[_process_ethnicity]
+    N -->|No| P[Set all ethnicity fields = NaN]
+    
+    O --> Q[Select final columns]
+    P --> Q
+    Q --> R[Convert to float types]
+    R --> S[Return processed DataFrame]
+    
+    subgraph "Processing Functions"
+        F1[_process_age<br/>- append_age_at_record_series<br/>- Calculate age from DOB]
+        F2[_process_sex<br/>- Map gender to binary<br/>- Male=1, Female=0]
+        F3[_process_dead<br/>- Check if death date exists<br/>- Dead=1 if date, 0 otherwise]
+        F4[_process_ethnicity<br/>- EthnicityAbstractor.abstractEthnicity<br/>- One-hot encode ethnicity<br/>- Create census_* columns]
+    end
+    
+    F -.-> F1
+    I -.-> F2
+    L -.-> F3
+    O -.-> F4
+    
+    subgraph "Final Output Columns"
+        T[client_idcode<br/>male<br/>age<br/>dead<br/>census_white<br/>census_asian_or_asian_british<br/>census_black_african_caribbean_or_black_british<br/>census_mixed_or_multiple_ethnic_groups<br/>census_other_ethnic_group]
+    end
+    
+    S --> T
+    
+    style A fill:#e1f5fe
+    style F1 fill:#f3e5f5
+    style F2 fill:#f3e5f5
+    style F3 fill:#f3e5f5
+    style F4 fill:#f3e5f5
+    style T fill:#e8f5e8
