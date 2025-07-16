@@ -856,6 +856,19 @@ class config_class:
                 )
                 print('using existing offset column: "{}"'.format(offset_column_name))
 
+                print(
+                    pd.to_datetime(
+                        self.individual_patient_window_df[
+                            self.individual_patient_window_start_column_name
+                        ],
+                        errors="coerce",
+                        utc=True,
+                        format="ISO8601",
+                    )
+                    .isna()
+                    .value_counts(),
+                )
+
                 self.patient_dict = build_patient_dict(
                     dataframe=self.individual_patient_window_df,
                     patient_id_column=self.individual_patient_id_column_name,
@@ -863,24 +876,26 @@ class config_class:
                     end_column=self.individual_patient_window_start_column_name
                     + "_offset",
                 )
-                individual_patient_window_df[
+                self.individual_patient_window_df[
                     self.individual_patient_window_start_column_name
                 ] = pd.to_datetime(
-                    individual_patient_window_df[
+                    self.individual_patient_window_df[
                         self.individual_patient_window_start_column_name
                     ],
                     errors="coerce",
                     utc=True,
+                    format="ISO8601",
                 )
 
-                individual_patient_window_df[
+                self.individual_patient_window_df[
                     self.individual_patient_window_start_column_name + "_offset"
                 ] = pd.to_datetime(
-                    individual_patient_window_df[
+                    self.individual_patient_window_df[
                         self.individual_patient_window_start_column_name + "_offset"
                     ],
                     errors="coerce",
                     utc=True,
+                    format="ISO8601",
                 )
 
             else:

@@ -18,6 +18,11 @@ from IPython.display import display
 from tqdm import tqdm
 import pytz
 
+import pandas as pd
+from dateutil.parser import parse
+from dateutil.relativedelta import relativedelta
+import warnings
+
 color_bars = [
     Fore.RED,
     Fore.GREEN,
@@ -1320,76 +1325,191 @@ def add_offset_column(
 ):
     """
     Adds a new column with the offset from the start time to the provided DataFrame.
+    Handles multiple datetime formats flexibly.
 
     Parameters:
     - dataframe: pandas DataFrame
     - start_column_name: str, the name of the column with the starting datetime
     - offset_column_name: str, the name of the new column to be created with the offset
-    - time_offset: relativedelta, the time period offset to be added to the start time
+    - time_offset: relativedelta or timedelta, the time period offset to be added to the start time
+    - verbose: int, verbosity level (0=silent, 1=basic, 2=detailed)
 
     Returns:
-    - None (modifies the input DataFrame in place)
+    - pandas DataFrame (modified dataframe with new offset column)
     """
 
     if start_column_name not in dataframe.columns:
         raise ValueError(f"Column '{start_column_name}' does not exist.")
 
-    # attempt to fix human time stamp inconsistencies:
-    try:
-        dataframe[start_column_name] = pd.to_datetime(
-            dataframe[start_column_name].astype(str),
-            infer_datetime_format=True,
-            format="%d/%m/%y %H.%M.%S",
+    # Create a copy to avoid modifying the original
+    df = dataframe.copy()
+
+    # Common datetime formats to try
+    common_formats = [
+        "%d/%m/%y %H.%M.%S",
+        "%d/%m/%Y %H.%M.%S",
+        "%m/%d/%y %H.%M.%S",
+        "%m/%d/%Y %H.%M.%S",
+        "%d/%m/%y %H:%M:%S",
+        "%d/%m/%Y %H:%M:%S",
+        "%m/%d/%y %H:%M:%S",
+        "%m/%d/%Y %H:%M:%S",
+        "%Y-%m-%d %H:%M:%S",
+        "%Y-%m-%d %H.%M.%S",
+        "%d-%m-%Y %H:%M:%S",
+        "%d-%m-%Y %H.%M.%S",
+        "%Y/%m/%d %H:%M:%S",
+        "%Y/%m/%d %H.%M.%S",
+        "%d/%m/%y",
+        "%m/%d/%y",
+        "%d/%m/%Y",
+        "%m/%d/%Y",
+        "%Y-%m-%d",
+        "%Y/%m/%d",
+        "%d-%m-%Y",
+        "%d.%m.%Y",
+        "%d.%m.%y",
+        "%Y.%m.%d",
+    ]
+
+    def parse_datetime_flexible(value):
+        """Try multiple methods to parse datetime"""
+        if pd.isna(value):
+            return pd.NaT
+
+        # Convert to string if not already
+        str_value = str(value).strip()
+
+        # Skip if empty or 'nan'
+        if not str_value or str_value.lower() in ["nan", "nat", "none", "null"]:
+            return pd.NaT
+
+        # Method 1: Try pandas to_datetime with infer_datetime_format
+        try:
+            result = pd.to_datetime(str_value, infer_datetime_format=True)
+            if pd.notna(result):
+                return result
+        except:
+            pass
+
+        # Method 2: Try common formats
+        for fmt in common_formats:
+            try:
+                result = pd.to_datetime(str_value, format=fmt)
+                if pd.notna(result):
+                    return result
+            except:
+                continue
+
+        # Method 3: Try dateutil parser (fuzzy parsing)
+        try:
+            result = parse(str_value, fuzzy=True)
+            return pd.to_datetime(result)
+        except:
+            pass
+
+        # Method 4: Try pandas to_datetime with errors='coerce'
+        try:
+            result = pd.to_datetime(str_value, errors="coerce")
+            if pd.notna(result):
+                return result
+        except:
+            pass
+
+        # If all methods fail, return NaT
+        return pd.NaT
+
+    # Apply the flexible parsing
+    if verbose >= 1:
+        print(f"Processing {len(df)} rows for datetime conversion...")
+
+    # Convert the datetime column
+    converted_column = df[start_column_name].apply(parse_datetime_flexible)
+
+    # Count successful conversions
+    successful_conversions = converted_column.notna().sum()
+    total_rows = len(df)
+
+    if verbose >= 1:
+        print(
+            f"Successfully converted {successful_conversions}/{total_rows} datetime values"
         )
-    except Exception as e:
-        if verbose > 1:
-            print(f"Failed to convert column '{start_column_name}' to datetime: {e}")
-
-        # If the conversion fails, move on without raising an error
-        dataframe[start_column_name] = pd.to_datetime(
-            dataframe[start_column_name], errors="coerce"
-        )
-
-    # cast back to str for parser
-    dataframe[start_column_name] = dataframe[start_column_name].astype(str)
-
-    # Attempt to parse datetime using dateutil.parser.parse
-    try:
-        dataframe[start_column_name + "_converted"] = dataframe[
-            start_column_name
-        ].apply(lambda x: parse(x, fuzzy=True) if pd.notna(x) else pd.NaT)
-    except Exception as e:
-        if verbose > 1:
+        if successful_conversions < total_rows:
+            failed_count = total_rows - successful_conversions
             print(
-                f"Failed to parse column '{start_column_name}' using dateutil.parser.parse: {e}"
+                f"Warning: {failed_count} values could not be converted and will be NaT"
             )
 
-        # If parsing fails, move on without raising an error
-        dataframe[start_column_name + "_converted"] = pd.to_datetime(
-            dataframe[start_column_name], format="%m/%d/%y %H.%M.%S", errors="coerce"
-        )
+    if verbose >= 2:
+        # Show some examples of the original and converted values
+        print("\nSample conversions:")
+        sample_size = min(5, len(df))
+        for i in range(sample_size):
+            orig = df[start_column_name].iloc[i]
+            conv = converted_column.iloc[i]
+            print(f"  '{orig}' -> {conv}")
 
-    # Ensure the start column is now in datetime format
-    if not pd.api.types.is_datetime64_any_dtype(
-        dataframe[start_column_name + "_converted"]
-    ):
-        raise ValueError(
-            f"Column '{start_column_name}_converted' does not exist or cannot be converted to datetime format."
-        )
-
-    # Define a function to apply the offset individually to each element
+    # Define a function to apply the offset
     def apply_offset(dt):
         if pd.notna(dt):
-            return dt + time_offset
+            try:
+                return dt + time_offset
+            except Exception as e:
+                if verbose >= 2:
+                    print(f"Error applying offset to {dt}: {e}")
+                return pd.NaT
         else:
             return pd.NaT
 
     # Apply the offset function to create the new column
-    dataframe[offset_column_name] = dataframe[start_column_name + "_converted"].apply(
-        apply_offset
-    )
+    df[offset_column_name] = converted_column.apply(apply_offset)
 
-    return dataframe
+    # Count successful offset applications
+    successful_offsets = df[offset_column_name].notna().sum()
+
+    if verbose >= 1:
+        print(
+            f"Successfully applied offset to {successful_offsets}/{successful_conversions} converted values"
+        )
+
+    return df
+
+
+# Example usage and testing function
+def test_datetime_formats():
+    """Test the function with various datetime formats"""
+    import pandas as pd
+    from dateutil.relativedelta import relativedelta
+
+    # Create test data with various formats
+    test_data = {
+        "timestamps": [
+            "25/12/23 14.30.45",
+            "12/25/23 14.30.45",
+            "25/12/2023 14:30:45",
+            "2023-12-25 14:30:45",
+            "2023/12/25 14:30:45",
+            "25-12-2023 14:30:45",
+            "25.12.2023 14:30:45",
+            "25/12/23",
+            "2023-12-25",
+            None,
+            "invalid_date",
+            "01/01/24 00.00.00",
+        ]
+    }
+
+    df = pd.DataFrame(test_data)
+
+    # Test with 1 month offset
+    offset = relativedelta(months=1)
+
+    result = add_offset_column(df, "timestamps", "offset_timestamps", offset, verbose=2)
+
+    print("\nTest Results:")
+    print(result[["timestamps", "offset_timestamps"]])
+
+    return result
 
 
 # add_offset_column(df, 'ADMISSION_DTTM', offset_column_name, time_offset)
