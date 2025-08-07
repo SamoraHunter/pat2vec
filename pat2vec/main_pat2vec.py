@@ -62,6 +62,36 @@ color_bars = [
 
 
 class main:
+    """The main orchestrator for the pat2vec feature extraction pipeline.
+
+    This class manages the entire workflow of processing patient data to generate
+    time-sliced feature vectors. It initializes the pipeline based on a configuration
+    object, connects to data sources like CogStack, prepares a list of patients,
+    and orchestrates the feature extraction process for each patient.
+
+    The typical workflow is as follows:
+    1.  An instance of this class is created with a `config_obj` that defines
+        all pipeline parameters (e.g., time windows, enabled features, paths).
+    2.  It establishes a connection to the data source (e.g., Elasticsearch via CogStack).
+    3.  It retrieves or generates a list of patients to be processed.
+    4.  It can pre-fetch all necessary raw data batches for the entire patient cohort
+        if `prefetch_pat_batches` is enabled in the configuration.
+    5.  For each patient, it iterates through the defined time windows.
+    6.  For each time slice, it calls the `main_batch` function, which in turn calls
+        the individual feature extraction modules (e.g., for demographics, bloods,
+        NLP annotations) to generate a feature vector.
+    7.  The resulting feature vector is saved to a file.
+
+    This class relies heavily on the `config_obj` for its behavior.
+
+    Attributes:
+        config_obj (config_class): The configuration object that controls the pipeline.
+        cs (CogStack): An instance of the CogStack client for data retrieval.
+        all_patient_list (list): The list of patient IDs to be processed.
+        cat (MedCAT): A MedCAT instance for clinical text annotation if required.
+        t (tqdm.trange): A progress bar for monitoring the process.
+    """
+
     def __init__(
         self,
         cogstack=True,
@@ -71,25 +101,29 @@ class main:
         hostname=None,
         config_obj=None,
     ):
+        """Initializes the main pat2vec pipeline orchestrator.
 
-        # Additional parameters
-        """
-        Initialises the main class for the pat2vec pipeline.
+        This constructor sets up the pipeline environment, including data source
+        connections, patient lists, and NLP models, based on the provided
+        configuration.
 
-        Parameters
-        ----------
-        cogstack : bool, optional
-            Whether to use the cogstack v8 library, search a real elastic cluster, by default True
-        use_filter : bool, optional
-            Whether to use a medcat CUI filter for annotations data, by default False
-        json_filter_path : str, optional
-            Path to json file containing the filter, by default None
-        random_seed_val : int, optional
-            Random seed value for reproducibility, by default 42
-        hostname : str, optional
-            Hostname, by default None
-        config_obj : config_class, optional
-            Config object, by default None
+        Args:
+            cogstack (bool, optional): If True, connects to a CogStack Elasticsearch
+                instance for data retrieval. If False, a dummy searcher is used,
+                which is useful for testing. Defaults to True.
+            use_filter (bool, optional): If True, applies a CUI filter to the
+                MedCAT model to restrict annotations to a specific set of concepts.
+                Requires `json_filter_path`. Defaults to False.
+            json_filter_path (str, optional): Path to a JSON file containing the
+                CUI filter for MedCAT. Required if `use_filter` is True.
+                Defaults to None.
+            random_seed_val (int, optional): The random seed for reproducibility of
+                operations like patient list shuffling. Defaults to 42.
+            hostname (str, optional): Deprecated. The hostname for the SFTP server.
+                SFTP settings are now managed within the config object. Defaults to None.
+            config_obj (config_class, optional): The main configuration object that
+                drives the pipeline's behavior. If None, a default configuration
+                is created. Defaults to None.
         """
         self.aliencat = config_obj.aliencat  # Deprecated environment specific bools
         self.dgx = config_obj.dgx  # Deprecated environment specific bools
@@ -235,28 +269,53 @@ class main:
             prefetch_batches(pat2vec_obj=self)
 
     def pat_maker(self, i):
-        """Processes a single patient's data, retrieves relevant batches if enabled in main options, and prepares for further processing.
+        """Orchestrates the entire feature extraction process for a single patient.
 
-        This function handles the retrieval of various data batches (e.g., EPR, MCT,
-        smoking status, demographics, etc.) for a given patient. It also manages
-        individual patient time windows if enabled, and performs initial data
-        cleaning by dropping rows with missing timestamps or empty analyzed text.
+        This method is the primary worker function for processing one patient from the
+        cohort. It manages the patient's specific time window, pre-fetches all
+        necessary raw data, and then iterates through each time slice to generate
+        feature vectors.
+
+        The key steps for each patient are:
+        1.  **Check for Completion**: Skips the patient if their feature vectors have
+            already been generated, based on the `stripped_list_start`.
+        2.  **Set Time Window**: If `individual_patient_window` is enabled, it
+            calculates and sets the specific start and end dates for this patient,
+            overriding the global time window. It handles both primary and control
+            patients differently.
+        3.  **Pre-fetch Data Batches**: It calls various `get_pat_batch_*` functions
+            to retrieve all required data for the patient across their entire
+            time window. This includes demographics, bloods, medications, clinical
+            notes (EPR, MRC), reports, and other observations.
+        4.  **Pre-generate Annotations**: If text-based features are enabled (e.g.,
+            `annotations`, `annotations_mrc`), it processes the fetched clinical
+            notes with MedCAT to generate all annotations for the patient upfront.
+        5.  **Data Cleaning**: Performs initial cleaning on the fetched batches, such
+            as dropping records with missing timestamps.
+        6.  **Iterate and Process Slices**: It loops through each time slice defined
+            in the patient's `date_list`. For each slice, it calls `main_batch`,
+            passing all the pre-fetched data. `main_batch` is responsible for
+            filtering the data for that specific slice and generating the final
+            feature vector CSV file.
 
         Args:
-            i (int): The index of the current patient in `self.all_patient_list`.
+            i (int): The index of the patient within `self.all_patient_list` to be
+                processed.
 
         Side Effects:
-            - Updates `self.config_obj.global_start_month`,
-            `self.config_obj.global_start_year`, etc., if individual patient
-            windows are enabled.
-            - Updates `self.config_obj.date_list` if individual patient windows are
-            enabled.
-            - Prints progress and debug information based on `self.config_obj.verbosity` level.
-            - Calls `create_folders_for_pat`, `update_pbar`, and various `get_pat_batch_*` functions.
+            - Creates output directories for the patient's feature vectors if they
+              do not exist.
+            - Fetches potentially large amounts of data from the source (e.g.,
+              Elasticsearch) and holds it in memory for processing.
+            - Calls `main_batch` which results in writing one CSV file per time
+              slice for the patient.
+            - Updates the `tqdm` progress bar to reflect the current status.
+            - Can modify `self.config_obj` attributes (like `date_list` and global
+              start/end dates) on-the-fly when `individual_patient_window` is enabled.
 
         Returns:
-            None: This function primarily updates internal states and retrieves data;
-                it does not return any significant value.
+            None: This method orchestrates the processing pipeline and manages file
+                I/O, but it does not return any value.
         """
 
         if self.config_obj.verbosity > 3:

@@ -67,17 +67,58 @@ def main_batch(
     cohort_searcher_with_terms_and_search=None,
     cat=None,
 ):
-    """
-    Main method for batch processing patients.
-    For enabled main options, recieves patient data from the datalake in batch form, processes it into a feature vector, and saves it to a location on disk.
-    :param current_pat_client_id_code: The client idcode of the current patient.
-    :param target_date_range: A tuple of start and end dates to retrieve data for.
-    :param config_obj: A pat2vec configuration object.
-    :param stripped_list_start: A list of already processed patient idcodes.
-    :param t: A tqdm progress bar.
-    :param cohort_searcher_with_terms_and_search: A CohortSearcherWithTermsAndSearch object.
-    :param cat: A medcat 'cat' object. cat = CAT.load_model_pack(model_pack_path).
-    :return: None
+    """Orchestrates the feature extraction process for a single patient within a specific time window.
+
+    This function serves as the main entry point for processing a patient's data in batch mode.
+    It iterates through the feature extraction modules enabled in the configuration object (`config_obj`).
+    For each enabled feature (e.g., demographics, bloods, annotations), it calls the
+    corresponding `get_*` function, passing the pre-fetched batch data. The resulting feature
+    DataFrames are then concatenated into a single feature vector for the given patient and
+    target date range.
+
+    The final feature vector is saved as a CSV file to a specified directory, effectively creating
+    a time-slice representation of the patient's state.
+
+    Args:
+        current_pat_client_id_code (str): The unique identifier for the patient being processed.
+        target_date_range (tuple): A tuple representing the specific time window (e.g., (YYYY, MM, DD))
+            for which to generate the feature vector.
+        batch_demo (pd.DataFrame, optional): Pre-fetched batch data for demographics.
+        batch_smoking (pd.DataFrame, optional): Pre-fetched batch data for smoking status.
+        batch_core_02 (pd.DataFrame, optional): Pre-fetched batch data for SpO2 observations.
+        batch_bednumber (pd.DataFrame, optional): Pre-fetched batch data for bed numbers.
+        batch_vte (pd.DataFrame, optional): Pre-fetched batch data for VTE status.
+        batch_hospsite (pd.DataFrame, optional): Pre-fetched batch data for hospital sites.
+        batch_resus (pd.DataFrame, optional): Pre-fetched batch data for resuscitation status.
+        batch_news (pd.DataFrame, optional): Pre-fetched batch data for NEWS scores.
+        batch_bmi (pd.DataFrame, optional): Pre-fetched batch data for BMI-related observations.
+        batch_diagnostics (pd.DataFrame, optional): Pre-fetched batch data for diagnostic orders.
+        batch_epr (pd.DataFrame, optional): Pre-fetched batch data for EPR documents (deprecated, use annotations).
+        batch_mct (pd.DataFrame, optional): Pre-fetched batch data for MRC documents (deprecated, use annotations).
+        batch_bloods (pd.DataFrame, optional): Pre-fetched batch data for blood tests.
+        batch_drugs (pd.DataFrame, optional): Pre-fetched batch data for drug orders.
+        batch_epr_docs_annotations (pd.DataFrame, optional): Pre-fetched batch data for EPR document annotations.
+        batch_epr_docs_annotations_mct (pd.DataFrame, optional): Pre-fetched batch data for MRC document annotations.
+        batch_report_docs_annotations (pd.DataFrame, optional): Pre-fetched batch data for report annotations.
+        batch_appointments (pd.DataFrame, optional): Pre-fetched batch data for appointments.
+        batch_textual_obs_annotations (pd.DataFrame, optional): Pre-fetched batch data for textual observation annotations.
+        config_obj (object, optional): A configuration object containing settings like `main_options`,
+            paths, and verbosity.
+        stripped_list_start (list, optional): A list of patient IDs that have already been processed
+            to avoid redundant computation.
+        t (object, optional): A tqdm progress bar instance for updating progress.
+        cohort_searcher_with_terms_and_search (callable, optional): A function to query the data source,
+            used by some feature extraction methods in non-batch mode.
+        cat (object, optional): A MedCAT instance for clinical text annotation. Required if any
+            annotation options are enabled.
+
+    Raises:
+        ValueError: If `config_obj`, `cohort_searcher_with_terms_and_search`, `t`, or `cat` (when required)
+            are not provided.
+
+    Side Effects:
+        - Writes a CSV file containing the patient's feature vector for the specified time slice.
+        - Updates the tqdm progress bar `t`.
     """
     if config_obj is None:
         raise ValueError(
