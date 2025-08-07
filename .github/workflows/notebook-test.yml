@@ -18,16 +18,21 @@ jobs:
           apt-get update
           apt-get install -y sudo git curl gnupg ca-certificates
 
+      - name: 1. Install Corporate Certificate (if present)
+        run: |
+          # This step is designed to work both locally with `act` (where the cert is mounted)
+          # and on the public GitHub runner (where it is not).
+          CERT_PATH="/usr/local/share/ca-certificates/kch_certauth.crt"
+          if [ -f "$CERT_PATH" ]; then
+            echo "✅ Corporate certificate found. Updating system trust store..."
+            sudo update-ca-certificates
+          else
+            echo "⚠️ Corporate certificate not found. Proceeding without it (standard public runner environment)."
+          fi
+
       - name: Setup Runner Environment
         run: |
-          # --- 1. Trust Corporate Certificate ---
-          echo "Checking for mounted certificate..."
-          if [ ! -f "/usr/local/share/ca-certificates/kch_certauth.crt" ]; then
-            echo "::error::Corporate certificate was not found. Please use the --container-options or --mount flag."
-            exit 1
-          fi
-          echo "Certificate found. Updating system trust store..."
-          sudo update-ca-certificates
+
 
           # --- 2. Install All System Dependencies Non-Interactively ---
           sudo apt-get update
