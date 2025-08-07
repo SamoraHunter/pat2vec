@@ -12,18 +12,18 @@ source "$VENV_DIR/bin/activate"
 
 # Upgrade pip
 echo "Upgrading pip..."
-python -m pip install --upgrade --trusted-host dh-cap02 -i http://dh-cap02:8000/mirrors/pat2vec pip
+python -m pip install --upgrade --trusted-host dh-cap02 -i http://dh-cap02:8008/mirrors/pat2vec pip
 echo "Pip upgrade completed."
 
 # Install requirements
 echo "Installing requirements..."
 
-pip install --trusted-host dh-cap02 -i http://dh-cap02:8000/mirrors/pat2vec -r "$REQUIREMENTS_FILE"
+pip install --trusted-host dh-cap02 -i http://dh-cap02:8008/mirrors/pat2vec -r "$REQUIREMENTS_FILE"
 
 echo "Requirements installation completed."
 
 # Install ipykernel
-pip install --trusted-host dh-cap02 -i http://dh-cap02:8000/mirrors/pat2vec ipykernel
+pip install --trusted-host dh-cap02 -i http://dh-cap02:8008/mirrors/pat2vec ipykernel
 
 # Add virtual environment to Jupyter kernelspec
 echo "Adding virtual environment to Jupyter kernelspec..."

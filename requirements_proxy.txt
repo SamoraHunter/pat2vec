@@ -214,7 +214,7 @@ elasticsearch==8.17.0
     #   eland
 #en-core-web-md #@ https://github.com/explosion/spacy-models/releases/download/en_core_web_md-3.6.0/en_core_web_md-3.6.0-py3-none-any.whl
     # via -r temp-requirements.txt
-en-core-web-md @ http://dh-cap02:8000/mirrors/pat2vec/en-core-web-md/en_core_web_md-3.6.0-py3-none-any.whl # hypenated path for _ in actual dir
+en-core-web-md @ http://dh-cap02:8008/mirrors/pat2vec/en-core-web-md/en_core_web_md-3.6.0-py3-none-any.whl # hypenated path for _ in actual dir
 
 et-xmlfile==2.0.0
     # via
