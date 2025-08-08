@@ -14,3 +14,4 @@ pre-commit
 seaborn
 rapidfuzz
 python-pptx
+ipykernel

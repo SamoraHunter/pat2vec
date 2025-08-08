@@ -18,12 +18,9 @@ echo "Pip upgrade completed."
 # Install requirements
 echo "Installing requirements..."
 
-pip install --trusted-host dh-cap02 -i http://dh-cap02:8008/mirrors/pat2vec -r "$REQUIREMENTS_FILE"
+pip install --trusted-host dh-cap02 -i http://dh-cap02:8008/mirrors/pat2vec -r "$REQUIREMENTS_FILE" --retries 5 --timeout 60
 
 echo "Requirements installation completed."
-
-# Install ipykernel
-pip install --trusted-host dh-cap02 -i http://dh-cap02:8008/mirrors/pat2vec ipykernel
 
 # Add virtual environment to Jupyter kernelspec
 echo "Adding virtual environment to Jupyter kernelspec..."

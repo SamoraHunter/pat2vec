@@ -15,3 +15,4 @@ nbmake
 seaborn
 rapidfuzz
 python-pptx
+ipykernel

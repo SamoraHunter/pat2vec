@@ -20,10 +20,6 @@ echo "Installing requirements..."
 pip install -r "$REQUIREMENTS_FILE"
 echo "Requirements installation completed."
 
-
-# Install ipykernel
-pip install ipykernel
-
 # Add virtual environment to Jupyter kernelspec
 echo "Adding virtual environment to Jupyter kernelspec..."
 python -m ipykernel install --user --name=pat2vec_env
