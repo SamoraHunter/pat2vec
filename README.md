@@ -26,15 +26,15 @@ This tool converts individual patient records into structured time-interval feat
 
 ## Example Use Cases
 
-### 1. Patient-Level Aggregation  
+### 1. Patient-Level Aggregation
 Compute summary statistics (e.g., the mean of *n* variables) for each unique patient, resulting in one row per patient. This is ideal for models requiring a single representation per individual.
 
-### 2. Longitudinal Time Series Construction  
+### 2. Longitudinal Time Series Construction
 Generate a monthly time series for each patient that includes:
 
-- Biochemistry results  
-- Demographic attributes  
-- MedCat-derived clinical text annotations  
+- Biochemistry results
+- Demographic attributes
+- MedCat-derived clinical text annotations
 
 The time series spans up to 25 years retrospectively, aligned to each patient's diagnosis date, enabling a consistent retrospective view across varying start times.
 
@@ -57,11 +57,11 @@ See requirements.txt
 - Modular feature space selection
 - Look back
 - Look forward
-- Individual patient time windows. 
+- Individual patient time windows.
 
 ## 📊 Diagrams
 
-This project includes a collection of diagrams illustrating the system architecture, data pipelines, ingestion examples, and method workflows.  
+This project includes a collection of diagrams illustrating the system architecture, data pipelines, ingestion examples, and method workflows.
 You can view the Mermaid definitions or the rendered diagrams below.
 
 ### 📂 System Architecture & Configuration
@@ -88,6 +88,7 @@ You can view the Mermaid definitions or the rendered diagrams below.
 | **Post-Processing Build Methods** | [assets/post_processing_build_methods.mmd](assets/post_processing_build_methods.mmd) | ![Post-Processing Build Methods](assets/post_processing_build_methods.svg) |
 
 ---
+---
 
 ### 🔍 Feature Extraction
 | Diagram | Mermaid | Image |
@@ -111,7 +112,7 @@ You can view the Mermaid definitions or the rendered diagrams below.
 
 1. **Clone the repository:**
     cd to gloabl_files
-   
+
     ```shell
     git clone https://github.com/SamoraHunter/pat2vec.git
     cd pat2vec
@@ -125,7 +126,7 @@ You can view the Mermaid definitions or the rendered diagrams below.
 3. **Add the `pat2vec` directory to the Python path:**
 
    Before importing `pat2vec` in your Python script, add the following lines to the script, replacing `/path/to/pat2vec` with the actual path to the `pat2vec` directory inside your project:
-   
+
     ```python
     import sys
     sys.path.append('/path/to/pat2vec')
@@ -139,50 +140,50 @@ You can view the Mermaid definitions or the rendered diagrams below.
 
 ### Unix/Linux:
 
-### **Option 1: Install All Requirements Automatically**  
-This option installs `pat2vec` along with its dependencies, including:  
-- `pat2vec_env` (virtual environment)  
-- `snomed_methods`  
-- `cogstack_search_methods`  
-- `clinical_note_splitter`  
+### **Option 1: Install All Requirements Automatically**
+This option installs `pat2vec` along with its dependencies, including:
+- `pat2vec_env` (virtual environment)
+- `snomed_methods`
+- `cogstack_search_methods`
+- `clinical_note_splitter`
 
-Before running the installation, ensure you:  
+Before running the installation, ensure you:
 - Place the **model pack** in the appropriate directory  gloabl_files/medcat_models/%modelpack%.zip
 - Populate the **credentials file**  under gloabl_files/credentials.py
 - *(Optional)* Add a **SNOMED file** if needed  gloabl_files/.. 'snomed', 'SnomedCT_InternationalRF2_PRODUCTION_20231101T120000Z', 'SnomedCT_InternationalRF2_PRODUCTION_20231101T120000Z', 'Full', 'Terminology', 'sct2_StatedRelationship_Full_INT_20231101.txt'
 
-### **Installation Steps:**  
+### **Installation Steps:**
 
-1. Copy the `install_pat2vec.sh` file to your installation directory.  
-2. Grant execution permissions:  
+1. Copy the `install_pat2vec.sh` file to your installation directory.
+2. Grant execution permissions:
    ```sh
    chmod +x install_pat2vec.sh
-   ```  
-3. Run the installation using one of the following options:  
+   ```
+3. Run the installation using one of the following options:
 
-   - **Standard installation:**  
+   - **Standard installation:**
      ```sh
      ./install_pat2vec.sh
-     ```  
-   - **Installation with proxy mirror support:**  
+     ```
+   - **Installation with proxy mirror support:**
      ```sh
      ./install_pat2vec.sh --proxy
-     ```  
-   - **Install to a specific directory:**  
+     ```
+   - **Install to a specific directory:**
      ```sh
      ./install_pat2vec.sh --directory /path/to/install
-     ```  
-   - **Skip cloning repositories (if already cloned manually):**  
+     ```
+   - **Skip cloning repositories (if already cloned manually):**
      ```sh
      ./install_pat2vec.sh --no-clone
-     ```  
+     ```
 
-### **Repositories Installed by This Script:**  
-The script will clone the following repositories:  
-- [`pat2vec`](https://github.com/SamoraHunter/pat2vec.git)  
-- [`snomed_methods`](https://github.com/SamoraHunter/snomed_methods.git)  
-- [`cogstack_search_methods`](https://github.com/SamoraHunter/cogstack_search_methods.git)  
-- [`clinical_note_splitter`](https://github.com/SamoraHunter/clinical_note_splitter.git)  
+### **Repositories Installed by This Script:**
+The script will clone the following repositories:
+- [`pat2vec`](https://github.com/SamoraHunter/pat2vec.git)
+- [`snomed_methods`](https://github.com/SamoraHunter/snomed_methods.git)
+- [`cogstack_search_methods`](https://github.com/SamoraHunter/cogstack_search_methods.git)
+- [`clinical_note_splitter`](https://github.com/SamoraHunter/clinical_note_splitter.git)
 
 ---
 
@@ -192,22 +193,22 @@ The script will clone the following repositories:
     ```shell
     git clone https://github.com/SamoraHunter/pat2vec.git
     ```
-    
+
     . **Run the installation script:**
-    
+
     ```shell
     (Requires python3 on path and venv)
     chmod +x install.sh
     ./install.sh
     ```
-    
+
     cd pat2vec
     ```
 
 2. **Add the `pat2vec` directory to the Python path:**
 
    Before importing `pat2vec` in your Python script, add the following lines to the script, replacing `/path/to/pat2vec` with the actual path to the `pat2vec` directory inside your project:
-   
+
     ```python
     import sys
     sys.path.append('/path/to/pat2vec')
@@ -233,8 +234,8 @@ The script will clone the following repositories:
         - project_01/
             - example_usage.ipynb
             - treatment_docs.csv
- 
-*treatment_docs.csv should contain a column 'client_idcode' with your UUID's. 
+
+*treatment_docs.csv should contain a column 'client_idcode' with your UUID's.
 **https://github.com/SamoraHunter/SNOMED_methods.git
 
 - Configure options
@@ -246,7 +247,7 @@ The script will clone the following repositories:
 - open example_usage.ipynb and hit run all.
 
 - If testing in a live environment ensure the testing flag is set to False in the config_obj.
-- 
+-
 
 
 ## Contributing
@@ -254,4 +255,3 @@ Contributions are welcome! Please see the contributing guidelines for more infor
 
 ## License
 This project is licensed under the MIT License - see the LICENSE file for details
-

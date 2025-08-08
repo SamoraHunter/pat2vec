@@ -1,0 +1,48 @@
+graph TD
+    subgraph "Annotation Batch Orchestrators"
+        A["get_pat_document_annotation_batch (EPR)"]
+        B["get_pat_document_annotation_batch_mct (MCT)"]
+        C["get_pat_batch_textual_obs_annotation_batch (Textual Obs)"]
+        D["get_pat_document_annotation_batch_reports (Reports)"]
+    end
+
+    A --> E{annot_pat_batch_docs}
+    B --> E
+    C --> E
+    D --> E
+
+    subgraph "Core Annotation Processing"
+        E -- "Annotates documents via" --> F((MedCAT Engine))
+        style F fill:#f9f,stroke:#333,stroke-width:2px
+        E -- "Returns multi_annots" --> A
+        E -- "Returns multi_annots" --> B
+        E -- "Returns multi_annots" --> C
+        E -- "Returns multi_annots" --> D
+    end
+
+    subgraph "DataFrame Conversion & Enrichment"
+        A --> G["multi_annots_to_df (EPR)"]
+        B --> H["multi_annots_to_df_mct (MCT)"]
+        C --> I["multi_annots_to_df_textual_obs (Textual Obs)"]
+        D --> J["multi_annots_to_df_reports (Reports)"]
+
+        G --> K{json_to_dataframe}
+        H --> K
+        I --> K
+        J --> K
+
+        K -- "For each annotation" --> L[parse_meta_anns]
+
+        G --> M{Optional Enrichment}
+        H --> M
+        I --> M
+        J --> M
+        M --> N[join_icd10_codes_to_annot]
+        M --> O[join_icd10_OPC4S_codes_to_annot]
+    end
+
+    subgraph "Standalone Utility Functions"
+        U1[check_pat_document_annotation_complete]
+        U2[filter_annot_dataframe]
+        U3[calculate_pretty_name_count_features]
+    end
