@@ -2,7 +2,8 @@ import os
 import pandas as pd
 from multiprocessing import Pool, cpu_count
 from functools import partial
-from clinical_note_splitter.clinical_notes_splitter import split_and_append_chunks
+
+from pat2vec.util.clinical_note_splitter import split_and_append_chunks
 from pat2vec.util.methods_get import filter_dataframe_by_timestamp
 from pat2vec.util.methods_annotation_regex import append_regex_term_counts
 
@@ -556,7 +557,7 @@ def get_merged_pat_batch_mct_docs(
         batch_target = cohort_searcher_with_terms_and_search(
             index_name="observations",
             fields_list="""observation_guid client_idcode obscatalogmasteritem_displayname
-                            observation_valuetext_analysed observationdocument_recordeddtm 
+                            observation_valuetext_analysed observationdocument_recordeddtm
                             clientvisit_visitidcode""".split(),
             term_name=config_obj.client_idcode_term_name,
             entered_list=client_idcode_list,  # Pass the entire list of client IDs
@@ -1133,7 +1134,7 @@ def get_merged_pat_batch_bmi(
         batch_target = cohort_searcher_with_terms_and_search(
             index_name="observations",
             fields_list="""observation_guid client_idcode obscatalogmasteritem_displayname
-                            observation_valuetext_analysed observationdocument_recordeddtm 
+                            observation_valuetext_analysed observationdocument_recordeddtm
                             clientvisit_visitidcode""".split(),
             term_name=config_obj.client_idcode_term_name,
             entered_list=client_idcode_list,  # Pass the entire list of client IDs
@@ -1222,7 +1223,7 @@ def get_merged_pat_batch_obs(
         batch_target = cohort_searcher_with_terms_and_search(
             index_name="observations",
             fields_list="""observation_guid client_idcode obscatalogmasteritem_displayname
-                            observation_valuetext_analysed observationdocument_recordeddtm 
+                            observation_valuetext_analysed observationdocument_recordeddtm
                             clientvisit_visitidcode""".split(),
             term_name=config_obj.client_idcode_term_name,
             entered_list=client_idcode_list,  # Pass the entire list of client IDs
@@ -1309,7 +1310,7 @@ def get_merged_pat_batch_news(
         batch_target = cohort_searcher_with_terms_and_search(
             index_name="observations",
             fields_list="""observation_guid client_idcode obscatalogmasteritem_displayname
-                            observation_valuetext_analysed observationdocument_recordeddtm 
+                            observation_valuetext_analysed observationdocument_recordeddtm
                             clientvisit_visitidcode""".split(),
             term_name=config_obj.client_idcode_term_name,
             entered_list=client_idcode_list,  # Pass the entire list of client IDs

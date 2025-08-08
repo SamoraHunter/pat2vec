@@ -1,8 +1,9 @@
 import os
 import pandas as pd
-from clinical_note_splitter.clinical_notes_splitter import split_and_append_chunks
+
 from IPython.display import display
 
+from pat2vec.util.clinical_note_splitter import split_and_append_chunks
 from pat2vec.util.filter_methods import filter_dataframe_by_fuzzy_terms
 from pat2vec.util.filter_methods import (
     apply_bloods_data_type_filter,

@@ -19,7 +19,7 @@ show_help() {
 
 setup_medcat_models() {
     echo "Checking if medcat_models directory exists inside global_files..."
-    
+
     # Check if the directory already exists
     if [ ! -d "$GLOBAL_FILES_DIR/medcat_models" ]; then
         echo "Directory medcat_models does not exist, creating it..."
@@ -27,7 +27,7 @@ setup_medcat_models() {
     else
         echo "medcat_models directory already exists, skipping creation."
     fi
-    
+
     # Create the placeholder file or skip if it's already there
     echo "Place your MedCAT model pack in this directory" > "$GLOBAL_FILES_DIR/medcat_models/put_medcat_modelpack_here.txt"
 }
@@ -36,17 +36,17 @@ create_paths_file() {
     echo "Setting up paths.py file..."
     local paths_dir="notebooks"
     local paths_file="$paths_dir/paths.py"
-    
+
     # Create notebooks directory if it doesn't exist
     if [ ! -d "$paths_dir" ]; then
         echo "Creating notebooks directory..."
         mkdir -p "$paths_dir" || { echo "ERROR: Failed to create notebooks directory"; return 1; }
     fi
-    
+
     # Create or overwrite paths.py
     echo "Creating paths.py file..."
     echo "medcat_path = 'put your model pack path here'" > "$paths_file"
-    
+
     if [ $? -eq 0 ]; then
         echo "paths.py created successfully at: $paths_file"
         ls -l "$paths_file"  # Verify the file exists and show its details
@@ -59,20 +59,20 @@ create_paths_file() {
 copy_credentials() {
     echo "Starting credentials copy process..."
     echo "Target directory: $GLOBAL_FILES_DIR"
-    
+
     local source_file="$GLOBAL_FILES_DIR/pat2vec/pat2vec/util/credentials.py"
     local target_file="$GLOBAL_FILES_DIR/credentials.py"
-    
+
     echo "Looking for credentials at: $source_file"
-    
+
     # Check if source file exists
     if [ ! -f "$source_file" ]; then
         echo "ERROR: Source credentials file not found at: $source_file"
         return 1
     fi
-    
+
     echo "Source file found at: $source_file"
-    
+
     # Check if target file already exists
     if [ -f "$target_file" ]; then
         echo "Target credentials file already exists at: $target_file"
@@ -84,11 +84,11 @@ copy_credentials() {
             return 0
         fi
     fi
-    
+
     # Attempt to copy the file
     echo "Copying credentials file..."
     cp "$source_file" "$target_file"
-    
+
     if [ $? -eq 0 ]; then
         echo "Credentials file copied successfully to: $target_file"
         echo "IMPORTANT: Make sure to populate the credentials file with your actual credentials!"
@@ -102,16 +102,15 @@ copy_credentials() {
 clone_repositories() {
     # Save current directory
     local current_dir=$(pwd)
-    
+
     # Change to global_files directory
     cd "$GLOBAL_FILES_DIR" || { echo "Error: Could not change to global_files directory"; exit 1; }
-    
+
     local repos=(
         "https://github.com/SamoraHunter/cogstack_search_methods.git"
-        "https://github.com/SamoraHunter/clinical_note_splitter.git"
         "https://github.com/SamoraHunter/snomed_methods.git"
     )
-    
+
     for repo in "${repos[@]}"; do
         local repo_name=$(basename "$repo" .git)
         if [ ! -d "$repo_name" ]; then
@@ -121,7 +120,7 @@ clone_repositories() {
             echo "$repo_name already exists, skipping..."
         fi
     done
-    
+
     # Return to original directory
     cd "$current_dir" || { echo "Error: Could not return to original directory"; exit 1; }
 }
