@@ -123,7 +123,7 @@ from .util.ethnicity_abstractor import (
     EthnicityAbstractor
 )
 from .util.evaluation_methods import (
-    compare_ipw_annotation_rows, create_profile_reports
+    CsvProfiler, compare_ipw_annotation_rows
 )
 from .util.evaluation_methods_ploting import (
     generate_pie_charts
@@ -226,17 +226,17 @@ from .util.presentation_methods import (
 
 # Define the public API of the package
 __all__ = [
-    "BatchConfig", "CogStack", "EthnicityAbstractor", "MultiStream", "PathsClass",
-    "add_offset_column", "aggregate_dataframe_mean", "analyze_client_codes",
-    "annot_pat_batch_docs", "anonymize_feature_names", "appendAge", "appendAgeAtRecord",
-    "append_age_at_record_series", "append_regex_term_counts", "append_to_file",
-    "apply_bloods_data_type_filter", "apply_data_type_epr_docs_filters",
-    "apply_data_type_mct_docs_filters", "build_ipw_dataframe", "build_merged_bloods",
-    "build_merged_epr_mct_annot_df", "build_merged_epr_mct_doc_df",
-    "build_patient_dict", "bulk_str_extract", "bulk_str_extract_round_robin",
-    "bulk_str_findall", "calculate_age_append", "calculate_interval",
-    "calculate_pretty_name_count_features", "catch", "check_csv_files_in_directory",
-    "check_csv_integrity", "check_list_presence",
+    "BatchConfig", "CogStack", "CsvProfiler", "EthnicityAbstractor", "MultiStream",
+    "PathsClass", "add_offset_column", "aggregate_dataframe_mean",
+    "analyze_client_codes", "annot_pat_batch_docs", "anonymize_feature_names",
+    "appendAge", "appendAgeAtRecord", "append_age_at_record_series",
+    "append_regex_term_counts", "append_to_file", "apply_bloods_data_type_filter",
+    "apply_data_type_epr_docs_filters", "apply_data_type_mct_docs_filters",
+    "build_ipw_dataframe", "build_merged_bloods", "build_merged_epr_mct_annot_df",
+    "build_merged_epr_mct_doc_df", "build_patient_dict", "bulk_str_extract",
+    "bulk_str_extract_round_robin", "bulk_str_findall", "calculate_age_append",
+    "calculate_interval", "calculate_pretty_name_count_features", "catch",
+    "check_csv_files_in_directory", "check_csv_integrity", "check_list_presence",
     "check_pat_document_annotation_complete", "check_sftp_connection",
     "coerce_document_df_to_medcat_trainer_input", "cohort_searcher_no_terms",
     "cohort_searcher_no_terms_fuzzy", "cohort_searcher_with_terms_and_search",
@@ -250,8 +250,8 @@ __all__ = [
     "create_folders_for_pat", "create_local_folders", "create_ner_results_dataframe",
     "create_powerpoint_from_images", "create_powerpoint_from_images_group",
     "create_powerpoint_slides", "create_powerpoint_slides_client_idcode_groups",
-    "create_profile_reports", "create_remote_folders", "dataframe_generator",
-    "date_cleaner", "deanonymize_feature_names", "demo_to_latest", "df_column_uniquify",
+    "create_remote_folders", "dataframe_generator", "date_cleaner",
+    "deanonymize_feature_names", "demo_to_latest", "df_column_uniquify",
     "draw_document_samples", "drop_columns_with_all_nan", "dummy_CAT",
     "dummy_medcat_annotation_generator", "dump_results",
     "enum_exact_target_date_vector", "enum_target_date_vector", "exist_check",
