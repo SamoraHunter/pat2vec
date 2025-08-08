@@ -10,11 +10,6 @@ from pat2vec.util.cogstack_v8_lite import *
 from colorama import Back, Fore, Style
 from credentials import *
 from tqdm import trange
-
-from pat2vec.pat2vec_get_methods.current_pat_annotations_to_file import (
-    get_current_pat_annotations_batch_to_file,
-    get_current_pat_annotations_mct_batch_to_file,
-)
 from pat2vec.pat2vec_main_methods.main_batch import main_batch
 from pat2vec.pat2vec_pat_list.get_patient_treatment_list import get_all_patients_list
 from pat2vec.patvec_get_batch_methods.main import (
