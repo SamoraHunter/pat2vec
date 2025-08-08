@@ -1,11 +1,9 @@
-from ydata_profiling import ProfileReport
-from typing import Optional, List
-from IPython.display import clear_output
 import os
-from multiprocessing import Pool, cpu_count
+import traceback
+from typing import List, Optional, Union
 import pandas as pd
+from IPython.display import clear_output
 from tqdm import tqdm
-from typing import List, Union
 
 
 def compare_ipw_annotation_rows(
@@ -75,100 +73,163 @@ def compare_ipw_annotation_rows(
             input("Press Enter to continue...")
 
 
-def create_profile_reports(
-    epr_batchs_fp: str,
-    prefix: Optional[str] = None,
-    cols: Optional[List[str]] = None,
-    icd10_opc4s: bool = False,
-) -> None:
+class CsvProfiler:
     """
-    Generate Pandas Profiling Reports for CSV files in a directory.
-
-    Parameters:
-    - epr_batchs_fp (str): Path to the directory containing CSV files.
-    - prefix (str, optional): Prefix to be added to the generated report files.
-    - cols (List[str], optional): List of columns to be used in profiling. If not provided, default columns are used.
-    - icd10_opc4s (bool): Flag to indicate whether to filter rows based on the 'targetId' column.
-
-    Returns:
-    None
+    A class to encapsulate the functionality for generating profile reports from CSV files.
+    The ProfileReport dependency is imported as a class attribute.
     """
-    # Default columns
-    default_cols = [
-        "client_idcode",
-        "pretty_name",
-        "cui",
-        "type_ids",
-        "types",
-        "acc",
-        "context_similarity",
-        "icd10",
-        "ontologies",
-        "snomed",
-        "Time_Value",
-        "Time_Confidence",
-        "Presence_Value",
-        "Presence_Confidence",
-        "Subject_Value",
-        "Subject_Confidence",
-        "conceptId",
-        "targetId",
-        "updatetime",
-    ]
 
-    # Use default columns if not provided
-    cols = cols or default_cols
+    @staticmethod
+    def create_profile_reports(
+        epr_batchs_fp: str,
+        prefix: Optional[str] = None,
+        cols: Optional[List[str]] = None,
+        icd10_opc4s: bool = False,
+    ) -> None:
+        """
+        Generate Pandas Profiling Reports for CSV files in a directory.
 
-    # Create a directory for profile reports if it doesn't exist
-    profile_reports_dir = "profile_reports"
-    os.makedirs(profile_reports_dir, exist_ok=True)
+        This method iterates through all CSV files in a specified directory, generates
+        a ydata-profiling report for each, and saves it as an HTML file.
 
-    for csv_file in tqdm(os.listdir(epr_batchs_fp)):
-        file_path = os.path.join(epr_batchs_fp, csv_file)
-        try:
-            # Check if 'updatetime' is in the columns before using it
-            csv_columns = pd.read_csv(file_path, nrows=1).columns
-            if "updatetime" not in csv_columns:
-                try:
-                    cols.remove("updatetime")
-                except:
-                    pass
-                if ("observationdocument_recordeddtm") not in cols:
-                    cols.append("observationdocument_recordeddtm")
+        Parameters:
+        - epr_batchs_fp (str): Path to the directory containing the CSV files.
+        - prefix (str, optional): A prefix string to be added to the generated report filenames. Defaults to None.
+        - cols (List[str], optional): A specific list of columns to include in the profile. If None, a default set of columns is used.
+        - icd10_opc4s (bool): A flag to indicate whether to filter rows where the 'targetId' column is not empty. Defaults to False.
 
-            # Check if 'targetId' is in the columns before using it
-            if "targetId" not in csv_columns:
-                if "targetId" in cols:
-                    cols.remove("targetId")
+        Returns:
+        None
+        """
+
+        from ydata_profiling import ProfileReport
+
+        # Default columns to be used if none are provided
+        default_cols = [
+            "client_idcode",
+            "pretty_name",
+            "cui",
+            "type_ids",
+            "types",
+            "acc",
+            "context_similarity",
+            "icd10",
+            "ontologies",
+            "snomed",
+            "Time_Value",
+            "Time_Confidence",
+            "Presence_Value",
+            "Presence_Confidence",
+            "Subject_Value",
+            "Subject_Confidence",
+            "conceptId",
+            "targetId",
+            "updatetime",
+        ]
+
+        # Use the provided column list or the default list
+        cols_to_use = cols or default_cols
+
+        # Create the output directory for profile reports if it doesn't already exist
+        profile_reports_dir = "profile_reports"
+        os.makedirs(profile_reports_dir, exist_ok=True)
+
+        for csv_file in tqdm(
+            os.listdir(epr_batchs_fp), desc="Generating Profile Reports"
+        ):
+            file_path = os.path.join(epr_batchs_fp, csv_file)
+
+            if not os.path.isfile(file_path):
                 continue
 
-            if not icd10_opc4s:
-                df = pd.read_csv(file_path, usecols=cols).sample(100)
-            else:
-                df = pd.read_csv(file_path, usecols=cols)
-                if "targetId" in df.columns:
-                    df = df[df["targetId"].notna()]
+            try:
+                current_cols = list(cols_to_use)
+                csv_columns = pd.read_csv(file_path, nrows=0).columns
 
-            profile = ProfileReport(
-                df,
-                title=f"Pandas Profiling Report {csv_file}_{prefix}",
-                explorative=True,
-                config_file="",
-            )
+                if "updatetime" not in csv_columns:
+                    if "updatetime" in current_cols:
+                        current_cols.remove("updatetime")
+                    if (
+                        "observationdocument_recordeddtm" not in current_cols
+                        and "observationdocument_recordeddtm" in csv_columns
+                    ):
+                        current_cols.append("observationdocument_recordeddtm")
 
-            # Save the profiling report to the profile_reports directory
-            report_name = f"{prefix}_{csv_file.split('.')[0]}_profile_report.html"
-            report_path = os.path.join(profile_reports_dir, report_name)
-            profile.to_file(report_path)
+                if "targetId" not in csv_columns and "targetId" in current_cols:
+                    current_cols.remove("targetId")
 
-            print(f"Profile report for {csv_file} created at: {report_path}")
-        except Exception as e:
-            print(f"Error processing {csv_file}: {type(e).__name__}")
-            print(e)
-            import traceback
+                final_cols = [col for col in current_cols if col in csv_columns]
 
-            traceback.print_exc()
+                if not icd10_opc4s:
+                    df = pd.read_csv(file_path, usecols=final_cols).sample(
+                        n=100, random_state=1
+                    )
+                else:
+                    df = pd.read_csv(file_path, usecols=final_cols)
+                    if "targetId" in df.columns:
+                        df.dropna(subset=["targetId"], inplace=True)
+
+                # IMPORTANT: ProfileReport is now called as a class attribute
+                profile = ProfileReport(
+                    df,
+                    title=f"Profiling Report for {csv_file}"
+                    + (f" ({prefix})" if prefix else ""),
+                    explorative=True,
+                )
+
+                report_prefix = f"{prefix}_" if prefix else ""
+                report_name = (
+                    f"{report_prefix}{os.path.splitext(csv_file)[0]}_profile.html"
+                )
+                report_path = os.path.join(profile_reports_dir, report_name)
+                profile.to_file(report_path)
+
+                print(f"✅ Profile report for {csv_file} created at: {report_path}")
+
+            except Exception as e:
+                print(f"❌ Error processing {csv_file}: {type(e).__name__} - {e}")
+                traceback.print_exc()
 
 
-# Example usage:
-# create_profile_reports('/path/to/csv/files', prefix='my_prefix', cols=['column1', 'column2'], icd10_opc4s=True)
+if __name__ == "__main__":
+    # This block demonstrates how to use the CsvProfiler class.
+    print("Setting up a dummy directory with CSV files for demonstration...")
+    dummy_dir = "epr_batches_dummy"
+    os.makedirs(dummy_dir, exist_ok=True)
+
+    data1 = {
+        "client_idcode": range(5),
+        "pretty_name": ["Fever", "Headache", "Cough", "Sore Throat", "Fatigue"],
+        "cui": [f"C00{i}" for i in range(5)],
+        "targetId": [None, "ICD10:R51", None, "ICD10:R05", None],
+        "updatetime": pd.to_datetime(
+            ["2023-01-10", "2023-01-11", "2023-01-12", "2023-01-13", "2023-01-14"]
+        ),
+    }
+    pd.DataFrame(data1).to_csv(os.path.join(dummy_dir, "batch_01.csv"), index=False)
+
+    data2 = {
+        "client_idcode": range(5, 10),
+        "pretty_name": [
+            "Nausea",
+            "Vomiting",
+            "Diarrhea",
+            "Abdominal Pain",
+            "Dizziness",
+        ],
+        "cui": [f"C00{i}" for i in range(5, 10)],
+        "observationdocument_recordeddtm": pd.to_datetime(
+            ["2024-02-10", "2024-02-11", "2024-02-12", "2024-02-13", "2024-02-14"]
+        ),
+    }
+    pd.DataFrame(data2).to_csv(os.path.join(dummy_dir, "batch_02.csv"), index=False)
+
+    print("Dummy files created.")
+    print("-" * 30)
+
+    print("\nRunning example...")
+    CsvProfiler.create_profile_reports(
+        epr_batchs_fp=dummy_dir, prefix="class_import_profile"
+    )
+
+    print("\nDemonstration complete. Check the 'profile_reports' directory for output.")
