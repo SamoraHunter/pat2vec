@@ -6,7 +6,10 @@ from IPython.display import display
 # from COGStats import EthnicityAbstractor
 # from COGStats import *
 from pat2vec.util.ethnicity_abstractor import EthnicityAbstractor
-from pat2vec.util.methods_get import get_demographics3_batch
+from pat2vec.util.methods_get import (
+    filter_dataframe_by_timestamp,
+    get_start_end_year_month,
+)
 
 
 def get_demo(current_pat_client_id_code, target_date_range, pat_batch, config_obj=None):
@@ -240,3 +243,124 @@ def _process_dead(demo_dataframe):
         display(demo_dataframe)
         raise Exception("more than one row process _process_dead")
     return demo_dataframe
+
+
+def get_demographics3_batch(
+    patlist,
+    target_date_range,
+    pat_batch,
+    config_obj=None,
+    cohort_searcher_with_terms_and_search=None,
+):
+
+    batch_mode = config_obj.batch_mode
+
+    # patlist = config_obj.patlist #is present?
+
+    start_year, start_month, end_year, end_month, start_day, end_day = (
+        get_start_end_year_month(target_date_range, config_obj=config_obj)
+    )
+    pat_batch = pat_batch.sort_values(["client_idcode", "updatetime"])
+
+    # if critical field is nan, lets impute from its most recent non nan
+    pat_batch[
+        [
+            "client_firstname",
+            "client_lastname",
+            "client_dob",
+            "client_gendercode",
+            "client_racecode",
+            "client_deceaseddtm",
+        ]
+    ] = (
+        pat_batch.groupby("client_idcode")[
+            [
+                "client_firstname",
+                "client_lastname",
+                "client_dob",
+                "client_gendercode",
+                "client_racecode",
+                "client_deceaseddtm",
+            ]
+        ]
+        .ffill()
+        .copy()
+    )
+
+    pat_batch.reset_index(drop=True, inplace=True)
+
+    if batch_mode:
+
+        demo = filter_dataframe_by_timestamp(
+            pat_batch,
+            start_year,
+            start_month,
+            end_year,
+            end_month,
+            start_day,
+            end_day,
+            "updatetime",
+        )
+
+    else:
+        demo = cohort_searcher_with_terms_and_search(
+            index_name="epr_documents",
+            fields_list=[
+                "client_idcode",
+                "client_firstname",
+                "client_lastname",
+                "client_dob",
+                "client_gendercode",
+                "client_racecode",
+                "client_deceaseddtm",
+                "updatetime",
+            ],
+            term_name=config_obj.client_idcode_term_name,
+            entered_list=patlist,
+            search_string=f"updatetime:[{start_year}-{start_month}-{start_day} TO {end_year}-{end_month}-{end_day}] ",
+        )
+
+    demo["updatetime"] = pd.to_datetime(demo["updatetime"], utc=True)
+    # .drop_duplicates(subset = ["client_idcode"], keep = "last", inplace = True)
+    demo = demo.sort_values(["client_idcode", "updatetime"])
+
+    # Reset index if necessary
+    demo = demo.reset_index(drop=True)
+
+    # if more than one in the range return the nearest the end of the period
+    if len(demo) > 1:
+        try:
+            # print("case1")
+            return demo.tail(1)
+            # return demo.iloc[-1].to_frame()
+        except Exception as e:
+            print(e)
+
+    # if only one return it
+    elif len(demo) == 1:
+        return demo
+
+    # otherwise return only the client id
+    else:
+        if config_obj.verbosity >= 1:
+            display(f"no demo data found for {patlist}")
+            display(pat_batch)
+
+        demo = pd.DataFrame(data=None, columns=None)
+        demo["client_idcode"] = patlist
+        # Define the columns to be set to NaN
+        columns_to_set_nan = [
+            "client_firstname",
+            "client_lastname",
+            "client_dob",
+            "client_gendercode",
+            "client_racecode",
+            "client_deceaseddtm",
+            "updatetime",
+        ]
+
+        # Add these columns to the DataFrame and set their values to NaN
+        for column in columns_to_set_nan:
+            demo[column] = np.nan
+
+        return demo.head(1)

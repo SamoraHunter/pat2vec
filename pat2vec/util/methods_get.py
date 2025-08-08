@@ -69,44 +69,6 @@ def list_dir_wrapper(path, config_obj=None):
         return os.listdir(path)
 
 
-def get_start_end_year_month(target_date_range, n=1):
-
-    start_year, start_month, start_day = (
-        target_date_range[0],
-        target_date_range[1],
-        target_date_range[2],
-    )
-
-    start_date = dt.date(start_year, start_month, start_day)
-    end_date = start_date + dt.timedelta(days=n)
-    return (
-        start_date.year,
-        start_date.month,
-        end_date.year,
-        end_date.month,
-        start_date.day,
-        end_date.day,
-    )
-
-
-# def get_empty_date_vector(config_object):
-
-#     #start date. Other days are for duration of time window
-
-#     start_date = config_object.start_date
-
-
-#     years = config_object.years
-#     months = config_object.months
-#     days = config_object.days
-
-#     combinations = generate_date_list(start_date, years, months, days)
-
-#     combinations = [str(item) + '_' + 'date_time_stamp' for item in combinations]
-
-#     return pd.DataFrame(data=0.0, index=np.arange(1), columns = combinations).astype(float) #untested float cast
-
-
 def convert_timestamp_to_tuple(timestamp):
     # parse the timestamp string into a datetime object
     dt = datetime.strptime(timestamp, "%Y-%m-%dT%H:%M:%S.%f%z")
@@ -147,38 +109,6 @@ def enum_exact_target_date_vector(
     empty_date_vector["client_idcode"] = current_pat_client_id_code
 
     return empty_date_vector
-
-
-# def generate_date_list(start_date, years, months, days, time_window_interval_delta=relativedelta(days=1), config_obj=None):
-##working
-#     lookback = config_obj.lookback
-
-#     config_obj.global_start_year, config_obj.global_start_month, config_obj.global_end_year, config_obj.global_end_month, config_obj.global_start_day, config_obj.global_end_day
-
-#     if (lookback == False):
-#         end_date = start_date + \
-#             relativedelta(years=years, months=months, days=days)
-#     else:
-#         end_date = start_date - \
-#             relativedelta(years=years, months=months, days=days)
-
-#     date_list = []
-#     current_date = start_date
-
-#     if (lookback == False):
-#         # look forward...
-#         while current_date <= end_date:
-#             date_list.append(
-#                 (current_date.year, current_date.month, current_date.day))
-#             current_date += time_window_interval_delta  # timedelta(days=1)
-#     else:
-#         # look back
-#         while current_date >= end_date:
-#             date_list.append(
-#                 (current_date.year, current_date.month, current_date.day))
-#             current_date += time_window_interval_delta
-
-#     return date_list
 
 
 def generate_date_list(
@@ -267,41 +197,6 @@ def generate_date_list(
     return date_list
 
 
-# def filter_dataframe_by_timestamp(df, start_year, start_month, end_year, end_month, start_day, end_day, timestamp_string, dropna=False):
-#     # Convert timestamp column to datetime format
-
-#     # if(dropna):
-#     #     df[timestamp_string] = pd.to_datetime(df[timestamp_string], errors='coerce')
-#     #     df.dropna(subset=[timestamp_string], inplace=True)
-
-#     df[timestamp_string] = pd.to_datetime(df[timestamp_string], utc=True)
-
-#     # df[timestamp_string] = pd.to_datetime(df[timestamp_string])
-
-#     # imputed from elastic. Mirror:
-#     # start_day = 1
-#     # end_day = 1
-#     hour = 23
-#     minute = 59
-#     second = 59
-
-#     # Filter based on year and month ranges
-#     try:
-#         filtered_df = df[(df[timestamp_string] >= str(datetime(start_year, int(start_month), int(start_day), hour, minute, second))) &
-#                          (df[timestamp_string] <= str(datetime(end_year, int(
-#                              end_month), int(end_day), hour, minute, second)))
-#                          ]
-#     except Exception as e:
-#         print("error in filter_dataframe_by_timestamp")
-#         print(e)
-#         display(df)
-#         print(start_year, start_month, end_year, end_month,
-#               start_day, end_day, timestamp_string)
-#         raise e
-#         # filtered_df = df[df[timestamp_string] =="2323"]
-
-
-#     return filtered_df
 def filter_dataframe_by_timestamp(
     df,
     start_year,
@@ -341,28 +236,6 @@ def filter_dataframe_by_timestamp(
         filtered_df.dropna(subset=[timestamp_string], inplace=True)
     # display(filtered_df)
     return filtered_df
-
-
-# def filter_dataframe_by_timestamp(df, start_year, start_month, end_year, end_month, start_day, end_day, timestamp_string, dropna=False):
-
-#     #print("filter_dataframe_by_timestamp", "methods_get")
-#     #raise
-#     # Convert timestamp column to datetime format
-#     df[timestamp_string] = pd.to_datetime(df[timestamp_string], utc=True)
-
-#     # Ensure start date is earlier than end date
-#     start_datetime = datetime(start_year, int(start_month), int(start_day))
-#     end_datetime = datetime(end_year, int(end_month), int(end_day))
-#     if start_datetime > end_datetime:
-#         start_datetime, end_datetime = end_datetime, start_datetime
-
-#     # Filter based on datetime range
-#     filtered_df = df[(df[timestamp_string] >= start_datetime) & (df[timestamp_string] <= end_datetime)]
-
-#     if dropna:
-#         filtered_df.dropna(subset=[timestamp_string], inplace=True)
-#     display(filtered_df)
-#     return filtered_df
 
 
 def dump_results(file_data, path, config_obj=None):
@@ -458,159 +331,29 @@ def update_pbar(
     t.refresh()
 
 
-def get_demographics3_batch(
-    patlist,
-    target_date_range,
-    pat_batch,
-    config_obj=None,
-    cohort_searcher_with_terms_and_search=None,
-):
-
-    batch_mode = config_obj.batch_mode
-
-    # patlist = config_obj.patlist #is present?
-
-    start_year, start_month, end_year, end_month, start_day, end_day = (
-        get_start_end_year_month(target_date_range, config_obj=config_obj)
-    )
-    pat_batch = pat_batch.sort_values(["client_idcode", "updatetime"])
-
-    # if critical field is nan, lets impute from its most recent non nan
-    pat_batch[
-        [
-            "client_firstname",
-            "client_lastname",
-            "client_dob",
-            "client_gendercode",
-            "client_racecode",
-            "client_deceaseddtm",
-        ]
-    ] = (
-        pat_batch.groupby("client_idcode")[
-            [
-                "client_firstname",
-                "client_lastname",
-                "client_dob",
-                "client_gendercode",
-                "client_racecode",
-                "client_deceaseddtm",
-            ]
-        ]
-        .ffill()
-        .copy()
-    )
-
-    pat_batch.reset_index(drop=True, inplace=True)
-
-    if batch_mode:
-
-        demo = filter_dataframe_by_timestamp(
-            pat_batch,
-            start_year,
-            start_month,
-            end_year,
-            end_month,
-            start_day,
-            end_day,
-            "updatetime",
-        )
-
-    else:
-        demo = cohort_searcher_with_terms_and_search(
-            index_name="epr_documents",
-            fields_list=[
-                "client_idcode",
-                "client_firstname",
-                "client_lastname",
-                "client_dob",
-                "client_gendercode",
-                "client_racecode",
-                "client_deceaseddtm",
-                "updatetime",
-            ],
-            term_name=config_obj.client_idcode_term_name,
-            entered_list=patlist,
-            search_string=f"updatetime:[{start_year}-{start_month}-{start_day} TO {end_year}-{end_month}-{end_day}] ",
-        )
-
-    demo["updatetime"] = pd.to_datetime(demo["updatetime"], utc=True)
-    # .drop_duplicates(subset = ["client_idcode"], keep = "last", inplace = True)
-    demo = demo.sort_values(["client_idcode", "updatetime"])
-
-    # Reset index if necessary
-    demo = demo.reset_index(drop=True)
-
-    # if more than one in the range return the nearest the end of the period
-    if len(demo) > 1:
-        try:
-            # print("case1")
-            return demo.tail(1)
-            # return demo.iloc[-1].to_frame()
-        except Exception as e:
-            print(e)
-
-    # if only one return it
-    elif len(demo) == 1:
-        return demo
-
-    # otherwise return only the client id
-    else:
-        if config_obj.verbosity >= 1:
-            display(f"no demo data found for {patlist}")
-            display(pat_batch)
-
-        demo = pd.DataFrame(data=None, columns=None)
-        demo["client_idcode"] = patlist
-        # Define the columns to be set to NaN
-        columns_to_set_nan = [
-            "client_firstname",
-            "client_lastname",
-            "client_dob",
-            "client_gendercode",
-            "client_racecode",
-            "client_deceaseddtm",
-            "updatetime",
-        ]
-
-        # Add these columns to the DataFrame and set their values to NaN
-        for column in columns_to_set_nan:
-            demo[column] = np.nan
-
-        return demo.head(1)
-
-
-# def list_dir_wrapper(self, path, sftp_obj=None, config_obj = None):
-
-#     hostname = config_obj.hostname
-
-#     username = config_obj.username
-
-#     password = config_obj.password
-
-#     #global sftp_client
-#     if(self.remote_dump):
-#         if(self.share_sftp == False):
-#             ssh_client = paramiko.SSHClient()
-#             ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-#             ssh_client.connect(hostname=hostname, username=username, password=password)
-
-#             sftp_client = ssh_client.open_sftp()
-#             sftp_obj = sftp_client
-#         elif(sftp_obj ==None):
-#             sftp_obj = sftp_client
-
-#         res = sftp_obj.listdir(path)
-
-
-#         return res
-
-#     else:
-
-#         return os.listdir(path)
-
-
 def get_free_gpu():
-    # move to cogstats?
+    """Identifies and returns the GPU with the most available free memory.
+
+    This function executes the `nvidia-smi` command-line utility to query the
+    current memory usage of all available NVIDIA GPUs. It parses the output to
+    determine which GPU has the maximum amount of free memory and returns its
+    index along with the amount of free memory.
+
+    This is particularly useful for automatically selecting a GPU for a
+    compute-intensive task in a multi-GPU system.
+
+    Returns:
+        tuple[int, str]: A tuple where the first element is the integer index
+        of the GPU with the most free memory, and the second element is a
+        string representing the amount of free memory in MiB (e.g., "1024").
+
+    Raises:
+        FileNotFoundError: If the `nvidia-smi` command is not found in the
+            system's PATH.
+        subprocess.CalledProcessError: If the `nvidia-smi` command fails or
+            returns a non-zero exit code.
+    """
+
     gpu_stats = subprocess.check_output(
         ["nvidia-smi", "--format=csv", "--query-gpu=memory.used,memory.free"]
     )
@@ -699,6 +442,26 @@ def convert_date(date_string):
 
 
 def get_start_end_year_month(target_date_range, config_obj=None):
+    """Calculates start and end date components based on a time interval.
+
+    This function takes a starting date and adds a time interval defined in a
+    configuration object to determine the end date. It then returns the year,
+    month, and day for both the start and end dates.
+
+    Args:
+        target_date_range (tuple): A tuple of (year, month, day) representing
+            the start date.
+        config_obj (object, optional): A configuration object that must contain
+            the `time_window_interval_delta` attribute. This delta is added
+            to the start date to calculate the end date. Defaults to None.
+
+    Returns:
+        tuple: A tuple of six integers: (start_year, start_month, end_year,
+            end_month, start_day, end_day).
+
+    Raises:
+        ValueError: If `config_obj` is not provided.
+    """
 
     if config_obj is None:
         raise ValueError("config_obj cannot be None")
@@ -747,53 +510,6 @@ def get_empty_date_vector(config_obj):
     return pd.DataFrame(data=0.0, index=np.arange(1), columns=combinations).astype(
         float
     )
-
-
-# def get_demographics3_batch(patlist, target_date_range, pat_batch, config_obj = None, cohort_searcher_with_terms_and_search=None):
-
-#     batch_mode = config_obj.batch_mode
-
-#     #patlist = config_obj.patlist #is present?
-
-
-#     start_year, start_month, end_year, end_month, start_day, end_day = get_start_end_year_month(target_date_range)
-
-
-#     if(batch_mode):
-
-#         demo = filter_dataframe_by_timestamp(pat_batch, start_year, start_month, end_year, end_month, start_day, end_day, 'updatetime')
-
-
-#     else:
-#         demo = cohort_searcher_with_terms_and_search(index_name="epr_documents",
-#                                             fields_list=["client_idcode", "client_firstname", "client_lastname", "client_dob", "client_gendercode", "client_racecode", "client_deceaseddtm", "updatetime"],
-#                                             term_name="client_idcode.keyword",
-#                                             entered_list=patlist,
-#                                             search_string= f'updatetime:[{start_year}-{start_month}-{start_day} TO {end_year}-{end_month}-{end_day}] '
-#                                                 )
-
-
-#     demo["updatetime"] = pd.to_datetime(demo["updatetime"], utc=True)
-#     demo = demo.sort_values(["client_idcode", "updatetime"]) #.drop_duplicates(subset = ["client_idcode"], keep = "last", inplace = True)
-
-#     #if more than one in the range return the nearest the end of the period
-#     if(len(demo)> 1):
-#         try:
-#             #print("case1")
-#             return demo.tail(1)
-#             #return demo.iloc[-1].to_frame()
-#         except Exception as e:
-#             print(e)
-
-#     #if only one return it
-#     elif len(demo)==1:
-#         return demo
-
-#     #otherwise return only the client id
-#     else:
-#         demo = pd.DataFrame(data=None, columns=None)
-#         demo['client_idcode'] = patlist
-#         return demo
 
 
 def sftp_exists(path, config_obj=None):
@@ -902,25 +618,6 @@ def check_sftp_connection(self, remote_directory, config_obj):
 
     except Exception as e:
         print(f"Error: {e}")
-
-
-def get_free_gpu():
-    # move to cogstats?
-    gpu_stats = subprocess.check_output(
-        ["nvidia-smi", "--format=csv", "--query-gpu=memory.used,memory.free"]
-    )
-    gpu_df = pd.read_csv(
-        StringIO(gpu_stats.decode("utf-8")),
-        names=["memory.used", "memory.free"],
-        skiprows=1,
-    )
-    print("GPU usage:\n{}".format(gpu_df))
-    gpu_df["memory.free"] = gpu_df["memory.free"].map(lambda x: x.rstrip(" [MiB]"))
-    idx = gpu_df["memory.free"].astype(int).idxmax()
-    print(
-        "Returning GPU{} with {} free MiB".format(idx, gpu_df.iloc[idx]["memory.free"])
-    )
-    return int(idx), gpu_df.iloc[idx]["memory.free"]
 
 
 def method1(self):
@@ -1238,23 +935,6 @@ def filter_stripped_list(stripped_list, config_obj=None):
     return stripped_list, stripped_list_start
 
 
-# Example usage:
-# stripped_list, stripped_list_start = filter_stripped_list(your_stripped_list, strip_list=True, remote_dump=True, hostname="your_host", username="your_username", password="your_password", current_pat_lines_path="your_path", n_pat_lines=your_n)
-
-
-# def create_folders(all_patient_list, config_obj=None):
-#     pre_annotation_path = config_obj.pre_annotation_path
-#     pre_annotation_path_mrc = config_obj.pre_annotation_path_mrc
-#     current_pat_line_path = config_obj.current_pat_line_path
-#     #all_patient_list = config_obj.all_patient_list
-
-#     for i in tqdm(range(len(all_patient_list))):
-#         for path in [pre_annotation_path, pre_annotation_path_mrc, current_pat_line_path]:
-#             folder_path = os.path.join(path, str(all_patient_list[i]))
-
-
-#             if not os.path.exists(folder_path):
-#                 os.makedirs(folder_path)
 def create_folders(all_patient_list, config_obj=None):
     """
     Create folders for each patient in the specified paths.
