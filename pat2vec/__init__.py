@@ -33,7 +33,7 @@ from .pat2vec_get_methods.get_method_demo import (
     get_demographics3
 )
 from .pat2vec_get_methods.get_method_demographics import (
-    get_demo
+    get_demo, get_demographics3_batch
 )
 from .pat2vec_get_methods.get_method_diagnostics import (
     get_current_pat_diagnostics
@@ -89,8 +89,14 @@ from .patvec_get_batch_methods.main import (
     get_pat_batch_reports, get_pat_batch_reports_docs_annotations,
     get_pat_batch_textual_obs_annotations, get_pat_batch_textual_obs_docs
 )
+from .tests.test_methods_get import (
+    TestFilterDataFrameByTimestamp
+)
 from .util.anonymisation_data_methods import (
     anonymize_feature_names, deanonymize_feature_names
+)
+from .util.clinical_note_splitter import (
+    find_date, split_and_append_chunks, split_clinical_notes, split_clinical_notes_mct
 )
 from .util.cogstack_v8_lite import (
     CogStack, appendAge, appendAgeAtRecord, append_age_at_record_series,
@@ -173,8 +179,7 @@ from .util.methods_get import (
     create_folders_annot_csv_wrapper, create_folders_for_pat, create_local_folders,
     create_remote_folders, dump_results, enum_exact_target_date_vector,
     enum_target_date_vector, exist_check, filter_dataframe_by_timestamp,
-    filter_stripped_list, generate_date_list, get_demographics3_batch,
-    get_empty_date_vector, get_free_gpu, get_free_gpu, get_start_end_year_month,
+    filter_stripped_list, generate_date_list, get_empty_date_vector, get_free_gpu,
     get_start_end_year_month, list_dir_wrapper, list_dir_wrapper, list_dir_wrapper,
     method1, method1, method2, method2, read_csv_wrapper, read_remote, sftp_exists,
     test_datetime_formats, update_pbar, write_csv_wrapper, write_remote
@@ -227,16 +232,17 @@ from .util.presentation_methods import (
 # Define the public API of the package
 __all__ = [
     "BatchConfig", "CogStack", "CsvProfiler", "EthnicityAbstractor", "MultiStream",
-    "PathsClass", "add_offset_column", "aggregate_dataframe_mean",
-    "analyze_client_codes", "annot_pat_batch_docs", "anonymize_feature_names",
-    "appendAge", "appendAgeAtRecord", "append_age_at_record_series",
-    "append_regex_term_counts", "append_to_file", "apply_bloods_data_type_filter",
-    "apply_data_type_epr_docs_filters", "apply_data_type_mct_docs_filters",
-    "build_ipw_dataframe", "build_merged_bloods", "build_merged_epr_mct_annot_df",
-    "build_merged_epr_mct_doc_df", "build_patient_dict", "bulk_str_extract",
-    "bulk_str_extract_round_robin", "bulk_str_findall", "calculate_age_append",
-    "calculate_interval", "calculate_pretty_name_count_features", "catch",
-    "check_csv_files_in_directory", "check_csv_integrity", "check_list_presence",
+    "PathsClass", "TestFilterDataFrameByTimestamp", "add_offset_column",
+    "aggregate_dataframe_mean", "analyze_client_codes", "annot_pat_batch_docs",
+    "anonymize_feature_names", "appendAge", "appendAgeAtRecord",
+    "append_age_at_record_series", "append_regex_term_counts", "append_to_file",
+    "apply_bloods_data_type_filter", "apply_data_type_epr_docs_filters",
+    "apply_data_type_mct_docs_filters", "build_ipw_dataframe", "build_merged_bloods",
+    "build_merged_epr_mct_annot_df", "build_merged_epr_mct_doc_df",
+    "build_patient_dict", "bulk_str_extract", "bulk_str_extract_round_robin",
+    "bulk_str_findall", "calculate_age_append", "calculate_interval",
+    "calculate_pretty_name_count_features", "catch", "check_csv_files_in_directory",
+    "check_csv_integrity", "check_list_presence",
     "check_pat_document_annotation_complete", "check_sftp_connection",
     "coerce_document_df_to_medcat_trainer_input", "cohort_searcher_no_terms",
     "cohort_searcher_no_terms_fuzzy", "cohort_searcher_with_terms_and_search",
@@ -323,8 +329,9 @@ __all__ = [
     "run_generate_patient_timeline_and_append", "run_pip_compile", "sample_by_terms",
     "sanitize_hospital_ids", "save_group", "save_missing_values_pickle",
     "search_cohort", "set_index_safe_wrapper", "setup_logger", "sftp_exists",
-    "split_and_save_csv", "split_clinical_notes", "stringlist2pylist",
-    "stringlist2searchlist", "swap_start_end", "test_datetime_formats",
-    "update_global_start_date", "update_pbar", "verify_split_data_concatenated",
-    "verify_split_data_individual", "without_keys", "write_csv_wrapper", "write_remote"
+    "split_and_append_chunks", "split_and_save_csv", "split_clinical_notes",
+    "split_clinical_notes_mct", "stringlist2pylist", "stringlist2searchlist",
+    "swap_start_end", "test_datetime_formats", "update_global_start_date",
+    "update_pbar", "verify_split_data_concatenated", "verify_split_data_individual",
+    "without_keys", "write_csv_wrapper", "write_remote"
 ]
