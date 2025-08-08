@@ -130,7 +130,6 @@ class main:
         self.store_annot = config_obj.store_annot
         self.share_sftp = config_obj.share_sftp  # Deprecated
         self.multi_process = config_obj.multi_process  # Deprecated
-        self.annot_first = config_obj.annot_first  # Deprecated
         self.strip_list = config_obj.strip_list
         self.verbosity = config_obj.verbosity
         self.random_seed_val = config_obj.random_seed_val
@@ -325,7 +324,6 @@ class main:
         hostname = self.config_obj.hostname
         username = self.config_obj.username
         password = self.config_obj.password
-        annot_first = self.config_obj.annot_first
 
         stripped_list_start = self.stripped_list_start
 
