@@ -12,3 +12,6 @@ nbconvert
 nbstripout
 pre-commit
 nbmake
+seaborn
+rapidfuzz
+python-pptx
