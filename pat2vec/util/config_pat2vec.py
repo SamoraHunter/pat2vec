@@ -137,7 +137,6 @@ class config_class:
         store_annot=False,
         share_sftp=True,
         multi_process=False,
-        annot_first=False,
         strip_list=True,
         verbosity=3,
         random_seed_val=42,
@@ -212,7 +211,6 @@ class config_class:
             store_annot (bool): Flag to store annotations. Partially deprecated. Defaults to **True**.
             share_sftp (bool): Flag for sharing via SFTP. Partially deprecated. Defaults to **True**.
             multi_process (bool): Flag for multi-process execution. Deprecated. Defaults to **False**.
-            annot_first (bool): Flag for annotation priority. Deprecated. Defaults to **False**.
             strip_list (bool): If **True**, this will check for completed patients before starting to avoid redundancy. Defaults to **True**.
             verbosity (int): Verbosity level for printing debug messages (0-9). Defaults to **0**.
             random_seed_val (int): Random seed value for reproducibility of controls.
@@ -332,7 +330,6 @@ class config_class:
         self.store_annot = store_annot
         self.share_sftp = share_sftp
         self.multi_process = multi_process
-        self.annot_first = annot_first
         self.strip_list = strip_list
         self.verbosity = verbosity
         self.random_seed_val = random_seed_val

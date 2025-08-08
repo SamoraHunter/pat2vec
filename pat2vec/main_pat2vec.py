@@ -680,152 +680,150 @@ class main:
             else:
                 batch_reports = empty_return_reports
 
-            if not annot_first:
+            if self.config_obj.main_options.get("smoking", True):
+                search_term = "CORE_SmokingStatus"
+                batch_smoking = get_pat_batch_obs(
+                    current_pat_client_id_code,
+                    search_term,
+                    config_obj=self.config_obj,
+                    cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search,
+                )
+            else:
+                batch_smoking = empty_return
 
-                if self.config_obj.main_options.get("smoking", True):
-                    search_term = "CORE_SmokingStatus"
-                    batch_smoking = get_pat_batch_obs(
-                        current_pat_client_id_code,
-                        search_term,
-                        config_obj=self.config_obj,
-                        cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search,
-                    )
-                else:
-                    batch_smoking = empty_return
+            if self.config_obj.main_options.get("core_02", True):
 
-                if self.config_obj.main_options.get("core_02", True):
+                search_term = "CORE_SpO2"
+                batch_core_02 = get_pat_batch_obs(
+                    current_pat_client_id_code,
+                    search_term,
+                    config_obj=self.config_obj,
+                    cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search,
+                )
+            else:
+                batch_core_02 = empty_return
 
-                    search_term = "CORE_SpO2"
-                    batch_core_02 = get_pat_batch_obs(
-                        current_pat_client_id_code,
-                        search_term,
-                        config_obj=self.config_obj,
-                        cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search,
-                    )
-                else:
-                    batch_core_02 = empty_return
+            if self.config_obj.main_options.get("bed", True):
+                search_term = "CORE_BedNumber3"
+                batch_bednumber = get_pat_batch_obs(
+                    current_pat_client_id_code,
+                    search_term,
+                    config_obj=self.config_obj,
+                    cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search,
+                )
+            else:
+                batch_bednumber = empty_return
 
-                if self.config_obj.main_options.get("bed", True):
-                    search_term = "CORE_BedNumber3"
-                    batch_bednumber = get_pat_batch_obs(
-                        current_pat_client_id_code,
-                        search_term,
-                        config_obj=self.config_obj,
-                        cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search,
-                    )
-                else:
-                    batch_bednumber = empty_return
+            if self.config_obj.main_options.get("vte_status", True):
+                search_term = "CORE_VTE_STATUS"
+                batch_vte = get_pat_batch_obs(
+                    current_pat_client_id_code,
+                    search_term,
+                    config_obj=self.config_obj,
+                    cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search,
+                )
+            else:
+                batch_vte = empty_return
 
-                if self.config_obj.main_options.get("vte_status", True):
-                    search_term = "CORE_VTE_STATUS"
-                    batch_vte = get_pat_batch_obs(
-                        current_pat_client_id_code,
-                        search_term,
-                        config_obj=self.config_obj,
-                        cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search,
-                    )
-                else:
-                    batch_vte = empty_return
+            if self.config_obj.main_options.get("hosp_site", True):
+                search_term = "CORE_HospitalSite"
+                batch_hospsite = get_pat_batch_obs(
+                    current_pat_client_id_code,
+                    search_term,
+                    config_obj=self.config_obj,
+                    cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search,
+                )
+            else:
+                batch_hospsite = empty_return
 
-                if self.config_obj.main_options.get("hosp_site", True):
-                    search_term = "CORE_HospitalSite"
-                    batch_hospsite = get_pat_batch_obs(
-                        current_pat_client_id_code,
-                        search_term,
-                        config_obj=self.config_obj,
-                        cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search,
-                    )
-                else:
-                    batch_hospsite = empty_return
+            if self.config_obj.main_options.get("core_resus", True):
+                search_term = "CORE_RESUS_STATUS"
+                batch_resus = get_pat_batch_obs(
+                    current_pat_client_id_code,
+                    search_term,
+                    config_obj=self.config_obj,
+                    cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search,
+                )
+            else:
+                batch_resus = empty_return
 
-                if self.config_obj.main_options.get("core_resus", True):
-                    search_term = "CORE_RESUS_STATUS"
-                    batch_resus = get_pat_batch_obs(
-                        current_pat_client_id_code,
-                        search_term,
-                        config_obj=self.config_obj,
-                        cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search,
-                    )
-                else:
-                    batch_resus = empty_return
+            if self.config_obj.main_options.get("news", True):
+                search_term = None  # inside function
+                batch_news = get_pat_batch_news(
+                    current_pat_client_id_code,
+                    search_term,
+                    config_obj=self.config_obj,
+                    cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search,
+                )
+            else:
+                batch_news = empty_return
 
-                if self.config_obj.main_options.get("news", True):
-                    search_term = None  # inside function
-                    batch_news = get_pat_batch_news(
-                        current_pat_client_id_code,
-                        search_term,
-                        config_obj=self.config_obj,
-                        cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search,
-                    )
-                else:
-                    batch_news = empty_return
+            if self.config_obj.main_options.get("bmi", True):
+                search_term = None  # inside function
+                batch_bmi = get_pat_batch_bmi(
+                    current_pat_client_id_code,
+                    search_term,
+                    config_obj=self.config_obj,
+                    cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search,
+                )
 
-                if self.config_obj.main_options.get("bmi", True):
-                    search_term = None  # inside function
-                    batch_bmi = get_pat_batch_bmi(
-                        current_pat_client_id_code,
-                        search_term,
-                        config_obj=self.config_obj,
-                        cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search,
-                    )
+            else:
+                batch_bmi = empty_return
 
-                else:
-                    batch_bmi = empty_return
+            if self.config_obj.main_options.get("diagnostics", True):
+                search_term = None  # inside function
+                batch_diagnostics = get_pat_batch_diagnostics(
+                    current_pat_client_id_code,
+                    search_term,
+                    config_obj=self.config_obj,
+                    cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search,
+                )
+            else:
+                batch_diagnostics = empty_return
 
-                if self.config_obj.main_options.get("diagnostics", True):
-                    search_term = None  # inside function
-                    batch_diagnostics = get_pat_batch_diagnostics(
-                        current_pat_client_id_code,
-                        search_term,
-                        config_obj=self.config_obj,
-                        cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search,
-                    )
-                else:
-                    batch_diagnostics = empty_return
+            if self.config_obj.main_options.get("drugs", True):
+                search_term = None  # inside function
+                batch_drugs = get_pat_batch_drugs(
+                    current_pat_client_id_code,
+                    search_term,
+                    config_obj=self.config_obj,
+                    cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search,
+                )
+            else:
+                batch_drugs = empty_return
 
-                if self.config_obj.main_options.get("drugs", True):
-                    search_term = None  # inside function
-                    batch_drugs = get_pat_batch_drugs(
-                        current_pat_client_id_code,
-                        search_term,
-                        config_obj=self.config_obj,
-                        cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search,
-                    )
-                else:
-                    batch_drugs = empty_return
+            if self.config_obj.main_options.get("demo", True):
+                search_term = None  # inside function
+                batch_demo = get_pat_batch_demo(
+                    current_pat_client_id_code,
+                    search_term,
+                    config_obj=self.config_obj,
+                    cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search,
+                )
+            else:
+                batch_demo = empty_return
 
-                if self.config_obj.main_options.get("demo", True):
-                    search_term = None  # inside function
-                    batch_demo = get_pat_batch_demo(
-                        current_pat_client_id_code,
-                        search_term,
-                        config_obj=self.config_obj,
-                        cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search,
-                    )
-                else:
-                    batch_demo = empty_return
+            if self.config_obj.main_options.get("bloods", True):
+                search_term = None  # inside function
+                batch_bloods = get_pat_batch_bloods(
+                    current_pat_client_id_code,
+                    search_term,
+                    config_obj=self.config_obj,
+                    cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search,
+                )
+            else:
+                batch_bloods = empty_return
 
-                if self.config_obj.main_options.get("bloods", True):
-                    search_term = None  # inside function
-                    batch_bloods = get_pat_batch_bloods(
-                        current_pat_client_id_code,
-                        search_term,
-                        config_obj=self.config_obj,
-                        cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search,
-                    )
-                else:
-                    batch_bloods = empty_return
+            if self.config_obj.main_options.get("appointments", True):
 
-                if self.config_obj.main_options.get("appointments", True):
-
-                    batch_appointments = get_pat_batch_appointments(
-                        current_pat_client_id_code,
-                        search_term,
-                        config_obj=self.config_obj,
-                        cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search,
-                    )
-                else:
-                    batch_appointments = empty_return
+                batch_appointments = get_pat_batch_appointments(
+                    current_pat_client_id_code,
+                    search_term,
+                    config_obj=self.config_obj,
+                    cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search,
+                )
+            else:
+                batch_appointments = empty_return
 
             if self.config_obj.main_options.get("annotations", True):
 
@@ -1075,58 +1073,38 @@ class main:
                     if run_on_pat:
                         if self.config_obj.verbosity > 5:
                             print(f"Processing date {date_list[j]} for patient {i}...")
-                        if annot_first:
 
-                            # deprecated method
-
-                            get_current_pat_annotations_batch_to_file(
+                        if self.config_obj.calculate_vectors:
+                            main_batch(
                                 all_patient_list[i],
                                 date_list[j],
-                                batch_epr,
-                                sftp_obj,
-                                skip_check=skip_check,
+                                batch_demo=batch_demo,
+                                batch_smoking=batch_smoking,
+                                batch_core_02=batch_core_02,
+                                batch_bednumber=batch_bednumber,
+                                batch_vte=batch_vte,
+                                batch_hospsite=batch_hospsite,
+                                batch_resus=batch_resus,
+                                batch_news=batch_news,
+                                batch_bmi=batch_bmi,
+                                batch_diagnostics=batch_diagnostics,
+                                batch_epr=batch_epr,
+                                batch_mct=batch_mct,
+                                batch_bloods=batch_bloods,
+                                batch_drugs=batch_drugs,
+                                batch_epr_docs_annotations=batch_epr_docs_annotations,
+                                batch_epr_docs_annotations_mct=batch_epr_docs_annotations_mct,
+                                batch_report_docs_annotations=batch_reports_docs_annotations,
+                                batch_textual_obs_annotations=batch_textual_obs_annotations,
+                                batch_appointments=batch_appointments,
+                                config_obj=self.config_obj,
+                                stripped_list_start=stripped_list_start,
+                                t=self.t,
+                                cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search,
+                                cat=self.cat,
                             )
-
-                            get_current_pat_annotations_mct_batch_to_file(
-                                all_patient_list[i],
-                                date_list[j],
-                                batch_mct,
-                                sftp_obj,
-                                skip_check=skip_check,
-                            )
-
                         else:
-                            if self.config_obj.calculate_vectors:
-                                main_batch(
-                                    all_patient_list[i],
-                                    date_list[j],
-                                    batch_demo=batch_demo,
-                                    batch_smoking=batch_smoking,
-                                    batch_core_02=batch_core_02,
-                                    batch_bednumber=batch_bednumber,
-                                    batch_vte=batch_vte,
-                                    batch_hospsite=batch_hospsite,
-                                    batch_resus=batch_resus,
-                                    batch_news=batch_news,
-                                    batch_bmi=batch_bmi,
-                                    batch_diagnostics=batch_diagnostics,
-                                    batch_epr=batch_epr,
-                                    batch_mct=batch_mct,
-                                    batch_bloods=batch_bloods,
-                                    batch_drugs=batch_drugs,
-                                    batch_epr_docs_annotations=batch_epr_docs_annotations,
-                                    batch_epr_docs_annotations_mct=batch_epr_docs_annotations_mct,
-                                    batch_report_docs_annotations=batch_reports_docs_annotations,
-                                    batch_textual_obs_annotations=batch_textual_obs_annotations,
-                                    batch_appointments=batch_appointments,
-                                    config_obj=self.config_obj,
-                                    stripped_list_start=stripped_list_start,
-                                    t=self.t,
-                                    cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search,
-                                    cat=self.cat,
-                                )
-                            else:
-                                pass
+                            pass
 
                 except Exception as e:
                     print(e)
