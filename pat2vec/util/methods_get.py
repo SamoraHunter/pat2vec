@@ -208,6 +208,30 @@ def filter_dataframe_by_timestamp(
     timestamp_string,
     dropna=False,
 ):
+    """Filters a DataFrame to include only rows within a specified date range.
+
+    This function takes a DataFrame and filters it based on a timestamp column,
+    retaining only the rows where the timestamp falls between a given start and
+    end date. It handles conversion of the timestamp column to datetime objects
+    and ensures the start date is chronologically before the end date.
+
+    Args:
+        df (pd.DataFrame): The DataFrame to filter.
+        start_year (int): The year of the start date.
+        start_month (int): The month of the start date.
+        end_year (int): The year of the end date.
+        end_month (int): The month of the end date.
+        start_day (int): The day of the start date.
+        end_day (int): The day of the end date.
+        timestamp_string (str): The name of the column in `df` that contains
+            the timestamps to filter on.
+        dropna (bool, optional): If True, drops rows with NaN values in the
+            timestamp column after filtering. Defaults to False.
+
+    Returns:
+        pd.DataFrame: A new DataFrame containing only the rows that fall
+        within the specified date range.
+    """
 
     # Convert timestamp column to datetime format
     df[timestamp_string] = pd.to_datetime(
@@ -280,6 +304,29 @@ def update_pbar(
     skipped_counter=None,
     **n_docs_to_annotate,
 ):
+    """Updates a tqdm progress bar with formatted information about the current processing state.
+
+    This function dynamically sets the description and color of a tqdm progress bar
+    to reflect the current patient, processing stage, and execution time. The color
+    changes to indicate slow performance if the elapsed time exceeds predefined
+    thresholds.
+
+    Args:
+        current_pat_client_id_code (str): The identifier of the patient currently being processed.
+        start_time (datetime.datetime): The start time of the current operation.
+            Note: This parameter is currently overwritten by `config_obj.start_time`.
+        stage_int (int): An integer representing the processing stage. Note: This parameter is currently unused.
+        stage_str (str): A string describing the current processing stage (e.g., "demo", "annotating").
+        t (tqdm.tqdm): The tqdm progress bar instance to update.
+        config_obj (object): A configuration object containing settings like `start_time`,
+            `multi_process`, and various `slow_execution_threshold` values.
+        skipped_counter (Union[int, multiprocessing.Value], optional): A counter for the number of
+            skipped items. Can be a standard integer or a multiprocessing-safe value. Defaults to None.
+        **n_docs_to_annotate: Arbitrary keyword arguments that are displayed at the end of the
+            progress bar description. Useful for showing counts like the number of documents
+            to annotate.
+
+    """
 
     start_time = config_obj.start_time
 
