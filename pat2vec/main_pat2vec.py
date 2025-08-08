@@ -8,7 +8,9 @@ import pandas as pd
 from pat2vec.patvec_get_batch_methods.get_prefetch_batches import prefetch_batches
 from pat2vec.util.cogstack_v8_lite import *
 from colorama import Back, Fore, Style
-from credentials import *
+
+from .util.credentials import *
+
 from tqdm import trange
 from pat2vec.pat2vec_main_methods.main_batch import main_batch
 from pat2vec.pat2vec_pat_list.get_patient_treatment_list import get_all_patients_list
