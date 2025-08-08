@@ -6,7 +6,6 @@ from IPython.core.getipython import get_ipython
 
 
 def setup_logger():
-    # Get the directory path of the current module
     """
     Sets up a logger for the application, directing log messages to both a log file and the console.
 
@@ -53,6 +52,9 @@ def setup_logger():
     console_handler.setFormatter(formatter)
     logger.addHandler(console_handler)
 
+    # Store original stdout for restoration
+    original_stdout = sys.stdout
+
     # Define a trace function for logging
     def tracefunc(frame, event, arg):
         # Only log events from files within the notebook directory
@@ -61,25 +63,33 @@ def setup_logger():
                 logger.debug(
                     f"{event}: {frame.f_code.co_filename} - Line {frame.f_lineno}"
                 )
-
         return tracefunc
 
     # Register the trace function globally for all events
     sys.settrace(tracefunc)
 
-    # Redirect stdout to the logger
-    class LoggerWriter:
-        def __init__(self, logger, level):
+    # Create a custom stdout that both logs and preserves normal output
+    class TeeWriter:
+        def __init__(self, original_stream, logger, level):
+            self.original_stream = original_stream
             self.logger = logger
             self.level = level
 
         def write(self, message):
+            # Write to original stdout (preserves Jupyter cell output)
+            self.original_stream.write(message)
+            # Also log the message (but only non-empty messages)
             if message.strip():
                 self.logger.log(self.level, message.strip())
 
         def flush(self):
-            pass
+            self.original_stream.flush()
 
-    sys.stdout = LoggerWriter(logger, logging.INFO)
+        def __getattr__(self, name):
+            # Delegate any other attributes to the original stream
+            return getattr(self.original_stream, name)
+
+    # Replace stdout with our tee writer
+    sys.stdout = TeeWriter(original_stdout, logger, logging.INFO)
 
     return logger
