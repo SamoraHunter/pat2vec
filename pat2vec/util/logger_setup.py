@@ -40,6 +40,7 @@ def setup_logger():
         format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     )
 
+    logging.getLogger("elasticsearch").setLevel(logging.WARNING)
     # Create a logger
     logger = logging.getLogger(__name__)
 
