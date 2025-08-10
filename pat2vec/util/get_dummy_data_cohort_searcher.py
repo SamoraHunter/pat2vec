@@ -16,6 +16,9 @@ import random
 import string
 from IPython import display
 import numpy as np
+import calendar
+from datetime import datetime, timedelta
+import random
 
 random_state = 42
 Faker.seed(random_state)
@@ -42,6 +45,31 @@ def maybe_nan(value, probability=0.2):
     - probability: Optional probability (default=0.2) to replace the value with NaN.
     """
     return value if random.random() > probability else np.nan
+
+
+def create_random_date_from_globals(start_year, start_month, end_year, end_month):
+    """
+    Generates a random datetime using year and month numbers,
+    correctly using all possible days in the end month.
+    """
+    # Define the start date as the beginning of the first day
+    start_dt = datetime(start_year, start_month, 1)
+
+    # Find the last day of the end month (e.g., 29 for Feb 2024, 31 for Mar 2024)
+    _, num_days_in_end_month = calendar.monthrange(end_year, end_month)
+
+    # Define the end date as the last second of the last day
+    end_dt = datetime(end_year, end_month, num_days_in_end_month, 23, 59, 59)
+
+    # Calculate the total number of seconds between the two dates
+    time_difference = end_dt - start_dt
+    total_seconds = int(time_difference.total_seconds())
+
+    if total_seconds <= 0:
+        return start_dt
+
+    random_second = random.randrange(total_seconds)
+    return start_dt + timedelta(seconds=random_second)
 
 
 def generate_epr_documents_data(
@@ -93,13 +121,11 @@ def generate_epr_documents_data(
                 for _ in range(num_rows)
             ],
             "updatetime": [
-                datetime(
-                    random.randint(global_start_year, global_end_year),
-                    random.randint(global_start_month, global_end_month),
-                    random.randint(1, 28),
-                    random.randint(0, 23),
-                    random.randint(0, 59),
-                    random.randint(0, 59),
+                create_random_date_from_globals(
+                    global_start_year,
+                    global_start_month,
+                    global_end_year,
+                    global_end_month,
                 )
                 for _ in range(num_rows)
             ],
@@ -176,14 +202,11 @@ def generate_epr_documents_personal_data(
                 maybe_nan(client_deceaseddtm_val) for _ in range(num_rows)
             ],
             "updatetime": [
-                datetime(
-                    random.randint(global_start_year, global_end_year),
-                    random.randint(global_start_month, global_end_month),
-                    random.randint(1, 28),
-                    random.randint(0, 23),
-                    random.randint(0, 59),
-                    random.randint(0, 59),
-                    tzinfo=timezone.utc,
+                create_random_date_from_globals(
+                    global_start_year,
+                    global_start_month,
+                    global_end_year,
+                    global_end_month,
                 ).strftime("%Y-%m-%d")
                 for _ in range(num_rows)
             ],
@@ -251,24 +274,20 @@ def generate_diagnostic_orders_data(
                 for i in range(num_rows)
             ],
             "order_entered": [
-                datetime(
-                    random.randint(global_start_year, global_end_year),
-                    random.randint(global_start_month, global_end_month),
-                    random.randint(1, 28),
-                    random.randint(0, 23),
-                    random.randint(0, 59),
-                    random.randint(0, 59),
+                create_random_date_from_globals(
+                    global_start_year,
+                    global_start_month,
+                    global_end_year,
+                    global_end_month,
                 )
                 for _ in range(num_rows)
             ],
             "order_createdwhen": [
-                datetime(
-                    random.randint(global_start_year, global_end_year),
-                    random.randint(global_start_month, global_end_month),
-                    random.randint(1, 28),
-                    random.randint(0, 23),
-                    random.randint(0, 59),
-                    random.randint(0, 59),
+                create_random_date_from_globals(
+                    global_start_year,
+                    global_start_month,
+                    global_end_year,
+                    global_end_month,
                 )
                 for _ in range(num_rows)
             ],
@@ -277,13 +296,11 @@ def generate_diagnostic_orders_data(
             "_index": ["{np.nan}" for _ in range(num_rows)],
             "_score": ["{np.nan}" for _ in range(num_rows)],
             "order_performeddtm": [
-                datetime(
-                    random.randint(global_start_year, global_end_year),
-                    random.randint(global_start_month, global_end_month),
-                    random.randint(1, 28),
-                    random.randint(0, 23),
-                    random.randint(0, 59),
-                    random.randint(0, 59),
+                create_random_date_from_globals(
+                    global_start_year,
+                    global_start_month,
+                    global_end_year,
+                    global_end_month,
                 )
                 for _ in range(num_rows)
             ],
@@ -340,24 +357,20 @@ def generate_drug_orders_data(
                 for i in range(num_rows)
             ],
             "order_entered": [
-                datetime(
-                    random.randint(global_start_year, global_end_year),
-                    random.randint(global_start_month, global_end_month),
-                    random.randint(1, 28),
-                    random.randint(0, 23),
-                    random.randint(0, 59),
-                    random.randint(0, 59),
+                create_random_date_from_globals(
+                    global_start_year,
+                    global_start_month,
+                    global_end_year,
+                    global_end_month,
                 )
                 for _ in range(num_rows)
             ],
             "order_createdwhen": [
-                datetime(
-                    random.randint(global_start_year, global_end_year),
-                    random.randint(global_start_month, global_end_month),
-                    random.randint(1, 28),
-                    random.randint(0, 23),
-                    random.randint(0, 59),
-                    random.randint(0, 59),
+                create_random_date_from_globals(
+                    global_start_year,
+                    global_start_month,
+                    global_end_year,
+                    global_end_month,
                 )
                 for _ in range(num_rows)
             ],
@@ -366,13 +379,11 @@ def generate_drug_orders_data(
             "_index": ["{np.nan}" for i in range(num_rows)],
             "_score": ["{np.nan}" for i in range(num_rows)],
             "order_performeddtm": [
-                datetime(
-                    random.randint(global_start_year, global_end_year),
-                    random.randint(global_start_month, global_end_month),
-                    random.randint(1, 28),
-                    random.randint(0, 23),
-                    random.randint(0, 59),
-                    random.randint(0, 59),
+                create_random_date_from_globals(
+                    global_start_year,
+                    global_start_month,
+                    global_end_year,
+                    global_end_month,
                 )
                 for _ in range(num_rows)
             ],
@@ -429,13 +440,11 @@ def generate_observations_MRC_text_data(
             ],
             # 'observation_valuetext_analysed': [faker.paragraph() for _ in range(num_rows)],
             "observationdocument_recordeddtm": [
-                datetime(
-                    random.randint(global_start_year, global_end_year),
-                    random.randint(global_start_month, global_end_month),
-                    random.randint(1, 28),
-                    random.randint(0, 23),
-                    random.randint(0, 59),
-                    random.randint(0, 59),
+                create_random_date_from_globals(
+                    global_start_year,
+                    global_start_month,
+                    global_end_year,
+                    global_end_month,
                 )
                 for _ in range(num_rows)
             ],
@@ -498,13 +507,11 @@ def generate_observations_Reports_text_data(
             ],
             # 'observation_valuetext_analysed': [faker.paragraph() for _ in range(num_rows)],
             "updatetime": [
-                datetime(
-                    random.randint(global_start_year, global_end_year),
-                    random.randint(global_start_month, global_end_month),
-                    random.randint(1, 28),
-                    random.randint(0, 23),
-                    random.randint(0, 59),
-                    random.randint(0, 59),
+                create_random_date_from_globals(
+                    global_start_year,
+                    global_start_month,
+                    global_end_year,
+                    global_end_month,
                 )
                 for _ in range(num_rows)
             ],
@@ -564,14 +571,11 @@ def generate_appointments_data(
             "ClinicDesc": [faker.word() for _ in range(num_rows)],
             "Consultant": [faker.name() for _ in range(num_rows)],
             "DateModified": [
-                datetime(
-                    random.randint(global_start_year, global_end_year),
-                    random.randint(global_start_month, global_end_month),
-                    random.randint(1, 28),
-                    random.randint(0, 23),
-                    random.randint(0, 59),
-                    random.randint(0, 59),
-                    tzinfo=pytz.utc,
+                create_random_date_from_globals(
+                    global_start_year,
+                    global_start_month,
+                    global_end_year,
+                    global_end_month,
                 )
                 for _ in range(num_rows)
             ],
@@ -586,14 +590,11 @@ def generate_appointments_data(
             "_index": [str(None) for _ in range(num_rows)],
             "_score": [str(None) for _ in range(num_rows)],
             "AppointmentDateTime": [
-                datetime(
-                    random.randint(global_start_year, global_end_year),
-                    random.randint(global_start_month, global_end_month),
-                    random.randint(1, 28),
-                    random.randint(0, 23),
-                    random.randint(0, 59),
-                    random.randint(0, 59),
-                    tzinfo=pytz.utc,
+                create_random_date_from_globals(
+                    global_start_year,
+                    global_start_month,
+                    global_end_year,
+                    global_end_month,
                 )
                 for _ in range(num_rows)
             ],
@@ -671,13 +672,11 @@ def generate_observations_data(
                 random.uniform(0, 100) for _ in range(num_rows)
             ],
             "observationdocument_recordeddtm": [
-                datetime(
-                    random.randint(global_start_year, global_end_year),
-                    random.randint(global_start_month, global_end_month),
-                    random.randint(1, 28),
-                    random.randint(0, 23),
-                    random.randint(0, 59),
-                    random.randint(0, 59),
+                create_random_date_from_globals(
+                    global_start_year,
+                    global_start_month,
+                    global_end_year,
+                    global_end_month,
                 )
                 for _ in range(num_rows)
             ],
@@ -731,14 +730,11 @@ def generate_basic_observations_data(
             ],
             "basicobs_value_numeric": [random.uniform(1, 100) for _ in range(num_rows)],
             "basicobs_entered": [
-                datetime(
-                    random.randint(global_start_year, global_end_year),
-                    random.randint(global_start_month, global_end_month),
-                    random.randint(1, 28),
-                    random.randint(0, 23),
-                    random.randint(0, 59),
-                    random.randint(0, 59),
-                    tzinfo=timezone.utc,
+                create_random_date_from_globals(
+                    global_start_year,
+                    global_start_month,
+                    global_end_year,
+                    global_end_month,
                 ).strftime("%Y-%m-%dT%H:%M:%S")
                 for _ in range(num_rows)
             ],
@@ -759,14 +755,11 @@ def generate_basic_observations_data(
             "order_entered": ["{np.nan}" for i in range(num_rows)],
             "clientvisit_visitidcode": ["{np.nan}" for i in range(num_rows)],
             "updatetime": [
-                datetime(
-                    random.randint(global_start_year, global_end_year),
-                    random.randint(global_start_month, global_end_month),
-                    random.randint(1, 28),
-                    random.randint(0, 23),
-                    random.randint(0, 59),
-                    random.randint(0, 59),
-                    tzinfo=timezone.utc,
+                create_random_date_from_globals(
+                    global_start_year,
+                    global_start_month,
+                    global_end_year,
+                    global_end_month,
                 ).strftime("%Y-%m-%dT%H:%M:%S")
                 for _ in range(num_rows)
             ],
@@ -817,14 +810,11 @@ def generate_basic_observations_textual_obs_data(
             "basicobs_value_numeric": [random.uniform(1, 100) for _ in range(num_rows)],
             "basicobs_value_analysed": [faker.sentence() for _ in range(num_rows)],
             "basicobs_entered": [
-                datetime(
-                    random.randint(global_start_year, global_end_year),
-                    random.randint(global_start_month, global_end_month),
-                    random.randint(1, 28),
-                    random.randint(0, 23),
-                    random.randint(0, 59),
-                    random.randint(0, 59),
-                    tzinfo=timezone.utc,
+                create_random_date_from_globals(
+                    global_start_year,
+                    global_start_month,
+                    global_end_year,
+                    global_end_month,
                 ).strftime("%Y-%m-%dT%H:%M:%S")
                 for _ in range(num_rows)
             ],
@@ -835,14 +825,11 @@ def generate_basic_observations_textual_obs_data(
             "basicobs_guid": [f"obs_{i}" for i in range(num_rows)],
             "clientvisit_serviceguid": ["{np.nan}" for i in range(num_rows)],
             "updatetime": [
-                datetime(
-                    random.randint(global_start_year, global_end_year),
-                    random.randint(global_start_month, global_end_month),
-                    random.randint(1, 28),
-                    random.randint(0, 23),
-                    random.randint(0, 59),
-                    random.randint(0, 59),
-                    tzinfo=timezone.utc,
+                create_random_date_from_globals(
+                    global_start_year,
+                    global_start_month,
+                    global_end_year,
+                    global_end_month,
                 ).strftime("%Y-%m-%dT%H:%M:%S")
                 for _ in range(num_rows)
             ],
