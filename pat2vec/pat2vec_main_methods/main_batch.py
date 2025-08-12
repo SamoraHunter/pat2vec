@@ -177,7 +177,7 @@ def main_batch(
                 config_obj=config_obj,
             ):
 
-                if (
+                if (n_pat_lines is not None) and (
                     len(
                         list_dir_wrapper(
                             current_pat_lines_path + str(current_pat_client_id_code),

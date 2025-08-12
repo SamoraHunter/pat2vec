@@ -19,7 +19,7 @@ from pat2vec.util.methods_annotation import (
 )
 from pat2vec.util.methods_annotation_regex import append_regex_term_counts
 from pat2vec.util.methods_get import exist_check
-from pat2vec.util.methods_get import filter_dataframe_by_timestamp
+from pat2vec.util.filter_dataframe_by_timestamp import filter_dataframe_by_timestamp
 
 
 def get_pat_batch_obs(

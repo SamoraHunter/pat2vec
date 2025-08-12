@@ -1,4 +1,3 @@
-import datetime as dt
 import os
 import pickle
 import subprocess
@@ -13,15 +12,25 @@ import pandas as pd
 import paramiko
 from colorama import Back, Fore, Style
 from dateutil.parser import parse
-from dateutil.relativedelta import relativedelta
 from IPython.display import display
 from tqdm import tqdm
 import pytz
 
 import pandas as pd
 from dateutil.parser import parse
-from dateutil.relativedelta import relativedelta
 import warnings
+
+# Use the modern standard library for timezones (Python 3.9+)
+import logging
+
+from pat2vec.util.generate_date_list import generate_date_list
+
+# Configure basic logging
+logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
+
+
+from datetime import datetime
+
 
 color_bars = [
     Fore.RED,
@@ -109,157 +118,6 @@ def enum_exact_target_date_vector(
     empty_date_vector["client_idcode"] = current_pat_client_id_code
 
     return empty_date_vector
-
-
-def generate_date_list(
-    start_date,
-    years,
-    months,
-    days,
-    time_window_interval_delta=relativedelta(days=1),
-    config_obj=None,
-):
-
-    lookback = config_obj.lookback
-
-    config_obj.global_start_year, config_obj.global_start_month, config_obj.global_end_year, config_obj.global_end_month, config_obj.global_start_day, config_obj.global_end_day
-
-    if lookback == False:
-        end_date = start_date + relativedelta(years=years, months=months, days=days)
-    else:
-        end_date = start_date - relativedelta(years=years, months=months, days=days)
-
-    global_start_date = datetime.strptime(
-        f"{config_obj.global_start_year}-{config_obj.global_start_month}-{config_obj.global_start_day}",
-        "%Y-%m-%d",
-    )
-    global_end_date = datetime.strptime(
-        f"{config_obj.global_end_year}-{config_obj.global_end_month}-{config_obj.global_end_day}",
-        "%Y-%m-%d",
-    )
-
-    # import pytz
-
-    # Assuming your timezone is 'UTC', you can replace it with your actual timezone
-    timezone = pytz.UTC
-
-    # Check if start_date and end_date are timezone-aware
-    if not start_date.tzinfo:
-        start_date = timezone.localize(start_date)
-
-    if not end_date.tzinfo:
-        end_date = timezone.localize(end_date)
-
-    # Check if global_start_date and global_end_date are timezone-aware
-    if not global_start_date.tzinfo:
-        global_start_date = timezone.localize(global_start_date)
-
-    if not global_end_date.tzinfo:
-        global_end_date = timezone.localize(global_end_date)
-
-    # Adjust start_date and end_date based on global start and end dates
-    if start_date < global_start_date:
-        start_date = global_start_date
-
-    if end_date > global_end_date:
-        end_date = global_end_date
-
-    # Rest of your code
-
-    date_list = []
-    current_date = start_date
-
-    if lookback == False:
-        # look forward...
-        while current_date <= end_date:
-            date_list.append((current_date.year, current_date.month, current_date.day))
-            current_date += time_window_interval_delta  # timedelta(days=1)
-    else:
-        # look back
-        # limit lookback dates by global dates.
-        if start_date < global_start_date:
-
-            start_date = global_start_date
-            if config_obj.verbose >= 1:
-                print("start_date < global_start_date", start_date)
-
-        if end_date > global_end_date:
-            end_date = global_end_date
-            if config_obj.verbose >= 1:
-                print("end_date > global_end_date", end_date)
-
-        while current_date >= end_date:
-            date_list.append((current_date.year, current_date.month, current_date.day))
-            current_date += time_window_interval_delta
-
-        # date_list.reverse() # cohort searcher date order fix
-
-    return date_list
-
-
-def filter_dataframe_by_timestamp(
-    df,
-    start_year,
-    start_month,
-    end_year,
-    end_month,
-    start_day,
-    end_day,
-    timestamp_string,
-    dropna=False,
-):
-    """Filters a DataFrame to include only rows within a specified date range.
-
-    This function takes a DataFrame and filters it based on a timestamp column,
-    retaining only the rows where the timestamp falls between a given start and
-    end date. It handles conversion of the timestamp column to datetime objects
-    and ensures the start date is chronologically before the end date.
-
-    Args:
-        df (pd.DataFrame): The DataFrame to filter.
-        start_year (int): The year of the start date.
-        start_month (int): The month of the start date.
-        end_year (int): The year of the end date.
-        end_month (int): The month of the end date.
-        start_day (int): The day of the start date.
-        end_day (int): The day of the end date.
-        timestamp_string (str): The name of the column in `df` that contains
-            the timestamps to filter on.
-        dropna (bool, optional): If True, drops rows with NaN values in the
-            timestamp column after filtering. Defaults to False.
-
-    Returns:
-        pd.DataFrame: A new DataFrame containing only the rows that fall
-        within the specified date range.
-    """
-
-    # Convert timestamp column to datetime format
-    df[timestamp_string] = pd.to_datetime(
-        df[timestamp_string], utc=True, errors="coerce"
-    )
-
-    df = df.dropna(subset=[timestamp_string])
-
-    # Ensure start date is earlier than end date
-    start_datetime = pd.Timestamp(
-        datetime(start_year, int(start_month), int(start_day)), tz="UTC"
-    )
-    end_datetime = pd.Timestamp(
-        datetime(end_year, int(end_month), int(end_day)), tz="UTC"
-    )
-    if start_datetime > end_datetime:
-        start_datetime, end_datetime = end_datetime, start_datetime
-
-    # Filter based on datetime range
-    filtered_df = df[
-        (df[timestamp_string] >= start_datetime)
-        & (df[timestamp_string] <= end_datetime)
-    ]
-
-    if dropna:
-        filtered_df.dropna(subset=[timestamp_string], inplace=True)
-    # display(filtered_df)
-    return filtered_df
 
 
 def dump_results(file_data, path, config_obj=None):
@@ -486,53 +344,6 @@ def convert_date(date_string):
     date_string = date_string.split("T")[0]
     date_object = datetime.strptime(date_string, "%Y-%m-%d")
     return date_object
-
-
-def get_start_end_year_month(target_date_range, config_obj=None):
-    """Calculates start and end date components based on a time interval.
-
-    This function takes a starting date and adds a time interval defined in a
-    configuration object to determine the end date. It then returns the year,
-    month, and day for both the start and end dates.
-
-    Args:
-        target_date_range (tuple): A tuple of (year, month, day) representing
-            the start date.
-        config_obj (object, optional): A configuration object that must contain
-            the `time_window_interval_delta` attribute. This delta is added
-            to the start date to calculate the end date. Defaults to None.
-
-    Returns:
-        tuple: A tuple of six integers: (start_year, start_month, end_year,
-            end_month, start_day, end_day).
-
-    Raises:
-        ValueError: If `config_obj` is not provided.
-    """
-
-    if config_obj is None:
-        raise ValueError("config_obj cannot be None")
-
-    time_window_interval_delta = config_obj.time_window_interval_delta
-
-    start_year, start_month, start_day = (
-        target_date_range[0],
-        target_date_range[1],
-        target_date_range[2],
-    )
-
-    start_date = dt.date(start_year, start_month, start_day)
-    # end_date = start_date + dt.timedelta(days=n)
-    end_date = start_date + time_window_interval_delta
-
-    return (
-        start_date.year,
-        start_date.month,
-        end_date.year,
-        end_date.month,
-        start_date.day,
-        end_date.day,
-    )
 
 
 def get_empty_date_vector(config_obj):

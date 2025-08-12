@@ -3,6 +3,7 @@ import random
 import re
 from typing import List
 import re
+import numpy as np
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.cluster import KMeans
 from collections import Counter
@@ -22,6 +23,9 @@ def extract_treatment_id_list_from_docs(config_obj):
     Returns:
     - list: A list of unique client IDs from the treatment document.
     """
+
+    random.seed(config_obj.random_seed_val)
+    np.random.seed(config_obj.random_seed_val)
 
     # Extract the treatment document filename from the configuration object
     treatment_doc_filename = config_obj.treatment_doc_filename
@@ -75,8 +79,20 @@ def extract_treatment_id_list_from_docs(config_obj):
                 print("best_match_column: None, attempting default client_idcode")
             config_obj.patient_id_column_name = "client_idcode"
 
-    # drop the nan in column
-    docs[config_obj.patient_id_column_name].dropna(inplace=True)
+        # drop the nan in column
+        docs[config_obj.patient_id_column_name].dropna(inplace=True)
+
+        if config_obj.sample_treatment_docs > 0:
+            # Determine the number of samples by taking the smaller of the requested
+            # number and the total number of available rows.
+            n_samples = min(config_obj.sample_treatment_docs, len(docs))
+
+            if config_obj.verbosity >= 1:
+                # The print statement now reflects the actual number of samples being taken.
+                print(f"Sampling {n_samples} of {len(docs)} available treatment docs.")
+
+            # Safely sample the DataFrame.
+            docs = docs.sample(n_samples)
 
     # Extract the unique client IDs from the document
     treatment_client_id_list = list(docs[config_obj.patient_id_column_name].unique())
@@ -254,7 +270,22 @@ def get_all_patients_list(config_obj):
         print("failed to analyze_client_codes")
         print(e)
 
-    # Propensity score matching here or in super function?
+    if config_obj.sample_treatment_docs > 0:
+        random.seed(config_obj.random_seed_val)
+        np.random.seed(config_obj.random_seed_val)
+
+        n_samples = min(config_obj.sample_treatment_docs, len(all_patient_list))
+
+        if config_obj.verbosity >= 0:
+            # The print statement now reflects the actual number of samples being taken.
+            print(
+                f"Sampling {n_samples} of {len(all_patient_list)} available treatment docs."
+            )
+
+            # Safely sample the DataFrame.
+            all_patient_list = pd.Series(all_patient_list).sample(n_samples).to_list()
+
+            print("all_patient_list size now:", len(all_patient_list))
 
     return all_patient_list
 

@@ -6,8 +6,8 @@ from IPython.display import display
 # from COGStats import EthnicityAbstractor
 # from COGStats import *
 from pat2vec.util.ethnicity_abstractor import EthnicityAbstractor
-from pat2vec.util.methods_get import (
-    filter_dataframe_by_timestamp,
+from pat2vec.util.filter_dataframe_by_timestamp import filter_dataframe_by_timestamp
+from pat2vec.util.get_start_end_year_month import (
     get_start_end_year_month,
 )
 

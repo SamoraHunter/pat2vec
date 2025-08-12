@@ -4,74 +4,13 @@ import pandas as pd
 import paramiko
 from dateutil.relativedelta import relativedelta
 from IPython.display import display
+from pat2vec.util.calculate_interval import calculate_interval
 from pat2vec.util.current_pat_batch_path_methods import PathsClass
+from pat2vec.util.generate_date_list import generate_date_list
 from pat2vec.util.methods_get import (
     add_offset_column,
     build_patient_dict,
-    generate_date_list,
 )
-
-
-class MultiStream:
-    # This class is a simple container for multiple streams that can be used
-    # interchangeably with a single stream. For example, you can create an
-    # instance of this class and pass it to the logging module as the stream
-    # to be used for logging. Then, any messages that are logged will be
-    # written to all of the streams that are contained within this class.
-    # This is useful for situations where you want to log to multiple
-    # places at the same time.
-    #
-    # The constructor takes a single argument, which is a list of streams.
-    # The streams can be any type of stream, including strings (in which
-    # case they will be used as file names), or already open file objects.
-    #
-    # For example, to create a MultiStream that logs to the console and to
-    # a file, you could do the following:
-    #
-    #     stream_list = [sys.stdout, 'logfile.txt']
-    #     multi_stream = MultiStream(stream_list)
-    #     logging.basicConfig(stream=multi_stream, level=logging.INFO)
-    #
-    # Then, any messages that are logged will be written to both the console
-    # and the logfile.
-
-    def __init__(self, streams):
-        self.streams = streams
-
-    def write(self, text):
-        for stream in self.streams:
-            stream.write(text)
-
-    def flush(self):
-        for stream in self.streams:
-            stream.flush()
-
-
-def calculate_interval(start_date, time_delta, m=1):
-    # adjust for time interval width
-    end_date = start_date + time_delta
-    interval_days = (end_date - start_date).days
-
-    n_intervals = interval_days // m
-    return n_intervals
-
-
-def update_global_start_date(self, start_date):
-    print("updating global start date")
-    # Compare and update individual elements of global start date if necessary
-    if self.lookback == False:
-        if start_date.year > int(self.global_start_year):
-            self.global_start_year = str(start_date.year)
-        if start_date.month > int(self.global_start_month):
-            self.global_start_month = str(start_date.month)
-        if start_date.day > int(self.global_start_day):
-            self.global_start_day = str(start_date.day)
-
-        print(
-            "Warning: Updated global start date as start date later than global start date."
-        )
-
-    return self
 
 
 def get_test_options_dict():
@@ -113,6 +52,95 @@ def get_test_options_dict():
         "textual_obs": True,
     }
     return main_options_dict
+
+
+def update_global_start_date(self, start_date):
+    """
+    Updates the global start date if the provided start_date is later.
+    This logic only applies when looking forward (lookback=False).
+    """
+    # This function should only operate when looking forward.
+    if self.lookback:
+        return self  # Do nothing if it's a lookback calculation
+
+    # Construct a complete datetime object from the global start attributes for a clean comparison.
+    # This also handles the case where the attributes might still be strings.
+    try:
+        global_start = datetime(
+            int(self.global_start_year),
+            int(self.global_start_month),
+            int(self.global_start_day),
+        )
+    except (ValueError, TypeError):
+        # Handle cases where global date attributes are invalid to prevent crashes.
+        print("Warning: Invalid global date attributes in config. Cannot update.")
+        return self
+
+    # Compare the full date objects for simplicity and accuracy.
+    if start_date > global_start:
+        print(
+            "Warning: Updating global start date because the provided start_date is later."
+        )
+
+        # Assign the new values as integers, not strings.
+        self.global_start_year = start_date.year
+        self.global_start_month = start_date.month
+        self.global_start_day = start_date.day
+
+    return self
+
+
+def validate_and_fix_global_dates(self):
+    """
+    Ensures that global_start_date < global_end_date for Elasticsearch compatibility.
+    If they're in wrong order, swaps them and warns the user.
+    """
+    try:
+        global_start = datetime(
+            int(self.global_start_year),
+            int(self.global_start_month),
+            int(self.global_start_day),
+        )
+        global_end = datetime(
+            int(self.global_end_year),
+            int(self.global_end_month),
+            int(self.global_end_day),
+        )
+
+        if global_start > global_end:
+            print(
+                f"Warning: Global start date ({global_start}) is after global end date ({global_end})"
+            )
+            print("Swapping dates to ensure Elasticsearch compatibility...")
+
+            # Swap the dates
+            temp_year, temp_month, temp_day = (
+                self.global_start_year,
+                self.global_start_month,
+                self.global_start_day,
+            )
+            (
+                self.global_start_year,
+                self.global_start_month,
+                self.global_start_day,
+            ) = (self.global_end_year, self.global_end_month, self.global_end_day)
+            self.global_end_year, self.global_end_month, self.global_end_day = (
+                temp_year,
+                temp_month,
+                temp_day,
+            )
+
+            print(
+                f"New global start date: {self.global_start_year}-{self.global_start_month}-{self.global_start_day}"
+            )
+            print(
+                f"New global end date: {self.global_end_year}-{self.global_end_month}-{self.global_end_day}"
+            )
+
+    except (ValueError, TypeError) as e:
+        print(f"Warning: Could not validate global dates due to invalid values: {e}")
+
+    return self
 
 
 class config_class:
@@ -185,6 +213,7 @@ class config_class:
         sanitize_pat_list=True,
         calculate_vectors=True,
         prefetch_pat_batches=False,
+        sample_treatment_docs=0,  # 0 for no sampling, provide an int for the number of samples.
     ):
         """
         Initializes the config_class instance with various configuration parameters for data processing and analysis.
@@ -614,6 +643,8 @@ class config_class:
         self.slow_execution_threshold_high = timedelta(seconds=30)
         self.slow_execution_threshold_extreme = timedelta(seconds=60)
 
+        self.sample_treatment_docs = sample_treatment_docs
+
         priority_list_bool = False
 
         if priority_list_bool:
@@ -741,11 +772,11 @@ class config_class:
         else:
             self.sftp_client = None
 
-        if self.lookback:
-            self.time_window_interval_delta = -self.time_window_interval_delta
-            print("looking back with ", self.time_window_interval_delta)
-        else:
-            print("looking forward with ", self.time_window_interval_delta)
+        # if self.lookback:
+        #     self.time_window_interval_delta = -self.time_window_interval_delta
+        #     print("looking back with ", self.time_window_interval_delta)
+        # else:
+        #     print("looking forward with ", self.time_window_interval_delta)
 
         self.model_paths = {
             "aliencat": "../medcat_model_pack_316666b47dfaac07.zip",
@@ -754,21 +785,6 @@ class config_class:
             "dhcap02": "../medcat_model_pack_316666b47dfaac07.zip",
             "override_medcat_model_path": None,
         }
-
-        if self.lookback == True:
-            print("Swapping global values")
-            # Swapping values
-            global_start_year, global_end_year = global_end_year, global_start_year
-            global_start_month, global_end_month = global_end_month, global_start_month
-            global_start_day, global_end_day = global_end_day, global_start_day
-
-            # Output the swapped values
-            print("global_start_year:", global_start_year)
-            print("global_start_month:", global_start_month)
-            print("global_end_year:", global_end_year)
-            print("global_end_month:", global_end_month)
-            print("global_start_day:", global_start_day)
-            print("global_end_day:", global_end_day)
 
         if global_start_year == None:
             (
@@ -788,25 +804,6 @@ class config_class:
             self.global_start_day = str(global_start_day).zfill(2)
             self.global_end_day = str(global_end_day).zfill(2)
 
-        if self.lookback:
-
-            self = swap_start_end(self)
-            if self.verbosity >= 1:
-                print("Swapping start and end dates, lookback True")
-                # Output
-                print(
-                    "Start:",
-                    self.global_start_year,
-                    self.global_start_month,
-                    self.global_start_day,
-                )
-                print(
-                    "End:",
-                    self.global_end_year,
-                    self.global_end_month,
-                    self.global_end_day,
-                )
-
         self.initial_global_start_year = self.global_start_year
         self.initial_global_start_month = self.global_start_month
         self.initial_global_end_year = self.global_end_year
@@ -814,22 +811,37 @@ class config_class:
         self.initial_global_start_day = self.global_start_day
         self.initial_global_end_day = self.global_end_day
 
+        # CRITICAL: Ensure global dates are in correct order for Elasticsearch
+        self = validate_and_fix_global_dates(self)
+
+        if self.lookback:
+            if self.verbosity >= 1:
+                print(
+                    "Lookback mode enabled - this affects time window calculation direction"
+                )
+                print("Global dates remain ordered for Elasticsearch compatibility")
+                print(
+                    f"Global range: {self.global_start_year}-{self.global_start_month}-{self.global_start_day} to {self.global_end_year}-{self.global_end_month}-{self.global_end_day}"
+                )
+
+        # Update global start date based on the provided start_date (only for forward looking)
         self = update_global_start_date(self, self.start_date)
 
-        self.date_list = generate_date_list(
-            self.start_date,
-            self.years,
-            self.months,
-            self.days,
-            time_window_interval_delta=self.time_window_interval_delta,
-            config_obj=self,
-        )
+        if not self.individual_patient_window:
+            self.date_list = generate_date_list(
+                self.start_date,
+                self.years,
+                self.months,
+                self.days,
+                time_window_interval_delta=self.time_window_interval_delta,
+                config_obj=self,
+            )
 
-        if self.verbosity > 0:
-            for date in self.date_list[0:5]:
-                print(date)
+            if self.verbosity > 0:
+                for date in self.date_list[0:5]:
+                    print(date)
 
-        self.n_pat_lines = len(self.date_list)
+            self.n_pat_lines = len(self.date_list)
 
         if self.individual_patient_window:
             print("individual_patient_window set!")
@@ -912,6 +924,11 @@ class config_class:
                     end_column=f"{start_column_name}_offset",
                 )
 
+            self.n_pat_lines = (
+                None  # N_pat_lines will be dynamic for each pat... or potentially?
+            )
+            self.date_list = None  # We will generate this in main_pat2vec under individiual patient window
+
             if self.lookback == True:
                 # print("skipping reverse")
 
@@ -942,29 +959,3 @@ class config_class:
                 print("data_type_filter_dict")
                 print(self.data_type_filter_dict)
                 print(self.data_type_filter_dict.keys())
-
-
-def swap_start_end(self):
-    # Temporary variables to hold start values
-    """
-    Swap the values of start and end dates for all patients in the global and individual patient time windows.
-
-    This method is used to reverse the direction of the time windows, e.g. from forward to backward in time or vice versa.
-    It is used internally in the IndividualPatientWindow class when `lookback` is set to `True`.
-    """
-    temp_year = self.global_start_year
-    temp_month = self.global_start_month
-    temp_day = self.global_start_day
-
-    # Assigning end values to start variables
-    self.global_start_year = self.global_end_year
-    self.global_start_month = self.global_end_month
-    self.global_start_day = self.global_end_day
-
-    # Assigning temporary values to end variables
-    self.global_end_year = temp_year
-    self.global_end_month = temp_month
-    self.global_end_day = temp_day
-
-    # Return self for method chaining
-    return self

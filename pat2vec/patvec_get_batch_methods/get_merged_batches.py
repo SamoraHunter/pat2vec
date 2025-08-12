@@ -4,7 +4,7 @@ from multiprocessing import Pool, cpu_count
 from functools import partial
 
 from pat2vec.util.clinical_note_splitter import split_and_append_chunks
-from pat2vec.util.methods_get import filter_dataframe_by_timestamp
+from pat2vec.util.filter_dataframe_by_timestamp import filter_dataframe_by_timestamp
 from pat2vec.util.methods_annotation_regex import append_regex_term_counts
 
 from pat2vec.util.filter_methods import filter_dataframe_by_fuzzy_terms

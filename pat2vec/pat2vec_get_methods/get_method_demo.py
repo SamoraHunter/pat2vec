@@ -1,6 +1,6 @@
 import pandas as pd
 from IPython.display import display
-from pat2vec.util.methods_get import get_start_end_year_month
+from pat2vec.util.get_start_end_year_month import get_start_end_year_month
 
 
 def get_demographics3(

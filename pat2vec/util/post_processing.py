@@ -213,7 +213,7 @@ def filter_annot_dataframe2(dataframe, filter_args):
             elif column in ["Time_Value", "Presence_Value", "Subject_Value"]:
                 # Include rows where the column is in the specified list of values
                 mask &= (
-                    dataframe[column].isin(value)
+                    dataframe[column].astype(str).isin(value)
                     if isinstance(value, list)
                     else (dataframe[column] == value)
                 )
