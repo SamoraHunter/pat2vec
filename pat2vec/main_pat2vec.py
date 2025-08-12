@@ -9,6 +9,8 @@ from pat2vec.patvec_get_batch_methods.get_prefetch_batches import prefetch_batch
 from pat2vec.util.cogstack_v8_lite import *
 from colorama import Back, Fore, Style
 
+from pat2vec.util.generate_date_list import generate_date_list
+
 from .util.credentials import *
 
 from tqdm import trange
@@ -36,7 +38,6 @@ from pat2vec.util import config_pat2vec
 from pat2vec.util.methods_get import (
     create_folders_for_pat,
     filter_stripped_list,
-    generate_date_list,
     get_free_gpu,
     list_dir_wrapper,
     update_pbar,
@@ -251,10 +252,12 @@ class main:
                 path=self.current_pat_lines_path, config_obj=config_obj
             )
         ]
-
-        self.stripped_list, self.stripped_list_start = filter_stripped_list(
-            self.stripped_list, config_obj=self.config_obj
-        )
+        if self.config_obj.individual_patient_window == False:
+            self.stripped_list, self.stripped_list_start = filter_stripped_list(
+                self.stripped_list, config_obj=self.config_obj
+            )
+        else:
+            print("skipped strip list because ipw is enabled")
 
         self.n_pat_lines = config_obj.n_pat_lines
 
