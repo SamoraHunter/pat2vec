@@ -89,11 +89,38 @@ from .patvec_get_batch_methods.main import (
     get_pat_batch_reports, get_pat_batch_reports_docs_annotations,
     get_pat_batch_textual_obs_annotations, get_pat_batch_textual_obs_docs
 )
+from .tests.test_calculate_interval import (
+    TestCalculateInterval
+)
+from .tests.test_config_class import (
+    TestConfigClass
+)
+from .tests.test_filter_dataframe_by_timestamp_extended import (
+    TestFilterDataFrameByTimestampExtended
+)
+from .tests.test_generate_date_list import (
+    TestGenerateDateList
+)
+from .tests.test_get_dummy_data_cohort_searcher_get_date import (
+    TestCreateRandomDateFromGlobals
+)
+from .tests.test_get_start_end_year_month import (
+    MockConfig, TestGetStartEndYearMonth
+)
+from .tests.test_global_date_validation import (
+    TestGlobalDateValidation
+)
+from .tests.test_individual_patient_window import (
+    TestIndividualPatientWindow
+)
 from .tests.test_methods_get import (
     TestFilterDataFrameByTimestamp
 )
 from .util.anonymisation_data_methods import (
     anonymize_feature_names, deanonymize_feature_names
+)
+from .util.calculate_interval import (
+    calculate_interval
 )
 from .util.clinical_note_splitter import (
     find_date, split_and_append_chunks, split_clinical_notes, split_clinical_notes_mct
@@ -115,8 +142,8 @@ from .util.compile_requirements import (
     append_to_file, process_requirements, run_pip_compile
 )
 from .util.config_pat2vec import (
-    MultiStream, calculate_interval, config_class, get_test_options_dict,
-    swap_start_end, update_global_start_date
+    config_class, get_test_options_dict, update_global_start_date,
+    validate_and_fix_global_dates
 )
 from .util.current_pat_batch_path_methods import (
     PathsClass
@@ -134,13 +161,19 @@ from .util.evaluation_methods import (
 from .util.evaluation_methods_ploting import (
     generate_pie_charts
 )
+from .util.filter_dataframe_by_timestamp import (
+    filter_dataframe_by_timestamp
+)
 from .util.filter_methods import (
     apply_bloods_data_type_filter, apply_data_type_epr_docs_filters,
     apply_data_type_mct_docs_filters, filter_dataframe_by_fuzzy_terms
 )
+from .util.generate_date_list import (
+    generate_date_list
+)
 from .util.get_dummy_data_cohort_searcher import (
-    cohort_searcher_with_terms_and_search_dummy, dummy_CAT,
-    dummy_medcat_annotation_generator, extract_date_range,
+    cohort_searcher_with_terms_and_search_dummy, create_random_date_from_globals,
+    dummy_CAT, dummy_medcat_annotation_generator, extract_date_range,
     extract_search_term_obscatalogmasteritem_displayname, generate_appointments_data,
     generate_basic_observations_data, generate_basic_observations_textual_obs_data,
     generate_diagnostic_orders_data, generate_drug_orders_data,
@@ -150,6 +183,9 @@ from .util.get_dummy_data_cohort_searcher import (
     generate_patient_timeline_faker, generate_uuid, generate_uuid_list,
     get_patient_timeline_dummy, maybe_nan, random_sample,
     run_generate_patient_timeline_and_append
+)
+from .util.get_start_end_year_month import (
+    get_start_end_year_month
 )
 from .util.helper_functions import (
     extract_nhs_numbers, get_search_client_idcode_list_from_nhs_number_list
@@ -178,10 +214,9 @@ from .util.methods_get import (
     convert_date, convert_timestamp_to_tuple, create_folders,
     create_folders_annot_csv_wrapper, create_folders_for_pat, create_local_folders,
     create_remote_folders, dump_results, enum_exact_target_date_vector,
-    enum_target_date_vector, exist_check, filter_dataframe_by_timestamp,
-    filter_stripped_list, generate_date_list, get_empty_date_vector, get_free_gpu,
-    get_start_end_year_month, list_dir_wrapper, list_dir_wrapper, list_dir_wrapper,
-    method1, method1, method2, method2, read_csv_wrapper, read_remote, sftp_exists,
+    enum_target_date_vector, exist_check, filter_stripped_list, get_empty_date_vector,
+    get_free_gpu, list_dir_wrapper, list_dir_wrapper, list_dir_wrapper, method1,
+    method1, method2, method2, read_csv_wrapper, read_remote, sftp_exists,
     test_datetime_formats, update_pbar, write_csv_wrapper, write_remote
 )
 from .util.methods_get_medcat import (
@@ -231,18 +266,21 @@ from .util.presentation_methods import (
 
 # Define the public API of the package
 __all__ = [
-    "BatchConfig", "CogStack", "CsvProfiler", "EthnicityAbstractor", "MultiStream",
-    "PathsClass", "TestFilterDataFrameByTimestamp", "add_offset_column",
-    "aggregate_dataframe_mean", "analyze_client_codes", "annot_pat_batch_docs",
-    "anonymize_feature_names", "appendAge", "appendAgeAtRecord",
-    "append_age_at_record_series", "append_regex_term_counts", "append_to_file",
-    "apply_bloods_data_type_filter", "apply_data_type_epr_docs_filters",
-    "apply_data_type_mct_docs_filters", "build_ipw_dataframe", "build_merged_bloods",
-    "build_merged_epr_mct_annot_df", "build_merged_epr_mct_doc_df",
-    "build_patient_dict", "bulk_str_extract", "bulk_str_extract_round_robin",
-    "bulk_str_findall", "calculate_age_append", "calculate_interval",
-    "calculate_pretty_name_count_features", "catch", "check_csv_files_in_directory",
-    "check_csv_integrity", "check_list_presence",
+    "BatchConfig", "CogStack", "CsvProfiler", "EthnicityAbstractor", "MockConfig",
+    "PathsClass", "TestCalculateInterval", "TestConfigClass",
+    "TestCreateRandomDateFromGlobals", "TestFilterDataFrameByTimestamp",
+    "TestFilterDataFrameByTimestampExtended", "TestGenerateDateList",
+    "TestGetStartEndYearMonth", "TestGlobalDateValidation",
+    "TestIndividualPatientWindow", "add_offset_column", "aggregate_dataframe_mean",
+    "analyze_client_codes", "annot_pat_batch_docs", "anonymize_feature_names",
+    "appendAge", "appendAgeAtRecord", "append_age_at_record_series",
+    "append_regex_term_counts", "append_to_file", "apply_bloods_data_type_filter",
+    "apply_data_type_epr_docs_filters", "apply_data_type_mct_docs_filters",
+    "build_ipw_dataframe", "build_merged_bloods", "build_merged_epr_mct_annot_df",
+    "build_merged_epr_mct_doc_df", "build_patient_dict", "bulk_str_extract",
+    "bulk_str_extract_round_robin", "bulk_str_findall", "calculate_age_append",
+    "calculate_interval", "calculate_pretty_name_count_features", "catch",
+    "check_csv_files_in_directory", "check_csv_integrity", "check_list_presence",
     "check_pat_document_annotation_complete", "check_sftp_connection",
     "coerce_document_df_to_medcat_trainer_input", "cohort_searcher_no_terms",
     "cohort_searcher_no_terms_fuzzy", "cohort_searcher_with_terms_and_search",
@@ -256,8 +294,8 @@ __all__ = [
     "create_folders_for_pat", "create_local_folders", "create_ner_results_dataframe",
     "create_powerpoint_from_images", "create_powerpoint_from_images_group",
     "create_powerpoint_slides", "create_powerpoint_slides_client_idcode_groups",
-    "create_remote_folders", "dataframe_generator", "date_cleaner",
-    "deanonymize_feature_names", "demo_to_latest", "df_column_uniquify",
+    "create_random_date_from_globals", "create_remote_folders", "dataframe_generator",
+    "date_cleaner", "deanonymize_feature_names", "demo_to_latest", "df_column_uniquify",
     "draw_document_samples", "drop_columns_with_all_nan", "dummy_CAT",
     "dummy_medcat_annotation_generator", "dump_results",
     "enum_exact_target_date_vector", "enum_target_date_vector", "exist_check",
@@ -331,7 +369,7 @@ __all__ = [
     "search_cohort", "set_index_safe_wrapper", "setup_logger", "sftp_exists",
     "split_and_append_chunks", "split_and_save_csv", "split_clinical_notes",
     "split_clinical_notes_mct", "stringlist2pylist", "stringlist2searchlist",
-    "swap_start_end", "test_datetime_formats", "update_global_start_date",
-    "update_pbar", "verify_split_data_concatenated", "verify_split_data_individual",
-    "without_keys", "write_csv_wrapper", "write_remote"
+    "test_datetime_formats", "update_global_start_date", "update_pbar",
+    "validate_and_fix_global_dates", "verify_split_data_concatenated",
+    "verify_split_data_individual", "without_keys", "write_csv_wrapper", "write_remote"
 ]
