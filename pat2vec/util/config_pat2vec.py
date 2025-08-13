@@ -157,10 +157,6 @@ class config_class:
         years=0,
         months=0,
         days=1,
-        aliencat=False,
-        dgx=False,
-        dhcap=False,
-        dhcap02=True,
         batch_mode=True,
         store_annot=False,
         share_sftp=True,
@@ -349,10 +345,6 @@ class config_class:
 
         self.data_type_filter_dict = data_type_filter_dict
 
-        self.aliencat = aliencat
-        self.dgx = dgx
-        self.dhcap = dhcap
-        self.dhcap02 = dhcap02
         self.batch_mode = batch_mode
         self.remote_dump = remote_dump
 
@@ -771,20 +763,6 @@ class config_class:
 
         else:
             self.sftp_client = None
-
-        # if self.lookback:
-        #     self.time_window_interval_delta = -self.time_window_interval_delta
-        #     print("looking back with ", self.time_window_interval_delta)
-        # else:
-        #     print("looking forward with ", self.time_window_interval_delta)
-
-        self.model_paths = {
-            "aliencat": "../medcat_model_pack_316666b47dfaac07.zip",
-            "dgx": "../medcat_models/20230328_trained_model_hfe_redone/medcat_model_pack_316666b47dfaac07",
-            "dhcap": "../medcat_model_pack_316666b47dfaac07.zip",
-            "dhcap02": "../medcat_model_pack_316666b47dfaac07.zip",
-            "override_medcat_model_path": None,
-        }
 
         if global_start_year == None:
             (

@@ -10,6 +10,7 @@ from pat2vec.util.cogstack_v8_lite import *
 from colorama import Back, Fore, Style
 
 from pat2vec.util.generate_date_list import generate_date_list
+from pat2vec.util.get_best_gpu import set_best_gpu
 
 from .util.credentials import *
 
@@ -123,10 +124,6 @@ class main:
                 drives the pipeline's behavior. If None, a default configuration
                 is created. Defaults to None.
         """
-        self.aliencat = config_obj.aliencat  # Deprecated environment specific bools
-        self.dgx = config_obj.dgx  # Deprecated environment specific bools
-        self.dhcap = config_obj.dhcap  # Deprecated environment specific bools
-        self.dhcap02 = config_obj.dhcap02  # Deprecated environment specific bools
         self.batch_mode = config_obj.batch_mode
         self.remote_dump = config_obj.remote_dump  # Deprecated
         self.negated_presence_annotations = config_obj.negated_presence_annotations
@@ -191,19 +188,7 @@ class main:
             json_cuis = json_data["projects"][0]["cuis"].split(",")
             self.cat.cdb.filter_by_cui(json_cuis)
 
-        if not (self.dhcap) and not (self.dhcap02):
-
-            gpu_index, free_mem = get_free_gpu()
-
-        else:
-            gpu_index, free_mem = -1, self.gpu_mem_threshold - 1
-
-        if int(free_mem) > self.gpu_mem_threshold:
-            os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu_index)
-            print(f"Setting gpu with {free_mem} free")
-        else:
-            print(f"Setting NO gpu, most free memory: {free_mem} !")
-            os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
+        set_best_gpu(config_obj.gpu_mem_threshold)
 
         random.seed(self.config_obj.random_seed_val)
         if config_obj.shuffle_pat_list == True:

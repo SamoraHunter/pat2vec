@@ -6,15 +6,12 @@ from pat2vec.util.get_dummy_data_cohort_searcher import dummy_CAT
 
 def get_cat(config_obj):
 
-
-
     if config_obj.verbosity >= 1:
         print(config_obj.override_medcat_model_path)
 
-    if(config_obj.testing):
-        
+    if config_obj.testing:
 
-        if(config_obj.dummy_medcat_model):
+        if config_obj.dummy_medcat_model:
             print("Returning dummy_CAT, TESTING")
 
             cat = dummy_CAT()
@@ -57,11 +54,9 @@ def get_cat(config_obj):
                 medcat_models_path = os.path.join(directory, "medcat_models")
                 if os.path.exists(medcat_models_path):
                     files_in_dir = os.listdir(medcat_models_path)
-                    zip_files = [
-                        file for file in files_in_dir if file.endswith(".zip")]
+                    zip_files = [file for file in files_in_dir if file.endswith(".zip")]
                     if zip_files:
-                        model_path = os.path.join(
-                            medcat_models_path, zip_files[0])
+                        model_path = os.path.join(medcat_models_path, zip_files[0])
                     else:
                         # Handle case where no zip files are found
                         print("No ZIP files found in the directory.")
@@ -85,14 +80,6 @@ def get_cat(config_obj):
                 model_path = config_obj.override_medcat_model_path
             elif config_obj.testing:
                 model_path = "medcat_models\medcat_model_pack_422d1d38fc58f158.zip"
-            elif config_obj.aliencat:
-                model_path = "/home/aliencat/samora/HFE/HFE/medcat_models/medcat_model_pack_316666b47dfaac07.zip"
-            elif config_obj.dgx:
-                model_path = "/data/AS/Samora/HFE/HFE/v18/medcat_models/20230328_trained_model_hfe_redone/medcat_model_pack_316666b47dfaac07"
-            elif config_obj.dhcap:
-                model_path = "/home/jovyan/work/medcat_models/medcat_model_pack_316666b47dfaac07.zip"
-            elif config_obj.dhcap02:
-                model_path = "/home/samorah/_data/medcat_models/medcat_model_pack_316666b47dfaac07.zip"
 
         if model_path is not None:
             if config_obj.verbosity > 0:
