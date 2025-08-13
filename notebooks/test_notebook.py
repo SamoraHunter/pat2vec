@@ -1,11 +1,17 @@
 import pytest
 import nbformat
 from nbconvert.preprocessors import ExecutePreprocessor
+import os
 
 
 def test_notebook():
-    with open("notebooks/example_usage.ipynb") as f:
+    notebook_filename = "notebooks/example_usage.ipynb"
+    notebook_dir = os.path.dirname(notebook_filename)
+
+    with open(notebook_filename) as f:
         nb = nbformat.read(f, as_version=4)
 
     ep = ExecutePreprocessor(timeout=600, kernel_name="pat2vec_env")
-    ep.preprocess(nb)  # Will raise an error if the notebook fails
+
+    # Set the working directory for the notebook execution
+    ep.preprocess(nb, {"metadata": {"path": notebook_dir}})
