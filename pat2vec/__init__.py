@@ -171,6 +171,9 @@ from .util.filter_methods import (
 from .util.generate_date_list import (
     generate_date_list
 )
+from .util.get_best_gpu import (
+    set_best_gpu
+)
 from .util.get_dummy_data_cohort_searcher import (
     cohort_searcher_with_terms_and_search_dummy, create_random_date_from_globals,
     dummy_CAT, dummy_medcat_annotation_generator, extract_date_range,
@@ -366,10 +369,10 @@ __all__ = [
     "retrieve_pat_annots_mct_epr", "retrieve_pat_bloods", "retrieve_pat_docs_mct_epr",
     "run_generate_patient_timeline_and_append", "run_pip_compile", "sample_by_terms",
     "sanitize_hospital_ids", "save_group", "save_missing_values_pickle",
-    "search_cohort", "set_index_safe_wrapper", "setup_logger", "sftp_exists",
-    "split_and_append_chunks", "split_and_save_csv", "split_clinical_notes",
-    "split_clinical_notes_mct", "stringlist2pylist", "stringlist2searchlist",
-    "test_datetime_formats", "update_global_start_date", "update_pbar",
-    "validate_and_fix_global_dates", "verify_split_data_concatenated",
+    "search_cohort", "set_best_gpu", "set_index_safe_wrapper", "setup_logger",
+    "sftp_exists", "split_and_append_chunks", "split_and_save_csv",
+    "split_clinical_notes", "split_clinical_notes_mct", "stringlist2pylist",
+    "stringlist2searchlist", "test_datetime_formats", "update_global_start_date",
+    "update_pbar", "validate_and_fix_global_dates", "verify_split_data_concatenated",
     "verify_split_data_individual", "without_keys", "write_csv_wrapper", "write_remote"
 ]
