@@ -15,3 +15,7 @@ seaborn
 rapidfuzz
 python-pptx
 ipykernel
+transformers==4.38.2
+accelerate==0.27.2
+peft==0.8.2
+huggingface-hub==0.20.3
