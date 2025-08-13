@@ -3,7 +3,13 @@ from setuptools import setup, find_packages
 setup(
     name="pat2vec",
     version="1.0.0",
-    description="Extract, transform, feature engineer, and produce machine learning ready datasets from a CogStack datalake.",
+    description=(
+        "A comprehensive Python package for healthcare data engineering, designed to "
+        "extract, transform, and feature engineer patient data from CogStack-based "
+        "electronic health record (EHR) datalakes. It provides tools for cohort "
+        "building, batch data processing, clinical note analysis, and creating "
+        "machine learning-ready datasets."
+    ),
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
     author="Samora Hunter",
