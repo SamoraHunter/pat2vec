@@ -1179,6 +1179,7 @@ def build_ipw_dataframe(
     mode="earliest",
     include_mct=True,
     include_textual_obs=True,
+    custom_pat_list=[],
 ):
 
     df = pd.DataFrame()
@@ -1188,6 +1189,10 @@ def build_ipw_dataframe(
     pat_list_stripped = [
         os.path.splitext(file)[0] for file in pat_list if file.endswith(".csv")
     ]
+
+    if custom_pat_list:
+        print(f"Using custom pat list, len:", len(custom_pat_list))
+        pat_list_stripped = custom_pat_list
 
     for pat in pat_list_stripped:
 
