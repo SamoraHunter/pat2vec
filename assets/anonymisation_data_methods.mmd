@@ -1,0 +1,35 @@
+graph TD
+    subgraph Anonymization: anonymize_feature_names
+        direction LR
+        A_Start[Start: anonymize_feature_names] --> A_Input(Input: DataFrame);
+        A_Input --> A_Init[Initialize: <br/> - anonymization_key dict <br/> - core_concept_map dict <br/> - PREDEFINED_PREFIXES <br/> - PREDEFINED_SUFFIXES];
+        A_Init --> A_Loop{For each column name};
+        A_Loop -- Next Name --> A_Prefix[1 Identify & Extract Longest Prefix];
+        A_Prefix --> A_Suffix[2 Identify & Extract Longest Suffix];
+        A_Suffix --> A_Core[3 Remaining string is core_concept];
+        A_Core --> A_CheckMap{Is 'core_concept' in map?};
+        A_CheckMap -- No --> A_MapNew[Generate new 'concept_ID' <br/> Add to core_concept_map];
+        A_MapNew --> A_GetMapped[4 Get anonymized_core_concept];
+        A_CheckMap -- Yes --> A_GetMapped;
+        A_GetMapped --> A_Reconstruct[5 Reconstruct Anonymized Name <br/> prefix + anonymized_core + suffix];
+        A_Reconstruct --> A_CheckSimple{Is it a simple name? <br/> no prefix/suffix matched};
+        A_CheckSimple -- Yes --> A_HandleSimple[Use generic 'feature_X' ID];
+        A_HandleSimple --> A_StoreKey[6 Store in Key: <br/> anonymized_name -> original_name];
+        A_CheckSimple -- No --> A_StoreKey;
+        A_StoreKey --> A_Loop;
+        A_Loop -- End Loop --> A_CreateDF[Create new DataFrame with anonymized columns];
+        A_CreateDF --> A_Output(Output: <br/> - Anonymized DataFrame <br/> - Anonymization Key);
+    end
+
+    subgraph De-anonymization: deanonymize_feature_names
+        direction LR
+        B_Start[Start: deanonymize_feature_names] --> B_Input(Input: <br/> - Anonymized Names List <br/> - Anonymization Key);
+        B_Input --> B_Loop{For each anonymized name};
+        B_Loop -- Next Name --> B_Lookup[Lookup name in key];
+        B_Lookup --> B_CheckFound{Name Found?};
+        B_CheckFound -- Yes --> B_AppendOriginal[Append original_name to results];
+        B_CheckFound -- No --> B_AppendNone[Log warning & append None];
+        B_AppendOriginal --> B_Loop;
+        B_AppendNone --> B_Loop;
+        B_Loop -- End Loop --> B_Output(Output: <br/> De-anonymized Names List);
+    end

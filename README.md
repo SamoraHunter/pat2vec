@@ -86,6 +86,7 @@ You can view the Mermaid definitions or the rendered diagrams below.
 |---|---|---|
 | **Methods Annotation** | [assets/methods_annotation.mmd](assets/methods_annotation.mmd) | ![Methods Annotation](assets/methods_annotation.png) |
 | **Post-Processing Build Methods** | [assets/post_processing_build_methods.mmd](assets/post_processing_build_methods.mmd) | ![Post-Processing Build Methods](assets/post_processing_build_methods.svg) |
+| **Post-Processing Anonymisation** | [assets/post_processing_anonymisation_high_level.mmd](assets/post_processing_anonymisation_high_level.mmd) | ![Post-Processing Anonymisation](assets/post_processing_anonymisation_high_level.svg) |
 
 ---
 ---

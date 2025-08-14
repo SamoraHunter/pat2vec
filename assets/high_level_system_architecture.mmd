@@ -1,0 +1,43 @@
+graph TD
+    subgraph "User Environment"
+        User[("User<br>(Jupyter Notebook/Script)")]
+    end
+
+    subgraph "Pat2Vec Core"
+        direction LR
+        Main["main_pat2vec.py<br>Orchestrator"]
+        Config["config_pat2vec.py<br>Pipeline Settings"]
+        PatList["get_patient_treatment_list.py<br>Cohort Definition"]
+    end
+
+    subgraph "External Systems & Data"
+        direction LR
+        CogStack[("CogStack<br>Elasticsearch")]
+        MedCATModel[("MedCAT Model<br>(.zip pack)")]
+        PatientFile[("Patient/Control List<br>(treatment_docs.csv)")]
+    end
+
+    subgraph "Output"
+        direction LR
+        ProjectDir[("Project Directory<br>/new_project/")]
+        PrefetchedData[("Prefetched Data Caches<br>current_pat_*_batches/")]
+        FeatureVectors[("Time-Sliced Vectors<br>current_pat_lines_parts/")]
+        FinalMatrix[("Concatenated Matrix<br>outputs/concatenated_data.csv")]
+    end
+
+    User --> Main
+    Config --> Main
+    PatientFile --> PatList
+    PatList --> Main
+    MedCATModel --> Main
+    Main -- "Queries for data" --> CogStack
+    Main -- "Writes to" --> PrefetchedData
+    Main -- "Writes to" --> FeatureVectors
+    FeatureVectors -- "Processed by post_processing.py" --> FinalMatrix
+    ProjectDir -- "Contains" --> PrefetchedData
+    ProjectDir -- "Contains" --> FeatureVectors
+    ProjectDir -- "Contains" --> FinalMatrix
+
+    style Main fill:#f9f,stroke:#333,stroke-width:2px
+    style CogStack fill:#bbf,stroke:#333,stroke-width:2px
+    style FinalMatrix fill:#f96,stroke:#333,stroke-width:2px

@@ -1,0 +1,68 @@
+graph TD
+    subgraph Title [pat2vec: Batch Data Fetching Logic]
+        style Title fill:#fff,stroke:#333,stroke-width:2px,font-size:20px,text-align:center
+        direction TB
+        T["File: pat2vec/patvec_get_batch_methods/main.py"]
+    end
+
+    subgraph CoreLogic ["Shared Logic for all get_pat_batch_* functions"]
+        A["Start: Call get_pat_batch_... function"] --> B["Get parameters from config_obj<br/>- Global date range<br/>- Paths<br/>- Caching flags (e.g., store_pat_batch_observations)"];
+        B --> C["Construct target CSV path for patient's batch<br/>e.g., .../pre_bloods_batch_path/{patient_id}.csv"];
+        C --> D{"Batch CSV exists and not overwriting?"};
+        D -- No --> F["Fetch data from Elasticsearch"];
+        D -- Yes --> E["Read DataFrame from CSV"];
+
+        F --> G{"Store batch enabled?"};
+        G -- Yes --> H["Save DataFrame to CSV"];
+        G -- No --> I["Return DataFrame"];
+        H --> I;
+        E --> I;
+    end
+
+    subgraph ElasticsearchQuery ["Elasticsearch Query (Inside 'Fetch data' step)"]
+        F --> F1["Call cohort_searcher_with_terms_and_search"];
+        F1 --> F2["Provide:<br/>- index_name<br/>- fields_list<br/>- term_name (e.g., client_idcode.keyword)<br/>- patient_id<br/>- search_string"];
+        F2 --> F3["search_string is built using specific filters and the global date range"];
+    end
+
+    subgraph FunctionSpecifics ["Function-Specific Elasticsearch Queries & Post-Processing"]
+        direction LR
+
+        subgraph ObsGroup ["Observations (obs, news, bmi)"]
+            Obs_Index["<b>index:</b> observations"]
+            Obs_Search["<b>search_string examples:</b><br/>- get_pat_batch_obs: 'obscatalogmasteritem_displayname:(&quot;{search_term}&quot;)'<br/>- get_pat_batch_news: '...:(&quot;NEWS&quot; OR &quot;NEWS2&quot;)'<br/>- get_pat_batch_bmi: '...:(&quot;OBS BMI&quot; OR &quot;OBS Weight&quot; OR &quot;OBS height&quot;)'"]
+        end
+
+        subgraph BloodsGroup ["get_pat_batch_bloods"]
+            Bloods_Index["<b>index:</b> basic_observations"]
+            Bloods_Search["<b>search_string:</b><br/>'basicobs_value_numeric:*'"]
+            Bloods_Search --> Bloods_Filter["Apply fuzzy term &amp; data type filters"]
+        end
+
+        subgraph OrdersGroup ["Orders (drugs, diagnostics)"]
+            Orders_Index["<b>index:</b> order"]
+            Orders_Search["<b>search_string examples:</b><br/>- get_pat_batch_drugs: 'order_typecode:&quot;medication&quot;'<br/>- get_pat_batch_diagnostics: 'order_typecode:&quot;diagnostic&quot;'"]
+        end
+
+        subgraph DocsGroup ["Documents (epr, mct, textual_obs, reports)"]
+            EPR_Index["<b>get_pat_batch_epr_docs</b><br/><b>index:</b> epr_documents<br/><b>post-processing:</b><br/>- Fuzzy/regex filters<br/>- Optional note splitting"]
+            MCT_Index["<b>get_pat_batch_mct_docs</b><br/><b>index:</b> observations<br/><b>search:</b> 'AoMRC_ClinicalSummary_FT'<br/><b>post-processing:</b><br/>- Data type filters<br/>- Optional note splitting"]
+            TextualObs_Index["<b>get_pat_batch_textual_obs_docs</b><br/><b>index:</b> basic_observations<br/><b>post-processing:</b><br/>- Drop empty textualObs<br/>- Create 'body_analysed'"]
+            Reports_Index["<b>get_pat_batch_reports</b><br/><b>index:</b> basic_observations<br/><b>search:</b> 'basicobs_itemname_analysed:report'<br/><b>post-processing:</b><br/>- Create 'body_analysed'"]
+        end
+
+        subgraph AnnotationsGroup ["Annotation Logic (e.g., get_pat_batch_epr_docs_annotations)"]
+            Annot_Start["Start"] --> Annot_Check{"Annotation batch exists?"}
+            Annot_Check -- Yes --> Annot_Read["Read annotation CSV"]
+            Annot_Check -- No --> Annot_Read_Doc["Read corresponding document batch CSV"]
+            Annot_Read_Doc --> Annot_Process["Annotate with MedCAT<br/>(calls get_pat_document_annotation_batch_...)"]
+            Annot_Process --> Annot_Save["Save annotation CSV"]
+            Annot_Save --> Annot_Return["Return DataFrame"]
+            Annot_Read --> Annot_Return
+        end
+
+        subgraph OtherGroup ["Other Data Types"]
+            Demo_Index["<b>get_pat_batch_demo</b><br/><b>index:</b> epr_documents"]
+            Appt_Index["<b>get_pat_batch_appointments</b><br/><b>index:</b> pims_apps*"]
+        end
+    end

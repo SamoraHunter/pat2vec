@@ -1,0 +1,27 @@
+graph TD
+    subgraph "Input"
+        InputVectors[("Individual Feature Vectors<br>current_pat_lines_parts/*.csv")]
+    end
+
+    subgraph "Concatenation & Cleaning"
+        InputVectors --> Concat["post_processing.process_csv_files_multi()<br>Concatenate all vectors into one CSV"]
+        Concat --> RawMatrix[("Raw Data Matrix<br>outputs/concatenated_data.csv")]
+        RawMatrix --> ExtractDT["extract_datetime_from_binary_columns`<br>Create 'datetime' column"]
+        ExtractDT --> Impute["impute_dataframe`<br>Forward/backward/mean fill missing values"]
+        Impute --> CleanedMatrix[("Cleaned & Imputed Matrix")]
+    end
+
+    subgraph "Anonymization (Optional)"
+        CleanedMatrix --> Anonymize["`anonymisation_data_methods.anonymize_feature_names()`"]
+        Anonymize --> AnonymizedMatrix[("Anonymized Data Matrix")]
+        Anonymize --> AnonymizationKey[("Anonymization Key<br>`anonymization_key.pkl`")]
+    end
+
+    subgraph "Final Output"
+        CleanedMatrix --> FinalOutput["ML-Ready Data Matrix 'D'"]
+        AnonymizedMatrix --> FinalOutput
+    end
+
+    style Concat fill:#bbf,stroke:#333,stroke-width:2px
+    style Anonymize fill:#f9f,stroke:#333,stroke-width:2px
+    style FinalOutput fill:#f96,stroke:#333,stroke-width:2px
