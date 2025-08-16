@@ -1,6 +1,8 @@
 import random
 import pandas as pd
-from pat2vec.util.cogstack_v8_lite import cohort_searcher_no_terms_fuzzy
+from pat2vec.pat2vec_search.cogstack_search_methods import (
+    cohort_searcher_no_terms_fuzzy,
+)
 from typing import List, Optional, Union
 from fuzzywuzzy import fuzz
 import os

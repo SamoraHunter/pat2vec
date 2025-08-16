@@ -9,9 +9,11 @@ random_state = 42
 
 random.seed(random_state)
 
-from pat2vec.util.cogstack_v8_lite import (
+from pat2vec.pat2vec_search.cogstack_search_methods import (
     iterative_multi_term_cohort_searcher_no_terms_fuzzy,
     iterative_multi_term_cohort_searcher_no_terms_fuzzy_mct,
+)
+from pat2vec.pat2vec_search.cogstack_search_methods import (
     iterative_multi_term_cohort_searcher_no_terms_fuzzy_textual_obs,
 )
 from pat2vec.util.get_dummy_data_cohort_searcher import (

@@ -1,18 +1,29 @@
-import getpass
-import random
-import warnings
-from typing import Dict, List
+from os.path import exists
+from pathlib import Path
+
+from tqdm.notebook import tqdm
+from pat2vec.util.credentials import List, getpass
+
+
 import eland as ed
 import elasticsearch
 import elasticsearch.helpers
 import pandas as pd
-from tqdm.notebook import tqdm
 
+
+import getpass
+from typing import Dict, List
+
+from pat2vec.util.get_dummy_data_cohort_searcher import (
+    cohort_searcher_with_terms_and_search_dummy,
+    generate_uuid_list,
+)
+
+import random
+import warnings
 
 warnings.filterwarnings("ignore")
-from os.path import exists
 import os
-from pathlib import Path
 
 # add one level up to path with sys.path for importing actual credentials
 import sys
@@ -21,11 +32,6 @@ random_state = 42
 random.seed(random_state)
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-from .get_dummy_data_cohort_searcher import (
-    cohort_searcher_with_terms_and_search_dummy,
-    generate_uuid_list,
-)
 
 
 def create_credentials_file():
@@ -84,32 +90,6 @@ password = "your_real_password"
 
     print(f"Credentials file created at: {credentials_file}")
     print("Please update the file with your actual credentials.")
-
-
-try:
-    from credentials import *
-except ImportError as e:
-    print(e)
-    print(
-        "WARNING: No credentials file found, place credentials in gloabl_files/credentials.py"
-    )
-    # Run the routine
-    create_credentials_file()
-    try:
-        from credentials import *
-    except ImportError as e:
-        print(e)
-        print(
-            "WARNING: No credentials file found, place credentials in gloabl_files/credentials.py"
-        )
-        username = "dummy username"
-        password = "dummy password"
-        api_key = ""
-        hosts = ["https://your-actual-elasticsearch-host:9200"]
-
-
-print(f"Imported cogstack_v8_lite from pat2vec.util .")
-print(f"Username: %s" % username)
 
 
 class CogStack(object):
@@ -239,25 +219,6 @@ class CogStack(object):
         return ed.DataFrame(es_client=self.elastic, es_index_pattern=index)
 
 
-# if api_key defined (from credentials import *) then we assume user wants to use API key authentication
-
-if "api_key" in locals() and api_key:
-    print("Using API key authentication")
-    cs = CogStack(hosts, api_key=api_key, api=True)
-else:
-    print(
-        f"Using basic authentication (active directory or local user), username: {username}"
-    )
-
-    cs = CogStack(hosts, username, password, api=False)
-
-# authentication check
-try:
-    cs.elastic.info()
-except Exception as e:
-    print(e)
-
-
 def list_chunker(entered_list):
     """
     Splits a list into smaller chunks of a specified size.
@@ -276,10 +237,54 @@ def list_chunker(entered_list):
     return chunks
 
 
-# Use a generator to yield DataFrames one by one
 def dataframe_generator(list_of_dfs):
     for df in list_of_dfs:
         yield df
+
+
+try:
+    from credentials import *
+except ImportError as e:
+    print(e)
+    print(
+        "WARNING: No credentials file found, place credentials in gloabl_files/credentials.py"
+    )
+    # Run the routine
+    create_credentials_file()
+    try:
+        from credentials import *
+    except ImportError as e:
+        print(e)
+        print(
+            "WARNING: No credentials file found, place credentials in gloabl_files/credentials.py"
+        )
+        username = "dummy username"
+        password = "dummy password"
+        api_key = ""
+        hosts = ["https://your-actual-elasticsearch-host:9200"]
+
+
+print(f"Imported cogstack_v8_lite from pat2vec.util .")
+print(f"Username: %s" % username)
+
+
+# if api_key defined (from credentials import *) then we assume user wants to use API key authentication
+
+if "api_key" in locals() and api_key:
+    print("Using API key authentication")
+    cs = CogStack(hosts, api_key=api_key, api=True)
+else:
+    print(
+        f"Using basic authentication (active directory or local user), username: {username}"
+    )
+
+    cs = CogStack(hosts, username, password, api=False)
+
+# authentication check
+try:
+    cs.elastic.info()
+except Exception as e:
+    print(e)
 
 
 def cohort_searcher_with_terms_and_search(
@@ -428,6 +433,92 @@ def cohort_searcher_no_terms(index_name, fields_list, search_string):
         "query": {"bool": {"must": [{"query_string": {"query": search_string}}]}},
         "_source": fields_list,
     }
+    df = cs.cogstack2df(query=query, index=index_name, column_headers=fields_list)
+    return df
+
+
+def cohort_searcher_no_terms_fuzzy(
+    index_name, fields_list, search_string, method="fuzzy", fuzzy=2, slop=1
+):
+    """
+    Search Elasticsearch using different query methods: fuzzy, exact, or phrase (with slop and fuzziness).
+
+    Parameters:
+    - index_name (str): The name of the Elasticsearch index.
+    - fields_list (list): List of fields to retrieve in the response.
+    - search_string (str): The search string to query.
+    - method (str): The search method ("fuzzy", "exact", or "phrase"). Defaults to "fuzzy".
+    - fuzzy (int): The fuzziness level for fuzzy matching. Only used if method="fuzzy" or "phrase".
+    - slop (int): The slop value for phrase searches, allowing word reordering. Only used if method="phrase".
+
+    Returns:
+    - DataFrame: A DataFrame containing the search results.
+    """
+    if method == "fuzzy":
+        # Fuzzy query
+        query = {
+            "from": 0,
+            "size": 10000,
+            "query": {
+                "bool": {
+                    "must": [
+                        {
+                            "query_string": {
+                                "fields": ["*"],  # Search across all fields by default
+                                "query": search_string,
+                                "fuzziness": fuzzy,  # Set fuzziness level
+                            }
+                        }
+                    ]
+                }
+            },
+            "_source": fields_list,
+        }
+    elif method == "exact":
+        # Exact match query using keyword fields
+        query = {
+            "from": 0,
+            "size": 10000,
+            "query": {
+                "term": {
+                    f"{fields_list[0]}.keyword": search_string  # Exact match on the first field in the list
+                }
+            },
+            "_source": fields_list,
+        }
+    elif method == "phrase":
+        # Phrase match query with slop and fuzziness for typos
+        query = {
+            "from": 0,
+            "size": 10000,
+            "query": {
+                "bool": {
+                    "must": [
+                        {
+                            "match": {
+                                "_all": {  # Fuzzy matching to allow typos
+                                    "query": search_string,
+                                    "fuzziness": fuzzy,  # Allow typos
+                                }
+                            }
+                        },
+                        {
+                            "match_phrase": {
+                                "_all": {  # Ensure phrase-like behavior with word proximity
+                                    "query": search_string,
+                                    "slop": slop,  # Allow slight reordering of words
+                                }
+                            }
+                        },
+                    ]
+                }
+            },
+            "_source": fields_list,
+        }
+    else:
+        raise ValueError("Invalid method. Choose from 'fuzzy', 'exact', or 'phrase'.")
+
+    # Execute the query and return the results as a DataFrame
     df = cs.cogstack2df(query=query, index=index_name, column_headers=fields_list)
     return df
 
@@ -1204,89 +1295,3 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy_textual_obs(
             )
 
     return docs  # Return the final docs DataFrame
-
-
-def cohort_searcher_no_terms_fuzzy(
-    index_name, fields_list, search_string, method="fuzzy", fuzzy=2, slop=1
-):
-    """
-    Search Elasticsearch using different query methods: fuzzy, exact, or phrase (with slop and fuzziness).
-
-    Parameters:
-    - index_name (str): The name of the Elasticsearch index.
-    - fields_list (list): List of fields to retrieve in the response.
-    - search_string (str): The search string to query.
-    - method (str): The search method ("fuzzy", "exact", or "phrase"). Defaults to "fuzzy".
-    - fuzzy (int): The fuzziness level for fuzzy matching. Only used if method="fuzzy" or "phrase".
-    - slop (int): The slop value for phrase searches, allowing word reordering. Only used if method="phrase".
-
-    Returns:
-    - DataFrame: A DataFrame containing the search results.
-    """
-    if method == "fuzzy":
-        # Fuzzy query
-        query = {
-            "from": 0,
-            "size": 10000,
-            "query": {
-                "bool": {
-                    "must": [
-                        {
-                            "query_string": {
-                                "fields": ["*"],  # Search across all fields by default
-                                "query": search_string,
-                                "fuzziness": fuzzy,  # Set fuzziness level
-                            }
-                        }
-                    ]
-                }
-            },
-            "_source": fields_list,
-        }
-    elif method == "exact":
-        # Exact match query using keyword fields
-        query = {
-            "from": 0,
-            "size": 10000,
-            "query": {
-                "term": {
-                    f"{fields_list[0]}.keyword": search_string  # Exact match on the first field in the list
-                }
-            },
-            "_source": fields_list,
-        }
-    elif method == "phrase":
-        # Phrase match query with slop and fuzziness for typos
-        query = {
-            "from": 0,
-            "size": 10000,
-            "query": {
-                "bool": {
-                    "must": [
-                        {
-                            "match": {
-                                "_all": {  # Fuzzy matching to allow typos
-                                    "query": search_string,
-                                    "fuzziness": fuzzy,  # Allow typos
-                                }
-                            }
-                        },
-                        {
-                            "match_phrase": {
-                                "_all": {  # Ensure phrase-like behavior with word proximity
-                                    "query": search_string,
-                                    "slop": slop,  # Allow slight reordering of words
-                                }
-                            }
-                        },
-                    ]
-                }
-            },
-            "_source": fields_list,
-        }
-    else:
-        raise ValueError("Invalid method. Choose from 'fuzzy', 'exact', or 'phrase'.")
-
-    # Execute the query and return the results as a DataFrame
-    df = cs.cogstack2df(query=query, index=index_name, column_headers=fields_list)
-    return df

@@ -6,7 +6,9 @@ import csv
 import multiprocessing
 from multiprocessing import Pool
 
-from pat2vec.util.cogstack_v8_lite import cohort_searcher_with_terms_and_search
+from pat2vec.pat2vec_search.cogstack_search_methods import (
+    cohort_searcher_with_terms_and_search,
+)
 
 
 def pull_and_write(index_name, fields_list, term_name, entered_list, search_string):

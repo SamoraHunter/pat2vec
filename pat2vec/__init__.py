@@ -69,6 +69,15 @@ from .pat2vec_pat_list.get_patient_treatment_list import (
     analyze_client_codes, extract_treatment_id_list_from_docs, generate_control_list,
     get_all_patients_list, sanitize_hospital_ids
 )
+from .pat2vec_search.cogstack_search_methods import (
+    CogStack, cohort_searcher_no_terms, cohort_searcher_no_terms_fuzzy,
+    cohort_searcher_with_terms_and_search, cohort_searcher_with_terms_no_search,
+    create_credentials_file, dataframe_generator,
+    iterative_multi_term_cohort_searcher_no_terms_fuzzy,
+    iterative_multi_term_cohort_searcher_no_terms_fuzzy_mct,
+    iterative_multi_term_cohort_searcher_no_terms_fuzzy_textual_obs, list_chunker,
+    set_index_safe_wrapper
+)
 from .pat2vec_search.data_helper_functions import (
     appendAge, appendAgeAtRecord, append_age_at_record_series, df_column_uniquify
 )
@@ -140,15 +149,6 @@ from .util.calculate_interval import (
 )
 from .util.clinical_note_splitter import (
     find_date, split_and_append_chunks, split_clinical_notes, split_clinical_notes_mct
-)
-from .util.cogstack_v8_lite import (
-    CogStack, cohort_searcher_no_terms, cohort_searcher_no_terms_fuzzy,
-    cohort_searcher_with_terms_and_search, cohort_searcher_with_terms_no_search,
-    create_credentials_file, dataframe_generator,
-    iterative_multi_term_cohort_searcher_no_terms_fuzzy,
-    iterative_multi_term_cohort_searcher_no_terms_fuzzy_mct,
-    iterative_multi_term_cohort_searcher_no_terms_fuzzy_textual_obs, list_chunker,
-    set_index_safe_wrapper
 )
 from .util.compile_requirements import (
     append_to_file, process_requirements, run_pip_compile

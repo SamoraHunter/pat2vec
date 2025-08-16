@@ -5,8 +5,11 @@ import traceback
 from datetime import datetime
 from multiprocessing import Pool
 import pandas as pd
+from pat2vec.pat2vec_search.cogstack_search_methods import (
+    cohort_searcher_with_terms_and_search,
+)
 from pat2vec.patvec_get_batch_methods.get_prefetch_batches import prefetch_batches
-from pat2vec.util.cogstack_v8_lite import *
+from pat2vec.pat2vec_search.cogstack_search_methods import *
 from colorama import Back, Fore, Style
 
 from pat2vec.util.generate_date_list import generate_date_list
