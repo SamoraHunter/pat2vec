@@ -69,6 +69,22 @@ from .pat2vec_pat_list.get_patient_treatment_list import (
     analyze_client_codes, extract_treatment_id_list_from_docs, generate_control_list,
     get_all_patients_list, sanitize_hospital_ids
 )
+from .pat2vec_search.data_helper_functions import (
+    appendAge, appendAgeAtRecord, append_age_at_record_series, df_column_uniquify
+)
+from .pat2vec_search.matcher import (
+    matcher
+)
+from .pat2vec_search.nearest import (
+    nearest
+)
+from .pat2vec_search.search_helper_functions import (
+    bulk_str_extract, bulk_str_extract_round_robin, bulk_str_findall, date_cleaner,
+    pylist2searchlist, stringlist2pylist, stringlist2searchlist, without_keys
+)
+from .pat2vec_search.search_multiprocess import (
+    cohort_searcher_with_terms_and_search_multi, pull_and_write
+)
 from .patvec_get_batch_methods.get_merged_batches import (
     get_merged_pat_batch_appointments, get_merged_pat_batch_bloods,
     get_merged_pat_batch_bmi, get_merged_pat_batch_demo,
@@ -126,17 +142,13 @@ from .util.clinical_note_splitter import (
     find_date, split_and_append_chunks, split_clinical_notes, split_clinical_notes_mct
 )
 from .util.cogstack_v8_lite import (
-    CogStack, appendAge, appendAgeAtRecord, append_age_at_record_series,
-    bulk_str_extract, bulk_str_extract_round_robin, bulk_str_findall, catch,
-    cohort_searcher_no_terms, cohort_searcher_no_terms_fuzzy,
-    cohort_searcher_with_terms_and_search, cohort_searcher_with_terms_and_search_multi,
-    cohort_searcher_with_terms_no_search, create_credentials_file, dataframe_generator,
-    date_cleaner, df_column_uniquify, find_date, get_demographics, get_demographics2,
+    CogStack, cohort_searcher_no_terms, cohort_searcher_no_terms_fuzzy,
+    cohort_searcher_with_terms_and_search, cohort_searcher_with_terms_no_search,
+    create_credentials_file, dataframe_generator,
     iterative_multi_term_cohort_searcher_no_terms_fuzzy,
     iterative_multi_term_cohort_searcher_no_terms_fuzzy_mct,
     iterative_multi_term_cohort_searcher_no_terms_fuzzy_textual_obs, list_chunker,
-    matcher, nearest, pull_and_write, pylist2searchlist, set_index_safe_wrapper,
-    split_clinical_notes, stringlist2pylist, stringlist2searchlist, without_keys
+    set_index_safe_wrapper
 )
 from .util.compile_requirements import (
     append_to_file, process_requirements, run_pip_compile
@@ -282,7 +294,7 @@ __all__ = [
     "build_ipw_dataframe", "build_merged_bloods", "build_merged_epr_mct_annot_df",
     "build_merged_epr_mct_doc_df", "build_patient_dict", "bulk_str_extract",
     "bulk_str_extract_round_robin", "bulk_str_findall", "calculate_age_append",
-    "calculate_interval", "calculate_pretty_name_count_features", "catch",
+    "calculate_interval", "calculate_pretty_name_count_features",
     "check_csv_files_in_directory", "check_csv_integrity", "check_list_presence",
     "check_pat_document_annotation_complete", "check_sftp_connection",
     "coerce_document_df_to_medcat_trainer_input", "cohort_searcher_no_terms",
@@ -325,20 +337,20 @@ __all__ = [
     "get_current_pat_annotations_mrc_cs", "get_current_pat_bloods",
     "get_current_pat_diagnostics", "get_current_pat_drugs",
     "get_current_pat_report_annotations", "get_current_pat_textual_obs_annotations",
-    "get_demo", "get_demographics", "get_demographics2", "get_demographics3",
-    "get_demographics3_batch", "get_empty_date_vector", "get_free_gpu",
-    "get_guess_datetime_column", "get_hosp_site", "get_merged_pat_batch_appointments",
-    "get_merged_pat_batch_bloods", "get_merged_pat_batch_bmi",
-    "get_merged_pat_batch_demo", "get_merged_pat_batch_diagnostics",
-    "get_merged_pat_batch_drugs", "get_merged_pat_batch_epr_docs",
-    "get_merged_pat_batch_mct_docs", "get_merged_pat_batch_news",
-    "get_merged_pat_batch_obs", "get_merged_pat_batch_reports",
-    "get_merged_pat_batch_textual_obs_docs", "get_news", "get_pat_batch_appointments",
-    "get_pat_batch_bloods", "get_pat_batch_bmi", "get_pat_batch_demo",
-    "get_pat_batch_diagnostics", "get_pat_batch_drugs", "get_pat_batch_epr_docs",
-    "get_pat_batch_epr_docs_annotations", "get_pat_batch_mct_docs",
-    "get_pat_batch_mct_docs_annotations", "get_pat_batch_news", "get_pat_batch_obs",
-    "get_pat_batch_reports", "get_pat_batch_reports_docs_annotations",
+    "get_demo", "get_demographics3", "get_demographics3_batch", "get_empty_date_vector",
+    "get_free_gpu", "get_guess_datetime_column", "get_hosp_site",
+    "get_merged_pat_batch_appointments", "get_merged_pat_batch_bloods",
+    "get_merged_pat_batch_bmi", "get_merged_pat_batch_demo",
+    "get_merged_pat_batch_diagnostics", "get_merged_pat_batch_drugs",
+    "get_merged_pat_batch_epr_docs", "get_merged_pat_batch_mct_docs",
+    "get_merged_pat_batch_news", "get_merged_pat_batch_obs",
+    "get_merged_pat_batch_reports", "get_merged_pat_batch_textual_obs_docs", "get_news",
+    "get_pat_batch_appointments", "get_pat_batch_bloods", "get_pat_batch_bmi",
+    "get_pat_batch_demo", "get_pat_batch_diagnostics", "get_pat_batch_drugs",
+    "get_pat_batch_epr_docs", "get_pat_batch_epr_docs_annotations",
+    "get_pat_batch_mct_docs", "get_pat_batch_mct_docs_annotations",
+    "get_pat_batch_news", "get_pat_batch_obs", "get_pat_batch_reports",
+    "get_pat_batch_reports_docs_annotations",
     "get_pat_batch_textual_obs_annotation_batch",
     "get_pat_batch_textual_obs_annotations", "get_pat_batch_textual_obs_docs",
     "get_pat_document_annotation_batch", "get_pat_document_annotation_batch_mct",

@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-from pat2vec.util.cogstack_v8_lite import append_age_at_record_series
+from pat2vec.pat2vec_search.data_helper_functions import append_age_at_record_series
 from IPython.display import display
 
 # from COGStats import EthnicityAbstractor
