@@ -850,7 +850,7 @@ class config_class:
                         ],
                         errors="coerce",
                         utc=True,
-                        format="ISO8601",
+                        # format="ISO8601",
                     )
                     .isna()
                     .value_counts(),
@@ -871,7 +871,7 @@ class config_class:
                     ],
                     errors="coerce",
                     utc=True,
-                    format="ISO8601",
+                    # format="ISO8601",
                 )
 
                 self.individual_patient_window_df[
@@ -882,7 +882,7 @@ class config_class:
                     ],
                     errors="coerce",
                     utc=True,
-                    format="ISO8601",
+                    # format="ISO8601",
                 )
 
             else:
