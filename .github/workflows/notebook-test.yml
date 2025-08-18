@@ -1,3 +1,4 @@
+
 name: Notebook Test
 
 on: [push, pull_request]
@@ -12,31 +13,26 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Install dependencies for local (act) runner
+      - name: Prepare Local Runner (Install Cert & Dependencies)
         if: ${{ env.ACT }}
         run: |
+          # Step 1: Install the absolute minimum to get the cert tool
           apt-get update
-          apt-get install -y sudo git curl gnupg ca-certificates
+          apt-get install -y ca-certificates sudo gnupg
 
-      - name: 1. Install Corporate Certificate (if present)
-        run: |
-          # This step is designed to work both locally with `act` (where the cert is mounted)
-          # and on the public GitHub runner (where it is not).
-          CERT_PATH="/usr/local/share/ca-certificates/kch_certauth.crt"
+          # Step 2: Check for the mounted cert and update the system trust store IMMEDIATELY
+          CERT_PATH="/usr/local/share/ca-certificates/kch_oct_2024_root.crt"
           if [ -f "$CERT_PATH" ]; then
             echo "✅ Corporate certificate found. Updating system trust store..."
-            sudo update-ca-certificates
+            update-ca-certificates
           else
-            echo "⚠️ Corporate certificate not found. Proceeding without it (standard public runner environment)."
+            echo "⚠️ Corporate certificate not found. Proceeding without it."
           fi
 
-      - name: Setup Runner Environment
-        run: |
-
-
-          # --- 2. Install All System Dependencies Non-Interactively ---
-          sudo apt-get update
-          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y \
+          # Step 3: Now that certs are trusted, run a full update and install everything else
+          echo "INFO: Running full system update and installing dependencies..."
+          apt-get update
+          apt-get install -y \
             lsb-release \
             python3-pip \
             git \
@@ -44,40 +40,34 @@ jobs:
             jq \
             tzdata
 
-          # --- 3. Set Timezone to Europe/London ---
-          sudo ln -fs /usr/share/zoneinfo/Europe/London /etc/localtime
-          sudo dpkg-reconfigure -f noninteractive tzdata
+          # Step 4: Set Timezone
+          ln -fs /usr/share/zoneinfo/Europe/London /etc/localtime
+          dpkg-reconfigure -f noninteractive tzdata
 
-          # --- 4. Install Python 3.10 from PPA ---
-          sudo gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys F23C5A6CF475977595C89F51BA6932366A755776
-          sudo gpg --export BA6932366A755776 | sudo gpg --dearmor -o /usr/share/keyrings/deadsnakes-archive-keyring.gpg
-          echo "deb [signed-by=/usr/share/keyrings/deadsnakes-archive-keyring.gpg] http://ppa.launchpadcontent.net/deadsnakes/ppa/ubuntu $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/deadsnakes-ppa.list
+          # Step 5: Install Python 3.10 from PPA (using firewall-friendly hkps)
+          echo "INFO: Adding deadsnakes PPA for Python 3.10..."
+          gpg --keyserver hkps://keyserver.ubuntu.com --recv-keys F23C5A6CF475977595C89F51BA6932366A755776
+          gpg --export BA6932366A755776 | gpg --dearmor -o /usr/share/keyrings/deadsnakes-archive-keyring.gpg
+          echo "deb [signed-by=/usr/share/keyrings/deadsnakes-archive-keyring.gpg] http://ppa.launchpadcontent.net/deadsnakes/ppa/ubuntu $(lsb_release -cs) main" | tee /etc/apt/sources.list.d/deadsnakes-ppa.list
 
-          sudo apt-get update
-          sudo apt-get install -y python3.10 python3.10-venv python3.10-distutils
+          apt-get update
+          apt-get install -y python3.10 python3.10-venv python3.10-distutils
 
-          # --- 5. Set Python 3.10 as Default ---
-          sudo update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.10 1
-          sudo update-alternatives --install /usr/bin/python python /usr/bin/python3.10 1
-          # The pip upgrade command has been removed as it was causing the failure.
+          # Step 6: Set Python 3.10 as Default
+          update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.10 1
+          update-alternatives --install /usr/bin/python python /usr/bin/python3.10 1
 
       - name: Setup pat2vec
         run: |
           cd $GITHUB_WORKSPACE
           sed -i 's/apt-get install/apt-get install -y/g' install_pat2vec.sh
-          # The --trusted-host flag is no longer necessary now that the root CA is trusted
-          # We can remove this line for a cleaner script, but it's harmless to leave.
           sed -i 's/pip install/pip install --trusted-host pypi.org --trusted-host files.pythonhosted.org/g' install_pat2vec.sh
 
           if ping -c 1 dh-cap02 &> /dev/null; then
             echo "mirror Server is available"
-            echo "::set-output name=server_available::true"
-            echo "install_pat2vec.sh --proxy"
             bash install_pat2vec.sh --proxy
           else
             echo "mirror Server is not available"
-            echo "::set-output name=server_available::false"
-            echo "install_pat2vec.sh"
             bash install_pat2vec.sh
           fi
 
@@ -94,5 +84,4 @@ jobs:
           set -e
           cd $GITHUB_WORKSPACE
           source "$VENV_PATH/bin/activate"
-          # Ensure test dependencies like pytest and nbmake are installed via your install_pat2vec.sh script
           pytest --nbmake --nbmake-timeout=1200 notebooks/test_notebook.py
