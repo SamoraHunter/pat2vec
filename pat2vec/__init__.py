@@ -141,6 +141,12 @@ from .tests.test_individual_patient_window import (
 from .tests.test_methods_get import (
     TestFilterDataFrameByTimestamp
 )
+from .tests.test_post_processing_get_pat_ipw_record import (
+    TestGetPatIpwRecord
+)
+from .tests.test_post_processing_process_csv_files import (
+    TestProcessCsvFiles
+)
 from .util.anonymisation_data_methods import (
     anonymize_feature_names, deanonymize_feature_names
 )
@@ -242,17 +248,19 @@ from .util.methods_post_get import (
     copy_project_folders_with_substring_match, retrieve_pat_annotations
 )
 from .util.post_processing import (
-    aggregate_dataframe_mean, build_ipw_dataframe, check_list_presence,
-    collapse_df_to_mean, convert_true_to_float, copy_files_and_dirs, count_files,
-    drop_columns_with_all_nan, extract_datetime_from_binary_columns,
+    aggregate_dataframe_mean, check_list_presence, collapse_df_to_mean,
+    convert_true_to_float, copy_files_and_dirs, count_files, drop_columns_with_all_nan,
+    extract_datetime_from_binary_columns,
     extract_datetime_from_binary_columns_chunk_reader, extract_datetime_to_column,
     extract_types_from_csv, filter_and_select_rows, filter_and_update_csv,
     filter_annot_dataframe2, filter_dataframe_by_cui, filter_dataframe_n_lists,
-    get_all_target_annots, get_pat_ipw_record, impute_dataframe, impute_datetime,
+    get_all_target_annots, impute_dataframe, impute_datetime,
     join_icd10_OPC4S_codes_to_annot, join_icd10_codes_to_annot, missing_percentage_df,
-    plot_missing_pattern_bloods, process_chunk, process_csv_files,
-    process_csv_files_multi, produce_filtered_annotation_dataframe,
+    plot_missing_pattern_bloods, process_chunk, produce_filtered_annotation_dataframe,
     remove_file_from_paths, retrieve_pat_annots_mct_epr, save_missing_values_pickle
+)
+from .util.post_processing_build_ipw_dataframe import (
+    build_ipw_dataframe
 )
 from .util.post_processing_build_methods import (
     build_merged_bloods, build_merged_epr_mct_annot_df, build_merged_epr_mct_doc_df,
@@ -261,8 +269,14 @@ from .util.post_processing_build_methods import (
     merge_diagnostics_csv, merge_drugs_csv, merge_news_csv, retrieve_pat_bloods,
     retrieve_pat_docs_mct_epr
 )
+from .util.post_processing_get_pat_ipw_record import (
+    get_pat_ipw_record
+)
 from .util.post_processing_medcat import (
     coerce_document_df_to_medcat_trainer_input, sample_by_terms
+)
+from .util.post_processing_process_csv_files import (
+    process_csv_files, process_csv_files_multi
 )
 from .util.pre_get_drug_treatment_docs import (
     get_treatment_records_by_drug_order_name, iterative_drug_treatment_search
@@ -285,17 +299,18 @@ __all__ = [
     "PathsClass", "TestCalculateInterval", "TestConfigClass",
     "TestCreateRandomDateFromGlobals", "TestFilterDataFrameByTimestamp",
     "TestFilterDataFrameByTimestampExtended", "TestGenerateDateList",
-    "TestGetStartEndYearMonth", "TestGlobalDateValidation",
-    "TestIndividualPatientWindow", "add_offset_column", "aggregate_dataframe_mean",
-    "analyze_client_codes", "annot_pat_batch_docs", "anonymize_feature_names",
-    "appendAge", "appendAgeAtRecord", "append_age_at_record_series",
-    "append_regex_term_counts", "append_to_file", "apply_bloods_data_type_filter",
-    "apply_data_type_epr_docs_filters", "apply_data_type_mct_docs_filters",
-    "build_ipw_dataframe", "build_merged_bloods", "build_merged_epr_mct_annot_df",
-    "build_merged_epr_mct_doc_df", "build_patient_dict", "bulk_str_extract",
-    "bulk_str_extract_round_robin", "bulk_str_findall", "calculate_age_append",
-    "calculate_interval", "calculate_pretty_name_count_features",
-    "check_csv_files_in_directory", "check_csv_integrity", "check_list_presence",
+    "TestGetPatIpwRecord", "TestGetStartEndYearMonth", "TestGlobalDateValidation",
+    "TestIndividualPatientWindow", "TestProcessCsvFiles", "add_offset_column",
+    "aggregate_dataframe_mean", "analyze_client_codes", "annot_pat_batch_docs",
+    "anonymize_feature_names", "appendAge", "appendAgeAtRecord",
+    "append_age_at_record_series", "append_regex_term_counts", "append_to_file",
+    "apply_bloods_data_type_filter", "apply_data_type_epr_docs_filters",
+    "apply_data_type_mct_docs_filters", "build_ipw_dataframe", "build_merged_bloods",
+    "build_merged_epr_mct_annot_df", "build_merged_epr_mct_doc_df",
+    "build_patient_dict", "bulk_str_extract", "bulk_str_extract_round_robin",
+    "bulk_str_findall", "calculate_age_append", "calculate_interval",
+    "calculate_pretty_name_count_features", "check_csv_files_in_directory",
+    "check_csv_integrity", "check_list_presence",
     "check_pat_document_annotation_complete", "check_sftp_connection",
     "coerce_document_df_to_medcat_trainer_input", "cohort_searcher_no_terms",
     "cohort_searcher_no_terms_fuzzy", "cohort_searcher_with_terms_and_search",
