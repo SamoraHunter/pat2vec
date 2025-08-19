@@ -85,3 +85,14 @@ jobs:
           cd $GITHUB_WORKSPACE
           source "$VENV_PATH/bin/activate"
           pytest --nbmake --nbmake-timeout=1200 notebooks/test_notebook.py
+
+
+      - name: Clean Up Generated Files for Local Act Runner
+        if: ${{ env.ACT }}
+        run: |
+          echo "INFO: Cleaning up directories created during the test run..."
+
+          # Remove generated directories
+          rm -rf notebooks/new_project
+          rm -rf notebooks/new_project_ipw
+          rm -rf notebooks/treatment_doc_extract
