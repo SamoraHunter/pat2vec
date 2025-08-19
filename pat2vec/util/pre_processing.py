@@ -2,6 +2,7 @@
 # create function that takes a list of terms, runs iterative_multi_term_cohort_searcher_no_terms_fuzzy and returns terms
 # takes pat2vec_obj
 
+from datetime import datetime
 import os
 import random
 
