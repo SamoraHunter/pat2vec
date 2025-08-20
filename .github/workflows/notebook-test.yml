@@ -60,23 +60,29 @@ jobs:
       - name: Prepare GitHub Runner (without Corporate Certs)
         if: ${{ !env.ACT }}
         run: |
-          echo "✅ Running standard GitHub Action setup..."
-          # Step 1: Install dependencies (no cert-specific tools needed first)
+          echo "Running standard GitHub Action setup..."
+          # Step 1: Install dependencies
           sudo apt-get update
-          sudo apt-get install -y lsb-release python3-pip git iputils-ping jq tzdata gnupg
+          sudo apt-get install -y lsb-release ca-certificates gnupg
 
           # Step 2: Set Timezone
           sudo ln -fs /usr/share/zoneinfo/Europe/London /etc/localtime
           sudo dpkg-reconfigure -f noninteractive tzdata
 
-          # Step 3: Install Python 3.10 from PPA
+          # Step 3: Add the deadsnakes PPA
           echo "INFO: Adding deadsnakes PPA for Python 3.10..."
+          # Download the key, convert it, and save it to the keyrings directory
           sudo gpg --keyserver hkps://keyserver.ubuntu.com --recv-keys F23C5A6CF475977595C89F51BA6932366A755776
-          echo "deb http://ppa.launchpadcontent.net/deadsnakes/ppa/ubuntu $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/deadsnakes-ppa.list > /dev/null
+          sudo gpg --export F23C5A6CF475977595C89F51BA6932366A755776 | sudo gpg --dearmor -o /usr/share/keyrings/deadsnakes-archive-keyring.gpg
+
+          # Create the repository source file, telling it where to find the key
+          echo "deb [signed-by=/usr/share/keyrings/deadsnakes-archive-keyring.gpg] http://ppa.launchpadcontent.net/deadsnakes/ppa/ubuntu $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/deadsnakes-ppa.list > /dev/null
+
+          # Step 4: Update and install Python 3.10
           sudo apt-get update
           sudo apt-get install -y python3.10 python3.10-venv python3.10-distutils
 
-          # Step 4: Set Python 3.10 as Default
+          # Step 5: Set Python 3.10 as Default
           sudo update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.10 1
           sudo update-alternatives --install /usr/bin/python python /usr/bin/python3.10 1
 
