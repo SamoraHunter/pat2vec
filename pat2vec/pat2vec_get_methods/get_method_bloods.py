@@ -69,6 +69,21 @@ def get_current_pat_bloods(
             + f"{bloods_time_field}:[{start_year}-{start_month}-{start_day} TO {end_year}-{end_month}-{end_day}]",
         )
 
+    # Ensure only target columns are present. Useful if source data isn't directly from ES.
+    current_pat_bloods = current_pat_bloods[
+        [
+            "_index",
+            "_id",
+            "_score",
+            "client_idcode",
+            "basicobs_itemname_analysed",
+            "basicobs_value_numeric",
+            "basicobs_entered",
+            "clientvisit_serviceguid",
+            "updatetime",
+        ]
+    ]
+
     if batch_mode:
         current_pat_bloods["datetime"] = current_pat_bloods[bloods_time_field].copy()
     else:
