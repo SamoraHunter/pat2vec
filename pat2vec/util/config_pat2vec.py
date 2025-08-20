@@ -1,3 +1,4 @@
+import math
 import os
 from datetime import datetime, timedelta
 import pandas as pd
@@ -229,9 +230,6 @@ class config_class:
             years (int): Number of years to add to the `start_date`. This sets the duration of the time window, which is defined as the `start_date` plus the specified `years`, `months`, and `days`. Defaults to **30**.
             months (int): Number of months to add to the `start_date`. Defaults to **0**.
             days (int): Number of days to add to the `start_date`. Defaults to **0**.
-            dgx (bool): Flag for DGX environment. Set to **True** if in this environment; each environment needs specific paths configured. Defaults to **False**.
-            dhcap (bool): Flag for DHCap. Defaults to **False**.
-            dhcap02 (bool): Flag for DHCap02. Defaults to **True**.
             batch_mode (bool): Flag for batch processing mode. This is currently the **only functioning mode**. Defaults to **True**.
             store_annot (bool): Flag to store annotations. Partially deprecated. Defaults to **True**.
             share_sftp (bool): Flag for sharing via SFTP. Partially deprecated. Defaults to **True**.
@@ -616,19 +614,23 @@ class config_class:
         print(f"Setting days to: {days}")
         self.days = days
 
-        m = 1
-
-        # self.start_date = datetime.strptime(start_date, "%Y-%m-%d")
         self.time_delta = relativedelta(days=days, weeks=0, months=months, years=years)
 
-        # timedelta()
-
-        result = calculate_interval(
-            start_date=self.start_date, time_delta=self.time_delta, m=m
+        num = calculate_interval(
+            start_date=start_date,
+            total_delta=self.time_delta,
+            interval_delta=time_window_interval_delta,
         )
 
         print(
-            f"Number of {m}-day intervals between {start_date} and the calculated end date: {result}"
+            f"Number of {time_window_interval_delta} intervals in {self.time_delta}: {num}"
+        )
+        print("Expected time interval vectors per patient:", num)
+
+        print(
+            "Time interval vectors will span the following dates: ",
+            start_date,
+            start_date + self.time_delta,
         )
 
         self.slow_execution_threshold_low = timedelta(seconds=10)
