@@ -80,6 +80,14 @@ def generate_epr_documents_data(
     global_end_year,
     global_end_month,
     use_GPT=True,
+    fields_list=[
+        "client_idcode",
+        "document_guid",
+        "document_description",
+        "body_analysed",
+        "updatetime",
+        "clientvisit_visitidcode",
+    ],
 ):
     """
     Generate dummy data for the 'epr_documents' index.
@@ -140,6 +148,14 @@ def generate_epr_documents_data(
     try:
         # print(f"Number of DataFrames in df_holder_list: {len(df_holder_list)}")
         df = pd.concat(df_holder_list, axis=0, ignore_index=True)
+
+        # Ensure only target columns are present. Useful if source data isn't directly from ES.
+        fields_list = [
+            col for col in fields_list if col not in ["_id", "_index", "_score"]
+        ]
+
+        df = df[fields_list]
+        df.reset_index(drop=True, inplace=True)
         return df
     except Exception as e:
         print(e)
@@ -153,6 +169,16 @@ def generate_epr_documents_personal_data(
     global_start_month,
     global_end_year,
     global_end_month,
+    fields_list=[
+        "client_idcode",
+        "client_firstname",
+        "client_lastname",
+        "client_dob",
+        "client_gendercode",
+        "client_racecode",
+        "client_deceaseddtm",
+        "updatetime",
+    ],
 ):
     """
     Generate dummy data for the 'epr_documents' index with linked personal information.
@@ -227,6 +253,11 @@ def generate_epr_documents_personal_data(
         df_holder_list.append(df)
 
     df = pd.concat(df_holder_list)
+    # fields_list = fields_list + ["_id", "_index", "_score"]
+
+    # df = df[fields_list]
+    # df.reset_index(drop=True, inplace=True)
+
     return df
 
 
@@ -237,6 +268,20 @@ def generate_diagnostic_orders_data(
     global_start_month,
     global_end_year,
     global_end_month,
+    fields_list=[
+        "order_guid",
+        "client_idcode",
+        "order_name",
+        "order_summaryline",
+        "order_holdreasontext",
+        "order_entered",
+        "order_createdwhen",
+        "clientvisit_visitidcode",
+        "_id",
+        "_index",
+        "_score",
+        "order_performeddtm",
+    ],
 ):
     """
     Generate dummy data for the 'diagnostic_orders' index.
@@ -310,6 +355,8 @@ def generate_diagnostic_orders_data(
         df_holder_list.append(df)
 
     df = pd.concat(df_holder_list)
+    fields_list = fields_list + ["_id", "_index", "_score"]
+
     return df
 
 
@@ -320,6 +367,20 @@ def generate_drug_orders_data(
     global_start_month,
     global_end_year,
     global_end_month,
+    fields_list=[
+        "order_guid",
+        "client_idcode",
+        "order_name",
+        "order_summaryline",
+        "order_holdreasontext",
+        "order_entered",
+        "order_createdwhen",
+        "clientvisit_visitidcode",
+        "_id",
+        "_index",
+        "_score",
+        "order_performeddtm",
+    ],
 ):
     """
     Generate dummy data for the 'drug_orders' index.
@@ -393,6 +454,11 @@ def generate_drug_orders_data(
         df_holder_list.append(df)
 
     df = pd.concat(df_holder_list)
+    fields_list = fields_list + ["_id", "_index", "_score"]
+
+    # Ensure only target columns are present. Useful if source data isn't directly from ES.
+    df = df[fields_list]
+    df.reset_index(drop=True, inplace=True)
     return df
 
 
@@ -404,6 +470,18 @@ def generate_observations_MRC_text_data(
     global_end_year,
     global_end_month,
     use_GPT=False,
+    fields_list=[
+        "observation_guid",
+        "client_idcode",
+        "obscatalogmasteritem_displayname",
+        "observation_valuetext_analysed",
+        "observationdocument_recordeddtm",
+        "clientvisit_visitidcode",
+        "_id",
+        "_index",
+        "_score",
+        "textualObs",
+    ],
 ):
     """
     Generate dummy data for the 'observations' index.
@@ -458,6 +536,13 @@ def generate_observations_MRC_text_data(
         df_holder_list.append(df)
 
     df = pd.concat(df_holder_list)
+    # filter df by fields list except ['_id', '_index', '_score']
+
+    fields_list = fields_list + ["_id", "_index", "_score"]
+
+    df = df[fields_list]
+
+    df.reset_index(drop=True, inplace=True)
     return df
 
 
@@ -469,6 +554,18 @@ def generate_observations_Reports_text_data(
     global_end_year,
     global_end_month,
     use_GPT=False,
+    fields_list=[
+        "basicobs_guid",
+        "client_idcode",
+        "basicobs_itemname_analysed",
+        "basicobs_value_analysed",
+        "textualObs",
+        "updatetime",
+        "clientvisit_visitidcode",
+        "_id",
+        "_index",
+        "_score",
+    ],
 ):
     """
     Generate dummy data for the 'basic observations' index and reports.
@@ -480,6 +577,8 @@ def generate_observations_Reports_text_data(
     - global_start_month (int): Start month for the global date range.
     - global_end_year (int): End year for the global date range.
     - global_end_month (int): End month for the global date range.
+    - use_GPT (bool): Whether to use GPT for generating text data.
+    - fields_list (list): List of fields to include in the DataFrame.
 
     Returns:
     - pd.DataFrame: Generated DataFrame with specified columns.
@@ -526,6 +625,10 @@ def generate_observations_Reports_text_data(
         df_holder_list.append(df)
 
     df = pd.concat(df_holder_list)
+    fields_list = fields_list + ["_id", "_index", "_score"]
+
+    df = df[fields_list]
+    df.reset_index(drop=True, inplace=True)
 
     return df
 
@@ -537,6 +640,42 @@ def generate_appointments_data(
     global_start_month,
     global_end_year,
     global_end_month,
+    fields_list=[
+        "client_idcode",
+        "Popular",
+        "AppointmentType",
+        "AttendanceReference",
+        "ClinicCode",
+        "ClinicDesc",
+        "Consultant",
+        "DateModified",
+        "DNA",
+        "HospitalID",
+        "PatNHSNo",
+        "Specialty",
+        "_id",
+        "_index",
+        "_score",
+        "AppointmentDateTime",
+        "Attended",
+        "CancDesc",
+        "CancRefNo",
+        "ConsultantCode",
+        "DateCreated",
+        "Ethnicity",
+        "Gender",
+        "NHSNoStatusCode",
+        "NotSpec",
+        "PatDateOfBirth",
+        "PatForename",
+        "PatPostCode",
+        "PatSurname",
+        "PiMsPatRefNo",
+        "Primarykeyfieldname",
+        "Primarykeyfieldvalue",
+        "SessionCode",
+        "SpecialtyCode",
+    ],
 ):
     """
     Generate dummy data for the 'pimps_apps' index.
@@ -548,6 +687,7 @@ def generate_appointments_data(
     - global_start_month (int): Start month for the global date range.
     - global_end_year (int): End year for the global date range.
     - global_end_month (int): End month for the global date range.
+    - fields_list (list): List of fields to include in the DataFrame.
 
     Returns:
     - pd.DataFrame: Generated DataFrame with specified columns.
@@ -630,6 +770,11 @@ def generate_appointments_data(
         df_holder_list.append(df)
 
     df = pd.concat(df_holder_list, ignore_index=True)
+    fields_list = fields_list + ["_id", "_index", "_score"]
+
+    # Ensure only target columns are present. Useful if source data isn't directly from ES.
+    df = df[fields_list]
+    df.reset_index(drop=True, inplace=True)
 
     return df
 
@@ -642,6 +787,18 @@ def generate_observations_data(
     global_end_year,
     global_end_month,
     search_term,
+    use_GPT=False,
+    fields_list=[
+        "observation_guid",
+        "client_idcode",
+        "obscatalogmasteritem_displayname",
+        "observation_valuetext_analysed",
+        "observationdocument_recordeddtm",
+        "clientvisit_visitidcode",
+        "_id",
+        "_index",
+        "_score",
+    ],
 ):
     """
     Generate dummy data for the 'observations' index.
@@ -653,6 +810,9 @@ def generate_observations_data(
     - global_start_month (int): Start month for the global date range.
     - global_end_year (int): End year for the global date range.
     - global_end_month (int): End month for the global date range.
+    - search_term (str): Search term to be used in the generated data.
+    - use_GPT (bool): Whether to use GPT for generating text data.
+    - fields_list (list): List of fields to include in the DataFrame.
 
     Returns:
     - pd.DataFrame: Generated DataFrame with specified columns.
@@ -690,6 +850,11 @@ def generate_observations_data(
         df_holder_list.append(df)
 
     df = pd.concat(df_holder_list, ignore_index=True)
+    # fields_list = fi
+
+    df = df[fields_list]
+    df.reset_index(drop=True, inplace=True)
+
     return df
 
 
@@ -700,6 +865,23 @@ def generate_basic_observations_data(
     global_start_month,
     global_end_year,
     global_end_month,
+    fields_list=[
+        "client_idcode",
+        "basicobs_itemname_analysed",
+        "basicobs_value_numeric",
+        "basicobs_entered",
+        "clientvisit_serviceguid",
+        "_id",
+        "_index",
+        "_score",
+        "order_guid",
+        "order_name",
+        "order_summaryline",
+        "order_holdreasontext",
+        "order_entered",
+        "clientvisit_visitidcode",
+        "updatetime",
+    ],
 ):
     """
     Generate dummy data for the 'basic_observations' index.
@@ -711,6 +893,7 @@ def generate_basic_observations_data(
     - global_start_month (int): Start month for the global date range.
     - global_end_year (int): End year for the global date range.
     - global_end_month (int): End month for the global date range.
+    - fields_list (list): List of fields to include in the DataFrame.
 
     Returns:
     - pd.DataFrame: Generated DataFrame with specified columns.
@@ -769,6 +952,11 @@ def generate_basic_observations_data(
         df_holder_list.append(df)
 
     df = pd.concat(df_holder_list, ignore_index=True)
+    # fields_list = fields_list + ["_id", "_index", "_score"]
+    fields_list = fields_list + ["_id", "_index", "_score"]
+    df = df[fields_list]
+    df.reset_index(drop=True, inplace=True)
+
     return df
 
 
@@ -779,6 +967,20 @@ def generate_basic_observations_textual_obs_data(
     global_start_month,
     global_end_year,
     global_end_month,
+    fields_list=[
+        "client_idcode",
+        "basicobs_itemname_analysed",
+        "basicobs_value_numeric",
+        "basicobs_entered",
+        "clientvisit_serviceguid",
+        "_id",
+        "_index",
+        "_score",
+        "basicobs_guid",
+        "clientvisit_serviceguid",
+        "updatetime",
+        "textualObs",
+    ],
 ):
 
     # print("generate_basic_observations_textual_obs_data")
@@ -792,6 +994,7 @@ def generate_basic_observations_textual_obs_data(
     - global_start_month (int): Start month for the global date range.
     - global_end_year (int): End year for the global date range.
     - global_end_month (int): End month for the global date range.
+    - fields_list (list): List of fields to include in the DataFrame.
 
     Returns:
     - pd.DataFrame: Generated DataFrame with specified columns.
@@ -843,6 +1046,10 @@ def generate_basic_observations_textual_obs_data(
         df_holder_list.append(df)
 
     df = pd.concat(df_holder_list, ignore_index=True)
+    fields_list = fields_list + ["_id", "_index", "_score"]
+
+    df = df[fields_list]
+    df.reset_index(drop=True, inplace=True)
 
     return df
 
@@ -924,6 +1131,7 @@ def cohort_searcher_with_terms_and_search_dummy(
             global_start_month,
             global_end_year,
             global_end_month,
+            fields_list=fields_list,
         )
         return df
 
@@ -938,6 +1146,7 @@ def cohort_searcher_with_terms_and_search_dummy(
             global_start_month,
             global_end_year,
             global_end_month,
+            fields_list=fields_list,
         )
         return df
 
@@ -955,6 +1164,7 @@ def cohort_searcher_with_terms_and_search_dummy(
             global_end_year,
             global_end_month,
             use_GPT=use_GPT,
+            fields_list=fields_list,
         )
         return df
 
@@ -975,6 +1185,7 @@ def cohort_searcher_with_terms_and_search_dummy(
             global_end_year,
             global_end_month,
             use_GPT=use_GPT,
+            fields_list=fields_list,
         )
         return df
 
@@ -996,6 +1207,7 @@ def cohort_searcher_with_terms_and_search_dummy(
             global_end_year,
             global_end_month,
             use_GPT=use_GPT,
+            fields_list=fields_list,
         )
         return df
 
@@ -1022,6 +1234,7 @@ def cohort_searcher_with_terms_and_search_dummy(
             global_start_month,
             global_end_year,
             global_end_month,
+            fields_list=fields_list,
         )
         return df
 
@@ -1044,6 +1257,7 @@ def cohort_searcher_with_terms_and_search_dummy(
             global_end_year,
             global_end_month,
             search_term,
+            fields_list=fields_list,
         )
         return df
 
@@ -1058,6 +1272,7 @@ def cohort_searcher_with_terms_and_search_dummy(
             global_start_month,
             global_end_year,
             global_end_month,
+            fields_list=fields_list,
         )
         return df
 
@@ -1072,6 +1287,7 @@ def cohort_searcher_with_terms_and_search_dummy(
             global_start_month,
             global_end_year,
             global_end_month,
+            fields_list=fields_list,
         )
         return df
 
@@ -1086,6 +1302,7 @@ def cohort_searcher_with_terms_and_search_dummy(
             global_start_month,
             global_end_year,
             global_end_month,
+            fields_list=fields_list,
         )
         return df
 
