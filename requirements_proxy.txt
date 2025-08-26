@@ -536,7 +536,7 @@ mdurl==0.1.2
     #   -r temp-requirements.txt
     #   markdown-it-py
 #medcat==0.2.5.7
-medcat==1.14.0
+medcat==1.16.0
     # via -r temp-requirements.txt
 metaphone==0.6
     # via -r temp-requirements.txt
