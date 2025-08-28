@@ -62,7 +62,7 @@ def create_credentials_file():
     base_dir = (
         Path(__file__).resolve().parent.parent.parent.parent
     )  # Go up three levels
-    credentials_dir = base_dir / "gloabl_files"  # Note: Spelling matches your example
+    credentials_dir = base_dir
     credentials_file = credentials_dir / "credentials.py"
 
     # Create the directory if it doesn't exist
@@ -86,7 +86,7 @@ password = "your_real_password"
 
     import sys
 
-    sys.path.append(credentials_dir)
+    sys.path.append(str(credentials_dir))
 
     print(f"Credentials file created at: {credentials_file}")
     print("Please update the file with your actual credentials.")
