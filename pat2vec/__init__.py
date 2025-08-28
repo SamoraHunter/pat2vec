@@ -138,8 +138,17 @@ from .tests.test_global_date_validation import (
 from .tests.test_individual_patient_window import (
     TestIndividualPatientWindow
 )
+from .tests.test_methods_annotation_filter_annot_dataframe import (
+    TestFilterAnnotDataframe
+)
+from .tests.test_methods_annotation_multi_annots_to_df import (
+    TestMultiAnnotsToDf
+)
 from .tests.test_methods_get import (
     TestFilterDataFrameByTimestamp
+)
+from .tests.test_post_processing_build_ipw_dataframe import (
+    TestBuildIpwDataframe
 )
 from .tests.test_post_processing_get_pat_ipw_record import (
     TestGetPatIpwRecord
@@ -149,6 +158,9 @@ from .tests.test_post_processing_process_csv_files import (
 )
 from .util.anonymisation_data_methods import (
     anonymize_feature_names, deanonymize_feature_names
+)
+from .util.anonymisation_deid_documents import (
+    DeIdAnonymizer, anonymize_dataframe_quick, anonymize_single_text
 )
 from .util.calculate_interval import (
     calculate_interval
@@ -194,16 +206,18 @@ from .util.get_best_gpu import (
 )
 from .util.get_dummy_data_cohort_searcher import (
     cohort_searcher_with_terms_and_search_dummy, create_random_date_from_globals,
-    dummy_CAT, dummy_medcat_annotation_generator, extract_date_range,
-    extract_search_term_obscatalogmasteritem_displayname, generate_appointments_data,
-    generate_basic_observations_data, generate_basic_observations_textual_obs_data,
-    generate_diagnostic_orders_data, generate_drug_orders_data,
-    generate_epr_documents_data, generate_epr_documents_personal_data,
-    generate_observations_MRC_text_data, generate_observations_Reports_text_data,
-    generate_observations_data, generate_patient_timeline,
-    generate_patient_timeline_faker, generate_uuid, generate_uuid_list,
-    get_patient_timeline_dummy, maybe_nan, random_sample,
+    extract_date_range, extract_search_term_obscatalogmasteritem_displayname,
+    generate_appointments_data, generate_basic_observations_data,
+    generate_basic_observations_textual_obs_data, generate_diagnostic_orders_data,
+    generate_drug_orders_data, generate_epr_documents_data,
+    generate_epr_documents_personal_data, generate_observations_MRC_text_data,
+    generate_observations_Reports_text_data, generate_observations_data,
+    generate_patient_timeline, generate_patient_timeline_faker, generate_uuid,
+    generate_uuid_list, get_patient_timeline_dummy, maybe_nan,
     run_generate_patient_timeline_and_append
+)
+from .util.get_dummy_data_medcat_annotation import (
+    dummy_CAT, dummy_medcat_annotation_generator, random_sample
 )
 from .util.get_start_end_year_month import (
     get_start_end_year_month
@@ -221,11 +235,21 @@ from .util.medcat_misc_methods import (
 )
 from .util.methods_annotation import (
     annot_pat_batch_docs, calculate_pretty_name_count_features,
-    check_pat_document_annotation_complete, filter_annot_dataframe,
+    check_pat_document_annotation_complete, multi_annots_to_df_mct,
+    multi_annots_to_df_reports, multi_annots_to_df_textual_obs
+)
+from .util.methods_annotation_filter_annot_dataframe import (
+    filter_annot_dataframe
+)
+from .util.methods_annotation_get_pat_document_annotation_batch import (
     get_pat_batch_textual_obs_annotation_batch, get_pat_document_annotation_batch,
-    get_pat_document_annotation_batch_mct, get_pat_document_annotation_batch_reports,
-    json_to_dataframe, multi_annots_to_df, multi_annots_to_df_mct,
-    multi_annots_to_df_reports, multi_annots_to_df_textual_obs, parse_meta_anns
+    get_pat_document_annotation_batch_mct, get_pat_document_annotation_batch_reports
+)
+from .util.methods_annotation_json_to_dataframe import (
+    json_to_dataframe, parse_meta_anns
+)
+from .util.methods_annotation_multi_annots_to_df import (
+    multi_annots_to_df, temporary_file
 )
 from .util.methods_annotation_regex import (
     append_regex_term_counts
@@ -295,22 +319,23 @@ from .util.presentation_methods import (
 
 # Define the public API of the package
 __all__ = [
-    "BatchConfig", "CogStack", "CsvProfiler", "EthnicityAbstractor", "MockConfig",
-    "PathsClass", "TestCalculateInterval", "TestConfigClass",
-    "TestCreateRandomDateFromGlobals", "TestFilterDataFrameByTimestamp",
-    "TestFilterDataFrameByTimestampExtended", "TestGenerateDateList",
-    "TestGetPatIpwRecord", "TestGetStartEndYearMonth", "TestGlobalDateValidation",
-    "TestIndividualPatientWindow", "TestProcessCsvFiles", "add_offset_column",
-    "aggregate_dataframe_mean", "analyze_client_codes", "annot_pat_batch_docs",
-    "anonymize_feature_names", "appendAge", "appendAgeAtRecord",
-    "append_age_at_record_series", "append_regex_term_counts", "append_to_file",
-    "apply_bloods_data_type_filter", "apply_data_type_epr_docs_filters",
-    "apply_data_type_mct_docs_filters", "build_ipw_dataframe", "build_merged_bloods",
-    "build_merged_epr_mct_annot_df", "build_merged_epr_mct_doc_df",
-    "build_patient_dict", "bulk_str_extract", "bulk_str_extract_round_robin",
-    "bulk_str_findall", "calculate_age_append", "calculate_interval",
-    "calculate_pretty_name_count_features", "check_csv_files_in_directory",
-    "check_csv_integrity", "check_list_presence",
+    "BatchConfig", "CogStack", "CsvProfiler", "DeIdAnonymizer", "EthnicityAbstractor",
+    "MockConfig", "PathsClass", "TestBuildIpwDataframe", "TestCalculateInterval",
+    "TestConfigClass", "TestCreateRandomDateFromGlobals", "TestFilterAnnotDataframe",
+    "TestFilterDataFrameByTimestamp", "TestFilterDataFrameByTimestampExtended",
+    "TestGenerateDateList", "TestGetPatIpwRecord", "TestGetStartEndYearMonth",
+    "TestGlobalDateValidation", "TestIndividualPatientWindow", "TestMultiAnnotsToDf",
+    "TestProcessCsvFiles", "add_offset_column", "aggregate_dataframe_mean",
+    "analyze_client_codes", "annot_pat_batch_docs", "anonymize_dataframe_quick",
+    "anonymize_feature_names", "anonymize_single_text", "appendAge",
+    "appendAgeAtRecord", "append_age_at_record_series", "append_regex_term_counts",
+    "append_to_file", "apply_bloods_data_type_filter",
+    "apply_data_type_epr_docs_filters", "apply_data_type_mct_docs_filters",
+    "build_ipw_dataframe", "build_merged_bloods", "build_merged_epr_mct_annot_df",
+    "build_merged_epr_mct_doc_df", "build_patient_dict", "bulk_str_extract",
+    "bulk_str_extract_round_robin", "bulk_str_findall", "calculate_age_append",
+    "calculate_interval", "calculate_pretty_name_count_features",
+    "check_csv_files_in_directory", "check_csv_integrity", "check_list_presence",
     "check_pat_document_annotation_complete", "check_sftp_connection",
     "coerce_document_df_to_medcat_trainer_input", "cohort_searcher_no_terms",
     "cohort_searcher_no_terms_fuzzy", "cohort_searcher_with_terms_and_search",
@@ -399,7 +424,8 @@ __all__ = [
     "search_cohort", "set_best_gpu", "set_index_safe_wrapper", "setup_logger",
     "sftp_exists", "split_and_append_chunks", "split_and_save_csv",
     "split_clinical_notes", "split_clinical_notes_mct", "stringlist2pylist",
-    "stringlist2searchlist", "test_datetime_formats", "update_global_start_date",
-    "update_pbar", "validate_and_fix_global_dates", "verify_split_data_concatenated",
-    "verify_split_data_individual", "without_keys", "write_csv_wrapper", "write_remote"
+    "stringlist2searchlist", "temporary_file", "test_datetime_formats",
+    "update_global_start_date", "update_pbar", "validate_and_fix_global_dates",
+    "verify_split_data_concatenated", "verify_split_data_individual", "without_keys",
+    "write_csv_wrapper", "write_remote"
 ]
