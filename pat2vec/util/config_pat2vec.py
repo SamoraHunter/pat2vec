@@ -212,55 +212,89 @@ class config_class:
         prefetch_pat_batches=False,
         sample_treatment_docs=0,  # 0 for no sampling, provide an int for the number of samples.
     ):
-        """
-        Initializes the config_class instance with various configuration parameters for data processing and analysis.
+        """Initializes the configuration object for the pat2vec pipeline.
 
-        This constructor sets up paths, time windows, and other settings for handling patient data,
-        including options for local or remote data dumps, MedCAT models, and feature engineering.
+        This class holds all configuration parameters for a pat2vec run, including
+        file paths, time window settings, feature selection, and operational flags.
 
         Args:
             remote_dump (bool): If **True**, data will be dumped to a remote server via SFTP. Defaults to **False**.
             suffix (str): A suffix to append to output folder names. Defaults to **""**.
-            treatment_doc_filename (str): The filename for treatment documents. Defaults to **'test_files/treatment_docs.csv'**.
+            treatment_doc_filename (str): The filename for the input document containing the primary cohort list. Defaults to **'treatment_docs.csv'**.
             treatment_control_ratio_n (int): The ratio of treatment to control patients. Defaults to **1**.
             proj_name (str): The name of the current project, used for creating project-specific folders where patient data batches and vectors are stored. Defaults to **'new_project'**.
-            current_path_dir (str): The current working directory. Defaults to **""**.
-            main_options (dict): A dictionary of boolean options for enabling or disabling various data types, such as demographic information ('demo'), BMI ('bmi'), blood-related information ('bloods'), drug-related information ('drugs'), and diagnostic information ('diagnostics'). It also includes options for 'core_02', 'bed', 'vte_status', 'hosp_site', 'core_resus', 'news', 'smoking', 'annotations' (EPR documents via MedCat), 'annotations_mrc' (MRC annotations via MedCat), 'negated_presence_annotations', 'appointments', 'annotations_reports', and 'textual_obs'. Defaults to `main_options_dict`.
-            start_date (datetime): The starting date for processing. Defaults to **datetime(1995, 1, 1)**.
-            years (int): Number of years to add to the `start_date`. This sets the duration of the time window, which is defined as the `start_date` plus the specified `years`, `months`, and `days`. Defaults to **30**.
+            current_path_dir (str): The current working directory. Defaults to **"."**.
+            main_options (dict, optional): A dictionary of boolean flags to enable or disable specific feature extractions (e.g., 'demo', 'bloods', 'annotations'). If **None**, a default dictionary is used. Defaults to **None**.
+            start_date (datetime): The anchor date for generating time windows. For global windows, this is the start. For individual windows, this is overridden per patient. Defaults to **datetime(1995, 1, 1)**.
+            years (int): The number of years in the time window duration. Defaults to **0**.
             months (int): Number of months to add to the `start_date`. Defaults to **0**.
-            days (int): Number of days to add to the `start_date`. Defaults to **0**.
+            days (int): The number of days in the time window duration. Defaults to **1**.
             batch_mode (bool): Flag for batch processing mode. This is currently the **only functioning mode**. Defaults to **True**.
-            store_annot (bool): Flag to store annotations. Partially deprecated. Defaults to **True**.
-            share_sftp (bool): Flag for sharing via SFTP. Partially deprecated. Defaults to **True**.
+            store_annot (bool): Flag to store annotations. Partially deprecated. Defaults to **False**.
+            share_sftp (bool): Flag for sharing SFTP connection. Partially deprecated. Defaults to **True**.
             multi_process (bool): Flag for multi-process execution. Deprecated. Defaults to **False**.
             strip_list (bool): If **True**, this will check for completed patients before starting to avoid redundancy. Defaults to **True**.
-            verbosity (int): Verbosity level for printing debug messages (0-9). Defaults to **0**.
-            random_seed_val (int): Random seed value for reproducibility of controls.
-            testing (bool): Flag for testing mode. If **True**, the system will use dummy data. Defaults to **True**.
-            dummy_medcat_model (bool): Flag for a dummy MedCAT model. Used if `testing` is **True**; this will simulate a MedCAT model. Defaults to **True**.
+            verbosity (int): Verbosity level for logging (0-9). Defaults to **3**.
+            random_seed_val (int): Random seed for reproducibility. Defaults to **42**.
+            hostname (str, optional): Hostname for SFTP connection. Defaults to **None**.
+            username (str, optional): Username for SFTP connection. Defaults to **None**.
+            password (str, optional): Password for SFTP connection. Defaults to **None**.
+            gpu_mem_threshold (int): GPU memory threshold in MB for MedCAT. Defaults to **4000**.
+            testing (bool): If **True**, enables testing mode, which may use dummy data generators. Defaults to **False**.
+            dummy_medcat_model (bool): If **True** and in testing mode, simulates a MedCAT model. Defaults to **False**.
             use_controls (bool): If **True**, this will add the desired ratio of controls at random from the global pool, requiring configuration with a master list of patients. Defaults to **False**.
             medcat (bool): Flag for MedCAT processing. If **True**, MedCAT will load into memory and be used for annotating. Defaults to **False**.
-            start_time (datetime): Current timestamp as the start time for logging and the progress bar. Defaults to `datetime.now()`.
-            patient_id_column_name (str): Column name for patient ID. Setting to **'auto'** will attempt to find it. Example: "client_idcode". Defaults to **'auto'**.
-            annot_filter_options (dict): Dictionary for annotation filtering. Only base annotations meeting this threshold will be included. It includes options for base concept accuracy ('acc'), UMLS list of types for MedCAT filter ('types'), and confidence thresholds for 'Time_Value', 'Presence_Value', and 'Subject_Value'. Defaults to `annot_filter_arguments`.
-            global_start_year (int): Global start year for setting the limits of the time window data can be drawn from. The start should not precede the `start_date` set above. Ensure that the global start year/month/day is before the end year/month/day. Defaults to **1995**.
-            global_start_month (int): Global start month. Defaults to **1**.
-            global_end_year (int): Global end year. Defaults to **2023**.
-            global_end_month (int): Global end month. Defaults to **1**.
-            global_start_day (int): Global start day. Defaults to **1**.
-            global_end_day (int): Global end day. Defaults to **1**.
+            global_start_year (int, optional): Global start year for the overall data extraction window. Defaults to **None**, then set to '1995'.
+            global_start_month (int, optional): Global start month. Defaults to **None**, then set to '01'.
+            global_start_day (int, optional): Global start day. Defaults to **None**, then set to '01'.
+            global_end_year (int, optional): Global end year. Defaults to **None**, then set to '2023'.
+            global_end_month (int, optional): Global end month. Defaults to **None**, then set to '11'.
+            global_end_day (int, optional): Global end day. Defaults to **None**, then set to '01'.
+            skip_additional_listdir (bool): If **True**, skips some `listdir` calls for performance. Defaults to **False**.
+            start_time (datetime, optional): Start time for logging. Defaults to `datetime.now()`.
+            root_path (str, optional): The root directory for the project. If **None**, defaults to the current working directory. Defaults to **None**.
+            negate_biochem (bool): Flag for negating biochemistry features. Defaults to **False**.
+            patient_id_column_name (str): Column name for patient IDs in input files. Defaults to **'client_idcode'**.
+            overwrite_stored_pat_docs (bool): If **True**, overwrites existing stored patient documents. Defaults to **False**.
+            overwrite_stored_pat_observations (bool): If **True**, overwrites existing stored patient observations. Defaults to **False**.
+            store_pat_batch_docs (bool): If **True**, stores patient document batches. Defaults to **True**.
+            store_pat_batch_observations (bool): If **True**, stores patient observation batches. Defaults to **True**.
+            annot_filter_options (dict, optional): Dictionary for filtering MedCAT annotations. Defaults to **None**.
             shuffle_pat_list (bool): Flag for shuffling the patient list. Defaults to **False**.
-            time_window_interval_delta (relativedelta): Specifies the time window to collapse each feature vector into (e.g., `years=1` results in one vector per year within the global time window). Defaults to `relativedelta(years=30)`.
+            individual_patient_window (bool): If **True**, uses patient-specific time windows defined in `individual_patient_window_df`. Defaults to **False**.
+            individual_patient_window_df (pd.DataFrame, optional): DataFrame with patient IDs and their individual start dates. Required if `individual_patient_window` is **True**. Defaults to **None**.
+            individual_patient_window_start_column_name (str, optional): The column name for start dates in `individual_patient_window_df`. Defaults to **None**.
+            individual_patient_id_column_name (str, optional): The column name for patient IDs in `individual_patient_window_df`. Defaults to **None**.
+            individual_patient_window_controls_method (str): Method for handling control patients in IPW mode ('full' or 'random'). Defaults to **'full'**.
+            dropna_doc_timestamps (bool): If **True**, drops documents with missing timestamps. Defaults to **True**.
+            time_window_interval_delta (relativedelta): The step/interval for each time slice vector. Defaults to **relativedelta(days=1)**.
+            feature_engineering_arg_dict (dict, optional): Dictionary of arguments for feature engineering. Defaults to **None**.
             split_clinical_notes (bool): If **True**, clinical notes will be split by date and treated as individual documents with extracted dates. Requires a note splitter module. Defaults to **True**.
-            lookback (bool): Determines the direction of the time length window. If **True**, it calculates backward in time; otherwise, it calculates forward. This applies when calculating individual patient windows from a table of start dates or from the global start date. Defaults to **False**.
+            lookback (bool): If **True**, the time window is calculated backward from the start date. If **False**, it's calculated forward. Defaults to **True**.
             add_icd10 (bool): If **True**, appends ICD-10 codes to annotation batches. These can be found under `current_pat_documents_annotations/%client_idcode%.csv`. Defaults to **False**.
             add_opc4s (bool): Requires `add_icd10` to be **True**. If **True**, appends OPC4S codes to annotation batches. These can be found under `current_pat_documents_annotations/%client_idcode%.csv`. Defaults to **False**.
-            override_medcat_model_path (str, optional): Forces the MedCAT model path. If **None**, it uses the defaults for the environment. Can be set in `paths.py` with `medcat_path = "%path to medcat model pack.zip"`. Defaults to `path_to_medcat_model_pack`.
+            all_epr_patient_list_path (str): Path to a file containing all patient IDs, used for sampling controls.
+            override_medcat_model_path (str, optional): Path to a MedCAT model pack to override the default. Defaults to **None**.
             data_type_filter_dict (dict, optional): Dictionary for data type filtering. See examples provided in the configuration. Defaults to **None**.
             filter_split_notes (bool): If enabled (**True**), the global time window filter will be reapplied after clinical note splitting. This is recommended to enable if `split_clinical_notes` is enabled. Defaults to **True**.
-            prefetch_pat_batches (bool): If enabled (**True**), this will fetch batches for the entire patient list and pre-populate batch folders with individual patient batches. Note that this may lead to out-of-memory issues. Defaults to **False**.
+            client_idcode_term_name (str): The Elasticsearch field name for patient ID searches. Defaults to **"client_idcode.keyword"**.
+            sanitize_pat_list (bool): If **True**, sanitizes the patient list (e.g., to uppercase). Defaults to **True**.
+            calculate_vectors (bool): If **True**, calculates feature vectors. If **False**, only extracts batches. Defaults to **True**.
+            prefetch_pat_batches (bool): If **True**, fetches all raw data for all patients before processing. May use significant memory. Defaults to **False**.
+            sample_treatment_docs (int): Number of patients to sample from the initial cohort list. `0` means no sampling. Defaults to **0**.
         """
+
+        if prefetch_pat_batches and individual_patient_window:
+            print(
+                "Warning: 'prefetch_pat_batches' is not compatible with 'individual_patient_window'."
+            )
+            print(
+                "The prefetch mechanism uses a global time window, while IPW requires patient-specific windows."
+            )
+            print(
+                "Disabling 'prefetch_pat_batches' to ensure correct time windows are used for each patient."
+            )
+            prefetch_pat_batches = False
 
         self.prefetch_pat_batches = prefetch_pat_batches
 
@@ -269,6 +303,8 @@ class config_class:
         self.sanitize_pat_list = (
             sanitize_pat_list  # Enforce all characters capitalized in patient list.
         )
+
+        self.skip_additional_listdir = skip_additional_listdir
 
         self.filter_split_notes = filter_split_notes
 
@@ -829,7 +865,40 @@ class config_class:
             # check if user uploaded ipw dataframe already contains offset, if so do not compute and print warning.
 
             start_column_name = self.individual_patient_window_start_column_name
+            id_column_name = self.individual_patient_id_column_name
             offset_column_name = start_column_name + "_offset"
+            end_date_column_name = start_column_name + "_end_date"
+
+            # Print a warning if the start column name is not in the dataframe
+            if start_column_name not in self.individual_patient_window_df.columns:
+                raise ValueError(f"Column '{start_column_name}' does not exist.")
+            if id_column_name not in self.individual_patient_window_df.columns:
+                raise ValueError(f"Column '{id_column_name}' does not exist.")
+            # print debug message about start column name, offset column name, end date column name, median time between start and end date
+            if self.verbosity >= 1:
+                print(f"Start column name: {start_column_name}")
+                print(f"Offset column name: {offset_column_name}")
+                print(f"End date column name: {end_date_column_name}")
+                if end_date_column_name in self.individual_patient_window_df.columns:
+                    median_days = (
+                        (
+                            pd.to_datetime(
+                                self.individual_patient_window_df[end_date_column_name],
+                                errors="coerce",
+                                utc=True,
+                            )
+                            - pd.to_datetime(
+                                self.individual_patient_window_df[start_column_name],
+                                errors="coerce",
+                                utc=True,
+                            )
+                        )
+                        .median()
+                        .days
+                    )
+                    print(
+                        f"Median time between {start_column_name} and {end_date_column_name}: {median_days} days"
+                    )
 
             if self.lookback:
                 time_offset = -relativedelta(days=days, months=months, years=years)
@@ -844,27 +913,6 @@ class config_class:
                     "if you want to recompute offset, delete offset column from dataframe"
                 )
                 print('using existing offset column: "{}"'.format(offset_column_name))
-
-                print(
-                    pd.to_datetime(
-                        self.individual_patient_window_df[
-                            self.individual_patient_window_start_column_name
-                        ],
-                        errors="coerce",
-                        utc=True,
-                        # format="ISO8601",
-                    )
-                    .isna()
-                    .value_counts(),
-                )
-
-                self.patient_dict = build_patient_dict(
-                    dataframe=self.individual_patient_window_df,
-                    patient_id_column=self.individual_patient_id_column_name,
-                    start_column=self.individual_patient_window_start_column_name,
-                    end_column=self.individual_patient_window_start_column_name
-                    + "_offset",
-                )
                 self.individual_patient_window_df[
                     self.individual_patient_window_start_column_name
                 ] = pd.to_datetime(
@@ -873,18 +921,25 @@ class config_class:
                     ],
                     errors="coerce",
                     utc=True,
-                    # format="ISO8601",
                 )
-
-                self.individual_patient_window_df[
-                    self.individual_patient_window_start_column_name + "_offset"
-                ] = pd.to_datetime(
-                    self.individual_patient_window_df[
-                        self.individual_patient_window_start_column_name + "_offset"
-                    ],
+                self.individual_patient_window_df[offset_column_name] = pd.to_datetime(
+                    self.individual_patient_window_df[offset_column_name],
                     errors="coerce",
                     utc=True,
-                    # format="ISO8601",
+                )
+                self.individual_patient_window_df[end_date_column_name] = (
+                    pd.to_datetime(
+                        self.individual_patient_window_df[end_date_column_name],
+                        errors="coerce",
+                        utc=True,
+                    )
+                )
+
+                self.patient_dict = build_patient_dict(
+                    dataframe=self.individual_patient_window_df,
+                    patient_id_column=self.individual_patient_id_column_name,
+                    start_column=offset_column_name,
+                    end_column=end_date_column_name,
                 )
 
             else:
@@ -895,12 +950,32 @@ class config_class:
                     start_column_name,
                     offset_column_name,
                     time_offset,
+                    verbose=self.verbosity,
+                )
+
+                # Ensure the start_column_name is converted to datetime before building the patient_dict
+                # The add_offset_column function internally converts it for offset calculation,
+                # but the original column in the DataFrame might still be of a different type.
+                self.individual_patient_window_df[
+                    self.individual_patient_window_start_column_name
+                ] = pd.to_datetime(
+                    self.individual_patient_window_df[
+                        self.individual_patient_window_start_column_name
+                    ],
+                    errors="coerce",
+                    utc=True,
+                )
+                # Also convert the newly created offset column to ensure it's a timezone-aware datetime
+                self.individual_patient_window_df[offset_column_name] = pd.to_datetime(
+                    self.individual_patient_window_df[offset_column_name],
+                    errors="coerce",
+                    utc=True,
                 )
 
                 self.patient_dict = build_patient_dict(
                     dataframe=self.individual_patient_window_df,
                     patient_id_column=self.individual_patient_id_column_name,
-                    start_column=f"{start_column_name}_converted",
+                    start_column=self.individual_patient_window_start_column_name,  # Use the now-converted original column
                     end_column=f"{start_column_name}_offset",
                 )
 
@@ -908,16 +983,6 @@ class config_class:
                 None  # N_pat_lines will be dynamic for each pat... or potentially?
             )
             self.date_list = None  # We will generate this in main_pat2vec under individiual patient window
-
-            if self.lookback == True:
-                # print("skipping reverse")
-
-                reversed_patient_dict = {
-                    key: tuple(reversed(value))
-                    for key, value in self.patient_dict.items()
-                }
-                print("reversed_patient_dict")
-                self.patient_dict = reversed_patient_dict
 
         if self.verbosity > 1:
 
@@ -929,12 +994,9 @@ class config_class:
             print("Debug message: global_end_day =", self.global_end_day)
 
             if self.individual_patient_window:
-                first_key = next(iter(self.patient_dict))
-                display(self.patient_dict[first_key])
-
-        self.skip_additional_listdir = skip_additional_listdir
-
-        if self.verbosity >= 1:
+                if self.patient_dict:
+                    first_key = next(iter(self.patient_dict))
+                    display(self.patient_dict[first_key])
             if self.data_type_filter_dict is not None:
                 print("data_type_filter_dict")
                 print(self.data_type_filter_dict)
