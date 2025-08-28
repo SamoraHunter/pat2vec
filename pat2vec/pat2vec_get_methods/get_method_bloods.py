@@ -234,7 +234,7 @@ def get_current_pat_bloods(
             df_unique_filtered.at[i, col_name + "_median"] = agg_val
 
             # mode
-            agg_val = stats.mode(filtered_column_values)[0][0]
+            agg_val = np.atleast_1d(stats.mode(filtered_column_values)[0])[0]
             df_unique_filtered.at[i, col_name + "_mode"] = agg_val
 
             # std
