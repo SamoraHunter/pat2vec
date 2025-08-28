@@ -5,7 +5,6 @@ from tqdm import tqdm
 
 from pat2vec.util.post_processing import (
     retrieve_pat_annots_mct_epr,
-    #    retrieve_pat_docs_mct_epr,
 )
 
 
@@ -67,98 +66,86 @@ def filter_annot_dataframe(df, annot_filter_arguments):
 
 def build_merged_epr_mct_annot_df(all_pat_list, config_obj, overwrite=False):
     """
-    Build a merged DataFrame containing annotations for multiple patients using MCT and EPR data.
+    Builds a merged DataFrame of annotations from EPR and MCT sources for all patients.
 
-    Parameters:
-    - config_obj (ConfigObject): An object containing configuration settings, including project name,
-                                patient list, etc.
-    - overwrite (bool): If True, overwrite the existing output file. Default is False.
+    This function iterates through a list of patient IDs, retrieves their
+    respective annotation data from both EPR and MCT sources using the
+    `retrieve_pat_annots_mct_epr` function, cleans the data, and then
+    concatenates it into a single large DataFrame. The final merged DataFrame
+    is saved to a CSV file.
+
+    Args:
+        all_pat_list (list): A list of patient client ID codes to process.
+        config_obj (object): A configuration object containing project settings,
+                             including `proj_name` and paths to annotation batches.
+        overwrite (bool, optional): If True, any existing merged file will be
+                                    overwritten. If False, the function will skip
+                                    the process if the file already exists.
+                                    Defaults to False.
 
     Returns:
-    File path to output
-
-    This function creates a directory for merged batches, retrieves annotations for each patient,
-    and writes the merged annotations to a CSV file named 'annots_mct_epr.csv'.
-    If the output file already exists and overwrite is False, subsequent batches are appended to it.
-
-    Example usage:
-    ```
-    config = ConfigObject(...)  # Create or load your configuration object
-    build_merged_epr_mct_annot_df(config, overwrite=True)
-    ```
-
+        str or None: The file path to the merged annotations CSV file. Returns
+                     None if no annotation data is found for any patient.
     """
     directory_path = config_obj.proj_name + "/" + "merged_batches/"
     Path(directory_path).mkdir(parents=True, exist_ok=True)
-
     output_file_path = directory_path + "annots_mct_epr.csv"
 
     if not overwrite and Path(output_file_path).is_file():
-        print("Output file already exists. Appending to the existing file.")
-    else:
-        for i in tqdm(range(0, len(all_pat_list)), total=len(all_pat_list)):
-            current_pat_idcode = all_pat_list[i]
-            all_annots = retrieve_pat_annots_mct_epr(current_pat_idcode, config_obj)
+        print(f"File already exists at {output_file_path}. Skipping.")
+        return output_file_path  # Return existing path
 
-            if i == 0:
-                # Create the output file and write the first batch directly
-                all_annots.to_csv(output_file_path, index=False)
-            else:
-                # Append each result to the output file
-                all_annots.to_csv(output_file_path, mode="a", header=False, index=False)
+    # --- Step 1: Collect all patient DataFrames in a list ---
+    all_patient_dfs = []
+    print("Reading and collecting all patient annotation batches...")
+    for current_pat_idcode in tqdm(all_pat_list):
+        # This function reads the individual patient CSV
+        pat_annots_df = retrieve_pat_annots_mct_epr(current_pat_idcode, config_obj)
 
+        # --- Step 2: Clean each DataFrame as we get it ---
+        # Robustly handle the inconsistent index column
+        if "Unnamed: 0" in pat_annots_df.columns:
+            pat_annots_df = pat_annots_df.drop("Unnamed: 0", axis=1)
+
+        if not pat_annots_df.empty:
+            all_patient_dfs.append(pat_annots_df)
+
+    # --- Step 3: Merge, Save, and Return ---
+    if not all_patient_dfs:
+        print("No annotation data found for any patient. No file will be created.")
+        return None  # Return None if there's nothing to save
+
+    print(f"\nConcatenating data for {len(all_patient_dfs)} patients...")
+    # Create one large, final DataFrame from the list of clean DataFrames
+    final_merged_df = pd.concat(all_patient_dfs, ignore_index=True)
+
+    print(f"Saving merged file to {output_file_path}...")
+    # Save the final, clean DataFrame to a CSV in a single operation
+    final_merged_df.to_csv(output_file_path, index=False)
+
+    print("Done.")
     return output_file_path
 
 
-# def build_merged_epr_mct_doc_df(all_pat_list, config_obj, overwrite=False):
-#     """
-#     Build a merged DataFrame containing annotations for multiple patients using MCT and EPR data.
-
-#     Parameters:
-#     - config_obj (ConfigObject): An object containing configuration settings, including project name,
-#                                 patient list, etc.
-#     - overwrite (bool): If True, overwrite the existing output file. Default is False.
-
-#     Returns:
-#     File path to output
-
-#     This function creates a directory for merged batches, retrieves annotations for each patient,
-#     and writes the merged annotations to a CSV file named 'annots_mct_epr.csv'.
-#     If the output file already exists and overwrite is False, subsequent batches are appended to it.
-
-#     Example usage:
-#     ```
-#     config = ConfigObject(...)  # Create or load your configuration object
-#     build_merged_epr_mct_annot_df(config, overwrite=True)
-#     ```
-
-#     """
-#     directory_path = config_obj.proj_name + "/" + "merged_batches/"
-#     Path(directory_path).mkdir(parents=True, exist_ok=True)
-
-#     output_file_path = directory_path + "docs_mct_epr.csv"
-
-#     if not overwrite and Path(output_file_path).is_file():
-#         print("Output file already exists. Appending to the existing file.")
-#     else:
-#         for i in tqdm(range(0, len(all_pat_list)), total=len(all_pat_list)):
-#             current_pat_idcode = all_pat_list[i]
-#             try:
-#                 all_docs = retrieve_pat_docs_mct_epr(current_pat_idcode, config_obj)
-#             except Exception as e:
-#                 print(e, current_pat_idcode)
-
-#             if i == 0:
-#                 # Create the output file and write the first batch directly
-#                 all_docs.to_csv(output_file_path, index=False)
-#             else:
-#                 # Append each result to the output file
-#                 all_docs.to_csv(output_file_path, mode="a", header=False, index=False)
-
-#     return output_file_path
-
-
 def build_merged_bloods(all_pat_list, config_obj, overwrite=False):
+    """
+    Builds a merged CSV file of bloods data from individual patient batch files.
+
+    This function iterates through a list of patient IDs, reads the corresponding
+    bloods batch CSV for each patient, and appends the data to a single merged
+    CSV file. It handles file existence and overwriting logic.
+
+    Args:
+        all_pat_list (list): A list of patient client ID codes to process.
+        config_obj (object): A configuration object containing project settings,
+                             including `proj_name` and `pre_bloods_batch_path`.
+        overwrite (bool, optional): If True, any existing merged file will be
+                                    overwritten. If False, data will be appended
+                                    to the existing file. Defaults to False.
+
+    Returns:
+        str: The file path to the merged bloods CSV file.
+    """
 
     directory_path = config_obj.proj_name + "/" + "merged_batches/"
     Path(directory_path).mkdir(parents=True, exist_ok=True)
@@ -203,6 +190,25 @@ def build_merged_bloods(all_pat_list, config_obj, overwrite=False):
 
 
 def build_merged_epr_mct_doc_df(all_pat_list, config_obj, overwrite=False):
+    """
+    Builds a merged CSV file of documents from EPR and MCT sources for all patients.
+
+    This function iterates through a list of patient IDs, retrieves their
+    respective document data from both EPR and MCT sources using the
+    `retrieve_pat_docs_mct_epr` function, and then appends the data to a single
+    merged CSV file.
+
+    Args:
+        all_pat_list (list): A list of patient client ID codes to process.
+        config_obj (object): A configuration object containing project settings,
+                             including `proj_name` and paths to document batches.
+        overwrite (bool, optional): If True, any existing merged file will be
+                                    overwritten. If False, data will be appended
+                                    to the existing file. Defaults to False.
+
+    Returns:
+        str: The file path to the merged documents CSV file.
+    """
     directory_path = config_obj.proj_name + "/" + "merged_batches/"
     Path(directory_path).mkdir(parents=True, exist_ok=True)
 
@@ -282,6 +288,39 @@ def retrieve_pat_docs_mct_epr(
     columns_report=None,
     merge_columns=True,
 ):
+    """
+    Retrieves and merges document data for a single patient from multiple sources.
+
+    This function reads document data for a specified patient from four potential
+    sources: EPR documents, MCT documents, textual observations, and reports.
+    It loads the corresponding CSV files, optionally selecting specific columns,
+    and concatenates them into a single DataFrame. It can also merge related
+
+    columns (like timestamps and content) to create a more unified dataset.
+
+    Args:
+        client_idcode (str): The unique identifier for the patient.
+        config_obj (object): A configuration object containing paths to the
+                             various document batch files.
+        columns_epr (list, optional): A list of columns to load from the EPR
+                                      documents CSV. Defaults to None (all columns).
+        columns_mct (list, optional): A list of columns to load from the MCT
+                                      documents CSV. Defaults to None (all columns).
+        columns_to (list, optional): A list of columns to load from the textual
+                                     observations CSV. Defaults to None (all columns).
+        columns_report (list, optional): A list of columns to load from the reports
+                                         CSV. Defaults to None (all columns).
+        merge_columns (bool, optional): If True, attempts to merge corresponding
+                                        columns (e.g., timestamps, content) from the
+                                        different sources into a unified set of
+                                        columns. Defaults to True.
+
+    Returns:
+        pd.DataFrame: A DataFrame containing the concatenated and optionally
+                      merged document data for the patient. Returns an empty
+                      DataFrame if no data is found for the patient in any
+                      of the sources.
+    """
     pre_document_batch_path = config_obj.pre_document_batch_path
     pre_document_batch_path_mct = config_obj.pre_document_batch_path_mct
     pre_textual_obs_document_batch_path = config_obj.pre_textual_obs_document_batch_path
@@ -370,6 +409,30 @@ def join_docs_to_annots(annots_df, docs_temp, drop_duplicates=True):
 
 
 def get_annots_joined_to_docs(config_obj, pat2vec_obj):
+    """
+    Builds and merges document and annotation dataframes, then joins them.
+
+    This function orchestrates the process of creating comprehensive, patient-level
+    data by first building merged dataframes for both documents (from EPR and MCT
+    sources) and their corresponding annotations. It then joins these two
+    dataframes based on a common document identifier.
+
+    The process involves:
+    1. Building a merged document DataFrame for all patients in `pat2vec_obj.all_patient_list`.
+    2. Building a merged annotation DataFrame for the same list of patients.
+    3. Reading the newly created merged CSV files.
+    4. Joining the annotation data to the document data.
+
+    Args:
+        config_obj (object): A configuration object containing project settings,
+                             including `proj_name` and paths to data batches.
+        pat2vec_obj (object): The main pat2vec object, which contains the
+                              `all_patient_list` and other necessary components.
+
+    Returns:
+        pd.DataFrame: A DataFrame containing the annotations joined with their
+                      corresponding document information.
+    """
 
     pre_path = config_obj.proj_name
 
