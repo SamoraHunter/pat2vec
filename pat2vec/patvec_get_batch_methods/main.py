@@ -11,11 +11,13 @@ from pat2vec.util.filter_methods import (
     apply_data_type_mct_docs_filters,
     filter_dataframe_by_fuzzy_terms,
 )
-from pat2vec.util.methods_annotation import (
+from pat2vec.util.methods_annotation_get_pat_document_annotation_batch import (
+    get_pat_document_annotation_batch_reports,
+)
+from pat2vec.util.methods_annotation_get_pat_document_annotation_batch import (
     get_pat_batch_textual_obs_annotation_batch,
     get_pat_document_annotation_batch,
     get_pat_document_annotation_batch_mct,
-    get_pat_document_annotation_batch_reports,
 )
 from pat2vec.util.methods_annotation_regex import append_regex_term_counts
 from pat2vec.util.methods_get import exist_check

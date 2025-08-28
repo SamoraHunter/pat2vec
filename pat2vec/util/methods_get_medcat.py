@@ -1,7 +1,7 @@
 import os
 import sys
 
-from pat2vec.util.get_dummy_data_cohort_searcher import dummy_CAT
+from pat2vec.util.get_dummy_data_medcat_annotation import dummy_CAT
 
 
 def get_cat(config_obj):

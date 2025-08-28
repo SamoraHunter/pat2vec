@@ -13,7 +13,11 @@ from pat2vec.util.get_start_end_year_month import get_start_end_year_month
 from pat2vec.util.methods_annotation import (
     calculate_pretty_name_count_features,
     check_pat_document_annotation_complete,
+)
+from pat2vec.util.methods_annotation_filter_annot_dataframe import (
     filter_annot_dataframe,
+)
+from pat2vec.util.methods_annotation_get_pat_document_annotation_batch import (
     get_pat_document_annotation_batch,
 )
 from pat2vec.util.methods_get import (

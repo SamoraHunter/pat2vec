@@ -1,7 +1,6 @@
 from datetime import datetime, timedelta
 import logging
 import os
-import pickle
 import re
 from datetime import datetime, timedelta, timezone
 import string
@@ -149,13 +148,6 @@ def generate_epr_documents_data(
         # print(f"Number of DataFrames in df_holder_list: {len(df_holder_list)}")
         df = pd.concat(df_holder_list, axis=0, ignore_index=True)
 
-        # Ensure only target columns are present. Useful if source data isn't directly from ES.
-        fields_list = [
-            col for col in fields_list if col not in ["_id", "_index", "_score"]
-        ]
-
-        df = df[fields_list]
-        df.reset_index(drop=True, inplace=True)
         return df
     except Exception as e:
         print(e)
@@ -850,7 +842,7 @@ def generate_observations_data(
         df_holder_list.append(df)
 
     df = pd.concat(df_holder_list, ignore_index=True)
-    # fields_list = fi
+    fields_list = fields_list + ["_id", "_index", "_score"]
 
     df = df[fields_list]
     df.reset_index(drop=True, inplace=True)
@@ -1481,70 +1473,6 @@ def extract_search_term_obscatalogmasteritem_displayname(search_string):
         return search_term
     else:
         return search_string
-
-
-def random_sample(pickled_dict, sample_size):
-    random.seed(random_state)
-    keys = list(pickled_dict["entities"].keys())
-    sample_keys = random.sample(keys, min(sample_size, len(keys)))
-    sample = {"entities": {key: pickled_dict["entities"][key] for key in sample_keys}}
-    return sample
-
-
-def dummy_medcat_annotation_generator():
-    """
-    Loads a sample MedCAT annotation dictionary from a pickle file and returns a random subset of its entities.
-
-    Parameters:
-        None
-
-    Returns:
-        dict: A dictionary containing a random subset of the entities from the sample annotations.
-    """
-    pickle_file = os.path.join("test_files", "sample_annotations.pickle")
-    # Load the dictionary from the pickle file
-    with open(pickle_file, "rb") as f:
-        sample_annotations = pickle.load(f)
-
-    dummy_annotations = random_sample(sample_annotations, random.randint(0, 10))
-
-    return dummy_annotations
-
-
-class dummy_CAT(object):
-
-    def __init__(self):
-        pass
-
-    def get_entities(self, text):
-        """
-        Given a text, this function returns a random subset of sample MedCAT annotations.
-
-        Parameters:
-            text (str): The text to annotate.
-
-        Returns:
-            dict: A dictionary containing a random subset of the entities from the sample annotations.
-        """
-        return dummy_medcat_annotation_generator()
-
-    def get_entities_multi_texts(self, texts):
-        """
-        Given a list of texts, this function returns a list of dictionaries containing a random subset of sample MedCAT annotations for each text in the list.
-
-        Parameters:
-            texts (list): The list of texts to annotate.
-
-        Returns:
-            list: A list of dictionaries containing a random subset of the entities from the sample annotations for each text in the list.
-        """
-        result = []
-
-        for i in range(0, len(texts)):
-
-            result.append(dummy_medcat_annotation_generator())
-
-        return result
 
 
 def run_generate_patient_timeline_and_append(
