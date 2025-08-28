@@ -109,13 +109,18 @@ class TestConfigClass(unittest.TestCase):
     ):
         """Test that patient_dict is generated when individual_patient_window is True."""
         mock_df = pd.DataFrame({"patient_id": ["P001"], "start_date": ["2020-01-01"]})
-        mock_add_offset.return_value = mock_df  # Simplified mock
+        # The mocked add_offset_column should return a DataFrame that includes
+        # the new offset column.
+        mock_df_with_offset = mock_df.copy()
+        mock_df_with_offset["start_date_offset"] = pd.to_datetime(["2021-01-01"])
+        mock_add_offset.return_value = mock_df_with_offset
         mock_build_dict.return_value = {
             "P001": (datetime(2020, 1, 1), datetime(2021, 1, 1))
         }
 
         with patch("builtins.print"):
             config = config_class(
+                years=1,  # This makes the test logic consistent
                 individual_patient_window=True,
                 individual_patient_window_df=mock_df,
                 individual_patient_window_start_column_name="start_date",

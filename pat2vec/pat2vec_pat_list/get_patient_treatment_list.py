@@ -233,7 +233,26 @@ def get_all_patients_list(config_obj):
     Returns:
         A list of all patient IDs.
     """
-    if config_obj.testing == False:
+    if config_obj.individual_patient_window:
+        if config_obj.verbosity > 0:
+            print("Using patient list from individual_patient_window_df")
+
+        ipw_df = config_obj.individual_patient_window_df
+        id_column = config_obj.individual_patient_id_column_name
+
+        if ipw_df is None or id_column is None:
+            raise ValueError(
+                "For individual_patient_window, both 'individual_patient_window_df' and 'individual_patient_id_column_name' must be provided in config."
+            )
+
+        if id_column not in ipw_df.columns:
+            raise ValueError(
+                f"Column '{id_column}' not found in individual_patient_window_df."
+            )
+
+        patient_ids = ipw_df[id_column].unique().tolist()
+
+    elif config_obj.testing == False:
 
         patient_ids = extract_treatment_id_list_from_docs(config_obj)
 

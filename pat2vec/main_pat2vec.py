@@ -320,10 +320,11 @@ class main:
 
         stripped_list_start = self.stripped_list_start
 
-        date_list = self.config_obj.date_list
-        if self.config_obj.verbosity > 3:
-            print("Date list> pat_maker")
-            print(date_list[0:5])
+        if not self.config_obj.individual_patient_window:
+            date_list = self.config_obj.date_list
+            if self.config_obj.verbosity > 3:
+                print("Date list> pat_maker")
+                print(date_list[0:5])
 
         multi_process = self.config_obj.multi_process
 
@@ -392,61 +393,34 @@ class main:
 
             else:
 
-                # Pat is in patient_dict.keys...
+                # Pat is in patient_dict.keys... Simplified and robust date retrieval.
+                pat_dates = self.config_obj.patient_dict.get(all_patient_list[i])
 
-                current_pat_start_date = self.config_obj.patient_dict.get(
-                    all_patient_list[i]
-                )[0]
+                if not pat_dates or len(pat_dates) != 2:
+                    print(
+                        f"Warning: Invalid or missing dates for patient {all_patient_list[i]} in patient_dict. Skipping."
+                    )
+                    return
 
+                # The patient_dict contains a tuple of (start, end) or (end, start) if lookback=True.
+                # These should already be datetime objects from the config setup.
+                current_pat_start_date, current_pat_end_date = pat_dates
+
+                print("Debug date routine:")
+                print("current_pat_start_date", current_pat_start_date)
+                print("current_pat_end_date", current_pat_end_date)
+
+                # Safeguard against non-datetime or NaT values which can cause crashes.
                 if (
-                    type(self.config_obj.patient_dict.get(all_patient_list[i])[1])
-                    != "datetime64[ns]"
+                    pd.isna(current_pat_start_date)
+                    or pd.isna(current_pat_end_date)
+                    or not isinstance(current_pat_start_date, datetime)
+                    or not isinstance(current_pat_end_date, datetime)
                 ):
-                    try:
-                        # print("forcing end date datetime")
-                        current_pat_end_date = pd.to_datetime(
-                            self.config_obj.patient_dict.get(all_patient_list[i])[1],
-                            # infer_datetime_format=True,
-                            # format="%d/%m/%y %H.%M.%S",
-                            #    errors="coerce",
-                        )
-
-                        # current_pat_end_date = pd.to_datetime(
-                        #     self.config_obj.patient_dict.get(all_patient_list[i])[1],
-                        #     errors="coerce",
-                        #     utc=True,
-                        # )
-                    except Exception as e:
-                        print("failed force end date dt")
-                        print(e)
-
-                if (
-                    type(self.config_obj.patient_dict.get(all_patient_list[i])[0])
-                    != "datetime64[ns]"
-                ):
-                    try:
-                        # print("forcing start date datetime")
-                        current_pat_start_date = pd.to_datetime(
-                            self.config_obj.patient_dict.get(all_patient_list[i])[0],
-                            # infer_datetime_format=True,
-                            # format="%d/%m/%y %H.%M.%S",
-                            #    errors="coerce",
-                        )
-
-                        # current_pat_end_date = pd.to_datetime(
-                        #     self.config_obj.patient_dict.get(all_patient_list[i])[1],
-                        #     errors="coerce",
-                        #     utc=True,
-                        # )
-                    except Exception as e:
-                        print("failed force start date dt")
-                        print(e)
-
-                else:
-                    # print("pats datetime end is is not datetime64[ns]")
-                    current_pat_end_date = self.config_obj.patient_dict.get(
-                        all_patient_list[i]
-                    )[1]
+                    print(
+                        f"Warning: Dates for patient {all_patient_list[i]} are invalid or not datetime objects. Skipping."
+                    )
+                    return
 
                 # print("Debug date routine:")
                 # print("current_pat_start_date", current_pat_start_date)
@@ -454,19 +428,34 @@ class main:
                 # print(self.config_obj.patient_dict.get(all_patient_list[i])[0])
                 # print(self.config_obj.patient_dict.get(all_patient_list[i])[1])
 
-            self.config_obj.global_start_month = current_pat_start_date.month
+            # The patient_dict contains a tuple of (start, end) dates.
+            # We assign the real start/end and then determine the anchor date for generation and clamping boundaries.
+            p_real_start = current_pat_start_date
+            p_real_end = current_pat_end_date
 
-            self.config_obj.global_start_year = current_pat_start_date.year
+            if p_real_start > p_real_end:
+                p_real_start, p_real_end = p_real_end, p_real_start
 
-            self.config_obj.global_end_month = current_pat_end_date.month
+            if self.config_obj.lookback:
+                # For lookback, the generation starts from the end of the patient's window and goes backward.
+                date_for_generate = p_real_end
+            else:
+                # For forward generation, it starts from the beginning of the window and goes forward.
+                date_for_generate = p_real_start
 
-            self.config_obj.global_end_year = current_pat_end_date.year
+            # The clamping boundaries are always the patient's full, ordered time window.
+            g_start, g_end = p_real_start, p_real_end
 
-            self.config_obj.global_start_day = current_pat_start_date.day
+            # Override global dates with the correctly ordered patient window for clamping.
+            # This is a workaround to pass patient-specific boundaries to generate_date_list.
+            self.config_obj.global_start_month = g_start.month
+            self.config_obj.global_start_year = g_start.year
+            self.config_obj.global_start_day = g_start.day
+            self.config_obj.global_end_month = g_end.month
+            self.config_obj.global_end_year = g_end.year
+            self.config_obj.global_end_day = g_end.day
 
-            self.config_obj.global_end_day = current_pat_end_date.day
-
-            self.config_obj.start_date = current_pat_start_date
+            self.config_obj.start_date = date_for_generate
 
             self.config_obj.global_start_year = str(
                 self.config_obj.global_start_year
@@ -532,10 +521,6 @@ class main:
                 print("current_pat_end_date", current_pat_end_date)
                 print("current_pat_start_date", current_pat_start_date)
 
-            if self.config_obj.lookback:
-                date_for_generate = current_pat_end_date
-            else:
-                date_for_generate = current_pat_start_date
             if self.config_obj.verbosity >= 4:
 
                 print("date for generate", date_for_generate)
@@ -547,14 +532,15 @@ class main:
                 self.config_obj.days,
                 interval_window_delta,
                 config_obj=self.config_obj,
-                # verbose=bool(self.config_obj.verbosity>0)
             )
             if self.config_obj.verbosity >= 4:
                 print("overwriting temp datetime with ipw")
+                print("date for generate:", date_for_generate)
+                print("self.config_obj.date_list:", self.config_obj.date_list)
             date_list = self.config_obj.date_list
 
             if self.config_obj.verbosity >= 4:
-                print(self.config_obj.date_list)
+                print("self.config_obj.date_list:", self.config_obj.date_list)
 
             self.n_pat_lines = len(self.config_obj.date_list)
 

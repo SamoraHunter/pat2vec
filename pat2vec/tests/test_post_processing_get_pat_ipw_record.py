@@ -241,11 +241,11 @@ class TestGetPatIpwRecord(unittest.TestCase):
         )
 
         self.assertEqual(len(result_df), 1)
-        self.assertEqual(
-            result_df.iloc[0]["updatetime"], datetime(2021, 3, 1)
+        self.assertEqual(  # Should use basicobs_entered
+            result_df.iloc[0]["updatetime"], pd.Timestamp("2021-03-01", tz="UTC")
         )  # Should use basicobs_entered
         self.assertNotEqual(
-            result_df.iloc[0]["updatetime"], datetime(2020, 1, 1)
+            result_df.iloc[0]["updatetime"], pd.Timestamp("2020-01-01", tz="UTC")
         )  # Should not use old updatetime
 
     @patch("pat2vec.util.post_processing_get_pat_ipw_record.filter_and_select_rows")
@@ -268,7 +268,7 @@ class TestGetPatIpwRecord(unittest.TestCase):
         self.assertEqual(len(result_df), 1)
         self.assertEqual(result_df.iloc[0]["client_idcode"], self.patient_id)
         self.assertEqual(
-            result_df.iloc[0]["updatetime"], datetime(2020, 1, 1)
+            result_df.iloc[0]["updatetime"], pd.Timestamp("2020-01-01", tz="UTC")
         )  # Start date
 
     @patch("pat2vec.util.post_processing_get_pat_ipw_record.filter_and_select_rows")
@@ -292,7 +292,7 @@ class TestGetPatIpwRecord(unittest.TestCase):
         self.assertEqual(len(result_df), 1)
         self.assertEqual(result_df.iloc[0]["client_idcode"], self.patient_id)
         self.assertEqual(
-            result_df.iloc[0]["updatetime"], datetime(2022, 12, 31)
+            result_df.iloc[0]["updatetime"], pd.Timestamp("2022-12-31", tz="UTC")
         )  # End date
 
     @patch("pat2vec.util.post_processing_get_pat_ipw_record.filter_and_select_rows")
@@ -475,7 +475,9 @@ class TestGetPatIpwRecord(unittest.TestCase):
             # Should return a default dataframe with start_datetime
             self.assertEqual(len(result_df), 1)
             self.assertEqual(result_df.iloc[0]["client_idcode"], self.patient_id)
-            self.assertEqual(result_df.iloc[0]["updatetime"], datetime(2020, 1, 1))
+            self.assertEqual(
+                result_df.iloc[0]["updatetime"], pd.Timestamp("2020-01-01", tz="UTC")
+            )
 
 
 if __name__ == "__main__":
