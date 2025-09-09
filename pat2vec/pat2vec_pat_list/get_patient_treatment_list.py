@@ -8,7 +8,7 @@ from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.cluster import KMeans
 from collections import Counter
 import pandas as pd
-from notebooks.test_files.read_test_file import read_test_data
+from pat2vec.util.testing_helpers import read_test_data
 
 
 def extract_treatment_id_list_from_docs(config_obj):
@@ -258,9 +258,18 @@ def get_all_patients_list(config_obj):
 
     else:
 
-        file_path = "notebooks/test_files/treatment_docs.csv"
+        if not hasattr(config_obj, "test_data_path") or not config_obj.test_data_path:
+            raise ValueError(
+                "In testing mode, 'test_data_path' must be set in the config object."
+            )
 
-        patient_ids = read_test_data()["client_idcode"]
+        test_df = read_test_data(config_obj.test_data_path)
+
+        if test_df is not None and "client_idcode" in test_df.columns:
+            patient_ids = test_df["client_idcode"]
+        else:
+            # Return an empty Series if file is not found or malformed
+            patient_ids = pd.Series([])
 
     all_patient_list = patient_ids.copy()
 

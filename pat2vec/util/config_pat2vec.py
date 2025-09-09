@@ -211,6 +211,7 @@ class config_class:
         calculate_vectors=True,
         prefetch_pat_batches=False,
         sample_treatment_docs=0,  # 0 for no sampling, provide an int for the number of samples.
+        test_data_path=None,
     ):
         """Initializes the configuration object for the pat2vec pipeline.
 
@@ -282,6 +283,7 @@ class config_class:
             calculate_vectors (bool): If **True**, calculates feature vectors. If **False**, only extracts batches. Defaults to **True**.
             prefetch_pat_batches (bool): If **True**, fetches all raw data for all patients before processing. May use significant memory. Defaults to **False**.
             sample_treatment_docs (int): Number of patients to sample from the initial cohort list. `0` means no sampling. Defaults to **0**.
+            test_data_path (str, optional): The path to the test data file, used when `testing` is **True**. Defaults to **None**.
         """
 
         if prefetch_pat_batches and individual_patient_window:
@@ -307,6 +309,8 @@ class config_class:
         self.skip_additional_listdir = skip_additional_listdir
 
         self.filter_split_notes = filter_split_notes
+
+        self.test_data_path = test_data_path
 
         self.suffix = suffix
         self.treatment_doc_filename = treatment_doc_filename
@@ -718,10 +722,13 @@ class config_class:
         if self.testing:
             print("Setting test options")
 
-            self.treatment_doc_filename = os.path.join(
-                os.getcwd(), "test_files", "treatment_docs.csv"
-            )
-            print("updating main options with implemented test options")
+            # If in testing mode and no specific test data path is provided,
+            # set it to the default path. This allows overriding it if needed.
+            if self.test_data_path is None:
+                self.test_data_path = "test_files/treatment_docs.csv"
+                print(f"Defaulting test_data_path to: {self.test_data_path}")
+
+            print("Updating main options with implemented test options")
             # Enforce implemented testing options
             update_main_options(self)
 
