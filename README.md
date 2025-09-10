@@ -3,7 +3,7 @@
 - [Example Use Cases](#example-use-cases)
   - [1. Patient-Level Aggregation](#1-patient-level-aggregation)
   - [2. Longitudinal Time Series Construction](#2-longitudinal-time-series-construction)
-- [Notable Requirements](#notable-requirements)
+- [Requirements](#requirements)
 - [Features](#features)
 - [📊 Diagrams](#-diagrams)
   - [System Architecture & Configuration](#system-architecture--configuration)
@@ -13,9 +13,8 @@
 - [Installation](#installation)
   - [Windows](#windows)
   - [Unix/Linux](#unixlinux)
-    - [Option 1: Install All Requirements Automatically](#option-1-install-all-requirements-automatically)
-    - [Option 2: Manual Installation](#option-2-manual-installation)
 - [Usage](#usage)
+- [FAQ](#faq)
 - [Contributing](#contributing)
 - [License](#license)
 
@@ -38,60 +37,61 @@ Generate a monthly time series for each patient that includes:
 
 The time series spans up to 25 years retrospectively, aligned to each patient's diagnosis date, enabling a consistent retrospective view across varying start times.
 
-## Notable requirements:
+## Requirements
 
-- CogStack (cogstack_v8_lite) ([cogstack_search_methods](https://github.com/SamoraHunter/cogstack_search_methods))
-- Elasticsearch
-- MedCat https://github.com/CogStack/MedCAT
-- Python >=3.10
-- Python3.10-venv (for install_pat2vec.py)
+**Core Services:**
+- **CogStack**: An operational instance for data retrieval. The required client libraries are now bundled with this project.
+- **Elasticsearch**: The backend for CogStack.
+- **MedCAT**: For medical concept annotation.
 
-See requirements.txt
+**Local Setup:**
+- **Python**: Version 3.10 or higher.
+- **Virtual Environment**: Requires the `python3-venv` package (or equivalent for your OS).
+- For all other Python packages, see `requirements.txt`.
 
-## Features:
+## Features
 
-- Single patient
-- Batch patient
-- Cohort search and creation
-- Automated random controls
-- Modular feature space selection
-- Look back
-- Look forward
-- Individual patient time windows.
+`pat2vec` offers a flexible suite of tools for processing and analyzing patient data.
+
+**Patient Processing**
+- **Single & Batch Processing**: Process individual patients for detailed analysis or run large batches for cohort-level studies.
+
+**Cohort Management**
+- **Cohort Search & Creation**: Define and build patient cohorts using flexible search criteria.
+- **Automated Control Matching**: Automatically generate random control groups for case-control studies.
+
+**Flexible Feature Engineering**
+- **Modular Feature Selection**: Choose from a wide range of feature extractors to build a custom feature space tailored to your research question.
+- **Temporal Windowing**: Define precise time windows for data extraction relative to a key event (e.g., diagnosis date), including look-back and look-forward periods.
 
 ## 📊 Diagrams
 
-This project includes a collection of diagrams illustrating the system architecture, data pipelines, ingestion examples, and method workflows.
-You can view the Mermaid definitions or the rendered diagrams below.
+<details>
+<summary>Click to view project diagrams</summary>
 
-### 📂 System Architecture & Configuration
+This project includes a collection of diagrams illustrating the system architecture, data pipelines, and feature extraction workflows. You can view the Mermaid definitions or the rendered diagrams below.
+
+#### 📂 System Architecture & Configuration
 | Diagram | Mermaid | Image |
 |---|---|---|
 | **System Architecture** | [assets/system_architecture.mmd](assets/system_architecture.mmd) | ![System Architecture](assets/system_architecture.png) |
 | **Configuration** | [assets/config.mmd](assets/config.mmd) | ![Configuration](assets/config.svg) |
 
----
-
-### 🛠️ Data Pipelines
+#### 🛠️ Data Pipelines
 | Diagram | Mermaid | Image |
 |---|---|---|
 | **Data Pipeline** | [assets/data_pipeline.mmd](assets/data_pipeline.mmd) | ![Data Pipeline](assets/data_pipeline.png) |
 | **Main Batch Processing** | [assets/main_batch.mmd](assets/main_batch.mmd) | ![Main Batch](assets/main_batch.svg) |
-| **Example Ingestion** | [assets/example_ingestion.mmd](assets/example_ingestion.mmd) | <img src="assets/example_ingestion.png" alt="Example Ingestion" width="50"/> |
+| **Example Ingestion** | [assets/example_ingestion.mmd](assets/example_ingestion.mmd) | ![Example Ingestion](assets/example_ingestion.png) |
 
----
-
-### 🧩 Methods & Post-Processing
+#### 🧩 Methods & Post-Processing
 | Diagram | Mermaid | Image |
 |---|---|---|
 | **Methods Annotation** | [assets/methods_annotation.mmd](assets/methods_annotation.mmd) | ![Methods Annotation](assets/methods_annotation.png) |
 | **Post-Processing Build Methods** | [assets/post_processing_build_methods.mmd](assets/post_processing_build_methods.mmd) | ![Post-Processing Build Methods](assets/post_processing_build_methods.svg) |
 | **Post-Processing Anonymisation** | [assets/post_processing_anonymisation_high_level.mmd](assets/post_processing_anonymisation_high_level.mmd) | ![Post-Processing Anonymisation](assets/post_processing_anonymisation_high_level.svg) |
 
----
----
-
-### 🔍 Feature Extraction
+#### 🔍 Feature Extraction
 | Diagram | Mermaid | Image |
 |---|---|---|
 | **Ethnicity Abstractor** | [assets/ethnicity_abstractor.mmd](assets/ethnicity_abstractor.mmd) | ![Ethnicity Abstractor](assets/ethnicity_abstractor.svg) |
@@ -106,152 +106,186 @@ You can view the Mermaid definitions or the rendered diagrams below.
 | **Get Method Patient Annotations** | [assets/get_method_pat_annotations.mmd](assets/get_method_pat_annotations.mmd) | ![Get Method Patient Annotations](assets/get_method_pat_annotations.svg) |
 | **Get Treatment Docs (No Terms Fuzzy)** | [assets/get_treatment_docs_by_iterative_multi_term_cohort_searcher_no_terms_fuzzy.mmd](assets/get_treatment_docs_by_iterative_multi_term_cohort_searcher_no_terms_fuzzy.mmd) | ![Get Treatment Docs (No Terms Fuzzy)](assets/get_treatment_docs_by_iterative_multi_term_cohort_searcher_no_terms_fuzzy.svg) |
 
+</details>
+
 
 ## Installation
 
-### Windows:
+### Windows
 
-1. **Clone the repository:**
-    cd to gloabl_files
+1.  **Clone the repository:**
+    Navigate to the directory where you want to store your projects. It's recommended to have a parent directory to hold `pat2vec` and its related assets.
 
+    ```shell
+    git clone https://github.com/SamoraHunter/pat2vec.git
+    ```
+
+2.  **Run the installation script:**
+    Navigate into the cloned repository and run the batch script. This will create a Python virtual environment, install dependencies from `requirements.txt`, and set up a Jupyter kernel.
+
+    ```shell
+    cd pat2vec
+    install.bat
+    ```
+
+3.  **Activate the environment:**
+    To use the installed packages, activate the virtual environment:
+    ```shell
+    pat2vec_env\Scripts\activate
+    ```
+
+4.  **Set up for your IDE/Notebook:**
+    If you are using an IDE like VS Code or a Jupyter Notebook, make sure to select the `pat2vec_env` kernel to run your code.
+
+5.  **Post-Installation Setup:**
+    The script sets up the Python environment, but you must manually arrange other project assets. In the parent directory of your `pat2vec` clone, you will need to:
+    -   **Clone the helper repository**:
+        ```shell
+        git clone https://github.com/SamoraHunter/snomed_methods.git
+        ```
+    -   **Add MedCAT model**: Create a `medcat_models` directory and copy your MedCAT model pack (`.zip`) into it.
+    -   **Add credentials**: Create a `credentials.py` file. You can use `pat2vec/pat2vec/config/credentials_template.py` as a starting point.
+
+    Your final directory structure should look like the one described in the Usage section.
+
+### Unix/Linux
+
+There are two installation scripts provided for Unix-like systems. The comprehensive script (`install_pat2vec.sh`) is recommended as it handles the complete project setup.
+
+#### **Option 1: Comprehensive Installation (Recommended)**
+
+The `install_pat2vec.sh` script automates the full setup, including:
+- Creating a Python virtual environment (`pat2vec_env`).
+- Installing Python dependencies (including development and testing tools).
+- Cloning the `snomed_methods` helper repository.
+- Creating required directories and template files (e.g., for MedCAT models and credentials).
+
+**Prerequisites**
+
+Before running, you will need:
+- A MedCAT model pack (`.zip` file).
+- Your CogStack/Elasticsearch credentials.
+
+**Installation Steps**
+
+1.  **Clone the repository:**
     ```shell
     git clone https://github.com/SamoraHunter/pat2vec.git
     cd pat2vec
     ```
 
-    **Run the installation script:**
+2.  **Run the installation script:**
+    Grant execution permissions and run the script. It must be run from within the `pat2vec` directory.
+
     ```shell
-    install.bat
+    chmod +x install_pat2vec.sh
+    ./install_pat2vec.sh
     ```
 
-3. **Add the `pat2vec` directory to the Python path:**
+    The script supports several options:
+    -   `--proxy`: Use if you are behind a corporate proxy that mirrors Python packages.
+    -   `--dev`: Installs development dependencies (e.g., `pytest`, `nbmake`) for running tests.
+    -   `--all`: Installs all optional feature dependencies.
+    -   `--force`: Removes any existing virtual environment and performs a clean installation.
+    -   `--no-clone`: Skips cloning the `snomed_methods` repository if you already have it.
 
-   Before importing `pat2vec` in your Python script, add the following lines to the script, replacing `/path/to/pat2vec` with the actual path to the `pat2vec` directory inside your project:
-
-    ```python
-    import sys
-    sys.path.append('/path/to/pat2vec')
+    For example, to install for development behind a proxy:
+    ```shell
+    ./install_pat2vec.sh --proxy --dev
     ```
 
-4. **Import `pat2vec` in your Python script:**
+3.  **Post-Installation Setup:**
+    The script creates a directory structure in the parent folder of `pat2vec`.
+    -   **Place MedCAT model:** Copy your model pack into the `medcat_models` directory created by the script.
+    -   **Populate credentials:** Edit the `credentials.py` file created by the script and fill in your details.
 
-    ```python
-    import pat2vec
+4.  **Activate the environment:**
+    ```shell
+    source pat2vec_env/bin/activate
     ```
 
-### Unix/Linux:
+#### **Option 2: Basic Installation**
 
-### **Option 1: Install All Requirements Automatically**
-This option installs `pat2vec` along with its dependencies, including:
-- `pat2vec_env` (virtual environment)
-- `snomed_methods`
-- `cogstack_search_methods`
-- `clinical_note_splitter`
+The `install.sh` script provides a basic setup. It creates a virtual environment and installs Python packages from `requirements.txt`. It does **not** clone helper repositories or create configuration files.
 
-Before running the installation, ensure you:
-- Place the **model pack** in the appropriate directory  gloabl_files/medcat_models/%modelpack%.zip
-- Populate the **credentials file**  under gloabl_files/credentials.py
-- *(Optional)* Add a **SNOMED file** if needed  gloabl_files/.. 'snomed', 'SnomedCT_InternationalRF2_PRODUCTION_20231101T120000Z', 'SnomedCT_InternationalRF2_PRODUCTION_20231101T120000Z', 'Full', 'Terminology', 'sct2_StatedRelationship_Full_INT_20231101.txt'
-
-### **Installation Steps:**
-
-1. Copy the `install_pat2vec.sh` file to your installation directory.
-2. Grant execution permissions:
-   ```sh
-   chmod +x install_pat2vec.sh
-   ```
-3. Run the installation using one of the following options:
-
-   - **Standard installation:**
-     ```sh
-     ./install_pat2vec.sh
-     ```
-   - **Installation with proxy mirror support:**
-     ```sh
-     ./install_pat2vec.sh --proxy
-     ```
-   - **Install to a specific directory:**
-     ```sh
-     ./install_pat2vec.sh --directory /path/to/install
-     ```
-   - **Skip cloning repositories (if already cloned manually):**
-     ```sh
-     ./install_pat2vec.sh --no-clone
-     ```
-
-### **Repositories Installed by This Script:**
-The script will clone the following repositories:
-- [`pat2vec`](https://github.com/SamoraHunter/pat2vec.git)
-- [`snomed_methods`](https://github.com/SamoraHunter/snomed_methods.git)
-- [`cogstack_search_methods`](https://github.com/SamoraHunter/cogstack_search_methods.git)
-- [`clinical_note_splitter`](https://github.com/SamoraHunter/clinical_note_splitter.git)
-
----
-
-## **Option 2: Manual Installation**
-
-1. **Clone the repository:**
+1.  **Clone the repository:**
     ```shell
     git clone https://github.com/SamoraHunter/pat2vec.git
+    cd pat2vec
     ```
 
-    . **Run the installation script:**
-
+2.  **Run the installation script:**
+    This script requires `python3` and the `venv` module to be available.
     ```shell
-    (Requires python3 on path and venv)
     chmod +x install.sh
     ./install.sh
     ```
 
-    cd pat2vec
+3.  **Manual Setup:**
+    You will need to manually clone `snomed_methods` and create the `credentials.py` file if you use this method.
+
+4.  **Activate the environment:**
+    ```shell
+    source pat2vec_env/bin/activate
     ```
 
-2. **Add the `pat2vec` directory to the Python path:**
+## Usage
 
-   Before importing `pat2vec` in your Python script, add the following lines to the script, replacing `/path/to/pat2vec` with the actual path to the `pat2vec` directory inside your project:
+This guide outlines the steps to run a `pat2vec` analysis after completing the installation.
 
-    ```python
-    import sys
-    sys.path.append('/path/to/pat2vec')
-    ```
+### 1. Finalize Project Setup
 
-3. **Import `pat2vec` in your Python script:**
+Before running an analysis, ensure your project directory is set up correctly. If you used the `install_pat2vec.sh` script, much of this is done for you.
 
-    ```python
-    import pat2vec
-    ```
+1.  **Populate `credentials.py`**: In the parent directory of your `pat2vec` clone, edit `credentials.py` with your Elasticsearch credentials.
+2.  **Add MedCAT Model**: Copy your MedCAT model pack (`.zip`) into the `medcat_models` directory.
+
+Your final directory structure should look like this:
+
+```
+your_project_folder/
+├── credentials.py              # <-- Populated with your credentials
+├── medcat_models/
+│   └── your_model.zip          # <-- Your MedCAT model pack
+├── snomed_methods/             # <-- Cloned helper repository
+└── pat2vec/                    # <-- This repository
+    ├── notebooks/
+    │   └── example_usage.ipynb
+    └── ...
+```
+
+### 2. Prepare Input Data
+
+Create a CSV file containing your patient cohort. This file must include:
+- A column named `client_idcode` with unique patient identifiers.
+- Any other relevant columns, such as a diagnosis date for aligning time series data.
+
+Place this file in an accessible location, such as a new `data` folder inside `pat2vec/notebooks/`.
+
+### 3. Configure and Run
+
+The `example_usage.ipynb` notebook provides a template for running the pipeline.
+
+1.  **Open the Notebook**: Navigate to `pat2vec/notebooks/` and open `example_usage.ipynb`.
+2.  **Select the Kernel**: Ensure the `pat2vec_env` Jupyter kernel is active.
+3.  **Configure the Analysis**: In the notebook, locate the `config_class`. This object controls all parameters for your run. You will need to set:
+    - Paths to your input cohort CSV and output directories.
+    - The list of features to extract.
+    - Time windows for data extraction (look-back/look-forward periods).
+4.  **Run the Pipeline**: Execute the cells in the notebook to process your data.
+
+> **Note:** When working with real patient data, ensure the `testing` flag in the `config_class` is set to `False`.
 
 
-## Usage:
+## FAQ
 
-- Set paths, gloabl_files/medcat_models/modelpack.zip, gloabl_files/snomed_methods, gloabl_files/..
-
-- gloabl_files/
-    - medcat_models/
-        - modelpack.zip
-    - snomed_methods/snomed_methods_v1.py**
-    - pat2vec/
-    - pat2vec_projects/
-        - project_01/
-            - example_usage.ipynb
-            - treatment_docs.csv
-
-*treatment_docs.csv should contain a column 'client_idcode' with your UUID's.
-**https://github.com/SamoraHunter/SNOMED_methods.git
-
-- Configure options
-
-- Run all
-
-- Examine example_usage.ipynb for additional functionality and use cases.
-
-- open example_usage.ipynb and hit run all.
-
-- If testing in a live environment ensure the testing flag is set to False in the config_obj.
--
+For answers to common questions, troubleshooting tips, and more detailed explanations of project concepts, please see the FAQ.md file.
+- [FAQ](./docs/FAQ.md)
+- [FAQ config_class](./docs/FAQ config_class.md)
 
 
 ## Contributing
+
 Contributions are welcome! Please see the contributing guidelines for more information.
 
 ## License
