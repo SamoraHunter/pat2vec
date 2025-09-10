@@ -239,3 +239,5 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
 notebooks/anonymization_log.json
+notebooks/my_project_outputfile_name_missing_dict.pickle
+notebooks/ipw_dataframe.csv

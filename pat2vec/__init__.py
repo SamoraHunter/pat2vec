@@ -225,6 +225,9 @@ from .util.get_start_end_year_month import (
 from .util.helper_functions import (
     extract_nhs_numbers, get_search_client_idcode_list_from_nhs_number_list
 )
+from .util.impute_data_for_pipe import (
+    mean_impute_dataframe, save_missing_percentage
+)
 from .util.logger_setup import (
     setup_logger
 )
@@ -411,24 +414,25 @@ __all__ = [
     "join_docs_to_annots", "join_icd10_OPC4S_codes_to_annot",
     "join_icd10_codes_to_annot", "json_to_dataframe", "list_chunker",
     "list_dir_wrapper", "main", "main_batch", "manually_label_annotation_df", "matcher",
-    "maybe_nan", "medcat_trainer_export_to_df", "merge_appointments_csv",
-    "merge_bmi_csv", "merge_demographics_csv", "merge_diagnostics_csv",
-    "merge_drugs_csv", "merge_news_csv", "method1", "method2", "missing_percentage_df",
-    "multi_annots_to_df", "multi_annots_to_df_mct", "multi_annots_to_df_reports",
-    "multi_annots_to_df_textual_obs", "nearest", "parse_medcat_trainer_project_json",
-    "parse_meta_anns", "plot_missing_pattern_bloods", "plot_ner_results",
-    "prefetch_batches", "process_chunk", "process_csv_files", "process_csv_files_multi",
+    "maybe_nan", "mean_impute_dataframe", "medcat_trainer_export_to_df",
+    "merge_appointments_csv", "merge_bmi_csv", "merge_demographics_csv",
+    "merge_diagnostics_csv", "merge_drugs_csv", "merge_news_csv", "method1", "method2",
+    "missing_percentage_df", "multi_annots_to_df", "multi_annots_to_df_mct",
+    "multi_annots_to_df_reports", "multi_annots_to_df_textual_obs", "nearest",
+    "parse_medcat_trainer_project_json", "parse_meta_anns",
+    "plot_missing_pattern_bloods", "plot_ner_results", "prefetch_batches",
+    "process_chunk", "process_csv_files", "process_csv_files_multi",
     "process_requirements", "produce_filtered_annotation_dataframe", "pull_and_write",
     "pylist2searchlist", "random_sample", "read_csv_wrapper", "read_remote",
     "read_test_data", "recreate_json", "remove_file_from_paths",
     "retrieve_pat_annotations", "retrieve_pat_annots_mct_epr", "retrieve_pat_bloods",
     "retrieve_pat_docs_mct_epr", "run_generate_patient_timeline_and_append",
     "run_pip_compile", "sample_by_terms", "sanitize_hospital_ids", "save_group",
-    "save_missing_values_pickle", "search_cohort", "set_best_gpu",
-    "set_index_safe_wrapper", "setup_logger", "sftp_exists", "split_and_append_chunks",
-    "split_and_save_csv", "split_clinical_notes", "split_clinical_notes_mct",
-    "stringlist2pylist", "stringlist2searchlist", "temporary_file",
-    "test_datetime_formats", "update_global_start_date", "update_pbar",
-    "validate_and_fix_global_dates", "verify_split_data_concatenated",
+    "save_missing_percentage", "save_missing_values_pickle", "search_cohort",
+    "set_best_gpu", "set_index_safe_wrapper", "setup_logger", "sftp_exists",
+    "split_and_append_chunks", "split_and_save_csv", "split_clinical_notes",
+    "split_clinical_notes_mct", "stringlist2pylist", "stringlist2searchlist",
+    "temporary_file", "test_datetime_formats", "update_global_start_date",
+    "update_pbar", "validate_and_fix_global_dates", "verify_split_data_concatenated",
     "verify_split_data_individual", "without_keys", "write_csv_wrapper", "write_remote"
 ]
