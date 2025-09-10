@@ -1,20 +1,24 @@
 #!/bin/bash
 
+VENV_DIR="$(pwd)/pat2vec_env"
 PROXY_MODE=false
 CLONE_REPOS=true
 FORCE_CLEAN=false
 INSTALL_MODE="lite"  # Default to lite installation
+DEV_MODE=false
 # Store the absolute path to global_files directory (one level up from pat2vec)
-GLOBAL_FILES_DIR="$(dirname "$(pwd)")"
+SCRIPT_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+GLOBAL_FILES_DIR="$(dirname "$SCRIPT_DIR")"
 
 show_help() {
-    echo "Usage: ./install.sh [OPTIONS]"
+    echo "Usage: ./install_pat2vec.sh [OPTIONS]"
     echo "Options:"
     echo "  -h, --help           Show this help message"
     echo "  -p, --proxy          Install with proxy support"
     echo "  --no-clone           Skip git clone operations"
     echo "  -f, --force          Remove existing files and perform fresh install"
     echo "  -a, --all            Install all components (overrides default lite installation)"
+    echo "  --dev                Install development dependencies"
 }
 
 setup_medcat_models() {
@@ -23,7 +27,7 @@ setup_medcat_models() {
     # Check if the directory already exists
     if [ ! -d "$GLOBAL_FILES_DIR/medcat_models" ]; then
         echo "Directory medcat_models does not exist, creating it..."
-        mkdir -p "$GLOBAL_FILES_DIR/medcat_models" || { echo "Failed to create medcat_models directory"; exit 1; }
+        mkdir -p "$GLOBAL_FILES_DIR/medcat_models" || { echo "Failed to create medcat_models directory"; return 1; }
     else
         echo "medcat_models directory already exists, skipping creation."
     fi
@@ -104,26 +108,73 @@ clone_repositories() {
     local current_dir=$(pwd)
 
     # Change to global_files directory
-    cd "$GLOBAL_FILES_DIR" || { echo "Error: Could not change to global_files directory"; exit 1; }
+    cd "$GLOBAL_FILES_DIR" || { echo "Error: Could not change to global_files directory"; return 1; }
+
+    local snomed_repo_url="https://github.com/SamoraHunter/snomed_methods.git"
 
     local repos=(
-        "https://github.com/SamoraHunter/cogstack_search_methods.git"
-        "https://github.com/SamoraHunter/snomed_methods.git"
+        "$snomed_repo_url"
     )
+
+    # Save current proxy settings
+    local saved_http_proxy="$http_proxy"
+    local saved_https_proxy="$https_proxy"
+    local saved_git_http_proxy=""
+    local saved_git_https_proxy=""
+    
+    # Get current git proxy settings if they exist
+    saved_git_http_proxy=$(git config --global --get http.proxy 2>/dev/null || echo "")
+    saved_git_https_proxy=$(git config --global --get https.proxy 2>/dev/null || echo "")
+
+    echo "Temporarily disabling proxy for Git operations..."
+    
+    # Unset environment proxy variables for git operations
+    unset http_proxy
+    unset https_proxy
+    unset HTTP_PROXY
+    unset HTTPS_PROXY
+    
+    # Unset git proxy configuration temporarily
+    git config --global --unset http.proxy 2>/dev/null || true
+    git config --global --unset https.proxy 2>/dev/null || true
 
     for repo in "${repos[@]}"; do
         local repo_name=$(basename "$repo" .git)
         if [ ! -d "$repo_name" ]; then
-            echo "Cloning $repo_name..."
-            git clone "$repo" || exit 1
+            echo "Cloning $repo (bypassing proxy)..."
+            if ! git clone "$repo"; then
+                echo "WARNING: Failed to clone $repo_name. This might be due to a permission issue or network problem. Continuing installation..."
+            fi
         else
             echo "$repo_name already exists, skipping..."
-        fi
+        fi 
     done
 
+    # Restore proxy settings
+    echo "Restoring proxy settings..."
+    if [ -n "$saved_http_proxy" ]; then
+        export http_proxy="$saved_http_proxy"
+    fi
+    if [ -n "$saved_https_proxy" ]; then
+        export https_proxy="$saved_https_proxy"
+    fi
+    if [ -n "$saved_git_http_proxy" ]; then
+        git config --global http.proxy "$saved_git_http_proxy"
+    fi
+    if [ -n "$saved_git_https_proxy" ]; then
+        git config --global https.proxy "$saved_git_https_proxy"
+    fi
+
     # Return to original directory
-    cd "$current_dir" || { echo "Error: Could not return to original directory"; exit 1; }
+    cd "$current_dir" || { echo "Error: Could not return to original directory"; return 1; }
 }
+
+main() {
+
+(
+    # Run in a subshell with -e to exit immediately on error without killing the parent shell.
+    # This makes error handling cleaner than manually checking every command.
+    set -e
 
 # Parse command line arguments
 while [[ $# -gt 0 ]]; do
@@ -132,7 +183,8 @@ while [[ $# -gt 0 ]]; do
         --no-clone) CLONE_REPOS=false; shift;;
         -f|--force) FORCE_CLEAN=true; shift;;
         -a|--all) INSTALL_MODE="all"; shift;;
-        -h|--help) show_help; exit 0;;
+        --dev) DEV_MODE=true; shift;;
+        -h|--help) show_help; return 0;;
         *) echo "Unknown option: $1"; show_help; exit 1;;
     esac
 done
@@ -140,6 +192,13 @@ done
 # Verify we're in the pat2vec directory
 if [[ ! "$(basename "$(pwd)")" == "pat2vec" ]]; then
     echo "Error: This script must be run from the pat2vec directory"
+    exit 1
+fi
+
+# Pre-flight check for write permissions in the global files directory
+if [ ! -w "$GLOBAL_FILES_DIR" ]; then
+    echo "ERROR: No write permission in the target directory: '$GLOBAL_FILES_DIR'." >&2
+    echo "Please run this script as a user with write permissions, or specify a writable path with a future '--global-files-dir' option." >&2
     exit 1
 fi
 
@@ -152,48 +211,87 @@ fi
 setup_medcat_models
 
 # Create paths.py file
-create_paths_file || echo "Warning: Paths file setup encountered issues"
+create_paths_file
 
 # Copy the credentials if needed
-copy_credentials || echo "Warning: Credentials setup encountered issues"
+copy_credentials
 
-# Run the appropriate pat2vec install script
-if [ "$INSTALL_MODE" == "all" ]; then
-    if [ "$PROXY_MODE" = true ]; then
-        if [ -f "install_proxy.sh" ]; then
-            chmod +x install_proxy.sh
-            ./install_proxy.sh
-        else
-            echo "Error: install_proxy.sh not found"
-            exit 1
-        fi
-    else
-        if [ -f "install.sh" ]; then
-            chmod +x install.sh
-            ./install.sh
-        else
-            echo "Error: install.sh not found"
-            exit 1
-        fi
-    fi
-else
-    if [ "$PROXY_MODE" = true ]; then
-        if [ -f "install_lite_proxy.sh" ]; then
-            chmod +x install_lite_proxy.sh
-            ./install_lite_proxy.sh
-        else
-            echo "Error: install_lite_proxy.sh not found"
-            exit 1
-        fi
-    else
-        if [ -f "install_lite.sh" ]; then
-            chmod +x install_lite.sh
-            ./install_lite.sh
-        else
-            echo "Error: install_lite.sh not found"
-            exit 1
-        fi
-    fi
+if [ "$FORCE_CLEAN" = true ] && [ -d "$VENV_DIR" ]; then
+    echo "Force clean enabled, removing existing virtual environment at $VENV_DIR..."
+    rm -rf "$VENV_DIR"
 fi
 
+echo "Creating virtual environment..."
+python3 -m venv "$VENV_DIR"
+
+echo "Activating virtual environment..."
+if [ ! -f "$VENV_DIR/bin/activate" ]; then
+    echo "ERROR: Virtual environment activation script not found at $VENV_DIR/bin/activate"
+    exit 1
+fi
+source "$VENV_DIR/bin/activate" || { echo "ERROR: Failed to activate virtual environment"; return 1; }
+
+echo "Upgrading pip..."
+pip_upgrade_args=("--upgrade" "pip")
+if [ "$PROXY_MODE" = true ]; then
+    pip_upgrade_args+=("--trusted-host" "dh-cap02" "-i" "http://dh-cap02:8008/mirrors/pat2vec")
+fi
+python -m pip install "${pip_upgrade_args[@]}"
+
+echo "Installing project dependencies..."
+
+extras=""
+if [ "$INSTALL_MODE" = "all" ]; then
+    extras="all"
+fi
+if [ "$DEV_MODE" = true ]; then
+    [ -n "$extras" ] && extras+=","
+    extras+="dev"
+fi
+
+INSTALL_TARGET="."
+[ -n "$extras" ] && INSTALL_TARGET=".[$extras]"
+
+echo "Running pip install -e \"$INSTALL_TARGET\""
+pip_install_args=("-e" "$INSTALL_TARGET")
+if [ "$PROXY_MODE" = true ]; then
+    pip_install_args+=("--trusted-host" "dh-cap02" "-i" "http://dh-cap02:8008/mirrors/pat2vec" "--retries" "5" "--timeout" "60")
+fi
+
+pip install "${pip_install_args[@]}"
+
+echo "Installing SpaCy model..."
+SPACY_MODEL_URL="https://github.com/explosion/spacy-models/releases/download/en_core_web_md-3.7.1/en_core_web_md-3.7.1-py3-none-any.whl"
+pip_spacy_args=()
+if [ "$PROXY_MODE" = true ]; then
+    # If using proxy, install the package by name from the local mirror index.
+    pip_spacy_args+=("en-core-web-md==3.6.0")
+    pip_spacy_args+=("--trusted-host" "dh-cap02")
+    pip_spacy_args+=("-i" "http://dh-cap02:8008/mirrors/pat2vec")
+else
+    # Otherwise, install directly from the public URL.
+    pip_spacy_args+=("$SPACY_MODEL_URL")
+fi
+
+pip install "${pip_spacy_args[@]}"
+
+echo "Adding virtual environment to Jupyter kernelspec..."
+python -m ipykernel install --user --name=pat2vec_env
+
+echo "Deactivating virtual environment..."
+deactivate
+
+echo ""
+echo "----------------------------------------------------"
 echo "Installation completed successfully!"
+echo "To activate the environment, run: source $VENV_DIR/bin/activate"
+echo "----------------------------------------------------"
+
+)
+local status=$?
+return $status
+
+}
+
+# Pass all script arguments to the main function
+main "$@"

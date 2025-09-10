@@ -8,97 +8,111 @@ jobs:
     runs-on: ubuntu-latest
     env:
       DEBIAN_FRONTEND: noninteractive
+      PYTHON_VERSION: '3.10'
 
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Prepare Local Runner (Install Cert & Dependencies)
+
+      - name: Install sudo (for local act runner)
         if: ${{ env.ACT }}
         run: |
-          # Step 1: Install the absolute minimum to get the cert tool
-          apt-get update
-          apt-get install -y ca-certificates sudo gnupg
+          apt-get update && apt-get install -y sudo
 
-          # Step 2: Check for the mounted cert and update the system trust store IMMEDIATELY
+      - name: Set Timezone
+        run: |
+          # Set the timezone to prevent interactive prompts from tzdata during package installations.
+          echo "Europe/London" | sudo tee /etc/timezone
+          sudo apt-get update && sudo apt-get install -y tzdata
+          sudo ln -fs /usr/share/zoneinfo/Europe/London /etc/localtime
+          sudo dpkg-reconfigure -f noninteractive tzdata
+
+      - name: Install ping utility
+        run: |
+          echo "Installing ping for proxy detection..."
+          sudo apt-get update && sudo apt-get install -y iputils-ping
+
+      - name: Trust Corporate Certificate (Local Runner Only)
+        if: ${{ env.ACT }}
+        run: |
           CERT_PATH="/usr/local/share/ca-certificates/kch_oct_2024_root.crt"
           if [ -f "$CERT_PATH" ]; then
             echo "✅ Corporate certificate found. Updating system trust store..."
-            update-ca-certificates
+            sudo apt-get update && sudo apt-get install -y ca-certificates
+            sudo update-ca-certificates
           else
             echo "⚠️ Corporate certificate not found. Proceeding without it."
           fi
 
-          # Step 3: Now that certs are trusted, run a full update and install everything else
-          echo "INFO: Running full system update and installing dependencies..."
-          apt-get update
-          apt-get install -y \
-            lsb-release \
-            python3-pip \
-            git \
-            iputils-ping \
-            jq \
-            tzdata
-
-          # Step 4: Set Timezone
-          ln -fs /usr/share/zoneinfo/Europe/London /etc/localtime
-          dpkg-reconfigure -f noninteractive tzdata
-
-          # Step 5: Install Python 3.10 from PPA (using firewall-friendly hkps)
-          echo "INFO: Adding deadsnakes PPA for Python 3.10..."
-          gpg --keyserver hkps://keyserver.ubuntu.com --recv-keys F23C5A6CF475977595C89F51BA6932366A755776
-          gpg --export BA6932366A755776 | gpg --dearmor -o /usr/share/keyrings/deadsnakes-archive-keyring.gpg
-          echo "deb [signed-by=/usr/share/keyrings/deadsnakes-archive-keyring.gpg] http://ppa.launchpadcontent.net/deadsnakes/ppa/ubuntu $(lsb_release -cs) main" | tee /etc/apt/sources.list.d/deadsnakes-ppa.list
-
-          apt-get update
-          apt-get install -y python3.10 python3.10-venv python3.10-distutils
-
-          # Step 6: Set Python 3.10 as Default
-          update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.10 1
-          update-alternatives --install /usr/bin/python python /usr/bin/python3.10 1
-
-      - name: Prepare GitHub Runner (without Corporate Certs)
-        if: ${{ !env.ACT }}
+      - name: Install Node.js (for local act runner)
+        # Node.js is sometimes needed by actions, keeping it for robustness.
         run: |
-          echo "Running standard GitHub Action setup..."
-          # Step 1: Install dependencies
+          echo "Installing Node.js..."
+          sudo apt-get update && sudo apt-get install -y nodejs npm
+
+      - name: Configure Proxy for Corporate Network (Local Runner Only)
+        if: ${{ env.ACT }}
+        run: |
+          # This step checks for the availability of the corporate proxy/mirror
+          # and sets the necessary environment variables for subsequent steps.
+          if ping -c 1 dh-cap02 &> /dev/null; then
+            echo "✅ Proxy server 'dh-cap02' is available. Configuring environment variables."
+            echo "http_proxy=http://dh-cap02:8008" >> $GITHUB_ENV
+            echo "https_proxy=http://dh-cap02:8008" >> $GITHUB_ENV
+            echo "NO_PROXY=localhost,127.0.0.1,kch-cap.kingsch.nhs.uk" >> $GITHUB_ENV
+          fi
+
+      - name: Install Python ${{ env.PYTHON_VERSION }} via apt and Set CA Environment
+        run: |
           sudo apt-get update
-          sudo apt-get install -y lsb-release ca-certificates gnupg
+          sudo apt-get install -y lsb-release software-properties-common gnupg
 
-          # Step 2: Set Timezone
-          sudo ln -fs /usr/share/zoneinfo/Europe/London /etc/localtime
-          sudo dpkg-reconfigure -f noninteractive tzdata
-
-          # Step 3: Add the deadsnakes PPA
-          echo "INFO: Adding deadsnakes PPA for Python 3.10..."
-          # Download the key, convert it, and save it to the keyrings directory
-          sudo gpg --keyserver hkps://keyserver.ubuntu.com --recv-keys F23C5A6CF475977595C89F51BA6932366A755776
+          # Add the deadsnakes PPA to get specific Python versions
+          sudo gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys F23C5A6CF475977595C89F51BA6932366A755776
           sudo gpg --export F23C5A6CF475977595C89F51BA6932366A755776 | sudo gpg --dearmor -o /usr/share/keyrings/deadsnakes-archive-keyring.gpg
-
-          # Create the repository source file, telling it where to find the key
-          echo "deb [signed-by=/usr/share/keyrings/deadsnakes-archive-keyring.gpg] http://ppa.launchpadcontent.net/deadsnakes/ppa/ubuntu $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/deadsnakes-ppa.list > /dev/null
-
-          # Step 4: Update and install Python 3.10
+          echo "deb [signed-by=/usr/share/keyrings/deadsnakes-archive-keyring.gpg] http://ppa.launchpadcontent.net/deadsnakes/ppa/ubuntu $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/deadsnakes-ppa.list
+          
           sudo apt-get update
-          sudo apt-get install -y python3.10 python3.10-venv python3.10-distutils
+          sudo apt-get install -y python${{ env.PYTHON_VERSION }} python${{ env.PYTHON_VERSION }}-venv python${{ env.PYTHON_VERSION }}-distutils
 
-          # Step 5: Set Python 3.10 as Default
-          sudo update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.10 1
-          sudo update-alternatives --install /usr/bin/python python /usr/bin/python3.10 1
+          # Set Python 3.10 as default
+          sudo update-alternatives --install /usr/bin/python3 python3 /usr/bin/python${{ env.PYTHON_VERSION }} 1
+          python3 --version
 
+          # Set certificate paths for Python tools (like pip) to use the system trust store
+          echo "SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt" >> $GITHUB_ENV
+          echo "REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt" >> $GITHUB_ENV
+
+      - name: Cache pip dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/pyproject.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+        
+      - name: Debug certificates
+        run: |
+          ls -la /usr/local/share/ca-certificates/
+          openssl x509 -in /usr/local/share/ca-certificates/kch_certauth.crt -text -noout | head -20
+
+      - name: Configure Git for Docker
+        run: |
+          git config --global http.sslCAInfo /usr/local/share/ca-certificates/kch_certauth.crt
+          git config --global http.lowSpeedLimit 1000
+          git config --global http.lowSpeedTime 300
 
       - name: Setup pat2vec
         run: |
-          cd $GITHUB_WORKSPACE
-          sed -i 's/apt-get install/apt-get install -y/g' install_pat2vec.sh
-          sed -i 's/pip install/pip install --trusted-host pypi.org --trusted-host files.pythonhosted.org/g' install_pat2vec.sh
-
+          # The install script handles proxy vs non-proxy.
+          # We use the --dev flag to get testing tools (pytest, nbmake).
           if ping -c 1 dh-cap02 &> /dev/null; then
-            echo "mirror Server is available"
-            bash install_pat2vec.sh --proxy
+            echo "✅ Mirror server is available. Installing with --proxy and --dev."
+            bash install_pat2vec.sh --proxy --dev
           else
-            echo "mirror Server is not available"
-            bash install_pat2vec.sh
+            echo "ℹ️ Mirror server not available. Performing standard dev installation."
+            bash install_pat2vec.sh --dev
           fi
 
       - name: Debug virtual environment
@@ -108,14 +122,13 @@ jobs:
           source "$VENV_PATH/bin/activate"
           which python
           python --version
+          pip list
 
       - name: Run notebook test
         run: |
           set -e
-          cd $GITHUB_WORKSPACE
           source "$VENV_PATH/bin/activate"
           pytest --nbmake --nbmake-timeout=1200 notebooks/test_notebook.py
-
 
       - name: Clean Up Generated Files for Local Act Runner
         if: ${{ env.ACT }}

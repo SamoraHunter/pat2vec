@@ -1,0 +1,69 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pat2vec"
+version = "0.1.0"
+description = "A project for pat2vec."
+readme = "README.md"
+requires-python = ">=3.10" # Based on requirements.txt generation environment
+
+# Core dependencies from requirements_lite.txt for the 'lite' installation.
+dependencies = [
+    "medcat==1.16.0", # Main NLP library
+    "paramiko", # For SSH
+    "colorama", # For colored terminal text
+    "elasticsearch==8.17.0", # Database interaction
+    "eland==8.17.0", # Elasticsearch pandas integration
+    "faker", # For generating fake data
+    "fuzzywuzzy", # For fuzzy string matching
+    "seaborn", # For data visualization
+    "rapidfuzz", # Fast fuzzy string matching
+    "python-pptx", # For PowerPoint files
+    "ipykernel", # For Jupyter integration
+    "transformers==4.48.1", # Hugging Face transformers
+    "accelerate==1.3.0", # Hugging Face accelerate
+    "peft==0.8.2", # Parameter-Efficient Fine-Tuning
+    "huggingface-hub==0.27.1", # Hugging Face Hub client
+    "polars", # High-performance DataFrame library
+    "pandas>=1.5.3", # Data manipulation and analysis
+    "numpy>=1.25.2", # Fundamental package for scientific computing
+]
+
+[project.optional-dependencies]
+# Additional packages for the 'all' installation, derived from the full requirements.txt.
+all = [
+    "torch>=2.5.1",
+    "scikit-learn>=1.6.1",
+    "jupyterlab",
+    "lifelines==0.28.0",
+    "bokeh==3.6.2",
+    "dask",
+    "datasets",
+    "numba",
+    "statsmodels",
+    "wordcloud",
+    "matplotlib-venn",
+    "nltk",
+    "sqlalchemy",
+    "openpyxl",
+    "pydot",
+    "pyodbc",
+    "python-tds",
+    "umls-api",
+]
+
+# Development and testing tools
+dev = [
+    "pytest",
+    "nbformat",
+    "nbconvert",
+    "nbstripout",
+    "nbmake",
+    "pre-commit",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["pat2vec*"]
