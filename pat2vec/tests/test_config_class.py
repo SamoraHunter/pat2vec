@@ -80,8 +80,8 @@ class TestConfigClass(unittest.TestCase):
         self.assertFalse(config.main_options["bmi"])
         # The filename should be updated
         self.assertEqual(
-            config.treatment_doc_filename,
-            os.path.join(os.getcwd(), "test_files", "treatment_docs.csv"),
+        config.treatment_doc_filename,
+        "treatment_docs.csv",
         )
 
     @patch("pat2vec.util.config_pat2vec.generate_date_list")

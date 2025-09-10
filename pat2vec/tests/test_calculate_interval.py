@@ -4,7 +4,7 @@ from dateutil.relativedelta import relativedelta
 
 from pat2vec.util.calculate_interval import calculate_interval
 
-
+#PYTHONPATH=. pytest pat2vec/tests
 class TestCalculateInterval(unittest.TestCase):
     """Unit tests for the calculate_interval function."""
 

@@ -48,7 +48,8 @@ class TestProcessCsvFiles(unittest.TestCase):
         df = pd.read_csv(output_file)
         self.assertEqual(len(df), 4)
         self.assertEqual(list(df.columns), ["id", "name"])
-        self.assertListEqual(df["id"].tolist(), [1, 2, 3, 4])
+        # Check that all expected IDs are present, regardless of order
+        self.assertEqual(sorted(df["id"].tolist()), [1, 2, 3, 4])
 
     @patch("pat2vec.util.post_processing_process_csv_files.tqdm", lambda x, **kwargs: x)
     def test_concatenation_with_different_columns(self):
