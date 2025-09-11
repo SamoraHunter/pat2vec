@@ -98,6 +98,7 @@ jobs:
           openssl x509 -in /usr/local/share/ca-certificates/kch_certauth.crt -text -noout | head -20
 
       - name: Configure Git for Docker
+        if: ${{ env.ACT }}
         run: |
           git config --global http.sslCAInfo /usr/local/share/ca-certificates/kch_certauth.crt
           git config --global http.lowSpeedLimit 1000
