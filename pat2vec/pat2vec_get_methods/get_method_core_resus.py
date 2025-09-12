@@ -6,6 +6,117 @@ from pat2vec.util.filter_dataframe_by_timestamp import filter_dataframe_by_times
 from pat2vec.util.get_start_end_year_month import (
     get_start_end_year_month,
 )
+from pat2vec.util.parse_date import validate_input_dates
+
+CORE_RESUS_FIELDS = [
+    "observation_guid",
+    "client_idcode",
+    "obscatalogmasteritem_displayname",
+    "observation_valuetext_analysed",
+    "observationdocument_recordeddtm",
+    "clientvisit_visitidcode",
+]
+
+
+def search_core_resus_observations(
+    cohort_searcher_with_terms_and_search=None,
+    client_id_codes=None,
+    observations_time_field='observationdocument_recordeddtm',
+    start_year='1995',
+    start_month='01',
+    start_day='01',
+    end_year='2025',
+    end_month='12',
+    end_day='12',
+    additional_custom_search_string=None,
+):
+    """
+    Searches for CORE_RESUS_STATUS observation data for a specific patient within a date range using cohort searcher.
+
+    Parameters:
+    - cohort_searcher_with_terms_and_search (callable): The function for cohort searching.
+    - client_id_codes (str or list): The client ID code(s) of the patient(s).
+    - observations_time_field (str): The timestamp field for filtering observations.
+    - start_year, start_month, start_day (int): Start date components.
+    - end_year, end_month, end_day (int): End date components.
+    - additional_custom_search_string (str, optional): An additional string to append to the search query. Defaults to None.
+
+    Returns:
+    - pd.DataFrame: A DataFrame containing the raw CORE_RESUS_STATUS observation data.
+    """
+    if cohort_searcher_with_terms_and_search is None:
+        raise ValueError("cohort_searcher_with_terms_and_search cannot be None.")
+    if client_id_codes is None:
+        raise ValueError("client_id_codes cannot be None.")
+    if observations_time_field is None:
+        raise ValueError("observations_time_field cannot be None.")
+    if any(
+        x is None
+        for x in [start_year, start_month, start_day, end_year, end_month, end_day]
+    ):
+        raise ValueError("Date components cannot be None.")
+
+    # Ensure client_id_codes is a list for the search function
+    if isinstance(client_id_codes, str):
+        client_id_codes = [client_id_codes]
+
+    start_year, start_month, start_day, end_year, end_month, end_day = validate_input_dates(
+        start_year, start_month, start_day, end_year, end_month, end_day
+    )
+
+    # Base search string for CORE_RESUS_STATUS observations
+    search_string = (
+        'obscatalogmasteritem_displayname:("CORE_RESUS_STATUS") AND '
+        + f"{observations_time_field}:[{start_year}-{start_month}-{start_day} TO {end_year}-{end_month}-{end_day}]"
+    )
+
+    if additional_custom_search_string:
+        search_string += f" {additional_custom_search_string}"
+
+    return cohort_searcher_with_terms_and_search(
+        index_name="observations",
+        fields_list=CORE_RESUS_FIELDS,
+        term_name="client_idcode.keyword",  # Note: using default, can be made configurable
+        entered_list=client_id_codes,
+        search_string=search_string,
+    )
+
+
+def calculate_core_resus_features(features_data, term_prefix="core_resus_status", negate_biochem=False):
+    """
+    Calculate resuscitation status features from CORE_RESUS_STATUS observations.
+
+    Parameters:
+    - features_data (pd.DataFrame): DataFrame containing CORE_RESUS_STATUS observations
+    - term_prefix (str): Prefix for feature column names
+    - negate_biochem (bool): Whether to set 0 values when no data is available
+
+    Returns:
+    - dict: Dictionary of calculated features
+    """
+    features = {}
+
+    if len(features_data) > 0:
+        # Count occurrences of each resuscitation status
+        features[f"{term_prefix}_For cardiopulmonary resuscitation"] = len(
+            features_data[
+                features_data["observation_valuetext_analysed"]
+                == "For cardiopulmonary resuscitation"
+            ]
+        )
+        features[f"{term_prefix}_Not for cardiopulmonary resuscitation"] = len(
+            features_data[
+                features_data["observation_valuetext_analysed"]
+                == "Not for cardiopulmonary resuscitation"
+            ]
+        )
+    elif negate_biochem:
+        # Set 0 values when negate_biochem is True and no data available
+        features[f"{term_prefix}_For cardiopulmonary resuscitation"] = 0
+        features[f"{term_prefix}_Not for cardiopulmonary resuscitation"] = 0
+    # If negate_biochem is False and no data, don't add features (pass)
+
+    return features
 
 
 def get_core_resus(
@@ -25,10 +136,16 @@ def get_core_resus(
     - pat_batch (pd.DataFrame): The DataFrame containing patient data.
     - batch_mode (bool, optional): Indicates whether batch mode is enabled. Defaults to False.
     - cohort_searcher_with_terms_and_search (callable, optional): The function for cohort searching. Defaults to None.
+    - config_obj: Configuration object containing batch_mode and other settings.
 
     Returns:
     - pd.DataFrame: A DataFrame containing CORE_RESUS_STATUS features for the specified patient.
     """
+    if config_obj is None:
+        raise ValueError(
+            "config_obj cannot be None. Please provide a valid configuration."
+        )
+
     batch_mode = config_obj.batch_mode
 
     start_year, start_month, end_year, end_month, start_day, end_day = (
@@ -47,75 +164,46 @@ def get_core_resus(
             "observationdocument_recordeddtm",
         )
     else:
-        current_pat_raw = cohort_searcher_with_terms_and_search(
-            index_name="observations",
-            fields_list=[
-                "observation_guid",
-                "client_idcode",
-                "obscatalogmasteritem_displayname",
-                "observation_valuetext_analysed",
-                "observationdocument_recordeddtm",
-                "clientvisit_visitidcode",
-            ],
-            term_name=config_obj.client_idcode_term_name,
-            entered_list=[current_pat_client_id_code],
-            search_string='obscatalogmasteritem_displayname:("CORE_RESUS_STATUS") AND '
-            + f"observationdocument_recordeddtm:[{start_year}-{start_month}-{start_day} TO {end_year}-{end_month}-{end_day}]",
+        current_pat_raw = search_core_resus_observations(
+            cohort_searcher_with_terms_and_search=cohort_searcher_with_terms_and_search,
+            client_id_codes=current_pat_client_id_code,
+            observations_time_field="observationdocument_recordeddtm",
+            start_year=start_year,
+            start_month=start_month,
+            start_day=start_day,
+            end_year=end_year,
+            end_month=end_month,
+            end_day=end_day,
         )
+
+    # Initialize features DataFrame
+    features = pd.DataFrame(
+        data=[current_pat_client_id_code], columns=["client_idcode"]
+    )
 
     if len(current_pat_raw) == 0:
+        # Return base DataFrame with just client_idcode if no data found
+        return features
 
-        features = pd.DataFrame(
-            data=[current_pat_client_id_code], columns=["client_idcode"]
-        )
-
+    # Filter for CORE_RESUS_STATUS observations
     features_data = current_pat_raw[
         current_pat_raw["obscatalogmasteritem_displayname"] == "CORE_RESUS_STATUS"
     ].copy()
 
-    # screen and purge dud values
-
+    # Calculate features
     term = "CORE_RESUS_STATUS".lower()
+    resus_stats = calculate_core_resus_features(features_data, term, config_obj.negate_biochem)
 
-    if len(features_data) > 0:
-        features = pd.DataFrame(
-            data=[current_pat_client_id_code], columns=["client_idcode"]
-        ).copy()
-        features[f"{term}_For cardiopulmonary resuscitation"] = len(
-            features_data[
-                features_data["observation_valuetext_analysed"]
-                == "For cardiopulmonary resuscitation"
-            ]
-        )
-        features[f"{term}_Not for cardiopulmonary resuscitation"] = len(
-            features_data[
-                features_data["observation_valuetext_analysed"]
-                == "Not for cardiopulmonary resuscitation"
-            ]
-        )
-    elif config_obj.negate_biochem:
-        features = pd.DataFrame(
-            data=[current_pat_client_id_code], columns=["client_idcode"]
-        ).copy()
-        features[f"{term}_For cardiopulmonary resuscitation"] = len(
-            features_data[
-                features_data["observation_valuetext_analysed"]
-                == "For cardiopulmonary resuscitation"
-            ]
-        )
-        features[f"{term}_Not for cardiopulmonary resuscitation"] = len(
-            features_data[
-                features_data["observation_valuetext_analysed"]
-                == "Not for cardiopulmonary resuscitation"
-            ]
-        )
-    else:
-        features = pd.DataFrame(
-            data=[current_pat_client_id_code], columns=["client_idcode"]
-        ).copy()
-        pass
+    # Add calculated features to the DataFrame
+    for key, value in resus_stats.items():
+        features[key] = value
 
     if config_obj.verbosity >= 6:
         display(features)
 
     return features
+
+CORE_RESUS_FIELDS = [
+    "observation_guid", "client_idcode", "obscatalogmasteritem_displayname",
+    "observation_valuetext_analysed", "observationdocument_recordeddtm", "clientvisit_visitidcode"
+]

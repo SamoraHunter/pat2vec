@@ -9,6 +9,69 @@ from pat2vec.util.filter_dataframe_by_timestamp import filter_dataframe_by_times
 from pat2vec.util.get_start_end_year_month import (
     get_start_end_year_month,
 )
+from pat2vec.util.parse_date import validate_input_dates
+
+BLOODS_FIELDS = [
+    "client_idcode",
+    "basicobs_itemname_analysed",
+    "basicobs_value_numeric",
+    "basicobs_entered",
+    "clientvisit_serviceguid",
+    "updatetime",
+]
+
+
+def search_bloods_data(
+    cohort_searcher_with_terms_and_search=None,
+    client_id_codes=None,
+    client_idcode_name="client_idcode.keyword",
+    bloods_time_field="basicobs_entered",
+    start_year=1995,
+    start_month=1,
+    start_day=1,
+    end_year=2025,
+    end_month=12,
+    end_day=12,
+    additional_custom_search_string=None,
+):
+    """
+    Searches for bloods data for a specific patient within a date range using cohort searcher.
+
+    Parameters:
+    - cohort_searcher_with_terms_and_search (callable): The function for cohort searching.
+    - client_id_codes (str or list): The client ID code(s) of the patient(s).
+    - client_idcode_name (str): The name of the client ID code field in the index.
+    - bloods_time_field (str): The timestamp field for filtering bloods data.
+    - start_year, start_month, start_day (int): Start date components.
+    - end_year, end_month, end_day (int): End date components.
+    - additional_custom_search_string (str, optional): An additional string to append to the search query. Defaults to None.
+
+    Returns:
+    - pd.DataFrame: A DataFrame containing the raw bloods data.
+    """
+    if cohort_searcher_with_terms_and_search is None:
+        raise ValueError("cohort_searcher_with_terms_and_search cannot be None.")
+    if client_id_codes is None:
+        raise ValueError("client_id_codes cannot be None.")
+
+    if isinstance(client_id_codes, str):
+        client_id_codes = [client_id_codes]
+
+    start_year, start_month, start_day, end_year, end_month, end_day = validate_input_dates(start_year, start_month, start_day, end_year, end_month, end_day)
+
+
+    search_string = f"basicobs_value_numeric:* AND {bloods_time_field}:[{start_year}-{start_month}-{start_day} TO {end_year}-{end_month}-{end_day}]"
+
+    if additional_custom_search_string:
+        search_string += f" {additional_custom_search_string}"
+
+    return cohort_searcher_with_terms_and_search(
+        index_name="basic_observations",
+        fields_list=BLOODS_FIELDS,
+        term_name=client_idcode_name,
+        entered_list=client_id_codes,
+        search_string=search_string,
+    )
 
 
 def get_current_pat_bloods(
@@ -53,20 +116,17 @@ def get_current_pat_bloods(
             bloods_time_field,
         )
     else:
-        current_pat_bloods = cohort_searcher_with_terms_and_search(
-            index_name="basic_observations",
-            fields_list=[
-                "client_idcode",
-                "basicobs_itemname_analysed",
-                "basicobs_value_numeric",
-                "basicobs_entered",
-                "clientvisit_serviceguid",
-                "updatetime",
-            ],
-            term_name=config_obj.client_idcode_term_name,
-            entered_list=[current_pat_client_id_code],
-            search_string="basicobs_value_numeric:* AND "
-            + f"{bloods_time_field}:[{start_year}-{start_month}-{start_day} TO {end_year}-{end_month}-{end_day}]",
+        current_pat_bloods = search_bloods_data(
+            cohort_searcher_with_terms_and_search=cohort_searcher_with_terms_and_search,
+            client_id_codes=current_pat_client_id_code,
+            client_idcode_name=config_obj.client_idcode_term_name,
+            bloods_time_field=bloods_time_field,
+            start_year=start_year,
+            start_month=start_month,
+            start_day=start_day,
+            end_year=end_year,
+            end_month=end_month,
+            end_day=end_day,
         )
 
     # Ensure only target columns are present. Useful if source data isn't directly from ES.

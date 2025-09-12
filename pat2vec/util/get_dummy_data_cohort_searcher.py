@@ -10,6 +10,9 @@ import numpy as np
 import pandas as pd
 from faker import Faker
 import pytz
+from pat2vec.pat2vec_get_methods.get_method_bmi import BMI_FIELDS
+from pat2vec.pat2vec_get_methods.get_method_core02 import CORE_O2_FIELDS
+from pat2vec.pat2vec_get_methods.get_method_core_resus import CORE_RESUS_FIELDS
 from transformers import pipeline
 import random
 import string
@@ -1117,203 +1120,162 @@ def cohort_searcher_with_terms_and_search_dummy(
             print("Generating data for 'client_firstname'")
         num_rows = random.randint(0, 10)
         df = generate_epr_documents_personal_data(
-            num_rows,
-            entered_list,
-            global_start_year,
-            global_start_month,
-            global_end_year,
-            global_end_month,
-            fields_list=fields_list,
-        )
-        return df
-
-    elif "basicobs_value_numeric:*" in search_string:
-        if verbose:
-            print("Generating data for 'basicobs_value_numeric'")
-        num_rows = random.randint(0, 10)
-        df = generate_basic_observations_data(
-            num_rows,
-            entered_list,
-            global_start_year,
-            global_start_month,
-            global_end_year,
-            global_end_month,
-            fields_list=fields_list,
+            num_rows, entered_list, global_start_year, global_start_month,
+            global_end_year, global_end_month, fields_list=fields_list,
         )
         return df
 
     elif index_name == "epr_documents":
         if verbose:
             print("Generating data for 'epr_documents'")
-
-        probabilities = [0.7, 0.1, 0.05, 0.05, 0.05]  # Adjust as needed
+        probabilities = [0.7, 0.1, 0.05, 0.05, 0.05]
         num_rows = random.choices(range(1, 6), probabilities)[0]
         df = generate_epr_documents_data(
-            num_rows,
-            entered_list,
-            global_start_year,
-            global_start_month,
-            global_end_year,
-            global_end_month,
-            use_GPT=use_GPT,
-            fields_list=fields_list,
+            num_rows, entered_list, global_start_year, global_start_month,
+            global_end_year, global_end_month, use_GPT=use_GPT, fields_list=fields_list,
         )
         return df
 
-    elif (
-        index_name == "observations"
-        and search_string.find("AoMRC_ClinicalSummary_FT") != -1
-    ):
-        if verbose:
-            print("Generating mrc text data for 'observations'")
+    elif index_name == "basic_observations":
+        # Nested checks for 'basic_observations' index
+        if "basicobs_itemname_analysed:report" in search_string:
+            if verbose:
+                print("Generating text data for 'basic_observations, reports'")
+            probabilities = [0.7, 0.1, 0.05, 0.05, 0.05]
+            num_rows = random.choices(range(1, 6), probabilities)[0]
+            df = generate_observations_Reports_text_data(
+                num_rows, entered_list, global_start_year, global_start_month,
+                global_end_year, global_end_month, use_GPT=use_GPT, fields_list=fields_list,
+            )
+            return df
 
-        probabilities = [0.7, 0.1, 0.05, 0.05, 0.05]  # Adjust as needed
-        num_rows = random.choices(range(1, 6), probabilities)[0]
-        df = generate_observations_MRC_text_data(
-            num_rows,
-            entered_list,
-            global_start_year,
-            global_start_month,
-            global_end_year,
-            global_end_month,
-            use_GPT=use_GPT,
-            fields_list=fields_list,
-        )
-        return df
+        elif fields_list == [ "client_idcode", "basicobs_itemname_analysed", "basicobs_value_numeric", "basicobs_value_analysed", "basicobs_entered", "clientvisit_serviceguid", "basicobs_guid", "updatetime", "textualObs"]:
+            if verbose:
+                print("Generating data for 'basic_observations textualObs'")
+            probabilities = [0.7, 0.1, 0.05, 0.05, 0.05]
+            num_rows = random.choices(range(1, 6), probabilities)[0]
+            df = generate_basic_observations_textual_obs_data(
+                num_rows, entered_list, global_start_year, global_start_month,
+                global_end_year, global_end_month, fields_list=fields_list,
+            )
+            return df
 
-    elif (
-        index_name == "basic_observations"
-        and search_string.find("basicobs_itemname_analysed:report") != -1
-    ):
-        if verbose:
-            print("Generating text data for 'basic_observations, reports'")
-        print("Generating text data for 'basic_observations, reports'")
-
-        probabilities = [0.7, 0.1, 0.05, 0.05, 0.05]  # Adjust as needed
-        num_rows = random.choices(range(1, 6), probabilities)[0]
-        df = generate_observations_Reports_text_data(
-            num_rows,
-            entered_list,
-            global_start_year,
-            global_start_month,
-            global_end_year,
-            global_end_month,
-            use_GPT=use_GPT,
-            fields_list=fields_list,
-        )
-        return df
-
-    elif index_name == "basic_observations" and fields_list == [
-        "client_idcode",
-        "basicobs_itemname_analysed",
-        "basicobs_value_numeric",
-        "basicobs_value_analysed",
-        "basicobs_entered",
-        "clientvisit_serviceguid",
-        "basicobs_guid",
-        "updatetime",
-        "textualObs",
-    ]:
-        if verbose:
-            print("Generating data for 'basic_observations textualObs'")
-
-        probabilities = [0.7, 0.1, 0.05, 0.05, 0.05]  # Adjust as needed
-        num_rows = random.choices(range(1, 6), probabilities)[0]
-        df = generate_basic_observations_textual_obs_data(
-            num_rows,
-            entered_list,
-            global_start_year,
-            global_start_month,
-            global_end_year,
-            global_end_month,
-            fields_list=fields_list,
-        )
-        return df
+        else: # Fallback for other basic_observations
+            if verbose:
+                print("Generating data for 'basicobs_value_numeric'")
+            num_rows = random.randint(0, 10)
+            df = generate_basic_observations_data(
+                num_rows, entered_list, global_start_year, global_start_month,
+                global_end_year, global_end_month, fields_list=fields_list,
+            )
+            return df
 
     elif index_name == "observations":
-        if verbose:
-            print("Generating data for 'observations'")
+        # Single entry point for the 'observations' index with nested triage
+        if any(term in search_string for term in ["OBS BMI", "OBS Weight", "OBS Height"]):
+            if verbose:
+                print("Generating data for 'bmi'")
+            probabilities = [0.1, 0.2, 0.4, 0.2, 0.1]
+            num_rows = random.choices(range(1, 6), probabilities)[0]
+            df = generate_bmi_data(
+                num_rows, entered_list, global_start_year, global_start_month,
+                global_end_year, global_end_month, fields_list=fields_list,
+            )
+            return df
 
-        probabilities = [0.7, 0.1, 0.05, 0.05, 0.05]  # Adjust as needed
-        num_rows = random.choices(range(1, 6), probabilities)[0]
+        elif '"CORE_SpO2"' in search_string:
+            if verbose:
+                print("Generating data for 'core_o2'")
+            probabilities = [0.1, 0.2, 0.4, 0.2, 0.1]
+            num_rows = random.choices(range(1, 6), probabilities)[0]
+            df = generate_core_o2_data(
+                num_rows, entered_list, global_start_year, global_start_month,
+                global_end_year, global_end_month, fields_list=fields_list,
+            )
+            return df
 
-        search_term = str(
-            extract_search_term_obscatalogmasteritem_displayname(search_string)
-        )
+        elif '"CORE_RESUS_STATUS"' in search_string:
+            if verbose:
+                print("Generating data for 'core_resus_status'")
+            probabilities = [0.7, 0.25, 0.05]
+            num_rows = random.choices(range(1, 4), probabilities)[0]
+            df = generate_core_resus_data(
+                num_rows, entered_list, global_start_year, global_start_month,
+                global_end_year, global_end_month, fields_list=fields_list,
+            )
+            return df
 
-        df = generate_observations_data(
-            num_rows,
-            entered_list,
-            global_start_year,
-            global_start_month,
-            global_end_year,
-            global_end_month,
-            search_term,
-            fields_list=fields_list,
-        )
-        return df
+        elif "CORE_HospitalSite" in search_string:
+            if verbose:
+                print("Generating data for 'hospital_site'")
+            probabilities = [0.8, 0.1, 0.05, 0.03, 0.02]
+            num_rows = random.choices(range(1, 6), probabilities)[0]
+            df = generate_hospital_site_data(
+                num_rows, entered_list, global_start_year, global_start_month,
+                global_end_year, global_end_month, fields_list=fields_list,
+            )
+            return df
 
-    elif index_name == "order" and "medication" in search_string:
-        if verbose:
-            print("Generating data for 'orders' with medication")
-        num_rows = random.randint(0, 10)
-        df = generate_drug_orders_data(
-            num_rows,
-            entered_list,
-            global_start_year,
-            global_start_month,
-            global_end_year,
-            global_end_month,
-            fields_list=fields_list,
-        )
-        return df
+        elif "AoMRC_ClinicalSummary_FT" in search_string:
+            if verbose:
+                print("Generating mrc text data for 'observations'")
+            probabilities = [0.7, 0.1, 0.05, 0.05, 0.05]
+            num_rows = random.choices(range(1, 6), probabilities)[0]
+            df = generate_observations_MRC_text_data(
+                num_rows, entered_list, global_start_year, global_start_month,
+                global_end_year, global_end_month, use_GPT=use_GPT, fields_list=fields_list,
+            )
+            return df
 
-    elif index_name == "order" and "diagnostic" in search_string:
-        if verbose:
-            print("Generating data for 'orders' with diagnostic")
-        num_rows = random.randint(0, 10)
-        df = generate_diagnostic_orders_data(
-            num_rows,
-            entered_list,
-            global_start_year,
-            global_start_month,
-            global_end_year,
-            global_end_month,
-            fields_list=fields_list,
-        )
-        return df
+        else: # Generic fallback for any other 'observations' request
+            if verbose:
+                print("Generating data for generic 'observations'")
+            probabilities = [0.7, 0.1, 0.05, 0.05, 0.05]
+            num_rows = random.choices(range(1, 6), probabilities)[0]
+            search_term = str(extract_search_term_obscatalogmasteritem_displayname(search_string))
+            df = generate_observations_data(
+                num_rows, entered_list, global_start_year, global_start_month,
+                global_end_year, global_end_month, search_term, fields_list=fields_list,
+            )
+            return df
+
+    elif index_name == "order":
+        if "medication" in search_string:
+            if verbose:
+                print("Generating data for 'orders' with medication")
+            num_rows = random.randint(0, 10)
+            df = generate_drug_orders_data(
+                num_rows, entered_list, global_start_year, global_start_month,
+                global_end_year, global_end_month, fields_list=fields_list,
+            )
+            return df
+
+        elif "diagnostic" in search_string:
+            if verbose:
+                print("Generating data for 'orders' with diagnostic")
+            num_rows = random.randint(0, 10)
+            df = generate_diagnostic_orders_data(
+                num_rows, entered_list, global_start_year, global_start_month,
+                global_end_year, global_end_month, fields_list=fields_list,
+            )
+            return df
 
     elif index_name == "pims_apps*":
         if verbose:
             print("Generating data for 'pims_apps'")
         num_rows = random.randint(0, 10)
         df = generate_appointments_data(
-            num_rows,
-            entered_list,
-            global_start_year,
-            global_start_month,
-            global_end_year,
-            global_end_month,
-            fields_list=fields_list,
+            num_rows, entered_list, global_start_year, global_start_month,
+            global_end_year, global_end_month, fields_list=fields_list,
         )
         return df
 
     else:
         print(
-            "Index name is not 'epr_documents', 'observations', 'basic_observations', 'orders'. Returning an empty DataFrame.",
+            "No matching triage rule found. Returning an empty DataFrame.",
             search_string,
         )
-        return pd.DataFrame(
-            columns=[
-                "updatetime",
-                "_index",
-                "_id",
-                "_score",
-                "observationdocument_recordeddtm",
-                "observation_valuetext_analysed",
-            ]
-            + fields_list
-        )
+        return pd.DataFrame(columns=["updatetime", "_index", "_id", "_score"] + fields_list)
 
 
 # # Example usage for epr_documents with personal information:
@@ -1614,3 +1576,257 @@ def generate_uuid_list(n, prefix, length=7):
     """Generate a list of n UUID-like strings."""
     uuid_list = [generate_uuid(prefix, length) for _ in range(n)]
     return uuid_list
+
+
+def generate_hospital_site_data(
+    num_rows,
+    entered_list,
+    global_start_year,
+    global_start_month,
+    global_end_year,
+    global_end_month,
+    fields_list=[
+        "observation_guid",
+        "client_idcode",
+        "obscatalogmasteritem_displayname",
+        "observation_valuetext_analysed",
+        "observationdocument_recordeddtm",
+        "clientvisit_visitidcode",
+    ],
+):
+    """
+    Generate dummy data for hospital site observations.
+
+    Parameters:
+    - num_rows (int): Number of rows to generate for each client.
+    - entered_list (list): List of client_idcode values.
+    - global_start_year (int): Start year for the global date range.
+    - global_start_month (int): Start month for the global date range.
+    - global_end_year (int): End year for the global date range.
+    - global_end_month (int): End month for the global date range.
+    - fields_list (list): The list of columns for the output DataFrame.
+
+    Returns:
+    - pd.DataFrame: Generated DataFrame with specified columns.
+    """
+    df_holder_list = []
+
+    # Define possible values for hospital sites, including key terms 'DH' and 'PRUH'
+    # for downstream feature calculation.
+    hospital_site_values = [
+        "King's College Hospital (DH)",
+        "Princess Royal University Hospital (PRUH)",
+        "Orpington Hospital",
+        "Queen Mary's Hospital, Sidcup",
+        "St Thomas' Hospital",
+    ]
+
+    for client_id_code in entered_list:
+        data = {
+            "observation_guid": [faker.uuid4() for _ in range(num_rows)],
+            "client_idcode": [client_id_code for _ in range(num_rows)],
+
+            # This field is constant based on the SEARCH_TERM in your code.
+            "obscatalogmasteritem_displayname": ["CORE_HospitalSite" for _ in range(num_rows)],
+
+            # This field contains the actual site name.
+            "observation_valuetext_analysed": [
+                maybe_nan(faker.random_element(elements=hospital_site_values))
+                for _ in range(num_rows)
+            ],
+
+            # Generate a random date for when the observation was recorded.
+            "observationdocument_recordeddtm": [
+                create_random_date_from_globals(
+                    global_start_year,
+                    global_start_month,
+                    global_end_year,
+                    global_end_month,
+                )
+                for _ in range(num_rows)
+            ],
+            "clientvisit_visitidcode": [f"visit_{faker.random_number(digits=8, fix_len=True)}" for _ in range(num_rows)],
+        }
+        df = pd.DataFrame(data)
+        df_holder_list.append(df)
+
+    # Concatenate all generated dataframes into a single one.
+    if not df_holder_list:
+        return pd.DataFrame(columns=fields_list)
+
+    final_df = pd.concat(df_holder_list, ignore_index=True)
+
+    # Ensure only the specified columns are present in the final dataframe.
+    final_df = final_df[fields_list]
+
+    return final_df
+
+def generate_bmi_data(
+    num_rows,
+    entered_list,
+    global_start_year,
+    global_start_month,
+    global_end_year,
+    global_end_month,
+    fields_list=BMI_FIELDS,
+):
+    """
+    Generate dummy data for BMI, Weight, and Height observations.
+
+    Parameters:
+    - num_rows (int): Number of observation rows to generate for each client.
+    - entered_list (list): List of client_idcode values.
+    - global_start_year (int): Start year for the global date range.
+    - global_start_month (int): Start month for the global date range.
+    - global_end_year (int): End year for the global date range.
+    - global_end_month (int): End month for the global date range.
+    - fields_list (list): The list of columns for the output DataFrame.
+
+    Returns:
+    - pd.DataFrame: Generated DataFrame with BMI-related observation data.
+    """
+    df_holder_list = []
+    observation_types = ["OBS BMI", "OBS Weight", "OBS Height"]
+
+    for client_id_code in entered_list:
+        # Generate data for this specific client
+        display_names = [random.choice(observation_types) for _ in range(num_rows)]
+        values = []
+        for name in display_names:
+            if name == "OBS BMI":
+                # Generate a realistic BMI value (15.0 to 45.0)
+                value = f"{random.uniform(15.0, 45.0):.2f}"
+            elif name == "OBS Weight":
+                # Generate a realistic weight in kg (40.0 to 150.0)
+                value = f"{random.uniform(40.0, 150.0):.2f}"
+            else:  # OBS Height
+                # Generate a realistic height in cm (140.0 to 200.0)
+                value = f"{random.uniform(140.0, 200.0):.2f}"
+            values.append(value)
+
+        data = {
+            "observation_guid": [faker.uuid4() for _ in range(num_rows)],
+            "client_idcode": [client_id_code for _ in range(num_rows)],
+            "obscatalogmasteritem_displayname": display_names,
+            "observation_valuetext_analysed": values,
+            "observationdocument_recordeddtm": [
+                create_random_date_from_globals(
+                    global_start_year, global_start_month,
+                    global_end_year, global_end_month
+                ) for _ in range(num_rows)
+            ],
+            "clientvisit_visitidcode": [f"visit_{faker.random_number(digits=8)}" for _ in range(num_rows)],
+        }
+        df_holder_list.append(pd.DataFrame(data))
+
+    if not df_holder_list:
+        return pd.DataFrame(columns=fields_list)
+
+    final_df = pd.concat(df_holder_list, ignore_index=True)
+    return final_df[fields_list]
+
+
+def generate_core_o2_data(
+    num_rows,
+    entered_list,
+    global_start_year,
+    global_start_month,
+    global_end_year,
+    global_end_month,
+    fields_list=CORE_O2_FIELDS,
+):
+    """
+    Generate dummy data for CORE_SpO2 (oxygen saturation) observations.
+
+    Parameters:
+    - num_rows (int): Number of observation rows to generate for each client.
+    - entered_list (list): List of client_idcode values.
+    - global_start_year (int): Start year for the global date range.
+    - global_start_month (int): Start month for the global date range.
+    - global_end_year (int): End year for the global date range.
+    - global_end_month (int): End month for the global date range.
+    - fields_list (list): The list of columns for the output DataFrame.
+
+    Returns:
+    - pd.DataFrame: Generated DataFrame with CORE_SpO2 observation data.
+    """
+    df_holder_list = []
+
+    # Realistic categorical values for SpO2 and oxygen delivery
+    spo2_values = ['98%', '97%', '96%', '95%', '94%', '93%', 'On Air', '2L O2 NP', '4L O2 NP', 'NRB Mask']
+
+    for client_id_code in entered_list:
+        data = {
+            "observation_guid": [faker.uuid4() for _ in range(num_rows)],
+            "client_idcode": [client_id_code for _ in range(num_rows)],
+            "obscatalogmasteritem_displayname": ["CORE_SpO2" for _ in range(num_rows)],
+            "observation_valuetext_analysed": [random.choice(spo2_values) for _ in range(num_rows)],
+            "observationdocument_recordeddtm": [
+                create_random_date_from_globals(
+                    global_start_year, global_start_month,
+                    global_end_year, global_end_month
+                ) for _ in range(num_rows)
+            ],
+            "clientvisit_visitidcode": [f"visit_{faker.random_number(digits=8)}" for _ in range(num_rows)],
+        }
+        df_holder_list.append(pd.DataFrame(data))
+
+    if not df_holder_list:
+        return pd.DataFrame(columns=fields_list)
+
+    final_df = pd.concat(df_holder_list, ignore_index=True)
+    return final_df[fields_list]
+
+def generate_core_resus_data(
+    num_rows,
+    entered_list,
+    global_start_year,
+    global_start_month,
+    global_end_year,
+    global_end_month,
+    fields_list=CORE_RESUS_FIELDS,
+):
+    """
+    Generate dummy data for CORE_RESUS_STATUS observations.
+
+    Parameters:
+    - num_rows (int): Number of observation rows to generate for each client.
+    - entered_list (list): List of client_idcode values.
+    - global_start_year (int): Start year for the global date range.
+    - global_start_month (int): Start month for the global date range.
+    - global_end_year (int): End year for the global date range.
+    - global_end_month (int): End month for the global date range.
+    - fields_list (list): The list of columns for the output DataFrame.
+
+    Returns:
+    - pd.DataFrame: Generated DataFrame with CORE_RESUS_STATUS observation data.
+    """
+    df_holder_list = []
+
+    # These are the exact values the feature calculation function looks for.
+    resuscitation_statuses = [
+        "For cardiopulmonary resuscitation",
+        "Not for cardiopulmonary resuscitation"
+    ]
+
+    for client_id_code in entered_list:
+        data = {
+            "observation_guid": [faker.uuid4() for _ in range(num_rows)],
+            "client_idcode": [client_id_code for _ in range(num_rows)],
+            "obscatalogmasteritem_displayname": ["CORE_RESUS_STATUS" for _ in range(num_rows)],
+            "observation_valuetext_analysed": [random.choice(resuscitation_statuses) for _ in range(num_rows)],
+            "observationdocument_recordeddtm": [
+                create_random_date_from_globals(
+                    global_start_year, global_start_month,
+                    global_end_year, global_end_month
+                ) for _ in range(num_rows)
+            ],
+            "clientvisit_visitidcode": [f"visit_{faker.random_number(digits=8)}" for _ in range(num_rows)],
+        }
+        df_holder_list.append(pd.DataFrame(data))
+
+    if not df_holder_list:
+        return pd.DataFrame(columns=fields_list)
+
+    final_df = pd.concat(df_holder_list, ignore_index=True)
+    return final_df[fields_list]

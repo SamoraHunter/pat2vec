@@ -9,43 +9,47 @@ from .main_pat2vec import (
     main
 )
 from .pat2vec_get_methods.get_method_appointments import (
-    get_appointments
+    get_appointments, search_appointments
 )
 from .pat2vec_get_methods.get_method_bed import (
-    get_bed
+    get_bed, search_bed_data
 )
 from .pat2vec_get_methods.get_method_bloods import (
-    get_current_pat_bloods
+    get_current_pat_bloods, search_bloods_data
 )
 from .pat2vec_get_methods.get_method_bmi import (
-    get_bmi_features
+    calculate_bmi_features, get_bmi_features, search_bmi_observations
 )
 from .pat2vec_get_methods.get_method_core02 import (
-    get_core_02
+    calculate_core_o2_features, clean_observation_value, get_core_02,
+    search_core_o2_observations
 )
 from .pat2vec_get_methods.get_method_core_resus import (
-    get_core_resus
+    calculate_core_resus_features, get_core_resus, search_core_resus_observations
 )
 from .pat2vec_get_methods.get_method_current_pat_annotations_mrc_cs import (
     get_current_pat_annotations_mrc_cs
 )
 from .pat2vec_get_methods.get_method_demo import (
-    get_demographics3
+    get_demographics3, process_demographics_data, search_demographics
 )
 from .pat2vec_get_methods.get_method_demographics import (
     get_demo, get_demographics3_batch
 )
 from .pat2vec_get_methods.get_method_diagnostics import (
-    get_current_pat_diagnostics
+    calculate_diagnostic_features, create_diagnostic_features_dataframe,
+    get_current_pat_diagnostics, prepare_diagnostic_datetime, search_diagnostic_orders
 )
 from .pat2vec_get_methods.get_method_drugs import (
-    get_current_pat_drugs
+    calculate_drug_features, create_drug_features_dataframe, get_current_pat_drugs,
+    prepare_drug_datetime, search_drug_orders
 )
 from .pat2vec_get_methods.get_method_hosp_site import (
-    get_hosp_site
+    calculate_hospital_site_features, get_hosp_site, prepare_hospital_site_data,
+    search_hospital_site
 )
 from .pat2vec_get_methods.get_method_news import (
-    get_news
+    compute_feature_stats, get_news
 )
 from .pat2vec_get_methods.get_method_pat_annotations import (
     get_current_pat_annotations
@@ -54,13 +58,13 @@ from .pat2vec_get_methods.get_method_report_annotations import (
     get_current_pat_report_annotations
 )
 from .pat2vec_get_methods.get_method_smoking import (
-    get_smoking
+    calculate_smoking_features, get_smoking, prepare_smoking_data, search_smoking
 )
 from .pat2vec_get_methods.get_method_textual_obs_annotations import (
     get_current_pat_textual_obs_annotations
 )
 from .pat2vec_get_methods.get_method_vte_status import (
-    get_vte_status
+    calculate_vte_features, get_vte_status, prepare_vte_data, search_vte
 )
 from .pat2vec_main_methods.main_batch import (
     main_batch
@@ -72,7 +76,7 @@ from .pat2vec_pat_list.get_patient_treatment_list import (
 from .pat2vec_search.cogstack_search_methods import (
     CogStack, cohort_searcher_no_terms, cohort_searcher_no_terms_fuzzy,
     cohort_searcher_with_terms_and_search, cohort_searcher_with_terms_no_search,
-    create_credentials_file, dataframe_generator,
+    create_credentials_file, dataframe_generator, initialize_cogstack_client,
     iterative_multi_term_cohort_searcher_no_terms_fuzzy,
     iterative_multi_term_cohort_searcher_no_terms_fuzzy_mct,
     iterative_multi_term_cohort_searcher_no_terms_fuzzy_textual_obs, list_chunker,
@@ -147,6 +151,9 @@ from .tests.test_methods_annotation_multi_annots_to_df import (
 from .tests.test_methods_get import (
     TestFilterDataFrameByTimestamp
 )
+from .tests.test_parse_date import (
+    TestDateValidationForElasticsearch
+)
 from .tests.test_post_processing_build_ipw_dataframe import (
     TestBuildIpwDataframe
 )
@@ -208,13 +215,14 @@ from .util.get_dummy_data_cohort_searcher import (
     cohort_searcher_with_terms_and_search_dummy, create_random_date_from_globals,
     extract_date_range, extract_search_term_obscatalogmasteritem_displayname,
     generate_appointments_data, generate_basic_observations_data,
-    generate_basic_observations_textual_obs_data, generate_diagnostic_orders_data,
+    generate_basic_observations_textual_obs_data, generate_bmi_data,
+    generate_core_o2_data, generate_core_resus_data, generate_diagnostic_orders_data,
     generate_drug_orders_data, generate_epr_documents_data,
-    generate_epr_documents_personal_data, generate_observations_MRC_text_data,
-    generate_observations_Reports_text_data, generate_observations_data,
-    generate_patient_timeline, generate_patient_timeline_faker, generate_uuid,
-    generate_uuid_list, get_patient_timeline_dummy, maybe_nan,
-    run_generate_patient_timeline_and_append
+    generate_epr_documents_personal_data, generate_hospital_site_data,
+    generate_observations_MRC_text_data, generate_observations_Reports_text_data,
+    generate_observations_data, generate_patient_timeline,
+    generate_patient_timeline_faker, generate_uuid, generate_uuid_list,
+    get_patient_timeline_dummy, maybe_nan, run_generate_patient_timeline_and_append
 )
 from .util.get_dummy_data_medcat_annotation import (
     dummy_CAT, dummy_medcat_annotation_generator, random_sample
@@ -274,6 +282,9 @@ from .util.methods_post_get import (
     check_csv_files_in_directory, check_csv_integrity,
     copy_project_folders_with_substring_match, retrieve_pat_annotations
 )
+from .util.parse_date import (
+    validate_input_dates
+)
 from .util.post_processing import (
     aggregate_dataframe_mean, check_list_presence, collapse_df_to_mean,
     convert_true_to_float, copy_files_and_dirs, count_files, drop_columns_with_all_nan,
@@ -327,7 +338,8 @@ from .util.testing_helpers import (
 __all__ = [
     "BatchConfig", "CogStack", "CsvProfiler", "DeIdAnonymizer", "EthnicityAbstractor",
     "MockConfig", "PathsClass", "TestBuildIpwDataframe", "TestCalculateInterval",
-    "TestConfigClass", "TestCreateRandomDateFromGlobals", "TestFilterAnnotDataframe",
+    "TestConfigClass", "TestCreateRandomDateFromGlobals",
+    "TestDateValidationForElasticsearch", "TestFilterAnnotDataframe",
     "TestFilterDataFrameByTimestamp", "TestFilterDataFrameByTimestampExtended",
     "TestGenerateDateList", "TestGetPatIpwRecord", "TestGetStartEndYearMonth",
     "TestGlobalDateValidation", "TestIndividualPatientWindow", "TestMultiAnnotsToDf",
@@ -340,19 +352,25 @@ __all__ = [
     "build_ipw_dataframe", "build_merged_bloods", "build_merged_epr_mct_annot_df",
     "build_merged_epr_mct_doc_df", "build_patient_dict", "bulk_str_extract",
     "bulk_str_extract_round_robin", "bulk_str_findall", "calculate_age_append",
-    "calculate_interval", "calculate_pretty_name_count_features",
-    "check_csv_files_in_directory", "check_csv_integrity", "check_list_presence",
-    "check_pat_document_annotation_complete", "check_sftp_connection",
+    "calculate_bmi_features", "calculate_core_o2_features",
+    "calculate_core_resus_features", "calculate_diagnostic_features",
+    "calculate_drug_features", "calculate_hospital_site_features", "calculate_interval",
+    "calculate_pretty_name_count_features", "calculate_smoking_features",
+    "calculate_vte_features", "check_csv_files_in_directory", "check_csv_integrity",
+    "check_list_presence", "check_pat_document_annotation_complete",
+    "check_sftp_connection", "clean_observation_value",
     "coerce_document_df_to_medcat_trainer_input", "cohort_searcher_no_terms",
     "cohort_searcher_no_terms_fuzzy", "cohort_searcher_with_terms_and_search",
     "cohort_searcher_with_terms_and_search_dummy",
     "cohort_searcher_with_terms_and_search_multi",
     "cohort_searcher_with_terms_no_search", "collapse_df_to_mean",
-    "compare_ipw_annotation_rows", "config_class", "convert_date",
-    "convert_timestamp_to_tuple", "convert_true_to_float", "copy_files_and_dirs",
-    "copy_project_folders_with_substring_match", "count_files",
-    "create_credentials_file", "create_folders", "create_folders_annot_csv_wrapper",
-    "create_folders_for_pat", "create_local_folders", "create_ner_results_dataframe",
+    "compare_ipw_annotation_rows", "compute_feature_stats", "config_class",
+    "convert_date", "convert_timestamp_to_tuple", "convert_true_to_float",
+    "copy_files_and_dirs", "copy_project_folders_with_substring_match", "count_files",
+    "create_credentials_file", "create_diagnostic_features_dataframe",
+    "create_drug_features_dataframe", "create_folders",
+    "create_folders_annot_csv_wrapper", "create_folders_for_pat",
+    "create_local_folders", "create_ner_results_dataframe",
     "create_powerpoint_from_images", "create_powerpoint_from_images_group",
     "create_powerpoint_slides", "create_powerpoint_slides_client_idcode_groups",
     "create_random_date_from_globals", "create_remote_folders", "dataframe_generator",
@@ -370,16 +388,17 @@ __all__ = [
     "filter_dataframe_by_fuzzy_terms", "filter_dataframe_by_timestamp",
     "filter_dataframe_n_lists", "filter_stripped_list", "find_date",
     "generate_appointments_data", "generate_basic_observations_data",
-    "generate_basic_observations_textual_obs_data", "generate_control_list",
+    "generate_basic_observations_textual_obs_data", "generate_bmi_data",
+    "generate_control_list", "generate_core_o2_data", "generate_core_resus_data",
     "generate_date_list", "generate_diagnostic_orders_data",
     "generate_drug_orders_data", "generate_epr_documents_data",
-    "generate_epr_documents_personal_data", "generate_observations_MRC_text_data",
-    "generate_observations_Reports_text_data", "generate_observations_data",
-    "generate_patient_timeline", "generate_patient_timeline_faker",
-    "generate_pie_charts", "generate_uuid", "generate_uuid_list",
-    "get_all_patients_list", "get_all_target_annots", "get_annots_joined_to_docs",
-    "get_appointments", "get_bed", "get_bmi_features", "get_cat", "get_core_02",
-    "get_core_resus", "get_current_pat_annotations",
+    "generate_epr_documents_personal_data", "generate_hospital_site_data",
+    "generate_observations_MRC_text_data", "generate_observations_Reports_text_data",
+    "generate_observations_data", "generate_patient_timeline",
+    "generate_patient_timeline_faker", "generate_pie_charts", "generate_uuid",
+    "generate_uuid_list", "get_all_patients_list", "get_all_target_annots",
+    "get_annots_joined_to_docs", "get_appointments", "get_bed", "get_bmi_features",
+    "get_cat", "get_core_02", "get_core_resus", "get_current_pat_annotations",
     "get_current_pat_annotations_mrc_cs", "get_current_pat_bloods",
     "get_current_pat_diagnostics", "get_current_pat_drugs",
     "get_current_pat_report_annotations", "get_current_pat_textual_obs_annotations",
@@ -407,7 +426,7 @@ __all__ = [
     "get_treatment_records_by_drug_order_name", "get_vte_status",
     "group_images_by_suffix", "guess_datetime_columns", "handle_inconsistent_dtypes",
     "impute_dataframe", "impute_datetime", "ingest_data_to_elasticsearch",
-    "iterative_drug_treatment_search",
+    "initialize_cogstack_client", "iterative_drug_treatment_search",
     "iterative_multi_term_cohort_searcher_no_terms_fuzzy",
     "iterative_multi_term_cohort_searcher_no_terms_fuzzy_mct",
     "iterative_multi_term_cohort_searcher_no_terms_fuzzy_textual_obs",
@@ -421,18 +440,26 @@ __all__ = [
     "multi_annots_to_df_reports", "multi_annots_to_df_textual_obs", "nearest",
     "parse_medcat_trainer_project_json", "parse_meta_anns",
     "plot_missing_pattern_bloods", "plot_ner_results", "prefetch_batches",
+    "prepare_diagnostic_datetime", "prepare_drug_datetime",
+    "prepare_hospital_site_data", "prepare_smoking_data", "prepare_vte_data",
     "process_chunk", "process_csv_files", "process_csv_files_multi",
-    "process_requirements", "produce_filtered_annotation_dataframe", "pull_and_write",
-    "pylist2searchlist", "random_sample", "read_csv_wrapper", "read_remote",
-    "read_test_data", "recreate_json", "remove_file_from_paths",
-    "retrieve_pat_annotations", "retrieve_pat_annots_mct_epr", "retrieve_pat_bloods",
-    "retrieve_pat_docs_mct_epr", "run_generate_patient_timeline_and_append",
-    "run_pip_compile", "sample_by_terms", "sanitize_hospital_ids", "save_group",
-    "save_missing_percentage", "save_missing_values_pickle", "search_cohort",
-    "set_best_gpu", "set_index_safe_wrapper", "setup_logger", "sftp_exists",
-    "split_and_append_chunks", "split_and_save_csv", "split_clinical_notes",
-    "split_clinical_notes_mct", "stringlist2pylist", "stringlist2searchlist",
-    "temporary_file", "test_datetime_formats", "update_global_start_date",
-    "update_pbar", "validate_and_fix_global_dates", "verify_split_data_concatenated",
-    "verify_split_data_individual", "without_keys", "write_csv_wrapper", "write_remote"
+    "process_demographics_data", "process_requirements",
+    "produce_filtered_annotation_dataframe", "pull_and_write", "pylist2searchlist",
+    "random_sample", "read_csv_wrapper", "read_remote", "read_test_data",
+    "recreate_json", "remove_file_from_paths", "retrieve_pat_annotations",
+    "retrieve_pat_annots_mct_epr", "retrieve_pat_bloods", "retrieve_pat_docs_mct_epr",
+    "run_generate_patient_timeline_and_append", "run_pip_compile", "sample_by_terms",
+    "sanitize_hospital_ids", "save_group", "save_missing_percentage",
+    "save_missing_values_pickle", "search_appointments", "search_bed_data",
+    "search_bloods_data", "search_bmi_observations", "search_cohort",
+    "search_core_o2_observations", "search_core_resus_observations",
+    "search_demographics", "search_diagnostic_orders", "search_drug_orders",
+    "search_hospital_site", "search_smoking", "search_vte", "set_best_gpu",
+    "set_index_safe_wrapper", "setup_logger", "sftp_exists", "split_and_append_chunks",
+    "split_and_save_csv", "split_clinical_notes", "split_clinical_notes_mct",
+    "stringlist2pylist", "stringlist2searchlist", "temporary_file",
+    "test_datetime_formats", "update_global_start_date", "update_pbar",
+    "validate_and_fix_global_dates", "validate_input_dates",
+    "verify_split_data_concatenated", "verify_split_data_individual", "without_keys",
+    "write_csv_wrapper", "write_remote"
 ]

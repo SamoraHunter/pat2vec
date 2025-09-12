@@ -3,11 +3,216 @@ import pandas as pd
 from IPython.display import display
 from pat2vec.util.filter_dataframe_by_timestamp import filter_dataframe_by_timestamp
 from pat2vec.util.get_start_end_year_month import get_start_end_year_month
-from pat2vec.util.methods_get import (
-    convert_date,
-)
+from pat2vec.util.parse_date import validate_input_dates
+from pat2vec.util.methods_get import convert_date
 
-from . import convert_date
+DIAGNOSTICS_FIELDS = [
+    "client_idcode",
+    "order_guid",
+    "order_name",
+    "order_summaryline",
+    "order_holdreasontext",
+    "order_entered",
+    "clientvisit_visitidcode",
+    "order_performeddtm",
+    "order_createdwhen",
+]
+
+COLUMNS_TO_DROP = [
+    "_index",
+    "_id",
+    "_score",
+    "order_guid",
+    "order_name",
+    "order_summaryline",
+    "order_holdreasontext",
+    "order_entered",
+    "clientvisit_visitidcode",
+    "order_performeddtm",
+    "order_createdwhen",
+    "datetime",
+    "index",
+]
+
+
+def search_diagnostic_orders(
+    cohort_searcher_with_terms_and_search=None,
+    client_id_codes=None,
+    diagnostic_time_field='order_createdwhen',
+    start_year='1995',
+    start_month='01',
+    start_day='01',
+    end_year='2025',
+    end_month='12',
+    end_day='12',
+    additional_custom_search_string=None,
+):
+    """
+    Searches for diagnostic order data for a specific patient within a date range using cohort searcher.
+
+    Parameters:
+    - cohort_searcher_with_terms_and_search (callable): The function for cohort searching.
+    - client_id_codes (str or list): The client ID code(s) of the patient(s).
+    - diagnostic_time_field (str): The timestamp field for filtering diagnostic orders.
+    - start_year, start_month, start_day (int): Start date components.
+    - end_year, end_month, end_day (int): End date components.
+    - additional_custom_search_string (str, optional): An additional string to append to the search query. Defaults to None.
+
+    Returns:
+    - pd.DataFrame: A DataFrame containing the raw diagnostic order data.
+    """
+    if cohort_searcher_with_terms_and_search is None:
+        raise ValueError("cohort_searcher_with_terms_and_search cannot be None.")
+    if client_id_codes is None:
+        raise ValueError("client_id_codes cannot be None.")
+    if diagnostic_time_field is None:
+        raise ValueError("diagnostic_time_field cannot be None.")
+    if any(
+        x is None
+        for x in [start_year, start_month, start_day, end_year, end_month, end_day]
+    ):
+        raise ValueError("Date components cannot be None.")
+
+    # Ensure client_id_codes is a list for the search function
+    if isinstance(client_id_codes, str):
+        client_id_codes = [client_id_codes]
+
+    start_year, start_month, start_day, end_year, end_month, end_day = validate_input_dates(
+        start_year, start_month, start_day, end_year, end_month, end_day
+    )
+
+    # Base search string for diagnostic orders
+    search_string = (
+        'order_typecode:"diagnostic" AND '
+        + f"{diagnostic_time_field}:[{start_year}-{start_month}-{start_day} TO {end_year}-{end_month}-{end_day}]"
+    )
+
+    if additional_custom_search_string:
+        search_string += f" {additional_custom_search_string}"
+
+    return cohort_searcher_with_terms_and_search(
+        index_name="order",
+        fields_list=DIAGNOSTICS_FIELDS,
+        term_name="client_idcode.keyword",  # Note: using default, can be made configurable
+        entered_list=client_id_codes,
+        search_string=search_string,
+    )
+
+
+def prepare_diagnostic_datetime(diagnostics_data, diagnostic_time_field, batch_mode=False):
+    """
+    Prepare datetime column for diagnostic data processing.
+
+    Parameters:
+    - diagnostics_data (pd.DataFrame): Raw diagnostic data
+    - diagnostic_time_field (str): The time field to process
+    - batch_mode (bool): Whether in batch mode or not
+
+    Returns:
+    - pd.DataFrame: Data with processed datetime column
+    """
+    data = diagnostics_data.copy()
+
+    if batch_mode:
+        data["datetime"] = data[diagnostic_time_field].copy()
+    else:
+        data["datetime"] = (
+            pd.Series(data[diagnostic_time_field])
+            .dropna()
+            .apply(convert_date)
+        )
+
+    return data
+
+
+def calculate_diagnostic_features(order_name_df_dict, order_name_list, batch_mode=False):
+    """
+    Calculate diagnostic features for each order type.
+
+    Parameters:
+    - order_name_df_dict (dict): Dictionary mapping order names to their data
+    - order_name_list (list): List of unique order names
+    - batch_mode (bool): Whether in batch mode or not
+
+    Returns:
+    - dict: Dictionary of calculated features
+    """
+    if batch_mode:
+        today = datetime.now(timezone.utc)
+    else:
+        today = datetime.today()
+
+    features = {}
+
+    for col_name in order_name_list:
+        filtered_df = order_name_df_dict.get(col_name)
+
+        if filtered_df is None or len(filtered_df) == 0:
+            continue
+
+        df_len = len(filtered_df)
+
+        if df_len >= 1:
+            # Number of tests
+            features[f"{col_name}_num-diagnostic-order"] = df_len
+
+            # Days since last test
+            try:
+                sorted_df = filtered_df.sort_values(by="datetime")
+                date_object = sorted_df.iloc[-1]["datetime"]
+                delta = today - date_object
+                features[f"{col_name}_days-since-last-diagnostic-order"] = delta.days
+            except Exception as e:
+                print(f"Error calculating days since last diagnostic for {col_name}: {e}")
+                features[f"{col_name}_days-since-last-diagnostic-order"] = None
+
+        if df_len >= 2:
+            # Days between earliest and latest (fixed logic from original)
+            try:
+                sorted_df = filtered_df.sort_values(by="datetime")
+                earliest = sorted_df.iloc[0]["datetime"]  # First record (earliest)
+                latest = sorted_df.iloc[-1]["datetime"]   # Last record (latest)
+                delta = latest - earliest
+                features[f"{col_name}_days-between-first-last-diagnostic"] = delta.days
+            except Exception as e:
+                print(f"Error calculating days between first-last diagnostic for {col_name}: {e}")
+                features[f"{col_name}_days-between-first-last-diagnostic"] = None
+
+    return features
+
+
+def create_diagnostic_features_dataframe(current_pat_client_id_code, diagnostic_features, original_data):
+    """
+    Create the final diagnostic features DataFrame.
+
+    Parameters:
+    - current_pat_client_id_code (str): Patient ID
+    - diagnostic_features (dict): Calculated diagnostic features
+    - original_data (pd.DataFrame): Original diagnostic data for reference
+
+    Returns:
+    - pd.DataFrame: Final features DataFrame
+    """
+    # Start with basic patient info
+    base_df = pd.DataFrame({"client_idcode": [current_pat_client_id_code]})
+
+    # Add any additional base columns from original data (excluding ones we'll drop)
+    if len(original_data) > 0:
+        sample_row = original_data.iloc[0:1].copy()
+
+        # Keep only columns that aren't in our drop list
+        columns_to_keep = [col for col in sample_row.columns
+                          if col not in COLUMNS_TO_DROP and col not in diagnostic_features.keys()]
+
+        for col in columns_to_keep:
+            if col != "client_idcode":  # Don't duplicate client_idcode
+                base_df[col] = sample_row[col].iloc[0]
+
+    # Add calculated features
+    for feature_name, feature_value in diagnostic_features.items():
+        base_df[feature_name] = feature_value
+
+    return base_df
 
 
 def get_current_pat_diagnostics(
@@ -24,22 +229,25 @@ def get_current_pat_diagnostics(
     - current_pat_client_id_code (str): The client ID code of the patient.
     - target_date_range (tuple): A tuple representing the target date range.
     - pat_batch (pd.DataFrame): The DataFrame containing patient data.
-    - batch_mode (bool, optional): Indicates whether batch mode is enabled. Defaults to False.
+    - config_obj: Configuration object containing batch_mode and other settings.
     - cohort_searcher_with_terms_and_search (callable, optional): The function for cohort searching. Defaults to None.
 
     Returns:
-    - pd.DataFrame: A DataFrame containing diagnostic test data for the specified patient.
+    - pd.DataFrame: A DataFrame containing diagnostic test features for the specified patient.
     """
+    if config_obj is None:
+        raise ValueError(
+            "config_obj cannot be None. Please provide a valid configuration."
+        )
 
     batch_mode = config_obj.batch_mode
+    diagnostic_time_field = config_obj.diagnostic_time_field
 
     start_year, start_month, end_year, end_month, start_day, end_day = (
         get_start_end_year_month(target_date_range, config_obj=config_obj)
     )
 
-    diagnostic_time_field = config_obj.diagnostic_time_field
-
-    # Diagnostic tests
+    # Get diagnostic data
     if batch_mode:
         diagnostics = filter_dataframe_by_timestamp(
             pat_batch,
@@ -52,159 +260,45 @@ def get_current_pat_diagnostics(
             diagnostic_time_field,
         )
     else:
-        diagnostics = cohort_searcher_with_terms_and_search(
-            index_name="order",
-            fields_list=[
-                "client_idcode",
-                "order_guid",
-                "order_name",
-                "order_summaryline",
-                "order_holdreasontext",
-                "order_entered",
-                "clientvisit_visitidcode",
-                "order_performeddtm",
-                "order_createdwhen",
-            ],
-            term_name=config_obj.client_idcode_term_name,
-            entered_list=[current_pat_client_id_code],
-            search_string='order_typecode:"diagnostic" AND '
-            + f"{diagnostic_time_field}:[{start_year}-{start_month}-{start_day} TO {end_year}-{end_month}-{end_day}]",
+        diagnostics = search_diagnostic_orders(
+            cohort_searcher_with_terms_and_search=cohort_searcher_with_terms_and_search,
+            client_id_codes=current_pat_client_id_code,
+            diagnostic_time_field=diagnostic_time_field,
+            start_year=start_year,
+            start_month=start_month,
+            start_day=start_day,
+            end_year=end_year,
+            end_month=end_month,
+            end_day=end_day,
         )
 
-    current_pat_diagnostics = diagnostics.copy()
+    # Return basic DataFrame if no diagnostic data found
+    if len(diagnostics) == 0:
+        return pd.DataFrame({"client_idcode": [current_pat_client_id_code]})
 
-    if batch_mode:
-        current_pat_diagnostics["datetime"] = current_pat_diagnostics[
-            diagnostic_time_field
-        ].copy()
+    # Prepare datetime column
+    current_pat_diagnostics = prepare_diagnostic_datetime(
+        diagnostics, diagnostic_time_field, batch_mode
+    )
 
-    else:
-        current_pat_diagnostics["datetime"] = (
-            pd.Series(current_pat_diagnostics[diagnostic_time_field])
-            .dropna()
-            .apply(convert_date)
-        )
-
+    # Group data by order name
     order_name_list = list(current_pat_diagnostics["order_name"].unique())
-
     order_name_df_dict = {
         elem: current_pat_diagnostics[current_pat_diagnostics.order_name == elem]
         for elem in order_name_list
     }
 
-    df_unique = current_pat_diagnostics.copy()
-
-    df_unique.drop_duplicates(subset="client_idcode", inplace=True)
-
-    df_unique.reset_index(inplace=True)
-
-    obs_columns_list = order_name_list
-
-    obs_columns_set = list(set(obs_columns_list))
-
-    obs_columns_set_columns_for_df = []
-    for i in range(0, len(obs_columns_set)):
-        obs_columns_set_columns_for_df.append(
-            obs_columns_set[i] + "_num-diagnostic-order"
-        )
-        obs_columns_set_columns_for_df.append(
-            obs_columns_set[i] + "_days-since-last-diagnostic-order"
-        )
-        obs_columns_set_columns_for_df.append(
-            obs_columns_set[i] + "_days-between-first-last-diagnostic"
-        )
-
-    orig_columns = list(df_unique.columns)
-
-    comb_cols = orig_columns + obs_columns_set_columns_for_df
-
-    df_unique = df_unique.reindex(comb_cols, axis=1)
-
-    df_unique = df_unique.copy()
-    df_unique.drop(
-        [
-            "_index",
-            "_id",
-            "_score",
-            "order_guid",
-            "order_name",
-            "order_summaryline",
-            "order_holdreasontext",
-            "order_entered",
-            "clientvisit_visitidcode",
-            "order_performeddtm",
-            "order_createdwhen",
-        ],
-        inplace=True,
-        axis=1,
+    # Calculate diagnostic features
+    diagnostic_features = calculate_diagnostic_features(
+        order_name_df_dict, order_name_list, batch_mode
     )
 
-    if batch_mode:
-
-        today = datetime.now(timezone.utc)
-
-    else:
-        today = datetime.today()
-
-    df_unique_filtered = df_unique.copy()
-
-    i = 0
-
-    for j in range(0, len(obs_columns_list)):
-        col_name = obs_columns_list[j]
-
-        filtered_df = order_name_df_dict.get(col_name)
-
-        df_len = len(filtered_df)
-        if df_len >= 1:
-            # n tests
-
-            agg_val = len(filtered_df)
-
-            df_unique_filtered.at[i, col_name + "_num-diagnostic-order"] = agg_val
-
-            # days-since-last-test
-            date_object = filtered_df.sort_values(by="datetime").iloc[-1]["datetime"]
-
-            delta = today - date_object
-
-            agg_val = delta.days
-
-            df_unique_filtered.at[i, col_name + "_days-since-last-diagnostic-order"] = (
-                agg_val
-            )
-
-        if df_len >= 2:
-
-            # days_between earliest and last
-
-            earliest = filtered_df.sort_values(by="datetime").iloc[-1]["datetime"]
-
-            oldest = filtered_df.sort_values(by="datetime").iloc[-1]["datetime"]
-
-            delta = earliest - oldest
-
-            agg_val = delta.days
-
-            df_unique_filtered.at[
-                i, col_name + "_days-between-first-last-diagnostic"
-            ] = agg_val
-
-    try:
-        df_unique_filtered.drop("datetime", axis=1, inplace=True)
-
-    except Exception as e:
-        print(e)
-        pass
-
-    try:
-        df_unique_filtered.drop("index", axis=1, inplace=True)
-
-    except Exception as e:
-        print(e)
-        pass
+    # Create final features DataFrame
+    result_df = create_diagnostic_features_dataframe(
+        current_pat_client_id_code, diagnostic_features, current_pat_diagnostics
+    )
 
     if config_obj.verbosity >= 6:
-        display(df_unique_filtered)
+        display(result_df)
 
-    return df_unique_filtered
+    return result_df

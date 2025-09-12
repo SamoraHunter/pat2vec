@@ -5,6 +5,123 @@ from pat2vec.util.filter_dataframe_by_timestamp import filter_dataframe_by_times
 from pat2vec.util.get_start_end_year_month import (
     get_start_end_year_month,
 )
+from pat2vec.util.parse_date import validate_input_dates
+
+CORE_O2_FIELDS = [
+    "observation_guid",
+    "client_idcode",
+    "obscatalogmasteritem_displayname",
+    "observation_valuetext_analysed",
+    "observationdocument_recordeddtm",
+    "clientvisit_visitidcode",
+]
+
+
+def search_core_o2_observations(
+    cohort_searcher_with_terms_and_search=None,
+    client_id_codes=None,
+    observations_time_field='observationdocument_recordeddtm',
+    start_year='1995',
+    start_month='01',
+    start_day='01',
+    end_year='2025',
+    end_month='12',
+    end_day='12',
+    search_term="CORE_SpO2",
+    additional_custom_search_string=None,
+):
+    """
+    Searches for CORE_SpO2 observation data for a specific patient within a date range using cohort searcher.
+
+    Parameters:
+    - cohort_searcher_with_terms_and_search (callable): The function for cohort searching.
+    - client_id_codes (str or list): The client ID code(s) of the patient(s).
+    - observations_time_field (str): The timestamp field for filtering observations.
+    - start_year, start_month, start_day (int): Start date components.
+    - end_year, end_month, end_day (int): End date components.
+    - search_term (str): The observation type to search for (default: "CORE_SpO2").
+    - additional_custom_search_string (str, optional): An additional string to append to the search query. Defaults to None.
+
+    Returns:
+    - pd.DataFrame: A DataFrame containing the raw CORE_SpO2 observation data.
+    """
+    if cohort_searcher_with_terms_and_search is None:
+        raise ValueError("cohort_searcher_with_terms_and_search cannot be None.")
+    if client_id_codes is None:
+        raise ValueError("client_id_codes cannot be None.")
+    if observations_time_field is None:
+        raise ValueError("observations_time_field cannot be None.")
+    if any(
+        x is None
+        for x in [start_year, start_month, start_day, end_year, end_month, end_day]
+    ):
+        raise ValueError("Date components cannot be None.")
+
+    # Ensure client_id_codes is a list for the search function
+    if isinstance(client_id_codes, str):
+        client_id_codes = [client_id_codes]
+
+    start_year, start_month, start_day, end_year, end_month, end_day = validate_input_dates(
+        start_year, start_month, start_day, end_year, end_month, end_day
+    )
+
+    # Base search string for CORE_SpO2 observations
+    search_string = (
+        f'obscatalogmasteritem_displayname:("{search_term}") AND '
+        + f"{observations_time_field}:[{start_year}-{start_month}-{start_day} TO {end_year}-{end_month}-{end_day}]"
+    )
+
+    if additional_custom_search_string:
+        search_string += f" {additional_custom_search_string}"
+
+    return cohort_searcher_with_terms_and_search(
+        index_name="observations",
+        fields_list=CORE_O2_FIELDS,
+        term_name="client_idcode.keyword",  # Note: using default, can be made configurable
+        entered_list=client_id_codes,
+        search_string=search_string,
+    )
+
+
+def clean_observation_value(value):
+    """
+    Clean observation value for use as a feature name.
+
+    Parameters:
+    - value (str): The original observation value
+
+    Returns:
+    - str: Cleaned value suitable for use as a column name
+    """
+    if pd.isna(value):
+        return None
+    return str(value).replace("-", "_").replace("%", "pct")
+
+
+def calculate_core_o2_features(features_data, search_term="CORE_SpO2"):
+    """
+    Calculate O2 saturation features from CORE_SpO2 observations.
+
+    Parameters:
+    - features_data (pd.DataFrame): DataFrame containing CORE_SpO2 observations
+    - search_term (str): The observation type being processed
+
+    Returns:
+    - dict: Dictionary of calculated features
+    """
+    features = {}
+
+    if len(features_data) > 0:
+        # Get all unique observation values, excluding NaN values
+        all_terms = features_data["observation_valuetext_analysed"].dropna().unique()
+
+        # Create binary features for each unique observation value
+        for term in all_terms:
+            cleaned_term = clean_observation_value(term)
+            if cleaned_term:  # Only add if cleaning was successful
+                features[cleaned_term] = 1
+
+    return features
 
 
 def get_core_02(
@@ -21,21 +138,20 @@ def get_core_02(
     - current_pat_client_id_code (str): The client ID code of the patient.
     - target_date_range (tuple): A tuple representing the target date range.
     - pat_batch (pd.DataFrame): The DataFrame containing patient data.
-    - batch_mode (bool, optional): Indicates whether batch mode is enabled. Defaults to False.
+    - config_obj: Configuration object containing batch_mode and other settings.
     - cohort_searcher_with_terms_and_search (callable, optional): The function for cohort searching. Defaults to None.
 
     Returns:
     - pd.DataFrame: A DataFrame containing CORE_SpO2 features for the specified patient.
     """
-
     if config_obj is None:
         raise ValueError(
-            "config_obj cannot be None. Please provide a valid configuration. get_core_02"
+            "config_obj cannot be None. Please provide a valid configuration."
         )
 
-    if cohort_searcher_with_terms_and_search is None:
+    if not config_obj.batch_mode and cohort_searcher_with_terms_and_search is None:
         raise ValueError(
-            "cohort_searcher_with_terms_and_search cannot be None. Please provide a valid configuration. get_core_02"
+            "cohort_searcher_with_terms_and_search cannot be None when not in batch mode."
         )
 
     batch_mode = config_obj.batch_mode
@@ -57,50 +173,43 @@ def get_core_02(
             end_day,
             "observationdocument_recordeddtm",
         )
-
     else:
-        current_pat_raw = cohort_searcher_with_terms_and_search(
-            index_name="observations",
-            fields_list="""observation_guid client_idcode	obscatalogmasteritem_displayname	observation_valuetext_analysed	observationdocument_recordeddtm clientvisit_visitidcode""".split(),
-            term_name=config_obj.client_idcode_term_name,
-            entered_list=[current_pat_client_id_code],
-            search_string=f'obscatalogmasteritem_displayname:("{search_term}") AND '
-            + f"observationdocument_recordeddtm:[{start_year}-{start_month}-{start_day} TO {end_year}-{end_month}-{end_day}]",
+        current_pat_raw = search_core_o2_observations(
+            cohort_searcher_with_terms_and_search=cohort_searcher_with_terms_and_search,
+            client_id_codes=current_pat_client_id_code,
+            observations_time_field="observationdocument_recordeddtm",
+            start_year=start_year,
+            start_month=start_month,
+            start_day=start_day,
+            end_year=end_year,
+            end_month=end_month,
+            end_day=end_day,
+            search_term=search_term,
         )
+
+    # Initialize features DataFrame
+    features = pd.DataFrame(
+        data=[current_pat_client_id_code], columns=["client_idcode"]
+    )
 
     if len(current_pat_raw) == 0:
+        # Return base DataFrame with just client_idcode if no data found
+        return features
 
-        features = pd.DataFrame(
-            data=[current_pat_client_id_code], columns=["client_idcode"]
-        )
-
+    # Filter for the specific observation type and clean data
     features_data = current_pat_raw[
         current_pat_raw["obscatalogmasteritem_displayname"] == search_term
     ].copy()
 
-    # screen and purge dud values
-    features_data.dropna(inplace=True)
+    # Remove rows with NaN values in the observation_valuetext_analysed column
+    features_data = features_data.dropna(subset=["observation_valuetext_analysed"])
 
-    # -----------------------------------------------------------------
+    # Calculate features
+    o2_stats = calculate_core_o2_features(features_data, search_term)
 
-    features_data = current_pat_raw[
-        current_pat_raw["obscatalogmasteritem_displayname"] == search_term
-    ].copy()
-
-    term = "core_sp_02".lower()
-
-    if len(features_data) > 0:
-        features = pd.DataFrame(
-            data=[current_pat_client_id_code], columns=["client_idcode"]
-        ).copy()
-
-        all_terms = list(
-            features_data["observation_valuetext_analysed"].dropna().unique()
-        )
-
-        for term in all_terms:
-
-            features[f'{term.replace("-", "_").replace("%", "pct")}'] = 1
+    # Add calculated features to the DataFrame
+    for key, value in o2_stats.items():
+        features[key] = value
 
     if config_obj.verbosity >= 6:
         display(features)

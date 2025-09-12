@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+from pat2vec.pat2vec_get_methods.get_method_demo import search_demographics
 from pat2vec.pat2vec_search.data_helper_functions import append_age_at_record_series
 from IPython.display import display
 
@@ -303,22 +304,17 @@ def get_demographics3_batch(
         )
 
     else:
-        demo = cohort_searcher_with_terms_and_search(
-            index_name="epr_documents",
-            fields_list=[
-                "client_idcode",
-                "client_firstname",
-                "client_lastname",
-                "client_dob",
-                "client_gendercode",
-                "client_racecode",
-                "client_deceaseddtm",
-                "updatetime",
-            ],
-            term_name=config_obj.client_idcode_term_name,
-            entered_list=patlist,
-            search_string=f"updatetime:[{start_year}-{start_month}-{start_day} TO {end_year}-{end_month}-{end_day}] ",
-        )
+        demo = search_demographics(
+        cohort_searcher_with_terms_and_search=cohort_searcher_with_terms_and_search,
+        client_id_codes=patlist,
+        demographics_time_field="updatetime",
+        start_year=start_year,
+        start_month=start_month,
+        start_day=start_day,
+        end_year=end_year,
+        end_month=end_month,
+        end_day=end_day,
+    )
 
     demo["updatetime"] = pd.to_datetime(demo["updatetime"], utc=True)
     # .drop_duplicates(subset = ["client_idcode"], keep = "last", inplace = True)

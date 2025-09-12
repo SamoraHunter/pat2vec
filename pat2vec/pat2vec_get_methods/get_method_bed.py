@@ -3,9 +3,76 @@ from IPython.display import display
 
 from pat2vec.util.filter_dataframe_by_timestamp import filter_dataframe_by_timestamp
 from pat2vec.util.get_start_end_year_month import get_start_end_year_month
-from pat2vec.util.methods_get import (
-    convert_date,
-)
+from pat2vec.util.parse_date import validate_input_dates
+
+BED_FIELDS = [
+    "observation_guid",
+    "client_idcode",
+    "obscatalogmasteritem_displayname",
+    "observation_valuetext_analysed",
+    "observationdocument_recordeddtm",
+    "clientvisit_visitidcode",
+]
+
+
+def search_bed_data(
+    cohort_searcher_with_terms_and_search=None,
+    client_id_codes=None,
+    client_idcode_name="client_idcode.keyword",
+    bed_time_field="observationdocument_recordeddtm",
+    start_year=1995,
+    start_month=1,
+    start_day=1,
+    end_year=2025,
+    end_month=12,
+    end_day=12,
+    search_term="CORE_BedNumber3",
+    additional_custom_search_string=None,
+):
+    """
+    Searches for bed data for a specific patient within a date range using cohort searcher.
+
+    Parameters:
+    - cohort_searcher_with_terms_and_search (callable): The function for cohort searching.
+    - client_id_codes (str or list): The client ID code(s) of the patient(s).
+    - config_obj (object): The configuration object.
+    - bed_time_field (str): The timestamp field for filtering bed data.
+    - start_year, start_month, start_day (int): Start date components.
+    - end_year, end_month, end_day (int): End date components.
+    - search_term (str): The search term for bed data.
+
+    Returns:
+    - pd.DataFrame: A DataFrame containing the raw bed data.
+    """
+    if cohort_searcher_with_terms_and_search is None:
+        raise ValueError("cohort_searcher_with_terms_and_search cannot be None.")
+    if client_id_codes is None:
+        raise ValueError("client_id_codes cannot be None.")
+    if bed_time_field is None:
+        raise ValueError("bed_time_field cannot be None.")
+    if any(
+        x is None
+        for x in [start_year, start_month, start_day, end_year, end_month, end_day]
+    ):
+        raise ValueError("Date components cannot be None.")
+
+    if isinstance(client_id_codes, str):
+        client_id_codes = [client_id_codes]
+
+    start_year, start_month, start_day, end_year, end_month, end_day = validate_input_dates(start_year, start_month, start_day, end_year, end_month, end_day)
+
+    search_string = f'obscatalogmasteritem_displayname:("{search_term}") AND {bed_time_field}:[{start_year}-{start_month}-{start_day} TO {end_year}-{end_month}-{end_day}]'
+
+    if additional_custom_search_string:
+        search_string += f" {additional_custom_search_string}"
+
+    return cohort_searcher_with_terms_and_search(
+        index_name="observations",
+        fields_list=BED_FIELDS,
+        term_name=client_idcode_name,
+        entered_list=client_id_codes,
+        search_string=search_string,
+    )
 
 
 def get_bed(
@@ -34,6 +101,7 @@ def get_bed(
         get_start_end_year_month(target_date_range, config_obj=config_obj)
     )
     search_term = "CORE_BedNumber3"
+    bed_time_field = "observationdocument_recordeddtm"
 
     if batch_mode:
         current_pat_raw = filter_dataframe_by_timestamp(
@@ -44,57 +112,42 @@ def get_bed(
             end_month,
             start_day,
             end_day,
-            "observationdocument_recordeddtm",
+            bed_time_field,
         )
     else:
-        current_pat_raw = cohort_searcher_with_terms_and_search(
-            index_name="observations",
-            fields_list=[
-                "observation_guid",
-                "client_idcode",
-                "obscatalogmasteritem_displayname",
-                "observation_valuetext_analysed",
-                "observationdocument_recordeddtm",
-                "clientvisit_visitidcode",
-            ],
-            term_name=config_obj.client_idcode_term_name,
-            entered_list=[current_pat_client_id_code],
-            search_string=f'obscatalogmasteritem_displayname:("{search_term}") AND observationdocument_recordeddtm:[{start_year}-{start_month}-{start_day} TO {end_year}-{end_month}-{end_day}]',
+        current_pat_raw = search_bed_data(
+            cohort_searcher_with_terms_and_search=cohort_searcher_with_terms_and_search,
+            client_id_codes=current_pat_client_id_code,
+            client_idcode_name=config_obj.client_idcode_term_name,
+            bed_time_field=bed_time_field,
+            start_year=start_year,
+            start_month=start_month,
+            start_day=start_day,
+            end_year=end_year,
+            end_month=end_month,
+            end_day=end_day,
+            search_term=search_term,
         )
+
+    features = pd.DataFrame(
+        data=[current_pat_client_id_code], columns=["client_idcode"]
+    )
 
     if len(current_pat_raw) == 0:
-
-        features = pd.DataFrame(
-            data=[current_pat_client_id_code], columns=["client_idcode"]
-        )
+        return features
 
     features_data = current_pat_raw[
         current_pat_raw["obscatalogmasteritem_displayname"] == search_term
     ].copy()
 
-    # screen and purge dud values
-    # features_data =  features_data[(features_data['observation_valuetext_analysed'].astype(float)<20)& (features_data['observation_valuetext_analysed'].astype(float)>-20)].copy()
-    features_data.dropna(inplace=True)
-
-    # -----------------------------------------------------------------
-
-    features_data = current_pat_raw[
-        current_pat_raw["obscatalogmasteritem_displayname"] == search_term
-    ].copy()
+    features_data.dropna(subset=["observation_valuetext_analysed"], inplace=True)
 
     term = "bed".lower()
 
     if len(features_data) > 0:
-        features = pd.DataFrame(
-            data=[current_pat_client_id_code], columns=["client_idcode"]
-        ).copy()
-
-        all_bed_terms = list(
-            features_data["observation_valuetext_analysed"].dropna().unique()
-        )
+        all_bed_terms = list(features_data["observation_valuetext_analysed"].unique())
 
         for bed_term in all_bed_terms:
-
             features[f"bed_{bed_term}"] = 1
 
     return features

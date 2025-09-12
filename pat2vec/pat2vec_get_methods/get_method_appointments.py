@@ -6,6 +6,96 @@ from pat2vec.util.filter_dataframe_by_timestamp import filter_dataframe_by_times
 from pat2vec.util.get_start_end_year_month import (
     get_start_end_year_month,
 )
+from pat2vec.util.parse_date import validate_input_dates
+
+APPOINTMENT_FIELDS = [
+    "Popular",
+    "AppointmentType",
+    "AttendanceReference",
+    "ClinicCode",
+    "ClinicDesc",
+    "Consultant",
+    "DateModified",
+    "DNA",
+    "HospitalID",
+    "PatNHSNo",
+    "Specialty",
+    "AppointmentDateTime",
+    "Attended",
+    "CancDesc",
+    "CancRefNo",
+    "ConsultantCode",
+    "DateCreated",
+    "Ethnicity",
+    "Gender",
+    "NHSNoStatusCode",
+    "NotSpec",
+    "PatDateOfBirth",
+    "PatForename",
+    "PatPostCode",
+    "PatSurname",
+    "PiMsPatRefNo",
+    "Primarykeyfieldname",
+    "Primarykeyfieldvalue",
+    "SessionCode",
+    "SpecialtyCode",
+]
+
+def search_appointments(
+    cohort_searcher_with_terms_and_search=None,
+    client_id_codes=None,
+    appointments_time_field='AppointmentDateTime',
+    start_year='1995',
+    start_month='01',
+    start_day='01',
+    end_year='2025',
+    end_month='12',
+    end_day='12',
+    additional_custom_search_string=None,
+):
+    """
+    Searches for appointment data for a specific patient within a date range using cohort searcher.
+
+    Parameters:
+    - cohort_searcher_with_terms_and_search (callable): The function for cohort searching.
+    - client_id_codes (str or list): The client ID code(s) of the patient(s).
+    - appointments_time_field (str): The timestamp field for filtering appointments.
+    - start_year, start_month, start_day (int): Start date components.
+    - end_year, end_month, end_day (int): End date components.
+    - additional_custom_search_string (str, optional): An additional string to append to the search query. Defaults to None.
+
+    Returns:
+    - pd.DataFrame: A DataFrame containing the raw appointment data.
+    """
+    if cohort_searcher_with_terms_and_search is None:
+        raise ValueError("cohort_searcher_with_terms_and_search cannot be None.")
+    if client_id_codes is None:
+        raise ValueError("client_id_codes cannot be None.")
+    if appointments_time_field is None:
+        raise ValueError("appointments_time_field cannot be None.")
+    if any(
+        x is None
+        for x in [start_year, start_month, start_day, end_year, end_month, end_day]
+    ):
+        raise ValueError("Date components cannot be None.")
+    # Ensure client_id_codes is a list for the search function
+    if isinstance(client_id_codes, str):
+        client_id_codes = [client_id_codes]
+
+    start_year, start_month, start_day, end_year, end_month, end_day = validate_input_dates(start_year, start_month, start_day, end_year, end_month, end_day)
+
+    search_string = f"{appointments_time_field}:[{start_year}-{start_month}-{start_day} TO {end_year}-{end_month}-{end_day}]"
+
+    if additional_custom_search_string:
+        search_string += f" {additional_custom_search_string}"
+
+    return cohort_searcher_with_terms_and_search(
+        index_name="pims_apps*",
+        fields_list=APPOINTMENT_FIELDS,
+        term_name="HospitalID.keyword",
+        entered_list=client_id_codes,
+        search_string=search_string,
+    )
 
 
 def get_appointments(
@@ -19,7 +109,7 @@ def get_appointments(
     Retrieves pims_apps features for a given patient within a specified date range.
 
     Parameters:
-    - current_pat_client_id_code (str): The client ID code of the patient.
+    - client_id_codes (str or list): The client ID code(s) of the patient(s).
     - target_date_range (tuple): A tuple representing the target date range.
     - pat_batch (pd.DataFrame): The DataFrame containing patient data.
     - batch_mode (bool, optional): Indicates whether batch mode is enabled. Defaults to False.
@@ -55,81 +145,48 @@ def get_appointments(
             timestamp_string=appointments_time_field,
         )
     else:
-        current_pat_raw = cohort_searcher_with_terms_and_search(
-            index_name="pims_apps*",
-            fields_list=[
-                "Popular",
-                "AppointmentType",
-                "AttendanceReference",
-                "ClinicCode",
-                "ClinicDesc",
-                "Consultant",
-                "DateModified",
-                "DNA",
-                "HospitalID",
-                "PatNHSNo",
-                "Specialty",
-                "AppointmentDateTime",
-                "Attended",
-                "CancDesc",
-                "CancRefNo",
-                "ConsultantCode",
-                "DateCreated",
-                "Ethnicity",
-                "Gender",
-                "NHSNoStatusCode",
-                "NotSpec",
-                "PatDateOfBirth",
-                "PatForename",
-                "PatPostCode",
-                "PatSurname",
-                "PiMsPatRefNo",
-                "Primarykeyfieldname",
-                "Primarykeyfieldvalue",
-                "SessionCode",
-                "SpecialtyCode",
-            ],
-            term_name="HospitalID.keyword",
-            entered_list=[current_pat_client_id_code],
-            search_string=f"{appointments_time_field}:[{start_year}-{start_month}-{start_day} TO {end_year}-{end_month}-{end_day}]",
+        current_pat_raw = search_appointments(
+            cohort_searcher_with_terms_and_search=cohort_searcher_with_terms_and_search,
+            client_id_codes=current_pat_client_id_code,
+            appointments_time_field=appointments_time_field,
+            start_year=start_year,
+            start_month=start_month,
+            start_day=start_day,
+            end_year=end_year,
+            end_month=end_month,
+            end_day=end_day,
         )
 
     current_pat_raw.rename(columns={"HospitalID": "client_idcode"}, inplace=True)
 
     if len(current_pat_raw) == 0:
-
-        features = pd.DataFrame(
-            data=[current_pat_client_id_code], columns=["client_idcode"]
-        )
+        return pd.DataFrame({"client_idcode": [current_pat_client_id_code]})
 
     else:
-
         current_pat_raw = current_pat_raw[current_pat_raw["Attended"].astype(int) == 1]
 
-        # Calculate value counts for consultant_code, ClinicCode, and AppointmentType
-        counts_consultant = current_pat_raw["ConsultantCode"].value_counts()
-        counts_clinic = current_pat_raw["ClinicCode"].value_counts()
-        counts_appointment_type = current_pat_raw["AppointmentType"].value_counts()
+        if not current_pat_raw.empty:
+            # One-hot encode and sum up attendances per patient
+            consultant_features = pd.get_dummies(
+                current_pat_raw, columns=["ConsultantCode"], prefix="ConsultantCode"
+            ).groupby("client_idcode").sum(numeric_only=True)
+            clinic_features = pd.get_dummies(
+                current_pat_raw, columns=["ClinicCode"], prefix="ClinicCode"
+            ).groupby("client_idcode").sum(numeric_only=True)
+            appointment_type_features = pd.get_dummies(
+                current_pat_raw, columns=["AppointmentType"], prefix="AppointmentType"
+            ).groupby("client_idcode").sum(numeric_only=True)
 
-        # Create a dictionary to hold the new feature vector
-        feature_vector = {}
+            # Merge all features
+            features = consultant_features.merge(
+                clinic_features, on="client_idcode", how="outer"
+            ).merge(appointment_type_features, on="client_idcode", how="outer")
+        else:
+            features = pd.DataFrame()
 
-        # Iterate over counts_consultant and populate the feature vector
-        for consultant, count in counts_consultant.items():
-            feature_vector[f"ConsultantCode_{consultant}"] = count
-
-        # Iterate over counts_clinic and populate the feature vector
-        for clinic, count in counts_clinic.items():
-            feature_vector[f"ClinicCode_{clinic}"] = count
-
-        # Iterate over counts_appointment_type and populate the feature vector
-        for appointment_type, count in counts_appointment_type.items():
-            feature_vector[f"AppointmentType_{appointment_type}"] = count
-
-        # Convert the feature vector into a DataFrame with a single row
-        features = pd.DataFrame([feature_vector])
-
-        features["client_idcode"] = current_pat_client_id_code
+        # Ensure all requested patients are in the output, filling missing ones with NaN/0
+        all_clients_df = pd.DataFrame({"client_idcode": [current_pat_client_id_code]})
+        features = pd.merge(all_clients_df, features, on="client_idcode", how="left")
 
     if config_obj.verbosity >= 6:
         display(features)
