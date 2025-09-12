@@ -30,7 +30,7 @@ from pat2vec.util.methods_get import (
 def get_current_pat_annotations_mrc_cs(
     current_pat_client_id_code,
     target_date_range,
-    batch_epr_docs_annotations,
+    batch_mct_docs_annotations,
     config_obj=None,
     t=None,
     cohort_searcher_with_terms_and_search=None,
@@ -42,7 +42,7 @@ def get_current_pat_annotations_mrc_cs(
     Parameters:
     - current_pat_client_id_code (str): The unique identifier for the patient.
     - target_date_range (str): The date range in the format '(YYYY,MM,DD)'.
-    - batch_epr_docs_annotations (pd.DataFrame): DataFrame containing EPR document annotations.
+    - batch_mct_docs_annotations (pd.DataFrame): DataFrame containing MCT document annotations.
     - config_obj (ConfigObject): Configuration object with settings and parameters.
     - t (obj, optional): Placeholder for a progress bar object.
     - cohort_searcher_with_terms_and_search (obj, optional): Placeholder for a cohort searcher object from cogstack search functions.
@@ -90,10 +90,10 @@ def get_current_pat_annotations_mrc_cs(
 
     # display(batch_epr_docs_annotations)
 
-    if batch_epr_docs_annotations is not None:
+    if batch_mct_docs_annotations is not None:
 
-        filtered_batch_epr_docs_annotations = filter_dataframe_by_timestamp(
-            batch_epr_docs_annotations,
+        filtered_batch_mct_docs_annotations = filter_dataframe_by_timestamp(
+            batch_mct_docs_annotations,
             start_year,
             start_month,
             end_year,
@@ -104,16 +104,16 @@ def get_current_pat_annotations_mrc_cs(
             dropna=True,
         )
 
-        if len(filtered_batch_epr_docs_annotations) > 0:
+        if len(filtered_batch_mct_docs_annotations) > 0:
 
             df_pat_target = calculate_pretty_name_count_features(
-                filtered_batch_epr_docs_annotations, suffix="mct"
+                filtered_batch_mct_docs_annotations, suffix="mct"
             )
         else:
             if config_obj.verbosity >= 6:
                 print(
-                    "len(filtered_batch_epr_docs_annotations)>0",
-                    len(filtered_batch_epr_docs_annotations) > 0,
+                    "len(filtered_batch_mct_docs_annotations)>0",
+                    len(filtered_batch_mct_docs_annotations) > 0,
                 )
             df_pat_target = pd.DataFrame(
                 data=[current_pat_client_id_code], columns=["client_idcode"]

@@ -42,26 +42,7 @@ from pat2vec.util.methods_get import (
 def main_batch(
     current_pat_client_id_code,
     target_date_range,
-    batch_demo=None,
-    batch_smoking=None,
-    batch_core_02=None,
-    batch_bednumber=None,
-    batch_vte=None,
-    batch_hospsite=None,
-    batch_resus=None,
-    batch_news=None,
-    batch_bmi=None,
-    batch_diagnostics=None,
-    batch_epr=None,
-    batch_mct=None,
-    batch_reports=None,
-    batch_bloods=None,
-    batch_drugs=None,
-    batch_epr_docs_annotations=None,
-    batch_epr_docs_annotations_mct=None,
-    batch_report_docs_annotations=None,
-    batch_appointments=None,
-    batch_textual_obs_annotations=None,
+    batches=None,
     config_obj=None,
     stripped_list_start=None,
     t=None,
@@ -71,11 +52,10 @@ def main_batch(
     """Orchestrates the feature extraction process for a single patient within a specific time window.
 
     This function serves as the main entry point for processing a patient's data in batch mode.
-    It iterates through the feature extraction modules enabled in the configuration object (`config_obj`).
-    For each enabled feature (e.g., demographics, bloods, annotations), it calls the
-    corresponding `get_*` function, passing the pre-fetched batch data. The resulting feature
-    DataFrames are then concatenated into a single feature vector for the given patient and
-    target date range.
+    It iterates through a list of predefined feature configurations. For each feature enabled
+    in `config_obj.main_options`, it calls the corresponding `get_*` function, passing the
+    pre-fetched data from the `batches` dictionary. The resulting feature DataFrames are
+    concatenated into a single feature vector for the given patient and time slice.
 
     The final feature vector is saved as a CSV file to a specified directory, effectively creating
     a time-slice representation of the patient's state.
@@ -84,26 +64,8 @@ def main_batch(
         current_pat_client_id_code (str): The unique identifier for the patient being processed.
         target_date_range (tuple): A tuple representing the specific time window (e.g., (YYYY, MM, DD))
             for which to generate the feature vector.
-        batch_demo (pd.DataFrame, optional): Pre-fetched batch data for demographics.
-        batch_smoking (pd.DataFrame, optional): Pre-fetched batch data for smoking status.
-        batch_core_02 (pd.DataFrame, optional): Pre-fetched batch data for SpO2 observations.
-        batch_bednumber (pd.DataFrame, optional): Pre-fetched batch data for bed numbers.
-        batch_vte (pd.DataFrame, optional): Pre-fetched batch data for VTE status.
-        batch_hospsite (pd.DataFrame, optional): Pre-fetched batch data for hospital sites.
-        batch_resus (pd.DataFrame, optional): Pre-fetched batch data for resuscitation status.
-        batch_news (pd.DataFrame, optional): Pre-fetched batch data for NEWS scores.
-        batch_bmi (pd.DataFrame, optional): Pre-fetched batch data for BMI-related observations.
-        batch_diagnostics (pd.DataFrame, optional): Pre-fetched batch data for diagnostic orders.
-        batch_epr (pd.DataFrame, optional): Pre-fetched batch data for EPR documents (deprecated, use annotations).
-        batch_mct (pd.DataFrame, optional): Pre-fetched batch data for MRC documents (deprecated, use annotations).
-        batch_reports (pd.DataFrame, optional): Pre-fetched batch data for reports. Its presence is a prerequisite for report annotations.
-        batch_bloods (pd.DataFrame, optional): Pre-fetched batch data for blood tests.
-        batch_drugs (pd.DataFrame, optional): Pre-fetched batch data for drug orders.
-        batch_epr_docs_annotations (pd.DataFrame, optional): Pre-fetched batch data for EPR document annotations.
-        batch_epr_docs_annotations_mct (pd.DataFrame, optional): Pre-fetched batch data for MRC document annotations.
-        batch_report_docs_annotations (pd.DataFrame, optional): Pre-fetched batch data for report annotations.
-        batch_appointments (pd.DataFrame, optional): Pre-fetched batch data for appointments.
-        batch_textual_obs_annotations (pd.DataFrame, optional): Pre-fetched batch data for textual observation annotations.
+        batches (dict[str, pd.DataFrame], optional): A dictionary containing all pre-fetched
+            data batches for the patient, keyed by batch name (e.g., 'batch_demo').
         config_obj (object, optional): A configuration object containing settings like `main_options`,
             paths, and verbosity.
         stripped_list_start (list, optional): A list of patient IDs that have already been processed
@@ -125,6 +87,11 @@ def main_batch(
     if config_obj is None:
         raise ValueError(
             "config_obj cannot be None. Please provide a valid configuration. (main_batch)"
+        )
+
+    if batches is None:
+        raise ValueError(
+            "batches cannot be None. Please provide a valid dictionary of dataframes. (main_batch)"
         )
 
     if cohort_searcher_with_terms_and_search is None:
@@ -196,217 +163,87 @@ def main_batch(
 
             try:
                 patient_vector = []
-
                 p_bar_entry = current_pat_client_id_code + "_" + str(target_date_range)
 
-                if main_options.get("demo"):
-                    update_pbar(p_bar_entry, start_time, 0, "demo", t, config_obj)
-                    current_pat_demo = get_demo(
-                        current_pat_client_id_code,  # Current patient client_idcode.
-                        target_date_range,  # Date range tuple.
-                        batch_demo,  # Batch demo data for given global time window.
-                        config_obj=config_obj,  # Pat2vec config object.
-                    )
+                # Define which functions require special or optional arguments.
+                # This makes the calling mechanism more robust and easier to extend.
+                funcs_with_cohort_searcher = {
+                    get_current_pat_drugs, get_current_pat_diagnostics, get_current_pat_annotations,
+                    get_current_pat_annotations_mrc_cs, get_core_02, get_bed, get_vte_status,
+                    get_hosp_site, get_core_resus, get_news, get_smoking,
+                    get_current_pat_report_annotations, get_current_pat_textual_obs_annotations,
+                    get_appointments
+                }
+                funcs_with_cat = {
+                    get_current_pat_annotations, get_current_pat_annotations_mrc_cs
+                }
+                funcs_with_t = {
+                    get_current_pat_annotations, get_current_pat_annotations_mrc_cs,
+                    get_current_pat_textual_obs_annotations
+                }
 
-                    patient_vector.append(
-                        current_pat_demo
-                    )  # Append demo feature data to current patient vector for this date range.
+                feature_configs = [
+                    # Simple functions (no optional cohort_searcher, cat, or t)
+                    {"option": "demo", "pbar": "demo", "func": get_demo, "batch_arg": "pat_batch", "batch_key": "batch_demo"},
+                    {"option": "bmi", "pbar": "bmi", "func": get_bmi_features, "batch_arg": "pat_batch", "batch_key": "batch_bmi"},
+                    {"option": "bloods", "pbar": "bloods", "func": get_current_pat_bloods, "batch_arg": "pat_batch", "batch_key": "batch_bloods"},
 
-                if main_options.get("bmi"):
-                    update_pbar(p_bar_entry, start_time, 1, "bmi", t, config_obj)
-                    bmi_features = get_bmi_features(
-                        current_pat_client_id_code,
-                        target_date_range,
-                        batch_bmi,
-                        config_obj=config_obj,
-                    )
-                    patient_vector.append(bmi_features)
+                    # Functions that can accept cohort_searcher
+                    {"option": "drugs", "pbar": "drugs", "func": get_current_pat_drugs, "batch_arg": "pat_batch", "batch_key": "batch_drugs"},
+                    {"option": "diagnostics", "pbar": "diagnostics", "func": get_current_pat_diagnostics, "batch_arg": "pat_batch", "batch_key": "batch_diagnostics"},
+                    {"option": "core_02", "pbar": "core_02", "func": get_core_02, "batch_arg": "pat_batch", "batch_key": "batch_core_02"},
+                    {"option": "bed", "pbar": "bed", "func": get_bed, "batch_arg": "pat_batch", "batch_key": "batch_bednumber"},
+                    {"option": "vte_status", "pbar": "vte_status", "func": get_vte_status, "batch_arg": "pat_batch", "batch_key": "batch_vte"},
+                    {"option": "hosp_site", "pbar": "hosp_site", "func": get_hosp_site, "batch_arg": "pat_batch", "batch_key": "batch_hospsite"},
+                    {"option": "core_resus", "pbar": "core_resus", "func": get_core_resus, "batch_arg": "pat_batch", "batch_key": "batch_resus"},
+                    {"option": "news", "pbar": "news", "func": get_news, "batch_arg": "pat_batch", "batch_key": "batch_news"},
+                    {"option": "smoking", "pbar": "smoking", "func": get_smoking, "batch_arg": "pat_batch", "batch_key": "batch_smoking"},
+                    {"option": "appointments", "pbar": "appointments", "func": get_appointments, "batch_arg": "pat_batch", "batch_key": "batch_appointments"},
 
-                if main_options.get("bloods"):
-                    update_pbar(p_bar_entry, start_time, 2, "bloods", t, config_obj)
-                    current_pat_bloods = get_current_pat_bloods(
-                        current_pat_client_id_code,
-                        target_date_range,
-                        batch_bloods,
-                        config_obj=config_obj,
-                    )
-                    patient_vector.append(current_pat_bloods)
+                    # Annotation functions with more complex signatures
+                    {
+                        "option": "annotations", "pbar": "annotations_epr", "func": get_current_pat_annotations,
+                        "batch_arg": "batch_epr_docs_annotations", "batch_key": "batch_epr_docs_annotations"
+                    },
+                    {
+                        "option": "annotations_mrc", "pbar": "annotations_mrc", "func": get_current_pat_annotations_mrc_cs,
+                        "batch_arg": "batch_mct_docs_annotations", "batch_key": "batch_epr_docs_annotations_mct"
+                    },
+                    {
+                        "option": "annotations_reports", "pbar": "annotations_reports", "func": get_current_pat_report_annotations,
+                        "batch_arg": "report_annotations", "batch_key": "batch_report_docs_annotations"
+                    },
+                    {
+                        "option": "textual_obs", "pbar": "textual_obs", "func": get_current_pat_textual_obs_annotations,
+                        "batch_arg": "textual_obs_annotations", "batch_key": "batch_textual_obs_annotations"
+                    },
+                ]
 
-                if main_options.get("drugs"):
-                    update_pbar(p_bar_entry, start_time, 3, "drugs", t, config_obj)
-                    current_pat_drugs = get_current_pat_drugs(
-                        current_pat_client_id_code,
-                        target_date_range,
-                        batch_drugs,
-                        config_obj=config_obj,
-                    )
-                    patient_vector.append(current_pat_drugs)
+                for i, config in enumerate(feature_configs):
+                    if main_options.get(config["option"]):
+                        update_pbar(p_bar_entry, start_time, i, config["pbar"], t, config_obj)
 
-                if main_options.get("diagnostics"):
-                    update_pbar(
-                        p_bar_entry, start_time, 4, "diagnostics", t, config_obj
-                    )
-                    current_pat_diagnostics = get_current_pat_diagnostics(
-                        current_pat_client_id_code,
-                        target_date_range,
-                        batch_diagnostics,
-                        config_obj=config_obj,
-                    )
-                    patient_vector.append(current_pat_diagnostics)
+                        # Dynamically build the arguments dictionary for each function
+                        args = {
+                            "current_pat_client_id_code": current_pat_client_id_code,
+                            "target_date_range": target_date_range,
+                            "config_obj": config_obj,
+                        }
 
-                if main_options.get("annotations"):
-                    update_pbar(
-                        p_bar_entry, start_time, 4, "annotations_epr", t, config_obj
-                    )
-                    df_pat_target = get_current_pat_annotations(
-                        current_pat_client_id_code,
-                        target_date_range,
-                        # batch_epr,
-                        batch_epr_docs_annotations=batch_epr_docs_annotations,
-                        config_obj=config_obj,
-                        t=t,
-                        cohort_searcher_with_terms_and_search=cohort_searcher_with_terms_and_search,
-                        cat=cat,
-                    )
+                        # Add the specific batch dataframe for the function
+                        args[config["batch_arg"]] = batches[config["batch_key"]]
 
-                    patient_vector.append(df_pat_target)
+                        # Add optional arguments only if the function expects them
+                        if config["func"] in funcs_with_cohort_searcher:
+                            args["cohort_searcher_with_terms_and_search"] = cohort_searcher_with_terms_and_search
+                        if config["func"] in funcs_with_cat:
+                            args["cat"] = cat
+                        if config["func"] in funcs_with_t:
+                            args["t"] = t
 
-                if main_options.get("annotations_mrc"):
-                    update_pbar(
-                        p_bar_entry, start_time, 4, "annotations_mrc", t, config_obj
-                    )
-                    df_pat_target = get_current_pat_annotations_mrc_cs(
-                        current_pat_client_id_code,
-                        target_date_range,
-                        # batch_mct,
-                        batch_epr_docs_annotations=batch_epr_docs_annotations_mct,
-                        config_obj=config_obj,
-                        t=t,
-                        cohort_searcher_with_terms_and_search=cohort_searcher_with_terms_and_search,
-                        cat=cat,
-                    )
-                    patient_vector.append(df_pat_target)
-
-                if main_options.get("core_02"):
-                    update_pbar(p_bar_entry, start_time, 1, "core_02", t, config_obj)
-                    df_pat_target = get_core_02(
-                        current_pat_client_id_code,
-                        target_date_range,
-                        batch_core_02,
-                        config_obj=config_obj,
-                        cohort_searcher_with_terms_and_search=cohort_searcher_with_terms_and_search,
-                    )
-                    patient_vector.append(df_pat_target)
-
-                if main_options.get("bed"):
-                    update_pbar(p_bar_entry, start_time, 2, "bed", t, config_obj)
-                    df_pat_target = get_bed(
-                        current_pat_client_id_code,
-                        target_date_range,
-                        batch_bednumber,
-                        config_obj=config_obj,
-                        cohort_searcher_with_terms_and_search=cohort_searcher_with_terms_and_search,
-                    )
-                    patient_vector.append(df_pat_target)
-
-                if main_options.get("vte_status"):
-                    update_pbar(p_bar_entry, start_time, 3, "vte_status", t, config_obj)
-                    df_pat_target = get_vte_status(
-                        current_pat_client_id_code,
-                        target_date_range,
-                        batch_vte,
-                        config_obj=config_obj,
-                        cohort_searcher_with_terms_and_search=cohort_searcher_with_terms_and_search,
-                    )
-                    patient_vector.append(df_pat_target)
-
-                if main_options.get("hosp_site"):
-                    update_pbar(p_bar_entry, start_time, 4, "hosp_site", t, config_obj)
-                    df_pat_target = get_hosp_site(
-                        current_pat_client_id_code,
-                        target_date_range,
-                        batch_hospsite,
-                        config_obj=config_obj,
-                        cohort_searcher_with_terms_and_search=cohort_searcher_with_terms_and_search,
-                    )
-                    patient_vector.append(df_pat_target)
-
-                if main_options.get("core_resus"):
-                    update_pbar(p_bar_entry, start_time, 1, "core_resus", t, config_obj)
-                    df_pat_target = get_core_resus(
-                        current_pat_client_id_code,
-                        target_date_range,
-                        batch_resus,
-                        config_obj=config_obj,
-                        cohort_searcher_with_terms_and_search=cohort_searcher_with_terms_and_search,
-                    )
-                    patient_vector.append(df_pat_target)
-
-                if main_options.get("news"):
-                    update_pbar(p_bar_entry, start_time, 2, "news", t, config_obj)
-                    df_pat_target = get_news(
-                        current_pat_client_id_code,
-                        target_date_range,
-                        batch_news,
-                        config_obj=config_obj,
-                        cohort_searcher_with_terms_and_search=cohort_searcher_with_terms_and_search,
-                    )
-                    patient_vector.append(df_pat_target)
-
-                if main_options.get("smoking"):
-                    update_pbar(p_bar_entry, start_time, 2, "smoking", t, config_obj)
-                    df_pat_target = get_smoking(
-                        current_pat_client_id_code,
-                        target_date_range,
-                        batch_smoking,
-                        config_obj=config_obj,
-                        cohort_searcher_with_terms_and_search=cohort_searcher_with_terms_and_search,
-                    )
-                    patient_vector.append(df_pat_target)
-
-                if main_options.get("annotations_reports"):
-                    update_pbar(
-                        p_bar_entry, start_time, 4, "annotations_reports", t, config_obj
-                    )
-
-                    df_pat_target = get_current_pat_report_annotations(
-                        current_pat_client_id_code=current_pat_client_id_code,
-                        target_date_range=target_date_range,
-                        report_annotations=batch_report_docs_annotations,
-                        config_obj=config_obj,
-                        cohort_searcher_with_terms_and_search=cohort_searcher_with_terms_and_search,
-                    )
-                    patient_vector.append(df_pat_target)
-
-                if main_options.get("textual_obs"):
-
-                    update_pbar(
-                        p_bar_entry, start_time, 1, "textual_obs", t, config_obj
-                    )
-
-                    df_pat_target = get_current_pat_textual_obs_annotations(
-                        current_pat_client_id_code=current_pat_client_id_code,
-                        target_date_range=target_date_range,
-                        textual_obs_annotations=batch_textual_obs_annotations,
-                        config_obj=config_obj,
-                        t=t,
-                        cohort_searcher_with_terms_and_search=cohort_searcher_with_terms_and_search,
-                    )
-                    patient_vector.append(df_pat_target)
-
-                if main_options.get("appointments"):
-                    update_pbar(
-                        p_bar_entry, start_time, 3, "appointments", t, config_obj
-                    )
-
-                    df_pat_target = get_appointments(
-                        current_pat_client_id_code=current_pat_client_id_code,
-                        target_date_range=target_date_range,
-                        pat_batch=batch_appointments,
-                        config_obj=config_obj,
-                        cohort_searcher_with_terms_and_search=cohort_searcher_with_terms_and_search,
-                    )
-                    patient_vector.append(df_pat_target)
+                        # Call the function with the prepared arguments
+                        feature_df = config["func"](**args)
+                        patient_vector.append(feature_df)
 
                 update_pbar(p_bar_entry, start_time, 2, "concatenating", t, config_obj)
 
