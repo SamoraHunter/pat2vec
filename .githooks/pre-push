@@ -1,27 +1,28 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # .githooks/pre-push
+set -e  # exit on any failure
 
-# Navigate to the repository root (relative to the hook location)
+# Navigate to repository root (relative to the hook location)
 cd "$(dirname "$0")/.."
 
-# Activate the virtual environment (if needed)
-VENV_PATH=$(find . -type d -name "pat2vec_env")
-if [ -n "$VENV_PATH" ]; then
-  source "$VENV_PATH/bin/activate"
-else
-  echo "Virtual environment not found. Exiting."
-  exit 1
-fi
+# Relative path to Python in the venv
+VENV_PYTHON="./pat2vec_env/bin/python"
 
-# Run the same test command as in the GitHub Actions workflow
-echo "Running tests before pushing..."
-pytest notebooks/test_notebook.py
-
-# Check the exit status of the test command
-if [ $? -ne 0 ]; then
-    echo "Tests failed. Push aborted."
+if [ ! -x "$VENV_PYTHON" ]; then
+    echo "Virtual environment Python not found at $VENV_PYTHON"
     exit 1
 fi
+
+# Generate __init__.py
+echo "Generating pat2vec/__init__.py..."
+"$VENV_PYTHON" generate_init.py > pat2vec/__init__.py
+
+# Run tests with PYTHONPATH=.
+echo "Running test suite under pat2vec/tests..."
+PYTHONPATH=. "$VENV_PYTHON" -m pytest pat2vec/tests
+
+echo "Running notebook tests..."
+PYTHONPATH=. "$VENV_PYTHON" -m pytest notebooks/test_notebook.py
 
 echo "All checks passed. Proceeding with push."
 exit 0
