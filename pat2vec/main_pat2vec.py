@@ -255,6 +255,363 @@ class main:
 
             prefetch_batches(pat2vec_obj=self)
 
+    def _get_patient_data_batches(self, current_pat_client_id_code):
+        """Fetches and organizes all data batches for a single patient.
+
+        This method centralizes and modularizes the data fetching logic previously
+        handled directly within `pat_maker`. It uses a configuration-driven
+        approach to retrieve various types of patient data (e.g., clinical notes,
+        lab results, demographics) based on the settings in `self.config_obj`.
+
+        The core of this method is two configuration lists:
+        - `batch_configs`: For standard data types like bloods, drugs, and demographics.
+        - `annotation_batch_configs`: For text-derived annotations from MedCAT.
+
+        Each entry in these lists is a dictionary that specifies:
+        - `option`: The key in `self.config_obj.main_options` that enables/disables
+          this data source.
+        - `var`: The variable name to use as the key in the returned dictionary.
+        - `func`: The specific `get_pat_batch_*` function responsible for fetching
+          the data.
+        - `args`: A dictionary of additional arguments for the fetch function (e.g.,
+          a specific `search_term`).
+        - `empty`: An empty DataFrame with the correct schema to use as a
+          fallback if the data source is disabled or returns no data.
+
+        This design makes the system highly extensible. To add a new data source,
+        a developer only needs to:
+        1. Create a new `get_pat_batch_<new_source>` function.
+        2. Add a corresponding configuration dictionary to the `batch_configs` or
+           `annotation_batch_configs` list within this method.
+
+        Args:
+            current_pat_client_id_code (str): The unique identifier for the patient
+                for whom to fetch data batches.
+
+        Returns:
+            dict[str, pd.DataFrame]: A dictionary where keys are the batch names
+                (e.g., 'batch_epr', 'batch_bloods') and values are the fetched
+                pandas DataFrames. If a data source is disabled in the main
+                configuration or if no data is found for the patient, the
+                corresponding value will be an appropriately structured empty
+                DataFrame.
+        """
+        empty_return = pd.DataFrame()
+        empty_return_epr = pd.DataFrame(columns=["updatetime", "body_analysed"])
+        empty_return_mct = pd.DataFrame(
+            columns=["observationdocument_recordeddtm", "observation_valuetext_analysed"]
+        )
+        empty_return_textual_obs = pd.DataFrame(columns=["basicobs_entered", "textualObs"])
+        empty_return_reports = pd.DataFrame(
+            columns=["updatetime", "observation_valuetext_analysed"]
+        )
+
+        # Configuration for standard data batches
+        batch_configs = [
+            {
+                "option": "annotations", "var": "batch_epr", "func": get_pat_batch_epr_docs,
+                "args": {"search_term": None}, "empty": empty_return_epr
+            },
+            {
+                "option": "annotations_mrc", "var": "batch_mct", "func": get_pat_batch_mct_docs,
+                "args": {"search_term": None}, "empty": empty_return_mct
+            },
+            {
+                "option": "textual_obs", "var": "batch_textual_obs_docs", "func": get_pat_batch_textual_obs_docs,
+                "args": {"search_term": None}, "empty": empty_return_textual_obs
+            },
+            {
+                "option": "annotations_reports", "var": "batch_reports", "func": get_pat_batch_reports,
+                "args": {"search_term": None}, "empty": empty_return_reports
+            },
+            {
+                "option": "smoking", "var": "batch_smoking", "func": get_pat_batch_obs,
+                "args": {"search_term": "CORE_SmokingStatus"}, "empty": empty_return
+            },
+            {
+                "option": "core_02", "var": "batch_core_02", "func": get_pat_batch_obs,
+                "args": {"search_term": "CORE_SpO2"}, "empty": empty_return
+            },
+            {
+                "option": "bed", "var": "batch_bednumber", "func": get_pat_batch_obs,
+                "args": {"search_term": "CORE_BedNumber3"}, "empty": empty_return
+            },
+            {
+                "option": "vte_status", "var": "batch_vte", "func": get_pat_batch_obs,
+                "args": {"search_term": "CORE_VTE_STATUS"}, "empty": empty_return
+            },
+            {
+                "option": "hosp_site", "var": "batch_hospsite", "func": get_pat_batch_obs,
+                "args": {"search_term": "CORE_HospitalSite"}, "empty": empty_return
+            },
+            {
+                "option": "core_resus", "var": "batch_resus", "func": get_pat_batch_obs,
+                "args": {"search_term": "CORE_RESUS_STATUS"}, "empty": empty_return
+            },
+            {
+                "option": "news", "var": "batch_news", "func": get_pat_batch_news,
+                "args": {"search_term": None}, "empty": empty_return
+            },
+            {
+                "option": "bmi", "var": "batch_bmi", "func": get_pat_batch_bmi,
+                "args": {"search_term": None}, "empty": empty_return
+            },
+            {
+                "option": "diagnostics", "var": "batch_diagnostics", "func": get_pat_batch_diagnostics,
+                "args": {"search_term": None}, "empty": empty_return
+            },
+            {
+                "option": "drugs", "var": "batch_drugs", "func": get_pat_batch_drugs,
+                "args": {"search_term": None}, "empty": empty_return
+            },
+            {
+                "option": "demo", "var": "batch_demo", "func": get_pat_batch_demo,
+                "args": {"search_term": None}, "empty": empty_return
+            },
+            {
+                "option": "bloods", "var": "batch_bloods", "func": get_pat_batch_bloods,
+                "args": {"search_term": None}, "empty": empty_return
+            },
+            {
+                "option": "appointments", "var": "batch_appointments", "func": get_pat_batch_appointments,
+                "args": {"search_term": None}, "empty": empty_return
+            },
+        ]
+
+        # Configuration for annotation batches
+        annotation_batch_configs = [
+            {
+                "option": "annotations", "var": "batch_epr_docs_annotations",
+                "func": get_pat_batch_epr_docs_annotations, "empty": empty_return_epr
+            },
+            {
+                "option": "annotations_mrc", "var": "batch_epr_docs_annotations_mct",
+                "func": get_pat_batch_mct_docs_annotations, "empty": empty_return_mct
+            },
+            {
+                "option": "textual_obs", "var": "batch_textual_obs_annotations",
+                "func": get_pat_batch_textual_obs_annotations, "empty": empty_return_textual_obs
+            },
+            {
+                "option": "annotations_reports", "var": "batch_reports_docs_annotations",
+                "func": get_pat_batch_reports_docs_annotations, "empty": empty_return_reports
+            },
+        ]
+
+        batches = {}
+
+        # Fetch standard batches
+        for config in batch_configs:
+            if self.config_obj.main_options.get(config["option"], True):
+                batches[config["var"]] = config["func"](
+                    current_pat_client_id_code=current_pat_client_id_code,
+                    config_obj=self.config_obj,
+                    cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search,
+                    **config["args"]
+                )
+            else:
+                batches[config["var"]] = config["empty"]
+
+        # Fetch annotation batches
+        for config in annotation_batch_configs:
+            if self.config_obj.main_options.get(config["option"], True):
+                batch_result = config["func"](
+                    current_pat_client_id_code,
+                    config_obj=self.config_obj,
+                    cat=self.cat,
+                    t=self.t,
+                )
+                # Handle cases where annotation functions might return None
+                if batch_result is None:
+                    if self.config_obj.verbosity > 2:
+                        print(f"{config['var']} empty")
+                    batches[config["var"]] = config["empty"]
+                else:
+                    batches[config["var"]] = batch_result
+            else:
+                batches[config["var"]] = config["empty"]
+
+        return batches
+
+    def _setup_patient_time_window(self, current_pat_client_id_code):
+        """
+        Sets up and returns the date list for a patient, handling IPW logic.
+        """
+        if self.config_obj.verbosity >= 4:
+            print("main_pat2vec>self.config_obj.individual_patient_window: ")
+
+        # Default to global date list if not using IPW
+        if not self.config_obj.individual_patient_window:
+            return self.config_obj.date_list
+
+        pat_dates = self.config_obj.patient_dict.get(current_pat_client_id_code)
+
+        if not pat_dates:  # It's a control patient
+            if self.config_obj.individual_patient_window_controls_method == "full":
+                current_pat_start_date = datetime(
+                    int(self.config_obj.initial_global_start_year),
+                    int(self.config_obj.initial_global_start_month),
+                    int(self.config_obj.initial_global_start_day),
+                )
+                current_pat_end_date = datetime(
+                    int(self.config_obj.initial_global_end_year),
+                    int(self.config_obj.initial_global_end_month),
+                    int(self.config_obj.initial_global_end_day),
+                )
+                if self.config_obj.verbosity >= 4:
+                    print(f"Control pat full {current_pat_client_id_code} ipw dates set:")
+                    print("Start Date:", current_pat_start_date)
+                    print("End Date:", current_pat_end_date)
+
+            elif self.config_obj.individual_patient_window_controls_method == "random":
+                # Select a random treatment's time window for application.
+                patient_ids = list(self.config_obj.patient_dict.keys())
+                if not patient_ids:
+                    print("Warning: Cannot use 'random' control method with an empty patient_dict. Skipping.")
+                    return None
+                random_pat_id = random.choice(patient_ids)
+                pat_dates = self.config_obj.patient_dict.get(random_pat_id)
+                current_pat_start_date, current_pat_end_date = pat_dates
+            else:
+                print(f"Unknown control method: {self.config_obj.individual_patient_window_controls_method}")
+                return None
+        else:  # It's a treatment patient
+            if len(pat_dates) != 2:
+                print(f"Warning: Invalid dates for patient {current_pat_client_id_code}. Skipping.")
+                return None
+            current_pat_start_date, current_pat_end_date = pat_dates
+
+        # Safeguard against invalid date types
+        if pd.isna(current_pat_start_date) or pd.isna(current_pat_end_date) or not isinstance(current_pat_start_date, datetime) or not isinstance(current_pat_end_date, datetime):
+            print(f"Warning: Dates for patient {current_pat_client_id_code} are invalid. Skipping.")
+            return None
+
+        # Determine anchor date for generation and clamping boundaries
+        p_real_start, p_real_end = min(current_pat_start_date, current_pat_end_date), max(current_pat_start_date, current_pat_end_date)
+        date_for_generate = p_real_end if self.config_obj.lookback else p_real_start
+
+        # Override global dates as a workaround for generate_date_list
+        self.config_obj.global_start_year = str(p_real_start.year).zfill(4)
+        self.config_obj.global_start_month = str(p_real_start.month).zfill(2)
+        self.config_obj.global_start_day = str(p_real_start.day).zfill(2)
+        self.config_obj.global_end_year = str(p_real_end.year).zfill(4)
+        self.config_obj.global_end_month = str(p_real_end.month).zfill(2)
+        self.config_obj.global_end_day = str(p_real_end.day).zfill(2)
+        self.config_obj.start_date = date_for_generate
+
+        date_list = generate_date_list(
+            date_for_generate,
+            self.config_obj.years,
+            self.config_obj.months,
+            self.config_obj.days,
+            self.config_obj.time_window_interval_delta,
+            config_obj=self.config_obj,
+        )
+
+        if self.config_obj.verbosity >= 4:
+            print("ipw, datelist", current_pat_client_id_code)
+            print(date_list[0:5] if date_list else "date_list is empty")
+
+        self.n_pat_lines = len(date_list)
+        return date_list
+
+    def _clean_document_batches(self, batches):
+        """
+        Cleans timestamp columns for all document-related batches.
+        """
+        doc_configs = [
+            {"key": "batch_epr", "time_col": "updatetime", "text_col": "body_analysed", "option": "annotations"},
+            {"key": "batch_mct", "time_col": "observationdocument_recordeddtm", "text_col": "observation_valuetext_analysed", "option": "annotations_mrc"},
+            {"key": "batch_reports", "time_col": "updatetime", "text_col": None, "option": "annotations_reports"},
+            {"key": "batch_textual_obs_docs", "time_col": "basicobs_entered", "text_col": None, "option": "textual_obs"},
+            {"key": "batch_epr_docs_annotations", "time_col": "updatetime", "text_col": None, "option": "annotations"},
+            {"key": "batch_epr_docs_annotations_mct", "time_col": "observationdocument_recordeddtm", "text_col": None, "option": "annotations_mrc"},
+            {"key": "batch_reports_docs_annotations", "time_col": "updatetime", "text_col": None, "option": "annotations_reports"},
+        ]
+
+        for config in doc_configs:
+            if self.config_obj.main_options.get(config["option"], True):
+                batch = batches.get(config["key"])
+                if batch is not None and not batch.empty:
+                    time_col = config["time_col"]
+                    text_col = config["text_col"]
+
+                    try:
+                        batch[time_col] = pd.to_datetime(batch[time_col], errors="coerce", utc=True)
+                        batch.dropna(subset=[time_col], inplace=True)
+
+                        if text_col:
+                            batch.dropna(subset=[text_col], inplace=True)
+                            batch = batch[batch[text_col].apply(lambda x: isinstance(x, str))]
+
+                        batches[config["key"]] = batch
+                    except Exception as e:
+                        print(f"Error cleaning batch {config['key']}: {e}")
+                        print(type(batch))
+                        print(batch.columns)
+
+        if self.config_obj.verbosity > 3:
+            print("post batch timestamp na drop:")
+            print("EPR:", len(batches["batch_epr"]))
+            print("MCT:", len(batches["batch_mct"]))
+            print("EPR annotations:", len(batches["batch_epr_docs_annotations"]))
+            print("EPR annotations mct:", len(batches["batch_epr_docs_annotations_mct"]))
+            print("textual obs docs:", len(batches["batch_textual_obs_docs"]))
+            print("textual obs annotations:", len(batches["batch_textual_obs_annotations"]))
+            print("batch_report_docs_annotations:", len(batches["batch_reports_docs_annotations"]))
+
+        return batches
+
+    def _process_patient_slices(self, current_pat_client_id_code, date_list, batches):
+        """
+        Iterates through time slices and calls main_batch to generate feature vectors.
+        """
+        run_on_pat = current_pat_client_id_code not in self.stripped_list
+
+        if not run_on_pat:
+            return
+
+        for j, date_slice in enumerate(date_list):
+            try:
+                if self.config_obj.verbosity > 5:
+                    print(f"Processing date {date_slice} for patient {current_pat_client_id_code}...")
+
+                if self.config_obj.calculate_vectors:
+                    main_batch(
+                        current_pat_client_id_code,
+                        date_slice,
+                        batch_demo=batches["batch_demo"],
+                        batch_smoking=batches["batch_smoking"],
+                        batch_core_02=batches["batch_core_02"],
+                        batch_bednumber=batches["batch_bednumber"],
+                        batch_vte=batches["batch_vte"],
+                        batch_hospsite=batches["batch_hospsite"],
+                        batch_resus=batches["batch_resus"],
+                        batch_news=batches["batch_news"],
+                        batch_bmi=batches["batch_bmi"],
+                        batch_diagnostics=batches["batch_diagnostics"],
+                        batch_epr=batches["batch_epr"],
+                        batch_mct=batches["batch_mct"],
+                        batch_bloods=batches["batch_bloods"],
+                        batch_drugs=batches["batch_drugs"],
+                        batch_epr_docs_annotations=batches["batch_epr_docs_annotations"],
+                        batch_epr_docs_annotations_mct=batches["batch_epr_docs_annotations_mct"],
+                        batch_report_docs_annotations=batches["batch_reports_docs_annotations"],
+                        batch_textual_obs_annotations=batches["batch_textual_obs_annotations"],
+                        batch_appointments=batches["batch_appointments"],
+                        config_obj=self.config_obj,
+                        stripped_list_start=self.stripped_list_start,
+                        t=self.t,
+                        cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search,
+                        cat=self.cat,
+                    )
+
+            except Exception as e:
+                print(e)
+                print(f"Exception in patmaker on {current_pat_client_id_code, date_slice}")
+                print(traceback.format_exc())
+                raise e
+
     def pat_maker(self, i):
         """Orchestrates the entire feature extraction process for a single patient.
 
@@ -312,6 +669,7 @@ class main:
         stripped_list = self.stripped_list
         all_patient_list = self.all_patient_list
         skipped_counter = self.config_obj.skipped_counter
+        current_pat_client_id_code = str(self.all_patient_list[i])
 
         remote_dump = self.config_obj.remote_dump
         hostname = self.config_obj.hostname
@@ -339,6 +697,8 @@ class main:
 
         if self.config_obj.individual_patient_window:
 
+        # Check if patient has already been processed
+        if current_pat_client_id_code in self.stripped_list_start:
             if self.config_obj.verbosity >= 4:
                 print("main_pat2vec>self.config_obj.individual_patient_window: ")
 
@@ -391,7 +751,16 @@ class main:
                         all_patient_list[index]
                     )[1]
 
+                print(f"patient {i} in stripped_list_start")
+            skipped_counter = self.config_obj.skipped_counter
+            if self.config_obj.multi_process is False:
+                skipped_counter += 1
             else:
+                with skipped_counter.get_lock():
+                    skipped_counter.value += 1
+            if self.config_obj.verbosity > 0:
+                print(f"Skipped {i}")
+            return
 
                 # Pat is in patient_dict.keys... Simplified and robust date retrieval.
                 pat_dates = self.config_obj.patient_dict.get(all_patient_list[i])
@@ -548,26 +917,49 @@ class main:
                 print("ipw, datelist", current_pat_client_id_code)
                 print(self.config_obj.date_list[0:5])
 
+        create_folders_for_pat(current_pat_client_id_code, self.config_obj)
         start_time = time.time()
 
         if self.config_obj.verbosity >= 4:
             print("pat maker called: opts: ", self.config_obj.main_options)
+        # 1. Set up time window for the patient
+        date_list = self._setup_patient_time_window(current_pat_client_id_code)
+        if date_list is None:
+            return  # Skip patient if time window setup fails
 
+        # 2. Update progress and fetch data batches
         update_pbar(
             p_bar_entry,
+            current_pat_client_id_code,
             start_time,
             0,
             f"Pat_maker called on {i}...",
             self.t,
             self.config_obj,
             skipped_counter,
+            self.config_obj.skipped_counter,
         )
+        batches = self._get_patient_data_batches(current_pat_client_id_code)
 
         sftp_obj = self.config_obj.sftp_obj
+        update_pbar(
+            current_pat_client_id_code,
+            start_time,
+            0,
+            f"Done batches in {time.time()-start_time}",
+            self.t,
+            self.config_obj,
+            self.config_obj.skipped_counter,
+        )
 
         # get_pat batches
+        # 3. Clean document batches if required
+        if self.config_obj.dropna_doc_timestamps:
+            batches = self._clean_document_batches(batches)
 
         stripped_list = stripped_list_start.copy()
+        # 4. Process patient data in time slices
+        self._process_patient_slices(current_pat_client_id_code, date_list, batches)
 
         if self.config_obj.verbosity >= 4:
             print("stripped_list_start")
@@ -587,276 +979,29 @@ class main:
                 skipped_counter,
             )
 
-            empty_return = pd.DataFrame()
-
-            empty_return_epr = pd.DataFrame(columns=["updatetime", "body_analysed"])
-
-            empty_return_mct = pd.DataFrame(
-                columns=[
-                    "observationdocument_recordeddtm",
-                    "observation_valuetext_analysed",
-                ]
-            )
-            empty_return_textual_obs = pd.DataFrame(
-                columns=[
-                    "basicobs_entered",
-                    "textualObs",
-                ]
-            )
-
-            empty_return_reports = pd.DataFrame(
-                columns=["updatetime", "observation_valuetext_analysed"]
-            )
-
-            if self.config_obj.main_options.get("annotations", True):
-                search_term = None  # inside function
-                batch_epr = get_pat_batch_epr_docs(
-                    current_pat_client_id_code=current_pat_client_id_code,
-                    search_term=search_term,
-                    config_obj=self.config_obj,
-                    cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search,
-                )
-            else:
-                batch_epr = empty_return_epr
-
-            if self.config_obj.main_options.get("annotations_mrc", True):
-                search_term = None  # inside function
-                batch_mct = get_pat_batch_mct_docs(
-                    current_pat_client_id_code,
-                    search_term,
-                    config_obj=self.config_obj,
-                    cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search,
-                )
-            else:
-                batch_mct = empty_return_mct
-
-            if self.config_obj.main_options.get("textual_obs", True):
-                search_term = None  # inside function
-                batch_textual_obs_docs = get_pat_batch_textual_obs_docs(
-                    current_pat_client_id_code,
-                    search_term,
-                    config_obj=self.config_obj,
-                    cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search,
-                )
-            else:
-                batch_textual_obs_docs = empty_return_textual_obs
-
-            if self.config_obj.main_options.get("annotations_reports", True):
-                search_term = None  # inside function
-                batch_reports = get_pat_batch_reports(
-                    current_pat_client_id_code=current_pat_client_id_code,
-                    search_term=search_term,
-                    config_obj=self.config_obj,
-                    cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search,
-                )
-            else:
-                batch_reports = empty_return_reports
-
-            if self.config_obj.main_options.get("smoking", True):
-                search_term = "CORE_SmokingStatus"
-                batch_smoking = get_pat_batch_obs(
-                    current_pat_client_id_code,
-                    search_term,
-                    config_obj=self.config_obj,
-                    cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search,
-                )
-            else:
-                batch_smoking = empty_return
-
-            if self.config_obj.main_options.get("core_02", True):
-
-                search_term = "CORE_SpO2"
-                batch_core_02 = get_pat_batch_obs(
-                    current_pat_client_id_code,
-                    search_term,
-                    config_obj=self.config_obj,
-                    cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search,
-                )
-            else:
-                batch_core_02 = empty_return
-
-            if self.config_obj.main_options.get("bed", True):
-                search_term = "CORE_BedNumber3"
-                batch_bednumber = get_pat_batch_obs(
-                    current_pat_client_id_code,
-                    search_term,
-                    config_obj=self.config_obj,
-                    cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search,
-                )
-            else:
-                batch_bednumber = empty_return
-
-            if self.config_obj.main_options.get("vte_status", True):
-                search_term = "CORE_VTE_STATUS"
-                batch_vte = get_pat_batch_obs(
-                    current_pat_client_id_code,
-                    search_term,
-                    config_obj=self.config_obj,
-                    cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search,
-                )
-            else:
-                batch_vte = empty_return
-
-            if self.config_obj.main_options.get("hosp_site", True):
-                search_term = "CORE_HospitalSite"
-                batch_hospsite = get_pat_batch_obs(
-                    current_pat_client_id_code,
-                    search_term,
-                    config_obj=self.config_obj,
-                    cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search,
-                )
-            else:
-                batch_hospsite = empty_return
-
-            if self.config_obj.main_options.get("core_resus", True):
-                search_term = "CORE_RESUS_STATUS"
-                batch_resus = get_pat_batch_obs(
-                    current_pat_client_id_code,
-                    search_term,
-                    config_obj=self.config_obj,
-                    cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search,
-                )
-            else:
-                batch_resus = empty_return
-
-            if self.config_obj.main_options.get("news", True):
-                search_term = None  # inside function
-                batch_news = get_pat_batch_news(
-                    current_pat_client_id_code,
-                    search_term,
-                    config_obj=self.config_obj,
-                    cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search,
-                )
-            else:
-                batch_news = empty_return
-
-            if self.config_obj.main_options.get("bmi", True):
-                search_term = None  # inside function
-                batch_bmi = get_pat_batch_bmi(
-                    current_pat_client_id_code,
-                    search_term,
-                    config_obj=self.config_obj,
-                    cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search,
-                )
-
-            else:
-                batch_bmi = empty_return
-
-            if self.config_obj.main_options.get("diagnostics", True):
-                search_term = None  # inside function
-                batch_diagnostics = get_pat_batch_diagnostics(
-                    current_pat_client_id_code,
-                    search_term,
-                    config_obj=self.config_obj,
-                    cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search,
-                )
-            else:
-                batch_diagnostics = empty_return
-
-            if self.config_obj.main_options.get("drugs", True):
-                search_term = None  # inside function
-                batch_drugs = get_pat_batch_drugs(
-                    current_pat_client_id_code,
-                    search_term,
-                    config_obj=self.config_obj,
-                    cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search,
-                )
-            else:
-                batch_drugs = empty_return
-
-            if self.config_obj.main_options.get("demo", True):
-                search_term = None  # inside function
-                batch_demo = get_pat_batch_demo(
-                    current_pat_client_id_code,
-                    search_term,
-                    config_obj=self.config_obj,
-                    cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search,
-                )
-            else:
-                batch_demo = empty_return
-
-            if self.config_obj.main_options.get("bloods", True):
-                search_term = None  # inside function
-                batch_bloods = get_pat_batch_bloods(
-                    current_pat_client_id_code,
-                    search_term,
-                    config_obj=self.config_obj,
-                    cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search,
-                )
-            else:
-                batch_bloods = empty_return
-
-            if self.config_obj.main_options.get("appointments", True):
-
-                batch_appointments = get_pat_batch_appointments(
-                    current_pat_client_id_code,
-                    search_term,
-                    config_obj=self.config_obj,
-                    cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search,
-                )
-            else:
-                batch_appointments = empty_return
-
-            if self.config_obj.main_options.get("annotations", True):
-
-                batch_epr_docs_annotations = get_pat_batch_epr_docs_annotations(
-                    current_pat_client_id_code,
-                    config_obj=self.config_obj,
-                    cat=self.cat,
-                    t=self.t,
-                )
-
-                if type(batch_epr_docs_annotations) == None:
-                    if self.config_obj.verbosity > 2:
-                        print(f"batch_epr_docs_annotations empty")
-                    batch_epr_docs_annotations = (
-                        empty_return_epr  # catch, was empty_return
-                    )
-            else:
-                batch_epr_docs_annotations = empty_return_epr
-
-            if self.config_obj.main_options.get("annotations_mrc", True):
-
-                batch_epr_docs_annotations_mct = get_pat_batch_mct_docs_annotations(
-                    current_pat_client_id_code,
-                    config_obj=self.config_obj,
-                    cat=self.cat,
-                    t=self.t,
-                )
-
-                if type(batch_epr_docs_annotations_mct) == None:
-                    if self.config_obj.verbosity > 2:
-                        print(f"batch_epr_docs_annotations_mct empty")
-
-            else:
-                batch_epr_docs_annotations_mct = empty_return_mct
-
-            if self.config_obj.main_options.get("textual_obs", True):
-
-                batch_textual_obs_annotations = get_pat_batch_textual_obs_annotations(
-                    current_pat_client_id_code,
-                    config_obj=self.config_obj,
-                    cat=self.cat,
-                    t=self.t,
-                )
-            else:
-                batch_textual_obs_annotations = empty_return_textual_obs
-
-            if self.config_obj.main_options.get("annotations_reports", True):
-
-                batch_reports_docs_annotations = get_pat_batch_reports_docs_annotations(
-                    current_pat_client_id_code,
-                    config_obj=self.config_obj,
-                    cat=self.cat,
-                    t=self.t,
-                )
-
-                if type(batch_reports_docs_annotations) == None:
-                    if self.config_obj.verbosity > 2:
-                        print(f"batch_reports_docs_annotations empty")
-                    batch_reports_docs_annotations = empty_return
-            else:
-                batch_reports_docs_annotations = empty_return_reports
+            # Fetch all data batches for the patient
+            batches = self._get_patient_data_batches(current_pat_client_id_code)
+            batch_epr = batches["batch_epr"]
+            batch_mct = batches["batch_mct"]
+            batch_textual_obs_docs = batches["batch_textual_obs_docs"]
+            batch_reports = batches["batch_reports"]
+            batch_smoking = batches["batch_smoking"]
+            batch_core_02 = batches["batch_core_02"]
+            batch_bednumber = batches["batch_bednumber"]
+            batch_vte = batches["batch_vte"]
+            batch_hospsite = batches["batch_hospsite"]
+            batch_resus = batches["batch_resus"]
+            batch_news = batches["batch_news"]
+            batch_bmi = batches["batch_bmi"]
+            batch_diagnostics = batches["batch_diagnostics"]
+            batch_drugs = batches["batch_drugs"]
+            batch_demo = batches["batch_demo"]
+            batch_bloods = batches["batch_bloods"]
+            batch_appointments = batches["batch_appointments"]
+            batch_epr_docs_annotations = batches["batch_epr_docs_annotations"]
+            batch_epr_docs_annotations_mct = batches["batch_epr_docs_annotations_mct"]
+            batch_textual_obs_annotations = batches["batch_textual_obs_annotations"]
+            batch_reports_docs_annotations = batches["batch_reports_docs_annotations"]
 
             update_pbar(
                 p_bar_entry,
@@ -1067,7 +1212,7 @@ class main:
                                 batch_epr_docs_annotations=batch_epr_docs_annotations,
                                 batch_epr_docs_annotations_mct=batch_epr_docs_annotations_mct,
                                 batch_report_docs_annotations=batch_reports_docs_annotations,
-                                batch_textual_obs_annotations=batch_textual_obs_annotations,
+                                batch_textual_obs_annotations=batch_textual_obs_annotations, # This was passed to main_batch
                                 batch_appointments=batch_appointments,
                                 config_obj=self.config_obj,
                                 stripped_list_start=stripped_list_start,
@@ -1102,3 +1247,7 @@ class main:
                     skipped_counter.value += 1
                 if self.config_obj.verbosity > 0:
                     print(f"Skipped {i}")
+        # 5. Finalize
+        if self.config_obj.remote_dump:
+            self.sftp_obj.close()
+            self.config_obj.ssh_client.close()
