@@ -1,4 +1,0 @@
-Requirement already satisfied: pydantic in c:\users\admin\documents\projects\pat2vec\.venv\lib\site-packages (2.6.1)
-Requirement already satisfied: annotated-types>=0.4.0 in c:\users\admin\documents\projects\pat2vec\.venv\lib\site-packages (from pydantic) (0.6.0)
-Requirement already satisfied: pydantic-core==2.16.2 in c:\users\admin\documents\projects\pat2vec\.venv\lib\site-packages (from pydantic) (2.16.2)
-Requirement already satisfied: typing-extensions>=4.6.1 in c:\users\admin\documents\projects\pat2vec\.venv\lib\site-packages (from pydantic) (4.8.0)
