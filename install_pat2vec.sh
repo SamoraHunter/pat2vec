@@ -260,13 +260,6 @@ fi
 
 pip install "${pip_install_args[@]}"
 
-if [ "$DEV_MODE" = true ]; then
-    echo "Installing documentation dependencies (Sphinx)..."
-    pip_doc_args=("sphinx" "sphinx-rtd-theme" "sphinx-autodoc-typehints")
-    [ "$PROXY_MODE" = true ] && pip_doc_args+=("--trusted-host" "dh-cap02" "-i" "http://dh-cap02:8008/mirrors/pat2vec")
-    pip install "${pip_doc_args[@]}"
-fi
-
 echo "Installing SpaCy model..."
 SPACY_MODEL_URL="https://github.com/explosion/spacy-models/releases/download/en_core_web_md-3.7.1/en_core_web_md-3.7.1-py3-none-any.whl"
 pip_spacy_args=()
