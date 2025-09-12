@@ -1,5 +1,8 @@
+[![Documentation Status](https://github.com/SamoraHunter/pat2vec/actions/workflows/docs.yml/badge.svg)](https://samorahunter.github.io/pat2vec/)
+
 ## Table of Contents
 - [Overview](#overview)
+- [Documentation](#documentation)
 - [Example Use Cases](#example-use-cases)
   - [1. Patient-Level Aggregation](#1-patient-level-aggregation)
   - [2. Longitudinal Time Series Construction](#2-longitudinal-time-series-construction)
@@ -22,6 +25,12 @@
 # Overview
 
 This tool converts individual patient records into structured time-interval feature vectors, making them suitable for filtering, aggregation, and assembly into a data matrix **D** for binary classification machine learning tasks.
+
+## Documentation
+
+The full API documentation for `pat2vec` is automatically generated and hosted on GitHub Pages.
+
+**View the Live Documentation**
 
 ## Example Use Cases
 
