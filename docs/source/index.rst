@@ -1,15 +1,24 @@
 .. pat2vec documentation master file, created by
-   sphinx-quickstart on Fri Sep 12 19:52:03 2025.
+   sphinx-quickstart.
+   You can adapt this file completely to your liking, but it should at least
+   contain the root `toctree` directive.
 
+Welcome to pat2vec's documentation!
+====================================
 
-pat2vec documentation
-=====================
+`pat2vec` is a powerful tool for converting individual patient records into structured time-interval feature vectors, making them suitable for machine learning tasks.
 
-Add your content using ``reStructuredText`` syntax. See the
-`reStructuredText <https://www.sphinx-doc.org/en/master/usage/restructuredtext/index.html>`_
-documentation for details.
-
+This documentation provides a detailed overview of the package's API.
 
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
+
+   api
+
+Indices and tables
+==================
+
+* :ref:`genindex`
+* :ref:`modindex`
+* :ref:`search`
