@@ -54,6 +54,7 @@ def main_batch(
     batch_diagnostics=None,
     batch_epr=None,
     batch_mct=None,
+    batch_reports=None,
     batch_bloods=None,
     batch_drugs=None,
     batch_epr_docs_annotations=None,
@@ -95,6 +96,7 @@ def main_batch(
         batch_diagnostics (pd.DataFrame, optional): Pre-fetched batch data for diagnostic orders.
         batch_epr (pd.DataFrame, optional): Pre-fetched batch data for EPR documents (deprecated, use annotations).
         batch_mct (pd.DataFrame, optional): Pre-fetched batch data for MRC documents (deprecated, use annotations).
+        batch_reports (pd.DataFrame, optional): Pre-fetched batch data for reports. Its presence is a prerequisite for report annotations.
         batch_bloods (pd.DataFrame, optional): Pre-fetched batch data for blood tests.
         batch_drugs (pd.DataFrame, optional): Pre-fetched batch data for drug orders.
         batch_epr_docs_annotations (pd.DataFrame, optional): Pre-fetched batch data for EPR document annotations.

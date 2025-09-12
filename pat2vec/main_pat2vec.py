@@ -566,12 +566,15 @@ class main:
         """
         Iterates through time slices and calls main_batch to generate feature vectors.
         """
-        run_on_pat = current_pat_client_id_code not in self.stripped_list
-
-        if not run_on_pat:
+        # The main pat_maker function already checks if the patient is in stripped_list_start.
+        # This check is a safeguard, but the main logic for skipping is at a higher level.
+        if current_pat_client_id_code in self.stripped_list_start:
+            if self.config_obj.verbosity > 3:
+                print(f"Patient {current_pat_client_id_code} already processed, skipping slice processing.")
             return
 
-        for j, date_slice in enumerate(date_list):
+        # The only_check_last logic from the original function is implicitly handled by this loop.
+        for date_slice in date_list:
             try:
                 if self.config_obj.verbosity > 5:
                     print(f"Processing date {date_slice} for patient {current_pat_client_id_code}...")
@@ -592,6 +595,7 @@ class main:
                         batch_diagnostics=batches["batch_diagnostics"],
                         batch_epr=batches["batch_epr"],
                         batch_mct=batches["batch_mct"],
+                        batch_reports=batches["batch_reports"],
                         batch_bloods=batches["batch_bloods"],
                         batch_drugs=batches["batch_drugs"],
                         batch_epr_docs_annotations=batches["batch_epr_docs_annotations"],
@@ -665,263 +669,24 @@ class main:
         if self.config_obj.verbosity > 3:
             print(f"Processing patient {i} at {self.all_patient_list[i]}...")
 
-        skipped_counter = self.config_obj.skipped_counter
-        stripped_list = self.stripped_list
-        all_patient_list = self.all_patient_list
-        skipped_counter = self.config_obj.skipped_counter
         current_pat_client_id_code = str(self.all_patient_list[i])
-
-        remote_dump = self.config_obj.remote_dump
-        hostname = self.config_obj.hostname
-        username = self.config_obj.username
-        password = self.config_obj.password
-
-        stripped_list_start = self.stripped_list_start
-
-        if not self.config_obj.individual_patient_window:
-            date_list = self.config_obj.date_list
-            if self.config_obj.verbosity > 3:
-                print("Date list> pat_maker")
-                print(date_list[0:5])
-
-        multi_process = self.config_obj.multi_process
-
-        if skipped_counter == None:
-            skipped_counter = 0
-
-        current_pat_client_id_code = str(all_patient_list[i])
-
-        create_folders_for_pat(current_pat_client_id_code, self.config_obj)
-
-        p_bar_entry = current_pat_client_id_code
-
-        if self.config_obj.individual_patient_window:
 
         # Check if patient has already been processed
         if current_pat_client_id_code in self.stripped_list_start:
             if self.config_obj.verbosity >= 4:
-                print("main_pat2vec>self.config_obj.individual_patient_window: ")
-
-            if all_patient_list[i] not in self.config_obj.patient_dict.keys():
-                # is control pat
-
-                if self.config_obj.individual_patient_window_controls_method == "full":
-                    # Use the initally set global time window
-                    # Assuming you have access to the global variables
-                    global_start_month = self.config_obj.initial_global_start_month
-                    global_start_year = self.config_obj.initial_global_start_year
-                    global_end_month = self.config_obj.initial_global_end_month
-                    global_end_year = self.config_obj.initial_global_end_year
-                    global_start_day = self.config_obj.initial_global_start_day
-                    global_end_day = self.config_obj.initial_global_end_day
-
-                    # Convert global variables to integers
-                    global_start_month = int(global_start_month)
-                    global_start_year = int(global_start_year)
-                    global_end_month = int(global_end_month)
-                    global_end_year = int(global_end_year)
-                    global_start_day = int(global_start_day)
-                    global_end_day = int(global_end_day)
-
-                    # Create datetime objects for start and end dates
-                    current_pat_start_date = datetime(
-                        global_start_year, global_start_month, global_start_day
-                    )
-                    current_pat_end_date = datetime(
-                        global_end_year, global_end_month, global_end_day
-                    )
-
-                    if self.config_obj.verbosity >= 4:
-                        print(f"Control pat full {all_patient_list[i]} ipw dates set:")
-                        # Print the datetime objects for verification (optional)
-                        print("Start Date:", current_pat_start_date)
-                        print("End Date:", current_pat_end_date)
-
-                elif (
-                    self.config_obj.individual_patient_window_controls_method
-                    == "random"
-                ):
-                    # Select a random treatments time window for application.
-                    index = random.randint(0, len(all_patient_list))
-                    current_pat_start_date = self.config_obj.patient_dict.get(
-                        all_patient_list[index]
-                    )[0]
-
-                    current_pat_end_date = self.config_obj.patient_dict.get(
-                        all_patient_list[index]
-                    )[1]
-
                 print(f"patient {i} in stripped_list_start")
-            skipped_counter = self.config_obj.skipped_counter
             if self.config_obj.multi_process is False:
-                skipped_counter += 1
+                self.config_obj.skipped_counter += 1
             else:
-                with skipped_counter.get_lock():
-                    skipped_counter.value += 1
+                with self.config_obj.skipped_counter.get_lock():
+                    self.config_obj.skipped_counter.value += 1
             if self.config_obj.verbosity > 0:
                 print(f"Skipped {i}")
             return
 
-                # Pat is in patient_dict.keys... Simplified and robust date retrieval.
-                pat_dates = self.config_obj.patient_dict.get(all_patient_list[i])
-
-                if not pat_dates or len(pat_dates) != 2:
-                    print(
-                        f"Warning: Invalid or missing dates for patient {all_patient_list[i]} in patient_dict. Skipping."
-                    )
-                    return
-
-                # The patient_dict contains a tuple of (start, end) or (end, start) if lookback=True.
-                # These should already be datetime objects from the config setup.
-                current_pat_start_date, current_pat_end_date = pat_dates
-
-                print("Debug date routine:")
-                print("current_pat_start_date", current_pat_start_date)
-                print("current_pat_end_date", current_pat_end_date)
-
-                # Safeguard against non-datetime or NaT values which can cause crashes.
-                if (
-                    pd.isna(current_pat_start_date)
-                    or pd.isna(current_pat_end_date)
-                    or not isinstance(current_pat_start_date, datetime)
-                    or not isinstance(current_pat_end_date, datetime)
-                ):
-                    print(
-                        f"Warning: Dates for patient {all_patient_list[i]} are invalid or not datetime objects. Skipping."
-                    )
-                    return
-
-                # print("Debug date routine:")
-                # print("current_pat_start_date", current_pat_start_date)
-                # print("current_pat_end_date", current_pat_end_date)
-                # print(self.config_obj.patient_dict.get(all_patient_list[i])[0])
-                # print(self.config_obj.patient_dict.get(all_patient_list[i])[1])
-
-            # The patient_dict contains a tuple of (start, end) dates.
-            # We assign the real start/end and then determine the anchor date for generation and clamping boundaries.
-            p_real_start = current_pat_start_date
-            p_real_end = current_pat_end_date
-
-            if p_real_start > p_real_end:
-                p_real_start, p_real_end = p_real_end, p_real_start
-
-            if self.config_obj.lookback:
-                # For lookback, the generation starts from the end of the patient's window and goes backward.
-                date_for_generate = p_real_end
-            else:
-                # For forward generation, it starts from the beginning of the window and goes forward.
-                date_for_generate = p_real_start
-
-            # The clamping boundaries are always the patient's full, ordered time window.
-            g_start, g_end = p_real_start, p_real_end
-
-            # Override global dates with the correctly ordered patient window for clamping.
-            # This is a workaround to pass patient-specific boundaries to generate_date_list.
-            self.config_obj.global_start_month = g_start.month
-            self.config_obj.global_start_year = g_start.year
-            self.config_obj.global_start_day = g_start.day
-            self.config_obj.global_end_month = g_end.month
-            self.config_obj.global_end_year = g_end.year
-            self.config_obj.global_end_day = g_end.day
-
-            self.config_obj.start_date = date_for_generate
-
-            self.config_obj.global_start_year = str(
-                self.config_obj.global_start_year
-            ).zfill(4)
-            self.config_obj.global_start_month = str(
-                self.config_obj.global_start_month
-            ).zfill(2)
-
-            self.config_obj.global_end_year = str(
-                self.config_obj.global_end_year
-            ).zfill(4)
-            self.config_obj.global_end_month = str(
-                self.config_obj.global_end_month
-            ).zfill(2)
-
-            self.config_obj.global_start_day = str(
-                self.config_obj.global_start_day
-            ).zfill(2)
-            self.config_obj.global_end_day = str(self.config_obj.global_end_day).zfill(
-                2
-            )
-
-            if self.config_obj.verbosity >= 4:
-                print("main_pat2vec > ipw dates:")
-                self.config_obj.global_start_year = str(
-                    self.config_obj.global_start_year
-                ).zfill(4)
-                self.config_obj.global_start_month = str(
-                    self.config_obj.global_start_month
-                ).zfill(2)
-                self.config_obj.global_end_year = str(
-                    self.config_obj.global_end_year
-                ).zfill(4)
-                self.config_obj.global_end_month = str(
-                    self.config_obj.global_end_month
-                ).zfill(2)
-
-                self.config_obj.global_start_day = str(
-                    self.config_obj.global_start_day
-                ).zfill(2)
-
-                self.config_obj.global_end_day = str(
-                    self.config_obj.global_end_day
-                ).zfill(2)
-
-            # calculate for ipw
-            interval_window_delta = self.config_obj.time_window_interval_delta
-
-            # self.config_obj.date_list = generate_date_list(self.config_obj.start_date,
-            #                                                self.config_obj.years,
-            #                                                self.config_obj.months,
-            #                                                self.config_obj.days,
-            #                                                interval_window_delta,
-            #                                                lookback=self.config_obj.lookback
-            #                                                )
-
-            if self.config_obj.verbosity >= 4:
-                print(
-                    "overwriting datelist in ipw",
-                    self.config_obj.start_date,
-                    interval_window_delta,
-                )
-                print("current_pat_end_date", current_pat_end_date)
-                print("current_pat_start_date", current_pat_start_date)
-
-            if self.config_obj.verbosity >= 4:
-
-                print("date for generate", date_for_generate)
-
-            self.config_obj.date_list = generate_date_list(
-                date_for_generate,
-                self.config_obj.years,
-                self.config_obj.months,
-                self.config_obj.days,
-                interval_window_delta,
-                config_obj=self.config_obj,
-            )
-            if self.config_obj.verbosity >= 4:
-                print("overwriting temp datetime with ipw")
-                print("date for generate:", date_for_generate)
-                print("self.config_obj.date_list:", self.config_obj.date_list)
-            date_list = self.config_obj.date_list
-
-            if self.config_obj.verbosity >= 4:
-                print("self.config_obj.date_list:", self.config_obj.date_list)
-
-            self.n_pat_lines = len(self.config_obj.date_list)
-
-            if self.config_obj.verbosity >= 4:
-                print("ipw, datelist", current_pat_client_id_code)
-                print(self.config_obj.date_list[0:5])
-
         create_folders_for_pat(current_pat_client_id_code, self.config_obj)
         start_time = time.time()
 
-        if self.config_obj.verbosity >= 4:
-            print("pat maker called: opts: ", self.config_obj.main_options)
         # 1. Set up time window for the patient
         date_list = self._setup_patient_time_window(current_pat_client_id_code)
         if date_list is None:
@@ -929,19 +694,16 @@ class main:
 
         # 2. Update progress and fetch data batches
         update_pbar(
-            p_bar_entry,
             current_pat_client_id_code,
             start_time,
             0,
             f"Pat_maker called on {i}...",
             self.t,
             self.config_obj,
-            skipped_counter,
             self.config_obj.skipped_counter,
         )
         batches = self._get_patient_data_batches(current_pat_client_id_code)
 
-        sftp_obj = self.config_obj.sftp_obj
         update_pbar(
             current_pat_client_id_code,
             start_time,
@@ -952,301 +714,13 @@ class main:
             self.config_obj.skipped_counter,
         )
 
-        # get_pat batches
         # 3. Clean document batches if required
         if self.config_obj.dropna_doc_timestamps:
             batches = self._clean_document_batches(batches)
 
-        stripped_list = stripped_list_start.copy()
         # 4. Process patient data in time slices
         self._process_patient_slices(current_pat_client_id_code, date_list, batches)
 
-        if self.config_obj.verbosity >= 4:
-            print("stripped_list_start")
-            print(stripped_list_start)
-
-        if current_pat_client_id_code not in stripped_list_start:
-            if self.config_obj.verbosity >= 6:
-                print(f"Getting batches for patient {i}...")
-
-            update_pbar(
-                p_bar_entry,
-                start_time,
-                0,
-                "Getting batches...",
-                self.t,
-                self.config_obj,
-                skipped_counter,
-            )
-
-            # Fetch all data batches for the patient
-            batches = self._get_patient_data_batches(current_pat_client_id_code)
-            batch_epr = batches["batch_epr"]
-            batch_mct = batches["batch_mct"]
-            batch_textual_obs_docs = batches["batch_textual_obs_docs"]
-            batch_reports = batches["batch_reports"]
-            batch_smoking = batches["batch_smoking"]
-            batch_core_02 = batches["batch_core_02"]
-            batch_bednumber = batches["batch_bednumber"]
-            batch_vte = batches["batch_vte"]
-            batch_hospsite = batches["batch_hospsite"]
-            batch_resus = batches["batch_resus"]
-            batch_news = batches["batch_news"]
-            batch_bmi = batches["batch_bmi"]
-            batch_diagnostics = batches["batch_diagnostics"]
-            batch_drugs = batches["batch_drugs"]
-            batch_demo = batches["batch_demo"]
-            batch_bloods = batches["batch_bloods"]
-            batch_appointments = batches["batch_appointments"]
-            batch_epr_docs_annotations = batches["batch_epr_docs_annotations"]
-            batch_epr_docs_annotations_mct = batches["batch_epr_docs_annotations_mct"]
-            batch_textual_obs_annotations = batches["batch_textual_obs_annotations"]
-            batch_reports_docs_annotations = batches["batch_reports_docs_annotations"]
-
-            update_pbar(
-                p_bar_entry,
-                start_time,
-                0,
-                f"Done batches in {time.time()-start_time}",
-                self.t,
-                self.config_obj,
-                skipped_counter,
-            )
-
-            if self.config_obj.verbosity > 3:
-
-                print("Batch Sizes:")
-                print("EPR:", len(batch_epr))
-                print("MCT:", len(batch_mct))
-                print("Smoking:", len(batch_smoking))
-                print("SpO2:", len(batch_core_02))
-                print("BedNumber:", len(batch_bednumber))
-                print("VTE:", len(batch_vte))
-                print("HospitalSite:", len(batch_hospsite))
-                print("RESUS:", len(batch_resus))
-                print("NEWS:", len(batch_news))
-                print("BMI:", len(batch_bmi))
-                print("Diagnostics:", len(batch_diagnostics))
-                print("Drugs:", len(batch_drugs))
-                print("Demo:", len(batch_demo))
-                print("Bloods:", len(batch_bloods))
-                print("EPR annotations:", len(batch_epr_docs_annotations))
-                print("EPR annotations mct:", len(batch_epr_docs_annotations_mct))
-                print("batch_reports:", len(batch_reports))
-                print(
-                    "batch_report_docs_annotations:",
-                    len(batch_reports_docs_annotations),
-                )
-                print("TextualObs:", len(batch_textual_obs_docs))
-                print("TextualObs annotations:", len(batch_textual_obs_annotations))
-
-            if self.config_obj.verbosity > 3:
-                print(f"Done batches in {time.time() - start_time}")
-
-            run_on_pat = False
-            only_check_last = True
-            last_check = all_patient_list[i] not in stripped_list
-            skip_check = last_check
-
-            if self.config_obj.dropna_doc_timestamps:
-                # clean epr and mct:
-
-                if self.config_obj.main_options.get("annotations", True):
-                    target_column_string = "updatetime"
-                    batch_epr[target_column_string] = pd.to_datetime(
-                        batch_epr[target_column_string], errors="coerce", utc=True
-                    )
-                    batch_epr.dropna(subset=[target_column_string], inplace=True)
-                    batch_epr.dropna(subset=["body_analysed"], inplace=True)
-                    batch_epr = batch_epr[
-                        batch_epr["body_analysed"].apply(lambda x: isinstance(x, str))
-                    ]
-
-                if self.config_obj.main_options.get("annotations_mrc", True):
-                    target_column_string = "observationdocument_recordeddtm"
-                    batch_mct[target_column_string] = pd.to_datetime(
-                        batch_mct[target_column_string], errors="coerce", utc=True
-                    )
-                    batch_mct.dropna(subset=[target_column_string], inplace=True)
-                    batch_mct.dropna(
-                        subset=["observation_valuetext_analysed"], inplace=True
-                    )
-                    batch_mct = batch_mct[
-                        batch_mct["observation_valuetext_analysed"].apply(
-                            lambda x: isinstance(x, str)
-                        )
-                    ]
-
-                if self.config_obj.main_options.get("annotations", True):
-                    target_column_string = "updatetime"
-                    try:
-                        batch_epr_docs_annotations[target_column_string] = (
-                            pd.to_datetime(
-                                batch_epr_docs_annotations[target_column_string],
-                                errors="coerce",
-                                utc=True,
-                            )
-                        )
-                    except Exception as e:
-                        print(e)
-                        print(type(batch_epr_docs_annotations))
-                        print(batch_epr_docs_annotations.columns)
-                        print(batch_epr_docs_annotations)
-
-                    try:
-                        batch_epr_docs_annotations.dropna(
-                            subset=[target_column_string], inplace=True
-                        )
-                    except Exception as e:
-                        print(e)
-                        print(type(batch_epr_docs_annotations))
-                        print(batch_epr_docs_annotations.columns)
-                        print(batch_epr_docs_annotations)
-
-                if self.config_obj.main_options.get("annotations_mrc", True):
-                    target_column_string = "observationdocument_recordeddtm"
-                    batch_epr_docs_annotations_mct[target_column_string] = (
-                        pd.to_datetime(
-                            batch_epr_docs_annotations_mct[target_column_string],
-                            errors="coerce",
-                            utc=True,
-                        )
-                    )
-                    batch_epr_docs_annotations_mct.dropna(
-                        subset=[target_column_string], inplace=True
-                    )
-
-                if self.config_obj.main_options.get("annotations_reports", True):
-                    target_column_string = "updatetime"
-                    batch_reports_docs_annotations[target_column_string] = (
-                        pd.to_datetime(
-                            batch_reports_docs_annotations[target_column_string],
-                            errors="coerce",
-                            utc=True,
-                        )
-                    )
-                    batch_reports_docs_annotations.dropna(
-                        subset=[target_column_string], inplace=True
-                    )
-
-                if self.config_obj.main_options.get("annotations_reports", True):
-                    target_column_string = "updatetime"
-                    batch_reports[target_column_string] = pd.to_datetime(
-                        batch_reports[target_column_string], errors="coerce", utc=True
-                    )
-                    batch_reports.dropna(subset=[target_column_string], inplace=True)
-
-                if self.config_obj.main_options.get("textual_obs", True):
-                    target_column_string = "basicobs_entered"
-                    batch_textual_obs_docs[target_column_string] = pd.to_datetime(
-                        batch_textual_obs_docs[target_column_string],
-                        errors="coerce",
-                        utc=True,
-                    )
-                    batch_textual_obs_docs.dropna(
-                        subset=[target_column_string], inplace=True
-                    )
-
-                # batch_epr_docs_annotations_mct.dropna(subset=['observation_valuetext_analysed'], inplace=True)
-
-                # target_column_string = 'body_analysed'
-                # batch_epr[target_column_string] = pd.to_datetime(batch_epr[target_column_string], errors='coerce', utc=True)
-                # batch_epr.dropna(subset=[target_column_string], inplace=True)
-
-                # target_column_string = 'observation_valuetext_analysed'
-                # batch_mct[target_column_string] = pd.to_datetime(batch_mct[target_column_string], errors='coerce', utc=True)
-                # batch_mct.dropna(subset=[target_column_string], inplace=True)
-
-                # target_column_string = 'body_analysed'
-                # batch_epr_docs_annotations[target_column_string] = pd.to_datetime(batch_epr_docs_annotations[target_column_string], errors='coerce', utc=True)
-                # batch_epr_docs_annotations.dropna(subset=[target_column_string], inplace=True)
-
-                # target_column_string = 'observation_valuetext_analysed'
-                # batch_epr_docs_annotations_mct[target_column_string] = pd.to_datetime(batch_epr_docs_annotations_mct[target_column_string], errors='coerce', utc=True)
-                # batch_epr_docs_annotations_mct.dropna(subset=[target_column_string], inplace=True)
-
-                if self.config_obj.verbosity > 3:
-                    print("post batch timestamp na drop:")
-                    print("EPR:", len(batch_epr))
-                    print("MCT:", len(batch_mct))
-                    print("EPR annotations:", len(batch_epr_docs_annotations))
-                    print("EPR annotations mct:", len(batch_epr_docs_annotations_mct))
-                    print("textual obs docs:", len(batch_textual_obs_docs))
-                    print(
-                        "textual obs annotations:", len(batch_textual_obs_annotations)
-                    )
-                    print(
-                        "batch_report_docs_annotations:",
-                        len(batch_reports_docs_annotations),
-                    )
-
-            for j in range(0, len(date_list)):
-                try:
-                    if only_check_last:
-                        run_on_pat = last_check
-                    else:
-                        run_on_pat = all_patient_list[i] not in stripped_list
-
-                    if run_on_pat:
-                        if self.config_obj.verbosity > 5:
-                            print(f"Processing date {date_list[j]} for patient {i}...")
-
-                        if self.config_obj.calculate_vectors:
-                            main_batch(
-                                all_patient_list[i],
-                                date_list[j],
-                                batch_demo=batch_demo,
-                                batch_smoking=batch_smoking,
-                                batch_core_02=batch_core_02,
-                                batch_bednumber=batch_bednumber,
-                                batch_vte=batch_vte,
-                                batch_hospsite=batch_hospsite,
-                                batch_resus=batch_resus,
-                                batch_news=batch_news,
-                                batch_bmi=batch_bmi,
-                                batch_diagnostics=batch_diagnostics,
-                                batch_epr=batch_epr,
-                                batch_mct=batch_mct,
-                                batch_bloods=batch_bloods,
-                                batch_drugs=batch_drugs,
-                                batch_epr_docs_annotations=batch_epr_docs_annotations,
-                                batch_epr_docs_annotations_mct=batch_epr_docs_annotations_mct,
-                                batch_report_docs_annotations=batch_reports_docs_annotations,
-                                batch_textual_obs_annotations=batch_textual_obs_annotations, # This was passed to main_batch
-                                batch_appointments=batch_appointments,
-                                config_obj=self.config_obj,
-                                stripped_list_start=stripped_list_start,
-                                t=self.t,
-                                cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search,
-                                cat=self.cat,
-                            )
-                        else:
-                            pass
-
-                except Exception as e:
-                    print(e)
-                    print(
-                        f"Exception in patmaker on {all_patient_list[i], date_list[j]}"
-                    )
-                    print(traceback.format_exc())
-                    raise e
-
-            if remote_dump:
-                self.sftp_obj.close()
-                self.config_obj.ssh_client.close()
-        else:
-            if self.config_obj.verbosity >= 4:
-                print(f"patient {i} in stripped_list_start")
-
-            if multi_process is False:
-                skipped_counter = skipped_counter + 1
-                if self.config_obj.verbosity > 0:
-                    print(f"Skipped {i}")
-            else:
-                with skipped_counter.get_lock():
-                    skipped_counter.value += 1
-                if self.config_obj.verbosity > 0:
-                    print(f"Skipped {i}")
         # 5. Finalize
         if self.config_obj.remote_dump:
             self.sftp_obj.close()
