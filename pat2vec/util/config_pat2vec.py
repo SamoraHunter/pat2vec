@@ -212,6 +212,7 @@ class config_class:
         prefetch_pat_batches=False,
         sample_treatment_docs=0,  # 0 for no sampling, provide an int for the number of samples.
         test_data_path=None,
+        credentials_path = '../../credentials.py'
     ):
         """Initializes the configuration object for the pat2vec pipeline.
 
@@ -284,6 +285,7 @@ class config_class:
             prefetch_pat_batches (bool): If **True**, fetches all raw data for all patients before processing. May use significant memory. Defaults to **False**.
             sample_treatment_docs (int): Number of patients to sample from the initial cohort list. `0` means no sampling. Defaults to **0**.
             test_data_path (str, optional): The path to the test data file, used when `testing` is **True**. Defaults to **None**.
+            credentials_path
         """
 
         if prefetch_pat_batches and individual_patient_window:
@@ -311,6 +313,9 @@ class config_class:
         self.filter_split_notes = filter_split_notes
 
         self.test_data_path = test_data_path
+
+        self.credentials_path = credentials_path
+        print("credentials_path:" , credentials_path)
 
         self.suffix = suffix
         self.treatment_doc_filename = treatment_doc_filename

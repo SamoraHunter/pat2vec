@@ -3,19 +3,18 @@ import random
 import time
 import traceback
 from datetime import datetime
+from pat2vec.pat2vec_search.cogstack_search_methods import initialize_cogstack_client
 from multiprocessing import Pool
 import pandas as pd
 from pat2vec.pat2vec_search.cogstack_search_methods import (
     cohort_searcher_with_terms_and_search,
 )
 from pat2vec.patvec_get_batch_methods.get_prefetch_batches import prefetch_batches
-from pat2vec.pat2vec_search.cogstack_search_methods import *
+#from pat2vec.pat2vec_search.cogstack_search_methods import *
 from colorama import Back, Fore, Style
 
 from pat2vec.util.generate_date_list import generate_date_list
 from pat2vec.util.get_best_gpu import set_best_gpu
-
-from .util.credentials import *
 
 from tqdm import trange
 from pat2vec.pat2vec_main_methods.main_batch import main_batch
@@ -138,7 +137,6 @@ class main:
         self.random_seed_val = config_obj.random_seed_val
         self.hostname = config_obj.hostname  # Deprecated
         self.config_obj = config_obj
-        self.cs = cs  # make cogstack v8 cs object available
 
         if self.config_obj == None:
             print("Init default config on config_pat2vec")
@@ -157,6 +155,8 @@ class main:
         self.sftp_client = config_obj.sftp_obj
 
         if cogstack == True:
+            # Initialize the CogStack client with the config object
+            self.cs = initialize_cogstack_client(self.config_obj)
 
             if config_obj.testing:
                 self.cohort_searcher_with_terms_and_search = (

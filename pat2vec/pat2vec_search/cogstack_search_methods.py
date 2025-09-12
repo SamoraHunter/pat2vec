@@ -9,6 +9,7 @@ import eland as ed
 import elasticsearch
 import elasticsearch.helpers
 import pandas as pd
+import importlib.util
 
 
 import getpass
@@ -21,8 +22,15 @@ from pat2vec.util.get_dummy_data_cohort_searcher import (
 
 import random
 import warnings
+import logging
 
 warnings.filterwarnings("ignore")
+
+# Suppress Elasticsearch logger
+logging.getLogger("elasticsearch").setLevel(logging.WARNING)
+logging.getLogger("elastic_transport").setLevel(logging.WARNING)
+logging.getLogger("urllib3").setLevel(logging.WARNING)
+
 import os
 
 # add one level up to path with sys.path for importing actual credentials
@@ -242,51 +250,6 @@ def dataframe_generator(list_of_dfs):
         yield df
 
 
-try:
-    from credentials import *
-except ImportError as e:
-    print(e)
-    print(
-        "WARNING: No credentials file found, place credentials in gloabl_files/credentials.py"
-    )
-    # Run the routine
-    create_credentials_file()
-    try:
-        from credentials import *
-    except ImportError as e:
-        print(e)
-        print(
-            "WARNING: No credentials file found, place credentials in gloabl_files/credentials.py"
-        )
-        username = "dummy username"
-        password = "dummy password"
-        api_key = ""
-        hosts = ["https://your-actual-elasticsearch-host:9200"]
-
-
-print(f"Imported cogstack_v8_lite from pat2vec.util .")
-print(f"Username: %s" % username)
-
-
-# if api_key defined (from credentials import *) then we assume user wants to use API key authentication
-
-if "api_key" in locals() and api_key:
-    print("Using API key authentication")
-    cs = CogStack(hosts, api_key=api_key, api=True)
-else:
-    print(
-        f"Using basic authentication (active directory or local user), username: {username}"
-    )
-
-    cs = CogStack(hosts, username, password, api=False)
-
-# authentication check
-try:
-    cs.elastic.info()
-except Exception as e:
-    print(e)
-
-
 def cohort_searcher_with_terms_and_search(
     index_name, fields_list, term_name, entered_list, search_string
 ):
@@ -304,6 +267,8 @@ def cohort_searcher_with_terms_and_search(
     Returns:
     - pandas.DataFrame: A DataFrame containing the results of the search, with the specified fields and filtered by the term name and list of values.
     """
+    if cs is None:
+        initialize_cogstack_client()
     if len(entered_list) >= 10000:
 
         results = []
@@ -370,7 +335,7 @@ def set_index_safe_wrapper(df):
 
 
 def cohort_searcher_with_terms_no_search(
-    index_name, fields_list, term_name, entered_list
+    index_name, fields_list, term_name, entered_list,
 ):
     """
     Searches a cohort based on specified terms without a search string and returns the results.
@@ -386,7 +351,8 @@ def cohort_searcher_with_terms_no_search(
     DataFrames with each DataFrame corresponding to a chunk of results. Otherwise, returns a single DataFrame
     with the results.
     """
-
+    if cs is None:
+        initialize_cogstack_client()
     if len(entered_list) >= 10000:
         results = []
         chunked_list = list_chunker(entered_list)
@@ -426,7 +392,8 @@ def cohort_searcher_no_terms(index_name, fields_list, search_string):
     Returns:
     - pandas.DataFrame: A DataFrame containing the search results with the specified fields.
     """
-
+    if cs is None:
+        initialize_cogstack_client()
     query = {
         "from": 0,
         "size": 10000,
@@ -438,7 +405,7 @@ def cohort_searcher_no_terms(index_name, fields_list, search_string):
 
 
 def cohort_searcher_no_terms_fuzzy(
-    index_name, fields_list, search_string, method="fuzzy", fuzzy=2, slop=1
+    index_name, fields_list, search_string, method="fuzzy", fuzzy=2, slop=1,
 ):
     """
     Search Elasticsearch using different query methods: fuzzy, exact, or phrase (with slop and fuzziness).
@@ -454,6 +421,8 @@ def cohort_searcher_no_terms_fuzzy(
     Returns:
     - DataFrame: A DataFrame containing the search results.
     """
+    if cs is None:
+        initialize_cogstack_client()
     if method == "fuzzy":
         # Fuzzy query
         query = {
@@ -584,6 +553,8 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy(
     pd.DataFrame
         The DataFrame containing the results of the search.
     """
+    if cs is None:
+        initialize_cogstack_client()
     if not terms_list:
         print("Terms list is empty. Exiting.")
         return
@@ -770,6 +741,8 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy_mct(
 
     :return: The resulting DataFrame containing the search results
     """
+    if cs is None:
+        initialize_cogstack_client()
     print(
         "iterative_multi_term_cohort_searcher_no_terms_fuzzy_mct",
         start_day,
@@ -1005,6 +978,86 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy_mct(
     return docs  # Return the final docs DataFrame
 
 
+cs = None
+
+
+def initialize_cogstack_client(config_obj=None):
+    """
+    Initializes the global CogStack client `cs`.
+
+    This function sets up the connection to Elasticsearch. It can be configured
+    to load credentials from a specific file path by passing a config object.
+    If a client instance already exists, it will not re-initialize unless a
+    config object with a new credentials path is provided.
+
+    The credential loading priority is:
+    1. `credentials_path` from the `config_obj`.
+    2. Default `credentials.py` in the project's root.
+    3. If not found, it creates a template `credentials.py` and tries again.
+    4. Falls back to dummy credentials if all else fails.
+
+    Args:
+        config_obj (object, optional): A configuration object that may have a
+            `credentials_path` attribute. Defaults to None.
+    """
+    global cs
+
+    credentials_path = None
+    if config_obj and hasattr(config_obj, 'credentials_path') and config_obj.credentials_path:
+        credentials_path = config_obj.credentials_path
+
+    # If cs is already initialized and no new path is given, do nothing.
+    if cs is not None and not credentials_path:
+        return
+
+    creds = {}
+    if credentials_path:
+        try:
+            spec = importlib.util.spec_from_file_location("credentials", credentials_path)
+            credentials_module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(credentials_module)
+            creds['username'] = getattr(credentials_module, 'username', None)
+            creds['password'] = getattr(credentials_module, 'password', None)
+            creds['api_key'] = getattr(credentials_module, 'api_key', None)
+            creds['hosts'] = getattr(credentials_module, 'hosts', [])
+            print(f"Loaded credentials from: {credentials_path}")
+        except (ImportError, FileNotFoundError, TypeError) as e:
+            print(f"Warning: Could not load credentials from {credentials_path}. Error: {e}. Falling back to default.")
+            credentials_path = None # Force fallback
+
+    if not creds:
+        try:
+            from credentials import username, password, api_key, hosts
+            creds = {'username': username, 'password': password, 'api_key': api_key, 'hosts': hosts}
+        except ImportError:
+            print("WARNING: No credentials file found. Attempting to create one.")
+            create_credentials_file()
+            try:
+                from credentials import username, password, api_key, hosts
+                creds = {'username': username, 'password': password, 'api_key': api_key, 'hosts': hosts}
+            except ImportError:
+                print("WARNING: Still no credentials file found. Using dummy credentials.")
+                creds = {'username': "dummy_user", 'password': "dummy_password", 'api_key': "", 'hosts': ["https://your-actual-elasticsearch-host:9200"]}
+
+    print(f"Imported cogstack_v8_lite from pat2vec.util .")
+    print(f"Username: {creds.get('username')}")
+
+    if creds.get('api_key'):
+        print("Using API key authentication")
+        cs = CogStack(creds['hosts'], api_key=creds['api_key'], api=True)
+    else:
+        print(f"Using basic authentication, username: {creds.get('username')}")
+        cs = CogStack(creds['hosts'], creds.get('username'), creds.get('password'), api=False)
+
+    try:
+        cs.elastic.info()
+        print("CogStack connection successful.")
+    except Exception as e:
+        print(f"CogStack connection failed: {e}")
+
+    return cs
+
+
 def iterative_multi_term_cohort_searcher_no_terms_fuzzy_textual_obs(
     terms_list,
     treatment_doc_filename,
@@ -1052,7 +1105,8 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy_textual_obs(
     Returns:
         pandas.DataFrame: DataFrame containing the search results, or an empty DataFrame if no results are found.
     """
-
+    if cs is None:
+        initialize_cogstack_client()
     print(
         "iterative_multi_term_cohort_searcher_no_terms_fuzzy_textual_obs",
         start_day,
