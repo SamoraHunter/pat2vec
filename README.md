@@ -74,37 +74,37 @@ This project includes a collection of diagrams illustrating the system architect
 #### 📂 System Architecture & Configuration
 | Diagram | Mermaid | Image |
 |---|---|---|
-| **System Architecture** | [assets/system_architecture.mmd](assets/system_architecture.mmd) | ![System Architecture](assets/system_architecture.png) |
-| **Configuration** | [assets/config.mmd](assets/config.mmd) | ![Configuration](assets/config.svg) |
+| **System Architecture** | [assets/system_architecture.mmd](https://github.com/SamoraHunter/pat2vec/blob/main/assets/system_architecture.mmd) | ![System Architecture](https://github.com/SamoraHunter/pat2vec/blob/main/assets/system_architecture.png) |
+| **Configuration** | [assets/config.mmd](https://github.com/SamoraHunter/pat2vec/blob/main/assets/config.mmd) | ![Configuration](https://github.com/SamoraHunter/pat2vec/blob/main/assets/config.svg) |
 
 #### 🛠️ Data Pipelines
 | Diagram | Mermaid | Image |
 |---|---|---|
-| **Data Pipeline** | [assets/data_pipeline.mmd](assets/data_pipeline.mmd) | ![Data Pipeline](assets/data_pipeline.png) |
-| **Main Batch Processing** | [assets/main_batch.mmd](assets/main_batch.mmd) | ![Main Batch](assets/main_batch.svg) |
-| **Example Ingestion** | [assets/example_ingestion.mmd](assets/example_ingestion.mmd) | ![Example Ingestion](assets/example_ingestion.png) |
+| **Data Pipeline** | [assets/data_pipeline.mmd](https://github.com/SamoraHunter/pat2vec/blob/main/assets/data_pipeline.mmd) | ![Data Pipeline](https://github.com/SamoraHunter/pat2vec/blob/main/assets/data_pipeline.png) |
+| **Main Batch Processing** | [assets/main_batch.mmd](https://github.com/SamoraHunter/pat2vec/blob/main/assets/main_batch.mmd) | ![Main Batch](https://github.com/SamoraHunter/pat2vec/blob/main/assets/main_batch.svg) |
+| **Example Ingestion** | [assets/example_ingestion.mmd](https://github.com/SamoraHunter/pat2vec/blob/main/assets/example_ingestion.mmd) | ![Example Ingestion](https://github.com/SamoraHunter/pat2vec/blob/main/assets/example_ingestion.png) |
 
 #### 🧩 Methods & Post-Processing
 | Diagram | Mermaid | Image |
 |---|---|---|
-| **Methods Annotation** | [assets/methods_annotation.mmd](assets/methods_annotation.mmd) | ![Methods Annotation](assets/methods_annotation.png) |
-| **Post-Processing Build Methods** | [assets/post_processing_build_methods.mmd](assets/post_processing_build_methods.mmd) | ![Post-Processing Build Methods](assets/post_processing_build_methods.svg) |
-| **Post-Processing Anonymisation** | [assets/post_processing_anonymisation_high_level.mmd](assets/post_processing_anonymisation_high_level.mmd) | ![Post-Processing Anonymisation](assets/post_processing_anonymisation_high_level.svg) |
+| **Methods Annotation** | [assets/methods_annotation.mmd](https://github.com/SamoraHunter/pat2vec/blob/main/assets/methods_annotation.mmd) | ![Methods Annotation](https://github.com/SamoraHunter/pat2vec/blob/main/assets/methods_annotation.png) |
+| **Post-Processing Build Methods** | [assets/post_processing_build_methods.mmd](https://github.com/SamoraHunter/pat2vec/blob/main/assets/post_processing_build_methods.mmd) | ![Post-Processing Build Methods](https://github.com/SamoraHunter/pat2vec/blob/main/assets/post_processing_build_methods.svg) |
+| **Post-Processing Anonymisation** | [assets/post_processing_anonymisation_high_level.mmd](https://github.com/SamoraHunter/pat2vec/blob/main/assets/post_processing_anonymisation_high_level.mmd) | ![Post-Processing Anonymisation](https://github.com/SamoraHunter/pat2vec/blob/main/assets/post_processing_anonymisation_high_level.svg) |
 
 #### 🔍 Feature Extraction
 | Diagram | Mermaid | Image |
 |---|---|---|
-| **Ethnicity Abstractor** | [assets/ethnicity_abstractor.mmd](assets/ethnicity_abstractor.mmd) | ![Ethnicity Abstractor](assets/ethnicity_abstractor.svg) |
-| **Get BMI** | [assets/get_bmi.mmd](assets/get_bmi.mmd) | ![Get BMI](assets/get_bmi.svg) |
-| **Get Demographics** | [assets/get_demographics.mmd](assets/get_demographics.mmd) | ![Get Demographics](assets/get_demographics.svg) |
-| **Get Diagnostics** | [assets/get_diagnostics.mmd](assets/get_diagnostics.mmd) | ![Get Diagnostics](assets/get_diagnostics.svg) |
-| **Get Drugs** | [assets/get_drugs.mmd](assets/get_drugs.mmd) | ![Get Drugs](assets/get_drugs.svg) |
-| **Get Smoking** | [assets/get_smoking.mmd](assets/get_smoking.mmd) | ![Get Smoking](assets/get_smoking.svg) |
-| **Get News** | [assets/get_news.mmd](assets/get_news.mmd) | ![Get News](assets/get_news.svg) |
-| **Get Dummy Data Cohort Searcher** | [assets/get_dummy_data_cohort_searcher.mmd](assets/get_dummy_data_cohort_searcher.mmd) | ![Get Dummy Data Cohort Searcher](assets/get_dummy_data_cohort_searcher.svg) |
-| **Get Method Bloods** | [assets/get_method_bloods.mmd](assets/get_method_bloods.mmd) | ![Get Method Bloods](assets/get_method_bloods.svg) |
-| **Get Method Patient Annotations** | [assets/get_method_pat_annotations.mmd](assets/get_method_pat_annotations.mmd) | ![Get Method Patient Annotations](assets/get_method_pat_annotations.svg) |
-| **Get Treatment Docs (No Terms Fuzzy)** | [assets/get_treatment_docs_by_iterative_multi_term_cohort_searcher_no_terms_fuzzy.mmd](assets/get_treatment_docs_by_iterative_multi_term_cohort_searcher_no_terms_fuzzy.mmd) | ![Get Treatment Docs (No Terms Fuzzy)](assets/get_treatment_docs_by_iterative_multi_term_cohort_searcher_no_terms_fuzzy.svg) |
+| **Ethnicity Abstractor** | [assets/ethnicity_abstractor.mmd](https://github.com/SamoraHunter/pat2vec/blob/main/assets/ethnicity_abstractor.mmd) | ![Ethnicity Abstractor](https://github.com/SamoraHunter/pat2vec/blob/main/assets/ethnicity_abstractor.svg) |
+| **Get BMI** | [assets/get_bmi.mmd](https://github.com/SamoraHunter/pat2vec/blob/main/assets/get_bmi.mmd) | ![Get BMI](https://github.com/SamoraHunter/pat2vec/blob/main/assets/get_bmi.svg) |
+| **Get Demographics** | [assets/get_demographics.mmd](https://github.com/SamoraHunter/pat2vec/blob/main/assets/get_demographics.mmd) | ![Get Demographics](https://github.com/SamoraHunter/pat2vec/blob/main/assets/get_demographics.svg) |
+| **Get Diagnostics** | [assets/get_diagnostics.mmd](https://github.com/SamoraHunter/pat2vec/blob/main/assets/get_diagnostics.mmd) | ![Get Diagnostics](https://github.com/SamoraHunter/pat2vec/blob/main/assets/get_diagnostics.svg) |
+| **Get Drugs** | [assets/get_drugs.mmd](https://github.com/SamoraHunter/pat2vec/blob/main/assets/get_drugs.mmd) | ![Get Drugs](https://github.com/SamoraHunter/pat2vec/blob/main/assets/get_drugs.svg) |
+| **Get Smoking** | [assets/get_smoking.mmd](https://github.com/SamoraHunter/pat2vec/blob/main/assets/get_smoking.mmd) | ![Get Smoking](https://github.com/SamoraHunter/pat2vec/blob/main/assets/get_smoking.svg) |
+| **Get News** | [assets/get_news.mmd](https://github.com/SamoraHunter/pat2vec/blob/main/assets/get_news.mmd) | ![Get News](https://github.com/SamoraHunter/pat2vec/blob/main/assets/get_news.svg) |
+| **Get Dummy Data Cohort Searcher** | [assets/get_dummy_data_cohort_searcher.mmd](https://github.com/SamoraHunter/pat2vec/blob/main/assets/get_dummy_data_cohort_searcher.mmd) | ![Get Dummy Data Cohort Searcher](https://github.com/SamoraHunter/pat2vec/blob/main/assets/get_dummy_data_cohort_searcher.svg) |
+| **Get Method Bloods** | [assets/get_method_bloods.mmd](https://github.com/SamoraHunter/pat2vec/blob/main/assets/get_method_bloods.mmd) | ![Get Method Bloods](https://github.com/SamoraHunter/pat2vec/blob/main/assets/get_method_bloods.svg) |
+| **Get Method Patient Annotations** | [assets/get_method_pat_annotations.mmd](https://github.com/SamoraHunter/pat2vec/blob/main/assets/get_method_pat_annotations.mmd) | ![Get Method Patient Annotations](https://github.com/SamoraHunter/pat2vec/blob/main/assets/get_method_pat_annotations.svg) |
+| **Get Treatment Docs (No Terms Fuzzy)** | [assets/get_treatment_docs_by_iterative_multi_term_cohort_searcher_no_terms_fuzzy.mmd](https://github.com/SamoraHunter/pat2vec/blob/main/assets/get_treatment_docs_by_iterative_multi_term_cohort_searcher_no_terms_fuzzy.mmd) | ![Get Treatment Docs (No Terms Fuzzy)](https://github.com/SamoraHunter/pat2vec/blob/main/assets/get_treatment_docs_by_iterative_multi_term_cohort_searcher_no_terms_fuzzy.svg) |
 
 </details>
 
@@ -276,6 +276,34 @@ The `example_usage.ipynb` notebook provides a template for running the pipeline.
 
 > **Note:** When working with real patient data, ensure the `testing` flag in the `config_class` is set to `False`.
 
+
+## Building the Documentation
+
+This project uses Sphinx to generate documentation from the source code's docstrings.
+
+1.  **Install development dependencies:**
+    If you haven't already, run the installation script with the `--dev` flag to install Sphinx and its extensions.
+    ```shell
+    ./install_pat2vec.sh --dev
+    ```
+
+2.  **Activate the virtual environment:**
+    ```shell
+    source pat2vec_env/bin/activate
+    ```
+
+3.  **Build the HTML documentation:**
+    Navigate to the `docs/` directory and use the provided `Makefile`.
+    ```shell
+    cd docs
+    make html
+    ```
+
+4.  **View the documentation:**
+    The generated files will be in `docs/build/html/`. You can open the main page in your browser:
+    ```
+    open docs/build/html/index.html
+    ```
 
 ## FAQ
 

@@ -121,19 +121,19 @@ clone_repositories() {
     local saved_https_proxy="$https_proxy"
     local saved_git_http_proxy=""
     local saved_git_https_proxy=""
-    
+
     # Get current git proxy settings if they exist
     saved_git_http_proxy=$(git config --global --get http.proxy 2>/dev/null || echo "")
     saved_git_https_proxy=$(git config --global --get https.proxy 2>/dev/null || echo "")
 
     echo "Temporarily disabling proxy for Git operations..."
-    
+
     # Unset environment proxy variables for git operations
     unset http_proxy
     unset https_proxy
     unset HTTP_PROXY
     unset HTTPS_PROXY
-    
+
     # Unset git proxy configuration temporarily
     git config --global --unset http.proxy 2>/dev/null || true
     git config --global --unset https.proxy 2>/dev/null || true
@@ -147,7 +147,7 @@ clone_repositories() {
             fi
         else
             echo "$repo_name already exists, skipping..."
-        fi 
+        fi
     done
 
     # Restore proxy settings
@@ -259,6 +259,13 @@ if [ "$PROXY_MODE" = true ]; then
 fi
 
 pip install "${pip_install_args[@]}"
+
+if [ "$DEV_MODE" = true ]; then
+    echo "Installing documentation dependencies (Sphinx)..."
+    pip_doc_args=("sphinx" "sphinx-rtd-theme" "sphinx-autodoc-typehints")
+    [ "$PROXY_MODE" = true ] && pip_doc_args+=("--trusted-host" "dh-cap02" "-i" "http://dh-cap02:8008/mirrors/pat2vec")
+    pip install "${pip_doc_args[@]}"
+fi
 
 echo "Installing SpaCy model..."
 SPACY_MODEL_URL="https://github.com/explosion/spacy-models/releases/download/en_core_web_md-3.7.1/en_core_web_md-3.7.1-py3-none-any.whl"
