@@ -1,4 +1,4 @@
-from setuptools import setup, find_packages
+from setuptools import find_packages, setup
 
 # Define dependencies for different installation options
 extras = {
@@ -18,7 +18,7 @@ setup(
         "building, batch data processing, clinical note analysis, and creating "
         "machine learning-ready datasets."
     ),
-    long_description=open("README.md").read(),
+    long_description=open("README.md", "r", encoding="utf-8").read(),
     long_description_content_type="text/markdown",
     author="Samora Hunter",
     author_email="samorahunter@gmail.com",

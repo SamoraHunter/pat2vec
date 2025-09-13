@@ -1,5 +1,5 @@
-from typing import List
 import getpass
+from typing import List
 
 print("imported dummy credential file: this should be placed in gloabl_files")
 # CogStack login details
@@ -13,7 +13,8 @@ hosts: List[str] = [  # Dummy Elasticsearch URL
 username = (
     "dummy_user"  # Warning, copy this file to gloabl_files before inputting credentials
 )
-password = "dummy_password"  # getpass.getpass(prompt='Enter your password for username:{}'.format(username))
+# getpass.getpass(prompt='Enter your password for username:{}'.format(username))
+password = "dummy_password"
 
 host_name = "localhost"
 
