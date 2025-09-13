@@ -2,27 +2,21 @@
 # create function that takes a list of terms, runs iterative_multi_term_cohort_searcher_no_terms_fuzzy and returns terms
 # takes pat2vec_obj
 
-from datetime import datetime
+from pat2vec.util.get_dummy_data_cohort_searcher import (
+    cohort_searcher_with_terms_and_search_dummy, generate_uuid_list)
+from pat2vec.pat2vec_search.cogstack_search_methods import (
+    iterative_multi_term_cohort_searcher_no_terms_fuzzy,
+    iterative_multi_term_cohort_searcher_no_terms_fuzzy_mct,
+    iterative_multi_term_cohort_searcher_no_terms_fuzzy_textual_obs)
+import pandas as pd
+import numpy as np
 import os
 import random
+from datetime import datetime
 
 random_state = 42
 
 random.seed(random_state)
-
-from pat2vec.pat2vec_search.cogstack_search_methods import (
-    iterative_multi_term_cohort_searcher_no_terms_fuzzy,
-    iterative_multi_term_cohort_searcher_no_terms_fuzzy_mct,
-)
-from pat2vec.pat2vec_search.cogstack_search_methods import (
-    iterative_multi_term_cohort_searcher_no_terms_fuzzy_textual_obs,
-)
-from pat2vec.util.get_dummy_data_cohort_searcher import (
-    cohort_searcher_with_terms_and_search_dummy,
-    generate_uuid_list,
-)
-import pandas as pd
-import numpy as np
 
 
 def get_treatment_docs_by_iterative_multi_term_cohort_searcher_no_terms_fuzzy(
@@ -97,7 +91,8 @@ def get_treatment_docs_by_iterative_multi_term_cohort_searcher_no_terms_fuzzy(
             global_start_month,
             global_start_year,
         )
-        print("Global End Date:", global_end_day, global_end_month, global_end_year)
+        print("Global End Date:", global_end_day,
+              global_end_month, global_end_year)
 
     if pat2vec_obj.config_obj.testing == True:
         random.seed(random_state)
@@ -293,7 +288,8 @@ def get_treatment_docs_by_iterative_multi_term_cohort_searcher_no_terms_fuzzy(
         # merge time column to fill updatetime nan with observation_datetime
         if "basicobs_entered" in search_results.columns:
             search_results["updatetime"] = search_results["updatetime"].fillna(
-                search_results["observationdocument_recordeddtm"]  # bloods time field
+                # bloods time field
+                search_results["observationdocument_recordeddtm"]
             )
 
         return search_results
@@ -338,21 +334,27 @@ def demo_to_latest(demo_df: pd.DataFrame) -> pd.DataFrame:
     return latest_demo_df
 
 
-def calculate_age_append(df):
-    """
-    Calculate the age of clients in the given DataFrame. #input demo_df
+def calculate_age_append(df: pd.DataFrame) -> pd.DataFrame:
+    """Calculate the age of clients in the given DataFrame.
 
-    Parameters:
-    df (pd.DataFrame): DataFrame containing client data.
+    This function takes a DataFrame containing client demographic data,
+    specifically a 'client_dob' (date of birth) column. It calculates
+    the current age of each client and appends it as a new 'age' column.
+    Rows with invalid or missing 'client_dob' are dropped.
+
+    Args:
+        df (pd.DataFrame): DataFrame containing client data with a 'client_dob'
+                           column.
 
     Returns:
-    pd.DataFrame: DataFrame with an additional 'age' column.
+        pd.DataFrame: The input DataFrame with an additional 'age' column.
     """
     # Drop rows with missing 'client_dob' values
     df.dropna(subset=["client_dob"], inplace=True)
 
     # Ensure 'client_dob' is in datetime format and remove timezone
-    df["client_dob"] = pd.to_datetime(df["client_dob"], errors="coerce", utc=True)
+    df["client_dob"] = pd.to_datetime(
+        df["client_dob"], errors="coerce", utc=True)
     df.dropna(subset=["client_dob"], inplace=True)
     df["client_dob"] = df["client_dob"].dt.tz_localize(None)
 
