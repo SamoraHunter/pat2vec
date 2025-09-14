@@ -1,9 +1,11 @@
-import os
 import ast
-from collections import defaultdict
+import os
+import sys
 import textwrap
+from collections import defaultdict
 
 # To update init with methods in pat2vec root dir, python generate_init.py > pat2vec/__init__.py
+# The script now writes the file directly. Just run: `python generate_init.py` # Windows
 
 
 def generate_init_file_content(package_path="pat2vec"):
@@ -28,7 +30,6 @@ def generate_init_file_content(package_path="pat2vec"):
                     try:
                         tree = ast.parse(f.read(), filename=file_path)
 
-                        # --- KEY CHANGE IS HERE ---
                         # Instead of ast.walk(), iterate over top-level nodes only.
                         # This finds functions and classes but ignores methods inside classes.
                         for node in tree.body:
@@ -92,4 +93,12 @@ def generate_init_file_content(package_path="pat2vec"):
 
 if __name__ == "__main__":
     init_content = generate_init_file_content()
-    print(init_content)
+    output_path = os.path.join("pat2vec", "__init__.py")
+
+    print(f"Writing __init__.py to {output_path}...")
+    try:
+        with open(output_path, "w", encoding="utf-8") as f:
+            f.write(init_content)
+        print("Done.")
+    except IOError as e:
+        print(f"Error writing to file: {e}", file=sys.stderr)
