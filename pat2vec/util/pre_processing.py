@@ -2,17 +2,20 @@
 # create function that takes a list of terms, runs iterative_multi_term_cohort_searcher_no_terms_fuzzy and returns terms
 # takes pat2vec_obj
 
-from pat2vec.util.get_dummy_data_cohort_searcher import (
-    cohort_searcher_with_terms_and_search_dummy, generate_uuid_list)
+import os
+import random
+from datetime import datetime
+from typing import List, Optional
+
+import numpy as np
+import pandas as pd
+
 from pat2vec.pat2vec_search.cogstack_search_methods import (
     iterative_multi_term_cohort_searcher_no_terms_fuzzy,
     iterative_multi_term_cohort_searcher_no_terms_fuzzy_mct,
     iterative_multi_term_cohort_searcher_no_terms_fuzzy_textual_obs)
-import pandas as pd
-import numpy as np
-import os
-import random
-from datetime import datetime
+from pat2vec.util.get_dummy_data_cohort_searcher import (
+    cohort_searcher_with_terms_and_search_dummy, generate_uuid_list)
 
 random_state = 42
 
@@ -34,25 +37,38 @@ def get_treatment_docs_by_iterative_multi_term_cohort_searcher_no_terms_fuzzy(
     fuzzy=2,  # int char order?
     slop=1,  # int word order tolerance
 ):
-    """
-    This function takes a list of terms, runs iterative_multi_term_cohort_searcher_no_terms_fuzzy
-    and returns the search results as a dataframe.
+    """Searches for documents using a list of terms and returns the results.
 
-    pat2vec_obj:
-        A pat2vec object with the necessary attributes set.
+    This function takes a list of terms, runs an iterative fuzzy search
+    across multiple data sources (EPR, MCT, Textual Observations), and
+    returns the combined search results as a pandas DataFrame. It also handles
+    saving the results to a CSV file.
 
-    term_list:
-        A list of terms to search for.
+    Args:
+        pat2vec_obj (object): A pat2vec object with necessary attributes set.
+        term_list (List[str]): A list of terms to search for.
+        overwrite (bool, optional): Whether to overwrite the output file if it
+            already exists. Defaults to False.
+        overwrite_search_term (Optional[str], optional): A term to override
+            the search terms in `term_list`. Used for testing. Defaults to None.
+        append (bool, optional): Whether to append to the output file if it
+            exists. Defaults to False.
+        verbose (int, optional): Verbosity level. Defaults to 0.
+        mct (bool, optional): If True, includes results from the MCT source.
+            Defaults to True.
+        textual_obs (bool, optional): If True, includes results from the
+            textual observations source. Defaults to True.
+        additional_filters (Optional[List[str]], optional): A list of
+            additional filters to apply to the search. Defaults to None.
+        all_fields (bool, optional): Whether to include and return all fields
+            in the search. Defaults to False.
+        method (str, optional): The search method to use ('fuzzy', 'phrase',
+            'exact'). Defaults to "fuzzy".
+        fuzzy (int, optional): The fuzzy matching tolerance. Defaults to 2.
+        slop (int, optional): The slop for phrase matching. Defaults to 1.
 
-    overwrite:
-        Whether to overwrite the output file if it already exists. Default is False.
-
-    additional_filters:
-        A list of additional filters to apply to the search.
-
-    all_fields:
-        Whether to include and return all fields in the search.
-
+    Returns:
+        pd.DataFrame: A DataFrame containing the search results.
     """
     if verbose >= 1:
         print(
@@ -301,8 +317,9 @@ def draw_document_samples(df: pd.DataFrame, n: int) -> pd.DataFrame:
     """
     Draw n samples for each search_term from the given DataFrame.
 
-    Parameters:
-        df (pd.DataFrame): DataFrame containing search_term and document_description columns.
+    Args:
+        df (pd.DataFrame): DataFrame containing search_term and
+            document_description columns.
         n (int): Number of samples to draw for each search_term.
 
     Returns:
@@ -324,8 +341,17 @@ def draw_document_samples(df: pd.DataFrame, n: int) -> pd.DataFrame:
 
 
 def demo_to_latest(demo_df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Returns the latest record for each unique 'client_idcode' in the DataFrame.
+    """Filters a demographics DataFrame to keep only the latest record per patient.
+
+    Based on the 'updatetime' column, this function finds and returns the most
+    recent entry for each unique 'client_idcode'.
+
+    Args:
+        demo_df (pd.DataFrame): A DataFrame with patient demographic data,
+            including 'client_idcode' and 'updatetime' columns.
+
+    Returns:
+        pd.DataFrame: A DataFrame containing only the latest record for each patient.
     """
     demo_df["updatetime"] = pd.to_datetime(demo_df["updatetime"], utc=True)
     latest_demo_df = demo_df.loc[
@@ -381,22 +407,25 @@ def search_cohort(
     end_day,
     additional_filters=None,
 ):
-    """
-    Searches for a cohort of patients based on the given parameters.
+    """Searches for a cohort of patients based on the given parameters.
 
-    Parameters:
-    patlist (list): List of patient IDs.
-    pat2vec_obj pat2vec object with config obj configured.
-    start_year (str): Start year for the search.
-    start_month (str): Start month for the search.
-    start_day (str): Start day for the search.
-    end_year (str): End year for the search.
-    end_month (str): End month for the search.
-    end_day (str): End day for the search.
-    additional_filters (list): List of additional filter strings to append to the search string.
+    Args:
+        patlist (list): List of patient IDs.
+        pat2vec_obj (object): pat2vec object with config obj configured.
+        start_year (str): Start year for the search.
+        start_month (str): Start month for the search.
+        start_day (str): Start day for the search.
+        end_year (str): End year for the search.
+        end_month (str): End month for the search.
+        end_day (str): End day for the search.
+        additional_filters (Optional[List[str]], optional): List of additional
+            filter strings to append to the search string. Defaults to None.
 
     Returns:
-    pd.DataFrame: DataFrame containing the search results.
+        pd.DataFrame: DataFrame containing the search results.
+
+    Raises:
+        ValueError: If `pat2vec_obj` is not provided.
     """
     search_string = f"updatetime:[{start_year}-{start_month}-{start_day} TO {end_year}-{end_month}-{end_day}]"
 

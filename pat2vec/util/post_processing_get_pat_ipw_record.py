@@ -1,9 +1,12 @@
-import pandas as pd
-from datetime import datetime
-from typing import Dict, List, Optional, Union
-from pat2vec.util.post_processing import filter_and_select_rows, filter_annot_dataframe2
 import os
+from datetime import datetime
+from typing import Any, Dict, List, Optional, Union
+
+import pandas as pd
 from IPython.display import display
+
+from pat2vec.util.post_processing import (filter_and_select_rows,
+                                          filter_annot_dataframe2)
 
 
 def _get_source_record(
@@ -11,12 +14,34 @@ def _get_source_record(
     base_path: str,
     time_column: str,
     necessary_columns: List[str],
-    annot_filter_arguments: Optional[Dict],
+    annot_filter_arguments: Optional[Dict[str, Any]],
     filter_codes: Optional[List[int]],
     mode: str,
     verbose: int,
 ) -> pd.DataFrame:
-    """Helper to read, clean, and filter records from a single data source."""
+    """Reads, cleans, and filters records from a single data source file.
+
+    This helper function is designed to process a single patient's annotation
+    file from a specific source (e.g., EPR, MCT). It handles file reading,
+    data cleaning by dropping rows with missing necessary values, and applying
+    various filters.
+
+    Args:
+        pat_id (str): The patient identifier.
+        base_path (str): The base directory path where the patient's CSV file is located.
+        time_column (str): The name of the column containing the timestamp.
+        necessary_columns (List[str]): A list of columns that must have non-NaN values.
+        annot_filter_arguments (Optional[Dict[str, Any]]): A dictionary of filters to apply
+            to the annotations.
+        filter_codes (Optional[List[int]]): A list of CUI codes to filter for.
+        mode (str): The mode for `filter_and_select_rows` ('earliest' or 'latest').
+        verbose (int): The verbosity level for logging.
+
+    Returns:
+        pd.DataFrame: A DataFrame containing the filtered records from the source.
+            Returns an empty DataFrame if the file is not found, is empty, or if
+            no rows remain after filtering.
+    """
     file_path = f"{base_path}/{pat_id}.csv"
     if not os.path.exists(file_path):
         if verbose > 10:
@@ -36,7 +61,8 @@ def _get_source_record(
 
     except Exception as e:
         if verbose > 10:
-            print(f"Error reading CSV for patient {pat_id} at {base_path}: {e}")
+            print(
+                f"Error reading CSV for patient {pat_id} at {base_path}: {e}")
         return pd.DataFrame()
 
     if verbose > 12:
@@ -44,12 +70,15 @@ def _get_source_record(
         display(df.head())
 
     # Check if necessary columns exist before dropping NaNs
-    existing_necessary_columns = [col for col in necessary_columns if col in df.columns]
-    missing_columns = [col for col in necessary_columns if col not in df.columns]
+    existing_necessary_columns = [
+        col for col in necessary_columns if col in df.columns]
+    missing_columns = [
+        col for col in necessary_columns if col not in df.columns]
 
     if missing_columns:
         if verbose > 10:
-            print(f"Missing necessary columns in {base_path}: {missing_columns}")
+            print(
+                f"Missing necessary columns in {base_path}: {missing_columns}")
         # Create missing columns with appropriate default values
         for col in missing_columns:
             if col == time_column:
@@ -105,19 +134,44 @@ def _get_source_record(
 
 def get_pat_ipw_record(
     current_pat_idcode: str,
-    config_obj=None,
-    annot_filter_arguments: Optional[Dict[str, Union[int, str, List[str]]]] = None,
+    config_obj: Optional[object] = None,
+    annot_filter_arguments: Optional[Dict[str,
+                                          Union[int, str, List[str]]]] = None,
     filter_codes: Optional[List[int]] = None,
     mode: str = "earliest",
     verbose: int = 0,
     include_mct: bool = True,
     include_textual_obs: bool = True,
 ) -> pd.DataFrame:
-    """
-    Retrieve patient IPW record.
+    """Retrieves a patient's Individual Patient Window (IPW) record.
 
-    This function retrieves the earliest relevant records, based on the filter_codes,
-    from the EPR, MCT, and textual_obs annotation dataframes.
+    This function finds the most relevant "index" record for a single patient
+    by searching across multiple annotation sources (EPR, MCT, textual_obs).
+    The index record is determined by `filter_codes` and the `mode` (e.g., the
+    'earliest' occurrence of a specific diagnosis CUI).
+
+    If no record is found, a fallback record is created based on the global
+    date settings in the configuration.
+
+    Args:
+        current_pat_idcode (str): The unique identifier for the patient.
+        config_obj (Optional[object], optional): The configuration object containing
+            paths and settings. Defaults to None.
+        annot_filter_arguments (Optional[Dict[str, Union[int, str, List[str]]]]):
+            A dictionary of filters to apply to annotations before selecting the
+            IPW record. Defaults to None.
+        filter_codes (Optional[List[int]]): A list of CUI codes to identify the
+            relevant clinical events. Defaults to None.
+        mode (str, optional): Determines whether to find the 'earliest' or 'latest'
+            record for the patient. Defaults to "earliest".
+        verbose (int, optional): Verbosity level for logging. Defaults to 0.
+        include_mct (bool, optional): If True, includes annotations from MCT
+            (MRC clinical notes) in the search. Defaults to True.
+        include_textual_obs (bool, optional): If True, includes annotations from
+            textual observations. Defaults to True.
+
+    Returns:
+        pd.DataFrame: A DataFrame containing the single IPW record for the patient.
     """
 
     # Use config verbosity if available
@@ -236,13 +290,16 @@ def get_pat_ipw_record(
         if "updatetime" in df.columns and not df["updatetime"].isna().all():
             valid_dfs.append(df)
         elif verbose > 10:
-            source = df.iloc[0].get("source", "unknown") if not df.empty else "unknown"
-            print(f"Excluding DataFrame from {source} due to invalid updatetime")
+            source = df.iloc[0].get(
+                "source", "unknown") if not df.empty else "unknown"
+            print(
+                f"Excluding DataFrame from {source} due to invalid updatetime")
 
     # Find the earliest record among valid DataFrames
     if valid_dfs:
         try:
-            earliest_df = min(valid_dfs, key=lambda df: df.iloc[0]["updatetime"])
+            earliest_df = min(
+                valid_dfs, key=lambda df: df.iloc[0]["updatetime"])
             if verbose >= 10:
                 source = earliest_df.iloc[0].get("source", "unknown")
                 timestamp = earliest_df.iloc[0]["updatetime"]
@@ -283,9 +340,11 @@ def get_pat_ipw_record(
         )
 
         if not config_obj.lookback:
-            earliest_df["updatetime"] = [pd.to_datetime(start_datetime, utc=True)]
+            earliest_df["updatetime"] = [
+                pd.to_datetime(start_datetime, utc=True)]
         else:
-            earliest_df["updatetime"] = [pd.to_datetime(end_datetime, utc=True)]
+            earliest_df["updatetime"] = [
+                pd.to_datetime(end_datetime, utc=True)]
 
         earliest_df["source"] = ["fallback"]
 
@@ -303,7 +362,8 @@ def get_pat_ipw_record(
         if check_columns:
             all_nan_mask = result_df[check_columns].isna().all(axis=1)
             if all_nan_mask.any() and verbose > 10:
-                print(f"Warning: Found {all_nan_mask.sum()} rows with all NaN values")
+                print(
+                    f"Warning: Found {all_nan_mask.sum()} rows with all NaN values")
 
         # Ensure client_idcode is not NaN
         result_df.loc[result_df["client_idcode"].isna(), "client_idcode"] = (

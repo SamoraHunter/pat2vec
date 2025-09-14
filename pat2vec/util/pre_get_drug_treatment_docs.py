@@ -1,15 +1,14 @@
-import random
-import pandas as pd
-from pat2vec.pat2vec_search.cogstack_search_methods import (
-    cohort_searcher_no_terms_fuzzy,
-)
-from typing import List, Optional, Union
-from fuzzywuzzy import fuzz
 import os
+import random
+from typing import List, Optional, Union
 
-from pat2vec.util.get_dummy_data_cohort_searcher import (
-    cohort_searcher_with_terms_and_search_dummy,
-)
+import pandas as pd
+from fuzzywuzzy import fuzz
+
+from pat2vec.pat2vec_search.cogstack_search_methods import \
+    cohort_searcher_no_terms_fuzzy
+from pat2vec.util.get_dummy_data_cohort_searcher import \
+    cohort_searcher_with_terms_and_search_dummy
 from pat2vec.util.pre_processing import generate_uuid_list
 
 # Functions to get cohort by drug order name.
@@ -27,49 +26,42 @@ def get_treatment_records_by_drug_order_name(
         "order_holdreasontext",
     ],
 ) -> pd.DataFrame:
-    """
-    Retrieves treatment records from the 'order' index in the database that match
-    a specified drug-related search term. Uses fuzzy matching to check against
-    multiple columns and stores matched columns in the output.
+    """Retrieves treatment records from the 'order' index that match a search term.
 
-    Parameters:
-    ----------
-    pat2vec_obj : object
-        The main pat2vec object, which contains configuration settings.
+    Uses fuzzy matching to check against multiple columns and stores matched
+    columns in the output.
 
-    term : str
-        A single drug name or keyword to search for.
-
-    verbose : int, optional
-        Verbosity level for logging/debugging (default is 0).
-        - 0: No output
-        - 1: Basic logs
-        - 5: Moderate logs
-        - 9: Full debug logs
-
-    all_fields : bool, optional
-        If True, retrieves all available fields from the database.
-        If False, retrieves only essential fields (default is False).
-
-    column_fields_to_match : list of str, optional
-        List of columns to check for fuzzy matching (default includes:
-        ['order_summaryline', 'order_name', 'order_holdreasontext']).
+    Args:
+        pat2vec_obj (object): The main pat2vec object, which contains
+            configuration settings.
+        term (str): A single drug name or keyword to search for.
+        verbose (int, optional): Verbosity level for logging/debugging.
+            - 0: No output
+            - 1: Basic logs
+            - 5: Moderate logs
+            - 9: Full debug logs
+            Defaults to 0.
+        all_fields (bool, optional): If True, retrieves all available fields
+            from the database. If False, retrieves only essential fields.
+            Defaults to False.
+        column_fields_to_match (List[str], optional): List of columns to check
+            for fuzzy matching. Defaults to `['order_summaryline', 'order_name',
+            'order_holdreasontext']`.
 
     Returns:
-    -------
-    pd.DataFrame
-        A DataFrame containing treatment records with an additional column indicating
-        which fields matched the search term. The matching column is named
-        'matched_{term}' where {term} is the lowercase, underscore-separated
-        version of the search term.
+        pd.DataFrame: A DataFrame containing treatment records with an
+            additional column indicating which fields matched the search term.
+            The matching column is named 'matched_{term}' where {term} is the
+            lowercase, underscore-separated version of the search term.
 
     Notes:
-    ------
-    - The function retrieves records using `cohort_searcher_no_terms_fuzzy()`.
-    - Applies fuzzy string matching with a threshold of 80 across selected columns.
-    - Additional column (`matched_{term}`) stores which fields matched the term.
-    - Only rows with at least one match are returned.
-    - For medication orders only (filtered by order_typecode="medication").
+        - The function retrieves records using `cohort_searcher_no_terms_fuzzy()`.
+        - Applies fuzzy string matching with a threshold of 80 across selected
+          columns.
+        - An additional column (`matched_{term}`) stores which fields matched
+          the term.
+        - Only rows with at least one match are returned.
+        - For medication orders only (filtered by order_typecode="medication").
     """
 
     if pat2vec_obj is None:
@@ -281,7 +273,8 @@ def get_treatment_records_by_drug_order_name(
         return pd.DataFrame()
 
     if verbose >= 9:
-        print(f"[DEBUG] Retrieved {len(drug_treatment_docs)} records from database.")
+        print(
+            f"[DEBUG] Retrieved {len(drug_treatment_docs)} records from database.")
 
     # Function to find matching columns for the search term
     def find_matching_columns(row, search_term):
@@ -345,38 +338,32 @@ def iterative_drug_treatment_search(
     drop_duplicates: bool = True,
     overwrite=False,
 ) -> None:
-    """
-    Iteratively searches for treatment records using a list of search terms and
-    appends results to a CSV file. Also includes matched fields and an option to
-    drop duplicate records based on order_guid.
+    """Iteratively search for drug treatment records and save them.
 
-    Parameters:
-    ----------
-    pat2vec_obj : object
-        The main pat2vec object containing configuration settings.
+    Searches for treatment records using a list of search terms, appends
+    results to a CSV file, includes matched fields, and provides an option to
+    drop duplicate records based on 'order_guid'.
 
-    search_terms : List[str]
-        A list of drug names or keywords to search for.
-
-    output_csv : str
-        Path to the CSV file where results will be stored. Appends to the file if it exists.
-
-    verbose : int, optional
-        Verbosity level for logging/debugging (default is 0).
-
-    all_fields : bool, optional
-        Whether to retrieve all available fields (default is False).
-
-    column_fields_to_match : List[str], optional
-        List of columns to check for fuzzy matching (default includes:
-        ['order_summaryline', 'order_name', 'order_holdreasontext']).
-
-    drop_duplicates : bool, optional
-        If True, drops duplicate records based on `order_guid`, while merging search term info.
+    Args:
+        pat2vec_obj (object): The main pat2vec object containing configuration
+            settings.
+        search_terms (List[str]): A list of drug names or keywords to search for.
+        output_file_path (str): Path to the CSV file where results will be
+            stored. Appends to the file if it exists.
+        verbose (int, optional): Verbosity level for logging/debugging.
+            Defaults to 0.
+        all_fields (bool, optional): Whether to retrieve all available fields.
+            Defaults to False.
+        column_fields_to_match (List[str], optional): List of columns to check
+            for fuzzy matching. Defaults to `['order_summaryline', 'order_name',
+            'order_holdreasontext']`.
+        drop_duplicates (bool, optional): If True, drops duplicate records
+            based on `order_guid`, while merging search term info. Defaults to True.
+        overwrite (bool, optional): If True, overwrite the output file if it
+            exists. Defaults to False.
 
     Returns:
-    -------
-    merged dataframe
+        pd.DataFrame: A merged dataframe of the results.
     """
 
     if overwrite:
@@ -428,7 +415,8 @@ def iterative_drug_treatment_search(
         all_results.append(treatment_records)
 
         if verbose >= 1:
-            print(f"[INFO] Retrieved {len(treatment_records)} records for term: {term}")
+            print(
+                f"[INFO] Retrieved {len(treatment_records)} records for term: {term}")
 
     if not all_results:
         if verbose >= 1:

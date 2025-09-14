@@ -1,32 +1,34 @@
-from pathlib import Path
 import os
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Union
+
 import pandas as pd
 from tqdm import tqdm
 
-from pat2vec.util.post_processing import (
-    retrieve_pat_annots_mct_epr,
-)
+from pat2vec.util.post_processing import retrieve_pat_annots_mct_epr
 
 
-def filter_annot_dataframe(df, annot_filter_arguments):
-    """
-    Filter a DataFrame based on the given inclusion criteria.
+def filter_annot_dataframe(
+    df: pd.DataFrame, annot_filter_arguments: Dict[str, Any]
+) -> pd.DataFrame:
+    """Filters a DataFrame based on the given inclusion criteria.
 
-    Parameters:
-    - df: DataFrame to be filtered
-    - annot_filter_arguments: Dictionary containing inclusion criteria
+    Args:
+        df (pd.DataFrame): DataFrame to be filtered.
+        annot_filter_arguments (Dict[str, Any]): Dictionary containing
+            inclusion criteria.
 
     Returns:
-    - Filtered DataFrame
+        pd.DataFrame: The filtered DataFrame.
     """
 
     # Define a function to handle non-numeric values in float columns
-    def filter_float_column(df, column_name, threshold):
+    def filter_float_column(df: pd.DataFrame, column_name: str, threshold: float) -> pd.DataFrame:
         if column_name in df.columns and column_name in annot_filter_arguments:
             # Convert the column to numeric values (assuming it contains only convertible values)
             df[column_name] = pd.to_numeric(df[column_name], errors="coerce")
-            df = df[df[column_name] > threshold]
-            return df
+            df = df[df[column_name] > threshold]  # type: ignore
+        return df
 
     # Apply the function for each float column
     df = filter_float_column(df, "acc", annot_filter_arguments["acc"])
@@ -50,11 +52,13 @@ def filter_annot_dataframe(df, annot_filter_arguments):
 
     # Check if 'Presence_Value' column exists in the DataFrame
     if "Presence_Value" in df.columns and "Presence_Value" in annot_filter_arguments:
-        df = df[df["Presence_Value"].isin(annot_filter_arguments["Presence_Value"])]
+        df = df[df["Presence_Value"].isin(
+            annot_filter_arguments["Presence_Value"])]
 
     # Check if 'Subject_Value' column exists in the DataFrame
     if "Subject_Value" in df.columns and "Subject_Value" in annot_filter_arguments:
-        df = df[df["Subject_Value"].isin(annot_filter_arguments["Subject_Value"])]
+        df = df[df["Subject_Value"].isin(
+            annot_filter_arguments["Subject_Value"])]
 
     return df
 
@@ -64,9 +68,10 @@ def filter_annot_dataframe(df, annot_filter_arguments):
 # filtered_df = filter_annot_dataframe(df, annot_filter_arguments)
 
 
-def build_merged_epr_mct_annot_df(all_pat_list, config_obj, overwrite=False):
-    """
-    Builds a merged DataFrame of annotations from EPR and MCT sources for all patients.
+def build_merged_epr_mct_annot_df(
+    all_pat_list: List[str], config_obj: object, overwrite: bool = False
+) -> Optional[str]:
+    """Builds a merged DataFrame of annotations from EPR and MCT sources.
 
     This function iterates through a list of patient IDs, retrieves their
     respective annotation data from both EPR and MCT sources using the
@@ -75,7 +80,7 @@ def build_merged_epr_mct_annot_df(all_pat_list, config_obj, overwrite=False):
     is saved to a CSV file.
 
     Args:
-        all_pat_list (list): A list of patient client ID codes to process.
+        all_pat_list (List[str]): A list of patient client ID codes to process.
         config_obj (object): A configuration object containing project settings,
                              including `proj_name` and paths to annotation batches.
         overwrite (bool, optional): If True, any existing merged file will be
@@ -84,8 +89,8 @@ def build_merged_epr_mct_annot_df(all_pat_list, config_obj, overwrite=False):
                                     Defaults to False.
 
     Returns:
-        str or None: The file path to the merged annotations CSV file. Returns
-                     None if no annotation data is found for any patient.
+        Optional[str]: The file path to the merged annotations CSV file.
+            Returns None if no annotation data is found for any patient.
     """
     directory_path = config_obj.proj_name + "/" + "merged_batches/"
     Path(directory_path).mkdir(parents=True, exist_ok=True)
@@ -100,7 +105,8 @@ def build_merged_epr_mct_annot_df(all_pat_list, config_obj, overwrite=False):
     print("Reading and collecting all patient annotation batches...")
     for current_pat_idcode in tqdm(all_pat_list):
         # This function reads the individual patient CSV
-        pat_annots_df = retrieve_pat_annots_mct_epr(current_pat_idcode, config_obj)
+        pat_annots_df = retrieve_pat_annots_mct_epr(
+            current_pat_idcode, config_obj)
 
         # --- Step 2: Clean each DataFrame as we get it ---
         # Robustly handle the inconsistent index column
@@ -127,16 +133,17 @@ def build_merged_epr_mct_annot_df(all_pat_list, config_obj, overwrite=False):
     return output_file_path
 
 
-def build_merged_bloods(all_pat_list, config_obj, overwrite=False):
-    """
-    Builds a merged CSV file of bloods data from individual patient batch files.
+def build_merged_bloods(
+    all_pat_list: List[str], config_obj: object, overwrite: bool = False
+) -> str:
+    """Builds a merged CSV file of bloods data from patient batch files.
 
     This function iterates through a list of patient IDs, reads the corresponding
     bloods batch CSV for each patient, and appends the data to a single merged
     CSV file. It handles file existence and overwriting logic.
 
     Args:
-        all_pat_list (list): A list of patient client ID codes to process.
+        all_pat_list (List[str]): A list of patient client ID codes to process.
         config_obj (object): A configuration object containing project settings,
                              including `proj_name` and `pre_bloods_batch_path`.
         overwrite (bool, optional): If True, any existing merged file will be
@@ -189,9 +196,10 @@ def build_merged_bloods(all_pat_list, config_obj, overwrite=False):
     return output_file_path
 
 
-def build_merged_epr_mct_doc_df(all_pat_list, config_obj, overwrite=False):
-    """
-    Builds a merged CSV file of documents from EPR and MCT sources for all patients.
+def build_merged_epr_mct_doc_df(
+    all_pat_list: List[str], config_obj: object, overwrite: bool = False
+) -> str:
+    """Builds a merged CSV of documents from EPR and MCT sources.
 
     This function iterates through a list of patient IDs, retrieves their
     respective document data from both EPR and MCT sources using the
@@ -199,7 +207,7 @@ def build_merged_epr_mct_doc_df(all_pat_list, config_obj, overwrite=False):
     merged CSV file.
 
     Args:
-        all_pat_list (list): A list of patient client ID codes to process.
+        all_pat_list (List[str]): A list of patient client ID codes to process.
         config_obj (object): A configuration object containing project settings,
                              including `proj_name` and paths to document batches.
         overwrite (bool, optional): If True, any existing merged file will be
@@ -224,7 +232,8 @@ def build_merged_epr_mct_doc_df(all_pat_list, config_obj, overwrite=False):
     for i in tqdm(range(0, len(all_pat_list)), total=len(all_pat_list)):
         current_pat_idcode = all_pat_list[i]
         try:
-            all_docs = retrieve_pat_docs_mct_epr(current_pat_idcode, config_obj)
+            all_docs = retrieve_pat_docs_mct_epr(
+                current_pat_idcode, config_obj)
         except Exception as e:
             print("Error retrieving patient documents for:", current_pat_idcode)
             print(e)
@@ -250,21 +259,16 @@ def build_merged_epr_mct_doc_df(all_pat_list, config_obj, overwrite=False):
     return output_file_path
 
 
-def retrieve_pat_bloods(client_idcode, config_obj):
-    """
-    Retrieve bloods data for the given client_idcode.
+def retrieve_pat_bloods(client_idcode: str, config_obj: object) -> pd.DataFrame:
+    """Retrieve bloods data for the given client_idcode.
 
-    Parameters
-    ----------
-    client_idcode : str
-        Unique identifier for the patient.
-    config_obj : ConfigObject
-        Configuration object containing necessary paths and parameters.
+    Args:
+        client_idcode (str): Unique identifier for the patient.
+        config_obj (object): Configuration object containing necessary paths
+            and parameters.
 
-    Returns
-    -------
-    pat_bloods : pd.DataFrame
-        Bloods data for the given client_idcode, if available.
+    Returns:
+        pd.DataFrame: Bloods data for the given client_idcode, if available.
     """
     pre_bloods_batch_path = config_obj.pre_bloods_batch_path
 
@@ -280,16 +284,15 @@ def retrieve_pat_bloods(client_idcode, config_obj):
 
 
 def retrieve_pat_docs_mct_epr(
-    client_idcode,
-    config_obj,
-    columns_epr=None,
-    columns_mct=None,
-    columns_to=None,
-    columns_report=None,
-    merge_columns=True,
-):
-    """
-    Retrieves and merges document data for a single patient from multiple sources.
+    client_idcode: str,
+    config_obj: object,
+    columns_epr: Optional[List[str]] = None,
+    columns_mct: Optional[List[str]] = None,
+    columns_to: Optional[List[str]] = None,
+    columns_report: Optional[List[str]] = None,
+    merge_columns: bool = True,
+) -> pd.DataFrame:
+    """Retrieves and merges document data for a patient from multiple sources.
 
     This function reads document data for a specified patient from four potential
     sources: EPR documents, MCT documents, textual observations, and reports.
@@ -301,15 +304,15 @@ def retrieve_pat_docs_mct_epr(
     Args:
         client_idcode (str): The unique identifier for the patient.
         config_obj (object): A configuration object containing paths to the
-                             various document batch files.
-        columns_epr (list, optional): A list of columns to load from the EPR
-                                      documents CSV. Defaults to None (all columns).
-        columns_mct (list, optional): A list of columns to load from the MCT
-                                      documents CSV. Defaults to None (all columns).
-        columns_to (list, optional): A list of columns to load from the textual
-                                     observations CSV. Defaults to None (all columns).
-        columns_report (list, optional): A list of columns to load from the reports
-                                         CSV. Defaults to None (all columns).
+            various document batch files.
+        columns_epr (Optional[List[str]], optional): A list of columns to load
+            from the EPR documents CSV. Defaults to None (all columns).
+        columns_mct (Optional[List[str]], optional): A list of columns to load
+            from the MCT documents CSV. Defaults to None (all columns).
+        columns_to (Optional[List[str]], optional): A list of columns to load
+            from the textual observations CSV. Defaults to None (all columns).
+        columns_report (Optional[List[str]], optional): A list of columns to
+            load from the reports CSV. Defaults to None (all columns).
         merge_columns (bool, optional): If True, attempts to merge corresponding
                                         columns (e.g., timestamps, content) from the
                                         different sources into a unified set of
@@ -374,16 +377,18 @@ def retrieve_pat_docs_mct_epr(
     return all_docs.reset_index(drop=True)
 
 
-def join_docs_to_annots(annots_df, docs_temp, drop_duplicates=True):
-    """
-    Merge two DataFrames based on the 'document_guid' column.
+def join_docs_to_annots(
+    annots_df: pd.DataFrame, docs_temp: pd.DataFrame, drop_duplicates: bool = True
+) -> pd.DataFrame:
+    """Merge two DataFrames based on the 'document_guid' column.
 
-    Parameters:
-    annots_df (DataFrame): The DataFrame containing annotations.
-    docs_temp (DataFrame): The DataFrame containing documents.
-
+    Args:
+        annots_df (pd.DataFrame): The DataFrame containing annotations.
+        docs_temp (pd.DataFrame): The DataFrame containing documents.
+        drop_duplicates (bool, optional): If True, drops duplicated columns
+            from `docs_temp` before merging. Defaults to True.
     Returns:
-    DataFrame: A merged DataFrame.
+        pd.DataFrame: A merged DataFrame.
     """
 
     if drop_duplicates:
@@ -403,15 +408,16 @@ def join_docs_to_annots(annots_df, docs_temp, drop_duplicates=True):
             docs_temp_dropped = docs_temp
 
     # Merge the DataFrames on 'document_guid' column
-    merged_df = pd.merge(annots_df, docs_temp_dropped, on="document_guid", how="left")
+    merged_df = pd.merge(annots_df, docs_temp_dropped,
+                         on="document_guid", how="left")
 
     return merged_df
 
 
-def get_annots_joined_to_docs(config_obj, pat2vec_obj):
-    """
-    Builds and merges document and annotation dataframes, then joins them.
-
+def get_annots_joined_to_docs(
+    config_obj: object, pat2vec_obj: object
+) -> pd.DataFrame:
+    """Builds and merges document and annotation dataframes, then joins them.
     This function orchestrates the process of creating comprehensive, patient-level
     data by first building merged dataframes for both documents (from EPR and MCT
     sources) and their corresponding annotations. It then joins these two
@@ -449,17 +455,19 @@ def get_annots_joined_to_docs(config_obj, pat2vec_obj):
     return res
 
 
-def merge_demographics_csv(all_pat_list, config_obj, overwrite=False):
-    """
-    Merge all CSV files in the demographics folder that match the patient list.
+def merge_demographics_csv(
+    all_pat_list: List[str], config_obj: object, overwrite: bool = False
+) -> str:
+    """Merge all demographics CSV files that match the patient list.
 
-    Parameters:
-    - all_pat_list (list): List of patient IDs to include.
-    - config_obj (ConfigObject): Configuration object containing project settings.
-    - overwrite (bool): If True, overwrite the existing output file. Default is False.
+    Args:
+        all_pat_list (List[str]): List of patient IDs to include.
+        config_obj (object): Configuration object containing project settings.
+        overwrite (bool, optional): If True, overwrite the existing output
+            file. Defaults to False.
 
     Returns:
-    - File path to the merged output CSV.
+        str: File path to the merged output CSV.
     """
     directory_path = os.path.join(config_obj.proj_name, "merged_batches")
     Path(directory_path).mkdir(parents=True, exist_ok=True)
@@ -486,17 +494,19 @@ def merge_demographics_csv(all_pat_list, config_obj, overwrite=False):
     return output_file_path
 
 
-def merge_bmi_csv(all_pat_list, config_obj, overwrite=False):
-    """
-    Merge all CSV files in the BMI folder that match the patient list.
+def merge_bmi_csv(
+    all_pat_list: List[str], config_obj: object, overwrite: bool = False
+) -> str:
+    """Merge all BMI CSV files that match the patient list.
 
-    Parameters:
-    - all_pat_list (list): List of patient IDs to include.
-    - config_obj (ConfigObject): Configuration object containing project settings.
-    - overwrite (bool): If True, overwrite the existing output file. Default is False.
+    Args:
+        all_pat_list (List[str]): List of patient IDs to include.
+        config_obj (object): Configuration object containing project settings.
+        overwrite (bool, optional): If True, overwrite the existing output
+            file. Defaults to False.
 
     Returns:
-    - File path to the merged output CSV.
+        str: File path to the merged output CSV.
     """
     directory_path = os.path.join(config_obj.proj_name, "merged_batches")
     Path(directory_path).mkdir(parents=True, exist_ok=True)
@@ -523,17 +533,19 @@ def merge_bmi_csv(all_pat_list, config_obj, overwrite=False):
     return output_file_path
 
 
-def merge_news_csv(all_pat_list, config_obj, overwrite=False):
-    """
-    Merge all CSV files in the News folder that match the patient list.
+def merge_news_csv(
+    all_pat_list: List[str], config_obj: object, overwrite: bool = False
+) -> str:
+    """Merge all NEWS CSV files that match the patient list.
 
-    Parameters:
-    - all_pat_list (list): List of patient IDs to include.
-    - config_obj (ConfigObject): Configuration object containing project settings.
-    - overwrite (bool): If True, overwrite the existing output file. Default is False.
+    Args:
+        all_pat_list (List[str]): List of patient IDs to include.
+        config_obj (object): Configuration object containing project settings.
+        overwrite (bool, optional): If True, overwrite the existing output
+            file. Defaults to False.
 
     Returns:
-    - File path to the merged output CSV.
+        str: File path to the merged output CSV.
     """
     directory_path = os.path.join(config_obj.proj_name, "merged_batches")
     Path(directory_path).mkdir(parents=True, exist_ok=True)
@@ -560,17 +572,19 @@ def merge_news_csv(all_pat_list, config_obj, overwrite=False):
     return output_file_path
 
 
-def merge_diagnostics_csv(all_pat_list, config_obj, overwrite=False):
-    """
-    Merge all CSV files in the Diagnostics folder that match the patient list.
+def merge_diagnostics_csv(
+    all_pat_list: List[str], config_obj: object, overwrite: bool = False
+) -> str:
+    """Merge all diagnostics CSV files that match the patient list.
 
-    Parameters:
-    - all_pat_list (list): List of patient IDs to include.
-    - config_obj (ConfigObject): Configuration object containing project settings.
-    - overwrite (bool): If True, overwrite the existing output file. Default is False.
+    Args:
+        all_pat_list (List[str]): List of patient IDs to include.
+        config_obj (object): Configuration object containing project settings.
+        overwrite (bool, optional): If True, overwrite the existing output
+            file. Defaults to False.
 
     Returns:
-    - File path to the merged output CSV.
+        str: File path to the merged output CSV.
     """
     directory_path = os.path.join(config_obj.proj_name, "merged_batches")
     Path(directory_path).mkdir(parents=True, exist_ok=True)
@@ -597,17 +611,19 @@ def merge_diagnostics_csv(all_pat_list, config_obj, overwrite=False):
     return output_file_path
 
 
-def merge_drugs_csv(all_pat_list, config_obj, overwrite=False):
-    """
-    Merge all CSV files in the Drugs folder that match the patient list.
+def merge_drugs_csv(
+    all_pat_list: List[str], config_obj: object, overwrite: bool = False
+) -> str:
+    """Merge all drugs CSV files that match the patient list.
 
-    Parameters:
-    - all_pat_list (list): List of patient IDs to include.
-    - config_obj (ConfigObject): Configuration object containing project settings.
-    - overwrite (bool): If True, overwrite the existing output file. Default is False.
+    Args:
+        all_pat_list (List[str]): List of patient IDs to include.
+        config_obj (object): Configuration object containing project settings.
+        overwrite (bool, optional): If True, overwrite the existing output
+            file. Defaults to False.
 
     Returns:
-    - File path to the merged output CSV.
+        str: File path to the merged output CSV.
     """
     # Define the directory for saving the merged file
     directory_path = os.path.join(config_obj.proj_name, "merged_batches")
@@ -642,17 +658,19 @@ def merge_drugs_csv(all_pat_list, config_obj, overwrite=False):
     return output_file_path
 
 
-def merge_appointments_csv(all_pat_list, config_obj, overwrite=False):
-    """
-    Merge all CSV files in the Appointments folder that match the patient list.
+def merge_appointments_csv(
+    all_pat_list: List[str], config_obj: object, overwrite: bool = False
+) -> str:
+    """Merge all appointments CSV files that match the patient list.
 
-    Parameters:
-    - all_pat_list (list): List of patient IDs to include.
-    - config_obj (ConfigObject): Configuration object containing project settings.
-    - overwrite (bool): If True, overwrite the existing output file. Default is False.
+    Args:
+        all_pat_list (List[str]): List of patient IDs to include.
+        config_obj (object): Configuration object containing project settings.
+        overwrite (bool, optional): If True, overwrite the existing output
+            file. Defaults to False.
 
     Returns:
-    - File path to the merged output CSV.
+        str: File path to the merged output CSV.
     """
     # Define the directory for saving the merged file
     directory_path = os.path.join(config_obj.proj_name, "merged_batches")
