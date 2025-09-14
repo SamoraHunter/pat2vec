@@ -30,19 +30,23 @@ release = '0.1.0'
 
 extensions = [
     'sphinx.ext.autodoc',  # Core library to pull in documentation from docstrings
-    'sphinx.ext.autosummary', # Create summary tables
+    'sphinx.ext.autosummary',  # Create summary tables
     'sphinx.ext.napoleon',  # Support for Google and NumPy style docstrings
     'sphinx.ext.viewcode',  # Add links to highlighted source code
     'sphinx_rtd_theme',     # Read the Docs theme
-    'sphinx_autodoc_typehints', # Automatically document typehints
+    'sphinx_autodoc_typehints',  # Automatically document typehints
 ]
 
 templates_path = ['_templates']
 exclude_patterns = []
 
 # -- Options for autodoc -----------------------------------------------------
-autodoc_member_order = 'bysource'
-autosummary_generate = True  # Turn on autosummary
+autodoc_default_options = {
+    'members': True,
+    'member-order': 'bysource',
+    'undoc-members': False,  # Set to True if you want to see items without docstrings
+    'show-inheritance': True,
+}
 
 # -- Options for Napoleon ----------------------------------------------------
 napoleon_google_docstring = True
