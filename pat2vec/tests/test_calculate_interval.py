@@ -120,6 +120,27 @@ class TestCalculateInterval(unittest.TestCase):
         result = calculate_interval(start_date, total_delta, interval_delta)
         self.assertEqual(result, 4)
 
+    def test_total_delta_just_shy_of_multiple(self):
+        """Test when the total delta is one day less than an exact multiple."""
+        start_date = datetime(2020, 1, 1)
+        # Total duration is 6 months minus 1 day. End date: 2020-06-30
+        total_delta = relativedelta(months=6, days=-1)
+        interval_delta = relativedelta(months=2)
+        # Intervals end at: 2020-03-01, 2020-05-01.
+        # The 3rd interval would end at 2020-07-01, which is after the end date.
+        result = calculate_interval(start_date, total_delta, interval_delta)
+        self.assertEqual(result, 2)
+
+    def test_weekly_interval_over_different_month_lengths(self):
+        """Test a weekly interval over months with different numbers of days."""
+        # January (31 days)
+        start_jan = datetime(2023, 1, 1)
+        total_delta_month = relativedelta(months=1)
+        interval_delta_week = relativedelta(weeks=1)
+        # 4 full weeks fit in Jan (1, 8, 15, 22, 29). The 5th week starts on Feb 5.
+        result_jan = calculate_interval(start_jan, total_delta_month, interval_delta_week)
+        self.assertEqual(result_jan, 4)
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

@@ -194,3 +194,66 @@ class TestMultiAnnotsToDf(unittest.TestCase):
         # Bonus: Check that the created file is empty (has 0 rows).
         result_df = pd.read_csv(expected_dest_path)
         self.assertEqual(len(result_df), 0)
+
+    @patch("pat2vec.util.methods_annotation_multi_annots_to_df.join_icd10_codes_to_annot")
+    @patch("pat2vec.util.methods_annotation_multi_annots_to_df.json_to_dataframe")
+    def test_icd10_join_logic(self, mock_json_to_df, mock_join_icd10):
+        """Test that ICD10 codes are joined when add_icd10 is True."""
+        # Arrange
+        self.mock_config.add_icd10 = True
+        self.mock_config.add_opc4s = False
+        mock_json_to_df.return_value = self.df_from_json_1
+        mock_join_icd10.return_value = self.df_from_json_1.copy()
+
+        # Act
+        multi_annots_to_df(
+            self.pat_id,
+            self.pat_batch.head(1),
+            [self.multi_annots[0]],
+            config_obj=self.mock_config,
+            t=self.mock_t,
+        )
+
+        # Assert
+        mock_join_icd10.assert_called_once()
+
+    @patch("pat2vec.util.methods_annotation_multi_annots_to_df.join_icd10_OPC4S_codes_to_annot")
+    @patch("pat2vec.util.methods_annotation_multi_annots_to_df.json_to_dataframe")
+    def test_icd10_opcs4_join_logic(self, mock_json_to_df, mock_join_opcs4):
+        """Test that ICD10 and OPC4S codes are joined when both flags are True."""
+        # Arrange
+        self.mock_config.add_icd10 = True
+        self.mock_config.add_opc4s = True
+        mock_json_to_df.return_value = self.df_from_json_1
+        mock_join_opcs4.return_value = self.df_from_json_1.copy()
+
+        # Act
+        multi_annots_to_df(
+            self.pat_id,
+            self.pat_batch.head(1),
+            [self.multi_annots[0]],
+            config_obj=self.mock_config,
+            t=self.mock_t,
+        )
+
+        # Assert
+        mock_join_opcs4.assert_called_once()
+
+    @patch("pat2vec.util.methods_annotation_multi_annots_to_df.json_to_dataframe")
+    def test_error_in_one_document_does_not_stop_processing(self, mock_json_to_df):
+        """Test that an error in one document doesn't halt processing of others."""
+        # Arrange
+        # First call raises an error, second call returns a valid DataFrame
+        mock_json_to_df.side_effect = [Exception("Simulated processing error"), self.df_from_json_2]
+        self.mock_config.verbosity = 1 # To cover the print statement in the except block
+
+        # Act
+        with patch('builtins.print') as mock_print:
+            result_df = multi_annots_to_df(
+                self.pat_id, self.pat_batch, self.multi_annots, config_obj=self.mock_config, t=self.mock_t
+            )
+
+        # Assert
+        mock_print.assert_any_call("Error processing document 0: Simulated processing error")
+        self.assertEqual(len(result_df), 1)
+        self.assertEqual(result_df.iloc[0]["cui"], "C0010200")

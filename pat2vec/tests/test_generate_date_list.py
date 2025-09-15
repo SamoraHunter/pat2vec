@@ -14,12 +14,8 @@ class TestGenerateDateList(unittest.TestCase):
         """Set up a mock config object for the tests."""
         self.mock_config = MagicMock()
         self.mock_config.lookback = False
-        self.mock_config.global_start_year = "2020"
-        self.mock_config.global_start_month = "1"
-        self.mock_config.global_start_day = "1"
-        self.mock_config.global_end_year = "2022"
-        self.mock_config.global_end_month = "12"
-        self.mock_config.global_end_day = "31"
+        self.mock_config.global_start_date = datetime(2020, 1, 1)
+        self.mock_config.global_end_date = datetime(2022, 12, 31)
         self.mock_config.verbosity = 0
 
     def test_missing_config_obj(self):
@@ -64,11 +60,22 @@ class TestGenerateDateList(unittest.TestCase):
         self.assertEqual(result[0], (2021, 1, 1))
         self.assertEqual(result[-1], (2021, 1, 5))
 
+    def test_lookback_clamping_to_global_start(self):
+        """Test that a lookback is clamped by the global start date."""
+        self.mock_config.lookback = True
+        self.mock_config.global_start_date = datetime(2021, 1, 3)
+        start_date = datetime(2021, 1, 5)
+        # Lookback of 4 days would normally go to 2021-01-01
+        result = generate_date_list(
+            start_date, years=0, months=0, days=4, config_obj=self.mock_config
+        )
+        self.assertEqual(len(result), 3)  # Should be clamped to 3 days
+        self.assertEqual(result[0], (2021, 1, 3))  # Starts at global_start_date
+        self.assertEqual(result[-1], (2021, 1, 5))
+
     def test_clamping_to_global_start_date(self):
         """Test that the date list is clamped to the global start date."""
-        self.mock_config.global_start_year = "2021"
-        self.mock_config.global_start_month = "1"
-        self.mock_config.global_start_day = "3"
+        self.mock_config.global_start_date = datetime(2021, 1, 3)
         start_date = datetime(2021, 1, 1)
         result = generate_date_list(
             start_date, years=0, months=0, days=4, config_obj=self.mock_config
@@ -79,9 +86,7 @@ class TestGenerateDateList(unittest.TestCase):
 
     def test_clamping_to_global_end_date(self):
         """Test that the date list is clamped to the global end date."""
-        self.mock_config.global_end_year = "2021"
-        self.mock_config.global_end_month = "1"
-        self.mock_config.global_end_day = "3"
+        self.mock_config.global_end_date = datetime(2021, 1, 3)
         start_date = datetime(2021, 1, 1)
         result = generate_date_list(
             start_date, years=0, months=0, days=4, config_obj=self.mock_config
@@ -92,12 +97,8 @@ class TestGenerateDateList(unittest.TestCase):
 
     def test_clamping_to_global_start_and_end(self):
         """Test clamping to both global start and end dates."""
-        self.mock_config.global_start_year = "2021"
-        self.mock_config.global_start_month = "2"
-        self.mock_config.global_start_day = "1"
-        self.mock_config.global_end_year = "2021"
-        self.mock_config.global_end_month = "3"
-        self.mock_config.global_end_day = "1"
+        self.mock_config.global_start_date = datetime(2021, 2, 1)
+        self.mock_config.global_end_date = datetime(2021, 3, 1)
         start_date = datetime(2021, 1, 1)
         result = generate_date_list(
             start_date,
@@ -119,11 +120,17 @@ class TestGenerateDateList(unittest.TestCase):
         )
         self.assertEqual(len(result), 0)
 
+    def test_start_date_after_global_end(self):
+        """Test that an empty list is returned if the start date is after the global end."""
+        start_date = datetime(2023, 1, 1)  # Global end is 2022-12-31
+        result = generate_date_list(
+            start_date, years=0, months=0, days=4, config_obj=self.mock_config
+        )
+        self.assertEqual(len(result), 0)
+
     def test_invalid_final_range_returns_empty(self):
         """Test that an empty list is returned if the final range is invalid."""
-        self.mock_config.global_start_year = "2021"
-        self.mock_config.global_start_month = "1"
-        self.mock_config.global_start_day = "10"
+        self.mock_config.global_start_date = datetime(2021, 1, 10)
         start_date = datetime(2021, 1, 1)
         result = generate_date_list(
             start_date, years=0, months=0, days=4, config_obj=self.mock_config
@@ -133,7 +140,7 @@ class TestGenerateDateList(unittest.TestCase):
     def test_zero_interval_delta_raises_error(self):
         """Test that a zero time_window_interval_delta raises a ValueError."""
         with self.assertRaisesRegex(
-            ValueError, "time_window_interval_delta must be greater than zero"
+            ValueError, "The time interval delta must be a positive duration."
         ):
             generate_date_list(
                 datetime(2021, 1, 1),
@@ -147,7 +154,7 @@ class TestGenerateDateList(unittest.TestCase):
     def test_negative_interval_delta_raises_error(self):
         """Test that a negative time_window_interval_delta raises a ValueError."""
         with self.assertRaisesRegex(
-            ValueError, "time_window_interval_delta must be positive"
+            ValueError, "The time interval delta must be a positive duration."
         ):
             generate_date_list(
                 datetime(2021, 1, 1),
@@ -160,7 +167,7 @@ class TestGenerateDateList(unittest.TestCase):
 
     def test_leap_year_handling(self):
         """Test that leap years are handled correctly."""
-        self.mock_config.global_start_year = "2020"
+        self.mock_config.global_start_date = datetime(2020, 1, 1)
         start_date = datetime(2020, 2, 27)
         result = generate_date_list(
             start_date, years=0, months=0, days=3, config_obj=self.mock_config
@@ -176,8 +183,8 @@ class TestGenerateDateList(unittest.TestCase):
 
         # Global dates are naive, start_date is aware
         start_date = datetime(2021, 1, 1, 5, 0, 0, tzinfo=est_tz)  # 10:00 UTC
-        self.mock_config.global_start_day = "1"
-        self.mock_config.global_end_day = "2"
+        self.mock_config.global_start_date = datetime(2021, 1, 1)
+        self.mock_config.global_end_date = datetime(2021, 1, 2)
 
         result = generate_date_list(
             start_date, years=0, months=0, days=1, config_obj=self.mock_config
@@ -201,6 +208,15 @@ class TestGenerateDateList(unittest.TestCase):
         self.assertEqual(result[1], (2021, 1, 31))
         self.assertEqual(result[2], (2021, 2, 1))
         self.assertEqual(result[3], (2021, 2, 2))
+
+    def test_zero_duration(self):
+        """Test that a zero duration returns only the start date if it's in bounds."""
+        start_date = datetime(2021, 5, 5)
+        result = generate_date_list(
+            start_date, years=0, months=0, days=0, config_obj=self.mock_config
+        )
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0], (2021, 5, 5))
 
 
 if __name__ == "__main__":

@@ -262,6 +262,36 @@ class TestIndividualPatientWindow(unittest.TestCase):
                 )
         self.assertIn("Column 'patient_id' does not exist.", str(cm.exception))
 
+    def test_ipw_with_duplicate_patient_ids(self):
+        """Test that duplicate patient IDs in the DataFrame use the last entry."""
+        mock_df = pd.DataFrame(
+            {
+                "patient_id": ["P001", "P002", "P001"],
+                "start_date": [
+                    "2020-01-01",
+                    "2020-02-01",
+                    "2021-05-05",
+                ],  # P001's last entry is 2021-05-05
+            }
+        )
+        with patch("builtins.print"):
+            config = config_class(
+                years=1,
+                days=0,
+                individual_patient_window=True,
+                individual_patient_window_df=mock_df,
+                individual_patient_window_start_column_name="start_date",
+                individual_patient_id_column_name="patient_id",
+                testing=True,
+                lookback=False,
+            )
+        self.assertEqual(len(config.patient_dict), 2)  # P001 and P002
+        self.assertIn("P001", config.patient_dict)
+        start_p1, end_p1 = config.patient_dict["P001"]
+        # Should correspond to the last entry for P001
+        self.assertEqual(start_p1, pd.Timestamp("2021-05-05", tz="UTC"))
+        self.assertEqual(end_p1, pd.Timestamp("2022-05-05", tz="UTC"))
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

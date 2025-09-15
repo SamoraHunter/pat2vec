@@ -89,6 +89,19 @@ class TestProcessCsvFiles(unittest.TestCase):
         # The exact files sampled depend on os.walk, but the count should be right.
         self.assertTrue(all(item in [1, 2, 3] for item in df["id"].tolist()))
 
+    @patch("pat2vec.util.post_processing_process_csv_files.tqdm", lambda x, **kwargs: x)
+    def test_output_filename_suffix(self):
+        """Test that the output filename suffix is correctly applied."""
+        self._create_csv("file1.csv", ["id"], [["1"]])
+
+        output_file = process_csv_files(
+            self.input_path, self.output_path, output_filename_suffix="custom_suffix"
+        )
+
+        expected_filename = "concatenated_data_custom_suffix.csv"
+        self.assertEqual(os.path.basename(output_file), expected_filename)
+        self.assertTrue(os.path.exists(output_file))
+
     def test_empty_input_directory_raises_error(self):
         """Test that an empty input directory raises a ValueError."""
         empty_dir = os.path.join(self.test_dir.name, "empty_input")

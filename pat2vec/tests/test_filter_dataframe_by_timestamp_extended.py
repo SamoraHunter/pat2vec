@@ -122,6 +122,43 @@ class TestFilterDataFrameByTimestampExtended(unittest.TestCase):
         )
         pd.testing.assert_frame_equal(original_df, original_df_copy)
 
+    def test_leap_year_boundary(self):
+        """Test filtering around a leap day."""
+        df = pd.DataFrame(
+            {
+                "timestamp": [
+                    "2024-02-28 23:59:59",  # in
+                    "2024-02-29 12:00:00",  # in (leap day)
+                    "2024-03-01 00:00:00",  # in
+                    "2024-03-02 10:00:00",  # out
+                ],
+                "value": [1, 2, 3, 4],
+            }
+        )
+        filtered = filter_dataframe_by_timestamp(
+            df,
+            start_year=2024,
+            start_month=2,
+            start_day=28,
+            end_year=2024,
+            end_month=3,
+            end_day=1,
+            timestamp_string="timestamp",
+        )
+        self.assertEqual(len(filtered), 3)
+        self.assertCountEqual(filtered["value"].tolist(), [1, 2, 3])
+
+    def test_column_with_only_invalid_dates(self):
+        """Test that an empty DataFrame is returned if the timestamp column has no valid dates."""
+        df = pd.DataFrame({"timestamp": ["not a date", "invalid", None], "value": [1, 2, 3]})
+        filtered = filter_dataframe_by_timestamp(
+            df,
+            start_year=2023, start_month=1, start_day=1,
+            end_year=2023, end_month=12, end_day=31,
+            timestamp_string="timestamp"
+        )
+        self.assertTrue(filtered.empty)
+
 
 if __name__ == "__main__":
     unittest.main()

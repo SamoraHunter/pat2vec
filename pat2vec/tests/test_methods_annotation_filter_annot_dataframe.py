@@ -1,5 +1,7 @@
 import unittest
 import pandas as pd
+import ast
+from unittest.mock import patch
 from pat2vec.util.methods_annotation_filter_annot_dataframe import (
     filter_annot_dataframe,
 )
@@ -118,6 +120,19 @@ class TestFilterAnnotDataframe(unittest.TestCase):
         result = filter_annot_dataframe(self.df, filter_args)
         self.assertEqual(len(result), 2)
         self.assertListEqual(result.index.tolist(), [10, 13])
+
+    def test_malformed_types_string(self):
+        """Test that a malformed string in the 'types' column is handled gracefully."""
+        malformed_df = self.df.copy()
+        # Introduce a malformed string that cannot be parsed by ast.literal_eval
+        malformed_df.loc[11, "types"] = "['procedure"
+
+        filter_args = {"types": ["procedure"]}
+        result = filter_annot_dataframe(malformed_df, filter_args)
+
+        # The function should catch the error and exclude the row,
+        # resulting in an empty DataFrame as no other rows match 'procedure'.
+        self.assertTrue(result.empty)
 
 
 if __name__ == "__main__":

@@ -119,5 +119,21 @@ class TestDateValidationForElasticsearch(unittest.TestCase):
                 end_year=2025, end_month="abc", end_day=1
             )
 
+    def test_year_zero_or_negative(self):
+        """
+        Tests that a zero or negative year raises a ValueError.
+        """
+        with self.assertRaisesRegex(ValueError, "year 0 is out of range"):
+            validate_input_dates(
+                start_year=0, start_month=1, start_day=1,
+                end_year=2025, end_month=1, end_day=1
+            )
+
+        with self.assertRaisesRegex(ValueError, "year -1 is out of range"):
+            validate_input_dates(
+                start_year=2024, start_month=1, start_day=1,
+                end_year=-1, end_month=1, end_day=1
+            )
+
 if __name__ == '__main__':
     unittest.main(verbosity=2)

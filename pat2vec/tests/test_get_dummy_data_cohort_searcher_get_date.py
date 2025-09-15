@@ -73,6 +73,23 @@ class TestCreateRandomDateFromGlobals(unittest.TestCase):
             )
             self.assertTrue(start_dt <= random_date <= end_dt)
 
+    def test_invalid_month_input(self):
+        """Test that an invalid month (e.g., 13) raises a ValueError."""
+        with self.assertRaises(ValueError):
+            create_random_date_from_globals(
+                start_year=2023, start_month=13, end_year=2023, end_month=14
+            )
+
+    def test_non_integer_input(self):
+        """Test that a non-integer input for a date component raises a TypeError."""
+        with self.assertRaises(TypeError):
+            create_random_date_from_globals(
+                start_year="two-thousand-twenty-three",
+                start_month=1,
+                end_year=2024,
+                end_month=1,
+            )
+
 
 if __name__ == "__main__":
     unittest.main()

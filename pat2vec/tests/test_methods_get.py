@@ -205,36 +205,7 @@ class TestFilterDataFrameByTimestamp(unittest.TestCase):
                 timestamp_string="non_existent_column",
             )
 
-    def test_debug_data(self):
-        """Debug test to understand the actual data after conversion."""
-        df_copy = self.df.copy()
-        df_copy["timestamp"] = pd.to_datetime(
-            df_copy["timestamp"], utc=True, errors="coerce"
-        )
-        print("\\nConverted timestamps:")
-        for i, (ts, val) in enumerate(zip(df_copy["timestamp"], df_copy["value"])):
-            print(f"Index {i}, Value {val}: {ts}")
-
-        # Check what falls in the 2023 range
-        start_2023 = pd.Timestamp(datetime(2023, 1, 1, 0, 0, 0), tz="UTC")
-        end_2023 = pd.Timestamp(datetime(2023, 12, 31, 23, 59, 59, 999999), tz="UTC")
-
-        in_2023 = df_copy[
-            (df_copy["timestamp"] >= start_2023) & (df_copy["timestamp"] <= end_2023)
-        ]
-        print(f"\\nTimestamps in 2023: {len(in_2023)}")
-        print(f"Values: {in_2023['value'].tolist()}")
-
-        # Check the Feb-Mar range
-        start_feb = pd.Timestamp(datetime(2023, 2, 1, 0, 0, 0), tz="UTC")
-        end_mar = pd.Timestamp(datetime(2023, 3, 31, 23, 59, 59, 999999), tz="UTC")
-
-        in_feb_mar = df_copy[
-            (df_copy["timestamp"] >= start_feb) & (df_copy["timestamp"] <= end_mar)
-        ]
-        print(f"\\nTimestamps in Feb-Mar 2023: {len(in_feb_mar)}")
-        print(f"Values: {in_feb_mar['value'].tolist()}")
-
+    def test_original_dataframe_is_not_modified(self):
         """Test that the original DataFrame is not modified."""
         original_df = self.df.copy()
         original_timestamp_col = original_df["timestamp"].copy()

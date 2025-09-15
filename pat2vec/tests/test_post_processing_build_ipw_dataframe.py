@@ -58,6 +58,33 @@ class TestBuildIpwDataframe(unittest.TestCase):
 
     @patch("pat2vec.util.post_processing_build_ipw_dataframe.get_pat_ipw_record")
     @patch("os.listdir")
+    def test_ignores_non_csv_files(self, mock_listdir, mock_get_ipw_record):
+        """Test that non-CSV files in the directory are ignored."""
+        # Arrange
+        mock_listdir.return_value = [
+            "P001.csv",
+            "P002.txt",
+            ".DS_Store",
+            "P003.csv.bak",
+        ]
+        mock_get_ipw_record.return_value = self.ipw_record_p1
+
+        # Act
+        build_ipw_dataframe(config_obj=self.mock_config)
+
+        # Assert
+        mock_get_ipw_record.assert_called_once_with(
+            current_pat_idcode="P001",
+            annot_filter_arguments=None,
+            filter_codes=None,
+            config_obj=self.mock_config,
+            mode="earliest",
+            include_mct=True,
+            include_textual_obs=True,
+        )
+
+    @patch("pat2vec.util.post_processing_build_ipw_dataframe.get_pat_ipw_record")
+    @patch("os.listdir")
     def test_with_custom_pat_list(self, mock_listdir, mock_get_ipw_record):
         """Test that a custom patient list is used instead of os.listdir."""
         # Arrange

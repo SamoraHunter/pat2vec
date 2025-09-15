@@ -43,6 +43,8 @@ class TestGlobalDateValidation(unittest.TestCase):
         mock_config.global_end_year = "2020"
         mock_config.global_end_month = "01"
         mock_config.global_end_day = "01"
+        mock_config.global_start_date = datetime(2021, 1, 1)
+        mock_config.global_end_date = datetime(2020, 1, 1)
 
         with patch("builtins.print"):  # Suppress print output
             result = validate_and_fix_global_dates(mock_config)
@@ -50,6 +52,8 @@ class TestGlobalDateValidation(unittest.TestCase):
         # Should be swapped
         self.assertEqual(result.global_start_year, "2020")
         self.assertEqual(result.global_end_year, "2021")
+        self.assertEqual(result.global_start_date, datetime(2020, 1, 1))
+        self.assertEqual(result.global_end_date, datetime(2021, 1, 1))
 
     def test_update_global_start_date_lookback_true(self):
         """Test that update_global_start_date does nothing when lookback=True."""
@@ -70,16 +74,18 @@ class TestGlobalDateValidation(unittest.TestCase):
         mock_config.global_start_year = "2020"
         mock_config.global_start_month = "1"
         mock_config.global_start_day = "1"
+        mock_config.global_start_date = datetime(2020, 1, 1)
 
         later_date = datetime(2021, 6, 15)
 
         with patch("builtins.print"):  # Suppress print output
-            result = update_global_start_date(mock_config, later_date)
+            update_global_start_date(mock_config, later_date)
 
         # Should update to the later date
-        self.assertEqual(result.global_start_year, 2021)
-        self.assertEqual(result.global_start_month, 6)
-        self.assertEqual(result.global_start_day, 15)
+        self.assertEqual(mock_config.global_start_year, "2021")
+        self.assertEqual(mock_config.global_start_month, "06")
+        self.assertEqual(mock_config.global_start_day, "15")
+        self.assertEqual(mock_config.global_start_date, later_date)
 
     def test_update_global_start_date_forward_earlier(self):
         """Test global start date remains unchanged when provided date is earlier."""
@@ -88,6 +94,7 @@ class TestGlobalDateValidation(unittest.TestCase):
         mock_config.global_start_year = "2021"
         mock_config.global_start_month = "6"
         mock_config.global_start_day = "15"
+        mock_config.global_start_date = datetime(2021, 6, 15)
 
         earlier_date = datetime(2020, 1, 1)
         result = update_global_start_date(mock_config, earlier_date)
