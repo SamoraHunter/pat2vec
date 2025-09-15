@@ -1,5 +1,8 @@
+from typing import Callable, List, Optional, Tuple, Union
+
 import pandas as pd
 from IPython.display import display
+
 from pat2vec.util.get_start_end_year_month import get_start_end_year_month
 from pat2vec.util.parse_date import validate_input_dates
 
@@ -16,33 +19,44 @@ DEMOGRAPHICS_FIELDS = [
 
 
 def search_demographics(
-    cohort_searcher_with_terms_and_search=None,
-    client_id_codes=None,
-    demographics_time_field='updatetime',
-    start_year='1995',
-    start_month='01',
-    start_day='01',
-    end_year='2025',
-    end_month='12',
-    end_day='12',
-    additional_custom_search_string=None,
-):
-    """
-    Searches for demographics data for specific patients within a date range using cohort searcher.
+    cohort_searcher_with_terms_and_search: Optional[Callable] = None,
+    client_id_codes: Optional[Union[str, List[str]]] = None,
+    demographics_time_field: str = 'updatetime',
+    start_year: str = '1995',
+    start_month: str = '01',
+    start_day: str = '01',
+    end_year: str = '2025',
+    end_month: str = '12',
+    end_day: str = '12',
+    additional_custom_search_string: Optional[str] = None,
+) -> pd.DataFrame:
+    """Searches for demographics data for patients within a date range.
 
-    Parameters:
-    - cohort_searcher_with_terms_and_search (callable): The function for cohort searching.
-    - client_id_codes (str or list): The client ID code(s) of the patient(s).
-    - demographics_time_field (str): The timestamp field for filtering demographics.
-    - start_year, start_month, start_day (int): Start date components.
-    - end_year, end_month, end_day (int): End date components.
-    - additional_custom_search_string (str, optional): An additional string to append to the search query. Defaults to None.
+    Args:
+        cohort_searcher_with_terms_and_search (Optional[Callable]): The function for
+            cohort searching. Defaults to None.
+        client_id_codes (Optional[Union[str, List[str]]]): The client ID code(s) of
+            the patient(s). Defaults to None.
+        demographics_time_field (str): The timestamp field for filtering
+            demographics. Defaults to 'updatetime'.
+        start_year (str): Start year for the search. Defaults to '1995'.
+        start_month (str): Start month for the search. Defaults to '01'.
+        start_day (str): Start day for the search. Defaults to '01'.
+        end_year (str): End year for the search. Defaults to '2025'.
+        end_month (str): End month for the search. Defaults to '12'.
+        end_day (str): End day for the search. Defaults to '12'.
+        additional_custom_search_string (Optional[str]): An additional string to
+            append to the search query. Defaults to None.
 
     Returns:
-    - pd.DataFrame: A DataFrame containing the raw demographics data.
+        pd.DataFrame: A DataFrame containing the raw demographics data.
+
+    Raises:
+        ValueError: If essential arguments are None.
     """
     if cohort_searcher_with_terms_and_search is None:
-        raise ValueError("cohort_searcher_with_terms_and_search cannot be None.")
+        raise ValueError(
+            "cohort_searcher_with_terms_and_search cannot be None.")
     if client_id_codes is None:
         raise ValueError("client_id_codes cannot be None.")
     if demographics_time_field is None:
@@ -70,22 +84,23 @@ def search_demographics(
     return cohort_searcher_with_terms_and_search(
         index_name="epr_documents",
         fields_list=DEMOGRAPHICS_FIELDS,
-        term_name="client_idcode.keyword",  # Note: using default, can be made configurable
+        # Note: using default, can be made configurable
+        term_name="client_idcode.keyword",
         entered_list=client_id_codes,
         search_string=search_string,
     )
 
 
-def process_demographics_data(demo_data, patlist):
-    """
-    Process raw demographics data to return the most recent record per patient.
+def process_demographics_data(demo_data: pd.DataFrame, patlist: List[str]) -> pd.DataFrame:
+    """Processes raw demographics data to return the most recent record per patient.
 
-    Parameters:
-    - demo_data (pd.DataFrame): Raw demographics data from search
-    - patlist (list): List of patient IDs that were requested
+    Args:
+        demo_data (pd.DataFrame): Raw demographics data from the search.
+        patlist (List[str]): List of patient IDs that were requested.
 
     Returns:
-    - pd.DataFrame: Processed demographics data with most recent records
+        pd.DataFrame: Processed demographics data containing the single most
+            recent record for the patient(s).
     """
     if len(demo_data) == 0:
         # No data found, return DataFrame with just patient IDs
@@ -99,7 +114,8 @@ def process_demographics_data(demo_data, patlist):
     if len(demo_data) > 1:
         try:
             # Get the most recent record (last row after sorting)
-            return demo_data.iloc[[-1]]  # Use [[-1]] to keep DataFrame structure
+            # Use [[-1]] to keep DataFrame structure
+            return demo_data.iloc[[-1]]
         except Exception as e:
             print(f"Error processing demographics data: {e}")
             # Fallback: return DataFrame with patient IDs
@@ -112,22 +128,27 @@ def process_demographics_data(demo_data, patlist):
 
 
 def get_demographics3(
-    patlist,
-    target_date_range,
-    cohort_searcher_with_terms_and_search,
-    config_obj=None
-):
-    """
-    Get demographics information for a list of patients within a specified date range.
+    patlist: List[str],
+    target_date_range: Tuple,
+    cohort_searcher_with_terms_and_search: Callable,
+    config_obj: Optional[object] = None
+) -> pd.DataFrame:
+    """Gets demographics information for patients within a specified date range.
 
-    Parameters:
-    - patlist (list): List of patient IDs.
-    - target_date_range (tuple): A tuple representing the target date range.
-    - cohort_searcher_with_terms_and_search (callable): The function for cohort searching.
-    - config_obj: Configuration object containing settings.
+    Args:
+        patlist (List[str]): List of patient IDs.
+        target_date_range (Tuple): A tuple representing the target date range.
+        cohort_searcher_with_terms_and_search (Callable): The function for cohort
+            searching.
+        config_obj (Optional[object]): Configuration object containing settings.
+            Defaults to None.
 
     Returns:
-    - pd.DataFrame: Demographics information for the specified patients.
+        pd.DataFrame: Demographics information for the specified patients.
+
+    Raises:
+        ValueError: If `config_obj` or `cohort_searcher_with_terms_and_search` is
+            None, or if `patlist` is empty.
     """
     if config_obj is None:
         raise ValueError(

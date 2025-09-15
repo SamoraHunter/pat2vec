@@ -1,40 +1,55 @@
+from typing import Callable, Optional, Tuple
+
 import pandas as pd
 from IPython.display import display
 from IPython.utils import io
 
-from pat2vec.util.filter_dataframe_by_timestamp import filter_dataframe_by_timestamp
+from pat2vec.util.filter_dataframe_by_timestamp import \
+    filter_dataframe_by_timestamp
 from pat2vec.util.get_start_end_year_month import get_start_end_year_month
-from pat2vec.util.methods_annotation import (
-    calculate_pretty_name_count_features,
-)
-from pat2vec.util.methods_get import (
-    update_pbar,
-)
+from pat2vec.util.methods_annotation import \
+    calculate_pretty_name_count_features
+from pat2vec.util.methods_get import update_pbar
 
 
 def get_current_pat_textual_obs_annotations(
-    current_pat_client_id_code,
-    target_date_range,
-    textual_obs_annotations,
-    config_obj=None,
-    t=None,
-    cohort_searcher_with_terms_and_search=None,
-    cat=None,
-):
-    """
-    Retrieves and processes current patient report annotations based on the provided parameters.
+    current_pat_client_id_code: str,
+    target_date_range: Tuple,
+    textual_obs_annotations: Optional[pd.DataFrame],
+    config_obj: Optional[object] = None,
+    t: Optional[object] = None,
+    cohort_searcher_with_terms_and_search: Optional[Callable] = None,
+    cat: Optional[object] = None,
+) -> pd.DataFrame:
+    """Retrieves and processes textual observation annotations for a patient.
 
-    Parameters:
-        current_pat_client_id_code (str): The client ID code of the current patient.
-        target_date_range (str): The target date range for the annotations.
-        textual_obs_annotations (pandas.DataFrame): The textual observation annotations.
-        config_obj (object): The configuration object. Defaults to None.
-        t (object): The object for tracking progress. Defaults to None.
-        cohort_searcher_with_terms_and_search (object): The cohort searcher object. Defaults to None.
-        cat (object): The object for entity recognition. Defaults to None.
+    This function filters a batch of pre-existing textual observation annotations
+    for a specific patient within a given date range. It then calculates
+    count-based features from the 'pretty_name' of the annotations.
+
+    Args:
+        current_pat_client_id_code (str): The unique identifier for the patient.
+        target_date_range (Tuple): The date range to filter annotations by.
+        textual_obs_annotations (Optional[pd.DataFrame]): DataFrame containing
+            textual observation annotations for a batch of patients.
+        config_obj (Optional[object]): Configuration object with settings such as
+            `verbosity` and `start_time`. Defaults to None.
+        t (Optional[object]): A progress bar object for updating status. Defaults
+            to None.
+        cohort_searcher_with_terms_and_search (Optional[Callable]): Placeholder
+            for a cohort searcher function, unused in this implementation.
+            Defaults to None.
+        cat (Optional[object]): Placeholder for a MedCAT object, unused in this
+            implementation. Defaults to None.
 
     Returns:
-        pandas.DataFrame: The processed annotations.
+        pd.DataFrame: A DataFrame containing the calculated annotation features
+            for the specified patient. If no annotations are found, a DataFrame
+            with only the 'client_idcode' is returned.
+
+    Raises:
+        ValueError: If `config_obj`, `textual_obs_annotations`,
+            `current_pat_client_id_code`, or `target_date_range` is None.
     """
 
     if config_obj is None:

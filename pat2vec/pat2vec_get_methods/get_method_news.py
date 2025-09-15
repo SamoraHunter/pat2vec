@@ -1,23 +1,29 @@
+from typing import Callable, Dict, Optional, Tuple
+
 import numpy as np
 import pandas as pd
 from IPython.display import display
 
-from pat2vec.util.filter_dataframe_by_timestamp import filter_dataframe_by_timestamp
+from pat2vec.util.filter_dataframe_by_timestamp import \
+    filter_dataframe_by_timestamp
 from pat2vec.util.get_start_end_year_month import get_start_end_year_month
 
 
-def compute_feature_stats(data: pd.DataFrame, column: str, feature_name: str, config_obj):
-    """
-    Compute summary statistics for a given feature column in the NEWS dataset.
+def compute_feature_stats(
+    data: pd.DataFrame, column: str, feature_name: str, config_obj: object
+) -> Dict:
+    """Computes summary statistics for a feature column in the NEWS dataset.
 
-    Parameters:
-    - data (pd.DataFrame): Subset of patient data for the feature.
-    - column (str): Column to compute stats from (usually 'observation_valuetext_analysed').
-    - feature_name (str): Name for the output columns.
-    - config_obj: Configuration with negate_biochem.
+    Args:
+        data (pd.DataFrame): Subset of patient data for the feature.
+        column (str): Column to compute stats from (e.g.,
+            'observation_valuetext_analysed').
+        feature_name (str): Base name for the output feature columns.
+        config_obj (object): Configuration object with `negate_biochem` attribute.
 
     Returns:
-    - dict: Dictionary of feature statistics.
+        Dict: A dictionary of calculated feature statistics (mean, median, std,
+            max, min, n).
     """
     stats = {}
     if len(data) > 0:
@@ -38,14 +44,29 @@ def compute_feature_stats(data: pd.DataFrame, column: str, feature_name: str, co
 
 
 def get_news(
-    current_pat_client_id_code,
-    target_date_range,
-    pat_batch,
-    config_obj=None,
-    cohort_searcher_with_terms_and_search=None,
-):
-    """
-    Retrieves NEWS2 features for a given patient within a specified date range.
+    current_pat_client_id_code: str,
+    target_date_range: Tuple,
+    pat_batch: pd.DataFrame,
+    config_obj: Optional[object] = None,
+    cohort_searcher_with_terms_and_search: Optional[Callable] = None,
+) -> pd.DataFrame:
+    """Retrieves NEWS/NEWS2 features for a patient within a date range.
+
+    This function fetches NEWS (National Early Warning Score) observation data,
+    either from a pre-loaded batch or by searching. It then calculates summary
+    statistics (mean, median, std, etc.) for each component of the NEWS score.
+
+    Args:
+        current_pat_client_id_code (str): The client ID code of the patient.
+        target_date_range (Tuple): A tuple representing the target date range.
+        pat_batch (pd.DataFrame): The DataFrame containing patient data for batch mode.
+        config_obj (Optional[object]): Configuration object with settings like
+            `batch_mode` and `client_idcode_term_name`. Defaults to None.
+        cohort_searcher_with_terms_and_search (Optional[Callable]): The function for
+            cohort searching. Defaults to None.
+
+    Returns:
+        pd.DataFrame: A DataFrame containing NEWS features for the specified patient.
     """
 
     start_year, start_month, end_year, end_month, start_day, end_day = get_start_end_year_month(
@@ -119,7 +140,8 @@ def get_news(
                 & (subset["observation_valuetext_analysed"].astype(float) > -20)
             ]
 
-        stats = compute_feature_stats(subset, "observation_valuetext_analysed", feature_name, config_obj)
+        stats = compute_feature_stats(
+            subset, "observation_valuetext_analysed", feature_name, config_obj)
         news_features.update(stats)
 
     news_features_df = pd.DataFrame([news_features])

@@ -1,11 +1,13 @@
+from typing import Callable, List, Optional, Tuple, Union
+
 import numpy as np
 import pandas as pd
 from IPython.display import display
 
-from pat2vec.util.filter_dataframe_by_timestamp import filter_dataframe_by_timestamp
+from pat2vec.util.filter_dataframe_by_timestamp import \
+    filter_dataframe_by_timestamp
 from pat2vec.util.get_start_end_year_month import get_start_end_year_month
 from pat2vec.util.parse_date import validate_input_dates
-
 
 HOSP_SITE_FIELDS = [
     "observation_guid",
@@ -34,7 +36,8 @@ def search_hospital_site(
 ):
     """Search hospital site observations via cohort search API."""
     if cohort_searcher_with_terms_and_search is None:
-        raise ValueError("cohort_searcher_with_terms_and_search cannot be None.")
+        raise ValueError(
+            "cohort_searcher_with_terms_and_search cannot be None.")
     if client_id_codes is None:
         raise ValueError("client_id_codes cannot be None.")
 
@@ -64,7 +67,8 @@ def search_hospital_site(
 
 def prepare_hospital_site_data(raw_data):
     """Filter to valid CORE_HospitalSite records and drop NAs."""
-    data = raw_data[raw_data["obscatalogmasteritem_displayname"] == SEARCH_TERM].copy()
+    data = raw_data[raw_data["obscatalogmasteritem_displayname"]
+                    == SEARCH_TERM].copy()
     data.dropna(inplace=True)
     return data
 
@@ -76,8 +80,10 @@ def calculate_hospital_site_features(features_data, current_pat_client_id_code, 
 
     if len(features_data) > 0:
         value_array = features_data["observation_valuetext_analysed"].dropna()
-        features[f"{term}_dh"] = value_array.str.contains("DH").astype(int).max()
-        features[f"{term}_ph"] = value_array.str.contains("PRUH").astype(int).max()
+        features[f"{term}_dh"] = value_array.str.contains(
+            "DH").astype(int).max()
+        features[f"{term}_ph"] = value_array.str.contains(
+            "PRUH").astype(int).max()
 
     elif negate_biochem:
         features[f"{term}_dh"] = np.nan
@@ -87,15 +93,33 @@ def calculate_hospital_site_features(features_data, current_pat_client_id_code, 
 
 
 def get_hosp_site(
-    current_pat_client_id_code,
-    target_date_range,
-    pat_batch,
-    config_obj=None,
-    cohort_searcher_with_terms_and_search=None,
-):
-    """Retrieve CORE_HospitalSite features for a patient within a date range."""
+    current_pat_client_id_code: str,
+    target_date_range: Tuple,
+    pat_batch: pd.DataFrame,
+    config_obj: Optional[object] = None,
+    cohort_searcher_with_terms_and_search: Optional[Callable] = None,
+) -> pd.DataFrame:
+    """Retrieves CORE_HospitalSite features for a patient within a date range.
+
+    This function fetches hospital site observation data, either from a pre-loaded
+    batch or by searching, and then creates binary features indicating the presence
+    of records from specific hospital sites.
+
+    Args:
+        current_pat_client_id_code (str): The client ID code of the patient.
+        target_date_range (Tuple): A tuple representing the target date range.
+        pat_batch (pd.DataFrame): The DataFrame containing patient data for batch mode.
+        config_obj (Optional[object]): Configuration object with settings like
+            `batch_mode` and `negate_biochem`. Defaults to None.
+        cohort_searcher_with_terms_and_search (Optional[Callable]): The function for
+            cohort searching. Defaults to None.
+
+    Returns:
+        pd.DataFrame: A DataFrame containing hospital site features for the patient.
+    """
     if config_obj is None:
-        raise ValueError("config_obj cannot be None. Please provide a valid configuration.")
+        raise ValueError(
+            "config_obj cannot be None. Please provide a valid configuration.")
 
     batch_mode = config_obj.batch_mode
     start_year, start_month, end_year, end_month, start_day, end_day = get_start_end_year_month(

@@ -1,32 +1,41 @@
+from typing import Callable, List, Optional, Tuple
+
 import numpy as np
 import pandas as pd
-from pat2vec.pat2vec_get_methods.get_method_demo import search_demographics
-from pat2vec.pat2vec_search.data_helper_functions import append_age_at_record_series
 from IPython.display import display
 
+from pat2vec.pat2vec_get_methods.get_method_demo import search_demographics
+from pat2vec.pat2vec_search.data_helper_functions import \
+    append_age_at_record_series
 # from COGStats import EthnicityAbstractor
 # from COGStats import *
 from pat2vec.util.ethnicity_abstractor import EthnicityAbstractor
-from pat2vec.util.filter_dataframe_by_timestamp import filter_dataframe_by_timestamp
-from pat2vec.util.get_start_end_year_month import (
-    get_start_end_year_month,
-)
+from pat2vec.util.filter_dataframe_by_timestamp import \
+    filter_dataframe_by_timestamp
+from pat2vec.util.get_start_end_year_month import get_start_end_year_month
 
 
-def get_demo(current_pat_client_id_code, target_date_range, pat_batch, config_obj=None):
-    """
-    Retrieve demographic information for a patient based on the provided parameters.
+def get_demo(
+    current_pat_client_id_code: str,
+    target_date_range: Tuple,
+    pat_batch: pd.DataFrame,
+    config_obj: Optional[object] = None,
+) -> pd.DataFrame:
+    """Retrieves and processes demographic features for a patient.
 
-    Parameters:
-    - current_pat_client_id_code (str): The client ID code for the current patient.
-    - target_date_range (tuple): A tuple representing the date range for which demographic information is required.
-    - pat_batch (dataframe): The demo batch dataframe for the patient.
-    - config_obj (Config,): Contains config options.
+    This function orchestrates the retrieval of the latest demographic record
+    for a patient within a target date range and then processes it to extract
+    features for age, sex, deceased status, and ethnicity.
+
+    Args:
+        current_pat_client_id_code (str): The client ID code for the patient.
+        target_date_range (Tuple): The date range for which to get data.
+        pat_batch (pd.DataFrame): The batch DataFrame containing demographic data.
+        config_obj (Optional[object]): Configuration object. Defaults to None.
 
     Returns:
-    - pd.DataFrame: A DataFrame containing the demographic information for the specified patient.
+        pd.DataFrame: A single-row DataFrame with demographic features.
     """
-
     # Filters the raw pat batch of data to return the latest row of raw data within the target date range
     current_pat_demo = get_demographics3_batch(
         [current_pat_client_id_code],
@@ -109,18 +118,16 @@ def get_demo(current_pat_client_id_code, target_date_range, pat_batch, config_ob
     return current_pat_demo.head(1)
 
 
-def _process_age(demo_dataframe):
-    """
-    Process age information for the patient.
+def _process_age(demo_dataframe: pd.DataFrame) -> pd.DataFrame:
+    """Calculates and appends the patient's age to the DataFrame.
 
-    Parameters:
-    - demo_dataframe (pd.DataFrame): DataFrame containing demographic information.
+    Args:
+        demo_dataframe (pd.DataFrame): DataFrame containing demographic information,
+            including a 'client_dob' column.
 
     Returns:
-    - pd.DataFrame: DataFrame with processed age information.
-
+        pd.DataFrame: The DataFrame with an added 'age' column.
     """
-
     demo_dataframe = append_age_at_record_series(demo_dataframe)
 
     if len(demo_dataframe) > 1:
@@ -131,15 +138,18 @@ def _process_age(demo_dataframe):
     return demo_dataframe
 
 
-def _process_ethnicity(demo_dataframe):
-    """
-    Process ethnicity information for the patient.
+def _process_ethnicity(demo_dataframe: pd.DataFrame) -> pd.DataFrame:
+    """Abstracts and one-hot encodes ethnicity information.
 
-    Parameters:
-    - demo_dataframe (pd.DataFrame): DataFrame containing demographic information.
+    Args:
+        demo_dataframe (pd.DataFrame): DataFrame containing demographic information,
+            including a 'client_racecode' column.
 
     Returns:
-    - pd.DataFrame: DataFrame with processed ethnicity information.
+        pd.DataFrame: The DataFrame with added one-hot encoded census ethnicity columns.
+
+    Raises:
+        Exception: If the input DataFrame contains more than one row.
     """
     if len(demo_dataframe) > 1:
         raise Exception("more than one row process ethnicity")
@@ -206,15 +216,15 @@ def _process_ethnicity(demo_dataframe):
     return processed_df
 
 
-def _process_sex(demo_dataframe):
-    """
-    Process gender information for the patient.
+def _process_sex(demo_dataframe: pd.DataFrame) -> pd.DataFrame:
+    """Maps gender information to a binary 'male' column.
 
-    Parameters:
-    - demo_dataframe (pd.DataFrame): DataFrame containing demographic information.
+    Args:
+        demo_dataframe (pd.DataFrame): DataFrame containing demographic information,
+            including a 'client_gendercode' column.
 
     Returns:
-    - pd.DataFrame: DataFrame with processed gender information.
+        pd.DataFrame: The DataFrame with an added 'male' column (1 for Male, 0 for Female).
     """
     sex_map = {"Male": 1, "Female": 0, "male": 1, "female": 0}
     demo_dataframe["male"] = demo_dataframe["client_gendercode"].map(sex_map)
@@ -226,15 +236,15 @@ def _process_sex(demo_dataframe):
     return demo_dataframe
 
 
-def _process_dead(demo_dataframe):
-    """
-    Process deceased status information for the patient.
+def _process_dead(demo_dataframe: pd.DataFrame) -> pd.DataFrame:
+    """Maps deceased status to a binary 'dead' column.
 
-    Parameters:
-    - demo_dataframe (pd.DataFrame): DataFrame containing demographic information.
+    Args:
+        demo_dataframe (pd.DataFrame): DataFrame containing demographic information,
+            including a 'client_deceaseddtm' column.
 
     Returns:
-    - pd.DataFrame: DataFrame with processed deceased status information.
+        pd.DataFrame: The DataFrame with an added 'dead' column (1 if deceased, 0 otherwise).
     """
     demo_dataframe["dead"] = demo_dataframe["client_deceaseddtm"].apply(
         lambda x: int(isinstance(x, str))
@@ -247,13 +257,30 @@ def _process_dead(demo_dataframe):
 
 
 def get_demographics3_batch(
-    patlist,
-    target_date_range,
-    pat_batch,
-    config_obj=None,
-    cohort_searcher_with_terms_and_search=None,
-):
+    patlist: List[str],
+    target_date_range: Tuple,
+    pat_batch: pd.DataFrame,
+    config_obj: Optional[object] = None,
+    cohort_searcher_with_terms_and_search: Optional[Callable] = None,
+) -> pd.DataFrame:
+    """Retrieves the latest demographic record for patients within a date range.
 
+    This function either filters a pre-loaded batch DataFrame or searches for
+    demographic data. It forward-fills missing critical information and returns
+    the single most recent record for each patient within the specified time window.
+
+    Args:
+        patlist (List[str]): A list of patient client ID codes.
+        target_date_range (Tuple): The date range for which to retrieve data.
+        pat_batch (pd.DataFrame): The DataFrame containing patient data for batch mode.
+        config_obj (Optional[object]): Configuration object. Defaults to None.
+        cohort_searcher_with_terms_and_search (Optional[Callable]): The function for
+            cohort searching. Defaults to None.
+
+    Returns:
+        pd.DataFrame: A DataFrame containing the most recent demographic record
+            for the patient(s) in the date range.
+    """
     batch_mode = config_obj.batch_mode
 
     # patlist = config_obj.patlist #is present?
@@ -305,16 +332,16 @@ def get_demographics3_batch(
 
     else:
         demo = search_demographics(
-        cohort_searcher_with_terms_and_search=cohort_searcher_with_terms_and_search,
-        client_id_codes=patlist,
-        demographics_time_field="updatetime",
-        start_year=start_year,
-        start_month=start_month,
-        start_day=start_day,
-        end_year=end_year,
-        end_month=end_month,
-        end_day=end_day,
-    )
+            cohort_searcher_with_terms_and_search=cohort_searcher_with_terms_and_search,
+            client_id_codes=patlist,
+            demographics_time_field="updatetime",
+            start_year=start_year,
+            start_month=start_month,
+            start_day=start_day,
+            end_year=end_year,
+            end_month=end_month,
+            end_day=end_day,
+        )
 
     demo["updatetime"] = pd.to_datetime(demo["updatetime"], utc=True)
     # .drop_duplicates(subset = ["client_idcode"], keep = "last", inplace = True)

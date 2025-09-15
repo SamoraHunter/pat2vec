@@ -1,14 +1,14 @@
 from datetime import datetime, timezone
+from typing import Callable, List, Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd
 from IPython.display import display
 from scipy import stats
 
-from pat2vec.util.filter_dataframe_by_timestamp import filter_dataframe_by_timestamp
-from pat2vec.util.get_start_end_year_month import (
-    get_start_end_year_month,
-)
+from pat2vec.util.filter_dataframe_by_timestamp import \
+    filter_dataframe_by_timestamp
+from pat2vec.util.get_start_end_year_month import get_start_end_year_month
 from pat2vec.util.parse_date import validate_input_dates
 
 BLOODS_FIELDS = [
@@ -26,39 +26,55 @@ def search_bloods_data(
     client_id_codes=None,
     client_idcode_name="client_idcode.keyword",
     bloods_time_field="basicobs_entered",
-    start_year=1995,
-    start_month=1,
-    start_day=1,
-    end_year=2025,
-    end_month=12,
-    end_day=12,
+    start_year: Union[int, str] = 1995,
+    start_month: Union[int, str] = 1,
+    start_day: Union[int, str] = 1,
+    end_year: Union[int, str] = 2025,
+    end_month: Union[int, str] = 12,
+    end_day: Union[int, str] = 12,
     additional_custom_search_string=None,
 ):
-    """
-    Searches for bloods data for a specific patient within a date range using cohort searcher.
+    """Searches for bloods data for patients within a date range.
 
-    Parameters:
-    - cohort_searcher_with_terms_and_search (callable): The function for cohort searching.
-    - client_id_codes (str or list): The client ID code(s) of the patient(s).
-    - client_idcode_name (str): The name of the client ID code field in the index.
-    - bloods_time_field (str): The timestamp field for filtering bloods data.
-    - start_year, start_month, start_day (int): Start date components.
-    - end_year, end_month, end_day (int): End date components.
-    - additional_custom_search_string (str, optional): An additional string to append to the search query. Defaults to None.
+    Uses a cohort searcher to find basic observation data that has a numeric value,
+    within a specified time window.
+
+    Args:
+        cohort_searcher_with_terms_and_search (Optional[Callable]): The function for
+            cohort searching. Defaults to None.
+        client_id_codes (Optional[Union[str, List[str]]]): The client ID code(s) of
+            the patient(s). Defaults to None.
+        client_idcode_name (str): The name of the client ID code field in the
+            index. Defaults to "client_idcode.keyword".
+        bloods_time_field (str): The timestamp field for filtering bloods data.
+            Defaults to 'basicobs_entered'.
+        start_year (Union[int, str]): Start year for the search. Defaults to 1995.
+        start_month (Union[int, str]): Start month for the search. Defaults to 1.
+        start_day (Union[int, str]): Start day for the search. Defaults to 1.
+        end_year (Union[int, str]): End year for the search. Defaults to 2025.
+        end_month (Union[int, str]): End month for the search. Defaults to 12.
+        end_day (Union[int, str]): End day for the search. Defaults to 12.
+        additional_custom_search_string (Optional[str]): An additional string to
+            append to the search query. Defaults to None.
 
     Returns:
-    - pd.DataFrame: A DataFrame containing the raw bloods data.
+        pd.DataFrame: A DataFrame containing the raw bloods data.
+
+    Raises:
+        ValueError: If `cohort_searcher_with_terms_and_search` or `client_id_codes`
+            is None.
     """
     if cohort_searcher_with_terms_and_search is None:
-        raise ValueError("cohort_searcher_with_terms_and_search cannot be None.")
+        raise ValueError(
+            "cohort_searcher_with_terms_and_search cannot be None.")
     if client_id_codes is None:
         raise ValueError("client_id_codes cannot be None.")
 
     if isinstance(client_id_codes, str):
         client_id_codes = [client_id_codes]
 
-    start_year, start_month, start_day, end_year, end_month, end_day = validate_input_dates(start_year, start_month, start_day, end_year, end_month, end_day)
-
+    start_year, start_month, start_day, end_year, end_month, end_day = validate_input_dates(
+        start_year, start_month, start_day, end_year, end_month, end_day)
 
     search_string = f"basicobs_value_numeric:* AND {bloods_time_field}:[{start_year}-{start_month}-{start_day} TO {end_year}-{end_month}-{end_day}]"
 
@@ -82,20 +98,28 @@ def get_current_pat_bloods(
     cohort_searcher_with_terms_and_search=None,
     config_obj=None,
 ):
-    """
-    Retrieves blood test data for a given patient within a specified date range.
+    """Retrieves and engineers features from blood test data for a patient.
 
-    Parameters:
-    - current_pat_client_id_code (str): The client ID code of the patient.
-    - target_date_range (tuple): A tuple representing the target date range.
-    - pat_batch (pd.DataFrame): The DataFrame containing patient data.
-    - batch_mode (bool, optional): Indicates whether batch mode is enabled. Defaults to False.
-    - cohort_searcher_with_terms_and_search (callable, optional): The function for cohort searching. Defaults to None.
+    This function fetches blood test data for a patient within a specified date
+    range, either from a pre-loaded batch or by searching. It then calculates
+    a wide range of statistical features for each type of blood test found,
+    such as mean, median, standard deviation, counts, and time-based features.
+
+    Args:
+        current_pat_client_id_code (str): The client ID code of the patient.
+        target_date_range (Tuple): A tuple representing the target date range.
+        pat_batch (pd.DataFrame): The DataFrame containing patient data for batch mode.
+        batch_mode (bool): Indicates if batch mode is enabled. This is controlled
+            by `config_obj.batch_mode`. Defaults to False.
+        cohort_searcher_with_terms_and_search (Optional[Callable]): The function for
+            cohort searching. Defaults to None.
+        config_obj (Optional[object]): Configuration object with settings like
+            `batch_mode` and `bloods_time_field`. Defaults to None.
 
     Returns:
-    - pd.DataFrame: A DataFrame containing blood test data for the specified patient.
+        pd.DataFrame: A DataFrame containing the calculated blood test features
+            for the specified patient.
     """
-
     batch_mode = config_obj.batch_mode
 
     start_year, start_month, end_year, end_month, start_day, end_day = (
@@ -145,7 +169,8 @@ def get_current_pat_bloods(
     ]
 
     if batch_mode:
-        current_pat_bloods["datetime"] = current_pat_bloods[bloods_time_field].copy()
+        current_pat_bloods["datetime"] = current_pat_bloods[bloods_time_field].copy(
+        )
     else:
         current_pat_bloods["datetime"] = pd.to_datetime(
             current_pat_bloods[bloods_time_field], errors="coerce"
@@ -180,14 +205,17 @@ def get_current_pat_bloods(
         obs_columns_set_columns_for_df.append(obs_columns_set[i] + "_median")
         obs_columns_set_columns_for_df.append(obs_columns_set[i] + "_mode")
         obs_columns_set_columns_for_df.append(obs_columns_set[i] + "_std")
-        obs_columns_set_columns_for_df.append(obs_columns_set[i] + "_num-tests")
+        obs_columns_set_columns_for_df.append(
+            obs_columns_set[i] + "_num-tests")
         obs_columns_set_columns_for_df.append(
             obs_columns_set[i] + "_days-since-last-test"
         )
         obs_columns_set_columns_for_df.append(obs_columns_set[i] + "_max")
         obs_columns_set_columns_for_df.append(obs_columns_set[i] + "_min")
-        obs_columns_set_columns_for_df.append(obs_columns_set[i] + "_most-recent")
-        obs_columns_set_columns_for_df.append(obs_columns_set[i] + "_earliest-test")
+        obs_columns_set_columns_for_df.append(
+            obs_columns_set[i] + "_most-recent")
+        obs_columns_set_columns_for_df.append(
+            obs_columns_set[i] + "_earliest-test")
         obs_columns_set_columns_for_df.append(
             obs_columns_set[i] + "_days-between-first-last"
         )
@@ -273,13 +301,15 @@ def get_current_pat_bloods(
             df_unique_filtered.at[i, col_name + "_earliest-test"] = agg_val
 
             # days-since-last-test
-            date_object = filtered_df.sort_values(by="datetime").iloc[-1]["datetime"]
+            date_object = filtered_df.sort_values(
+                by="datetime").iloc[-1]["datetime"]
 
             delta = today - date_object
 
             agg_val = delta.days
 
-            df_unique_filtered.at[i, col_name + "_days-since-last-test"] = agg_val
+            df_unique_filtered.at[i, col_name +
+                                  "_days-since-last-test"] = agg_val
 
             # n tests
 
@@ -324,26 +354,31 @@ def get_current_pat_bloods(
             col_name_low = col_name_mean - (col_name_std * 3)
 
             agg_val = int(float(min(filtered_column_values)) < col_name_low)
-            df_unique_filtered.at[i, col_name + "_contains-extreme-low"] = agg_val
+            df_unique_filtered.at[i, col_name +
+                                  "_contains-extreme-low"] = agg_val
 
             # contains extreme high
             col_name_high = col_name_mean + (col_name_std * 3)
 
             agg_val = int(float(max(filtered_column_values)) > col_name_high)
 
-            df_unique_filtered.at[i, col_name + "_contains-extreme-high"] = agg_val
+            df_unique_filtered.at[i, col_name +
+                                  "_contains-extreme-high"] = agg_val
 
             # days_between earliest and last
 
-            earliest = filtered_df.sort_values(by="datetime").iloc[-1]["datetime"]
+            earliest = filtered_df.sort_values(
+                by="datetime").iloc[-1]["datetime"]
 
-            oldest = filtered_df.sort_values(by="datetime").iloc[-1]["datetime"]
+            oldest = filtered_df.sort_values(
+                by="datetime").iloc[-1]["datetime"]
 
             delta = earliest - oldest
 
             agg_val = delta.days
 
-            df_unique_filtered.at[i, col_name + "_days-between-first-last"] = agg_val
+            df_unique_filtered.at[i, col_name +
+                                  "_days-between-first-last"] = agg_val
 
             # current_pat_bloods = df_unique_filtered
 
