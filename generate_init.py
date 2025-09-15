@@ -4,8 +4,8 @@ import sys
 import textwrap
 from collections import defaultdict
 
-# To update init with methods in pat2vec root dir, python generate_init.py > pat2vec/__init__.py
-# The script now writes the file directly. Just run: `python generate_init.py` # Windows
+# To update init with methods in pat2vec root dir,
+# The script now writes the file directly. Just run: `python generate_init.py`
 
 
 def generate_init_file_content(package_path="pat2vec"):
