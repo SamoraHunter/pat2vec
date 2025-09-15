@@ -1,32 +1,35 @@
 import os
 from pathlib import Path
+from typing import List
+import logging
 
 
 class PathsClass:
-    def __init__(self, root_path, suffix, output_folder):
-        """
-        Initializes the PathsClass with specified root path, suffix, and output folder.
+    """Manages the creation and organization of directory paths for the pipeline."""
 
-        Parameters:
-            root_path (str): The root directory path where all paths will be based.
-            suffix (str): The suffix to be appended to each directory name for differentiation.
-            output_folder (str): The specific output folder where results will be stored.
+    def __init__(self, root_path: str, suffix: str, output_folder: str) -> None:
+        """Initializes the PathsClass.
+
+        Sets up and creates all necessary directory paths for a processing run.
+
+        Args:
+            root_path: The root directory path where all paths will be based.
+            suffix: The suffix to be appended to each directory name for
+                differentiation.
+            output_folder: The name of the main output folder (e.g., 'outputs').
 
         Attributes:
-            root_path (str): Stores the provided root directory path.
-            suffix (str): Stores the provided suffix for directory names.
-            paths (list): A list of paths generated using the suffix, including paths for
-                        annotations, documents, batches, and more.
-            output_folder (str): The output directory path, appended to the paths list.
-
-        The method also ensures that all directories in the paths list are created and
-        prints the paths for verification.
+            root_path (str): The provided root directory path.
+            suffix (str): The provided suffix for directory names.
+            all_paths (List[str]): A list of all generated absolute directory paths.
+            output_folder_path (str): The absolute path to the main output
+                directory.
         """
-
         self.root_path = root_path
         self.suffix = suffix
 
-        self.paths = [
+        # These paths are relative to the root_path
+        relative_paths = [
             f"current_pat_annots_parts{self.suffix}/",
             f"current_pat_annots_mrc_parts{self.suffix}/",
             f"current_pat_documents_annotations_batches{self.suffix}/",
@@ -48,21 +51,34 @@ class PathsClass:
             f"current_pat_textual_obs_document_batches{self.suffix}/",
             f"current_pat_textual_obs_annotation_batches{self.suffix}/",
             f"merged_input_pat_batches{self.suffix}/",
-            output_folder,
         ]
 
-        self.output_folder = os.path.join(self.root_path, "outputs")
-        self.paths.append(self.output_folder)
+        # Create absolute paths
+        self.all_paths = [os.path.join(self.root_path, p) for p in relative_paths]
 
-        self._create_directories(self.paths)
+        # Handle the main output folder separately for clarity
+        self.output_folder_path = os.path.join(self.root_path, output_folder)
+        self.all_paths.append(self.output_folder_path)
+
+        self._create_directories()
         self._print_paths()
 
-    def _create_directories(self, paths):
-        for path in paths:
-            Path(os.path.join(self.root_path, path)).mkdir(parents=True, exist_ok=True)
+    def _create_directories(self) -> None:
+        """Creates directories from a list of paths.
 
-    def _print_paths(self):
-        for attribute in dir(self):
-            if "path" in attribute:
-                # print(getattr(self, attribute))
-                print(os.path.join(self.root_path, str(getattr(self, attribute))))
+        Args:
+            paths: A list of relative directory paths to be created under the
+                root path.
+        """
+        for path in self.all_paths:
+            Path(path).mkdir(parents=True, exist_ok=True)
+
+    def _print_paths(self) -> None:
+        """Prints all created absolute paths for verification.
+
+        This is intended for verification and debugging purposes to show the
+        fully resolved paths that have been configured.
+        """
+        logging.info("Created and verified the following paths:")
+        for path in sorted(self.all_paths):
+            print(path)

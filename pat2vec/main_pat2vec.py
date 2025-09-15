@@ -4,6 +4,7 @@ import time
 import traceback
 from datetime import datetime
 from multiprocessing import Pool
+from typing import Any, Dict, List, Optional
 
 import pandas as pd
 # from pat2vec.pat2vec_search.cogstack_search_methods import *
@@ -34,16 +35,6 @@ from pat2vec.util.methods_get import (create_folders_for_pat,
                                       filter_stripped_list, get_free_gpu,
                                       list_dir_wrapper, update_pbar)
 from pat2vec.util.methods_get_medcat import get_cat
-
-color_bars = [
-    Fore.RED,
-    Fore.GREEN,
-    Fore.BLUE,
-    Fore.MAGENTA,
-    Fore.YELLOW,
-    Fore.CYAN,
-    Fore.WHITE,
-]
 
 
 class main:
@@ -79,12 +70,12 @@ class main:
 
     def __init__(
         self,
-        cogstack=True,
-        use_filter=False,
-        json_filter_path=None,
-        random_seed_val=42,
-        hostname=None,
-        config_obj=None,
+        cogstack: bool = True,
+        use_filter: bool = False,
+        json_filter_path: Optional[str] = None,
+        random_seed_val: int = 42,
+        hostname: Optional[str] = None,
+        config_obj: Optional[Any] = None,
     ):
         """Initializes the main pat2vec pipeline orchestrator.
 
@@ -93,22 +84,14 @@ class main:
         configuration.
 
         Args:
-            cogstack (bool, optional): If True, connects to a CogStack Elasticsearch
-                instance for data retrieval. If False, a dummy searcher is used,
-                which is useful for testing. Defaults to True.
-            use_filter (bool, optional): If True, applies a CUI filter to the
-                MedCAT model to restrict annotations to a specific set of concepts.
-                Requires `json_filter_path`. Defaults to False.
-            json_filter_path (str, optional): Path to a JSON file containing the
-                CUI filter for MedCAT. Required if `use_filter` is True.
-                Defaults to None.
-            random_seed_val (int, optional): The random seed for reproducibility of
-                operations like patient list shuffling. Defaults to 42.
-            hostname (str, optional): Deprecated. The hostname for the SFTP server.
-                SFTP settings are now managed within the config object. Defaults to None.
-            config_obj (config_class, optional): The main configuration object that
-                drives the pipeline's behavior. If None, a default configuration
-                is created. Defaults to None.
+            cogstack: If True, connects to a CogStack Elasticsearch instance.
+                If False, a dummy searcher is used for testing.
+            use_filter: If True, applies a CUI filter to the MedCAT model.
+            json_filter_path: Path to a JSON file containing the CUI filter.
+            random_seed_val: The random seed for reproducibility.
+            hostname: Deprecated. SFTP settings are now in the config object.
+            config_obj: The main configuration object. If None, a default
+                configuration is created.
         """
         self.batch_mode = config_obj.batch_mode
         self.remote_dump = config_obj.remote_dump  # Deprecated
@@ -241,46 +224,31 @@ class main:
 
             prefetch_batches(pat2vec_obj=self)
 
-    def _get_patient_data_batches(self, current_pat_client_id_code):
+    def _get_patient_data_batches(
+        self, current_pat_client_id_code: str
+    ) -> Dict[str, pd.DataFrame]:
         """Fetches and organizes all data batches for a single patient.
 
-        This method centralizes and modularizes the data fetching logic previously
-        handled directly within `pat_maker`. It uses a configuration-driven
-        approach to retrieve various types of patient data (e.g., clinical notes,
-        lab results, demographics) based on the settings in `self.config_obj`.
+        This method uses a configuration-driven approach to retrieve various
+        types of patient data (e.g., clinical notes, lab results, demographics)
+        based on the settings in `self.config_obj`. It iterates through a list
+        of predefined batch configurations, calling the appropriate fetch
+        function for each enabled data type.
 
-        The core of this method is two configuration lists:
-        - `batch_configs`: For standard data types like bloods, drugs, and demographics.
-        - `annotation_batch_configs`: For text-derived annotations from MedCAT.
-
-        Each entry in these lists is a dictionary that specifies:
-        - `option`: The key in `self.config_obj.main_options` that enables/disables
-          this data source.
-        - `var`: The variable name to use as the key in the returned dictionary.
-        - `func`: The specific `get_pat_batch_*` function responsible for fetching
-          the data.
-        - `args`: A dictionary of additional arguments for the fetch function (e.g.,
-          a specific `search_term`).
-        - `empty`: An empty DataFrame with the correct schema to use as a
-          fallback if the data source is disabled or returns no data.
-
-        This design makes the system highly extensible. To add a new data source,
-        a developer only needs to:
-        1. Create a new `get_pat_batch_<new_source>` function.
-        2. Add a corresponding configuration dictionary to the `batch_configs` or
-           `annotation_batch_configs` list within this method.
+        This design is highly extensible. To add a new data source, a developer
+        only needs to:
+        1.  Create a new `get_pat_batch_<new_source>` function.
+        2.  Add a corresponding configuration dictionary to the `batch_configs`
+            or `annotation_batch_configs` list within this method.
 
         Args:
-            current_pat_client_id_code (str): The unique identifier for the patient
-                for whom to fetch data batches.
+            current_pat_client_id_code: The unique identifier for the patient
+                for whom to fetch data.
 
         Returns:
-            dict[str, pd.DataFrame]: A dictionary where keys are the batch names
-                (e.g., 'batch_epr', 'batch_bloods') and values are the fetched
-                pandas DataFrames. If a data source is disabled in the main
-                configuration or if no data is found for the patient, the
-                corresponding value will be an appropriately structured empty
-                DataFrame.
+            A dictionary where keys are batch names (e.g., 'batch_epr') and
+            values are the corresponding pandas DataFrames. If a data source is
+            disabled or returns no data, the value will be an empty DataFrame.
         """
         empty_return = pd.DataFrame()
         empty_return_epr = pd.DataFrame(
@@ -422,9 +390,19 @@ class main:
 
         return batches
 
-    def _setup_patient_time_window(self, current_pat_client_id_code):
-        """
-        Sets up and returns the date list for a patient, handling IPW logic.
+    def _setup_patient_time_window(
+        self, current_pat_client_id_code: str
+    ) -> Optional[List[tuple]]:
+        """Sets up and returns the date list for a patient, handling IPW logic.
+
+        If `individual_patient_window` is enabled, this method calculates a
+        patient-specific date list. Otherwise, it returns the global date list.
+
+        Args:
+            current_pat_client_id_code: The patient's unique identifier.
+
+        Returns:
+            A list of date tuples, or None if the time window cannot be set up.
         """
         if self.config_obj.verbosity >= 4:
             print("main_pat2vec>self.config_obj.individual_patient_window: ")
@@ -511,9 +489,16 @@ class main:
         self.n_pat_lines = len(date_list)
         return date_list
 
-    def _clean_document_batches(self, batches):
-        """
-        Cleans timestamp columns for all document-related batches.
+    def _clean_document_batches(
+        self, batches: Dict[str, pd.DataFrame]
+    ) -> Dict[str, pd.DataFrame]:
+        """Cleans timestamp columns for all document-related batches.
+
+        Args:
+            batches: A dictionary of DataFrames, keyed by batch name.
+
+        Returns:
+            The dictionary of DataFrames with cleaned timestamp columns.
         """
         doc_configs = [
             {"key": "batch_epr", "time_col": "updatetime",
@@ -571,9 +556,18 @@ class main:
 
         return batches
 
-    def _process_patient_slices(self, current_pat_client_id_code, date_list, batches):
-        """
-        Iterates through time slices and calls main_batch to generate feature vectors.
+    def _process_patient_slices(
+        self,
+        current_pat_client_id_code: str,
+        date_list: List[tuple],
+        batches: Dict[str, pd.DataFrame],
+    ) -> None:
+        """Iterates through time slices and calls main_batch to generate feature vectors.
+
+        Args:
+            current_pat_client_id_code: The patient's unique identifier.
+            date_list: The list of date tuples representing time slices.
+            batches: A dictionary of pre-fetched data batches for the patient.
         """
         # The main pat_maker function already checks if the patient is in stripped_list_start.
         # This check is a safeguard, but the main logic for skipping is at a higher level.
@@ -609,7 +603,7 @@ class main:
                 print(traceback.format_exc())
                 raise e
 
-    def pat_maker(self, i):
+    def pat_maker(self, i: int) -> None:
         """Orchestrates the entire feature extraction process for a single patient.
 
         This method is the primary worker function for processing one patient from the

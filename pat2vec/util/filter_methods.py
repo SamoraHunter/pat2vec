@@ -1,22 +1,30 @@
+import pandas as pd
+from typing import Any, List
 from fuzzywuzzy import process
 from pat2vec.util.methods_annotation_regex import append_regex_term_counts
 from IPython.display import display
 
 
 def filter_dataframe_by_fuzzy_terms(
-    df, filter_term_list, column_name="document_description", verbose=0
-):
-    """
-    Filter DataFrame by fuzzy matching terms in the specified column.
+    df: pd.DataFrame,
+    filter_term_list: List[str],
+    column_name: str = "document_description",
+    verbose: int = 0,
+) -> pd.DataFrame:
+    """Filters a DataFrame by fuzzy matching terms in a specified column.
+
+    This function iterates through a list of terms and finds the best fuzzy
+    matches in a DataFrame column. It returns a new DataFrame containing only
+    the rows that have a match score above a certain threshold (80).
 
     Args:
-        df (pd.DataFrame): DataFrame to filter.
-        filter_term_list (list): List of terms to filter by.
-        column_name (str): Name of the column to perform fuzzy matching.
-        verbose (int): Verbosity level (0: no verbose, 1: moderate verbose, 2: high verbose).
+        df: The DataFrame to filter.
+        filter_term_list: A list of terms to search for.
+        column_name: The name of the column to perform the fuzzy match on.
+        verbose: Verbosity level for logging.
 
     Returns:
-        pd.DataFrame: Filtered DataFrame.
+        A new DataFrame containing only the rows with fuzzy-matched terms.
     """
     if verbose >= 1:
         print("Filtering DataFrame by fuzzy terms...")
@@ -38,17 +46,22 @@ def filter_dataframe_by_fuzzy_terms(
     return filtered_df
 
 
-def apply_data_type_epr_docs_filters(config_obj, batch_target):
-    """
-    Apply data type filters specific to EPR documents to the batch target based on the configuration object.
+def apply_data_type_epr_docs_filters(
+    config_obj: Any, batch_target: pd.DataFrame
+) -> pd.DataFrame:
+    """Applies data type filters to a DataFrame of EPR documents.
+
+    This function filters a DataFrame based on rules defined in the `config_obj`.
+    It can apply fuzzy term matching on the 'document_description' column and
+    also count occurrences of regex patterns in the 'body_analysed' column,
+    adding the counts as new columns.
 
     Args:
-        config_obj (object): Configuration object containing data type filter information.
-        batch_target (DataFrame): Batch target DataFrame to be filtered.
+        config_obj: A configuration object containing filter settings.
+        batch_target: The DataFrame of EPR documents to be filtered.
 
     Returns:
-        DataFrame: Filtered batch target DataFrame.
-
+        The filtered DataFrame.
     """
     if config_obj.data_type_filter_dict is not None and not batch_target.empty:
         if (
@@ -96,17 +109,21 @@ def apply_data_type_epr_docs_filters(config_obj, batch_target):
     return batch_target
 
 
-def apply_bloods_data_type_filter(config_obj, batch_target):
-    """
-    Apply data type filter specific to bloods to the batch target based on the configuration object.
+def apply_bloods_data_type_filter(
+    config_obj: Any, batch_target: pd.DataFrame
+) -> pd.DataFrame:
+    """Applies data type filters to a DataFrame of bloods data.
+
+    This function filters a DataFrame based on fuzzy term matching against the
+    'basicobs_itemname_analysed' column, using filter terms defined in the
+    `config_obj`.
 
     Args:
-        config_obj (object): Configuration object containing data type filter information.
-        batch_target (DataFrame): Batch target DataFrame to be filtered.
+        config_obj: A configuration object containing filter settings.
+        batch_target: The DataFrame of bloods data to be filtered.
 
     Returns:
-        DataFrame: Filtered batch target DataFrame.
-
+        The filtered DataFrame.
     """
     if config_obj.data_type_filter_dict is not None:
         if (
@@ -133,17 +150,22 @@ def apply_bloods_data_type_filter(config_obj, batch_target):
     return batch_target
 
 
-def apply_data_type_mct_docs_filters(config_obj, batch_target):
-    """
-    Apply data type filters specific to MCT documents to the batch target based on the configuration object.
+def apply_data_type_mct_docs_filters(
+    config_obj: Any, batch_target: pd.DataFrame
+) -> pd.DataFrame:
+    """Applies data type filters to a DataFrame of MCT documents.
+
+    This function filters a DataFrame based on rules defined in the `config_obj`.
+    It can apply fuzzy term matching on the 'document_description' column and
+    also count occurrences of regex patterns in the 'body_analysed' column,
+    adding the counts as new columns.
 
     Args:
-        config_obj (object): Configuration object containing data type filter information.
-        batch_target (DataFrame): Batch target DataFrame to be filtered.
+        config_obj: A configuration object containing filter settings.
+        batch_target: The DataFrame of MCT documents to be filtered.
 
     Returns:
-        DataFrame: Filtered batch target DataFrame.
-
+        The filtered DataFrame.
     """
     if config_obj.data_type_filter_dict is not None and not batch_target.empty:
         if (

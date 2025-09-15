@@ -6,7 +6,7 @@ from datetime import datetime, timedelta, timezone
 import string
 from typing import Optional, cast
 import uuid
-import numpy as np
+from typing import Any, Dict, List, Tuple, Union
 import pandas as pd
 from faker import Faker
 import pytz
@@ -16,6 +16,7 @@ from pat2vec.pat2vec_get_methods.get_method_core_resus import CORE_RESUS_FIELDS
 from transformers import pipeline
 import random
 import string
+import numpy as np
 from IPython import display
 import numpy as np
 import calendar
@@ -38,21 +39,33 @@ from pat2vec.util.dummy_data_files.dummy_lists import (
 )
 
 
-def maybe_nan(value, probability=0.2):
-    """
-    Return the given value with a given probability of being replaced with NaN.
+def maybe_nan(value: Any, probability: float = 0.2) -> Union[Any, float]:
+    """Returns a value or NaN based on a probability.
 
-    Parameters:
-    - value: Any value to be returned with a given probability.
-    - probability: Optional probability (default=0.2) to replace the value with NaN.
+    Args:
+        value: The value to potentially return.
+        probability: The probability of returning `np.nan` instead of the value.
+            Defaults to 0.2.
+
+    Returns:
+        The original value or `np.nan`.
     """
     return value if random.random() > probability else np.nan
 
 
-def create_random_date_from_globals(start_year, start_month, end_year, end_month):
-    """
-    Generates a random datetime using year and month numbers,
-    correctly using all possible days in the end month.
+def create_random_date_from_globals(
+    start_year: int, start_month: int, end_year: int, end_month: int
+) -> datetime:
+    """Generates a random datetime within a given month-level range.
+
+    Args:
+        start_year: The starting year.
+        start_month: The starting month.
+        end_year: The ending year.
+        end_month: The ending month.
+
+    Returns:
+        A random datetime object within the specified range.
     """
     # Define the start date as the beginning of the first day
     start_dt = datetime(start_year, start_month, 1)
@@ -75,14 +88,14 @@ def create_random_date_from_globals(start_year, start_month, end_year, end_month
 
 
 def generate_epr_documents_data(
-    num_rows,
-    entered_list,
-    global_start_year,
-    global_start_month,
-    global_end_year,
-    global_end_month,
-    use_GPT=True,
-    fields_list=[
+    num_rows: int,
+    entered_list: List[str],
+    global_start_year: int,
+    global_start_month: int,
+    global_end_year: int,
+    global_end_month: int,
+    use_GPT: bool = True,
+    fields_list: List[str] = [
         "client_idcode",
         "document_guid",
         "document_description",
@@ -90,20 +103,21 @@ def generate_epr_documents_data(
         "updatetime",
         "clientvisit_visitidcode",
     ],
-):
-    """
-    Generate dummy data for the 'epr_documents' index.
+) -> pd.DataFrame:
+    """Generates dummy data for the 'epr_documents' index.
 
-    Parameters:
-    - num_rows (int): Number of rows to generate.
-    - entered_list (list): List of entered values.
-    - global_start_year (int): Start year for the global date range.
-    - global_start_month (int): Start month for the global date range.
-    - global_end_year (int): End year for the global date range.
-    - global_end_month (int): End month for the global date range.
+    Args:
+        num_rows: Number of rows to generate for each client.
+        entered_list: List of client IDs to generate data for.
+        global_start_year: Start year for the random date range.
+        global_start_month: Start month for the random date range.
+        global_end_year: End year for the random date range.
+        global_end_month: End month for the random date range.
+        use_GPT: If True, uses a text generation model for the document body.
+        fields_list: List of columns to include in the DataFrame.
 
     Returns:
-    - pd.DataFrame: Generated DataFrame with specified columns.
+        A pandas DataFrame with generated dummy EPR document data.
     """
 
     print(f"entered_list: {entered_list}")
@@ -158,13 +172,13 @@ def generate_epr_documents_data(
 
 
 def generate_epr_documents_personal_data(
-    num_rows,
-    entered_list,
-    global_start_year,
-    global_start_month,
-    global_end_year,
-    global_end_month,
-    fields_list=[
+    num_rows: int,
+    entered_list: List[str],
+    global_start_year: int,
+    global_start_month: int,
+    global_end_year: int,
+    global_end_month: int,
+    fields_list: List[str] = [
         "client_idcode",
         "client_firstname",
         "client_lastname",
@@ -174,20 +188,20 @@ def generate_epr_documents_personal_data(
         "client_deceaseddtm",
         "updatetime",
     ],
-):
-    """
-    Generate dummy data for the 'epr_documents' index with linked personal information.
+) -> pd.DataFrame:
+    """Generates dummy personal data for the 'epr_documents' index.
 
-    Parameters:
-    - num_rows (int): Number of rows to generate.
-    - entered_list (list): List of entered values.
-    - global_start_year (int): Start year for the global date range.
-    - global_start_month (int): Start month for the global date range.
-    - global_end_year (int): End year for the global date range.
-    - global_end_month (int): End month for the global date range.
+    Args:
+        num_rows: Number of rows to generate for each client.
+        entered_list: List of client IDs to generate data for.
+        global_start_year: Start year for the random date range.
+        global_start_month: Start month for the random date range.
+        global_end_year: End year for the random date range.
+        global_end_month: End month for the random date range.
+        fields_list: List of columns to include in the DataFrame.
 
     Returns:
-    - pd.DataFrame: Generated DataFrame with linked personal information.
+        A pandas DataFrame with generated dummy personal data.
     """
     df_holder_list = []
 
@@ -257,13 +271,13 @@ def generate_epr_documents_personal_data(
 
 
 def generate_diagnostic_orders_data(
-    num_rows,
-    entered_list,
-    global_start_year,
-    global_start_month,
-    global_end_year,
-    global_end_month,
-    fields_list=[
+    num_rows: int,
+    entered_list: List[str],
+    global_start_year: int,
+    global_start_month: int,
+    global_end_year: int,
+    global_end_month: int,
+    fields_list: List[str] = [
         "order_guid",
         "client_idcode",
         "order_name",
@@ -277,20 +291,20 @@ def generate_diagnostic_orders_data(
         "_score",
         "order_performeddtm",
     ],
-):
-    """
-    Generate dummy data for the 'diagnostic_orders' index.
+) -> pd.DataFrame:
+    """Generates dummy data for the 'diagnostic_orders' index.
 
-    Parameters:
-    - num_rows (int): Number of rows to generate.
-    - entered_list (list): List of entered values.
-    - global_start_year (int): Start year for the global date range.
-    - global_start_month (int): Start month for the global date range.
-    - global_end_year (int): End year for the global date range.
-    - global_end_month (int): End month for the global date range.
+    Args:
+        num_rows: Number of rows to generate for each client.
+        entered_list: List of client IDs to generate data for.
+        global_start_year: Start year for the random date range.
+        global_start_month: Start month for the random date range.
+        global_end_year: End year for the random date range.
+        global_end_month: End month for the random date range.
+        fields_list: List of columns to include in the DataFrame.
 
     Returns:
-    - pd.DataFrame: Generated DataFrame with specified columns.
+        A pandas DataFrame with generated dummy diagnostic order data.
     """
 
     df_holder_list = []
@@ -356,13 +370,13 @@ def generate_diagnostic_orders_data(
 
 
 def generate_drug_orders_data(
-    num_rows,
-    entered_list,
-    global_start_year,
-    global_start_month,
-    global_end_year,
-    global_end_month,
-    fields_list=[
+    num_rows: int,
+    entered_list: List[str],
+    global_start_year: int,
+    global_start_month: int,
+    global_end_year: int,
+    global_end_month: int,
+    fields_list: List[str] = [
         "order_guid",
         "client_idcode",
         "order_name",
@@ -376,20 +390,20 @@ def generate_drug_orders_data(
         "_score",
         "order_performeddtm",
     ],
-):
-    """
-    Generate dummy data for the 'drug_orders' index.
+) -> pd.DataFrame:
+    """Generates dummy data for the 'drug_orders' index.
 
-    Parameters:
-    - num_rows (int): Number of rows to generate.
-    - entered_list (list): List of entered values.
-    - global_start_year (int): Start year for the global date range.
-    - global_start_month (int): Start month for the global date range.
-    - global_end_year (int): End year for the global date range.
-    - global_end_month (int): End month for the global date range.
+    Args:
+        num_rows: Number of rows to generate for each client.
+        entered_list: List of client IDs to generate data for.
+        global_start_year: Start year for the random date range.
+        global_start_month: Start month for the random date range.
+        global_end_year: End year for the random date range.
+        global_end_month: End month for the random date range.
+        fields_list: List of columns to include in the DataFrame.
 
     Returns:
-    - pd.DataFrame: Generated DataFrame with specified columns.
+        A pandas DataFrame with generated dummy drug order data.
     """
     # print("generate_drug_orders_data")
     df_holder_list = []
@@ -458,14 +472,14 @@ def generate_drug_orders_data(
 
 
 def generate_observations_MRC_text_data(
-    num_rows,
-    entered_list,
-    global_start_year,
-    global_start_month,
-    global_end_year,
-    global_end_month,
-    use_GPT=False,
-    fields_list=[
+    num_rows: int,
+    entered_list: List[str],
+    global_start_year: int,
+    global_start_month: int,
+    global_end_year: int,
+    global_end_month: int,
+    use_GPT: bool = False,
+    fields_list: List[str] = [
         "observation_guid",
         "client_idcode",
         "obscatalogmasteritem_displayname",
@@ -477,20 +491,21 @@ def generate_observations_MRC_text_data(
         "_score",
         "textualObs",
     ],
-):
-    """
-    Generate dummy data for the 'observations' index.
+) -> pd.DataFrame:
+    """Generates dummy MRC text data for the 'observations' index.
 
-    Parameters:
-    - num_rows (int): Number of rows to generate.
-    - entered_list (list): List of entered values.
-    - global_start_year (int): Start year for the global date range.
-    - global_start_month (int): Start month for the global date range.
-    - global_end_year (int): End year for the global date range.
-    - global_end_month (int): End month for the global date range.
+    Args:
+        num_rows: Number of rows to generate for each client.
+        entered_list: List of client IDs to generate data for.
+        global_start_year: Start year for the random date range.
+        global_start_month: Start month for the random date range.
+        global_end_year: End year for the random date range.
+        global_end_month: End month for the random date range.
+        use_GPT: If True, uses a text generation model for the document body.
+        fields_list: List of columns to include in the DataFrame.
 
     Returns:
-    - pd.DataFrame: Generated DataFrame with specified columns.
+        A pandas DataFrame with generated dummy observation data.
     """
 
     df_holder_list = []
@@ -542,14 +557,14 @@ def generate_observations_MRC_text_data(
 
 
 def generate_observations_Reports_text_data(
-    num_rows,
-    entered_list,
-    global_start_year,
-    global_start_month,
-    global_end_year,
-    global_end_month,
-    use_GPT=False,
-    fields_list=[
+    num_rows: int,
+    entered_list: List[str],
+    global_start_year: int,
+    global_start_month: int,
+    global_end_year: int,
+    global_end_month: int,
+    use_GPT: bool = False,
+    fields_list: List[str] = [
         "basicobs_guid",
         "client_idcode",
         "basicobs_itemname_analysed",
@@ -561,22 +576,21 @@ def generate_observations_Reports_text_data(
         "_index",
         "_score",
     ],
-):
-    """
-    Generate dummy data for the 'basic observations' index and reports.
+) -> pd.DataFrame:
+    """Generates dummy report text data for the 'basic_observations' index.
 
-    Parameters:
-    - num_rows (int): Number of rows to generate.
-    - entered_list (list): List of entered values.
-    - global_start_year (int): Start year for the global date range.
-    - global_start_month (int): Start month for the global date range.
-    - global_end_year (int): End year for the global date range.
-    - global_end_month (int): End month for the global date range.
-    - use_GPT (bool): Whether to use GPT for generating text data.
-    - fields_list (list): List of fields to include in the DataFrame.
+    Args:
+        num_rows: Number of rows to generate for each client.
+        entered_list: List of client IDs to generate data for.
+        global_start_year: Start year for the random date range.
+        global_start_month: Start month for the random date range.
+        global_end_year: End year for the random date range.
+        global_end_month: End month for the random date range.
+        use_GPT: If True, uses a text generation model for the document body.
+        fields_list: List of columns to include in the DataFrame.
 
     Returns:
-    - pd.DataFrame: Generated DataFrame with specified columns.
+        A pandas DataFrame with generated dummy report data.
     """
     # print("generate_observations_Reports_text_data")
     random.seed(random_state)
@@ -629,13 +643,13 @@ def generate_observations_Reports_text_data(
 
 
 def generate_appointments_data(
-    num_rows,
-    entered_list,
-    global_start_year,
-    global_start_month,
-    global_end_year,
-    global_end_month,
-    fields_list=[
+    num_rows: int,
+    entered_list: List[str],
+    global_start_year: int,
+    global_start_month: int,
+    global_end_year: int,
+    global_end_month: int,
+    fields_list: List[str] = [
         "client_idcode",
         "Popular",
         "AppointmentType",
@@ -671,21 +685,20 @@ def generate_appointments_data(
         "SessionCode",
         "SpecialtyCode",
     ],
-):
-    """
-    Generate dummy data for the 'pimps_apps' index.
+) -> pd.DataFrame:
+    """Generates dummy data for the 'pims_apps' index.
 
-    Parameters:
-    - num_rows (int): Number of rows to generate.
-    - entered_list (list): List of entered values.
-    - global_start_year (int): Start year for the global date range.
-    - global_start_month (int): Start month for the global date range.
-    - global_end_year (int): End year for the global date range.
-    - global_end_month (int): End month for the global date range.
-    - fields_list (list): List of fields to include in the DataFrame.
+    Args:
+        num_rows: Number of rows to generate for each client.
+        entered_list: List of client IDs to generate data for.
+        global_start_year: Start year for the random date range.
+        global_start_month: Start month for the random date range.
+        global_end_year: End year for the random date range.
+        global_end_month: End month for the random date range.
+        fields_list: List of columns to include in the DataFrame.
 
     Returns:
-    - pd.DataFrame: Generated DataFrame with specified columns.
+        A pandas DataFrame with generated dummy appointment data.
     """
     df_holder_list = []
 
@@ -775,15 +788,15 @@ def generate_appointments_data(
 
 
 def generate_observations_data(
-    num_rows,
-    entered_list,
-    global_start_year,
-    global_start_month,
-    global_end_year,
-    global_end_month,
-    search_term,
-    use_GPT=False,
-    fields_list=[
+    num_rows: int,
+    entered_list: List[str],
+    global_start_year: int,
+    global_start_month: int,
+    global_end_year: int,
+    global_end_month: int,
+    search_term: str,
+    use_GPT: bool = False,
+    fields_list: List[str] = [
         "observation_guid",
         "client_idcode",
         "obscatalogmasteritem_displayname",
@@ -794,23 +807,22 @@ def generate_observations_data(
         "_index",
         "_score",
     ],
-):
-    """
-    Generate dummy data for the 'observations' index.
+) -> pd.DataFrame:
+    """Generates dummy data for the 'observations' index.
 
-    Parameters:
-    - num_rows (int): Number of rows to generate.
-    - entered_list (list): List of entered values.
-    - global_start_year (int): Start year for the global date range.
-    - global_start_month (int): Start month for the global date range.
-    - global_end_year (int): End year for the global date range.
-    - global_end_month (int): End month for the global date range.
-    - search_term (str): Search term to be used in the generated data.
-    - use_GPT (bool): Whether to use GPT for generating text data.
-    - fields_list (list): List of fields to include in the DataFrame.
+    Args:
+        num_rows: Number of rows to generate for each client.
+        entered_list: List of client IDs to generate data for.
+        global_start_year: Start year for the random date range.
+        global_start_month: Start month for the random date range.
+        global_end_year: End year for the random date range.
+        global_end_month: End month for the random date range.
+        search_term: The search term to use for the display name.
+        use_GPT: If True, uses a text generation model for the document body.
+        fields_list: List of columns to include in the DataFrame.
 
     Returns:
-    - pd.DataFrame: Generated DataFrame with specified columns.
+        A pandas DataFrame with generated dummy observation data.
     """
 
     df_holder_list = []
@@ -854,13 +866,13 @@ def generate_observations_data(
 
 
 def generate_basic_observations_data(
-    num_rows,
-    entered_list,
-    global_start_year,
-    global_start_month,
-    global_end_year,
-    global_end_month,
-    fields_list=[
+    num_rows: int,
+    entered_list: List[str],
+    global_start_year: int,
+    global_start_month: int,
+    global_end_year: int,
+    global_end_month: int,
+    fields_list: List[str] = [
         "client_idcode",
         "basicobs_itemname_analysed",
         "basicobs_value_numeric",
@@ -877,21 +889,20 @@ def generate_basic_observations_data(
         "clientvisit_visitidcode",
         "updatetime",
     ],
-):
-    """
-    Generate dummy data for the 'basic_observations' index.
+) -> pd.DataFrame:
+    """Generates dummy data for the 'basic_observations' index.
 
-    Parameters:
-    - num_rows (int): Number of rows to generate.
-    - entered_list (list): List of entered values.
-    - global_start_year (int): Start year for the global date range.
-    - global_start_month (int): Start month for the global date range.
-    - global_end_year (int): End year for the global date range.
-    - global_end_month (int): End month for the global date range.
-    - fields_list (list): List of fields to include in the DataFrame.
+    Args:
+        num_rows: Number of rows to generate for each client.
+        entered_list: List of client IDs to generate data for.
+        global_start_year: Start year for the random date range.
+        global_start_month: Start month for the random date range.
+        global_end_year: End year for the random date range.
+        global_end_month: End month for the random date range.
+        fields_list: List of columns to include in the DataFrame.
 
     Returns:
-    - pd.DataFrame: Generated DataFrame with specified columns.
+        A pandas DataFrame with generated dummy basic observation data.
     """
     # print("generate_basic_observations_data")
     random.seed(random_state)
@@ -956,13 +967,13 @@ def generate_basic_observations_data(
 
 
 def generate_basic_observations_textual_obs_data(
-    num_rows,
-    entered_list,
-    global_start_year,
-    global_start_month,
-    global_end_year,
-    global_end_month,
-    fields_list=[
+    num_rows: int,
+    entered_list: List[str],
+    global_start_year: int,
+    global_start_month: int,
+    global_end_year: int,
+    global_end_month: int,
+    fields_list: List[str] = [
         "client_idcode",
         "basicobs_itemname_analysed",
         "basicobs_value_numeric",
@@ -976,23 +987,23 @@ def generate_basic_observations_textual_obs_data(
         "updatetime",
         "textualObs",
     ],
-):
+) -> pd.DataFrame:
 
     # print("generate_basic_observations_textual_obs_data")
     """
-    Generate dummy data for the 'basic_observations' index with textual observations.
+    Generates dummy textual data for the 'basic_observations' index.
 
-    Parameters:
-    - num_rows (int): Number of rows to generate.
-    - entered_list (list): List of entered values.
-    - global_start_year (int): Start year for the global date range.
-    - global_start_month (int): Start month for the global date range.
-    - global_end_year (int): End year for the global date range.
-    - global_end_month (int): End month for the global date range.
-    - fields_list (list): List of fields to include in the DataFrame.
+    Args:
+        num_rows: Number of rows to generate for each client.
+        entered_list: List of client IDs to generate data for.
+        global_start_year: Start year for the random date range.
+        global_start_month: Start month for the random date range.
+        global_end_year: End year for the random date range.
+        global_end_month: End month for the random date range.
+        fields_list: List of columns to include in the DataFrame.
 
     Returns:
-    - pd.DataFrame: Generated DataFrame with specified columns.
+        A pandas DataFrame with generated dummy textual observation data.
     """
     df_holder_list = []
 
@@ -1049,18 +1060,20 @@ def generate_basic_observations_textual_obs_data(
     return df
 
 
-def extract_date_range(string):
-    """
-    Extract date range from a string.
+def extract_date_range(date_string: str) -> Optional[Tuple[int, int, int, int, int, int]]:
+    """Extracts a date range from a string.
 
-    Parameters:
-    - string (str): String of the format "YYYY-MM-DD TO YYYY-MM-DD".
+    The expected format is "YYYY-MM-DD TO YYYY-MM-DD".
+
+    Args:
+        date_string: The string containing the date range.
 
     Returns:
-    - tuple: A tuple of six integers, representing the start year, start month, start day, end year, end month, and end day.
+        A tuple of six integers (start_year, start_month, start_day,
+        end_year, end_month, end_day), or None if the pattern is not found.
     """
-    pattern = r"(\d+)-(\d+)-(\d+) TO (\d+)-(\d+)-(\d+)"
-    match = re.search(pattern, string)
+    pattern = r"(\d{4})-(\d{2})-(\d{2}) TO (\d{4})-(\d{2})-(\d{2})"
+    match = re.search(pattern, date_string)
     if match:
         global_start_year = int(match.group(1))
         global_start_month = int(match.group(2))
@@ -1081,21 +1094,28 @@ def extract_date_range(string):
 
 
 def cohort_searcher_with_terms_and_search_dummy(
-    index_name, fields_list, term_name, entered_list, search_string
-):
-    """
-    Generate dummy data based on the provided index and search parameters. This function is a dummy for a real cogStack deployment.
+    index_name: str,
+    fields_list: List[str],
+    term_name: str,
+    entered_list: List[str],
+    search_string: str,
+) -> pd.DataFrame:
+    """Generates dummy data based on simulated Elasticsearch query parameters.
 
-    Parameters:
-    - index_name (str): Name of the index.
-    - fields_list (list): List of fields for the DataFrame columns.
-    - term_name (str): Term name for search.
-    - entered_list (list): List of entered values.
-    - search_string (str): Search string for additional filtering.
-    - verbose (bool): Verbosity flag to enable/disable print statements.
+    This function acts as a stand-in for a real CogStack/Elasticsearch query,
+    routing requests to different dummy data generator functions based on the
+    `index_name` and `search_string`.
+
+    Args:
+        index_name: The name of the target index (e.g., 'epr_documents').
+        fields_list: A list of fields to be returned in the DataFrame.
+        term_name: The field name for the term-level query (e.g., 'client_idcode').
+        entered_list: The list of values for the term-level query.
+        search_string: A string simulating a query string search, used for
+            routing to the correct data generator.
 
     Returns:
-    - pd.DataFrame: Generated DataFrame based on the specified conditions.
+        A pandas DataFrame containing the generated dummy data.
     """
 
     # set here for drop in replacement of function
@@ -1110,7 +1130,7 @@ def cohort_searcher_with_terms_and_search_dummy(
         global_end_year,
         global_end_month,
         global_end_day,
-    ) = extract_date_range(search_string)
+    ) = extract_date_range(search_string)  # type: ignore
 
     if verbose:
         print("cohort_searcher_with_terms_and_search_dummy:", search_string)
@@ -1294,21 +1314,19 @@ def cohort_searcher_with_terms_and_search_dummy(
 # display(epr_documents_personal_df)
 
 
-def generate_patient_timeline(client_idcode):
+def generate_patient_timeline(client_idcode: str) -> str:
 
     # Set the logging level to suppress INFO messages
-    """
-    Generates a random patient timeline with a specified number of entries.
+    """Generates a random patient timeline using a GPT-2 model.
 
-    Parameters:
-        client_idcode (str): The client ID code for the patient.
+    Creates a short, semi-realistic clinical note timeline for a patient,
+    including demographic information and a series of timestamped entries.
+
+    Args:
+        client_idcode: The client ID for the patient.
 
     Returns:
-        str: A string containing the patient demographics and clinical note timeline.
-
-    Notes:
-        The timestamps are randomly generated between 1995 and the current time.
-        The entry text is generated using the GPT-2 model.
+        A string containing the patient's dummy timeline.
     """
     logging.getLogger("transformers").setLevel(logging.WARNING)
     generator = pipeline("text-generation", model="gpt2")
@@ -1358,15 +1376,18 @@ def generate_patient_timeline(client_idcode):
     return patient_timeline
 
 
-def generate_patient_timeline_faker(client_idcode):
-    """
-    Generates a fake patient timeline with a random number of clinical note summaries.
+def generate_patient_timeline_faker(client_idcode: str) -> str:
+    """Generates a fake patient timeline using the Faker library.
+
+    Creates a short, semi-realistic clinical note timeline for a patient,
+    including demographic information and a series of timestamped entries
+    with fake sentences.
 
     Args:
-        client_idcode (str): The client ID code of the patient.
+        client_idcode: The client ID for the patient.
 
     Returns:
-        str: A fake patient timeline with a random number of clinical note summaries.
+        A string containing the patient's dummy timeline.
     """
     probabilities = [0.7, 0.1, 0.05, 0.05, 0.05]  # Adjust as needed
 
@@ -1411,21 +1432,20 @@ def generate_patient_timeline_faker(client_idcode):
     return patient_timeline
 
 
-def extract_search_term_obscatalogmasteritem_displayname(search_string):
+def extract_search_term_obscatalogmasteritem_displayname(search_string: str) -> str:
     # Using regular expression to find the part after 'obscatalogmasteritem_displayname:'
-    """
-    Extracts and returns the search term from a given search string that contains
-    'obscatalogmasteritem_displayname' field. The function uses a regular expression
-    to find the term enclosed in parentheses after 'obscatalogmasteritem_displayname:'.
-    It removes any quotes and ignores any part of the term that comes after 'AND' or 'OR'.
+    """Extracts a search term from an 'obscatalogmasteritem_displayname' query.
 
-    Parameters:
-        search_string (str): The input string containing the search term to be extracted.
+    This function uses a regular expression to find a term enclosed in
+    parentheses following 'obscatalogmasteritem_displayname:'. It cleans the
+    term by removing quotes and stripping any trailing 'AND' or 'OR' clauses.
+
+    Args:
+        search_string: The input query string.
 
     Returns:
-        str: The extracted search term if present, otherwise returns the original search string.
+        The extracted search term, or the original string if no match is found.
     """
-
     match = re.search(r"obscatalogmasteritem_displayname:\((.*?)\)", search_string)
     if match:
         # Get the matched group and remove punctuation
@@ -1438,27 +1458,21 @@ def extract_search_term_obscatalogmasteritem_displayname(search_string):
 
 
 def run_generate_patient_timeline_and_append(
-    n=10, output_path=os.path.join("test_files", "dummy_timeline.csv")
-):
+    n: int = 10, output_path: str = os.path.join("test_files", "dummy_timeline.csv")
+) -> None:
     # This function is used to generate a dummy patient timeline text for each client_idcode and
     # append it to an existing CSV file or create a new one if it doesn't exist
     # Check for null pointer references and unhandled exceptions
 
-    """
-    Generates and appends dummy patient timeline texts to a CSV file.
+    """Generates and appends dummy patient timelines to a CSV file.
 
-    This function generates a specified number of dummy patient timelines, each associated
-    with a unique client ID code, and appends them to a CSV file. If the CSV file does not
-    already exist, it creates a new one. Each timeline consists of randomly generated demographic
-    and clinical note data.
+    This function creates `n` dummy patient timelines and appends them to a
+    specified CSV file. If the file doesn't exist, it will be created.
 
-    Parameters:
-        n (int): The number of patient timelines to generate. Defaults to 10.
-        output_path (str): The file path to the CSV file where the timelines are stored.
-                           Defaults to "test_files/dummy_timeline.csv".
-
-    Returns:
-        None
+    Args:
+        n: The number of patient timelines to generate. Defaults to 10.
+        output_path: The path to the output CSV file. Defaults to
+            "test_files/dummy_timeline.csv".
 
     Raises:
         FileNotFoundError: If the output_path does not exist and cannot be created.
@@ -1517,11 +1531,16 @@ def get_patient_timeline_dummy(
     client_idcode: str,
     output_path: str = os.path.join("test_files", "dummy_timeline.csv"),
 ) -> Optional[str]:
-    """
-    Get a random patient timeline text from a pre-existing CSV file
-    :param client_idcode: The client_idcode to search for
-    :param output_path: The path to the CSV file containing the patient timeline texts
-    :return: The corresponding patient timeline text or None if not found
+    """Retrieves a random patient timeline from a pre-generated CSV file.
+
+    Args:
+        client_idcode: The client ID to search for (currently unused, as a
+            random row is always selected).
+        output_path: The path to the CSV file containing dummy timelines.
+
+    Returns:
+        The text of a random patient timeline, or None if the file is not found
+        or is invalid.
     """
     try:
         df: pd.DataFrame = pd.read_csv(output_path)
@@ -1560,8 +1579,16 @@ def get_patient_timeline_dummy(
         return None
 
 
-def generate_uuid(prefix, length=7):
-    """Generate a UUID-like string."""
+def generate_uuid(prefix: str, length: int = 7) -> str:
+    """Generates a UUID-like string with a given prefix.
+
+    Args:
+        prefix: The prefix for the UUID, must be 'P' or 'V'.
+        length: The length of the random part of the string. Defaults to 7.
+
+    Returns:
+        The generated UUID-like string.
+    """
     if prefix not in ("P", "V"):
         raise ValueError("Prefix must be 'P' or 'V'")
 
@@ -1572,20 +1599,29 @@ def generate_uuid(prefix, length=7):
     return f"{prefix}{random_chars}"
 
 
-def generate_uuid_list(n, prefix, length=7):
-    """Generate a list of n UUID-like strings."""
+def generate_uuid_list(n: int, prefix: str, length: int = 7) -> List[str]:
+    """Generates a list of n UUID-like strings.
+
+    Args:
+        n: The number of UUIDs to generate.
+        prefix: The prefix for each UUID.
+        length: The length of the random part of each UUID.
+
+    Returns:
+        A list of generated UUID-like strings.
+    """
     uuid_list = [generate_uuid(prefix, length) for _ in range(n)]
     return uuid_list
 
 
 def generate_hospital_site_data(
-    num_rows,
-    entered_list,
-    global_start_year,
-    global_start_month,
-    global_end_year,
-    global_end_month,
-    fields_list=[
+    num_rows: int,
+    entered_list: List[str],
+    global_start_year: int,
+    global_start_month: int,
+    global_end_year: int,
+    global_end_month: int,
+    fields_list: List[str] = [
         "observation_guid",
         "client_idcode",
         "obscatalogmasteritem_displayname",
@@ -1593,21 +1629,20 @@ def generate_hospital_site_data(
         "observationdocument_recordeddtm",
         "clientvisit_visitidcode",
     ],
-):
-    """
-    Generate dummy data for hospital site observations.
+) -> pd.DataFrame:
+    """Generates dummy data for hospital site observations.
 
-    Parameters:
-    - num_rows (int): Number of rows to generate for each client.
-    - entered_list (list): List of client_idcode values.
-    - global_start_year (int): Start year for the global date range.
-    - global_start_month (int): Start month for the global date range.
-    - global_end_year (int): End year for the global date range.
-    - global_end_month (int): End month for the global date range.
-    - fields_list (list): The list of columns for the output DataFrame.
+    Args:
+        num_rows: Number of rows to generate for each client.
+        entered_list: List of client IDs to generate data for.
+        global_start_year: Start year for the random date range.
+        global_start_month: Start month for the random date range.
+        global_end_year: End year for the random date range.
+        global_end_month: End month for the random date range.
+        fields_list: List of columns to include in the DataFrame.
 
     Returns:
-    - pd.DataFrame: Generated DataFrame with specified columns.
+        A pandas DataFrame with generated dummy hospital site data.
     """
     df_holder_list = []
 
@@ -1662,28 +1697,27 @@ def generate_hospital_site_data(
     return final_df
 
 def generate_bmi_data(
-    num_rows,
-    entered_list,
-    global_start_year,
-    global_start_month,
-    global_end_year,
-    global_end_month,
-    fields_list=BMI_FIELDS,
-):
-    """
-    Generate dummy data for BMI, Weight, and Height observations.
+    num_rows: int,
+    entered_list: List[str],
+    global_start_year: int,
+    global_start_month: int,
+    global_end_year: int,
+    global_end_month: int,
+    fields_list: List[str] = BMI_FIELDS,
+) -> pd.DataFrame:
+    """Generates dummy data for BMI, Weight, and Height observations.
 
-    Parameters:
-    - num_rows (int): Number of observation rows to generate for each client.
-    - entered_list (list): List of client_idcode values.
-    - global_start_year (int): Start year for the global date range.
-    - global_start_month (int): Start month for the global date range.
-    - global_end_year (int): End year for the global date range.
-    - global_end_month (int): End month for the global date range.
-    - fields_list (list): The list of columns for the output DataFrame.
+    Args:
+        num_rows: Number of rows to generate for each client.
+        entered_list: List of client IDs to generate data for.
+        global_start_year: Start year for the random date range.
+        global_start_month: Start month for the random date range.
+        global_end_year: End year for the random date range.
+        global_end_month: End month for the random date range.
+        fields_list: List of columns to include in the DataFrame.
 
     Returns:
-    - pd.DataFrame: Generated DataFrame with BMI-related observation data.
+        A pandas DataFrame with generated dummy BMI-related data.
     """
     df_holder_list = []
     observation_types = ["OBS BMI", "OBS Weight", "OBS Height"]
@@ -1727,28 +1761,27 @@ def generate_bmi_data(
 
 
 def generate_core_o2_data(
-    num_rows,
-    entered_list,
-    global_start_year,
-    global_start_month,
-    global_end_year,
-    global_end_month,
-    fields_list=CORE_O2_FIELDS,
-):
-    """
-    Generate dummy data for CORE_SpO2 (oxygen saturation) observations.
+    num_rows: int,
+    entered_list: List[str],
+    global_start_year: int,
+    global_start_month: int,
+    global_end_year: int,
+    global_end_month: int,
+    fields_list: List[str] = CORE_O2_FIELDS,
+) -> pd.DataFrame:
+    """Generates dummy data for CORE_SpO2 (oxygen saturation) observations.
 
-    Parameters:
-    - num_rows (int): Number of observation rows to generate for each client.
-    - entered_list (list): List of client_idcode values.
-    - global_start_year (int): Start year for the global date range.
-    - global_start_month (int): Start month for the global date range.
-    - global_end_year (int): End year for the global date range.
-    - global_end_month (int): End month for the global date range.
-    - fields_list (list): The list of columns for the output DataFrame.
+    Args:
+        num_rows: Number of rows to generate for each client.
+        entered_list: List of client IDs to generate data for.
+        global_start_year: Start year for the random date range.
+        global_start_month: Start month for the random date range.
+        global_end_year: End year for the random date range.
+        global_end_month: End month for the random date range.
+        fields_list: List of columns to include in the DataFrame.
 
     Returns:
-    - pd.DataFrame: Generated DataFrame with CORE_SpO2 observation data.
+        A pandas DataFrame with generated dummy SpO2 data.
     """
     df_holder_list = []
 
@@ -1778,28 +1811,27 @@ def generate_core_o2_data(
     return final_df[fields_list]
 
 def generate_core_resus_data(
-    num_rows,
-    entered_list,
-    global_start_year,
-    global_start_month,
-    global_end_year,
-    global_end_month,
-    fields_list=CORE_RESUS_FIELDS,
-):
-    """
-    Generate dummy data for CORE_RESUS_STATUS observations.
+    num_rows: int,
+    entered_list: List[str],
+    global_start_year: int,
+    global_start_month: int,
+    global_end_year: int,
+    global_end_month: int,
+    fields_list: List[str] = CORE_RESUS_FIELDS,
+) -> pd.DataFrame:
+    """Generates dummy data for CORE_RESUS_STATUS observations.
 
-    Parameters:
-    - num_rows (int): Number of observation rows to generate for each client.
-    - entered_list (list): List of client_idcode values.
-    - global_start_year (int): Start year for the global date range.
-    - global_start_month (int): Start month for the global date range.
-    - global_end_year (int): End year for the global date range.
-    - global_end_month (int): End month for the global date range.
-    - fields_list (list): The list of columns for the output DataFrame.
+    Args:
+        num_rows: Number of rows to generate for each client.
+        entered_list: List of client IDs to generate data for.
+        global_start_year: Start year for the random date range.
+        global_start_month: Start month for the random date range.
+        global_end_year: End year for the random date range.
+        global_end_month: End month for the random date range.
+        fields_list: List of columns to include in the DataFrame.
 
     Returns:
-    - pd.DataFrame: Generated DataFrame with CORE_RESUS_STATUS observation data.
+        A pandas DataFrame with generated dummy resuscitation status data.
     """
     df_holder_list = []
 

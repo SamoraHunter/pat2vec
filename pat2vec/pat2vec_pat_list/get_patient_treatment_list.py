@@ -1,29 +1,36 @@
 import pickle
 import random
 import re
-from typing import List
-import re
+from typing import Any, Dict, List
+
 import numpy as np
-from sklearn.feature_extraction.text import CountVectorizer
-from sklearn.cluster import KMeans
 from collections import Counter
 import pandas as pd
+from sklearn.cluster import KMeans
+from sklearn.feature_extraction.text import CountVectorizer
+
 from pat2vec.util.testing_helpers import read_test_data
 
 
-def extract_treatment_id_list_from_docs(config_obj):
-    """
-    Retrieves a list of unique client IDs from a treatment document specified in the configuration.
+def extract_treatment_id_list_from_docs(config_obj: Any) -> List[str]:
+    """Retrieves a list of unique client IDs from a treatment document.
 
-    Parameters:
-    - config_obj (object): An object containing configuration parameters.
-        - treatment_doc_filename (str): The filename of the treatment document (CSV or XLSX format).
-        - patient_id_column_name (str): The column name for patient IDs. If 'auto', use regex to find the most likely column.
+    This function reads a CSV or XLSX file specified in the configuration,
+    identifies the column containing patient IDs (either explicitly or via
+    auto-detection), and returns a list of unique IDs. It can also sample
+    the document to a smaller size if configured.
+
+    Args:
+        config_obj: A configuration object containing parameters like
+            `treatment_doc_filename`, `patient_id_column_name`, and
+            `sample_treatment_docs`.
 
     Returns:
-    - list: A list of unique client IDs from the treatment document.
-    """
+        A list of unique client IDs from the treatment document.
 
+    Raises:
+        ValueError: If the file format is not CSV or XLSX.
+    """
     random.seed(config_obj.random_seed_val)
     np.random.seed(config_obj.random_seed_val)
 
@@ -106,18 +113,26 @@ def generate_control_list(
     control_list_path: str = "control_list.pkl",
     all_epr_patient_list_path: str = "none",
     verbosity: int = 0,
-) -> None:
-    """
-    Generate a list of control patients for a given list of treatment patients.
+) -> List[str]:
+    """Generates and saves a list of control patients.
+
+    This function creates a control group by taking a master list of all
+    patient IDs, removing the IDs from the provided treatment list, and then
+    randomly sampling from the remaining pool. The size of the control group
+    is determined by the size of the treatment group and the specified ratio.
+    The resulting list of control IDs is saved to a pickle file.
 
     Args:
-        treatment_client_id_list (List[str]): A list of client IDs for the treatment group.
-        treatment_control_ratio_n (int): The ratio of control patients to treatment patients.
-        control_list_path (str): The path to save the control list.
-        verbosity (int, optional): The level of verbosity. Defaults to 0.
+        treatment_client_id_list: A list of client IDs for the treatment group.
+        treatment_control_ratio_n: The desired ratio of control patients to
+            treatment patients (e.g., 2 for a 2:1 ratio).
+        control_list_path: The file path to save the generated control list pickle file.
+        all_epr_patient_list_path: The file path to the CSV containing all possible
+            patient IDs.
+        verbosity: The level of verbosity for logging.
 
     Returns:
-        all_patient_list_control
+        A list of client IDs for the generated control group.
     """
     random.seed(42)
 
@@ -149,18 +164,20 @@ def generate_control_list(
     return all_patient_list_control
 
 
-def sanitize_hospital_ids(hospital_ids, config_obj):
-    """
-    Sanitizes a list of hospital IDs by converting them to uppercase and checking their format.
+def sanitize_hospital_ids(hospital_ids: List[str], config_obj: Any) -> List[str]:
+    """Sanitizes a list of hospital IDs by converting them to uppercase.
 
-    Parameters:
-    - hospital_ids (List[str]): A list of hospital IDs to be sanitized.
-    - config_obj (object): An object containing configuration parameters.
-        - verbosity (int): The level of verbosity.
-        - sanitize_pat_list (bool): A flag indicating whether to sanitize the list of hospital IDs.
+    This function iterates through a list of hospital IDs, converts each to
+    uppercase, and provides warnings if the IDs do not conform to the expected
+    format (e.g., one letter followed by six digits).
+
+    Args:
+        hospital_ids: A list of hospital IDs to be sanitized.
+        config_obj: A configuration object containing the `verbosity` and
+            `sanitize_pat_list` flags.
 
     Returns:
-    - List[str]: The sanitized list of hospital IDs.
+        The sanitized list of hospital IDs.
     """
     valid_format = re.compile(
         r"^[A-Z]\d{6}$"
@@ -223,15 +240,29 @@ def sanitize_hospital_ids(hospital_ids, config_obj):
         return hospital_ids
 
 
-def get_all_patients_list(config_obj):
-    """
-    Extracts a list of all patient IDs from the given configuration object.
+def get_all_patients_list(config_obj: Any) -> List[str]:
+    """Extracts and prepares the final list of all patient IDs for the pipeline.
+
+    This function serves as the main entry point for generating the patient cohort.
+    It orchestrates several steps:
+    1.  Extracts the initial list of patient IDs, either from a treatment document,
+        an individual patient window (IPW) DataFrame, or a test data file.
+    2.  If `use_controls` is enabled in the config, it generates a corresponding
+        list of control patient IDs and appends them to the main list.
+    3.  Sanitizes the final list of IDs (e.g., converts to uppercase).
+    4.  Optionally samples the final list down to a smaller size if
+        `sample_treatment_docs` is configured.
 
     Args:
-        config_obj: A configuration object containing the necessary parameters.
+        config_obj: The main configuration object containing all necessary
+            parameters.
 
     Returns:
-        A list of all patient IDs.
+        A list of all patient IDs to be processed by the pipeline.
+
+    Raises:
+        ValueError: If required configuration parameters are missing (e.g.,
+            `test_data_path` in testing mode).
     """
     if config_obj.individual_patient_window:
         if config_obj.verbosity > 0:
@@ -318,16 +349,22 @@ def get_all_patients_list(config_obj):
     return all_patient_list
 
 
-def analyze_client_codes(client_idcode_list, min_val=3):
-    """
-    Analyze and cluster client ID codes based on their structure.
+def analyze_client_codes(
+    client_idcode_list: List[str], min_val: int = 3
+) -> Dict[str, Any]:
+    """Analyzes and clusters client ID codes based on their structure.
 
-    Parameters:
-    - client_idcode_list (list): List of client ID codes.
+    This function separates a list of client IDs into valid and invalid groups
+    based on a regex pattern (e.g., 'A123456'). It then uses KMeans clustering
+    on the valid codes to identify potential subgroups based on their prefix and
+    the sum of their digits.
+
+    Args:
+        client_idcode_list: A list of client ID codes to analyze.
+        min_val: The minimum number of clusters to create. Defaults to 3.
 
     Returns:
-    - dict: A dictionary with keys 'valid_codes', 'invalid_codes', and 'clusters', each containing the corresponding data.
-    - Prints warnings and sample invalid codes if the number of invalid codes is significant.
+        A dictionary containing 'valid_codes', 'invalid_codes', and 'clusters'.
     """
     # Step 1: Separate valid and invalid codes based on the expected pattern
     expected_pattern = r"^[A-Z]\d{6}$"

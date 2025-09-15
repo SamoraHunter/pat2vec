@@ -1,6 +1,6 @@
 import os
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
 import pandas as pd
 from IPython.display import display
@@ -15,7 +15,7 @@ def _get_source_record(
     time_column: str,
     necessary_columns: List[str],
     annot_filter_arguments: Optional[Dict[str, Any]],
-    filter_codes: Optional[List[int]],
+    filter_codes: Optional[List[Any]],
     mode: str,
     verbose: int,
 ) -> pd.DataFrame:
@@ -27,18 +27,18 @@ def _get_source_record(
     various filters.
 
     Args:
-        pat_id (str): The patient identifier.
-        base_path (str): The base directory path where the patient's CSV file is located.
-        time_column (str): The name of the column containing the timestamp.
-        necessary_columns (List[str]): A list of columns that must have non-NaN values.
-        annot_filter_arguments (Optional[Dict[str, Any]]): A dictionary of filters to apply
+        pat_id: The patient identifier.
+        base_path: The base directory path where the patient's CSV file is located.
+        time_column: The name of the column containing the timestamp.
+        necessary_columns: A list of columns that must have non-NaN values.
+        annot_filter_arguments: A dictionary of filters to apply
             to the annotations.
-        filter_codes (Optional[List[int]]): A list of CUI codes to filter for.
-        mode (str): The mode for `filter_and_select_rows` ('earliest' or 'latest').
-        verbose (int): The verbosity level for logging.
+        filter_codes: A list of CUI codes to filter for.
+        mode: The mode for `filter_and_select_rows` ('earliest' or 'latest').
+        verbose: The verbosity level for logging.
 
     Returns:
-        pd.DataFrame: A DataFrame containing the filtered records from the source.
+        A DataFrame containing the filtered records from the source.
             Returns an empty DataFrame if the file is not found, is empty, or if
             no rows remain after filtering.
     """
@@ -134,10 +134,9 @@ def _get_source_record(
 
 def get_pat_ipw_record(
     current_pat_idcode: str,
-    config_obj: Optional[object] = None,
-    annot_filter_arguments: Optional[Dict[str,
-                                          Union[int, str, List[str]]]] = None,
-    filter_codes: Optional[List[int]] = None,
+    config_obj: Optional[Any] = None,
+    annot_filter_arguments: Optional[Dict[str, Any]] = None,
+    filter_codes: Optional[List[Any]] = None,
     mode: str = "earliest",
     verbose: int = 0,
     include_mct: bool = True,
@@ -154,20 +153,20 @@ def get_pat_ipw_record(
     date settings in the configuration.
 
     Args:
-        current_pat_idcode (str): The unique identifier for the patient.
-        config_obj (Optional[object], optional): The configuration object containing
+        current_pat_idcode: The unique identifier for the patient.
+        config_obj: The configuration object containing
             paths and settings. Defaults to None.
-        annot_filter_arguments (Optional[Dict[str, Union[int, str, List[str]]]]):
+        annot_filter_arguments:
             A dictionary of filters to apply to annotations before selecting the
             IPW record. Defaults to None.
-        filter_codes (Optional[List[int]]): A list of CUI codes to identify the
+        filter_codes: A list of CUI codes to identify the
             relevant clinical events. Defaults to None.
-        mode (str, optional): Determines whether to find the 'earliest' or 'latest'
+        mode: Determines whether to find the 'earliest' or 'latest'
             record for the patient. Defaults to "earliest".
-        verbose (int, optional): Verbosity level for logging. Defaults to 0.
-        include_mct (bool, optional): If True, includes annotations from MCT
+        verbose: Verbosity level for logging. Defaults to 0.
+        include_mct: If True, includes annotations from MCT
             (MRC clinical notes) in the search. Defaults to True.
-        include_textual_obs (bool, optional): If True, includes annotations from
+        include_textual_obs: If True, includes annotations from
             textual observations. Defaults to True.
 
     Returns:

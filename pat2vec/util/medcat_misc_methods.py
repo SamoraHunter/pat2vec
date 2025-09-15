@@ -3,10 +3,9 @@ import pandas as pd
 import numpy as np
 from tqdm import tqdm
 from typing import Optional
-import os
 import textwrap
 from IPython.display import clear_output
-from typing import List, Union
+from typing import Any, Dict, List, Union
 from ast import literal_eval
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -14,13 +13,14 @@ import seaborn as sns
 
 def medcat_trainer_export_to_df(file_path: str) -> pd.DataFrame:
     """
-    Convert MedCATTrainer export JSON file to a pandas DataFrame.
+    Converts a MedCATTrainer export JSON file to a pandas DataFrame.
 
-    Parameters:
-    - file_path (str): Path to the JSON file containing MedCATTrainer export data.
+    Args:
+        file_path: Path to the JSON file containing MedCATTrainer export data.
 
     Returns:
-    - df (pd.DataFrame): DataFrame containing the extracted data.
+        A DataFrame containing the extracted data, with each row representing
+        a single annotation.
     """
     # Load the JSON data
     with open(file_path, "r") as f:
@@ -112,16 +112,22 @@ def extract_labels_from_medcat_annotation_export(
     output_file: Union[str, None] = None,
 ) -> pd.DataFrame:
     """
-    Extract labels from MedCAT annotation export.
+    Extracts and validates labels from a MedCAT annotation export.
 
-    Parameters:
-    - df (pd.DataFrame): The trainer output in DataFrame form Hint. medcat_trainer_export_to_df.
-    - human_labels (pd.DataFrame): The DataFrame containing human labels.
-    - window (int): The window size for extracting text samples. Default is 300.
-    - output_file (str, optional): The file path to write the processed DataFrame. If not provided, the output will not be saved to a file.
+    This function compares annotations from a MedCAT trainer export (`df`)
+    with a set of human-labeled data (`human_labels`). It matches them based
+    on the text content and source value, then validates the annotation based
+    on its meta-annotations (Subject, Presence, Time). The result is stored
+    in an 'extracted_label' column in the `human_labels` DataFrame.
+
+    Args:
+        df: The trainer output in DataFrame form (from `medcat_trainer_export_to_df`).
+        human_labels: The DataFrame containing human-labeled text samples.
+        window: The window size for extracting text samples for comparison.
+        output_file: An optional file path to save the processed DataFrame.
 
     Returns:
-    - pd.DataFrame: The processed human_labels DataFrame.
+        The processed `human_labels` DataFrame with the 'extracted_label' column.
     """
 
     human_labels["extracted_label"] = np.nan
@@ -162,20 +168,18 @@ def extract_labels_from_medcat_annotation_export(
 
 def recreate_json(df: pd.DataFrame, output_file: Optional[str] = None) -> str:
     """
-    Convert exported MedCAT trainer output DataFrame to JSON format suitable for training a MedCAT model.
+    Converts an exported MedCAT trainer DataFrame back to a training JSON.
+
+    This function takes a DataFrame (as produced by `medcat_trainer_export_to_df`)
+    and reconstructs the original JSON structure required for training a
+    MedCAT model.
 
     Args:
-        df (pd.DataFrame): DataFrame containing exported data from MedCAT trainer.
-        output_file (Optional[str]): Optional. File path to save the generated JSON. If not provided, JSON is not saved.
+        df: DataFrame containing exported data from a MedCAT trainer project.
+        output_file: Optional file path to save the generated JSON.
 
     Returns:
-        str: JSON string representing the MedCAT training data.
-
-    Example:
-        # Assuming df contains the exported data
-        output_filename = 'recreated_annotations.json'
-        recreated_json = recreate_json(df, output_file=output_filename)
-        print(recreated_json)
+        A JSON string representing the MedCAT training data.
     """
     projects = []
 
@@ -264,18 +268,22 @@ def manually_label_annotation_df(
     filter_codes_list: List[List[str]] = [],
 ) -> None:
     """
-    Loop over an annotation DataFrame and display annotations for unique client idcodes until they have a confirmed by user correct annotation.
-    The human labeling is stored in the file_path supplied.
+    Interactively labels an annotation DataFrame.
+
+    This function loops over an annotation DataFrame, displays annotations for
+    unique client ID codes, and prompts the user for a label (1 for correct,
+    0 for incorrect). The process continues until all annotations for a
+    client (matching `filter_codes_list`) are confirmed. The labels are
+    saved to a CSV file.
 
     Args:
-        df (pd.DataFrame): The DataFrame to annotate.
-        file_path (str, optional): The file path to store human labels. Defaults to 'human_labels.csv'.
-        confirmatory (bool, optional): Whether to perform confirmatory annotations. Defaults to False.
-        verbose (bool, optional): Whether to print verbose output. Defaults to False.
-        filter_codes_list (List[List[str]], optional): A list of lists of filter codes. Defaults to [].
-
-    Returns:
-        None
+        df: The DataFrame to annotate.
+        file_path: The file path to store the human labels.
+        confirmatory: If True, skips clients who already have a confirmed
+            correct annotation for the given filter codes.
+        verbose: If True, prints verbose output.
+        filter_codes_list: A list of CUI code lists. A client is considered
+            "done" when they have a correct annotation for each list of codes.
     """
     counter = 0
     if os.path.exists(file_path):
@@ -378,36 +386,25 @@ def manually_label_annotation_df(
     print("saved df!")
     counter += 1
 
+def parse_medcat_trainer_project_json(json_path: str) -> pd.DataFrame:
+    """Parses a MedCAT trainer project JSON into a structured DataFrame.
 
-# Example usage:
-# Assuming df is your DataFrame with the columns 'text_sample', 'source_value', and 'client_idcode'
-# And filter_codes_list is a list of lists of filter codes
-# annotate_dataframe(output_csv_file_sorted, confirmatory=True, verbose=True, filter_codes_list=[hfe_filter_codes_float, phleb_filter_codes_float])
-
-
-def parse_medcat_trainer_project_json(json_path):
-    # Load and normalize JSON
-    """
-    Parses a MedCAT trainer project JSON file and converts it into a structured DataFrame.
-
-    This function reads a JSON file containing MedCAT trainer project data, which may be
-    a string or a list of JSON strings. It normalizes and processes the data to extract
-    and structure relevant project and document information, including annotations and
-    their metadata, into a pandas DataFrame.
+    This function reads a JSON file exported from a MedCAT trainer project.
+    It handles various formats (nested JSON, list of JSON strings) and
+    normalizes the data into a flat DataFrame where each row represents a
+    single annotation with its associated document and project metadata.
 
     Args:
-        json_path (str): Path to the JSON file containing MedCAT trainer project data.
+        json_path: Path to the JSON file from a MedCAT trainer export.
 
     Returns:
-        pd.DataFrame: A DataFrame containing parsed and structured data including project
-        and document details, annotations, and their metadata.
+        A DataFrame containing parsed and structured data, including project
+        and document details, annotations, and their meta-annotations.
 
     Notes:
-        - The function handles nested JSON structures and safely converts JSON strings
-          to dictionaries.
-        - It explodes and processes the 'cuis' and 'documents' columns to ensure detailed
-          annotation data is available in the final DataFrame.
-        - Annotation metadata is extracted and included in the DataFrame columns.
+        - Handles nested JSON structures and safely converts JSON strings.
+        - Explodes 'cuis' and 'documents' columns to create detailed rows.
+        - Extracts meta-annotation details into separate columns.
     """
 
     with open(json_path, "r", encoding="utf-8") as f:
@@ -572,20 +569,18 @@ def create_ner_results_dataframe(
     return df
 
 
-# Example usage :
-# results_df = create_ner_results_dataframe(fps, fns, tps, cui_prec, cui_rec, cui_f1, cui_counts,)
-# results_df
-
-
-def plot_ner_results(results_df):
+def plot_ner_results(results_df: pd.DataFrame) -> None:
     """
-    Generates several plots to visualize NER evaluation results.
+    Generates plots to visualize NER (Named Entity Recognition) evaluation results.
+
+    This function creates a series of plots to help analyze the performance
+    of an NER model, including F1-scores, precision-recall, error analysis,
+    and the relationship between concept frequency and performance.
 
     Args:
-        results_df (pd.DataFrame): DataFrame containing NER evaluation metrics
-                                    with columns 'cui_name', 'cui_f1', 'cui_prec',
-                                    'cui_rec', 'fps', 'fns', 'tps', and 'cui_counts'.
-                                    It is assumed that 'cui_name' exists.
+        results_df: A DataFrame containing NER evaluation metrics, which must
+            include 'cui_name', 'cui_f1', 'cui_prec', 'cui_rec', 'fps', 'fns',
+            'tps', and 'cui_counts'.
     """
     if "cui_name" not in results_df.columns:
         print("Error: 'cui_name' column is required in the DataFrame.")
@@ -671,7 +666,3 @@ def plot_ner_results(results_df):
     plt.legend(bbox_to_anchor=(1.05, 1), loc="upper left")
     plt.tight_layout()
     plt.show()
-
-
-# Example usage (assuming you have your results_df):
-# plot_ner_results(results_df)

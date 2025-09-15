@@ -2,6 +2,7 @@ import os
 import pandas as pd
 from multiprocessing import Pool, cpu_count
 from functools import partial
+from typing import Any, List, Optional, Tuple
 
 from pat2vec.util.clinical_note_splitter import split_and_append_chunks
 from pat2vec.util.filter_dataframe_by_timestamp import filter_dataframe_by_timestamp
@@ -16,10 +17,20 @@ from pat2vec.util.filter_methods import (
 )
 
 
-def verify_split_data_concatenated(original_df, client_idcode_column, save_folder):
-    """
-    Fast verification by concatenating all CSVs and comparing to the original DataFrame.
-    Only works if client_idcode values are sorted/named in a way that matches the original DataFrame order.
+def verify_split_data_concatenated(
+    original_df: pd.DataFrame, client_idcode_column: str, save_folder: str
+) -> None:
+    """Verifies split data by concatenating and comparing with the original.
+
+    This function provides a fast verification method by reading all the split
+    CSV files, concatenating them, and comparing the result to the original
+    DataFrame. It assumes the files can be sorted in a way that matches the
+    original DataFrame's order.
+
+    Args:
+        original_df: The original DataFrame before splitting.
+        client_idcode_column: The name of the column used for splitting.
+        save_folder: The directory where the split CSV files are saved.
     """
     # Check for missing/extra files
     expected_clients = set(original_df[client_idcode_column].unique())
@@ -51,8 +62,20 @@ def verify_split_data_concatenated(original_df, client_idcode_column, save_folde
     print("Verification successful: All CSVs match the original DataFrame.")
 
 
-def verify_split_data_individual(original_df, client_idcode_column, save_folder):
-    """Thorough verification by checking each CSV individually."""
+def verify_split_data_individual(
+    original_df: pd.DataFrame, client_idcode_column: str, save_folder: str
+) -> None:
+    """Verifies split data by checking each individual CSV file.
+
+    This function performs a more thorough verification by iterating through
+    each expected client ID, reading its corresponding CSV file, and comparing
+    its content to the relevant slice of the original DataFrame.
+
+    Args:
+        original_df: The original DataFrame before splitting.
+        client_idcode_column: The name of the column used for splitting.
+        save_folder: The directory where the split CSV files are saved.
+    """
     # Check for missing/extra files (same as above)
     expected_clients = set(original_df[client_idcode_column].unique())
     saved_files = os.listdir(save_folder)
@@ -82,8 +105,15 @@ def verify_split_data_individual(original_df, client_idcode_column, save_folder)
     print("Verification successful: All CSVs match the original DataFrame.")
 
 
-def save_group(client_idcode_group, save_folder):
-    """Helper function to save a single group to CSV."""
+def save_group(
+    client_idcode_group: Tuple[str, pd.DataFrame], save_folder: str
+) -> None:
+    """Saves a single patient's data group to a CSV file.
+
+    Args:
+        client_idcode_group: A tuple containing the client ID and their data as a DataFrame.
+        save_folder: The directory where the CSV file will be saved.
+    """
     client_idcode, group = client_idcode_group
     file_path = os.path.join(save_folder, f"{client_idcode}.csv")
 
@@ -97,15 +127,22 @@ def save_group(client_idcode_group, save_folder):
     # print(f"Saved {file_path}")  # Optional: Might print out of order in multiprocessing
 
 
-def split_and_save_csv(df, client_idcode_column, save_folder, num_processes=None):
-    """
-    Splits a DataFrame by client_idcode and saves each subset as a CSV file using multiprocessing.
+def split_and_save_csv(
+    df: pd.DataFrame,
+    client_idcode_column: str,
+    save_folder: str,
+    num_processes: Optional[int] = None,
+) -> None:
+    """Splits a DataFrame by a key and saves each subset as a CSV using multiprocessing.
 
-    Parameters:
-    - df: pandas DataFrame containing the data.
-    - client_idcode_column: str, the column name for client_idcode.
-    - save_folder: str, path to the folder where CSVs will be saved.
-    - num_processes: int, number of processes to use (default: all CPUs).
+    This function groups a large DataFrame by the `client_idcode_column` and
+    saves the data for each client into a separate CSV file in the `save_folder`.
+
+    Args:
+        df: The pandas DataFrame to split.
+        client_idcode_column: The name of the column to group by.
+        save_folder: The path to the folder where CSVs will be saved.
+        num_processes: The number of processes to use. Defaults to all available CPUs.
     """
     # Ensure the save folder exists
     if not os.path.exists(save_folder):
@@ -134,25 +171,24 @@ def split_and_save_csv(df, client_idcode_column, save_folder, num_processes=None
 
 
 def get_merged_pat_batch_bloods(
-    client_idcode_list,
-    search_term,
-    config_obj=None,
-    cohort_searcher_with_terms_and_search=None,
-):
-    """
-    Retrieve batch basic observations for a list of patients based on the given parameters, specifically for blood tests.
+    client_idcode_list: List[str],
+    search_term: str,
+    config_obj: Any,
+    cohort_searcher_with_terms_and_search: Any,
+) -> pd.DataFrame:
+    """Retrieves a merged batch of blood test observations for a list of patients.
+
+    This function queries the `basic_observations` index for all patients in
+    `client_idcode_list` in a single search operation.
 
     Args:
-        client_idcode_list (list): A list of client ID codes for the patients.
-        search_term (str): The term used for searching blood test-related observations.
-        config_obj (ConfigObject): An object containing global start and end year/month.
-        cohort_searcher_with_terms_and_search (function): A function for searching a cohort with terms.
+        client_idcode_list: A list of client ID codes.
+        search_term: The term to search for (currently unused in the query).
+        config_obj: The configuration object.
+        cohort_searcher_with_terms_and_search: The search function to use.
 
     Returns:
-        pd.DataFrame: Merged batch of blood test-related observations for all patients.
-
-    Raises:
-        ValueError: If config_obj is None or missing required attributes.
+        A DataFrame containing the merged batch of blood test observations.
     """
 
     if config_obj is None or not all(
@@ -254,23 +290,22 @@ def get_merged_pat_batch_bloods(
 
 
 def get_merged_pat_batch_drugs(
-    client_idcode_list,
-    config_obj=None,
-    cohort_searcher_with_terms_and_search=None,
-):
-    """
-    Retrieve and merge batch drug orders for a list of patients based on the given parameters.
+    client_idcode_list: List[str],
+    config_obj: Any,
+    cohort_searcher_with_terms_and_search: Any,
+) -> pd.DataFrame:
+    """Retrieves a merged batch of drug orders for a list of patients.
+
+    This function queries the `order` index for all patients in
+    `client_idcode_list` in a single search operation, filtering for medication orders.
 
     Args:
-        client_idcode_list (list): A list of client ID codes for the patients.
-        config_obj (ConfigObject): An object containing global start and end year/month.
-        cohort_searcher_with_terms_and_search (function): A function for searching a cohort with terms.
+        client_idcode_list: A list of client ID codes.
+        config_obj: The configuration object.
+        cohort_searcher_with_terms_and_search: The search function to use.
 
     Returns:
-        pd.DataFrame: Merged batch of drug orders for all patients.
-
-    Raises:
-        ValueError: If config_obj is None or missing required attributes.
+        A DataFrame containing the merged batch of drug orders.
     """
 
     if config_obj is None or not all(
@@ -370,23 +405,22 @@ def get_merged_pat_batch_drugs(
 
 
 def get_merged_pat_batch_diagnostics(
-    client_idcode_list,
-    config_obj=None,
-    cohort_searcher_with_terms_and_search=None,
-):
-    """
-    Retrieve and merge batch diagnostic orders for a list of patients based on the given parameters.
+    client_idcode_list: List[str],
+    config_obj: Any,
+    cohort_searcher_with_terms_and_search: Any,
+) -> pd.DataFrame:
+    """Retrieves a merged batch of diagnostic orders for a list of patients.
+
+    This function queries the `order` index for all patients in
+    `client_idcode_list` in a single search operation, filtering for diagnostic orders.
 
     Args:
-        client_idcode_list (list): A list of client ID codes for the patients.
-        config_obj (ConfigObject): An object containing global start and end year/month.
-        cohort_searcher_with_terms_and_search (function): A function for searching a cohort with terms.
+        client_idcode_list: A list of client ID codes.
+        config_obj: The configuration object.
+        cohort_searcher_with_terms_and_search: The search function to use.
 
     Returns:
-        pd.DataFrame: Merged batch of diagnostic orders for all patients.
-
-    Raises:
-        ValueError: If config_obj is None or missing required attributes.
+        A DataFrame containing the merged batch of diagnostic orders.
     """
 
     if config_obj is None or not all(
@@ -492,25 +526,24 @@ def get_merged_pat_batch_diagnostics(
 
 
 def get_merged_pat_batch_mct_docs(
-    client_idcode_list,
-    search_term,
-    config_obj=None,
-    cohort_searcher_with_terms_and_search=None,
-):
-    """
-    Retrieve and merge batch MCT documents for a list of patients based on the given parameters.
+    client_idcode_list: List[str],
+    search_term: str,
+    config_obj: Any,
+    cohort_searcher_with_terms_and_search: Any,
+) -> pd.DataFrame:
+    """Retrieves a merged batch of MCT documents for a list of patients.
+
+    This function queries the `observations` index for all patients in
+    `client_idcode_list`, filtering for 'AoMRC_ClinicalSummary_FT' documents.
 
     Args:
-        client_idcode_list (list): A list of client ID codes for the patients.
-        search_term (str): The term used for searching MCT documents.
-        config_obj (ConfigObject): An object containing global start and end year/month.
-        cohort_searcher_with_terms_and_search (function): A function for searching a cohort with terms.
+        client_idcode_list: A list of client ID codes.
+        search_term: The term to search for (currently unused).
+        config_obj: The configuration object.
+        cohort_searcher_with_terms_and_search: The search function to use.
 
     Returns:
-        pd.DataFrame: Merged batch of MCT documents for all patients.
-
-    Raises:
-        ValueError: If config_obj is None or missing required attributes.
+        A DataFrame containing the merged batch of MCT documents.
     """
 
     if config_obj is None or not all(
@@ -598,25 +631,24 @@ def get_merged_pat_batch_mct_docs(
 
 
 def get_merged_pat_batch_epr_docs(
-    client_idcode_list,
-    search_term,
-    config_obj=None,
-    cohort_searcher_with_terms_and_search=None,
-):
-    """
-    Retrieve and merge batch EPR documents for a list of patients based on the given parameters.
+    client_idcode_list: List[str],
+    search_term: str,
+    config_obj: Any,
+    cohort_searcher_with_terms_and_search: Any,
+) -> pd.DataFrame:
+    """Retrieves a merged batch of EPR documents for a list of patients.
+
+    This function queries the `epr_documents` index for all patients in
+    `client_idcode_list` within the globally defined time window.
 
     Args:
-        client_idcode_list (list): A list of client ID codes for the patients.
-        search_term (str): The term used for searching EPR documents.
-        config_obj (ConfigObject): An object containing global start and end year/month.
-        cohort_searcher_with_terms_and_search (function): A function for searching a cohort with terms.
+        client_idcode_list: A list of client ID codes.
+        search_term: The term to search for (currently unused).
+        config_obj: The configuration object.
+        cohort_searcher_with_terms_and_search: The search function to use.
 
     Returns:
-        pd.DataFrame: Merged batch of EPR documents for all patients.
-
-    Raises:
-        ValueError: If config_obj is None or missing required attributes.
+        A DataFrame containing the merged batch of EPR documents.
     """
 
     if config_obj is None or not all(
@@ -756,25 +788,24 @@ def get_merged_pat_batch_epr_docs(
 
 
 def get_merged_pat_batch_textual_obs_docs(
-    client_idcode_list,
-    search_term,
-    config_obj=None,
-    cohort_searcher_with_terms_and_search=None,
-):
-    """
-    Retrieve and merge batch textual observations for a list of patients based on the given parameters.
+    client_idcode_list: List[str],
+    search_term: str,
+    config_obj: Any,
+    cohort_searcher_with_terms_and_search: Any,
+) -> pd.DataFrame:
+    """Retrieves a merged batch of textual observations for a list of patients.
+
+    This function queries the `basic_observations` index for all patients in
+    `client_idcode_list` and filters for rows containing non-empty `textualObs`.
 
     Args:
-        client_idcode_list (list): A list of client ID codes for the patients.
-        search_term (str): The term used for searching textual observations.
-        config_obj (ConfigObject): An object containing global start and end year/month.
-        cohort_searcher_with_terms_and_search (function): A function for searching a cohort with terms.
+        client_idcode_list: A list of client ID codes.
+        search_term: The term to search for (currently unused).
+        config_obj: The configuration object.
+        cohort_searcher_with_terms_and_search: The search function to use.
 
     Returns:
-        pd.DataFrame: Merged batch of textual observations for all patients.
-
-    Raises:
-        ValueError: If config_obj is None or missing required attributes.
+        A DataFrame containing the merged batch of textual observation documents.
     """
 
     if config_obj is None or not all(
@@ -860,25 +891,24 @@ def get_merged_pat_batch_textual_obs_docs(
 
 
 def get_merged_pat_batch_appointments(
-    client_idcode_list,
-    search_term,
-    config_obj=None,
-    cohort_searcher_with_terms_and_search=None,
-):
-    """
-    Retrieve and merge batch appointments for a list of patients based on the given parameters.
+    client_idcode_list: List[str],
+    search_term: str,
+    config_obj: Any,
+    cohort_searcher_with_terms_and_search: Any,
+) -> pd.DataFrame:
+    """Retrieves a merged batch of appointments for a list of patients.
+
+    This function queries the `pims_apps*` index for all patients in
+    `client_idcode_list` within the globally defined time window.
 
     Args:
-        client_idcode_list (list): A list of client ID codes for the patients.
-        search_term (str): The term used for searching appointments.
-        config_obj (ConfigObject): An object containing global start and end year/month.
-        cohort_searcher_with_terms_and_search (function): A function for searching a cohort with terms.
+        client_idcode_list: A list of client ID codes.
+        search_term: The term to search for (currently unused).
+        config_obj: The configuration object.
+        cohort_searcher_with_terms_and_search: The search function to use.
 
     Returns:
-        pd.DataFrame: Merged batch of appointments for all patients.
-
-    Raises:
-        ValueError: If config_obj is None or missing required attributes.
+        A DataFrame containing the merged batch of appointments.
     """
 
     if config_obj is None or not all(
@@ -979,25 +1009,24 @@ def get_merged_pat_batch_appointments(
 
 
 def get_merged_pat_batch_demo(
-    client_idcode_list,
-    search_term,
-    config_obj=None,
-    cohort_searcher_with_terms_and_search=None,
-):
-    """
-    Retrieve and merge batch demographic information for a list of patients based on the given parameters.
+    client_idcode_list: List[str],
+    search_term: str,
+    config_obj: Any,
+    cohort_searcher_with_terms_and_search: Any,
+) -> pd.DataFrame:
+    """Retrieves a merged batch of demographic information for a list of patients.
+
+    This function queries the `epr_documents` index for all patients in
+    `client_idcode_list` to get their demographic data.
 
     Args:
-        client_idcode_list (list): A list of client ID codes for the patients.
-        search_term (str): The term used for searching demographic information.
-        config_obj (ConfigObject): An object containing global start and end year/month.
-        cohort_searcher_with_terms_and_search (function): A function for searching a cohort with terms.
+        client_idcode_list: A list of client ID codes.
+        search_term: The term to search for (currently unused).
+        config_obj: The configuration object.
+        cohort_searcher_with_terms_and_search: The search function to use.
 
     Returns:
-        pd.DataFrame: Merged batch of demographic information for all patients.
-
-    Raises:
-        ValueError: If config_obj is None or missing required attributes.
+        A DataFrame containing the merged batch of demographic information.
     """
 
     if config_obj is None or not all(
@@ -1072,25 +1101,24 @@ def get_merged_pat_batch_demo(
 
 
 def get_merged_pat_batch_bmi(
-    client_idcode_list,
-    search_term,
-    config_obj=None,
-    cohort_searcher_with_terms_and_search=None,
-):
-    """
-    Retrieve and merge batch BMI-related observations for a list of patients based on the given parameters.
+    client_idcode_list: List[str],
+    search_term: str,
+    config_obj: Any,
+    cohort_searcher_with_terms_and_search: Any,
+) -> pd.DataFrame:
+    """Retrieves a merged batch of BMI-related observations for a list of patients.
+
+    This function queries the `observations` index for all patients in
+    `client_idcode_list`, filtering for BMI, Weight, and Height observations.
 
     Args:
-        client_idcode_list (list): A list of client ID codes for the patients.
-        search_term (str): The term used for searching BMI-related observations.
-        config_obj (ConfigObject): An object containing global start and end year/month.
-        cohort_searcher_with_terms_and_search (function): A function for searching a cohort with terms.
+        client_idcode_list: A list of client ID codes.
+        search_term: The term to search for (currently unused).
+        config_obj: The configuration object.
+        cohort_searcher_with_terms_and_search: The search function to use.
 
     Returns:
-        pd.DataFrame: Merged batch of BMI-related observations for all patients.
-
-    Raises:
-        ValueError: If config_obj is None or missing required attributes.
+        A DataFrame containing the merged batch of BMI-related observations.
     """
 
     if config_obj is None or not all(
@@ -1159,25 +1187,24 @@ def get_merged_pat_batch_bmi(
 
 
 def get_merged_pat_batch_obs(
-    client_idcode_list,
-    search_term,
-    config_obj=None,
-    cohort_searcher_with_terms_and_search=None,
-):
-    """
-    Retrieve and merge batch observations for a list of patients based on the given parameters.
+    client_idcode_list: List[str],
+    search_term: str,
+    config_obj: Any,
+    cohort_searcher_with_terms_and_search: Any,
+) -> pd.DataFrame:
+    """Retrieves a merged batch of specific observations for a list of patients.
+
+    This function queries the `observations` index for all patients in
+    `client_idcode_list`, filtering for a specific `search_term`.
 
     Args:
-        client_idcode_list (list): A list of client ID codes for the patients.
-        search_term (str): The term used for searching observations.
-        config_obj (ConfigObject): An object containing global start and end year/month.
-        cohort_searcher_with_terms_and_search (function): A function for searching a cohort with terms.
+        client_idcode_list: A list of client ID codes.
+        search_term: The specific observation term to search for.
+        config_obj: The configuration object.
+        cohort_searcher_with_terms_and_search: The search function to use.
 
     Returns:
-        pd.DataFrame: Merged batch of observations for all patients.
-
-    Raises:
-        ValueError: If config_obj is None or missing required attributes.
+        A DataFrame containing the merged batch of specified observations.
     """
 
     if config_obj is None or not all(
@@ -1248,25 +1275,24 @@ def get_merged_pat_batch_obs(
 
 
 def get_merged_pat_batch_news(
-    client_idcode_list,
-    search_term,
-    config_obj=None,
-    cohort_searcher_with_terms_and_search=None,
-):
-    """
-    Retrieve and merge batch NEWS observations for a list of patients based on the given parameters.
+    client_idcode_list: List[str],
+    search_term: str,
+    config_obj: Any,
+    cohort_searcher_with_terms_and_search: Any,
+) -> pd.DataFrame:
+    """Retrieves a merged batch of NEWS observations for a list of patients.
+
+    This function queries the `observations` index for all patients in
+    `client_idcode_list`, filtering for 'NEWS' or 'NEWS2' observations.
 
     Args:
-        client_idcode_list (list): A list of client ID codes for the patients.
-        search_term (str): The term used for searching NEWS observations.
-        config_obj (ConfigObject): An object containing global start and end year/month.
-        cohort_searcher_with_terms_and_search (function): A function for searching a cohort with terms.
+        client_idcode_list: A list of client ID codes.
+        search_term: The term to search for (currently unused).
+        config_obj: The configuration object.
+        cohort_searcher_with_terms_and_search: The search function to use.
 
     Returns:
-        pd.DataFrame: Merged batch of NEWS observations for all patients.
-
-    Raises:
-        ValueError: If config_obj is None or missing required attributes.
+        A DataFrame containing the merged batch of NEWS observations.
     """
 
     if config_obj is None or not all(
@@ -1335,26 +1361,24 @@ def get_merged_pat_batch_news(
 
 
 def get_merged_pat_batch_reports(
-    client_idcode_list,
-    search_term,
-    config_obj=None,
-    cohort_searcher_with_terms_and_search=None,
-):
-    """
-    Retrieve and merge batch reports for a list of patients based on the given parameters.
-    Filter reports with doc type filter arg set in config: KHMDC >>>> retrieves KHMDC reports.
+    client_idcode_list: List[str],
+    search_term: str,
+    config_obj: Any,
+    cohort_searcher_with_terms_and_search: Any,
+) -> pd.DataFrame:
+    """Retrieves a merged batch of reports for a list of patients.
+
+    This function queries the `basic_observations` index for all patients in
+    `client_idcode_list`, filtering for documents where the item name is 'report'.
 
     Args:
-        client_idcode_list (list): A list of client ID codes for the patients.
-        search_term (str): The term used for searching report-related observations.
-        config_obj (ConfigObject): An object containing global start and end year/month.
-        cohort_searcher_with_terms_and_search (function): A function for searching a cohort with terms.
+        client_idcode_list: A list of client ID codes.
+        search_term: The specific report type to search for.
+        config_obj: The configuration object.
+        cohort_searcher_with_terms_and_search: The search function to use.
 
     Returns:
-        pd.DataFrame: Merged batch of report-related observations for all patients.
-
-    Raises:
-        ValueError: If config_obj is None or missing required attributes.
+        A DataFrame containing the merged batch of reports.
     """
 
     if config_obj is None or not all(

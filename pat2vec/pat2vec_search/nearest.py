@@ -2,6 +2,7 @@ import pandas as pd
 
 
 from datetime import datetime, timedelta
+from typing import Any, Optional
 
 
 def nearest(
@@ -11,31 +12,39 @@ def nearest(
     value_col: str,
     max_time_before: timedelta = timedelta(weeks=6),
     max_time_after: timedelta = timedelta(weeks=50),
-):
-    """
-    Finds the nearest date and its corresponding value within a specified time range.
+) -> Optional[Any]:
+    """Finds the nearest date and its corresponding value within a time range.
 
-    Parameters:
-    - date (datetime): The reference date to find the nearest date around.
-    - lookup_dates_and_values (pd.DataFrame): DataFrame containing dates and their corresponding values.
-    - date_col (str): The column name for dates in the DataFrame.
-    - value_col (str): The column name for values in the DataFrame.
-    - max_time_before (timedelta, optional): Maximum time before the reference date to consider. Defaults to 6 weeks.
-    - max_time_after (timedelta, optional): Maximum time after the reference date to consider. Defaults to 50 weeks.
+    This function searches a DataFrame for the row with a date closest to a
+    given reference date, within a specified time window.
+
+    Args:
+        date: The reference date to find the nearest date around.
+        lookup_dates_and_values: DataFrame containing dates and values.
+        date_col: The name of the column containing dates in the DataFrame.
+        value_col: The name of the column containing values to be returned.
+        max_time_before: Maximum time before the reference date to consider.
+            Defaults to 6 weeks.
+        max_time_after: Maximum time after the reference date to consider.
+            Defaults to 50 weeks.
 
     Returns:
-    - The value corresponding to the nearest date within the specified range, or None if no date is found.
+        The value from `value_col` corresponding to the nearest date, or None
+        if no date is found within the specified range.
     """
 
     timebefore = date - max_time_before
     timeafter = date + max_time_after
-    lookup_dates_and_values = lookup_dates_and_values[
+    filtered_lookup = lookup_dates_and_values[
         (lookup_dates_and_values[date_col] > timebefore)
         & (lookup_dates_and_values[date_col] < timeafter)
-    ]
-    if lookup_dates_and_values.shape[0] == 0:
+    ].copy()
+
+    if filtered_lookup.empty:
         return None
-    min_date = min(
-        lookup_dates_and_values.iterrows(), key=lambda x: abs(x[1][date_col] - date)
-    )
-    return min_date[1][value_col]
+
+    # Find the index of the row with the minimum absolute time difference
+    nearest_index = (filtered_lookup[date_col] - date).abs().idxmin()
+
+    # Return the corresponding value
+    return filtered_lookup.loc[nearest_index, value_col]

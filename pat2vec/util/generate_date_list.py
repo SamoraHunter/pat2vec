@@ -3,6 +3,7 @@ from dateutil.relativedelta import relativedelta
 
 import logging
 from datetime import datetime
+from typing import Any, List, Tuple
 from zoneinfo import ZoneInfo
 
 
@@ -12,22 +13,26 @@ def generate_date_list(
     months: int,
     days: int,
     time_window_interval_delta: relativedelta = relativedelta(days=1),
-    config_obj=None,
-):
-    """
-    Generates a chronologically sorted list of dates within a specified range,
-    constrained by global boundaries.
+    config_obj: Any = None,
+) -> List[Tuple[int, int, int]]:
+    """Generates a list of dates within a range, constrained by global boundaries.
+
+    This function calculates a date range based on a start date and a duration
+    (defined by years, months, days). It then generates a list of dates within
+    this range at a specified interval (`time_window_interval_delta`). The final
+    list is clamped to global start and end dates defined in the `config_obj`.
 
     Args:
         start_date: The anchor date for the calculation.
         years: The number of years to add or subtract.
         months: The number of months to add or subtract.
         days: The number of days to add or subtract.
-        config_obj: A configuration object with 'lookback' and global date attributes.
         time_window_interval_delta: The step interval between dates.
+        config_obj: A configuration object with 'lookback' and global date
+            attributes (e.g., `global_start_year`).
 
     Returns:
-        A list of (year, month, day) tuples, sorted chronologically.
+        A chronologically sorted list of (year, month, day) tuples.
     """
     # Handle missing config_obj gracefully
     if not config_obj:
@@ -46,17 +51,9 @@ def generate_date_list(
         chronological_start = start_date
         chronological_end = start_date + time_delta
 
-    # Construct global boundary dates from the config
-    global_start_date = datetime(
-        int(config_obj.global_start_year),
-        int(config_obj.global_start_month),
-        int(config_obj.global_start_day),
-    )
-    global_end_date = datetime(
-        int(config_obj.global_end_year),
-        int(config_obj.global_end_month),
-        int(config_obj.global_end_day),
-    )
+    # Use the pre-constructed datetime objects from the config object
+    global_start_date = config_obj.global_start_date
+    global_end_date = config_obj.global_end_date
 
     # Make all datetimes timezone-aware using the modern 'zoneinfo'
     # This assumes all naive datetimes are in UTC.
@@ -68,7 +65,13 @@ def generate_date_list(
     if global_start_date.tzinfo is None:
         global_start_date = global_start_date.replace(tzinfo=utc_tz)
     if global_end_date.tzinfo is None:
-        global_end_date = global_end_date.replace(tzinfo=utc_tz)
+        # Set the time to the very end of the day to make the boundary inclusive
+        global_end_date = datetime(
+            global_end_date.year,
+            global_end_date.month,
+            global_end_date.day,
+            23, 59, 59, 999999
+        ).replace(tzinfo=utc_tz)
 
     # Clamp the calculated range to the global boundaries
     final_start_date = max(chronological_start, global_start_date)
@@ -93,17 +96,9 @@ def generate_date_list(
             )
         return []
 
-    # Validate that the time_window_interval_delta is positive and reasonable
-    # Handle None values in relativedelta attributes
-    years_val = getattr(time_window_interval_delta, "years", 0) or 0
-    months_val = getattr(time_window_interval_delta, "months", 0) or 0
-    days_val = getattr(time_window_interval_delta, "days", 0) or 0
-
-    if years_val < 0 or months_val < 0 or days_val < 0:
-        raise ValueError("time_window_interval_delta must be positive")
-
-    if time_window_interval_delta == relativedelta():
-        raise ValueError("time_window_interval_delta must be greater than zero")
+    # Validate that the time_window_interval_delta is a positive duration
+    if final_start_date + time_window_interval_delta <= final_start_date:
+        raise ValueError("The time interval delta must be a positive duration.")
 
     # Generate dates with proper bounds checking
     date_list = []

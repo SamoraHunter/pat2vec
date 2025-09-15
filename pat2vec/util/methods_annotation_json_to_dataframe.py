@@ -1,20 +1,43 @@
 import numpy as np
 import pandas as pd
+from typing import Any, Dict
 
 
 def json_to_dataframe(
-    json_data,
-    doc,
-    current_pat_client_id_code,
-    full_doc=False,
-    window=300,
-    text_column="body_analysed",
-    time_column="updatetime",
-    guid_column="document_guid",
-):
-    # Extract data from the JSON
-    # doc to be passed as pandas series
-    # observation_guid
+    json_data: Dict[str, Any],
+    doc: pd.Series,
+    current_pat_client_id_code: str,
+    full_doc: bool = False,
+    window: int = 300,
+    text_column: str = "body_analysed",
+    time_column: str = "updatetime",
+    guid_column: str = "document_guid",
+) -> pd.DataFrame:
+    """Converts a MedCAT JSON entity dictionary to a pandas DataFrame.
+
+    This function takes the 'entities' dictionary from a MedCAT output for a
+    single document and transforms it into a structured DataFrame. Each row in
+    the resulting DataFrame represents a single annotation (entity). It also
+    extracts a text sample around the annotation and includes document-level
+    metadata.
+
+    Args:
+        json_data: The 'entities' dictionary from MedCAT's output.
+        doc: The pandas Series representing the original document, containing
+            metadata like text, timestamp, and GUID.
+        current_pat_client_id_code: The patient's unique identifier.
+        full_doc: If True, includes the full document text in the first
+            annotation row. Defaults to False.
+        window: The number of characters to include on either side of the
+            annotation for the 'text_sample'. Defaults to 300.
+        text_column: The name of the column in `doc` containing the text.
+        time_column: The name of the column in `doc` containing the timestamp.
+        guid_column: The name of the column in `doc` containing the document GUID.
+
+    Returns:
+        A pandas DataFrame where each row is a single annotation, or an empty
+        DataFrame if no entities are present in the input.
+    """
     if any(json_data.values()):
         done = False
 
@@ -180,10 +203,18 @@ def json_to_dataframe(
         return empty_df
 
 
-def parse_meta_anns(meta_anns):
-    """
-    Parses the meta annotations for each document in the batch
-    Returns a dictionary of meta annotations for each document
+def parse_meta_anns(meta_anns: Dict[str, Any]) -> Dict[str, Any]:
+    """Parses meta-annotations from a MedCAT entity dictionary.
+
+    This function extracts the value and confidence for 'Time', 'Presence',
+    and 'Subject/Experiencer' meta-annotations. It includes a fallback to
+    check for 'Subject' if 'Subject/Experiencer' is not found.
+
+    Args:
+        meta_anns: The meta_anns dictionary from a MedCAT entity.
+
+    Returns:
+        A dictionary containing the parsed meta-annotation values and confidences.
     """
     time_value = meta_anns.get("Time", {}).get("value")
     time_confidence = meta_anns.get("Time", {}).get("confidence")

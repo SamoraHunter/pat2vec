@@ -2,19 +2,25 @@ import logging
 import os
 from datetime import datetime
 import sys
+from types import FrameType
+from typing import IO, Any, Callable
 from IPython.core.getipython import get_ipython
 
 
-def setup_logger():
-    """
-    Sets up a logger for the application, directing log messages to both a log file and the console.
+def setup_logger() -> logging.Logger:
+    """Sets up a logger that writes to a file and redirects stdout.
 
-    The log file is stored in a 'logs' directory, two levels up from the current module's directory,
-    and is named with the current date and time. The logger captures messages at the DEBUG level and above.
-    Console messages display at the INFO level.
+    This function configures a logger with two handlers:
+    1.  A file handler that saves DEBUG level logs to a timestamped file in a
+        `logs` directory.
+    2.  A stream handler that prints INFO level logs to the console.
+
+    Crucially, it also replaces `sys.stdout` with a custom `TeeWriter` class.
+    This class ensures that any output sent to `print()` is both displayed in
+    the console (e.g., a Jupyter cell) and captured in the log file.
 
     Returns:
-        logging.Logger: The configured logger instance.
+        The configured logger instance.
     """
 
     module_dir = os.path.dirname(os.path.realpath(__file__))
@@ -57,7 +63,7 @@ def setup_logger():
     original_stdout = sys.stdout
 
     # Define a trace function for logging
-    def tracefunc(frame, event, arg):
+    def tracefunc(frame: FrameType, event: str, arg: Any) -> Callable:
         # Only log events from files within the notebook directory
         if notebook_dir in frame.f_code.co_filename:
             if event == "line":
@@ -71,23 +77,42 @@ def setup_logger():
 
     # Create a custom stdout that both logs and preserves normal output
     class TeeWriter:
-        def __init__(self, original_stream, logger, level):
+        """A file-like object that writes to a stream and a logger."""
+
+        def __init__(self, original_stream: IO[str], logger: logging.Logger, level: int):
+            """Initializes the TeeWriter.
+
+            Args:
+                original_stream: The original stream to write to (e.g., sys.stdout).
+                logger: The logger instance to write to.
+                level: The logging level to use for messages.
+            """
             self.original_stream = original_stream
             self.logger = logger
             self.level = level
 
-        def write(self, message):
+        def write(self, message: str) -> None:
+            """Writes a message to the original stream and the logger.
+
+            Args:
+                message: The message to write.
+            """
             # Write to original stdout (preserves Jupyter cell output)
             self.original_stream.write(message)
             # Also log the message (but only non-empty messages)
             if message.strip():
                 self.logger.log(self.level, message.strip())
 
-        def flush(self):
+        def flush(self) -> None:
+            """Flushes the original stream."""
             self.original_stream.flush()
 
-        def __getattr__(self, name):
-            # Delegate any other attributes to the original stream
+        def __getattr__(self, name: str) -> Any:
+            """Delegates any other attribute access to the original stream.
+
+            Args:
+                name: The name of the attribute to access.
+            """
             return getattr(self.original_stream, name)
 
     # Replace stdout with our tee writer

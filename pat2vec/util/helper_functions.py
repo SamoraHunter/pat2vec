@@ -1,51 +1,50 @@
 import re
 import warnings
+from typing import Any, List
 
 
-def extract_nhs_numbers(input_string):
+def extract_nhs_numbers(input_string: str) -> List[str]:
+    """Extracts all occurrences of "NHS" followed by a 10-digit number.
+
+    The function searches for the pattern "NHS" followed by a 10-digit number,
+    which may contain spaces. It then cleans the extracted numbers by removing
+    any spaces.
+
+    Args:
+        input_string: The string to search for NHS numbers.
+
+    Returns:
+        A list of all extracted 10-digit NHS numbers as strings.
+
+    Examples:
+        >>> extract_nhs_numbers("NHS 123 456 7890")
+        ['1234567890']
+        >>> extract_nhs_numbers("NHS 123 456 7890 and NHS 098 765 4321")
+        ['1234567890', '0987654321']
+    """
     # Find all occurrences of "NHS" followed by a 10-digit number
-    """
-    Extract all occurrences of "NHS" followed by a 10-digit number from a string.
-
-    Parameters
-    ----------
-    input_string : str
-        The string to search for NHS numbers.
-
-    Returns
-    -------
-    list of str
-        A list of all extracted NHS numbers without spaces.
-
-    Examples
-    --------
-    >>> extract_nhs_numbers("NHS 123 456 7890")
-    ['1234567890']
-    >>> extract_nhs_numbers("NHS 123 456 7890 and NHS 098 765 4321")
-    ['1234567890', '987654321']
-    """
     matches = re.findall(r"NHS\s*(\d{3}\s*\d{3}\s*\d{4})", input_string)
     # Remove spaces from each extracted number
     cleaned_numbers = [re.sub(r"\s+", "", number) for number in matches]
     return cleaned_numbers
 
 
-def get_search_client_idcode_list_from_nhs_number_list(nhs_numbers, pat2vec_obj):
-    """
-    Retrieve a unique list of hospital IDs associated with a list of NHS numbers.
+def get_search_client_idcode_list_from_nhs_number_list(
+    nhs_numbers: List[str], pat2vec_obj: Any
+) -> List[str]:
+    """Retrieves a unique list of hospital IDs from a list of NHS numbers.
+
+    This function uses a `pat2vec_obj` to perform a cohort search against an
+    index (e.g., 'pims_apps*') to find the corresponding 'HospitalID' for each
+    'PatNHSNo' in the provided list.
 
     Args:
-        nhs_numbers (list): A list of NHS numbers.
-        pat2vec_obj: The pat2vec object used for cohort search.
+        nhs_numbers: A list of NHS numbers to search for.
+        pat2vec_obj: An object with a `cohort_searcher_with_terms_and_search`
+            method for querying the data source.
 
     Returns:
-        list: A unique list of hospital IDs.
-
-    Raises:
-        None.
-
-    Warns:
-        UserWarning: If any of the NHS numbers do not have an associated Hospital ID.
+        A unique list of hospital IDs found for the given NHS numbers.
     """
     # Perform cohort search
     df = pat2vec_obj.cohort_searcher_with_terms_and_search(

@@ -1,29 +1,24 @@
 import subprocess
 from tqdm import tqdm
+from typing import List
 
 
-def run_pip_compile():
-    """
-    Runs pip-compile command and returns True if successful, False otherwise.
+def run_pip_compile() -> bool:
+    """Runs pip-compile on requirements.in.
 
-    This function is used to run the pip-compile command which generates a
-    requirements.txt file from the requirements.in file. If the command is
-    successful, it returns True, otherwise it returns False.
+    This function executes the `pip-compile requirements.in` command to
+    generate a `requirements.txt` file. If the command fails, it prints the
+    error to the console.
 
-    The command is run with the following options:
-    - capture_output=True: This ensures that any output from the command is
-        captured and returned.
-    - text=True: This ensures that the output is returned as a string.
-    - check=True: This raises an error if the command fails.
-
-    If the command fails, the error message is printed to the console.
+    Returns:
+        True if the command is successful, False otherwise.
     """
     try:
-        result = subprocess.run(
+        subprocess.run(
             ["pip-compile", "requirements.in"],
             capture_output=True,
             text=True,
-            check=True,  # Raises an error if pip-compile fails
+            check=True,
         )
         return True
     except subprocess.CalledProcessError as e:
@@ -31,15 +26,24 @@ def run_pip_compile():
         return False
 
 
-def append_to_file(filename, requirement):
-    """
-    Appends a requirement to a file.
+def append_to_file(filename: str, requirement: str) -> None:
+    """Appends a requirement to a file, followed by a newline.
+
+    Args:
+        filename: The path to the file.
+        requirement: The requirement string to append.
     """
     with open(filename, "a") as f:
         f.write(requirement + "\n")
 
 
-def process_requirements():
+def process_requirements() -> None:
+    """Processes requirements one by one to find incompatibilities.
+
+    Reads requirements from `requirements_source.txt`, adds them individually
+    to `requirements.in`, and runs `pip-compile`. If a requirement causes a
+    compilation failure, it is reverted and logged to `failed_requirements.txt`.
+    """
     # Read the requirements from the source file
     with open("requirements_source.txt") as f:
         requirements = f.readlines()
@@ -48,7 +52,7 @@ def process_requirements():
     open("requirements.in", "w").close()
 
     # Track failed requirements
-    failed_requirements = []
+    failed_requirements: List[str] = []
 
     # Wrap the requirements in tqdm for progress tracking
     for requirement in tqdm(requirements, desc="Processing Requirements", unit="req"):

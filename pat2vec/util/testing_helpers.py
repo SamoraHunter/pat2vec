@@ -1,15 +1,20 @@
 import pandas as pd
+from typing import Optional
 
 
-def read_test_data(file_path: str):
-    """
-    Read data from a CSV file and return as a pandas DataFrame.
+def read_test_data(file_path: str) -> Optional[pd.DataFrame]:
+    """Reads data from a CSV file into a pandas DataFrame.
 
-    Parameters:
-    file_path (str): Path to the CSV file.
+    This function is a simple wrapper around `pd.read_csv` with added
+    error handling for file not found and other exceptions. It also prints
+    a warning if the loaded DataFrame is empty.
+
+    Args:
+        file_path: The path to the CSV file.
 
     Returns:
-    pandas.DataFrame: DataFrame containing the data from the CSV file, or None on error.
+        A pandas DataFrame containing the data from the CSV file, or None
+        if an error occurs or the file is not found.
     """
     try:
         df = pd.read_csv(file_path)

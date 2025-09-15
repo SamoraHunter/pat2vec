@@ -1,18 +1,22 @@
 import os
+from typing import Dict, List
 
 from pptx import Presentation
 from pptx.util import Inches
 
 
-def group_images_by_suffix(folder_path):
-    """
-    Group images in a folder based on the suffix in their filenames.
+def group_images_by_suffix(folder_path: str) -> Dict[str, List[str]]:
+    """Groups image files in a folder based on their filename suffix.
 
-    Parameters:
-    - folder_path (str): The path to the folder containing images.
+    For example, 'image_A_client1.png' and 'image_B_client1.png' would both
+    be grouped under the key 'client1'.
+
+    Args:
+        folder_path: The path to the folder containing the images.
 
     Returns:
-    - dict: A dictionary where keys are suffixes and values are lists of image filenames.
+        A dictionary where keys are suffixes and values are lists of image
+        filenames.
     """
     image_groups = {}
 
@@ -23,19 +27,22 @@ def group_images_by_suffix(folder_path):
 
     return image_groups
 
-def create_powerpoint_slides_client_idcode_groups(image_groups, output_path):
-    """
-    Create a PowerPoint presentation with slides containing images from different groups.
+def create_powerpoint_slides_client_idcode_groups(image_groups: Dict[str, List[str]], output_path: str) -> None:
+    """Creates a PowerPoint presentation from grouped images.
 
-    Parameters:
-    - image_groups (dict): Dictionary where keys are suffixes and values are lists of image filenames.
-    - output_path (str): The path for the output PowerPoint presentation.
+    Each image from the `image_groups` dictionary is placed on a new, blank
+    slide in the presentation.
+
+    Args:
+        image_groups: A dictionary where keys are group identifiers and values
+            are lists of image filenames.
+        output_path: The path where the output PowerPoint presentation will be saved.
     """
     presentation = Presentation()
 
     for suffix, images in image_groups.items():
         for image in images:
-            image_path = os.path.join(output_path, image)
+            image_path = os.path.join(os.path.dirname(output_path), image)
             slide_layout = presentation.slide_layouts[5]  # 5 corresponds to a blank slide layout
             slide = presentation.slides.add_slide(slide_layout)
 
@@ -45,12 +52,11 @@ def create_powerpoint_slides_client_idcode_groups(image_groups, output_path):
     presentation.save(output_path)
     print(f"PowerPoint file '{output_path}' created successfully.")
 
-def create_powerpoint_from_images_group(folder_path):
-    """
-    Create a PowerPoint presentation from images in a specified folder.
+def create_powerpoint_from_images_group(folder_path: str) -> None:
+    """Creates a PowerPoint presentation by grouping images in a folder.
 
-    Parameters:
-    - folder_path (str): The path to the folder containing images.
+    Args:
+        folder_path: The path to the folder containing the images.
     """
     image_groups = group_images_by_suffix(folder_path)
     output_path = os.path.join(folder_path, 'output_presentation.pptx')
@@ -61,18 +67,18 @@ def create_powerpoint_from_images_group(folder_path):
     #create_powerpoint_from_images_group(folder_path)
 
 
-def create_powerpoint_slides(images, output_path):
-    """
-    Create a PowerPoint presentation with slides containing individual images.
+def create_powerpoint_slides(images: List[str], folder_path: str, output_path: str) -> None:
+    """Creates a PowerPoint presentation with one image per slide.
 
-    Parameters:
-    - images (list): List of image filenames.
-    - output_path (str): The path for the output PowerPoint presentation.
+    Args:
+        images: A list of image filenames.
+        folder_path: The directory where the image files are located.
+        output_path: The path to save the generated PowerPoint file.
     """
     presentation = Presentation()
 
     for image in images:
-        image_path = os.path.join(output_path, image)
+        image_path = os.path.join(folder_path, image)
         slide_layout = presentation.slide_layouts[5]  # 5 corresponds to a blank slide layout
         slide = presentation.slides.add_slide(slide_layout)
 
@@ -82,7 +88,7 @@ def create_powerpoint_slides(images, output_path):
     presentation.save(output_path)
     print(f"PowerPoint file '{output_path}' created successfully.")
 
-def create_powerpoint_from_images(folder_path):
+def create_powerpoint_from_images(folder_path: str) -> None:
     """
     Create a PowerPoint presentation from images in a specified folder.
 
@@ -93,7 +99,7 @@ def create_powerpoint_from_images(folder_path):
               if file_name.endswith((".png", ".jpg", ".jpeg"))]
 
     output_path = os.path.join(folder_path, 'output_presentation.pptx')
-    create_powerpoint_slides(images, output_path)
+    create_powerpoint_slides(images, folder_path, output_path)
 
 # if __name__ == "__main__":
 #     folder_path = '../plot_outputs_folder_piechart'

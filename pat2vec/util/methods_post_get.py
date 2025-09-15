@@ -1,5 +1,5 @@
 import warnings
-from typing import Union
+from typing import Any, List, Optional
 import os
 import pandas as pd
 from tqdm import tqdm
@@ -7,17 +7,23 @@ import shutil
 from pat2vec.util.post_processing import remove_file_from_paths
 
 
-def retrieve_pat_annotations(current_pat_client_idcode: str, config_obj=None) -> pd.DataFrame:
-    """
-    Concatenates data from two CSV files (EPR and MCT) into a single dataframe.
-    Maps values from 'observationdocument_recordeddtm' to a new column 'updatetime' in the MCT dataframe.
+def retrieve_pat_annotations(
+    current_pat_client_idcode: str, config_obj: Any = None
+) -> pd.DataFrame:
+    """Concatenates EPR and MCT annotation data for a single patient.
 
-    Parameters:
-    - current_pat_client_idcode (str): The client ID code.
-    - config_obj (Union[YourConfigObjectType, dict]): The configuration object containing paths.
+    This function reads a patient's annotation data from two separate CSV
+    files—one for EPR documents and one for MCT documents. It then standardizes
+    the timestamp column and concatenates them into a single DataFrame.
+
+    Args:
+        current_pat_client_idcode: The client ID code for the patient.
+        config_obj: The configuration object containing file paths for
+            EPR and MCT annotation batches.
 
     Returns:
-    pd.DataFrame: Concatenated dataframe with the 'updatetime' column added.
+        A concatenated DataFrame containing annotations from both EPR and MCT
+        sources, with a unified 'updatetime' column.
     """
     # Specify the file paths
     current_pat_docs_epr = os.path.join(
@@ -40,7 +46,21 @@ def retrieve_pat_annotations(current_pat_client_idcode: str, config_obj=None) ->
     return result_df
 
 
-def copy_project_folders_with_substring_match(pat2vec_obj, substrings_to_match=None):
+def copy_project_folders_with_substring_match(
+    pat2vec_obj: Any, substrings_to_match: Optional[List[str]] = None
+) -> None:
+    """Copies project subfolders that match given substrings to a new versioned directory.
+
+    This is useful for creating a snapshot or a new version of a project's
+    outputs before running a new experiment. It finds the next available
+    version number (e.g., `my_project_1`, `my_project_2`) and copies only the
+    subfolders whose names contain one of the specified substrings.
+
+    Args:
+        pat2vec_obj: The main pat2vec object, containing the `config_obj`.
+        substrings_to_match: A list of substrings to identify which folders
+            to copy (e.g., ['batches', 'annots']).
+    """
     if substrings_to_match is None:
         substrings_to_match = ['batches', 'annots']
 
@@ -65,7 +85,27 @@ def copy_project_folders_with_substring_match(pat2vec_obj, substrings_to_match=N
     print("Folders copied successfully.")
 
 
-def check_csv_integrity(file_path, verbosity=0, delete_broken=False):
+def check_csv_integrity(
+    file_path: str, verbosity: int = 0, delete_broken: bool = False
+) -> None:
+    """Checks the integrity of a single CSV file.
+
+    This function attempts to read a CSV file and performs basic integrity
+    checks, such as ensuring it's not empty and that key columns do not
+    contain null values. If `delete_broken` is True, it will remove files
+    that fail these checks.
+
+    Args:
+        file_path: The path to the CSV file to check.
+        verbosity: The level of detail for logging warnings.
+        delete_broken: If True, deletes files that fail integrity checks.
+
+    Raises:
+        UserWarning: If the CSV file is empty, cannot be parsed, a key column
+            contains null values, or the file is not found. These warnings
+            are issued to inform the user of potential data integrity issues.
+
+    """
     try:
         df = pd.read_csv(file_path)
 
@@ -112,7 +152,26 @@ def check_csv_integrity(file_path, verbosity=0, delete_broken=False):
         warnings.warn(warning_message, UserWarning)
 
 
-def check_csv_files_in_directory(directory, verbosity=0, ignore_outputs=True, ignore_output_vectors=True, delete_broken=False):
+def check_csv_files_in_directory(
+    directory: str,
+    verbosity: int = 0,
+    ignore_outputs: bool = True,
+    ignore_output_vectors: bool = True,
+    delete_broken: bool = False,
+) -> None:
+    """Recursively checks the integrity of all CSV files in a directory.
+
+    This function walks through a directory and its subdirectories, applying
+    `check_csv_integrity` to every CSV file found. It provides options to
+    ignore certain common output directories.
+
+    Args:
+        directory: The root directory to start the search from.
+        verbosity: The verbosity level passed to `check_csv_integrity`.
+        ignore_outputs: If True, skips any path containing 'output'.
+        ignore_output_vectors: If True, skips paths for 'current_pat_lines_parts'.
+        delete_broken: If True, deletes files that fail integrity checks.
+    """
     total_files = sum(1 for _ in os.walk(directory)
                       for _ in os.listdir(directory))
 

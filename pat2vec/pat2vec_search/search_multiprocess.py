@@ -1,10 +1,10 @@
-import pandas as pd
-from tqdm.notebook import tqdm
-
-
 import csv
 import multiprocessing
 from multiprocessing import Pool
+from typing import Any, List
+
+import pandas as pd
+from tqdm.notebook import tqdm
 
 from pat2vec.pat2vec_search.cogstack_search_methods import (
     cohort_searcher_with_terms_and_search,
@@ -48,53 +48,53 @@ def pull_and_write(index_name, fields_list, term_name, entered_list, search_stri
 
 
 def cohort_searcher_with_terms_and_search_multi(
-    index_name, fields_list, term_name, entered_list, search_string
-):
-    """
-    Search a cohort with terms and search string, in parallel.
+    index_name: str,
+    fields_list: List[str],
+    term_name: str,
+    entered_list: List[str],
+    search_string: str,
+) -> pd.DataFrame:
+    """Searches a cohort in parallel using multiple processes.
 
-    Parameters
-    ----------
-    index_name : str
-        The name of the index to search.
-    fields_list : list
-        The list of fields to retrieve.
-    term_name : str
-        The name of the term to search.
-    entered_list : list
-        The list of values to search for.
-    search_string : str
-        The search string to use.
+    This function splits a large list of search terms (`entered_list`) into
+    chunks and distributes the search queries across multiple processes. The
+    results from each process are written to a temporary file and then read
+    back into a single DataFrame.
 
-    Returns
-    -------
-    pd.DataFrame
-        The DataFrame containing the results of the search.
+    Args:
+        index_name: The name of the index to search.
+        fields_list: The list of fields to retrieve.
+        term_name: The name of the term to filter on.
+        entered_list: The list of values to search for.
+        search_string: The search string to use.
+
+    Returns:
+        A DataFrame containing the combined results of the parallel search.
     """
     file_name = "temp_search_store.csv"
-    file = open(file_name, "w", newline="")
 
     with open(file_name, "w", newline="") as outcsv:
         writer = csv.writer(outcsv)
         writer.writerow(fields_list)
 
-    print(pd.read_csv(file_name))
     n = multiprocessing.cpu_count()
     l = entered_list
 
-    # using list comprehension
+    # Split the list of terms into chunks for each process
     pat_list_master = [l[i : i + n] for i in range(0, len(l), n)]
-    print(len(pat_list_master))
+    print(f"Splitting {len(l)} items into {len(pat_list_master)} chunks for parallel processing.")
 
-    pool = Pool()
+    # Prepare arguments for each process
+    args_list = [
+        (index_name, fields_list, term_name, chunk, search_string)
+        for chunk in pat_list_master
+    ]
 
-    if __name__ == "__main__":
-        print(f"starting..")
+    with Pool() as pool:
+        print(f"Starting parallel search with {pool._processes} processes...")
         for _ in tqdm(
-            pool.imap(pull_and_write, pat_list_master), total=len(pat_list_master)
+            pool.imap_unordered(pull_and_write, args_list), total=len(args_list)
         ):
             pass
-
-        pool.close()
 
     return pd.read_csv("temp_search_store.csv")

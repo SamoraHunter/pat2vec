@@ -5,29 +5,36 @@ from tqdm import tqdm
 import csv
 import os
 from datetime import datetime
+from typing import Optional, Union
 
 
 def process_csv_files(
-    input_path,
-    out_folder="outputs",
-    output_filename_suffix="concatenated_output",
-    part_size=336,
-    sample_size=None,
-    append_timestamp_column=False,
-):
-    """
-    Concatenate multiple CSV files from a given input path and save the result to a specified output path.
+    input_path: str,
+    out_folder: str = "outputs",
+    output_filename_suffix: str = "concatenated_output",
+    part_size: int = 336,
+    sample_size: Optional[Union[int, str]] = None,
+    append_timestamp_column: bool = False,
+) -> str:
+    """Concatenates multiple CSV files from a directory into a single file.
 
-    Parameters:
-    - input_path (str): The path where the CSV files are located.
-    - out_folder (str): The folder name for the output CSV file. Default is 'outputs'.
-    - output_filename_suffix (str): The suffix for the output CSV file name. Default is 'concatenated_output'.
-    - part_size (int): Size of parts for processing files in chunks. Default is 336.
-    - sample_size (int): Number of files to sample. If None, use all files. Default is None.
-    - append_timestamp_column (bool): If True, append a timestamp column. Default is False.
+    This function scans a directory for CSV files, determines a union of all
+    column headers, and then reads each file to append its content into a
+    single, large CSV file. It handles cases where CSVs have different columns
+    and can process files in chunks.
+
+    Args:
+        input_path: The path to the directory containing the CSV files.
+        out_folder: The folder name for the output CSV file.
+        output_filename_suffix: The suffix for the output CSV file name.
+        part_size: The number of files to process in each chunk.
+        sample_size: The number of files to sample. If 'all' or None, all
+            files are used.
+        append_timestamp_column: If True, processes the final concatenated
+            file to extract a datetime column from binary date columns.
 
     Returns:
-    - str: The path to the saved concatenated CSV file.
+        The path to the saved concatenated CSV file.
     """
 
     # Ensure output folder exists
@@ -166,14 +173,31 @@ def process_csv_files(
 
 
 def process_csv_files_multi(
-    input_path,
-    out_folder="outputs",
-    output_filename_suffix="concatenated_output",
-    part_size=336,
-    sample_size=None,
-    append_timestamp_column=False,
-    n_proc=None,
-):
+    input_path: str,
+    out_folder: str = "outputs",
+    output_filename_suffix: str = "concatenated_output",
+    part_size: int = 336,
+    sample_size: Optional[Union[int, str]] = None,
+    append_timestamp_column: bool = False,
+    n_proc: Optional[Union[int, str]] = None,
+) -> str:
+    """Concatenates multiple CSV files using multiprocessing.
+
+    This function is a multiprocessing version of `process_csv_files`. It
+    distributes the file processing across multiple CPU cores to speed up the
+    concatenation of a large number of CSV files.
+
+    Args:
+        input_path: The path to the directory containing the CSV files.
+        out_folder: The folder name for the output CSV file.
+        output_filename_suffix: The suffix for the output CSV file name.
+        part_size: The number of files to process in each chunk per process.
+        sample_size: The number of files to sample. If 'all' or None, all
+            files are used.
+        append_timestamp_column: If True, processes the final file to extract
+            a datetime column.
+        n_proc: The number of processes to use. Can be an integer, 'all', or 'half'.
+    """
     curate_columns = False
 
     all_file_paths = [

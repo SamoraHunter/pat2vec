@@ -7,24 +7,25 @@ from tqdm import tqdm
 
 
 def compare_ipw_annotation_rows(
-    dataframes: List[pd.DataFrame], columns_to_print: Union[List[str], None] = None
+    dataframes: List[pd.DataFrame], columns_to_print: Optional[List[str]] = None
 ) -> None:
-    """
-    Compare rows with the same 'client_idcode' across multiple individual patient window annotation dataframes and print specified columns
-    when differences are found in the 'text_sample' column. Example usage: I have a dataframe with the earliest annotation for a CUI,
-    I have another dataframe with the earliest annotation but filtered by meta annotations. I want to evaluate the application of the meta
-    annotation filter.
+    """Compares and prints differing rows from multiple annotation DataFrames.
 
-    Parameters:
-    - dataframes (List[pd.DataFrame]): A list of pandas DataFrames to compare.
-    - columns_to_print (Union[List[str], None]): A list of column names to print when differences are found.
-      If None, it defaults to columns:
-      ['updatetime', 'pretty_name', 'cui', 'types', 'source_value', 'detected_name', 'acc',
-       'context_similarity', 'Time_Value', 'Time_Confidence', 'Presence_Value', 'Presence_Confidence',
-       'Subject_Value', 'Subject_Confidence']
+    This function identifies rows with the same 'client_idcode' across a list
+    of DataFrames. If the 'text_sample' for that client differs between any
+    of the DataFrames, it prints the specified columns for each version of
+    the row, allowing for a side-by-side comparison.
 
-    Returns:
-    - None
+    This is useful for evaluating the effect of filtering steps, for example,
+    comparing an annotation DataFrame before and after applying a meta-annotation
+    filter.
+
+    Args:
+        dataframes: A list of pandas DataFrames to compare. Each DataFrame
+            should have a `name` attribute for clear output.
+        columns_to_print: A list of column names to print when differences
+            are found. If None, a default set of annotation-related columns
+            is used.
     """
     if columns_to_print is None:
         # Default columns to print
@@ -74,10 +75,7 @@ def compare_ipw_annotation_rows(
 
 
 class CsvProfiler:
-    """
-    A class to encapsulate the functionality for generating profile reports from CSV files.
-    The ProfileReport dependency is imported as a class attribute.
-    """
+    """A class to encapsulate functionality for profiling CSV files."""
 
     @staticmethod
     def create_profile_reports(
@@ -86,22 +84,21 @@ class CsvProfiler:
         cols: Optional[List[str]] = None,
         icd10_opc4s: bool = False,
     ) -> None:
+        """Generates profiling reports for CSV files in a directory.
+
+        This method iterates through all CSV files in a specified directory,
+        generates a ydata-profiling report for each, and saves it as an HTML
+        file in a 'profile_reports' subdirectory.
+
+        Args:
+            epr_batchs_fp: Path to the directory containing the CSV files.
+            prefix: An optional prefix to add to the generated report filenames.
+            cols: A specific list of columns to include in the profile. If None,
+                a default set of columns is used.
+            icd10_opc4s: If True, filters the DataFrame to only include rows
+                where the 'targetId' column is not empty before generating
+                the report. Defaults to False.
         """
-        Generate Pandas Profiling Reports for CSV files in a directory.
-
-        This method iterates through all CSV files in a specified directory, generates
-        a ydata-profiling report for each, and saves it as an HTML file.
-
-        Parameters:
-        - epr_batchs_fp (str): Path to the directory containing the CSV files.
-        - prefix (str, optional): A prefix string to be added to the generated report filenames. Defaults to None.
-        - cols (List[str], optional): A specific list of columns to include in the profile. If None, a default set of columns is used.
-        - icd10_opc4s (bool): A flag to indicate whether to filter rows where the 'targetId' column is not empty. Defaults to False.
-
-        Returns:
-        None
-        """
-
         from ydata_profiling import ProfileReport
 
         # Default columns to be used if none are provided

@@ -1,17 +1,31 @@
 import os
 import matplotlib.pyplot as plt
+import pandas as pd
+from typing import List, Optional
 
 
-def generate_pie_charts(all_batch_annots, save_plots=True, types=None):
-    """
-    Generate pie charts for each unique client_id in the given DataFrame.
+def generate_pie_charts(
+    all_batch_annots: pd.DataFrame,
+    save_plots: bool = True,
+    types: Optional[List[str]] = None,
+) -> None:
+    """Generates and saves pie charts of annotation distributions for each client.
 
-    Parameters:
-    - all_batch_annots (pd.DataFrame): The DataFrame containing annotation data.
-    - save_plots (bool, optional): If True, save the generated pie charts as PNG files.
-                                   If False, only display the charts without saving. Default is True.
-    - types (list, optional): List of types to create additional pie charts for.
-                              Default is ["['procedure']", "['disorder']", "['finding']"].
+    For each unique `client_idcode` in the input DataFrame, this function
+    creates pie charts summarizing the distribution of `pretty_name` for
+    annotations. It generates one chart for all annotation types combined and
+    separate charts for each type specified in the `types` list.
+
+    To improve readability, concepts in the bottom 25th percentile by count
+    are grouped into an "other" category.
+
+    Args:
+        all_batch_annots: DataFrame containing annotation data with columns
+            like 'client_idcode', 'pretty_name', and 'types'.
+        save_plots: If True, saves the charts as PNG files in a local
+            'plot_outputs_folder_piechart' directory.
+        types: A list of annotation types (e.g., "['disorder']") to generate
+            separate pie charts for. Defaults to a predefined list of common types.
     """
 
     # Create a folder for saving the plots

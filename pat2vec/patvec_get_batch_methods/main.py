@@ -1,5 +1,6 @@
 import os
 import pandas as pd
+from typing import Any
 
 from IPython.display import display
 
@@ -25,25 +26,26 @@ from pat2vec.util.filter_dataframe_by_timestamp import filter_dataframe_by_times
 
 
 def get_pat_batch_obs(
-    current_pat_client_id_code,
-    search_term,
-    config_obj=None,
-    cohort_searcher_with_terms_and_search=None,
-):
-    """
-    Retrieve batch observations for a patient based on the given parameters.
+    current_pat_client_id_code: str,
+    search_term: str,
+    config_obj: Any,
+    cohort_searcher_with_terms_and_search: Any,
+) -> pd.DataFrame:
+    """Retrieves a batch of specific observations for a patient.
+
+    This function fetches observation data for a single patient, filtering by a
+    specific `search_term` (e.g., 'CORE_SmokingStatus') within the globally
+    defined time window. It includes logic to read from a cached file if it
+    exists or query the data source otherwise.
 
     Args:
-        current_pat_client_id_code (str): The client ID code for the current patient.
-        search_term (str): The term used for searching observations.
-        config_obj (ConfigObject): An object containing global start and end year/month.
-        cohort_searcher_with_terms_and_search (function): A function for searching a cohort with terms.
+        current_pat_client_id_code: The patient's unique identifier.
+        search_term: The specific observation term to search for.
+        config_obj: The main configuration object.
+        cohort_searcher_with_terms_and_search: The search function to use.
 
     Returns:
-        list: Batch of observations.
-
-    Raises:
-        ValueError: If config_obj is None or missing required attributes.
+        A DataFrame containing the batch of specified observations.
     """
     if config_obj is None or not all(
         hasattr(config_obj, attr)
@@ -104,29 +106,25 @@ def get_pat_batch_obs(
     except Exception as e:
 
         print(f"Error retrieving batch observations: {e}")
-        return []
+        return pd.DataFrame()
 
 
 def get_pat_batch_news(
-    current_pat_client_id_code,
-    search_term,
-    config_obj=None,
-    cohort_searcher_with_terms_and_search=None,
-):
-    """
-    Retrieve batch observations for a patient based on the given parameters, specifically for NEWS observations.
+    current_pat_client_id_code: str,
+    search_term: str,
+    config_obj: Any,
+    cohort_searcher_with_terms_and_search: Any,
+) -> pd.DataFrame:
+    """Retrieves a batch of NEWS score observations for a patient.
 
     Args:
-        current_pat_client_id_code (str): The client ID code for the current patient.
-        search_term (str): The term used for searching NEWS observations.
-        config_obj (ConfigObject): An object containing global start and end year/month.
-        cohort_searcher_with_terms_and_search (function): A function for searching a cohort with terms.
+        current_pat_client_id_code: The patient's unique identifier.
+        search_term: The term to search for (currently unused).
+        config_obj: The main configuration object.
+        cohort_searcher_with_terms_and_search: The search function to use.
 
     Returns:
-        list: Batch of NEWS observations.
-
-    Raises:
-        ValueError: If config_obj is None or missing required attributes.
+        A DataFrame containing the batch of NEWS observations.
     """
     if config_obj is None or not all(
         hasattr(config_obj, attr)
@@ -180,29 +178,25 @@ def get_pat_batch_news(
     except Exception as e:
 
         print(f"Error retrieving batch NEWS observations: {e}")
-        return []
+        return pd.DataFrame()
 
 
 def get_pat_batch_bmi(
-    current_pat_client_id_code,
-    search_term,
-    config_obj=None,
-    cohort_searcher_with_terms_and_search=None,
-):
-    """
-    Retrieve batch observations for a patient based on the given parameters, specifically for BMI-related observations.
+    current_pat_client_id_code: str,
+    search_term: str,
+    config_obj: Any,
+    cohort_searcher_with_terms_and_search: Any,
+) -> pd.DataFrame:
+    """Retrieves a batch of BMI-related observations for a patient.
 
     Args:
-        current_pat_client_id_code (str): The client ID code for the current patient.
-        search_term (str): The term used for searching BMI-related observations.
-        config_obj (ConfigObject): An object containing global start and end year/month.
-        cohort_searcher_with_terms_and_search (function): A function for searching a cohort with terms.
+        current_pat_client_id_code: The patient's unique identifier.
+        search_term: The term to search for (currently unused).
+        config_obj: The main configuration object.
+        cohort_searcher_with_terms_and_search: The search function to use.
 
     Returns:
-        list: Batch of BMI-related observations.
-
-    Raises:
-        ValueError: If config_obj is None or missing required attributes.
+        A DataFrame containing the batch of BMI-related observations.
     """
     if config_obj is None or not all(
         hasattr(config_obj, attr)
@@ -256,29 +250,25 @@ def get_pat_batch_bmi(
     except Exception as e:
         """"""
         print(f"Error retrieving batch BMI-related observations: {e}")
-        return []
+        return pd.DataFrame()
 
 
 def get_pat_batch_bloods(
-    current_pat_client_id_code,
-    search_term,
-    config_obj=None,
-    cohort_searcher_with_terms_and_search=None,
-):
-    """
-    Retrieve batch basic observations for a patient based on the given parameters, specifically for blood tests.
+    current_pat_client_id_code: str,
+    search_term: str,
+    config_obj: Any,
+    cohort_searcher_with_terms_and_search: Any,
+) -> pd.DataFrame:
+    """Retrieves a batch of blood test observations for a patient.
 
     Args:
-        current_pat_client_id_code (str): The client ID code for the current patient.
-        search_term (str): The term used for searching blood test-related observations.
-        config_obj (ConfigObject): An object containing global start and end year/month.
-        cohort_searcher_with_terms_and_search (function): A function for searching a cohort with terms.
+        current_pat_client_id_code: The patient's unique identifier.
+        search_term: The term to search for (currently unused).
+        config_obj: The main configuration object.
+        cohort_searcher_with_terms_and_search: The search function to use.
 
     Returns:
-        list: Batch of blood test-related observations.
-
-    Raises:
-        ValueError: If config_obj is None or missing required attributes.
+        A DataFrame containing the batch of blood test observations.
     """
 
     overwrite_stored_pat_observations = config_obj.overwrite_stored_pat_observations
@@ -369,29 +359,25 @@ def get_pat_batch_bloods(
     except Exception as e:
         """"""
         print(f"Error retrieving batch blood test-related observations: {e}")
-        return []
+        return pd.DataFrame()
 
 
 def get_pat_batch_drugs(
-    current_pat_client_id_code,
-    search_term,
-    config_obj=None,
-    cohort_searcher_with_terms_and_search=None,
-):
-    """
-    Retrieve batch medication orders for a patient based on the given parameters.
+    current_pat_client_id_code: str,
+    search_term: str,
+    config_obj: Any,
+    cohort_searcher_with_terms_and_search: Any,
+) -> pd.DataFrame:
+    """Retrieves a batch of medication orders for a patient.
 
     Args:
-        current_pat_client_id_code (str): The client ID code for the current patient.
-        search_term (str): The term used for searching medication orders.
-        config_obj (ConfigObject): An object containing global start and end year/month.
-        cohort_searcher_with_terms_and_search (function): A function for searching a cohort with terms.
+        current_pat_client_id_code: The patient's unique identifier.
+        search_term: The term to search for (currently unused).
+        config_obj: The main configuration object.
+        cohort_searcher_with_terms_and_search: The search function to use.
 
     Returns:
-        list: Batch of medication orders.
-
-    Raises:
-        ValueError: If config_obj is None or missing required attributes.
+        A DataFrame containing the batch of medication orders.
     """
 
     if config_obj is None or not all(
@@ -448,29 +434,25 @@ def get_pat_batch_drugs(
     except Exception as e:
         """"""
         print(f"Error retrieving batch medication orders: {e}")
-        return []
+        return pd.DataFrame()
 
 
 def get_pat_batch_diagnostics(
-    current_pat_client_id_code,
-    search_term,
-    config_obj=None,
-    cohort_searcher_with_terms_and_search=None,
-):
-    """
-    Retrieve batch diagnostic orders for a patient based on the given parameters.
+    current_pat_client_id_code: str,
+    search_term: str,
+    config_obj: Any,
+    cohort_searcher_with_terms_and_search: Any,
+) -> pd.DataFrame:
+    """Retrieves a batch of diagnostic orders for a patient.
 
     Args:
-        current_pat_client_id_code (str): The client ID code for the current patient.
-        search_term (str): The term used for searching diagnostic orders.
-        config_obj (ConfigObject): An object containing global start and end year/month.
-        cohort_searcher_with_terms_and_search (function): A function for searching a cohort with terms.
+        current_pat_client_id_code: The patient's unique identifier.
+        search_term: The term to search for (currently unused).
+        config_obj: The main configuration object.
+        cohort_searcher_with_terms_and_search: The search function to use.
 
     Returns:
-        list: Batch of diagnostic orders.
-
-    Raises:
-        ValueError: If config_obj is None or missing required attributes.
+        A DataFrame containing the batch of diagnostic orders.
     """
     if config_obj is None or not all(
         hasattr(config_obj, attr)
@@ -523,29 +505,25 @@ def get_pat_batch_diagnostics(
     except Exception as e:
         """"""
         print(f"Error retrieving batch diagnostic orders: {e}")
-        return []
+        return pd.DataFrame()
 
 
 def get_pat_batch_epr_docs(
-    current_pat_client_id_code,
-    search_term,
-    config_obj=None,
-    cohort_searcher_with_terms_and_search=None,
-):
-    """
-    Retrieve batch EPR documents for a patient based on the given parameters.
+    current_pat_client_id_code: str,
+    search_term: str,
+    config_obj: Any,
+    cohort_searcher_with_terms_and_search: Any,
+) -> pd.DataFrame:
+    """Retrieves a batch of EPR documents for a patient.
 
     Args:
-        current_pat_client_id_code (str): The client ID code for the current patient.
-        search_term (str): The term used for searching EPR documents.
-        config_obj (ConfigObject): An object containing global start and end year/month.
-        cohort_searcher_with_terms_and_search (function): A function for searching a cohort with terms.
+        current_pat_client_id_code: The patient's unique identifier.
+        search_term: The term to search for (currently unused).
+        config_obj: The main configuration object.
+        cohort_searcher_with_terms_and_search: The search function to use.
 
     Returns:
-        list: Batch of EPR documents.
-
-    Raises:
-        ValueError: If config_obj is None or missing required attributes.
+        A DataFrame containing the batch of EPR documents.
     """
     if config_obj is None or not all(
         hasattr(config_obj, attr)
@@ -713,39 +691,23 @@ def get_pat_batch_epr_docs(
 
 
 def get_pat_batch_epr_docs_annotations(
-    current_pat_client_id_code, config_obj=None, cat=None, t=None
-):
-    """
-    Retrieves and processes annotations for a specific patient within a given date range.
+    current_pat_client_id_code: str, config_obj: Any, cat: Any, t: Any
+) -> pd.DataFrame:
+    """Retrieves or creates annotations for a patient's EPR document batch.
 
-    This function is responsible for retrieving annotations for a single patient
-    within a given time range. It takes in a configuration object, a target date
-    range, a DataFrame containing EPR document annotations, and an optional cohort
-    searcher and medcat object.
+    This function checks if an annotation file for the patient's EPR documents
+    already exists. If so, it reads it. If not, it reads the raw document
+    batch, generates annotations using the provided MedCAT model, and saves
+    the result.
 
-    The function uses the provided configuration to set up parameters such as start
-    time and verbosity level. It then filters the batch_epr_docs_annotations DataFrame
-    based on the target_date_range. If filtered annotations exist, it calculates
-    pretty name count features and returns the resulting DataFrame. If not, it creates
-    a DataFrame with the client_idcode. The resulting DataFrame is displayed if the
-    verbosity level is 6 or higher.
-
-    Parameters:
-    - current_pat_client_id_code (str): The unique identifier for the patient.
-    - target_date_range (str): The date range in the format '(YYYY,MM,DD)'.
-    - batch_epr_docs_annotations (pd.DataFrame): DataFrame containing EPR document annotations.
-    - config_obj (ConfigObject): Configuration object with settings and parameters.
-    - t (obj, optional): Placeholder for a progress bar object.
-    - cohort_searcher_with_terms_and_search (obj, optional): Placeholder for a cohort searcher object from cogstack search functions.
-    - cat (obj, optional): Placeholder for a medcat object with the model used to annotate.
+    Args:
+        current_pat_client_id_code: The patient's unique identifier.
+        config_obj: The main configuration object.
+        cat: The loaded MedCAT `CAT` object.
+        t: The tqdm progress bar instance.
 
     Returns:
-    - pd.DataFrame: DataFrame containing processed annotations for the specified patient.
-
-    Raises:
-    - ValueError: If config_obj is None, a valid configuration must be provided.
-    - TypeError: If batch_epr_docs_annotations is not a pd.DataFrame.
-
+        A DataFrame containing the annotations for the patient's EPR documents.
     """
     batch_epr_target_path = os.path.join(
         config_obj.pre_document_batch_path, str(current_pat_client_id_code) + ".csv"
@@ -779,39 +741,23 @@ def get_pat_batch_epr_docs_annotations(
 
 
 def get_pat_batch_mct_docs_annotations(
-    current_pat_client_id_code, config_obj=None, cat=None, t=None
-):
-    """
-    Retrieves and processes annotations for a specific patient within a given date range.
+    current_pat_client_id_code: str, config_obj: Any, cat: Any, t: Any
+) -> pd.DataFrame:
+    """Retrieves or creates annotations for a patient's MCT document batch.
 
-    This function is responsible for retrieving annotations for a single patient
-    within a given time range. It takes in a configuration object, a target date
-    range, a DataFrame containing mct clinical note document annotations, and an optional cohort
-    searcher and medcat object.
+    This function checks if an annotation file for the patient's MCT documents
+    already exists. If so, it reads it. If not, it reads the raw document
+    batch, generates annotations using the provided MedCAT model, and saves
+    the result.
 
-    The function uses the provided configuration to set up parameters such as start
-    time and verbosity level. It then filters the batch_epr_docs_annotations DataFrame
-    based on the target_date_range. If filtered annotations exist, it calculates
-    pretty name count features and returns the resulting DataFrame. If not, it creates
-    a DataFrame with the client_idcode. The resulting DataFrame is displayed if the
-    verbosity level is 6 or higher.
-
-    Parameters:
-    - current_pat_client_id_code (str): The unique identifier for the patient.
-    - target_date_range (str): The date range in the format '(YYYY,MM,DD)'.
-    - batch_epr_docs_annotations (pd.DataFrame): DataFrame containing EPR document annotations.
-    - config_obj (ConfigObject): Configuration object with settings and parameters.
-    - t (obj, optional): Placeholder for a progress bar object.
-    - cohort_searcher_with_terms_and_search (obj, optional): Placeholder for a cohort searcher object from cogstack search functions.
-    - cat (obj, optional): Placeholder for a medcat object with the model used to annotate.
+    Args:
+        current_pat_client_id_code: The patient's unique identifier.
+        config_obj: The main configuration object.
+        cat: The loaded MedCAT `CAT` object.
+        t: The tqdm progress bar instance.
 
     Returns:
-    - pd.DataFrame: DataFrame containing processed annotations for the specified patient.
-
-    Raises:
-    - ValueError: If config_obj is None, a valid configuration must be provided.
-    - TypeError: If batch_epr_docs_annotations is not a pd.DataFrame.
-
+        A DataFrame containing the annotations for the patient's MCT documents.
     """
     batch_epr_target_path_mct = os.path.join(
         config_obj.pre_document_batch_path_mct, str(current_pat_client_id_code) + ".csv"
@@ -851,25 +797,24 @@ def get_pat_batch_mct_docs_annotations(
 
 
 def get_pat_batch_textual_obs_annotations(
-    current_pat_client_id_code, config_obj=None, cat=None, t=None
-):
-    """
-    Retrieves and processes batch textual observation annotations for a patient.
+    current_pat_client_id_code: str, config_obj: Any, cat: Any, t: Any
+) -> pd.DataFrame:
+    """Retrieves or creates annotations for a patient's textual observation batch.
 
-    This function checks for the existence of a pre-existing annotation batch for
-    the given patient. If the annotation batch exists, it reads and returns it.
-    If not, it reads the batch of textual observations from a CSV file, filters
-    out any entries with missing or empty textual observations, and generates
-    the annotation batch.
+    This function checks if an annotation file for the patient's textual
+    observations already exists. If so, it reads it. If not, it reads the raw
+    observation batch, generates annotations using the provided MedCAT model,
+    and saves the result.
 
-    Parameters:
-        current_pat_client_id_code (str): The client ID code for the current patient.
-        config_obj (ConfigObject, optional): An object containing configuration settings.
-        cat (object, optional): An object for entity recognition.
-        t (object, optional): A progress tracker object.
+    Args:
+        current_pat_client_id_code: The patient's unique identifier.
+        config_obj: The main configuration object.
+        cat: The loaded MedCAT `CAT` object.
+        t: The tqdm progress bar instance.
 
     Returns:
-        pandas.DataFrame: A DataFrame containing the processed batch textual observation annotations.
+        A DataFrame containing the annotations for the patient's textual
+        observations.
     """
 
     batch_textual_obs_document_path = os.path.join(
@@ -911,25 +856,23 @@ def get_pat_batch_textual_obs_annotations(
 
 
 def get_pat_batch_reports_docs_annotations(
-    current_pat_client_id_code, config_obj=None, cat=None, t=None
-):
-    """
-    Retrieves and processes batch report annotations for a patient.
+    current_pat_client_id_code: str, config_obj: Any, cat: Any, t: Any
+) -> pd.DataFrame:
+    """Retrieves or creates annotations for a patient's reports batch.
 
-    This function checks for the existence of a pre-existing annotation batch for
-    the given patient. If the annotation batch exists, it reads and returns it.
-    If not, it reads the batch of reports from a CSV file, filters
-    out any entries with missing or empty textual observations, and generates
-    the annotation batch.
+    This function checks if an annotation file for the patient's reports
+    already exists. If so, it reads it. If not, it reads the raw reports
+    batch, generates annotations using the provided MedCAT model, and saves
+    the result.
 
-    Parameters:
-        current_pat_client_id_code (str): The client ID code for the current patient.
-        config_obj (ConfigObject, optional): An object containing configuration settings.
-        cat (object, optional): An object for entity recognition.
-        t (object, optional): A progress tracker object.
+    Args:
+        current_pat_client_id_code: The patient's unique identifier.
+        config_obj: The main configuration object.
+        cat: The loaded MedCAT `CAT` object.
+        t: The tqdm progress bar instance.
 
     Returns:
-        pandas.DataFrame: A DataFrame containing the processed batch report annotations.
+        A DataFrame containing the annotations for the patient's reports.
     """
     batch_reports_target_path_report = os.path.join(
         config_obj.pre_document_batch_path_reports,
@@ -963,25 +906,21 @@ def get_pat_batch_reports_docs_annotations(
 
 
 def get_pat_batch_mct_docs(
-    current_pat_client_id_code,
-    search_term,
-    config_obj=None,
-    cohort_searcher_with_terms_and_search=None,
-):
-    """
-    Retrieve batch MCT documents for a patient based on the given parameters.
+    current_pat_client_id_code: str,
+    search_term: str,
+    config_obj: Any,
+    cohort_searcher_with_terms_and_search: Any,
+) -> pd.DataFrame:
+    """Retrieves a batch of MCT (MRC clinical notes) documents for a patient.
 
     Args:
-        current_pat_client_id_code (str): The client ID code for the current patient.
-        search_term (str): The term used for searching MCT documents.
-        config_obj (ConfigObject): An object containing global start and end year/month.
-        cohort_searcher_with_terms_and_search (function): A function for searching a cohort with terms.
+        current_pat_client_id_code: The patient's unique identifier.
+        search_term: The term to search for (currently unused).
+        config_obj: The main configuration object.
+        cohort_searcher_with_terms_and_search: The search function to use.
 
     Returns:
-        list: Batch of MCT documents.
-
-    Raises:
-        ValueError: If config_obj is None or missing required attributes.
+        A DataFrame containing the batch of MCT documents.
     """
     if config_obj is None or not all(
         hasattr(config_obj, attr)
@@ -1061,29 +1000,25 @@ def get_pat_batch_mct_docs(
     except Exception as e:
         """"""
         print(f"Error retrieving batch MCT documents: {e}")
-        return []
+        return pd.DataFrame()
 
 
 def get_pat_batch_demo(
-    current_pat_client_id_code,
-    search_term,
-    config_obj=None,
-    cohort_searcher_with_terms_and_search=None,
-):
-    """
-    Retrieve batch demographic information for a patient based on the given parameters.
+    current_pat_client_id_code: str,
+    search_term: str,
+    config_obj: Any,
+    cohort_searcher_with_terms_and_search: Any,
+) -> pd.DataFrame:
+    """Retrieves a batch of demographic information for a patient.
 
     Args:
-        current_pat_client_id_code (str): The client ID code for the current patient.
-        search_term (str): The term used for searching demographic information.
-        config_obj (ConfigObject): An object containing global start and end year/month.
-        cohort_searcher_with_terms_and_search (function): A function for searching a cohort with terms.
+        current_pat_client_id_code: The patient's unique identifier.
+        search_term: The term to search for (currently unused).
+        config_obj: The main configuration object.
+        cohort_searcher_with_terms_and_search: The search function to use.
 
     Returns:
-        list: Batch of demographic information.
-
-    Raises:
-        ValueError: If config_obj is None or missing required attributes.
+        A DataFrame containing the batch of demographic information.
     """
     if config_obj is None or not all(
         hasattr(config_obj, attr)
@@ -1143,30 +1078,25 @@ def get_pat_batch_demo(
     except Exception as e:
         """"""
         print(f"Error retrieving batch demographic information: {e}")
-        return []
+        return pd.DataFrame()
 
 
 def get_pat_batch_reports(
-    current_pat_client_id_code,
-    search_term,
-    config_obj=None,
-    cohort_searcher_with_terms_and_search=None,
-):
-    """
-    Retrieve batch reports for a patient based on the given parameters.
-    Filter reports with doc type filter arg set in config: KHMDC >>>> retreives KHMDC reports
+    current_pat_client_id_code: str,
+    search_term: str,
+    config_obj: Any,
+    cohort_searcher_with_terms_and_search: Any,
+) -> pd.DataFrame:
+    """Retrieves a batch of reports for a patient.
 
     Args:
-        current_pat_client_id_code (str): The client ID code for the current patient.
-        search_term (str): The term used for searching report-related observations.
-        config_obj (ConfigObject): An object containing global start and end year/month.
-        cohort_searcher_with_terms_and_search (function): A function for searching a cohort with terms.
+        current_pat_client_id_code: The patient's unique identifier.
+        search_term: The specific report type to search for.
+        config_obj: The main configuration object.
+        cohort_searcher_with_terms_and_search: The search function to use.
 
     Returns:
-        list: Batch of report-related observations.
-
-    Raises:
-        ValueError: If config_obj is None or missing required attributes.
+        A DataFrame containing the batch of reports.
     """
 
     overwrite_stored_pat_observations = config_obj.overwrite_stored_pat_observations
@@ -1239,29 +1169,25 @@ def get_pat_batch_reports(
     except Exception as e:
         """"""
         print(f"Error retrieving batch reports: {e}")
-        return []
+        return pd.DataFrame()
 
 
 def get_pat_batch_textual_obs_docs(
-    current_pat_client_id_code,
-    search_term,
-    config_obj=None,
-    cohort_searcher_with_terms_and_search=None,
-):
-    """
-    Retrieve batch textual observations for a patient based on the given parameters.
+    current_pat_client_id_code: str,
+    search_term: str,
+    config_obj: Any,
+    cohort_searcher_with_terms_and_search: Any,
+) -> pd.DataFrame:
+    """Retrieves a batch of textual observation documents for a patient.
 
-    Parameters:
-        current_pat_client_id_code (str): The client ID code for the current patient.
-
-        config_obj (ConfigObject): An object containing global start and end year/month. (Default: None)
-        cohort_searcher_with_terms_and_search (function): A function for searching a cohort with terms. (Default: None)
+    Args:
+        current_pat_client_id_code: The patient's unique identifier.
+        search_term: The term to search for (currently unused).
+        config_obj: The main configuration object.
+        cohort_searcher_with_terms_and_search: The search function to use.
 
     Returns:
-        list: Batch of textualObs observations.
-
-    Raises:
-        ValueError: If config_obj is None or missing required attributes.
+        A DataFrame containing the batch of textual observation documents.
     """
 
     overwrite_stored_pat_observations = config_obj.overwrite_stored_pat_observations
@@ -1338,29 +1264,25 @@ def get_pat_batch_textual_obs_docs(
     except Exception as e:
         """"""
         print(f"Error retrieving batch textualObs: {e}")
-        return []
+        return pd.DataFrame()
 
 
 def get_pat_batch_appointments(
-    current_pat_client_id_code,
-    search_term,
-    config_obj=None,
-    cohort_searcher_with_terms_and_search=None,
-):
-    """
-    Retrieve batch appointment details for a patient based on the given parameters.
+    current_pat_client_id_code: str,
+    search_term: str,
+    config_obj: Any,
+    cohort_searcher_with_terms_and_search: Any,
+) -> pd.DataFrame:
+    """Retrieves a batch of appointments for a patient.
 
     Args:
-        current_pat_client_id_code (str): The client ID code for the current patient.
-        search_term (str): The term used for searching appointment-related details.
-        config_obj (ConfigObject): An object containing global start and end year/month.
-        cohort_searcher_with_terms_and_search (function): A function for searching a cohort with terms.
+        current_pat_client_id_code: The patient's unique identifier.
+        search_term: The term to search for (currently unused).
+        config_obj: The main configuration object.
+        cohort_searcher_with_terms_and_search: The search function to use.
 
     Returns:
-        pandas.DataFrame: Batch of appointment-related details.
-
-    Raises:
-        ValueError: If config_obj is None or missing required attributes.
+        A DataFrame containing the batch of appointments.
     """
 
     if config_obj is None or not all(
@@ -1445,4 +1367,4 @@ def get_pat_batch_appointments(
     except Exception as e:
         """"""
         print(f"Error retrieving batch appointments orders: {e}")
-        return []
+        return pd.DataFrame()

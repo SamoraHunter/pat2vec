@@ -10,12 +10,21 @@ import os
 import shutil
 import tempfile
 from contextlib import contextmanager
+from typing import Any, Dict, Iterator, List
 from IPython.display import display
 
 
 @contextmanager
-def temporary_file(suffix=".csv", delete=True):
-    """Context manager for temporary files with proper cleanup."""
+def temporary_file(suffix: str = ".csv", delete: bool = True) -> Iterator[str]:
+    """Context manager for creating and cleaning up temporary files.
+
+    Args:
+        suffix: The file suffix for the temporary file.
+        delete: If True, the file is deleted upon exiting the context.
+
+    Yields:
+        The path to the temporary file.
+    """
     temp_file = tempfile.NamedTemporaryFile(suffix=suffix, delete=False)
     temp_file.close()
     try:
@@ -26,49 +35,48 @@ def temporary_file(suffix=".csv", delete=True):
 
 
 def multi_annots_to_df(
-    current_pat_client_idcode,
-    pat_batch,
-    multi_annots,
-    config_obj=None,
-    t=None,
-    text_column="body_analysed",
-    time_column="updatetime",
-    guid_column="document_guid",
-):
+    current_pat_client_idcode: str,
+    pat_batch: pd.DataFrame,
+    multi_annots: List[Dict[str, Any]],
+    config_obj: Any,
+    t: Any,
+    text_column: str = "body_analysed",
+    time_column: str = "updatetime",
+    guid_column: str = "document_guid",
+) -> pd.DataFrame:
     """Processes MedCAT annotations for a batch of documents, creating and saving a DataFrame.
 
     This function takes a list of MedCAT annotation results, corresponding to a
     batch of documents for a single patient. It iterates through each document's
     annotations, converts them from JSON-like dictionary format into a structured
-    pandas DataFrame using `json_to_dataframe`. These individual DataFrames are
-    then concatenated into a single master DataFrame for the patient.
+    pandas DataFrame using `json_to_dataframe`, and concatenates them into a
+    single master DataFrame for the patient.
 
     The function can optionally enrich the annotation data by joining it with
     ICD-10 and OPCS-4 codes based on settings in the configuration object.
 
     Finally, the resulting DataFrame is saved as a CSV file in the patient's
-    designated annotation batch directory.
+    designated annotation directory.
 
     Args:
-        current_pat_client_idcode (str): The unique identifier for the patient.
-        pat_batch (pd.DataFrame): A DataFrame where each row represents a document
+        current_pat_client_idcode: The unique identifier for the patient.
+        pat_batch: A DataFrame where each row represents a document
             in the patient's batch.
-        multi_annots (list): A list of dictionaries, where each dictionary contains
+        multi_annots: A list of dictionaries, where each dictionary contains
             the MedCAT annotation entities for a corresponding document in `pat_batch`.
-        config_obj (object, optional): A configuration object containing settings
+        config_obj: A configuration object containing settings
             such as file paths (`pre_document_annotation_batch_path`), verbosity
             level, and flags for `add_icd10` and `add_opc4s`. Defaults to None.
-        t (object, optional): A tqdm progress bar object for providing real-time
-            feedback. This parameter is passed but not used in this function.
-        text_column (str, optional): The name of the column in `pat_batch` that
+        t: A tqdm progress bar object for providing real-time feedback.
+        text_column: The name of the column in `pat_batch` that
             contains the document text to be annotated. Defaults to 'body_analysed'.
-        time_column (str, optional): The name of the column in `pat_batch` that
+        time_column: The name of the column in `pat_batch` that
             holds the timestamp for each document. Defaults to 'updatetime'.
-        guid_column (str, optional): The name of the column in `pat_batch` that
+        guid_column: The name of the column in `pat_batch` that
             contains the unique identifier for each document. Defaults to 'document_guid'.
 
     Returns:
-        pd.DataFrame: A consolidated DataFrame containing all annotations for the
+        A consolidated DataFrame containing all annotations for the
         patient's document batch. An empty DataFrame is returned if no valid
         annotations are processed.
 

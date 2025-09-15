@@ -1,25 +1,45 @@
 import pandas as pd
 from rapidfuzz import fuzz
 import random
+from typing import List, Dict, Any
 
 
 def sample_by_terms(
-    df, column, term_groups, min_samples_per_term, total_sample_size, threshold=75
-):
-    """
-    Randomly samples rows from a DataFrame based on fuzzy matching of terms.
-    Useful for sampling documents for a medCat project with uneven distribution across terms.
+    df: pd.DataFrame,
+    column: str,
+    term_groups: List[List[str]],
+    min_samples_per_term: int,
+    total_sample_size: int,
+    threshold: int = 75,
+) -> pd.DataFrame:
+    """Randomly samples rows from a DataFrame based on fuzzy matching of terms.
 
-    Parameters:
-    df (pd.DataFrame): The DataFrame to sample from.
-    column (str): The column to search for matches.
-    term_groups (list of list of str): Groups of terms where each group is treated as a single entity.
-    min_samples_per_term (int): Minimum number of samples to take per term group.
-    total_sample_size (int): Desired total number of samples.
-    threshold (int): Fuzzy matching threshold (0-100).
+    This function is useful for creating a balanced sample set for tasks like
+    MedCAT model training, where the source data may have an uneven
+    distribution of concepts. It performs stratified sampling based on term
+    groups.
+
+    The sampling process is as follows:
+    1.  It ensures a `min_samples_per_term` for each group of terms.
+    2.  It then proportionally samples from the remaining available documents
+        to reach the `total_sample_size`.
+
+    Args:
+        df: The DataFrame to sample from.
+        column: The column in `df` to search for term matches.
+        term_groups: A list of term groups, where each inner list contains
+            synonymous or related terms.
+        min_samples_per_term: The minimum number of samples to retrieve for
+            each term group.
+        total_sample_size: The desired total number of samples in the final
+            DataFrame.
+        threshold: The fuzzy matching score (0-100) required to consider a
+            term as a match.
 
     Returns:
-    pd.DataFrame: A DataFrame containing the sampled rows with an added column for matched terms.
+        A new DataFrame containing the sampled rows. An additional
+        'matched_term' column is added for debugging, showing which specific
+        term from a group matched the row.
     """
     # Flatten term groups for creating match keys and initialize result
     term_matches = {tuple(group): [] for group in term_groups}
@@ -125,18 +145,35 @@ def sample_by_terms(
 
 
 def coerce_document_df_to_medcat_trainer_input(
-    df, text_column_value="body_analysed", name_value="_id"
-):
-    """
-    Prepares a DataFrame for MedCAT trainer input by renaming specified columns and ensuring unique names.
+    df: pd.DataFrame,
+    text_column_value: str = "body_analysed",
+    name_value: str = "_id",
+) -> pd.DataFrame:
+    """Prepares a DataFrame for MedCAT trainer input format.
 
-    Parameters:
-        df (pd.DataFrame): Input DataFrame.
-        text_column_value (str): Name of the column to use for text data (default is 'body_analysed').
-        name_value (str): Name of the column to use for the name data (default is '_id').
+    This function transforms a given DataFrame into the specific two-column
+    format required by the MedCAT trainer: a 'name' column for unique document
+    identifiers and a 'text' column for the document content.
+
+    It performs the following steps:
+    1.  Renames the specified `name_value` and `text_column_value` columns to
+        'name' and 'text', respectively.
+    2.  Ensures that all values in the 'name' column are unique. If duplicates
+        are found, they are made unique by appending a suffix (e.g., `_1`, `_2`).
+    3.  Returns a new DataFrame containing only the 'name' and 'text' columns.
+
+    Args:
+        df: The input DataFrame.
+        text_column_value: The name of the column containing the document text.
+        name_value: The name of the column to be used as the document identifier.
 
     Returns:
-        pd.DataFrame: A new DataFrame with columns renamed to 'name' and 'text'.
+        A new DataFrame with 'name' and 'text' columns, ready for MedCAT
+        trainer.
+
+    Raises:
+        KeyError: If `name_value` or `text_column_value` are not found in the
+            DataFrame's columns.
     """
     # Clean column names to avoid issues with whitespace
     df.columns = df.columns.str.strip()

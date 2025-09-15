@@ -1,29 +1,35 @@
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 import pandas as pd
 import regex
+from pandas import Timestamp
 
 
 def find_date(
     txt: str,
-    original_update_time_value=None,
+    original_update_time_value: Optional[Timestamp] = None,
     reg: str = "Entered on -",
     window: int = 20,
     verbosity: int = 0,
 ) -> List[Dict[str, Any]]:
-    """
-    Find and extract chunks of text with associated dates from the input text.
+    """Finds and extracts date-stamped text chunks from a larger text body.
 
-    Parameters:
-    - txt (str): Input text to search for date entries.
-    - reg (str, optional): Regular expression pattern to identify date entries (default is "Entered on -").
-    - window (int, optional): Size of the window to extract text around the identified date entries (default is 20).
+    This function scans through a given text for a specific regular expression
+    pattern that indicates a date entry (e.g., "Entered on -"). For each match,
+    it attempts to parse a timestamp from the subsequent text. It then splits
+    the original text into chunks, with each chunk ending at a newly found
+    timestamp.
+
+    Args:
+        txt: The input text to search for date entries.
+        original_update_time_value: A fallback timestamp to use if a date cannot be parsed from a chunk.
+        reg: The regular expression pattern to identify the start of a date entry.
+        window: The character window size after the `reg` match to search for a timestamp.
+        verbosity: The level of logging for messages.
 
     Returns:
-    List[Dict[str, Any]]: List of dictionaries containing extracted chunks with associated dates.
-
-    Example:
-    >>> chunks_list = find_date("Sample text with date entries.")
+        A list of dictionaries, where each dictionary represents a text chunk
+        and contains the text, the parsed date, and metadata about the match.
     """
 
     reg = "Entered on -"
@@ -89,18 +95,24 @@ def find_date(
     return chunks
 
 
-def split_clinical_notes(clin_note: pd.DataFrame, verbosity_val=0) -> pd.DataFrame:
-    """
-    Split clinical notes into chunks based on extracted dates.
+def split_clinical_notes(
+    clin_note: pd.DataFrame, verbosity_val: int = 0
+) -> Tuple[pd.DataFrame, pd.DataFrame]:
+    """Splits clinical notes from an EPR schema DataFrame into date-stamped chunks.
 
-    Parameters:
-    - clin_note (pd.DataFrame): DataFrame containing clinical notes to be split.
+    This function iterates through a DataFrame of clinical notes (assuming an
+    EPR-like schema with 'body_analysed' and 'updatetime' columns). It uses
+    the `find_date` function to break down each note's text into smaller
+    documents based on embedded timestamps.
+
+    Args:
+        clin_note: A DataFrame containing the clinical notes to be split.
+        verbosity_val: The verbosity level passed to the `find_date` function.
 
     Returns:
-    pd.DataFrame: DataFrame containing the split clinical notes.
-
-    Example:
-    >>> result_df = split_clinical_notes(clinical_notes_df)
+        A tuple containing two DataFrames:
+        - pd.DataFrame: The processed notes, split into smaller chunks.
+        - pd.DataFrame: The original rows of notes that could not be split.
     """
 
     extracted = []
@@ -162,18 +174,24 @@ def split_clinical_notes(clin_note: pd.DataFrame, verbosity_val=0) -> pd.DataFra
     return processed, none_rows
 
 
-def split_clinical_notes_mct(clin_note: pd.DataFrame, verbosity_val=0) -> pd.DataFrame:
-    """
-    Split clinical notes into chunks based on extracted dates. MCT schema from observations index.
+def split_clinical_notes_mct(
+    clin_note: pd.DataFrame, verbosity_val: int = 0
+) -> Tuple[pd.DataFrame, pd.DataFrame]:
+    """Splits clinical notes from an MCT schema DataFrame into date-stamped chunks.
 
-    Parameters:
-    - clin_note (pd.DataFrame): DataFrame containing clinical notes to be split.
+    This function is similar to `split_clinical_notes` but is tailored for an
+    MCT/observations schema (with 'observation_valuetext_analysed' and
+    'observationdocument_recordeddtm' columns). It breaks down each note's
+    text into smaller documents based on embedded timestamps.
+
+    Args:
+        clin_note: A DataFrame containing the clinical notes to be split.
+        verbosity_val: The verbosity level passed to the `find_date` function.
 
     Returns:
-    pd.DataFrame: DataFrame containing the split clinical notes.
-
-    Example:
-    >>> result_df = split_clinical_notes(clinical_notes_df)
+        A tuple containing two DataFrames:
+        - pd.DataFrame: The processed notes, split into smaller chunks.
+        - pd.DataFrame: The original rows of notes that could not be split.
     """
 
     # n.b possibly redundant, no split ever needed?
@@ -239,20 +257,25 @@ def split_clinical_notes_mct(clin_note: pd.DataFrame, verbosity_val=0) -> pd.Dat
 
 
 def split_and_append_chunks(
-    docs: pd.DataFrame, epr=True, mct=False, verbosity: int = 0
+    docs: pd.DataFrame, epr: bool = True, mct: bool = False, verbosity: int = 0
 ) -> pd.DataFrame:
-    """
-    Split and append clinical notes in a DataFrame.
+    """Filters, splits, and re-appends clinical notes within a DataFrame.
 
-    Parameters:
-    - docs (pd.DataFrame): Input DataFrame containing documents with a 'document_description' column.
-    - verbosity (int, optional): Verbosity level for logging (default is 0).
+    This function acts as a wrapper to orchestrate the clinical note splitting
+    process. It identifies clinical notes within a larger document DataFrame,
+    sends them to the appropriate splitting function (`split_clinical_notes` or
+    `split_clinical_notes_mct`), and then concatenates the resulting smaller
+    chunks back with the original non-clinical documents.
+
+    Args:
+        docs: The input DataFrame containing various document types.
+        epr: If True, assumes an EPR schema for splitting.
+        mct: If True, assumes an MCT/observations schema for splitting.
+        verbosity: The verbosity level for logging and splitting.
 
     Returns:
-    pd.DataFrame: Concatenated DataFrame containing both non-clinical and split clinical notes.
-
-    Example:
-    >>> result_df = split_and_append_chunks(input_df, verbosity=1)
+        A new DataFrame containing the original non-clinical notes plus the
+        newly created smaller chunks from the split clinical notes.
     """
 
     # Filter clinical and non-clinical notes

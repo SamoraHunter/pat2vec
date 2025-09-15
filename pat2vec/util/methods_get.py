@@ -1,26 +1,22 @@
 import os
 import pickle
 import subprocess
-import time
 from datetime import datetime, timedelta
 from io import StringIO
 from os.path import exists
 from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import numpy as np
-import pandas as pd
 import paramiko
 from colorama import Back, Fore, Style
 from dateutil.parser import parse
 from IPython.display import display
 from tqdm import tqdm
-import pytz
 
 import pandas as pd
-from dateutil.parser import parse
-import warnings
 
-# Use the modern standard library for timezones (Python 3.9+)
+# Use the modern standard library for timezones
 import logging
 
 from pat2vec.util.generate_date_list import generate_date_list
@@ -29,35 +25,28 @@ from pat2vec.util.generate_date_list import generate_date_list
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 
 
-from datetime import datetime
+def list_dir_wrapper(path: str, config_obj: Any = None) -> List[str]:
+    """Lists the contents of a directory, either locally or remotely via SFTP.
 
+    This function acts as a wrapper around `os.listdir` and `sftp.listdir`
+    to provide a consistent interface for listing directory contents based on
+    the `remote_dump` setting in the configuration object.
 
-color_bars = [
-    Fore.RED,
-    Fore.GREEN,
-    Fore.BLUE,
-    Fore.MAGENTA,
-    Fore.YELLOW,
-    Fore.CYAN,
-    Fore.WHITE,
-]
+    Args:
+        path: The path to the directory to list.
+        config_obj: The configuration object containing SFTP credentials and
+            settings if `remote_dump` is True.
 
-
-def list_dir_wrapper(path, config_obj=None):
-
+    Returns:
+        A list of filenames in the specified directory.
+    """
     hostname = config_obj.hostname
-
     username = config_obj.username
-
     password = config_obj.password
-
     remote_dump = config_obj.remote_dump
-
     share_sftp = config_obj.share_sftp
-
     sftp_obj = config_obj.sftp_obj
-
-    # global sftp_client
+    sftp_client = None  # Initialize to avoid UnboundLocalError
     if remote_dump:
         if share_sftp == False:
             ssh_client = paramiko.SSHClient()
@@ -66,19 +55,27 @@ def list_dir_wrapper(path, config_obj=None):
 
             sftp_client = ssh_client.open_sftp()
             sftp_obj = sftp_client
-        elif sftp_obj == None:
-            sftp_obj = sftp_client
 
         res = sftp_obj.listdir(path)
+        if not share_sftp and sftp_client:
+            sftp_client.close()
 
         return res
-
     else:
-
         return os.listdir(path)
 
 
-def convert_timestamp_to_tuple(timestamp):
+def convert_timestamp_to_tuple(timestamp: str) -> Tuple[int, int]:
+    """Converts a timestamp string to a (year, month) tuple.
+
+    Args:
+        timestamp: The timestamp string to convert, expected in the format
+            `%Y-%m-%dT%H:%M:%S.%f%z`.
+
+    Returns:
+        A tuple containing the year and month as integers.
+    """
+
     # parse the timestamp string into a datetime object
     dt = datetime.strptime(timestamp, "%Y-%m-%dT%H:%M:%S.%f%z")
 
@@ -90,8 +87,21 @@ def convert_timestamp_to_tuple(timestamp):
     return (year, month)
 
 
-def enum_target_date_vector(target_date_range, current_pat_client_id_code, config_obj):
+def enum_target_date_vector(
+    target_date_range: Tuple[int, int, int],
+    current_pat_client_id_code: str,
+    config_obj: Any,
+) -> pd.DataFrame:
+    """Creates a one-hot encoded date vector for a target date.
 
+    Args:
+        target_date_range: A tuple of (year, month, day) for the target date.
+        current_pat_client_id_code: The patient's ID.
+        config_obj: The configuration object.
+
+    Returns:
+        A single-row DataFrame with a one-hot encoded column for the target date.
+    """
     empty_date_vector = get_empty_date_vector(config_obj=config_obj)
 
     empty_date_vector.at[0, str(target_date_range) + "_date_time_stamp"] = 1
@@ -102,9 +112,20 @@ def enum_target_date_vector(target_date_range, current_pat_client_id_code, confi
 
 
 def enum_exact_target_date_vector(
-    target_date_range, current_pat_client_id_code, config_obj
-):
+    target_date_range: Tuple[int, int, int],
+    current_pat_client_id_code: str,
+    config_obj: Any,
+) -> pd.DataFrame:
+    """Creates a one-hot encoded date vector for a specific target date.
 
+    Args:
+        target_date_range: A tuple of (year, month, day) for the target date.
+        current_pat_client_id_code: The patient's ID.
+        config_obj: The configuration object (currently unused).
+
+    Returns:
+        A single-row DataFrame with a one-hot encoded column for the target date.
+    """
     # empty_date_vector = get_empty_date_vector(config_obj=config_obj)
 
     empty_date_vector = pd.DataFrame(
@@ -120,8 +141,15 @@ def enum_exact_target_date_vector(
     return empty_date_vector
 
 
-def dump_results(file_data, path, config_obj=None):
+def dump_results(file_data: Any, path: str, config_obj: Any = None) -> None:
+    """Saves data to a file using pickle, either locally or remotely via SFTP.
 
+    Args:
+        file_data: The Python object to be pickled.
+        path: The destination file path.
+        config_obj: The configuration object containing SFTP credentials and
+            settings if `remote_dump` is True.
+    """
     share_sftp = config_obj.share_sftp
     hostname = config_obj.hostname
     username = config_obj.username
@@ -130,7 +158,7 @@ def dump_results(file_data, path, config_obj=None):
     sftp_obj = config_obj.sftp_obj
 
     remote_dump = config_obj.remote_dump
-
+    sftp_client = None
     if remote_dump:
         if share_sftp == False:
             ssh_client = paramiko.SSHClient()
@@ -141,10 +169,10 @@ def dump_results(file_data, path, config_obj=None):
             sftp_obj = sftp_client
 
         with sftp_obj.open(path, "w") as file:
-
             pickle.dump(file_data, file)
         if share_sftp == False:
-            sftp_obj.close()
+            if sftp_client:
+                sftp_client.close()
             sftp_obj.close()
 
     else:
@@ -153,15 +181,15 @@ def dump_results(file_data, path, config_obj=None):
 
 
 def update_pbar(
-    current_pat_client_id_code,
-    start_time,
-    stage_int,
-    stage_str,
-    t,
-    config_obj,
-    skipped_counter=None,
-    **n_docs_to_annotate,
-):
+    current_pat_client_id_code: str,
+    start_time: datetime,
+    stage_int: int,
+    stage_str: str,
+    t: tqdm,
+    config_obj: Any,
+    skipped_counter: Optional[Union[int, Any]] = None,
+    **n_docs_to_annotate: Any,
+) -> None:
     """Updates a tqdm progress bar with formatted information about the current processing state.
 
     This function dynamically sets the description and color of a tqdm progress bar
@@ -170,22 +198,20 @@ def update_pbar(
     thresholds.
 
     Args:
-        current_pat_client_id_code (str): The identifier of the patient currently being processed.
-        start_time (datetime.datetime): The start time of the current operation.
+        current_pat_client_id_code: The identifier of the patient currently being processed.
+        start_time: The start time of the current operation.
             Note: This parameter is currently overwritten by `config_obj.start_time`.
-        stage_int (int): An integer representing the processing stage. Note: This parameter is currently unused.
-        stage_str (str): A string describing the current processing stage (e.g., "demo", "annotating").
-        t (tqdm.tqdm): The tqdm progress bar instance to update.
-        config_obj (object): A configuration object containing settings like `start_time`,
+        stage_int: An integer representing the processing stage. Note: This parameter is currently unused.
+        stage_str: A string describing the current processing stage (e.g., "demo", "annotating").
+        t: The tqdm progress bar instance to update.
+        config_obj: A configuration object containing settings like `start_time`,
             `multi_process`, and various `slow_execution_threshold` values.
-        skipped_counter (Union[int, multiprocessing.Value], optional): A counter for the number of
+        skipped_counter: A counter for the number of
             skipped items. Can be a standard integer or a multiprocessing-safe value. Defaults to None.
         **n_docs_to_annotate: Arbitrary keyword arguments that are displayed at the end of the
             progress bar description. Useful for showing counts like the number of documents
             to annotate.
-
     """
-
     start_time = config_obj.start_time
 
     multi_process = config_obj.multi_process
@@ -194,11 +220,9 @@ def update_pbar(
     slow_execution_threshold_extreme = config_obj.slow_execution_threshold_extreme
 
     colour_val = Fore.GREEN + Style.BRIGHT + stage_str
-
+    counter_disp = 0
     if multi_process:
-
         counter_disp = skipped_counter.value
-
     else:
         counter_disp = skipped_counter
 
@@ -236,7 +260,7 @@ def update_pbar(
     t.refresh()
 
 
-def get_free_gpu():
+def get_free_gpu() -> Tuple[int, str]:
     """Identifies and returns the GPU with the most available free memory.
 
     This function executes the `nvidia-smi` command-line utility to query the
@@ -248,9 +272,9 @@ def get_free_gpu():
     compute-intensive task in a multi-GPU system.
 
     Returns:
-        tuple[int, str]: A tuple where the first element is the integer index
-        of the GPU with the most free memory, and the second element is a
-        string representing the amount of free memory in MiB (e.g., "1024").
+        A tuple where the first element is the integer index of the GPU with
+        the most free memory, and the second element is a string representing
+        the amount of free memory in MiB (e.g., "1024").
 
     Raises:
         FileNotFoundError: If the `nvidia-smi` command is not found in the
@@ -258,7 +282,6 @@ def get_free_gpu():
         subprocess.CalledProcessError: If the `nvidia-smi` command fails or
             returns a non-zero exit code.
     """
-
     gpu_stats = subprocess.check_output(
         ["nvidia-smi", "--format=csv", "--query-gpu=memory.used,memory.free"]
     )
@@ -269,309 +292,60 @@ def get_free_gpu():
     )
     print("GPU usage:\n{}".format(gpu_df))
     gpu_df["memory.free"] = gpu_df["memory.free"].map(lambda x: x.rstrip(" [MiB]"))
-    idx = gpu_df["memory.free"].astype(int).idxmax()
+    idx = gpu_df["memory.free"].astype(int).idxmax()  # type: ignore
     print(
         "Returning GPU{} with {} free MiB".format(idx, gpu_df.iloc[idx]["memory.free"])
     )
     return int(idx), gpu_df.iloc[idx]["memory.free"]
 
 
-def method1(self):
+def convert_date(date_string: str) -> datetime:
+    """Converts a date string in 'YYYY-MM-DD' format to a datetime object.
 
-    self.logger.debug("This is a debug message from your_method.")
-    self.logger.warning("This is a warning message from your_method.")
+    Args:
+        date_string: The string to convert, which may include a time part
+            (e.g., 'YYYY-MM-DDTHH:MM:SS').
 
-    # Code for method1
-    pass
-
-
-def method2(self):
-    # Code for method2
-    pass
-
-
-def __str__(self):
-    return f"MyClass instance with parameters: {self.parameter1}, {self.parameter2}"
-
-
-color_bars = [
-    Fore.RED,
-    Fore.GREEN,
-    Fore.BLUE,
-    Fore.MAGENTA,
-    Fore.YELLOW,
-    Fore.CYAN,
-    Fore.WHITE,
-]
-
-
-def list_dir_wrapper(path, config_obj=None):
-
-    hostname = config_obj.hostname
-
-    username = config_obj.username
-
-    password = config_obj.password
-
-    remote_dump = config_obj.remote_dump
-
-    share_sftp = config_obj.share_sftp
-
-    sftp_obj = config_obj.sftp_obj
-
-    # global sftp_client
-    if remote_dump:
-        if share_sftp == False:
-            ssh_client = paramiko.SSHClient()
-            ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-            ssh_client.connect(hostname=hostname, username=username, password=password)
-
-            sftp_client = ssh_client.open_sftp()
-            sftp_obj = sftp_client
-        elif sftp_obj == None:
-            sftp_obj = sftp_client
-
-        res = sftp_obj.listdir(path)
-
-        return res
-
-    else:
-
-        return os.listdir(path)
-
-
-def convert_date(date_string):
+    Returns:
+        A datetime object representing the date part of the string.
+    """
     date_string = date_string.split("T")[0]
     date_object = datetime.strptime(date_string, "%Y-%m-%d")
     return date_object
 
 
-def get_empty_date_vector(config_obj):
-
-    # start date. Other days are for duration of time window
-
-    start_date = config_obj.start_date
-
-    years = config_obj.years
-    months = config_obj.months
-    days = config_obj.days
-
-    interval_window_delta = config_obj.time_window_interval_delta
-
-    combinations = generate_date_list(
-        start_date, years, months, days, interval_window_delta, config_obj=config_obj
-    )
-
-    combinations = [str(item) + "_" + "date_time_stamp" for item in combinations]
-
-    # untested float cast
-    return pd.DataFrame(data=0.0, index=np.arange(1), columns=combinations).astype(
-        float
-    )
-
-
-def sftp_exists(path, config_obj=None):
-
-    hostname = config_obj.hostname
-
-    username = config_obj.username
-
-    password = config_obj.password
-
-    sftp_obj = config_obj.sftp_obj
-
-    share_sftp = config_obj.share_sftp
-
-    try:
-        if share_sftp == False:
-            ssh_client = paramiko.SSHClient()
-            ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-            ssh_client.connect(hostname=hostname, username=username, password=password)
-
-            sftp_obj = ssh_client.open_sftp()
-
-        sftp_obj.stat(path)
-
-        if share_sftp == False:
-            sftp_obj.close()
-            sftp_obj.close()
-        return True
-    except FileNotFoundError:
-        return False
-
-
-def list_dir_wrapper(path, config_obj=None):
-
-    hostname = config_obj.hostname
-
-    username = config_obj.username
-
-    password = config_obj.password
-
-    sftp_obj = config_obj.sftp_obj
-
-    remote_dump = config_obj.remote_dump
-
-    share_sftp = config_obj.share_sftp
-
-    # global sftp_client
-    if remote_dump:
-        if share_sftp == False:
-            ssh_client = paramiko.SSHClient()
-            ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-            ssh_client.connect(hostname=hostname, username=username, password=password)
-
-            sftp_client = ssh_client.open_sftp()
-            sftp_obj = sftp_client
-        elif sftp_obj == None:
-            sftp_obj = sftp_client
-
-        res = sftp_obj.listdir(path)
-
-        return res
-
-    else:
-
-        return os.listdir(path)
-
-
-def exist_check(path, config_obj=None):
-
-    sftp_obj = config_obj.sftp_obj
-    remote_dump = config_obj.remote_dump
-
-    if remote_dump:
-        return sftp_exists(path, config_obj)
-    else:
-        return exists(path)
-
-
-def check_sftp_connection(self, remote_directory, config_obj):
-
-    hostname = config_obj.hostname
-    port = config_obj.port
-    username = config_obj.username
-    password = config_obj.password
-
-    try:
-        # Create an SSH client
-        ssh = paramiko.SSHClient()
-
-        # Automatically add the server's host key
-        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-
-        # Connect to the server
-        ssh.connect(hostname, port, username, password)
-
-        # Open an SFTP session
-        sftp = ssh.open_sftp()
-
-        # Check if the connection is successful by listing the remote directory
-        remote_directory = sftp.listdir()
-        print(f"Connection successful. Remote directory contents: {remote_directory}")
-
-        # Close the SFTP session and the SSH connection
-        sftp.close()
-        ssh.close()
-
-    except Exception as e:
-        print(f"Error: {e}")
-
-
-def method1(self):
-
-    self.logger.debug("This is a debug message from your_method.")
-    self.logger.warning("This is a warning message from your_method.")
-
-    # Code for method1
-    pass
-
-
-def method2(self):
-    # Code for method2
-    pass
-
-
-def __str__(self):
-    return f"MyClass instance with parameters: {self.parameter1}, {self.parameter2}"
-
-
-def write_remote(path, csv_file, config_obj=None):
-    """
-    Write a Pandas DataFrame to a remote file using SFTP or SSH.
-
-    Parameters:
-    - path (str): The remote path where the file should be written.
-    - csv_file (pd.DataFrame): The DataFrame to be written to the remote file.
-    - config_obj (ConfigObject, optional): An object containing configuration details.
-                                           Should have 'hostname', 'username', 'password',
-                                           'share_sftp', and 'sftp_obj' attributes.
-
-    Returns:
-    None
-    """
-
-    if config_obj is None:
-        raise ValueError("Config object cannot be None.")
-
-    hostname = config_obj.hostname
-    username = config_obj.username
-    password = config_obj.password
-    share_sftp = config_obj.share_sftp
-
-    if share_sftp:
-        sftp_obj = config_obj.sftp_obj
-    else:
-        ssh_client = paramiko.SSHClient()
-        ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        ssh_client.connect(hostname=hostname, username=username, password=password)
-        sftp_client = ssh_client.open_sftp()
-        sftp_obj = sftp_client
-
-    with sftp_obj.open(path, "w") as file:
-        csv_file.to_csv(file)
-
-    if not share_sftp:
-        sftp_obj.close()
-        ssh_client.close()
-
-
-def write_csv_wrapper(path, csv_file_data=None, config_obj=None):
-    """
-    Write CSV data to a file either locally or remotely based on the configuration.
-
-    Parameters:
-    - path (str): The path to the CSV file.
-    - csv_file_data (pd.DataFrame): The DataFrame containing the CSV data.
-    - config_obj (ConfigObject): An object containing configuration settings, including 'remote_dump'.
-
-    Returns:
-    None
+def write_csv_wrapper(
+    path: str, csv_file_data: Optional[pd.DataFrame] = None, config_obj: Any = None
+) -> None:
+    """Writes CSV data to a file either locally or remotely.
+
+    Args:
+        path: The path to the destination CSV file.
+        csv_file_data: The DataFrame to write.
+        config_obj: An object containing configuration settings, including
+            'remote_dump'.
     """
     remote_dump = config_obj.remote_dump
 
     if not remote_dump:
         # Write data locally
-        csv_file_data.to_csv(path, index=False)
+        if csv_file_data is not None:
+            csv_file_data.to_csv(path, index=False)
     else:
         # Write data remotely using a custom function (write_remote)
         write_remote(path, csv_file_data, config_obj=config_obj)
 
 
-def read_remote(path, config_obj=None):
-    """
-    Read a remote CSV file using SFTP or SSH and return a Pandas DataFrame.
+def read_remote(path: str, config_obj: Any = None) -> pd.DataFrame:
+    """Reads a remote CSV file via SFTP and returns a pandas DataFrame.
 
-    Parameters:
-    - path (str): The remote path from where the file should be read.
-    - config_obj (ConfigObject, optional): An object containing configuration details.
-                                           Should have 'hostname', 'username', 'password',
-                                           'share_sftp', and 'sftp_obj' attributes.
+    Args:
+        path: The remote path of the CSV file to read.
+        config_obj: An object containing configuration details.
 
     Returns:
-    pd.DataFrame: The DataFrame containing the data read from the remote CSV file.
+        The DataFrame containing the data read from the remote CSV file.
     """
-
     if config_obj is None:
         raise ValueError("Config object cannot be None.")
 
@@ -579,7 +353,7 @@ def read_remote(path, config_obj=None):
     username = config_obj.username
     password = config_obj.password
     share_sftp = config_obj.share_sftp
-
+    sftp_client = None  # Initialize to ensure it's defined for the finally block
     if share_sftp:
         sftp_obj = config_obj.sftp_obj
     else:
@@ -588,29 +362,31 @@ def read_remote(path, config_obj=None):
         ssh_client.connect(hostname=hostname, username=username, password=password)
         sftp_client = ssh_client.open_sftp()
         sftp_obj = sftp_client
+    try:
+        with sftp_obj.open(path, "r") as file:
+            # Read CSV content into a Pandas DataFrame
+            csv_content = file.read().decode("utf-8")
+            df = pd.read_csv(StringIO(csv_content))
+        return df
+    finally:
+        if not share_sftp and sftp_client:
+            sftp_client.close()
+            ssh_client.close()
 
-    with sftp_obj.open(path, "r") as file:
-        # Read CSV content into a Pandas DataFrame
-        csv_content = file.read().decode("utf-8")
-        df = pd.read_csv(StringIO(csv_content))
 
-    if not share_sftp:
-        sftp_obj.close()
-        ssh_client.close()
+def read_csv_wrapper(path: str, config_obj: Any = None) -> pd.DataFrame:
+    """Reads CSV data from a file, handling both local and remote paths.
 
-    return df
+    This function is a wrapper that calls either `pd.read_csv` for local files
+    or `read_remote` for SFTP paths, based on the `remote_dump` flag in the
+    configuration.
 
-
-def read_csv_wrapper(path, config_obj=None):
-    """
-    Read CSV data from a file either locally or remotely based on the configuration.
-
-    Parameters:
-    - path (str): The path to the CSV file.
-    - config_obj (ConfigObject): An object containing configuration settings, including 'remote_dump'.
+    Args:
+        path: The path to the CSV file (local or remote).
+        config_obj: An object containing configuration settings, including 'remote_dump'.
 
     Returns:
-    pd.DataFrame: The DataFrame containing the data read from the CSV file.
+        The DataFrame containing the data read from the CSV file.
     """
     remote_dump = config_obj.remote_dump
 
@@ -624,18 +400,14 @@ def read_csv_wrapper(path, config_obj=None):
     return df
 
 
-def create_local_folders(config_obj=None):
-    """
-    Create local folders for patent documents and annotated vectors.
+def create_local_folders(config_obj: Any = None) -> None:
+    """Creates local project directories for storing intermediate files.
 
-    Parameters:
-    - root_path (str): The root path where the folders should be created.
-    - project_name (str): The name of the project.
-
-    Returns:
-    None
+    Args:
+        config_obj: The configuration object containing `root_path` and
+            `proj_name`.
     """
-    project_name = config_obj.project_name
+    project_name = config_obj.proj_name
 
     root_path = config_obj.root_path
 
@@ -648,19 +420,15 @@ def create_local_folders(config_obj=None):
     Path(pat_doc_annot_vec_folder_path).mkdir(parents=True, exist_ok=True)
 
 
-def create_remote_folders(config_obj=None):
-    """
-    Create remote folders for patent documents and annotated vectors using SFTP or SSH.
+def create_remote_folders(config_obj: Any = None) -> None:
+    """Creates remote project directories for storing intermediate files via SFTP.
 
-    Parameters:
-    - root_path (str): The root path where the folders should be created remotely.
-    - project_name (str): The name of the project.
-    - config_obj (ConfigObject, optional): An object containing configuration details.
-                                           Should have 'hostname', 'username', 'password',
-                                           'share_sftp', and 'sftp_obj' attributes.
+    Args:
+        config_obj: An object containing configuration details like `root_path`,
+            `proj_name`, and SFTP credentials.
 
-    Returns:
-    None
+    Raises:
+        ValueError: If `config_obj` is not provided.
     """
     root_path = config_obj.root_path
     project_name = config_obj.proj_name
@@ -672,7 +440,7 @@ def create_remote_folders(config_obj=None):
     username = config_obj.username
     password = config_obj.password
     share_sftp = config_obj.share_sftp
-
+    sftp_client = None  # Initialize for the finally block
     if share_sftp:
         sftp_obj = config_obj.sftp_obj
     else:
@@ -681,46 +449,37 @@ def create_remote_folders(config_obj=None):
         ssh_client.connect(hostname=hostname, username=username, password=password)
         sftp_client = ssh_client.open_sftp()
         sftp_obj = sftp_client
-
-    pat_doc_folder_path = root_path + "/" + project_name + "/pat_docs/"
-    pat_doc_annot_vec_folder_path = (
-        root_path + "/" + project_name + "/pat_docs_annot_vecs/"
-    )
-
     try:
-        # Create the remote directory if it doesn't exist
-        sftp_obj.stat(pat_doc_folder_path)
-    except FileNotFoundError:
-        sftp_obj.mkdir(pat_doc_folder_path)
+        pat_doc_folder_path = root_path + "/" + project_name + "/pat_docs/"
+        pat_doc_annot_vec_folder_path = (
+            root_path + "/" + project_name + "/pat_docs_annot_vecs/"
+        )
 
-    try:
-        # Create the remote directory if it doesn't exist
-        sftp_obj.stat(pat_doc_annot_vec_folder_path)
-    except FileNotFoundError:
-        sftp_obj.mkdir(pat_doc_annot_vec_folder_path)
+        try:
+            sftp_obj.stat(pat_doc_folder_path)
+        except FileNotFoundError:
+            sftp_obj.mkdir(pat_doc_folder_path)
 
-    if not share_sftp:
-        sftp_obj.close()
-        ssh_client.close()
+        try:
+            sftp_obj.stat(pat_doc_annot_vec_folder_path)
+        except FileNotFoundError:
+            sftp_obj.mkdir(pat_doc_annot_vec_folder_path)
+
+    finally:
+        if not share_sftp and sftp_client:
+            sftp_client.close()
+            ssh_client.close()
 
 
-def create_folders_annot_csv_wrapper(config_obj=None):
+def create_folders_annot_csv_wrapper(config_obj: Any = None) -> None:
+    """Creates folders locally or remotely based on the configuration.
+
+    This function is a wrapper that calls either `create_local_folders` or
+    `create_remote_folders` based on the `remote_dump` flag in the config.
+
+    Args:
+        config_obj: The configuration object.
     """
-    Create folders locally or remotely and read CSV data based on the configuration.
-
-    Parameters:
-    - root_path (str): The root path where the folders should be created.
-    - project_name (str): The name of the project.
-    - csv_file_path (str): The path to the CSV file.
-    - config_obj (ConfigObject, optional): An object containing configuration details.
-                                           Should have 'remote_dump', 'hostname', 'username',
-                                           'password', 'share_sftp', and 'sftp_obj' attributes.
-
-    Returns:
-    pd.DataFrame: The DataFrame containing the data read from the CSV file.
-    """
-    root_path = config_obj.root_path
-    project_name = config_obj.proj_name
 
     # Create folders
     if not config_obj or not config_obj.remote_dump:
@@ -731,15 +490,117 @@ def create_folders_annot_csv_wrapper(config_obj=None):
         create_remote_folders(config_obj=config_obj)
 
 
-def filter_stripped_list(stripped_list, config_obj=None):
+def get_empty_date_vector(config_obj: Any) -> pd.DataFrame:
+    """Creates an empty DataFrame with one-hot encoded date columns.
 
+    The columns are generated based on the time window settings in the
+    configuration object.
+
+    Args:
+        config_obj: The configuration object with time window settings.
+
+    Returns:
+        A single-row DataFrame with columns for each date in the time window,
+        initialized to 0.0.
+    """
+    start_date = config_obj.start_date
+    years = config_obj.years
+    months = config_obj.months
+    days = config_obj.days
+    interval_window_delta = config_obj.time_window_interval_delta
+
+    combinations = generate_date_list(
+        start_date, years, months, days, interval_window_delta, config_obj=config_obj
+    )
+
+    combinations = [str(item) + "_" + "date_time_stamp" for item in combinations]
+
+    return pd.DataFrame(data=0.0, index=np.arange(1), columns=combinations).astype(
+        float
+    )
+
+
+def sftp_exists(path: str, config_obj: Any) -> bool:
+    """Checks if a file or directory exists on a remote SFTP server.
+
+    Args:
+        path: The remote path to check.
+        config_obj: The configuration object containing SFTP credentials and
+            settings.
+
+    Returns:
+        True if the path exists, False otherwise.
+    """
+    sftp_client = None
+    ssh_client = None
+    try:
+        if config_obj.share_sftp:
+            sftp_obj = config_obj.sftp_obj
+        else:
+            ssh_client = paramiko.SSHClient()
+            ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+            ssh_client.connect(
+                hostname=config_obj.hostname,
+                username=config_obj.username,
+                password=config_obj.password,
+            )
+            sftp_client = ssh_client.open_sftp()
+            sftp_obj = sftp_client
+
+        sftp_obj.stat(path)
+        return True
+    except FileNotFoundError:
+        return False
+    finally:
+        if not config_obj.share_sftp and sftp_client:
+            sftp_client.close()
+            if ssh_client:
+                ssh_client.close()
+
+
+def exist_check(path: str, config_obj: Any = None) -> bool:
+    """Checks if a file or directory exists, either locally or remotely.
+
+    This is a wrapper around `os.path.exists` and `sftp_exists` that checks
+    the `remote_dump` flag in the configuration object.
+
+    Args:
+        path: The path to check.
+        config_obj: The configuration object.
+
+    Returns:
+        True if the path exists, False otherwise.
+    """
+    remote_dump = config_obj.remote_dump
+
+    if remote_dump:
+        return sftp_exists(path, config_obj)
+    else:
+        return exists(path)
+
+
+def filter_stripped_list(
+    stripped_list: List[str], config_obj: Any = None
+) -> Tuple[List[str], List[str]]:
+    """Filters a list of patients to exclude those already processed.
+
+    Checks if a patient's output directory contains at least `n_pat_lines`
+    files, indicating that processing for that patient is complete.
+
+    Args:
+        stripped_list: The initial list of patient IDs to process.
+        config_obj: The configuration object containing paths and settings.
+
+    Returns:
+        A tuple containing two lists: the filtered list of patients to be
+        processed, and the original filtered list (for reference).
+    """
     strip_list = config_obj.strip_list
     remote_dump = config_obj.remote_dump
-    hostname = config_obj.hostname
-    username = config_obj.username
-    password = config_obj.password
     current_pat_lines_path = config_obj.current_pat_lines_path
     n_pat_lines = config_obj.n_pat_lines
+    sftp_client = None
+    ssh_client = None
 
     if strip_list:
         # stripped_list_start_copy = stripped_list.copy()
@@ -748,8 +609,11 @@ def filter_stripped_list(stripped_list, config_obj=None):
         if remote_dump:
             ssh_client = paramiko.SSHClient()
             ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-            ssh_client.connect(hostname=hostname, username=username, password=password)
-
+            ssh_client.connect(
+                hostname=config_obj.hostname,
+                username=config_obj.username,
+                password=config_obj.password,
+            )
             sftp_client = ssh_client.open_sftp()
 
             for i in range(len(stripped_list)):
@@ -784,8 +648,10 @@ def filter_stripped_list(stripped_list, config_obj=None):
         stripped_list = container_list.copy()
 
         if remote_dump:
-            sftp_client.close()
-            ssh_client.close()
+            if sftp_client:
+                sftp_client.close()
+            if ssh_client:
+                ssh_client.close()
     else:
         stripped_list = []
         stripped_list_start = []
@@ -793,16 +659,12 @@ def filter_stripped_list(stripped_list, config_obj=None):
     return stripped_list, stripped_list_start
 
 
-def create_folders(all_patient_list, config_obj=None):
-    """
-    Create folders for each patient in the specified paths.
+def create_folders(all_patient_list: List[str], config_obj: Any = None) -> None:
+    """Creates folders for each patient in the specified paths.
 
-    Parameters:
-    - all_patient_list (list): List of patient IDs.
-    - config_obj (object): Configuration object containing paths and verbosity level.
-
-    Returns:
-    None
+    Args:
+        all_patient_list: List of patient IDs.
+        config_obj: Configuration object containing paths and verbosity level.
     """
     pre_annotation_path = config_obj.pre_annotation_path
     pre_annotation_path_mrc = config_obj.pre_annotation_path_mrc
@@ -822,16 +684,12 @@ def create_folders(all_patient_list, config_obj=None):
         print(f"Folders created: {current_pat_lines_path}...")
 
 
-def create_folders_for_pat(patient_id, config_obj=None):
-    """
-    Create folders for a single patient in the specified paths.
+def create_folders_for_pat(patient_id: str, config_obj: Any = None) -> None:
+    """Creates folders for a single patient in the specified paths.
 
-    Parameters:
-    - patient_id (str): Patient ID.
-    - config_obj (object): Configuration object containing paths and verbosity level.
-
-    Returns:
-    None
+    Args:
+        patient_id: The patient's ID.
+        config_obj: Configuration object containing paths and verbosity level.
     """
     pre_annotation_path = config_obj.pre_annotation_path
     pre_annotation_path_mrc = config_obj.pre_annotation_path_mrc
@@ -852,30 +710,27 @@ def create_folders_for_pat(patient_id, config_obj=None):
         print(f"Folders created for patient {patient_id}: {current_pat_lines_path}...")
 
 
-def convert_date(date_string):
-    date_string = date_string.split("T")[0]
-    date_object = datetime.strptime(date_string, "%Y-%m-%d")
-    return date_object
-
-
 def add_offset_column(
-    dataframe, start_column_name, offset_column_name, time_offset, verbose=1
-):
-    """
-    Adds a new column with the offset from the start time to the provided DataFrame.
+    dataframe: pd.DataFrame,
+    start_column_name: str,
+    offset_column_name: str,
+    time_offset: Union[timedelta, Any],
+    verbose: int = 1,
+) -> pd.DataFrame:
+    """Adds a new column with a time offset from a starting datetime column.
+
     Handles multiple datetime formats flexibly.
 
-    Parameters:
-    - dataframe: pandas DataFrame
-    - start_column_name: str, the name of the column with the starting datetime
-    - offset_column_name: str, the name of the new column to be created with the offset
-    - time_offset: relativedelta or timedelta, the time period offset to be added to the start time
-    - verbose: int, verbosity level (0=silent, 1=basic, 2=detailed)
+    Args:
+        dataframe: The input DataFrame.
+        start_column_name: The name of the column with the starting datetime.
+        offset_column_name: The name for the new column to be created.
+        time_offset: The time period offset to add to the start time.
+        verbose: Verbosity level (0=silent, 1=basic, 2=detailed).
 
     Returns:
-    - pandas DataFrame (modified dataframe with new offset column)
+        The modified DataFrame with the new offset column.
     """
-
     if start_column_name not in dataframe.columns:
         raise ValueError(f"Column '{start_column_name}' does not exist.")
 
@@ -1053,18 +908,22 @@ def test_datetime_formats():
 # add_offset_column(df, 'ADMISSION_DTTM', offset_column_name, time_offset)
 
 
-def build_patient_dict(dataframe, patient_id_column, start_column, end_column):
-    """
-    Builds a dictionary with patient_id as key and (start, end) as values.
+def build_patient_dict(
+    dataframe: pd.DataFrame,
+    patient_id_column: str,
+    start_column: str,
+    end_column: str,
+) -> Dict[str, Tuple[datetime, datetime]]:
+    """Builds a dictionary mapping patient IDs to (start, end) datetime tuples.
 
-    Parameters:
-    - dataframe: pandas DataFrame
-    - patient_id_column: str, the name of the column containing patient IDs
-    - start_column: str, the name of the column containing start datetime
-    - end_column: str, the name of the column containing end datetime
+    Args:
+        dataframe: The input DataFrame.
+        patient_id_column: The name of the column containing patient IDs.
+        start_column: The name of the column containing start datetimes.
+        end_column: The name of the column containing end datetimes.
 
     Returns:
-    - patient_dict: dict, a dictionary with patient_id as key and (start, end) as values
+        A dictionary where keys are patient IDs and values are (start, end) tuples.
     """
     if patient_id_column not in dataframe.columns:
         raise ValueError(f"Column '{patient_id_column}' does not exist.")
@@ -1093,3 +952,44 @@ def build_patient_dict(dataframe, patient_id_column, start_column, end_column):
             )
 
     return patient_dict
+
+
+def write_remote(path, csv_file, config_obj=None):
+    """Writes a pandas DataFrame to a remote file via SFTP.
+
+    Args:
+        path: The remote path where the file should be written.
+        csv_file: The DataFrame to be written.
+        config_obj: An object containing SFTP configuration details.
+
+    Raises:
+        ValueError: If `config_obj` is not provided.
+    """
+
+    if config_obj is None:
+        raise ValueError("Config object cannot be None.")
+
+    share_sftp = config_obj.share_sftp
+    sftp_client = None
+    ssh_client = None
+    if share_sftp:
+        sftp_obj = config_obj.sftp_obj
+    else:
+        ssh_client = paramiko.SSHClient()
+        ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        ssh_client.connect(
+            hostname=config_obj.hostname,
+            username=config_obj.username,
+            password=config_obj.password,
+        )
+        sftp_client = ssh_client.open_sftp()
+        sftp_obj = sftp_client
+
+    with sftp_obj.open(path, "w") as file:
+        csv_file.to_csv(file)
+
+    if not share_sftp:
+        if sftp_client:
+            sftp_client.close()
+        if ssh_client:
+            ssh_client.close()

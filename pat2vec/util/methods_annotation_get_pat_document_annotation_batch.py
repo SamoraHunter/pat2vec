@@ -7,34 +7,31 @@ from pat2vec.util.methods_annotation import (
 from pat2vec.util.methods_annotation_multi_annots_to_df import multi_annots_to_df
 import pandas as pd
 import os
+from typing import Any
 from IPython.display import display
 
 
 def get_pat_document_annotation_batch(
-    current_pat_client_idcode, pat_batch, cat=None, config_obj=None, t=None
-):
-    """
-    Retrieves the annotation batch for the given patient.
+    current_pat_client_idcode: str,
+    pat_batch: pd.DataFrame,
+    cat: Any,
+    config_obj: Any,
+    t: Any,
+) -> pd.DataFrame:
+    """Retrieves or creates the annotation batch for a patient's documents.
 
-    This function annotates the given patient's batch of documents and stores the
-    annotations in a CSV file. It then reads and returns the annotation batch.
+    This function orchestrates the annotation of a patient's document batch.
+    It calls MedCAT to get annotations, saves them to a patient-specific CSV
+    file, and then reads that file back into a DataFrame.
 
-    Parameters
-    ----------
-    current_pat_client_idcode : str
-        The client ID code for the current patient.
-    pat_batch : pandas.DataFrame
-        A DataFrame containing the batch of documents for the patient.
-    cat : object, optional
-        An object for entity recognition.
-    config_obj : object, optional
-        An object containing configuration settings.
-    t : object, optional
-        A progress tracker object.
+    Args:
+        current_pat_client_idcode: The client ID for the current patient.
+        pat_batch: A DataFrame containing the batch of documents for the patient.
+        cat: The loaded MedCAT `CAT` object for entity recognition.
+        config_obj: The configuration object containing settings and paths.
+        t: The tqdm progress bar instance to update.
 
-    Returns
-    -------
-    pandas.DataFrame
+    Returns:
         A DataFrame containing the annotation batch for the patient.
     """
 
@@ -61,9 +58,29 @@ def get_pat_document_annotation_batch(
 
 
 def get_pat_document_annotation_batch_mct(
-    current_pat_client_idcode, pat_batch, cat=None, config_obj=None, t=None
-):
+    current_pat_client_idcode: str,
+    pat_batch: pd.DataFrame,
+    cat: Any,
+    config_obj: Any,
+    t: Any,
+) -> pd.DataFrame:
+    """Retrieves or creates the annotation batch for a patient's MCT documents.
 
+    This function annotates a patient's MCT (MRC clinical notes) document
+    batch using MedCAT, saves the structured annotations to a CSV file,
+    and returns the result as a DataFrame.
+
+    Args:
+        current_pat_client_idcode: The client ID for the current patient.
+        pat_batch: A DataFrame containing the batch of MCT documents.
+        cat: The loaded MedCAT `CAT` object.
+        config_obj: The configuration object.
+        t: The tqdm progress bar instance.
+
+    Returns:
+        A DataFrame containing the annotation batch for the patient's MCT
+        documents.
+    """
     # get the annotations for the pat documents
     multi_annots = annot_pat_batch_docs(
         current_pat_client_idcode=current_pat_client_idcode,
@@ -103,8 +120,29 @@ def get_pat_document_annotation_batch_mct(
 
 
 def get_pat_batch_textual_obs_annotation_batch(
-    current_pat_client_idcode, pat_batch, cat=None, config_obj=None, t=None
-):
+    current_pat_client_idcode: str,
+    pat_batch: pd.DataFrame,
+    cat: Any,
+    config_obj: Any,
+    t: Any,
+) -> pd.DataFrame:
+    """Retrieves or creates annotations for a textual observation batch.
+
+    This function annotates a patient's textual observation batch using
+    MedCAT, saves the structured annotations to a CSV file, and returns the
+    result as a DataFrame.
+
+    Args:
+        current_pat_client_idcode: The client ID for the current patient.
+        pat_batch: A DataFrame containing the batch of textual observations.
+        cat: The loaded MedCAT `CAT` object.
+        config_obj: The configuration object.
+        t: The tqdm progress bar instance.
+
+    Returns:
+        A DataFrame containing the annotation batch for the patient's textual
+        observations.
+    """
     # get the annotations for the pat documents
     multi_annots = annot_pat_batch_docs(
         current_pat_client_idcode=current_pat_client_idcode,
@@ -144,9 +182,29 @@ def get_pat_batch_textual_obs_annotation_batch(
 
 
 def get_pat_document_annotation_batch_reports(
-    current_pat_client_idcode, pat_batch, cat=None, config_obj=None, t=None
-):
+    current_pat_client_idcode: str,
+    pat_batch: pd.DataFrame,
+    cat: Any,
+    config_obj: Any,
+    t: Any,
+) -> pd.DataFrame:
+    """Retrieves or creates the annotation batch for a patient's reports.
 
+    This function annotates a patient's reports batch using MedCAT, saves the
+    structured annotations to a CSV file, and returns the result as a
+    DataFrame.
+
+    Args:
+        current_pat_client_idcode: The client ID for the current patient.
+        pat_batch: A DataFrame containing the batch of reports.
+        cat: The loaded MedCAT `CAT` object.
+        config_obj: The configuration object.
+        t: The tqdm progress bar instance.
+
+    Returns:
+        A DataFrame containing the annotation batch for the patient's
+        reports.
+    """
     # get the annotations for the pat documents
     multi_annots = annot_pat_batch_docs(
         current_pat_client_idcode=current_pat_client_idcode,

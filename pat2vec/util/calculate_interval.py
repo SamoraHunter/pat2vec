@@ -2,9 +2,25 @@ from datetime import datetime
 from dateutil.relativedelta import relativedelta
 
 
-def calculate_interval(start_date, total_delta, interval_delta):
-    """
-    Calculates how many 'interval_delta' chunks fit inside the 'total_delta'.
+def calculate_interval(
+    start_date: datetime, total_delta: relativedelta, interval_delta: relativedelta
+) -> int:
+    """Calculates how many 'interval_delta' chunks fit inside 'total_delta'.
+
+    This function iteratively adds the `interval_delta` to the `start_date`
+    until it exceeds the total duration specified by `total_delta`. It counts
+    how many full intervals fit within this period.
+
+    Args:
+        start_date: The starting date of the total period.
+        total_delta: The total duration from the start date.
+        interval_delta: The duration of a single interval chunk.
+
+    Returns:
+        The number of complete intervals that fit within the total duration.
+
+    Raises:
+        ValueError: If `interval_delta` is not a positive duration.
     """
     # Check for a zero-length interval to prevent an infinite loop.
     if start_date + interval_delta <= start_date:

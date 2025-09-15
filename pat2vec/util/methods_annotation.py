@@ -1,6 +1,7 @@
 import os
 import shutil
 import pandas as pd
+from typing import Any, Dict, List, Optional
 from IPython.display import display
 
 from pat2vec.util.methods_annotation_json_to_dataframe import json_to_dataframe
@@ -11,22 +12,17 @@ from pat2vec.util.post_processing import (
 )
 
 
-def check_pat_document_annotation_complete(current_pat_client_id_code, config_obj=None):
-    """
-    Check if Patient's document annotation file is complete
+def check_pat_document_annotation_complete(
+    current_pat_client_id_code: str, config_obj: Any = None
+) -> bool:
+    """Checks if a patient's document annotation file already exists.
 
-    Parameters
-    ----------
-    current_pat_client_id_code : str
-        Patient's idcode
+    Args:
+        current_pat_client_id_code: The patient's ID code.
+        config_obj: The configuration object containing file paths.
 
-    config_obj : object
-        Config object
-
-    Returns
-    -------
-    bool
-        True if annotation file exists, False otherwise
+    Returns:
+        True if the annotation file exists, False otherwise.
     """
     pre_document_batch_path = config_obj.pre_document_batch_path
 
@@ -46,14 +42,28 @@ def check_pat_document_annotation_complete(current_pat_client_id_code, config_ob
 
 
 def annot_pat_batch_docs(
-    current_pat_client_idcode,
-    pat_batch,
-    cat=None,
-    config_obj=None,
-    t=None,
-    text_column="body_analysed",
-):
+    current_pat_client_idcode: str,
+    pat_batch: pd.DataFrame,
+    cat: Any,
+    config_obj: Any,
+    t: Any,
+    text_column: str = "body_analysed",
+) -> List[Dict[str, Any]]:
+    """Annotates a batch of patient documents using a MedCAT model.
 
+    Args:
+        current_pat_client_idcode: The patient's ID code.
+        pat_batch: DataFrame containing the documents to be annotated.
+        cat: The loaded MedCAT `CAT` object.
+        config_obj: The configuration object.
+        t: The tqdm progress bar instance to update.
+        text_column: The name of the column in `pat_batch` containing the
+            text to annotate.
+
+    Returns:
+        A list of dictionaries, where each dictionary contains the MedCAT
+        annotation entities for a document.
+    """
     start_time = config_obj.start_time
 
     n_docs_to_annotate = len(pat_batch)
@@ -74,16 +84,31 @@ def annot_pat_batch_docs(
 
 
 def multi_annots_to_df_textual_obs(
-    current_pat_client_idcode,
-    pat_batch,
-    multi_annots,
-    config_obj=None,
-    t=None,
-    text_column="textualObs",
-    time_column="basicobs_entered",
-    guid_column="basicobs_guid",
-):
+    current_pat_client_idcode: str,
+    pat_batch: pd.DataFrame,
+    multi_annots: List[Dict[str, Any]],
+    config_obj: Any,
+    t: Any,
+    text_column: str = "textualObs",
+    time_column: str = "basicobs_entered",
+    guid_column: str = "basicobs_guid",
+) -> None:
+    """Converts MedCAT annotations for textual observations to a DataFrame and saves it.
 
+    This function processes a list of annotations, converts them to a structured
+    DataFrame, optionally joins ICD-10/OPCS-4 codes, and saves the result
+    to a patient-specific CSV file.
+
+    Args:
+        current_pat_client_idcode: The patient's ID code.
+        pat_batch: DataFrame of the original documents that were annotated.
+        multi_annots: The list of annotation dictionaries from MedCAT.
+        config_obj: The configuration object.
+        t: The tqdm progress bar instance to update.
+        text_column: The name of the text column in `pat_batch`.
+        time_column: The name of the timestamp column in `pat_batch`.
+        guid_column: The name of the document identifier column in `pat_batch`.
+    """
     n_docs_to_annotate = len(pat_batch)
 
     start_time = config_obj.start_time
@@ -189,16 +214,31 @@ def multi_annots_to_df_textual_obs(
 
 
 def multi_annots_to_df_reports(
-    current_pat_client_idcode,
-    pat_batch,
-    multi_annots,
-    config_obj=None,
-    t=None,
-    text_column="body_analysed",
-    time_column="updatetime",
-    guid_column="basicobs_guid",
-):
+    current_pat_client_idcode: str,
+    pat_batch: pd.DataFrame,
+    multi_annots: List[Dict[str, Any]],
+    config_obj: Any,
+    t: Any,
+    text_column: str = "body_analysed",
+    time_column: str = "updatetime",
+    guid_column: str = "basicobs_guid",
+) -> None:
+    """Converts MedCAT annotations for reports to a DataFrame and saves it.
 
+    This function processes a list of annotations from reports, converts them
+    to a structured DataFrame, optionally joins ICD-10/OPCS-4 codes, and saves
+    the result to a patient-specific CSV file.
+
+    Args:
+        current_pat_client_idcode: The patient's ID code.
+        pat_batch: DataFrame of the original report documents that were annotated.
+        multi_annots: The list of annotation dictionaries from MedCAT.
+        config_obj: The configuration object.
+        t: The tqdm progress bar instance to update.
+        text_column: The name of the text column in `pat_batch`.
+        time_column: The name of the timestamp column in `pat_batch`.
+        guid_column: The name of the document identifier column in `pat_batch`.
+    """
     n_docs_to_annotate = len(pat_batch)
 
     start_time = config_obj.start_time
@@ -304,16 +344,31 @@ def multi_annots_to_df_reports(
 
 
 def multi_annots_to_df_mct(
-    current_pat_client_idcode,
-    pat_batch,
-    multi_annots,
-    config_obj=None,
-    t=None,
-    text_column="observation_valuetext_analysed",
-    time_column="observationdocument_recordeddtm",
-    guid_column="observation_guid",
-):
+    current_pat_client_idcode: str,
+    pat_batch: pd.DataFrame,
+    multi_annots: List[Dict[str, Any]],
+    config_obj: Any,
+    t: Any,
+    text_column: str = "observation_valuetext_analysed",
+    time_column: str = "observationdocument_recordeddtm",
+    guid_column: str = "observation_guid",
+) -> None:
+    """Converts MedCAT annotations for MCT documents to a DataFrame and saves it.
 
+    This function processes a list of annotations from MCT documents, converts
+    them to a structured DataFrame, optionally joins ICD-10/OPCS-4 codes, and
+    saves the result to a patient-specific CSV file.
+
+    Args:
+        current_pat_client_idcode: The patient's ID code.
+        pat_batch: DataFrame of the original MCT documents that were annotated.
+        multi_annots: The list of annotation dictionaries from MedCAT.
+        config_obj: The configuration object.
+        t: The tqdm progress bar instance to update.
+        text_column: The name of the text column in `pat_batch`.
+        time_column: The name of the timestamp column in `pat_batch`.
+        guid_column: The name of the document identifier column in `pat_batch`.
+    """
     n_docs_to_annotate = len(pat_batch)
 
     start_time = config_obj.start_time
@@ -418,8 +473,22 @@ def multi_annots_to_df_mct(
         temp_result.to_csv(current_pat_document_annotation_batch_path)
 
 
-def calculate_pretty_name_count_features(df_copy, suffix="epr"):
+def calculate_pretty_name_count_features(
+    df_copy: pd.DataFrame, suffix: str = "epr"
+) -> Optional[pd.DataFrame]:
+    """Calculates count-based features from the 'pretty_name' column.
 
+    This function groups a DataFrame by 'pretty_name' and calculates the count
+    for each name, returning the result as a single-row DataFrame (vector).
+
+    Args:
+        df_copy: The input DataFrame, expected to have a 'pretty_name' column.
+        suffix: A suffix to append to the feature name.
+
+    Returns:
+        A single-row DataFrame with counts for each pretty_name, or None if the
+        input DataFrame is empty.
+    """
     if len(df_copy) > 0:
 
         additional_features = {

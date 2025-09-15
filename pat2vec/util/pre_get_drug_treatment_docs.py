@@ -1,6 +1,6 @@
 import os
 import random
-from typing import List, Optional, Union
+from typing import Any, List, Optional
 
 import pandas as pd
 from fuzzywuzzy import fuzz
@@ -16,7 +16,7 @@ from pat2vec.util.pre_processing import generate_uuid_list
 
 
 def get_treatment_records_by_drug_order_name(
-    pat2vec_obj,
+    pat2vec_obj: Any,
     term: str,  # Single search term
     verbose: int = 0,
     all_fields: bool = False,
@@ -26,42 +26,29 @@ def get_treatment_records_by_drug_order_name(
         "order_holdreasontext",
     ],
 ) -> pd.DataFrame:
-    """Retrieves treatment records from the 'order' index that match a search term.
+    """Retrieves drug order records from Elasticsearch that match a search term.
 
-    Uses fuzzy matching to check against multiple columns and stores matched
-    columns in the output.
+    This function performs a fuzzy search for a given `term` within the 'order'
+    index, specifically for records where `order_typecode` is "medication".
+    The fuzzy matching is applied to the columns specified in
+    `column_fields_to_match`.
 
     Args:
-        pat2vec_obj (object): The main pat2vec object, which contains
-            configuration settings.
-        term (str): A single drug name or keyword to search for.
-        verbose (int, optional): Verbosity level for logging/debugging.
-            - 0: No output
-            - 1: Basic logs
-            - 5: Moderate logs
-            - 9: Full debug logs
-            Defaults to 0.
-        all_fields (bool, optional): If True, retrieves all available fields
-            from the database. If False, retrieves only essential fields.
-            Defaults to False.
-        column_fields_to_match (List[str], optional): List of columns to check
-            for fuzzy matching. Defaults to `['order_summaryline', 'order_name',
-            'order_holdreasontext']`.
+        pat2vec_obj: The main pat2vec object, containing configuration settings.
+        term: A single drug name or keyword to search for.
+        verbose: Verbosity level for logging/debugging.
+        all_fields: If True, retrieves all available fields from the database.
+            If False, retrieves only essential fields.
+        column_fields_to_match: List of columns to check for fuzzy matching.
 
     Returns:
-        pd.DataFrame: A DataFrame containing treatment records with an
-            additional column indicating which fields matched the search term.
-            The matching column is named 'matched_{term}' where {term} is the
-            lowercase, underscore-separated version of the search term.
+        A DataFrame containing treatment records that match the search term.
+        An additional column, `matched_{term}`, is added to indicate which
+        fields matched the term. Returns an empty DataFrame if no records are
+        found.
 
-    Notes:
-        - The function retrieves records using `cohort_searcher_no_terms_fuzzy()`.
-        - Applies fuzzy string matching with a threshold of 80 across selected
-          columns.
-        - An additional column (`matched_{term}`) stores which fields matched
-          the term.
-        - Only rows with at least one match are returned.
-        - For medication orders only (filtered by order_typecode="medication").
+    Raises:
+        ValueError: If `pat2vec_obj` is None or `term` is not a string.
     """
 
     if pat2vec_obj is None:
@@ -325,7 +312,7 @@ def get_treatment_records_by_drug_order_name(
 
 
 def iterative_drug_treatment_search(
-    pat2vec_obj: object,
+    pat2vec_obj: Any,
     search_terms: List[str],
     output_file_path: str,
     verbose: int = 0,
@@ -336,34 +323,28 @@ def iterative_drug_treatment_search(
         "order_holdreasontext",
     ],
     drop_duplicates: bool = True,
-    overwrite=False,
-) -> None:
-    """Iteratively search for drug treatment records and save them.
+    overwrite: bool = False,
+) -> pd.DataFrame:
+    """Iteratively searches for drug records and saves them to a CSV file.
 
-    Searches for treatment records using a list of search terms, appends
-    results to a CSV file, includes matched fields, and provides an option to
-    drop duplicate records based on 'order_guid'.
+    This function loops through a list of `search_terms`, retrieves matching
+    drug order records for each, and appends the results to a single CSV file.
+    It can handle deduplication based on 'order_guid'.
 
     Args:
-        pat2vec_obj (object): The main pat2vec object containing configuration
-            settings.
-        search_terms (List[str]): A list of drug names or keywords to search for.
-        output_file_path (str): Path to the CSV file where results will be
+        pat2vec_obj: The main pat2vec object containing configuration settings.
+        search_terms: A list of drug names or keywords to search for.
+        output_file_path: Path to the CSV file where results will be
             stored. Appends to the file if it exists.
-        verbose (int, optional): Verbosity level for logging/debugging.
-            Defaults to 0.
-        all_fields (bool, optional): Whether to retrieve all available fields.
-            Defaults to False.
-        column_fields_to_match (List[str], optional): List of columns to check
-            for fuzzy matching. Defaults to `['order_summaryline', 'order_name',
-            'order_holdreasontext']`.
-        drop_duplicates (bool, optional): If True, drops duplicate records
-            based on `order_guid`, while merging search term info. Defaults to True.
-        overwrite (bool, optional): If True, overwrite the output file if it
-            exists. Defaults to False.
+        verbose: Verbosity level for logging/debugging.
+        all_fields: Whether to retrieve all available fields.
+        column_fields_to_match: List of columns to check for fuzzy matching.
+        drop_duplicates: If True, drops duplicate records based on 'order_guid',
+            while merging search term info.
+        overwrite: If True, overwrite the output file if it exists.
 
     Returns:
-        pd.DataFrame: A merged dataframe of the results.
+        A merged DataFrame of the search results.
     """
 
     if overwrite:

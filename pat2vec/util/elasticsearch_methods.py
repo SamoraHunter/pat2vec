@@ -1,5 +1,6 @@
 from getpass import getpass
 import pandas as pd
+from typing import Any, Dict, List, Optional
 from .credentials import *
 from elasticsearch import Elasticsearch
 from elasticsearch.helpers import bulk
@@ -10,23 +11,27 @@ from elasticsearch import Elasticsearch, helpers
 
 
 def ingest_data_to_elasticsearch(
-    temp_df, index_name, index_mapping=None, replace_index=False
-):
-    """
-    Function to ingest data from a DataFrame into Elasticsearch with error handling.
+    temp_df: pd.DataFrame,
+    index_name: str,
+    index_mapping: Optional[Dict[str, Any]] = None,
+    replace_index: bool = False,
+) -> Dict[str, int]:
+    """Ingests data from a DataFrame into Elasticsearch with error handling.
 
-    Parameters:
-        temp_df (DataFrame): The DataFrame containing the data to be ingested.
-        index_name (str): Name of the Elasticsearch index.
-        index_mapping (dict, optional): Mapping for the index.
-        replace_index (bool, optional): Whether to replace the index if it exists.
+    Args:
+        temp_df: The DataFrame containing the data to be ingested.
+        index_name: Name of the Elasticsearch index.
+        index_mapping: Optional mapping for the index.
+        replace_index: Whether to replace the index if it exists.
 
     Returns:
-        dict: A summary containing the number of successful and failed operations.
-    """
+        A summary containing the number of successful and failed operations.
 
+    Raises:
+        ConnectionError: If the Elasticsearch server is not reachable.
+    """
     # Set default index mapping if none is provided
-    index_mapping = index_mapping or {
+    index_mapping = index_mapping or {  # type: ignore
         "settings": {
             "number_of_shards": 1,
             "number_of_replicas": 1,
@@ -146,7 +151,20 @@ def ingest_data_to_elasticsearch(
 # ingest_data_to_elasticsearch(temp_df, "annotations_myeloma")
 
 
-def handle_inconsistent_dtypes(df):
+def handle_inconsistent_dtypes(df: pd.DataFrame) -> pd.DataFrame:
+    """Handles inconsistent data types in a DataFrame's columns.
+
+    Iterates through each column, determines the majority data type (datetime,
+    string, int, or float), and casts the entire column to that type. This is
+    useful for cleaning data before ingestion into systems with strict schemas
+    like Elasticsearch.
+
+    Args:
+        df: The DataFrame to process.
+
+    Returns:
+        The DataFrame with columns cast to their majority data type.
+    """
     for column in tqdm(df.columns, desc="Processing columns"):
         non_null_values = df[column].dropna()
         dt_count = (
@@ -184,21 +202,20 @@ def handle_inconsistent_dtypes(df):
     return df
 
 
-def guess_datetime_columns(df, threshold=0.5):
-    """
-    Guess datetime columns in a DataFrame by attempting to parse each value as a datetime.
+def guess_datetime_columns(df: pd.DataFrame, threshold: float = 0.5) -> List[str]:
+    """Guesses which columns in a DataFrame are datetime columns.
 
-    Parameters
-    ----------
-    df : pandas.DataFrame
-        The DataFrame to guess datetime columns from.
-    threshold : float, optional
-        The minimum percentage of values in a column that must be parseable as datetime for the column to be considered a datetime column.
-        Defaults to 0.5.
+    It iterates through each column and attempts to parse its values as datetimes.
+    If the percentage of parsable values exceeds a given threshold, the column
+    is considered a datetime column.
 
-    Returns
-    -------
-    list
+    Args:
+        df: The DataFrame to analyze.
+        threshold: The minimum percentage of values in a column that must be
+            parsable as datetime for it to be considered a datetime column.
+            Defaults to 0.5.
+
+    Returns:
         A list of column names that are likely to be datetime columns.
     """
     datetime_columns = []
@@ -222,7 +239,24 @@ def guess_datetime_columns(df, threshold=0.5):
     return datetime_columns
 
 
-def get_guess_datetime_column(df, threshold=0.2):
+def get_guess_datetime_column(
+    df: pd.DataFrame, threshold: float = 0.2
+) -> Optional[str]:
+    """Finds the single column most likely to be a datetime column.
+
+    This function iterates through all columns and calculates the ratio of values
+    that can be parsed as a datetime. It returns the name of the column with the
+    highest ratio, provided that ratio is above the specified threshold.
+
+    Args:
+        df: The DataFrame to analyze.
+        threshold: The minimum percentage of values that must be parsable as
+            datetime for a column to be considered. Defaults to 0.2.
+
+    Returns:
+        The name of the column most likely to contain datetimes, or None if no
+        column meets the threshold.
+    """
     highest_ratio = 0
     highest_column = None
 

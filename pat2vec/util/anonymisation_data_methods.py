@@ -1,34 +1,40 @@
 import pickle
 import uuid
 import pandas as pd  # Import pandas
+from typing import Dict, List, Optional, Tuple
 
 
-def anonymize_feature_names(df):
-    """
-    Anonymizes the column names of a pandas DataFrame while preserving predefined
-    prefixes and suffixes. The 'core' part of the feature name is replaced with
-    a unique, generic identifier.
+def anonymize_feature_names(df: pd.DataFrame) -> Tuple[pd.DataFrame, Dict[str, str]]:
+    """Anonymizes DataFrame column names, preserving prefixes and suffixes.
+
+    The 'core' part of each feature name is replaced with a unique, generic
+    identifier (e.g., 'concept_0'). This is useful for sharing data structures
+    without revealing sensitive or proprietary feature names. The function
+    returns both the anonymized DataFrame and a key to reverse the process.
+
+    The function identifies prefixes and suffixes from predefined lists. These
+    are sorted by length to ensure the longest possible match is found first,
+    avoiding partial matches (e.g., matching '_count' before '_count_present').
 
     Args:
-        df (pd.DataFrame): The input pandas DataFrame whose columns need to be anonymized.
+        df: The input pandas DataFrame whose columns need to be anonymized.
 
     Returns:
-        tuple: A tuple containing:
+        A tuple containing:
             - pd.DataFrame: A new DataFrame with anonymized column names.
-            - dict: A dictionary mapping the anonymized names to their
-                    original names, serving as the reversal key.
-                    Format: {anonymized_name: original_name}
+            - dict: A dictionary mapping anonymized names to their original
+              names, for de-anonymization. Format: {anonymized_name: original_name}.
     """
-    original_feature_names = (
+    original_feature_names: List[str] = (
         df.columns.tolist()
     )  # Extract column names from the DataFrame
 
-    anonymized_names_list = []
-    anonymization_key = {}
+    anonymized_names_list: List[str] = []
+    anonymization_key: Dict[str, str] = {}
 
     # Mapping to keep core concepts consistently anonymized if they appear multiple times
-    core_concept_map = {}
-    next_concept_id = 0
+    core_concept_map: Dict[str, str] = {}
+    next_concept_id: int = 0
 
     # Define prefixes and suffixes strictly based on the provided get_pertubation_columns function
     # Sorted by length in descending order to ensure longest match is found first
@@ -152,27 +158,26 @@ def anonymize_feature_names(df):
     return anonymized_df, anonymization_key
 
 
-def deanonymize_feature_names(anonymized_feature_names, anonymization_key):
-    """
-    De-anonymizes a list of feature names using a provided key.
+def deanonymize_feature_names(
+    anonymized_feature_names: List[str], anonymization_key: Dict[str, str]
+) -> List[Optional[str]]:
+    """De-anonymizes a list of feature names using a provided key.
 
     Args:
-        anonymized_feature_names (list): A list of anonymized feature names (strings).
-        anonymization_key (dict): The dictionary mapping anonymized names back to
-                                  original names. Format: {anonymized_name: original_name}
+        anonymized_feature_names: A list of anonymized feature names.
+        anonymization_key: The dictionary mapping anonymized names back to
+            original names. Format: {anonymized_name: original_name}.
 
     Returns:
-        list: A list of the original feature names (strings).
-              Returns None for any anonymized name not found in the key.
+        A list of the original feature names. If an anonymized name is not
+        found in the key, the corresponding item in the list will be None.
     """
-    deanonymized_names = []
+    deanonymized_names: List[Optional[str]] = []
     for anonymized_name in anonymized_feature_names:
-        original_name = anonymization_key.get(anonymized_name)
-        if original_name is not None:
-            deanonymized_names.append(original_name)
-        else:
+        original_name = anonymization_key.get(anonymized_name, None)
+        if original_name is None:
             print(f"Warning: Anonymized name '{anonymized_name}' not found in the key.")
-            deanonymized_names.append(None)
+        deanonymized_names.append(original_name)
 
     return deanonymized_names
 

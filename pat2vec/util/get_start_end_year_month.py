@@ -1,9 +1,9 @@
 import datetime
-from typing import Tuple
+from typing import Any, Tuple
 
 
 def get_start_end_year_month(
-    target_date_range: Tuple[int, int, int], config_obj=None
+    target_date_range: Tuple[int, int, int], config_obj: Any = None
 ) -> Tuple[int, int, int, int, int, int]:
     """Calculates start and end date components based on a time interval.
 
@@ -12,14 +12,14 @@ def get_start_end_year_month(
     month, and day for both the start and end dates.
 
     Args:
-        target_date_range (tuple): A tuple of (year, month, day) representing
+        target_date_range: A tuple of (year, month, day) representing
             the start date.
-        config_obj (object, optional): A configuration object that must contain
+        config_obj: A configuration object that must contain
             the `time_window_interval_delta` attribute. This delta is added
             to the start date to calculate the end date. Defaults to None.
 
     Returns:
-        tuple: A tuple of six integers: (start_year, start_month, end_year,
+        A tuple of six integers: (start_year, start_month, end_year,
             end_month, start_day, end_day).
 
     Raises:

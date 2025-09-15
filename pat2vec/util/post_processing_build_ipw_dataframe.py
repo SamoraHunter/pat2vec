@@ -1,17 +1,18 @@
 from pat2vec.util.post_processing_get_pat_ipw_record import get_pat_ipw_record
 import pandas as pd
 import os
+from typing import Any, Dict, List, Optional
 
 
 def build_ipw_dataframe(
-    annot_filter_arguments=None,
-    filter_codes=None,
-    config_obj=None,
-    mode="earliest",
-    include_mct=True,
-    include_textual_obs=True,
-    custom_pat_list=None,
-):
+    annot_filter_arguments: Optional[Dict[str, Any]] = None,
+    filter_codes: Optional[List[int]] = None,
+    config_obj: Optional[Any] = None,
+    mode: str = "earliest",
+    include_mct: bool = True,
+    include_textual_obs: bool = True,
+    custom_pat_list: Optional[List[str]] = None,
+) -> pd.DataFrame:
     """Builds a DataFrame of Individual Patient Window (IPW) records.
 
     This function iterates through a list of patients, finds the relevant "index"
@@ -20,19 +21,19 @@ def build_ipw_dataframe(
     occurrence of a specific clinical event (e.g., a diagnosis CUI).
 
     Args:
-        annot_filter_arguments (Optional[Dict]): A dictionary of filters to apply
+        annot_filter_arguments: A dictionary of filters to apply
             to the annotations before selecting the IPW record. Defaults to None.
-        filter_codes (Optional[List[int]]): A list of CUI codes to identify
+        filter_codes: A list of CUI codes to identify
             the relevant clinical events. Defaults to None.
-        config_obj (object, optional): The configuration object containing paths
+        config_obj: The configuration object containing paths
             and settings. Defaults to None.
-        mode (str, optional): Determines whether to find the 'earliest' or 'latest'
+        mode: Determines whether to find the 'earliest' or 'latest'
             record for each patient. Defaults to "earliest".
-        include_mct (bool, optional): If True, includes annotations from MCT
+        include_mct: If True, includes annotations from MCT
             (MRC clinical notes) in the search. Defaults to True.
-        include_textual_obs (bool, optional): If True, includes annotations from
+        include_textual_obs: If True, includes annotations from
             textual observations. Defaults to True.
-        custom_pat_list (List[str], optional): A specific list of patient IDs to
+        custom_pat_list: A specific list of patient IDs to
             process. If empty, the patient list is derived from the files in
             the `pre_document_batch_path`. Defaults to an empty list.
 

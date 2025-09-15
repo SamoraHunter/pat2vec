@@ -1,6 +1,6 @@
 import os
 import logging
-from typing import List, Union, Optional, Dict, Any, Tuple
+from typing import List, Union, Optional, Dict, Any, Tuple, Type
 from pathlib import Path
 import pandas as pd
 
@@ -10,43 +10,42 @@ try:
 
     MEDCAT_AVAILABLE = True
 except ImportError:
-    MEDCAT_AVAILABLE = False
-    DeIdModel = None
+    MEDCAT_AVAILABLE = False  # type: ignore
+    DeIdModel = None  # type: ignore
 
 
 class DeIdAnonymizer:
-    """
-    A modular class for anonymizing clinical text data using MedCAT's DeIdModel.
+    """A class for anonymizing clinical text using MedCAT's DeIdModel.
 
-    This class provides methods to:
-    - Load pre-trained DeIdModel instances
-    - Anonymize single or multiple texts
-    - Process structured data (DataFrames) with text columns
-    - Verify anonymization quality
-    - Generate anonymization reports
+    This class encapsulates the functionality for loading a de-identification
+    model, anonymizing text data in various formats (single string, list of
+    strings, pandas DataFrame columns), and providing utilities for inspection
+    and reporting.
 
     Attributes:
-        model: The loaded MedCAT DeIdModel instance
-        model_path: Path to the model pack
-        is_loaded: Boolean indicating if model is successfully loaded
-        anonymization_log: List of anonymization operations performed
+        model: The loaded MedCAT DeIdModel instance.
+        model_path: The path to the loaded model pack.
+        is_loaded: A boolean indicating if a model is successfully loaded.
+        pii_labels: A list of PII labels the loaded model is configured to redact.
+        anonymization_log: A list of dictionaries logging each operation.
+        logger: A configured logger instance for the class.
     """
 
     def __init__(
         self, model_path: Optional[Union[str, Path]] = None, log_level: str = "INFO"
     ):
-        """
-        Initialize the DeIdAnonymizer.
+        """Initializes the DeIdAnonymizer.
 
         Args:
-            model_path: Path to the MedCAT DeIdModel pack (directory or zip file)
-            log_level: Logging level (DEBUG, INFO, WARNING, ERROR)
+            model_path: Optional path to the MedCAT DeIdModel pack. If provided,
+                the model is loaded upon initialization.
+            log_level: The logging level for the instance (e.g., "INFO", "DEBUG").
         """
-        self.model = None
+        self.model: Optional[Type[DeIdModel]] = None
         self.model_path = model_path
-        self.is_loaded = False
-        self.pii_labels = []  # Store the PII labels the model will redact
-        self.anonymization_log = []
+        self.is_loaded: bool = False
+        self.pii_labels: List[str] = []
+        self.anonymization_log: List[Dict[str, Any]] = []
 
         # Setup logging
         logging.basicConfig(level=getattr(logging, log_level.upper()))
@@ -65,17 +64,16 @@ class DeIdAnonymizer:
             self.load_model(model_path)
 
     def load_model(self, model_path: Union[str, Path]) -> bool:
-        """
-        Load a pre-trained DeIdModel from the specified path.
+        """Loads a pre-trained DeIdModel from a specified path.
 
         Args:
-            model_path: Path to the model pack (directory or zip file)
+            model_path: The path to the model pack (directory or .zip file).
 
         Returns:
-            bool: True if model loaded successfully, False otherwise
+            True if the model was loaded successfully, False otherwise.
         """
         try:
-            model_path = Path(model_path)
+            model_path_p = Path(model_path)
             if not model_path.exists():
                 self.logger.error(f"Model path does not exist: {model_path}")
                 return False
@@ -83,7 +81,7 @@ class DeIdAnonymizer:
             self.logger.info(f"Loading DeIdModel from: {model_path}")
             self.model = DeIdModel.load_model_pack(str(model_path))
             self.model_path = model_path
-            self.is_loaded = True
+            self.is_loaded = self.model is not None
 
             # Hotfix for a spaCy extension error that can occur with some MedCAT models.
             # The 'link_candidates' attribute is expected by a serialization pipe
@@ -122,14 +120,14 @@ class DeIdAnonymizer:
             return False
 
     def _check_model_loaded(self) -> None:
-        """Check if model is loaded, raise exception if not."""
+        """Checks if a model is loaded, raising a RuntimeError if not."""
         if not self.is_loaded or self.model is None:
             raise RuntimeError(
                 "DeIdModel not loaded. Please call load_model() first or "
                 "provide model_path during initialization."
             )
 
-    def _log_operation(self, operation: str, details: Dict[str, Any]) -> None:
+    def _log_operation(self, operation: str, details: Dict[str, Any]) -> None:  # type: ignore
         """Log an anonymization operation for audit purposes."""
         log_entry = {
             "operation": operation,
@@ -140,18 +138,19 @@ class DeIdAnonymizer:
 
     def anonymize_text(
         self, text: str, redact: bool = True, verify: bool = False
-    ) -> Union[str, Tuple[str, Dict]]:
-        """
-        Anonymize a single text string.
+    ) -> Union[str, Tuple[str, Dict[str, Any]]]:
+        """Anonymizes a single text string.
 
         Args:
-            text: Input text to anonymize
-            redact: If True, replace PII with asterisks; if False, replace with type tags
-            verify: If True, return verification info along with anonymized text
+            text: The input text to anonymize.
+            redact: If True, replaces PII with asterisks ('***'). If False,
+                replaces PII with type tags (e.g., '<PERSON>').
+            verify: If True, returns a tuple containing the anonymized text and
+                a dictionary with verification information.
 
         Returns:
-            str: Anonymized text (if verify=False)
-            Tuple[str, Dict]: (anonymized_text, verification_info) if verify=True
+            If `verify` is False, returns the anonymized text string.
+            If `verify` is True, returns a tuple of (anonymized_text, verification_info).
         """
         self._check_model_loaded()
 
@@ -186,25 +185,27 @@ class DeIdAnonymizer:
         verify_sample: bool = False,
         sample_size: int = 10,
     ) -> Union[List[str], Tuple[List[str], Dict]]:
-        """
-        Anonymize multiple text strings.
+        """Anonymizes a list of text strings, with parallel processing support.
 
         Args:
-            texts: List of input texts to anonymize
-            redact: If True, replace PII with asterisks; if False, replace with type tags
-            n_process: Number of processes for parallel processing
-            batch_size: Batch size for processing
-            verify_sample: If True, verify a random sample of results
-            sample_size: Size of sample to verify (if verify_sample=True)
+            texts: A list of input texts to anonymize.
+            redact: If True, replaces PII with asterisks. If False, uses type tags.
+            n_process: The number of processes to use for parallel execution.
+            batch_size: The number of texts to process in each batch.
+            verify_sample: If True, verifies a random sample of the results and
+                returns a report.
+            sample_size: The size of the random sample to verify if `verify_sample`
+                is True.
 
         Returns:
-            List[str]: Anonymized texts (if verify_sample=False)
-            Tuple[List[str], Dict]: (anonymized_texts, verification_report) if verify_sample=True
+            If `verify_sample` is False, returns a list of anonymized texts.
+            If `verify_sample` is True, returns a tuple of
+            (anonymized_texts, verification_report).
         """
         self._check_model_loaded()
 
         try:
-            anonymized = self.model.deid_multi_texts(
+            anonymized: List[str] = self.model.deid_multi_texts(
                 texts, redact=redact, n_process=n_process, batch_size=batch_size
             )
 
@@ -240,20 +241,23 @@ class DeIdAnonymizer:
         n_process: int = 1,
         batch_size: int = 100,
     ) -> pd.DataFrame:
-        """
-        Anonymize text columns in a pandas DataFrame.
+        """Anonymizes specified text columns in a pandas DataFrame.
 
         Args:
-            df: Input DataFrame
-            text_columns: List of column names containing text to anonymize
-            redact: If True, replace PII with asterisks; if False, replace with type tags
-            inplace: If True, modify DataFrame in place; if False, return new DataFrame
-            suffix: Suffix to add to anonymized column names (ignored if inplace=True)
-            n_process: Number of processes for parallel processing
-            batch_size: Batch size for processing
+            df: The input DataFrame.
+            text_columns: A list of column names containing the text to be
+                anonymized.
+            redact: If True, replaces PII with asterisks. If False, uses type tags.
+            inplace: If True, modifies the DataFrame in place by overwriting the
+                original text columns. If False, returns a new DataFrame with
+                anonymized columns added.
+            suffix: The suffix to add to new anonymized column names. This is
+                ignored if `inplace` is True.
+            n_process: The number of processes for parallel execution.
+            batch_size: The number of texts to process in each batch.
 
         Returns:
-            pd.DataFrame: DataFrame with anonymized text columns
+            A DataFrame with the specified text columns anonymized.
         """
         self._check_model_loaded()
 
@@ -301,16 +305,16 @@ class DeIdAnonymizer:
         return result_df
 
     def inspect_text(self, text: str) -> List[Dict[str, Any]]:
-        """
-        Inspects text to find PII entities without anonymizing it, and returns them.
+        """Inspects text to find and log PII entities without anonymizing.
 
-        This is useful for debugging to see what the model is capable of detecting.
+        This method is useful for debugging and understanding what the loaded
+        model is capable of detecting in a given piece of text.
 
         Args:
             text: The text to inspect.
 
         Returns:
-            A list of dictionaries, where each dictionary represents a found PII entity.
+            A list of dictionaries, each representing a found PII entity.
         """
         self._check_model_loaded()
         self.logger.info(f"Inspecting text for PII entities...")
@@ -330,14 +334,14 @@ class DeIdAnonymizer:
         return entities
 
     def get_structured_annotations(self, text: str) -> List[Dict[str, Any]]:
-        """
-        Get structured annotations for identified PII entities in text.
+        """Gets structured annotations for PII entities in a text.
 
         Args:
-            text: Input text to analyze
+            text: The input text to analyze.
 
         Returns:
-            List[Dict]: List of entity dictionaries with text, label, start, end positions
+            A list of dictionaries, where each dictionary contains details
+            (text, label, start, end, confidence) for an identified PII entity.
         """
         self._check_model_loaded()
 
@@ -365,7 +369,7 @@ class DeIdAnonymizer:
             raise
 
     def _verify_single_text(self, original: str, anonymized: str) -> Dict[str, Any]:
-        """Verify anonymization quality for a single text."""
+        """Verifies anonymization quality for a single text."""
         entities = self.get_structured_annotations(original)
 
         verification = {
@@ -381,7 +385,7 @@ class DeIdAnonymizer:
     def _verify_multiple_texts(
         self, original_texts: List[str], anonymized_texts: List[str], sample_size: int
     ) -> Dict[str, Any]:
-        """Verify anonymization quality for a sample of multiple texts."""
+        """Verifies anonymization quality for a sample of multiple texts."""
         import random
 
         # Sample texts for verification
@@ -410,11 +414,11 @@ class DeIdAnonymizer:
         return report
 
     def generate_report(self) -> Dict[str, Any]:
-        """
-        Generate a summary report of all anonymization operations performed.
+        """Generates a summary report of all operations performed.
 
         Returns:
-            Dict: Report containing operation statistics and model information
+            A dictionary containing statistics about the anonymization
+            operations, model details, and total texts processed.
         """
         if not self.anonymization_log:
             return {"message": "No anonymization operations performed yet"}
@@ -457,11 +461,10 @@ class DeIdAnonymizer:
         return report
 
     def save_log(self, filepath: Union[str, Path]) -> None:
-        """
-        Save the anonymization log to a file.
+        """Saves the anonymization operation log to a JSON file.
 
         Args:
-            filepath: Path where to save the log file (JSON format)
+            filepath: The path where the log file will be saved.
         """
         import json
 
@@ -484,16 +487,15 @@ class DeIdAnonymizer:
 def anonymize_single_text(
     text: str, model_path: Union[str, Path], redact: bool = True
 ) -> str:
-    """
-    Convenience function to anonymize a single text.
+    """A convenience function to quickly anonymize a single text string.
 
     Args:
-        text: Input text to anonymize
-        model_path: Path to the DeIdModel pack
-        redact: If True, replace PII with asterisks; if False, replace with type tags
+        text: The input text to anonymize.
+        model_path: The path to the DeIdModel pack.
+        redact: If True, replaces PII with asterisks. If False, uses type tags.
 
     Returns:
-        str: Anonymized text
+        The anonymized text.
     """
     anonymizer = DeIdAnonymizer(model_path)
     return anonymizer.anonymize_text(text, redact=redact)
@@ -505,17 +507,16 @@ def anonymize_dataframe_quick(
     model_path: Union[str, Path],
     redact: bool = True,
 ) -> pd.DataFrame:
-    """
-    Convenience function to anonymize DataFrame text columns.
+    """A convenience function to quickly anonymize columns in a DataFrame.
 
     Args:
-        df: Input DataFrame
-        text_columns: List of column names containing text to anonymize
-        model_path: Path to the DeIdModel pack
-        redact: If True, replace PII with asterisks; if False, replace with type tags
+        df: The input DataFrame.
+        text_columns: A list of column names to anonymize.
+        model_path: The path to the DeIdModel pack.
+        redact: If True, replaces PII with asterisks. If False, uses type tags.
 
     Returns:
-        pd.DataFrame: DataFrame with anonymized text columns
+        A new DataFrame with anonymized text columns.
     """
     anonymizer = DeIdAnonymizer(model_path)
     return anonymizer.anonymize_dataframe(df, text_columns, redact=redact)

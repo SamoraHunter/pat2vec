@@ -4,8 +4,8 @@ import pickle
 import shutil
 import time
 from datetime import datetime
-from itertools import chain
-from typing import List, Optional
+from itertools import chain, zip_longest
+from typing import Any, Dict, List, Optional
 
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -28,18 +28,21 @@ def count_files(path: str) -> int:
     return count
 
 
-def extract_datetime_to_column(df, drop=True):
+def extract_datetime_to_column(df: pd.DataFrame, drop: bool = True) -> pd.DataFrame:
     """Extracts datetime information from specified columns and creates a new column.
 
+    This function scans for columns with names matching the pattern
+    `'(YYYY, MM, DD)_date_time_stamp'` and a value of 1. For each such
+    occurrence, it parses the date from the column name and populates a new
+    'extracted_datetime_stamp' column.
+
     Args:
-        df (pandas.DataFrame): The DataFrame containing the datetime information in specific columns.
-        drop (bool, optional): If True, drop the original date_time_stamp columns after extraction.
-            Defaults to True.
+        df: The DataFrame containing date-as-column features.
+        drop: If True, the original date_time_stamp columns are dropped.
 
     Returns:
-        pandas.DataFrame: The DataFrame with a new column 'extracted_datetime_stamp' containing the extracted datetime values.
+        The DataFrame with a new 'extracted_datetime_stamp' column.
     """
-
     # Initialize the new column
     df["extracted_datetime_stamp"] = pd.to_datetime("")
 
@@ -70,19 +73,22 @@ def extract_datetime_to_column(df, drop=True):
     return df
 
 
-def filter_annot_dataframe2(dataframe, filter_args):
+def filter_annot_dataframe2(
+    dataframe: pd.DataFrame, filter_args: Dict[str, Any]
+) -> pd.DataFrame:
     """Filter a DataFrame based on specified filter arguments.
 
     Args:
-        dataframe (pandas.DataFrame): The DataFrame to filter.
-        filter_args (dict): A dictionary containing filter arguments.
+        dataframe: The DataFrame to filter.
+        filter_args: A dictionary containing filter arguments.
             Keys are column names, and values are the filter criteria.
             Special handling for 'types', 'Time_Value', 'Presence_Value', 'Subject_Value',
             'Time_Confidence', 'Presence_Confidence', 'Subject_Confidence', and 'acc'.
 
     Returns:
-        pandas.DataFrame: The filtered DataFrame.
+        The filtered DataFrame.
     """
+
     # Initialize a boolean mask with True values for all rows
     mask = pd.Series(True, index=dataframe.index)
 
@@ -119,24 +125,24 @@ def filter_annot_dataframe2(dataframe, filter_args):
 
 
 def produce_filtered_annotation_dataframe(
-    cui_filter=False,
-    meta_annot_filter=False,
-    pat_list=None,
-    config_obj=None,
-    filter_custom_args=None,
-    cui_code_list=None,
-    mct=False,
-):
+    cui_filter: bool = False,
+    meta_annot_filter: bool = False,
+    pat_list: Optional[List[str]] = None,
+    config_obj: Optional[Any] = None,
+    filter_custom_args: Optional[Dict[str, Any]] = None,
+    cui_code_list: Optional[List[int]] = None,
+    mct: bool = False,
+) -> pd.DataFrame:
     """Filter annotation dataframe based on specified criteria.
 
     Args:
-        cui_filter (bool, optional): Whether to filter by CUI codes. Defaults to False.
-        meta_annot_filter (bool, optional): Whether to apply meta annotation filtering. Defaults to False.
-        pat_list (list, optional): List of patient identifiers. If None, uses `config_obj.all_patient_list`. Defaults to None.
-        config_obj (ConfigObject, optional): Configuration object containing necessary parameters. Defaults to None.
-        filter_custom_args (dict, optional): Custom filter arguments. If None, uses `config_obj.filter_arguments`. Defaults to None.
-        cui_code_list (list, optional): List of CUI codes for filtering. Defaults to None.
-        mct (bool, optional): If True, processes MCT annotation batches; otherwise, processes EPR. Defaults to False.
+        cui_filter: Whether to filter by CUI codes.
+        meta_annot_filter: Whether to apply meta annotation filtering.
+        pat_list: List of patient identifiers. If None, uses `config_obj.all_patient_list`.
+        config_obj: Configuration object containing necessary parameters.
+        filter_custom_args: Custom filter arguments. If None, uses `config_obj.filter_arguments`.
+        cui_code_list: List of CUI codes for filtering.
+        mct: If True, processes MCT annotation batches; otherwise, processes EPR.
 
     Returns:
         pd.DataFrame: Filtered annotation dataframe.
@@ -221,14 +227,14 @@ def produce_filtered_annotation_dataframe(
     return super_result
 
 
-def extract_types_from_csv(directory):
+def extract_types_from_csv(directory: str) -> List[str]:
     """Extracts all unique 'types' from CSV files within a given directory and its subdirectories.
 
     Args:
-        directory (str): The path to the directory to search for CSV files.
+        directory: The path to the directory to search for CSV files.
 
     Returns:
-        list: A list of all unique 'types' found in the 'types' column of the CSV files.
+        A list of all unique 'types' found in the 'types' column of the CSV files.
     """
 
     all_types = set()
@@ -255,16 +261,15 @@ def remove_file_from_paths(
     current_pat_idcode: str,
     project_name: str = "new_project",
     verbosity: int = 0,
-    config_obj: Optional[object] = None,
+    config_obj: Optional[Any] = None,
 ) -> None:
     """Removes patient-specific CSV files from various predefined project paths.
 
     Args:
-        current_pat_idcode (str): The unique identifier of the patient whose files are to be removed.
-        project_name (str, optional): The name of the project. Used if `config_obj` is None.
-            Defaults to "new_project".
-        verbosity (int, optional): Verbosity level for printing messages. Defaults to 0.
-        config_obj (Optional[object], optional): A configuration object containing project paths.
+        current_pat_idcode: The unique identifier of the patient whose files are to be removed.
+        project_name: The name of the project. Used if `config_obj` is None.
+        verbosity: Verbosity level for printing messages.
+        config_obj: A configuration object containing project paths.
             If provided, `project_name` is overridden by `config_obj.proj_name`. Defaults to None.
     """
 
@@ -330,7 +335,7 @@ def remove_file_from_paths(
                 print(f"Error removing {file_path}: {e}")
 
 
-def process_chunk(args):
+def process_chunk(args: tuple) -> Dict[str, List[str]]:
     """Processes a chunk of CSV files, concatenating their data into a dictionary.
 
     This helper function is designed for multiprocessing. It reads a specified
@@ -339,10 +344,10 @@ def process_chunk(args):
     data from those columns.
 
     Args:
-        args (tuple): A tuple containing (part_chunk, all_files, part_size, unique_columns).
+        args: A tuple containing (part_chunk, all_files, part_size, unique_columns).
 
     Returns:
-        dict: A dictionary with concatenated data for the specified unique columns.
+        A dictionary with concatenated data for the specified unique columns.
     """
     part_chunk, all_files, part_size, unique_columns = args
     concatenated_data = {column: [] for column in unique_columns}
@@ -356,18 +361,18 @@ def process_chunk(args):
     return concatenated_data
 
 
-def join_icd10_codes_to_annot(df, inner=False):
+def join_icd10_codes_to_annot(df: pd.DataFrame, inner: bool = False) -> pd.DataFrame:
     """Joins ICD-10 codes to an annotation DataFrame.
 
     This function merges the input DataFrame `df` with a predefined ICD-10 mapping
     DataFrame based on the 'cui' column in `df` and 'referencedComponentId' in the mapping.
 
     Args:
-        df (pd.DataFrame): The annotation DataFrame.
-        inner (bool, optional): If True, performs an inner merge; otherwise, performs a left merge. Defaults to False.
+        df: The annotation DataFrame.
+        inner: If True, performs an inner merge; otherwise, performs a left merge.
 
     Returns:
-        pd.DataFrame: The DataFrame with ICD-10 codes joined.
+        The DataFrame with ICD-10 codes joined.
     """
 
     mfp = (
@@ -389,18 +394,18 @@ def join_icd10_codes_to_annot(df, inner=False):
     return result
 
 
-def join_icd10_OPC4S_codes_to_annot(df, inner=False):
+def join_icd10_OPC4S_codes_to_annot(df: pd.DataFrame, inner: bool = False) -> pd.DataFrame:
     """Joins ICD-10 and OPCS-4 codes to an annotation DataFrame.
 
     This function merges the input DataFrame `df` with a predefined ICD-10/OPCS-4 mapping
     DataFrame based on the 'cui' column in `df` and 'conceptId' in the mapping.
 
     Args:
-        df (pd.DataFrame): The annotation DataFrame.
-        inner (bool, optional): If True, performs an inner merge; otherwise, performs a left merge. Defaults to False.
+        df: The annotation DataFrame.
+        inner: If True, performs an inner merge; otherwise, performs a left merge.
 
     Returns:
-        pd.DataFrame: The DataFrame with ICD-10 and OPCS-4 codes joined.
+        The DataFrame with ICD-10 and OPCS-4 codes joined.
     """
 
     # ../home/cogstack/samora/_data/gloabl_files/
@@ -420,24 +425,24 @@ def join_icd10_OPC4S_codes_to_annot(df, inner=False):
 
 
 def filter_and_select_rows(
-    dataframe,
-    filter_list,
-    verbosity=0,
-    time_column="updatetime",
-    filter_column="cui",
-    mode="earliest",
-    n_rows=1,
-):
+    dataframe: pd.DataFrame,
+    filter_list: List[Any],
+    verbosity: int = 0,
+    time_column: str = "updatetime",
+    filter_column: str = "cui",
+    mode: str = "earliest",
+    n_rows: int = 1,
+) -> pd.DataFrame:
     """Filter a dataframe based on a filter_column and filter_list, and return either the earliest or latest rows.
 
     Args:
-        dataframe (pd.DataFrame): Input dataframe.
-        filter_list (list): List of values to filter the dataframe.
-        verbosity (int, optional): If > 0, print additional information during execution. Defaults to 0.
-        time_column (str, optional): Column representing time, used for sorting if specified. Defaults to "updatetime".
-        filter_column (str, optional): Column used for filtering based on filter_list. Defaults to "cui".
-        mode (str, optional): Either 'earliest' or 'latest' to specify the rows to return. Defaults to "earliest".
-        n_rows (int, optional): Number of rows to return if they exist. Defaults to 1.
+        dataframe: Input dataframe.
+        filter_list: List of values to filter the dataframe.
+        verbosity: If > 0, print additional information during execution.
+        time_column: Column representing time, used for sorting if specified.
+        filter_column: Column used for filtering based on filter_list.
+        mode: Either 'earliest' or 'latest' to specify the rows to return.
+        n_rows: Number of rows to return if they exist.
 
     Returns:
         pd.DataFrame: Filtered and selected rows from the input dataframe.
@@ -474,24 +479,24 @@ def filter_and_select_rows(
 
 
 def filter_dataframe_by_cui(
-    dataframe,
-    filter_list,
-    filter_column="cui",
-    mode="earliest",
-    temporal="before",
-    verbosity=0,
-    time_column="updatetime",
-):
+    dataframe: pd.DataFrame,
+    filter_list: List[int],
+    filter_column: str = "cui",
+    mode: str = "earliest",
+    temporal: str = "before",
+    verbosity: int = 0,
+    time_column: str = "updatetime",
+) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """Filter an annotation DataFrame based on a list of CUI codes and a specified mode.
 
     Args:
-        dataframe (pd.DataFrame): The input DataFrame.
-        filter_list (list): List of CUI codes to filter the DataFrame.
-        filter_column (str, optional): The column containing filter. Defaults to 'cui'.
-        mode (str, optional): Specifies whether to consider the earliest or latest entry for each filter. Defaults to "earliest".
-        temporal (str, optional): Specifies whether to retain entries before or after the selected mode entry. Defaults to "before".
-        verbosity (int, optional): Verbosity level. 0 for no debug statements, higher values for more verbosity.
-        time_column (str, optional): The column containing time information. Defaults to 'updatetime'.
+        dataframe: The input DataFrame.
+        filter_list: List of CUI codes to filter the DataFrame.
+        filter_column: The column containing filter.
+        mode: Specifies whether to consider the earliest or latest entry for each filter.
+        temporal: Specifies whether to retain entries before or after the selected mode entry.
+        verbosity: Verbosity level. 0 for no debug statements, higher values for more verbosity.
+        time_column: The column containing time information.
 
     Returns:
         pd.DataFrame: Filtered DataFrame based on the specified criteria.
@@ -565,8 +570,8 @@ def copy_files_and_dirs(
     source_root: str,
     source_name: str,
     destination: str,
-    items_to_copy: List[str] = None,
-    loose_files: List[str] = None,
+    items_to_copy: Optional[List[str]] = None,
+    loose_files: Optional[List[str]] = None,
 ) -> None:
     """Copies specified directories and files from a source project location to a new destination.
 
@@ -574,10 +579,10 @@ def copy_files_and_dirs(
     the directory structure. It can copy specific subdirectories and individual files.
 
     Args:
-        source_root (str): The root directory of the source project.
-        source_name (str): The name of the source project directory (e.g., "new_project").
-        destination (str): The destination directory where the project will be copied.
-        items_to_copy (List[str], optional): A list of directory or file names (relative to `source_name`)
+        source_root: The root directory of the source project.
+        source_name: The name of the source project directory (e.g., "new_project").
+        destination: The destination directory where the project will be copied.
+        items_to_copy: A list of directory or file names (relative to `source_name`)
             to copy. If None, a default set of common project directories is copied. Defaults to None.
         loose_files (List[str], optional): A list of file names (relative to `source_root`)
             to copy directly to the `destination` root. If None, a default set of common
@@ -656,8 +661,11 @@ def copy_files_and_dirs(
 
 
 def filter_and_update_csv(
-    target_directory, ipw_dataframe, filter_type="after", verbosity=False
-):
+    target_directory: str,
+    ipw_dataframe: pd.DataFrame,
+    filter_type: str = "after",
+    verbosity: bool = False,
+) -> None:
     """Filters and updates CSV files in a target directory based on patient IPW records.
 
     This function iterates through each patient record in the `ipw_dataframe`,
@@ -665,7 +673,7 @@ def filter_and_update_csv(
     and filters the rows in those CSV files based on a timestamp column and a filter date.
 
     Args:
-        target_directory (str): The root directory containing the CSV files to be filtered.
+        target_directory: The root directory containing the CSV files to be filtered.
         ipw_dataframe (pd.DataFrame): A DataFrame containing patient IPW records, including 'client_idcode' and a timestamp column (e.g., 'updatetime').
         filter_type (str, optional): The type of filtering to apply: "after" (keep records after filter_date) or "before" (keep records before filter_date). Defaults to "after".
         verbosity (bool, optional): If True, print verbose messages during processing. Defaults to False.
@@ -740,14 +748,14 @@ def filter_and_update_csv(
 
 
 def retrieve_pat_annots_mct_epr(
-    client_idcode,
-    config_obj,
-    columns_epr=None,
-    columns_mct=None,
-    columns_to=None,
-    columns_report=None,
-    merge_columns=True,
-):
+    client_idcode: str,
+    config_obj: Any,
+    columns_epr: Optional[List[str]] = None,
+    columns_mct: Optional[List[str]] = None,
+    columns_to: Optional[List[str]] = None,
+    columns_report: Optional[List[str]] = None,
+    merge_columns: bool = True,
+) -> pd.DataFrame:
     """Retrieves and merges annotation data for a single patient from multiple sources.
 
     This function reads annotation data for a specified patient from four potential
@@ -757,13 +765,13 @@ def retrieve_pat_annots_mct_epr(
     columns (e.g., timestamps, content) to create a more unified dataset.
 
     Args:
-        client_idcode (str): The unique identifier for the patient.
-        config_obj (object): A configuration object containing paths to the
+        client_idcode: The unique identifier for the patient.
+        config_obj: A configuration object containing paths to the
             various annotation batch files.
-        columns_epr (list, optional): A list of columns to load from the EPR annotations CSV. Defaults to None (all columns).
-        columns_mct (list, optional): A list of columns to load from the MCT annotations CSV. Defaults to None (all columns).
-        columns_to (list, optional): A list of columns to load from the textual observations annotations CSV. Defaults to None (all columns).
-        columns_report (list, optional): A list of columns to load from the reports annotations CSV. Defaults to None (all columns).
+        columns_epr: A list of columns to load from the EPR annotations CSV.
+        columns_mct: A list of columns to load from the MCT annotations CSV.
+        columns_to: A list of columns to load from the textual observations annotations CSV.
+        columns_report: A list of columns to load from the reports annotations CSV.
         merge_columns (bool, optional): If True, attempts to merge corresponding
             columns (e.g., timestamps, content) from the different sources into a unified set of
             columns. Defaults to True.
@@ -898,18 +906,18 @@ def check_list_presence(df, column, lst, annot_filter_arguments=None):
     )
 
 
-def filter_dataframe_n_lists(df, column_name, n_lists):
+def filter_dataframe_n_lists(df: pd.DataFrame, column_name: str, n_lists: List[List[Any]]) -> pd.DataFrame:
     """Filters a DataFrame to include rows where the value in a specified column
     is present in *all* of the provided lists.
 
     Args:
-        df (pd.DataFrame): The input DataFrame.
-        column_name (str): The name of the column to filter.
-        n_lists (list of list): A list of lists. A row is kept only if the value
+        df: The input DataFrame.
+        column_name: The name of the column to filter.
+        n_lists: A list of lists. A row is kept only if the value
             in `column_name` is present in every sublist within `n_lists`.
 
     Returns:
-        pd.DataFrame: The filtered DataFrame.
+        The filtered DataFrame.
     """
     # Create a mask for each list in n_lists
     masks = [df[column_name].isin(lst) for lst in n_lists]
@@ -926,9 +934,9 @@ def filter_dataframe_n_lists(df, column_name, n_lists):
 def get_all_target_annots(
     all_pat_list: List[str],
     n_lists: List[List[int]],
-    config_obj: Optional[object] = None,
-    annot_filter_arguments: Optional[dict] = None,
-):
+    config_obj: Optional[Any] = None,
+    annot_filter_arguments: Optional[Dict[str, Any]] = None,
+) -> pd.DataFrame:
     """Retrieves and filters target annotations for a list of patients.
 
     This function iterates through a list of patient IDs, retrieves their annotations,
@@ -937,10 +945,10 @@ def get_all_target_annots(
     provided `n_lists`. The results are concatenated into a single DataFrame and saved.
 
     Args:
-        all_pat_list (List[str]): A list of patient IDs to process.
-        n_lists (List[List[int]]): A list of lists of CUI codes. Annotations are kept if their CUI is in all sublists.
-        config_obj (Optional[object], optional): A configuration object. Defaults to None.
-        annot_filter_arguments (Optional[dict], optional): Arguments to filter annotations. Defaults to None.
+        all_pat_list: A list of patient IDs to process.
+        n_lists: A list of lists of CUI codes. Annotations are kept if their CUI is in all sublists.
+        config_obj: A configuration object.
+        annot_filter_arguments: Arguments to filter annotations.
 
     Returns:
         pd.DataFrame: A DataFrame containing all target annotations.
@@ -976,17 +984,17 @@ def get_all_target_annots(
     return results_df
 
 
-def extract_datetime_from_binary_columns(df):
+def extract_datetime_from_binary_columns(df: pd.DataFrame) -> pd.DataFrame:
     """Extracts datetime values from binary columns representing dates in a DataFrame.
 
     Binary columns are expected to have names like `(YYYY, MM, DD)_date_time_stamp`,
     where a value of 1 indicates the presence of that date.
 
     Args:
-        df (pd.DataFrame): The DataFrame containing the binary columns with '_date_time_stamp' in column names.
+        df: The DataFrame containing the binary columns with '_date_time_stamp' in column names.
 
     Returns:
-        list: A list of datetime values extracted from the binary columns.
+        The DataFrame with a new 'datetime' column.
     """
     # Extracting date columns with '_date_time_stamp' in their names
     date_columns = [
@@ -1023,17 +1031,17 @@ def extract_datetime_from_binary_columns(df):
 # df = extract_datetime_from_binary_columns(df)
 
 
-def extract_datetime_from_binary_columns_chunk_reader(filepath):
+def extract_datetime_from_binary_columns_chunk_reader(filepath: str) -> pd.DataFrame:
     """Extracts datetime values from binary columns representing dates from a CSV file.
 
     This function reads a CSV file in chunks, extracts datetime values from binary columns
     (e.g., `(YYYY, MM, DD)_date_time_stamp`), and appends a 'datetime' column to the DataFrame.
 
     Args:
-        filepath (str): The file path to the CSV file containing the binary columns with '_date_time_stamp' in column names.
+        filepath: The file path to the CSV file.
 
     Returns:
-        pd.DataFrame: The DataFrame with the 'datetime' column appended.
+        The last chunk of the DataFrame with the 'datetime' column appended.
     """
     chunk_size = 1000  # Adjust this value based on your RAM capacity
     date_time_column_values = []
@@ -1073,15 +1081,15 @@ def extract_datetime_from_binary_columns_chunk_reader(filepath):
     return chunk
 
 
-def drop_columns_with_all_nan(df):
+def drop_columns_with_all_nan(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.Index]:
     """Drops columns from a DataFrame where all values are NaN or None.
 
     Args:
-        df (pd.DataFrame): The input DataFrame.
+        df: The input DataFrame.
 
     Returns:
-        tuple: A tuple containing:
-            - pd.DataFrame: The DataFrame with columns containing all NaNs dropped.
+        A tuple containing:
+            - The DataFrame with columns containing all NaNs dropped.
             - pd.Index: An Index of the column names that were dropped.
     """
     # Identify columns where all values are NaN or None
@@ -1093,18 +1101,16 @@ def drop_columns_with_all_nan(df):
     return df, nan_columns
 
 
-def save_missing_values_pickle(df, out_file_path, overwrite=False):
+def save_missing_values_pickle(df: pd.DataFrame, out_file_path: str, overwrite: bool = False) -> None:
     """Calculates the percentage of missing values for each column in a DataFrame
     and saves the result as a pickle file.
 
     Args:
-        df (pd.DataFrame): The input DataFrame.
-        out_file_path (str): The full path to the output file (e.g., "path/to/data.csv").
+        df: The input DataFrame.
+        out_file_path: The full path to the output file (e.g., "path/to/data.csv").
             The pickle file will be saved in the same directory with a `_missing_dict.pickle` suffix.
-        overwrite (bool, optional): If True, overwrites the pickle file if it already exists. Defaults to False.
+        overwrite: If True, overwrites the pickle file if it already exists.
 
-    Returns:
-        None
     """
     # Calculate percentage of missing values for each column
     missing_percentages = (df.isnull().sum() / len(df)) * 100
@@ -1140,17 +1146,16 @@ def save_missing_values_pickle(df, out_file_path, overwrite=False):
 
 
 def convert_true_to_float(
-    df,
-    columns=[
+    df: pd.DataFrame,
+    columns: List[str] = [
         "census_black_african_caribbean_or_black_british",
         "census_mixed_or_multiple_ethnic_groups",
         "census_white",
         "census_asian_or_asian_british",
         "census_other_ethnic_group",
     ],
-):
-    """Converts 'True' strings to float 1.0 in specified columns and
-    ensures those columns are of float datatype.
+) -> pd.DataFrame:
+    """Converts 'True' strings to 1.0 and ensures columns are float type.
 
     Args:
         df (pandas.DataFrame): The DataFrame to operate on.
@@ -1169,14 +1174,14 @@ def convert_true_to_float(
 
 
 def impute_datetime(
-    df,
-    datetime_column="datetime",
-    patient_column="client_idcode",
-    forward=True,
-    backward=True,
-    mean_impute=True,
-    verbose=False,
-):
+    df: pd.DataFrame,
+    datetime_column: str = "datetime",
+    patient_column: str = "client_idcode",
+    forward: bool = True,
+    backward: bool = True,
+    mean_impute: bool = True,
+    verbose: bool = False,
+) -> pd.DataFrame:
     """Imputes missing datetime values in a DataFrame based on patient ID and temporal order.
 
     This function sorts the DataFrame by patient ID and datetime, then applies
@@ -1184,13 +1189,13 @@ def impute_datetime(
     datetime column.
 
     Args:
-        df (pd.DataFrame): The input DataFrame.
-        datetime_column (str, optional): The name of the datetime column to impute. Defaults to "datetime".
-        patient_column (str, optional): The name of the patient ID column for grouping. Defaults to "client_idcode".
-        forward (bool, optional): If True, performs forward-fill imputation. Defaults to True.
-        backward (bool, optional): If True, performs backward-fill imputation. Defaults to True.
-        mean_impute (bool, optional): If True, performs mean imputation for any remaining NaNs. Defaults to True.
-        verbose (bool, optional): If True, prints verbose messages. Defaults to False.
+        df: The input DataFrame.
+        datetime_column: The name of the datetime column to impute.
+        patient_column: The name of the patient ID column for grouping.
+        forward: If True, performs forward-fill imputation.
+        backward: If True, performs backward-fill imputation.
+        mean_impute: If True, performs mean imputation for any remaining NaNs.
+        verbose: If True, prints verbose messages.
     """
     start_time = time.time()
     if verbose:
@@ -1254,14 +1259,14 @@ def impute_datetime(
 
 
 def impute_dataframe(
-    df,
-    verbose=True,
-    datetime_column="datetime",
-    patient_column="client_idcode",
-    forward=True,
-    backward=True,
+    df: pd.DataFrame,
+    verbose: bool = True,
+    datetime_column: str = "datetime",
+    patient_column: str = "client_idcode",
+    forward: bool = True,
+    backward: bool = True,
     mean_impute: bool = True,
-):
+) -> pd.DataFrame:
     """Imputes missing numeric values in a DataFrame based on patient ID and temporal order.
 
     This function sorts the DataFrame by patient ID and datetime, then applies
@@ -1269,13 +1274,13 @@ def impute_dataframe(
     numeric columns.
 
     Args:
-        df (pd.DataFrame): The input DataFrame.
-        verbose (bool, optional): If True, prints verbose messages. Defaults to True.
-        datetime_column (str, optional): The name of the datetime column for sorting. Defaults to "datetime".
-        patient_column (str, optional): The name of the patient ID column for grouping. Defaults to "client_idcode".
-        forward (bool, optional): If True, performs forward-fill imputation. Defaults to True.
-        backward (bool, optional): If True, performs backward-fill imputation. Defaults to True.
-        mean_impute (bool, optional): If True, performs mean imputation for any remaining NaNs. Defaults to True.
+        df: The input DataFrame.
+        verbose: If True, prints verbose messages.
+        datetime_column: The name of the datetime column for sorting.
+        patient_column: The name of the patient ID column for grouping.
+        forward: If True, performs forward-fill imputation.
+        backward: If True, performs backward-fill imputation.
+        mean_impute: If True, performs mean imputation for any remaining NaNs.
     """
     start_time = time.time()
 
@@ -1303,14 +1308,14 @@ def impute_dataframe(
     return df
 
 
-def missing_percentage_df(dataframe):
+def missing_percentage_df(dataframe: pd.DataFrame) -> pd.DataFrame:
     """Calculate the percentage of missing values in each column of a DataFrame.
 
     Args:
-        dataframe (pd.DataFrame): The input DataFrame.
+        dataframe: The input DataFrame.
 
     Returns:
-        pd.DataFrame: A DataFrame containing two columns: 'Column' (column names) and 'MissingPercentage' (percentage of missing values).
+        A DataFrame containing 'Column' (column names) and 'MissingPercentage'.
     """
     # Calculate percentage of missing values
     missing_percentage = dataframe.isnull().mean() * 100
@@ -1335,14 +1340,12 @@ def aggregate_dataframe_mean(
     first value for non-numeric columns.
 
     Args:
-        df (pd.DataFrame): The input DataFrame to aggregate.
-        group_by_column (str, optional): The column to group by.
-            Defaults to "client_idcode".
+        df: The input DataFrame to aggregate.
+        group_by_column: The column to group by.
 
     Returns:
-        pd.DataFrame: The aggregated DataFrame.
+        The aggregated DataFrame.
     """
-
     def custom_aggregation(x):
         agg_values = {}
         for col in x.columns:
@@ -1360,18 +1363,18 @@ def aggregate_dataframe_mean(
 
 
 def collapse_df_to_mean(
-    df, output_filename="output.csv", client_idcode_string="client_idcode"
-):
+    df: pd.DataFrame,
+    output_filename: str = "output.csv",
+    client_idcode_string: str = "client_idcode",
+) -> None:
     """Collapses a DataFrame to calculate mean values for numeric columns and retains the first non-numeric value for non-numeric columns
     for each unique client_idcode.
 
     Args:
-        df (pd.DataFrame): Input DataFrame containing client_idcode and other columns.
-        output_filename (str, optional): Name of the output file to save the processed DataFrame. Defaults to 'output.csv'.
-        client_idcode_string (str, optional): Name of the client_idcode column in the DataFrame. Defaults to 'client_idcode'.
+        df: Input DataFrame containing client_idcode and other columns.
+        output_filename: Name of the output file to save the processed DataFrame.
+        client_idcode_string: Name of the client_idcode column in the DataFrame.
 
-    Returns:
-        None: Saves the processed DataFrame to the specified output file.
     """
     # Check if the output file exists
     if os.path.exists(output_filename):
@@ -1429,13 +1432,12 @@ def collapse_df_to_mean(
                 )
 
 
-def plot_missing_pattern_bloods(dfb):
+def plot_missing_pattern_bloods(dfb: pd.DataFrame) -> None:
     """Plots the number of missing client_idcodes for the top 50 most frequent
     'basicobs_itemname_analysed' values in the given dataframe dfb.
 
     Args:
-        dfb (pd.DataFrame): DataFrame containing the columns 'client_idcode' and 'basicobs_itemname_analysed'.
-
+        dfb: DataFrame containing 'client_idcode' and 'basicobs_itemname_analysed'.
     """
 
     # Step 1: Identify the top 50 basicobs_itemname_analysed by frequency

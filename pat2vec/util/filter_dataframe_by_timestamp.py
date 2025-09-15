@@ -2,19 +2,20 @@ import pandas as pd
 
 
 from datetime import datetime
+from typing import Union
 
 
 def filter_dataframe_by_timestamp(
-    df,
-    start_year,
-    start_month,
-    end_year,
-    end_month,
-    start_day,
-    end_day,
-    timestamp_string,
-    dropna=False,
-):
+    df: pd.DataFrame,
+    start_year: Union[int, str],
+    start_month: Union[int, str],
+    end_year: Union[int, str],
+    end_month: Union[int, str],
+    start_day: Union[int, str],
+    end_day: Union[int, str],
+    timestamp_string: str,
+    dropna: bool = False,
+) -> pd.DataFrame:
     """Filters a DataFrame to include only rows within a specified date range.
 
     This function takes a DataFrame and filters it based on a timestamp column,
@@ -23,20 +24,20 @@ def filter_dataframe_by_timestamp(
     and ensures the start date is chronologically before the end date.
 
     Args:
-        df (pd.DataFrame): The DataFrame to filter.
-        start_year (int): The year of the start date.
-        start_month (int): The month of the start date.
-        start_day (int): The day of the start date.
-        end_year (int): The year of the end date.
-        end_month (int): The month of the end date.
-        end_day (int): The day of the end date.
-        timestamp_string (str): The name of the column in `df` that contains
+        df: The DataFrame to filter.
+        start_year: The year of the start date.
+        start_month: The month of the start date.
+        start_day: The day of the start date.
+        end_year: The year of the end date.
+        end_month: The month of the end date.
+        end_day: The day of the end date.
+        timestamp_string: The name of the column in `df` that contains
             the timestamps to filter on.
-        dropna (bool, optional): If True, drops rows with NaN values in the
+        dropna: If True, drops rows with NaN values in the
             timestamp column before filtering. Defaults to False.
 
     Returns:
-        pd.DataFrame: A new DataFrame containing only the rows that fall
+        A new DataFrame containing only the rows that fall
         within the specified date range.
     """
     # Work on a copy to avoid modifying the original DataFrame
