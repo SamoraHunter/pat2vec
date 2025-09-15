@@ -1,6 +1,7 @@
 import math
 import os
 from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional, Type, TypeVar, Union
 import pandas as pd
 import paramiko
 from dateutil.relativedelta import relativedelta
@@ -14,278 +15,181 @@ from pat2vec.util.methods_get import (
 )
 
 
-def get_test_options_dict():
-    # contains implemented testing functions, i.e have a dummy data generator implemented.
-    """
-    Returns a dictionary of main options for testing configurations.
-
-    The dictionary contains boolean flags for various features to be enabled
-    or disabled during testing. These options include demographic information,
-    BMI tracking, blood-related information, drug-related information,
-    diagnostic information, and various annotations, among others.
-
-    Returns:
-        dict: A dictionary with keys as option names and values as boolean
-        indicating whether the feature is enabled (True) or disabled (False).
-    """
-
-    main_options_dict = {
-        # Enable demographic information (Ethnicity mapped to UK census, age, death)
-        "demo": True,
-        "bmi": False,  # Enable BMI (Body Mass Index) tracking
-        "bloods": True,  # Enable blood-related information
-        "drugs": True,  # Enable drug-related information
-        "diagnostics": True,  # Enable diagnostic information
-        "core_02": False,  # Enable core_02 information
-        "bed": False,  # Enable bed n information
-        "vte_status": False,  # Enable VTE () status tracking
-        "hosp_site": False,  # Enable hospital site information
-        "core_resus": False,  # Enable core resuscitation information
-        "news": False,  # Enable NEWS (National Early Warning Score) tracking
-        "smoking": False,  # Enable smoking-related information
-        "annotations": True,  # Enable EPR annotations
-        # Enable MRC (Additional clinical note observations index) annotations
-        "annotations_mrc": True,
-        # Enable or disable negated presence annotations
-        "negated_presence_annotations": False,
-        "appointments": True,
-        "annotations_reports": False,
-        "textual_obs": True,
-    }
-    return main_options_dict
+T_config = TypeVar("T_config", bound="config_class")
 
 
-def update_global_start_date(self, start_date):
-    """
-    Updates the global start date if the provided start_date is later.
-    This logic only applies when looking forward (lookback=False).
-    """
-    # This function should only operate when looking forward.
-    if self.lookback:
-        return self  # Do nothing if it's a lookback calculation
-
-    # Construct a complete datetime object from the global start attributes for a clean comparison.
-    # This also handles the case where the attributes might still be strings.
-    try:
-        global_start = datetime(
-            int(self.global_start_year),
-            int(self.global_start_month),
-            int(self.global_start_day),
-        )
-    except (ValueError, TypeError):
-        # Handle cases where global date attributes are invalid to prevent crashes.
-        print("Warning: Invalid global date attributes in config. Cannot update.")
-        return self
-
-    # Compare the full date objects for simplicity and accuracy.
-    if start_date > global_start:
-        print(
-            "Warning: Updating global start date because the provided start_date is later."
-        )
-
-        # Assign the new values as integers, not strings.
-        self.global_start_year = start_date.year
-        self.global_start_month = start_date.month
-        self.global_start_day = start_date.day
-
-    return self
-
-
-def validate_and_fix_global_dates(self):
-    """
-    Ensures that global_start_date < global_end_date for Elasticsearch compatibility.
-    If they're in wrong order, swaps them and warns the user.
-    """
-    try:
-        global_start = datetime(
-            int(self.global_start_year),
-            int(self.global_start_month),
-            int(self.global_start_day),
-        )
-        global_end = datetime(
-            int(self.global_end_year),
-            int(self.global_end_month),
-            int(self.global_end_day),
-        )
-
-        if global_start > global_end:
-            print(
-                f"Warning: Global start date ({global_start}) is after global end date ({global_end})"
-            )
-            print("Swapping dates to ensure Elasticsearch compatibility...")
-
-            # Swap the dates
-            temp_year, temp_month, temp_day = (
-                self.global_start_year,
-                self.global_start_month,
-                self.global_start_day,
-            )
-            (
-                self.global_start_year,
-                self.global_start_month,
-                self.global_start_day,
-            ) = (self.global_end_year, self.global_end_month, self.global_end_day)
-            self.global_end_year, self.global_end_month, self.global_end_day = (
-                temp_year,
-                temp_month,
-                temp_day,
-            )
-
-            print(
-                f"New global start date: {self.global_start_year}-{self.global_start_month}-{self.global_start_day}"
-            )
-            print(
-                f"New global end date: {self.global_end_year}-{self.global_end_month}-{self.global_end_day}"
-            )
-
-    except (ValueError, TypeError) as e:
-        print(f"Warning: Could not validate global dates due to invalid values: {e}")
-
-    return self
-
-
+# NOTE: This class is very large. Consider refactoring into smaller, more focused
+# configuration objects (e.g., `PathConfig`, `TimeWindowConfig`, `FeatureConfig`).
 class config_class:
+    """Initializes the configuration object for the pat2vec pipeline."""
+
     def __init__(
         self,
-        remote_dump=False,
-        suffix="",
-        treatment_doc_filename="treatment_docs.csv",
-        treatment_control_ratio_n=1,
-        proj_name="new_project",
-        current_path_dir=".",
-        main_options=None,
-        start_date=(datetime(1995, 1, 1)),
-        years=0,
-        months=0,
-        days=1,
-        batch_mode=True,
-        store_annot=False,
-        share_sftp=True,
-        multi_process=False,
-        strip_list=True,
-        verbosity=3,
-        random_seed_val=42,
-        hostname=None,
-        username=None,
-        password=None,
-        gpu_mem_threshold=4000,
-        testing=False,
-        dummy_medcat_model=False,
-        use_controls=False,
-        medcat=False,
-        global_start_year=None,
-        global_start_month=None,
-        global_end_year=None,
-        global_end_month=None,
-        global_start_day=None,
-        global_end_day=None,
-        skip_additional_listdir=False,
-        start_time=None,
-        root_path=None,
-        negate_biochem=False,
-        patient_id_column_name="client_idcode",
-        overwrite_stored_pat_docs=False,
-        overwrite_stored_pat_observations=False,
-        store_pat_batch_docs=True,
-        store_pat_batch_observations=True,
-        annot_filter_options=None,
-        shuffle_pat_list=False,
-        individual_patient_window=False,
-        individual_patient_window_df=None,
-        individual_patient_window_start_column_name=None,
-        individual_patient_id_column_name=None,
-        individual_patient_window_controls_method="full",  # full, random
-        dropna_doc_timestamps=True,
-        time_window_interval_delta=relativedelta(days=1),
-        feature_engineering_arg_dict=None,
-        split_clinical_notes=True,
-        lookback=True,  # look back or forward from the start date
-        add_icd10=False,  # append ICD 10 codes to the output of annotations
-        add_opc4s=False,  # append OPC4s codes to the output of annotations
-        all_epr_patient_list_path="/home/samorah/_data/gloabl_files/all_client_idcodes_epr_unique.csv",  # Used for control patient sampling
-        override_medcat_model_path=None,
-        data_type_filter_dict=None,
-        filter_split_notes=True,  # Apply global time window to notes post clinical note splitting.
-        client_idcode_term_name="client_idcode.keyword",  # Used for elastic search index keyword search
-        sanitize_pat_list=True,
-        calculate_vectors=True,
-        prefetch_pat_batches=False,
-        sample_treatment_docs=0,  # 0 for no sampling, provide an int for the number of samples.
-        test_data_path=None,
-        credentials_path = '../../credentials.py'
-    ):
+        remote_dump: bool = False,
+        suffix: str = "",
+        treatment_doc_filename: str = "treatment_docs.csv",
+        treatment_control_ratio_n: int = 1,
+        proj_name: str = "new_project",
+        current_path_dir: str = ".",
+        main_options: Optional[Dict[str, bool]] = None,
+        start_date: datetime = datetime(1995, 1, 1),
+        years: int = 0,
+        months: int = 0,
+        days: int = 1,
+        batch_mode: bool = True,
+        store_annot: bool = False,
+        share_sftp: bool = True,
+        multi_process: bool = False,
+        strip_list: bool = True,
+        verbosity: int = 3,
+        random_seed_val: int = 42,
+        hostname: Optional[str] = None,
+        username: Optional[str] = None,
+        password: Optional[str] = None,
+        gpu_mem_threshold: int = 4000,
+        testing: bool = False,
+        dummy_medcat_model: bool = False,
+        use_controls: bool = False,
+        medcat: bool = False,
+        global_start_year: Optional[Union[int, str]] = None,
+        global_start_month: Optional[Union[int, str]] = None,
+        global_end_year: Optional[Union[int, str]] = None,
+        global_end_month: Optional[Union[int, str]] = None,
+        global_start_day: Optional[Union[int, str]] = None,
+        global_end_day: Optional[Union[int, str]] = None,
+        skip_additional_listdir: bool = False,
+        start_time: Optional[datetime] = None,
+        root_path: Optional[str] = None,
+        negate_biochem: bool = False,
+        patient_id_column_name: str = "client_idcode",
+        overwrite_stored_pat_docs: bool = False,
+        overwrite_stored_pat_observations: bool = False,
+        store_pat_batch_docs: bool = True,
+        store_pat_batch_observations: bool = True,
+        annot_filter_options: Optional[Dict[str, Any]] = None,
+        shuffle_pat_list: bool = False,
+        individual_patient_window: bool = False,
+        individual_patient_window_df: Optional[pd.DataFrame] = None,
+        individual_patient_window_start_column_name: Optional[str] = None,
+        individual_patient_id_column_name: Optional[str] = None,
+        individual_patient_window_controls_method: str = "full",  # full, random
+        dropna_doc_timestamps: bool = True,
+        time_window_interval_delta: relativedelta = relativedelta(days=1),
+        feature_engineering_arg_dict: Optional[Dict[str, Any]] = None,
+        split_clinical_notes: bool = True,
+        lookback: bool = True,
+        add_icd10: bool = False,
+        add_opc4s: bool = False,
+        all_epr_patient_list_path: str = "/home/samorah/_data/gloabl_files/all_client_idcodes_epr_unique.csv",
+        override_medcat_model_path: Optional[str] = None,
+        data_type_filter_dict: Optional[Dict[str, Any]] = None,
+        filter_split_notes: bool = True,
+        client_idcode_term_name: str = "client_idcode.keyword",
+        sanitize_pat_list: bool = True,
+        calculate_vectors: bool = True,
+        prefetch_pat_batches: bool = False,
+        sample_treatment_docs: int = 0,
+        test_data_path: Optional[str] = None,
+        credentials_path: str = "../../credentials.py",
+    ) -> None:
         """Initializes the configuration object for the pat2vec pipeline.
 
         This class holds all configuration parameters for a pat2vec run, including
         file paths, time window settings, feature selection, and operational flags.
 
         Args:
-            remote_dump (bool): If **True**, data will be dumped to a remote server via SFTP. Defaults to **False**.
-            suffix (str): A suffix to append to output folder names. Defaults to **""**.
-            treatment_doc_filename (str): The filename for the input document containing the primary cohort list. Defaults to **'treatment_docs.csv'**.
-            treatment_control_ratio_n (int): The ratio of treatment to control patients. Defaults to **1**.
-            proj_name (str): The name of the current project, used for creating project-specific folders where patient data batches and vectors are stored. Defaults to **'new_project'**.
-            current_path_dir (str): The current working directory. Defaults to **"."**.
-            main_options (dict, optional): A dictionary of boolean flags to enable or disable specific feature extractions (e.g., 'demo', 'bloods', 'annotations'). If **None**, a default dictionary is used. Defaults to **None**.
-            start_date (datetime): The anchor date for generating time windows. For global windows, this is the start. For individual windows, this is overridden per patient. Defaults to **datetime(1995, 1, 1)**.
-            years (int): The number of years in the time window duration. Defaults to **0**.
-            months (int): Number of months to add to the `start_date`. Defaults to **0**.
-            days (int): The number of days in the time window duration. Defaults to **1**.
-            batch_mode (bool): Flag for batch processing mode. This is currently the **only functioning mode**. Defaults to **True**.
-            store_annot (bool): Flag to store annotations. Partially deprecated. Defaults to **False**.
-            share_sftp (bool): Flag for sharing SFTP connection. Partially deprecated. Defaults to **True**.
-            multi_process (bool): Flag for multi-process execution. Deprecated. Defaults to **False**.
-            strip_list (bool): If **True**, this will check for completed patients before starting to avoid redundancy. Defaults to **True**.
-            verbosity (int): Verbosity level for logging (0-9). Defaults to **3**.
-            random_seed_val (int): Random seed for reproducibility. Defaults to **42**.
-            hostname (str, optional): Hostname for SFTP connection. Defaults to **None**.
-            username (str, optional): Username for SFTP connection. Defaults to **None**.
-            password (str, optional): Password for SFTP connection. Defaults to **None**.
-            gpu_mem_threshold (int): GPU memory threshold in MB for MedCAT. Defaults to **4000**.
-            testing (bool): If **True**, enables testing mode, which may use dummy data generators. Defaults to **False**.
-            dummy_medcat_model (bool): If **True** and in testing mode, simulates a MedCAT model. Defaults to **False**.
-            use_controls (bool): If **True**, this will add the desired ratio of controls at random from the global pool, requiring configuration with a master list of patients. Defaults to **False**.
-            medcat (bool): Flag for MedCAT processing. If **True**, MedCAT will load into memory and be used for annotating. Defaults to **False**.
-            global_start_year (int, optional): Global start year for the overall data extraction window. Defaults to **None**, then set to '1995'.
-            global_start_month (int, optional): Global start month. Defaults to **None**, then set to '01'.
-            global_start_day (int, optional): Global start day. Defaults to **None**, then set to '01'.
-            global_end_year (int, optional): Global end year. Defaults to **None**, then set to '2023'.
-            global_end_month (int, optional): Global end month. Defaults to **None**, then set to '11'.
-            global_end_day (int, optional): Global end day. Defaults to **None**, then set to '01'.
-            skip_additional_listdir (bool): If **True**, skips some `listdir` calls for performance. Defaults to **False**.
-            start_time (datetime, optional): Start time for logging. Defaults to `datetime.now()`.
-            root_path (str, optional): The root directory for the project. If **None**, defaults to the current working directory. Defaults to **None**.
-            negate_biochem (bool): Flag for negating biochemistry features. Defaults to **False**.
-            patient_id_column_name (str): Column name for patient IDs in input files. Defaults to **'client_idcode'**.
-            overwrite_stored_pat_docs (bool): If **True**, overwrites existing stored patient documents. Defaults to **False**.
-            overwrite_stored_pat_observations (bool): If **True**, overwrites existing stored patient observations. Defaults to **False**.
-            store_pat_batch_docs (bool): If **True**, stores patient document batches. Defaults to **True**.
-            store_pat_batch_observations (bool): If **True**, stores patient observation batches. Defaults to **True**.
-            annot_filter_options (dict, optional): Dictionary for filtering MedCAT annotations. Defaults to **None**.
-            shuffle_pat_list (bool): Flag for shuffling the patient list. Defaults to **False**.
-            individual_patient_window (bool): If **True**, uses patient-specific time windows defined in `individual_patient_window_df`. Defaults to **False**.
-            individual_patient_window_df (pd.DataFrame, optional): DataFrame with patient IDs and their individual start dates. Required if `individual_patient_window` is **True**. Defaults to **None**.
-            individual_patient_window_start_column_name (str, optional): The column name for start dates in `individual_patient_window_df`. Defaults to **None**.
-            individual_patient_id_column_name (str, optional): The column name for patient IDs in `individual_patient_window_df`. Defaults to **None**.
-            individual_patient_window_controls_method (str): Method for handling control patients in IPW mode ('full' or 'random'). Defaults to **'full'**.
-            dropna_doc_timestamps (bool): If **True**, drops documents with missing timestamps. Defaults to **True**.
-            time_window_interval_delta (relativedelta): The step/interval for each time slice vector. Defaults to **relativedelta(days=1)**.
-            feature_engineering_arg_dict (dict, optional): Dictionary of arguments for feature engineering. Defaults to **None**.
-            split_clinical_notes (bool): If **True**, clinical notes will be split by date and treated as individual documents with extracted dates. Requires a note splitter module. Defaults to **True**.
-            lookback (bool): If **True**, the time window is calculated backward from the start date. If **False**, it's calculated forward. Defaults to **True**.
-            add_icd10 (bool): If **True**, appends ICD-10 codes to annotation batches. These can be found under `current_pat_documents_annotations/%client_idcode%.csv`. Defaults to **False**.
-            add_opc4s (bool): Requires `add_icd10` to be **True**. If **True**, appends OPC4S codes to annotation batches. These can be found under `current_pat_documents_annotations/%client_idcode%.csv`. Defaults to **False**.
-            all_epr_patient_list_path (str): Path to a file containing all patient IDs, used for sampling controls.
-            override_medcat_model_path (str, optional): Path to a MedCAT model pack to override the default. Defaults to **None**.
-            data_type_filter_dict (dict, optional): Dictionary for data type filtering. See examples provided in the configuration. Defaults to **None**.
-            filter_split_notes (bool): If enabled (**True**), the global time window filter will be reapplied after clinical note splitting. This is recommended to enable if `split_clinical_notes` is enabled. Defaults to **True**.
-            client_idcode_term_name (str): The Elasticsearch field name for patient ID searches. Defaults to **"client_idcode.keyword"**.
-            sanitize_pat_list (bool): If **True**, sanitizes the patient list (e.g., to uppercase). Defaults to **True**.
-            calculate_vectors (bool): If **True**, calculates feature vectors. If **False**, only extracts batches. Defaults to **True**.
-            prefetch_pat_batches (bool): If **True**, fetches all raw data for all patients before processing. May use significant memory. Defaults to **False**.
-            sample_treatment_docs (int): Number of patients to sample from the initial cohort list. `0` means no sampling. Defaults to **0**.
-            test_data_path (str, optional): The path to the test data file, used when `testing` is **True**. Defaults to **None**.
-            credentials_path
+            remote_dump: If `True`, data will be dumped to a remote server via SFTP.
+            suffix: A suffix to append to output folder names.
+            treatment_doc_filename: The filename for the input document containing the
+                primary cohort list.
+            treatment_control_ratio_n: The ratio of treatment to control patients.
+            proj_name: The name of the current project, used for creating
+                project-specific folders where patient data batches and vectors are stored.
+            current_path_dir: The current working directory.
+            main_options: A dictionary of boolean flags to enable or disable specific
+                feature extractions (e.g., 'demo', 'bloods', 'annotations').
+                If `None`, a default dictionary is used.
+            start_date: The anchor date for generating time windows. For global windows,
+                this is the start. For individual windows, this is overridden per patient.
+            years: The number of years in the time window duration.
+            months: Number of months to add to the `start_date`.
+            days: The number of days in the time window duration.
+            batch_mode: Flag for batch processing mode. This is currently the only
+                functioning mode.
+            store_annot: Flag to store annotations. Partially deprecated.
+            share_sftp: Flag for sharing SFTP connection. Partially deprecated.
+            multi_process: Flag for multi-process execution. Deprecated.
+            strip_list: If `True`, this will check for completed patients before
+                starting to avoid redundancy.
+            verbosity: Verbosity level for logging (0-9).
+            random_seed_val: Random seed for reproducibility.
+            hostname: Hostname for SFTP connection.
+            username: Username for SFTP connection.
+            password: Password for SFTP connection.
+            gpu_mem_threshold: GPU memory threshold in MB for MedCAT.
+            testing: If `True`, enables testing mode, which may use dummy data generators.
+            dummy_medcat_model: If `True` and in testing mode, simulates a MedCAT model.
+            use_controls: If `True`, this will add the desired ratio of controls at
+                random from the global pool, requiring configuration with a master list
+                of patients.
+            medcat: Flag for MedCAT processing. If `True`, MedCAT will load into memory
+                and be used for annotating.
+            global_start_year: Global start year for the overall data extraction window.
+            global_start_month: Global start month.
+            global_start_day: Global start day.
+            global_end_year: Global end year.
+            global_end_month: Global end month.
+            global_end_day: Global end day.
+            skip_additional_listdir: If `True`, skips some `listdir` calls for performance.
+            start_time: Start time for logging. Defaults to `datetime.now()`.
+            root_path: The root directory for the project. If `None`, defaults to the
+                current working directory.
+            negate_biochem: Flag for negating biochemistry features.
+            patient_id_column_name: Column name for patient IDs in input files.
+            overwrite_stored_pat_docs: If `True`, overwrites existing stored patient documents.
+            overwrite_stored_pat_observations: If `True`, overwrites existing stored
+                patient observations.
+            store_pat_batch_docs: If `True`, stores patient document batches.
+            store_pat_batch_observations: If `True`, stores patient observation batches.
+            annot_filter_options: Dictionary for filtering MedCAT annotations.
+            shuffle_pat_list: Flag for shuffling the patient list.
+            individual_patient_window: If `True`, uses patient-specific time windows
+                defined in `individual_patient_window_df`.
+            individual_patient_window_df: DataFrame with patient IDs and their individual
+                start dates. Required if `individual_patient_window` is `True`.
+            individual_patient_window_start_column_name: The column name for start dates
+                in `individual_patient_window_df`.
+            individual_patient_id_column_name: The column name for patient IDs in
+                `individual_patient_window_df`.
+            individual_patient_window_controls_method: Method for handling control
+                patients in IPW mode ('full' or 'random').
+            dropna_doc_timestamps: If `True`, drops documents with missing timestamps.
+            time_window_interval_delta: The step/interval for each time slice vector.
+            feature_engineering_arg_dict: Dictionary of arguments for feature engineering.
+            split_clinical_notes: If `True`, clinical notes will be split by date and
+                treated as individual documents with extracted dates. Requires a note
+                splitter module.
+            lookback: If `True`, the time window is calculated backward from the start
+                date. If `False`, it's calculated forward.
+            add_icd10: If `True`, appends ICD-10 codes to annotation batches.
+            add_opc4s: Requires `add_icd10` to be `True`. If `True`, appends OPC4S codes
+                to annotation batches.
+            all_epr_patient_list_path: Path to a file containing all patient IDs, used
+                for sampling controls.
+            override_medcat_model_path: Path to a MedCAT model pack to override the default.
+            data_type_filter_dict: Dictionary for data type filtering.
+            filter_split_notes: If enabled (`True`), the global time window filter will be
+                reapplied after clinical note splitting.
+            client_idcode_term_name: The Elasticsearch field name for patient ID searches.
+            sanitize_pat_list: If `True`, sanitizes the patient list (e.g., to uppercase).
+            calculate_vectors: If `True`, calculates feature vectors. If `False`, only
+                extracts batches.
+            prefetch_pat_batches: If `True`, fetches all raw data for all patients before
+                processing. May use significant memory.
+            sample_treatment_docs: Number of patients to sample from the initial cohort
+                list. `0` means no sampling.
+            test_data_path: The path to the test data file, used when `testing` is `True`.
+            credentials_path: Path to the credentials file.
         """
 
         if prefetch_pat_batches and individual_patient_window:
@@ -303,6 +207,13 @@ class config_class:
         self.prefetch_pat_batches = prefetch_pat_batches
 
         self.calculate_vectors = calculate_vectors  # Calculate vectors for each patient else just extract batches
+
+        # Validate IPW configuration early to prevent TypeErrors
+        if individual_patient_window and individual_patient_window_df is None:
+            raise ValueError(
+                "individual_patient_window_df must be provided when individual_patient_window is True."
+            )
+
 
         self.sanitize_pat_list = (
             sanitize_pat_list  # Enforce all characters capitalized in patient list.
@@ -684,7 +595,7 @@ class config_class:
 
         self.sample_treatment_docs = sample_treatment_docs
 
-        priority_list_bool = False
+        priority_list_bool: bool = False
 
         if priority_list_bool:
             # add logic to prioritise pats from list.
@@ -703,27 +614,6 @@ class config_class:
 
             all_patient_list = priority_list  # + all_patient_list
 
-        def update_main_options(self):
-            """
-            Updates the main options by setting any enabled options not present in the
-            test options dictionary to False.
-
-            This is used to ensure that only enabled options that are implemented in the
-            test data are used when running tests.
-
-            Parameters
-            ----------
-            None
-
-            Returns
-            -------
-            None
-            """
-            test_options_dict = get_test_options_dict()
-            for option, value in self.main_options.items():
-                if value and not test_options_dict[option]:
-                    self.main_options[option] = False
-
         if self.testing:
             print("Setting test options")
 
@@ -735,7 +625,7 @@ class config_class:
 
             print("Updating main options with implemented test options")
             # Enforce implemented testing options
-            update_main_options(self)
+            self._update_main_options()
 
         if self.remote_dump == False:
             self.sftp_obj = None
@@ -760,6 +650,12 @@ class config_class:
             # Create an SSH client and connect to the remote machine
             self.ssh_client = paramiko.SSHClient()
             self.ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+
+            if not all([self.hostname, self.username, self.password]):
+                raise ValueError(
+                    "Hostname, username, and password must be provided for remote dump."
+                )
+
             self.ssh_client.connect(
                 hostname=self.hostname, username=self.username, password=self.password
             )
@@ -840,23 +736,27 @@ class config_class:
         self.initial_global_end_day = self.global_end_day
 
         # CRITICAL: Ensure global dates are in correct order for Elasticsearch
-        self = validate_and_fix_global_dates(self)
-
-        if self.lookback:
-            if self.verbosity >= 1:
-                print(
-                    "Lookback mode enabled - this affects time window calculation direction"
-                )
-                print("Global dates remain ordered for Elasticsearch compatibility")
-                print(
-                    f"Global range: {self.global_start_year}-{self.global_start_month}-{self.global_start_day} to {self.global_end_year}-{self.global_end_month}-{self.global_end_day}"
-                )
+        try:
+            self.global_start_date = datetime(
+                int(self.global_start_year),
+                int(self.global_start_month),
+                int(self.global_start_day),
+            )
+            self.global_end_date = datetime(
+                int(self.global_end_year),
+                int(self.global_end_month),
+                int(self.global_end_day),
+            )
+        except (ValueError, TypeError):
+            self.global_start_date = None
+            self.global_end_date = None
+        self._validate_and_fix_global_dates()
 
         # Update global start date based on the provided start_date (only for forward looking)
         self = update_global_start_date(self, self.start_date)
 
         if not self.individual_patient_window:
-            self.date_list = generate_date_list(
+            self.date_list: List[datetime] = generate_date_list(
                 self.start_date,
                 self.years,
                 self.months,
@@ -1013,3 +913,193 @@ class config_class:
                 print("data_type_filter_dict")
                 print(self.data_type_filter_dict)
                 print(self.data_type_filter_dict.keys())
+
+    def _get_test_options_dict(self) -> Dict[str, bool]:
+        """Returns a dictionary of implemented testing functions.
+
+        The dictionary contains boolean flags for various features that have a
+        dummy data generator implemented for testing purposes.
+
+        Returns:
+            A dictionary with feature names as keys and a boolean indicating
+            if a test implementation exists.
+        """
+        return {
+            "demo": True,
+            "bmi": False,
+            "bloods": True,
+            "drugs": True,
+            "diagnostics": True,
+            "core_02": False,
+            "bed": False,
+            "vte_status": False,
+            "hosp_site": False,
+            "core_resus": False,
+            "news": False,
+            "smoking": False,
+            "annotations": True,
+            "annotations_mrc": True,
+            "negated_presence_annotations": False,
+            "appointments": True,
+            "annotations_reports": False,
+            "textual_obs": True,
+        }
+
+    def _update_main_options(self) -> None:
+        """Disables main options that are not implemented for testing.
+
+        This ensures that when `self.testing` is True, only features with
+        available dummy data generators are enabled. It modifies `self.main_options`
+        in place.
+        """
+        test_options_dict = self._get_test_options_dict()
+        for option, value in self.main_options.items():
+            if value and not test_options_dict.get(option, False):
+                self.main_options[option] = False
+
+    def _validate_and_fix_global_dates(self) -> None:
+        """Ensures global start date is before the global end date.
+
+        If the start date is after the end date, it swaps them to ensure
+        compatibility with Elasticsearch range queries and warns the user.
+        Modifies date attributes in place.
+        """
+        try:
+            global_start = datetime(
+                int(self.global_start_year),
+                int(self.global_start_month),
+                int(self.global_start_day),
+            )
+            global_end = datetime(
+                int(self.global_end_year),
+                int(self.global_end_month),
+                int(self.global_end_day),
+            )
+
+
+            if self.global_start_date and self.global_end_date and self.global_start_date > self.global_end_date:
+                print(
+                    f"Warning: Global start date ({global_start.date()}) is after "
+                    f"global end date ({global_end.date()})."
+                    f"Warning: Global start date ({self.global_start_date.date()}) is after "
+                    f"global end date ({self.global_end_date.date()})."
+                )
+                print("Swapping dates to ensure Elasticsearch compatibility...")
+
+                # Swap the date attributes
+                (
+                    self.global_start_year,
+                    self.global_start_month,
+                    self.global_start_day,
+                    self.global_end_year,
+                    self.global_end_month,
+                    self.global_end_day,
+                ) = (
+                    self.global_end_year,
+                    self.global_end_month,
+                    self.global_end_day,
+                    self.global_start_year,
+                    self.global_start_month,
+                    self.global_start_day,
+                )
+                # Also swap the datetime objects
+                (
+                    self.global_start_date,
+                    self.global_end_date
+                ) = (
+                    self.global_end_date,
+                    self.global_start_date
+                )
+
+        except (ValueError, TypeError) as e:
+            print(f"Warning: Could not validate global dates due to invalid values: {e}")
+
+
+def update_global_start_date(self: T_config, start_date: datetime) -> T_config:
+    """Updates the global start date if the provided start_date is later.
+
+    This logic only applies when looking forward (lookback=False).
+
+    Args:
+        self: The configuration object instance.
+        start_date: The new start date to compare against the global start date.
+
+    Returns:
+        The configuration object instance.
+    """
+    # This function is now defined outside the class but operates on an instance.
+    # It's kept for compatibility but would be better as a private method.
+    # The logic has been simplified and made more robust.
+    if self.lookback:
+        return self
+
+    try:
+        if self.global_start_date and start_date > self.global_start_date:
+            print(
+                "Warning: Updating global start date because the provided "
+                "start_date is later."
+            )
+            self.global_start_year = str(start_date.year)
+            self.global_start_month = str(start_date.month).zfill(2)
+            self.global_start_day = str(start_date.day).zfill(2)
+            # Also update the datetime object to maintain consistency
+            self.global_start_date = start_date
+    except (ValueError, TypeError):
+        print("Warning: Invalid global date attributes in config. Cannot update.")
+
+    return self
+
+
+def validate_and_fix_global_dates(config: T_config) -> T_config:
+    """Ensures global start date is before the global end date.
+
+    If the start date is after the end date, it swaps them to ensure
+    compatibility with Elasticsearch range queries and warns the user.
+
+    Args:
+        config: The configuration object instance.
+
+    Returns:
+        The modified configuration object.
+    """
+    try:
+        global_start = datetime(
+            int(config.global_start_year),
+            int(config.global_start_month),
+            int(config.global_start_day),
+        )
+        global_end = datetime(
+            int(config.global_end_year),
+            int(config.global_end_month),
+            int(config.global_end_day),
+        )
+
+        if global_start > global_end:
+            print(
+                f"Warning: Global start date ({global_start.date()}) is after "
+                f"global end date ({global_end.date()})."
+            )
+            print("Swapping dates to ensure Elasticsearch compatibility...")
+
+            # Swap the date attributes
+            (
+                config.global_start_year, config.global_start_month, config.global_start_day,
+                config.global_end_year, config.global_end_month, config.global_end_day,
+            ) = (
+                config.global_end_year, config.global_end_month, config.global_end_day,
+                config.global_start_year, config.global_start_month, config.global_start_day,
+            )
+            # Also swap the datetime objects if they exist
+            if hasattr(config, 'global_start_date') and hasattr(config, 'global_end_date'):
+                (
+                    config.global_start_date,
+                    config.global_end_date
+                ) = (
+                    config.global_end_date,
+                    config.global_start_date
+                )
+
+    except (ValueError, TypeError) as e:
+        print(f"Warning: Could not validate global dates due to invalid values: {e}")
+
+    return config

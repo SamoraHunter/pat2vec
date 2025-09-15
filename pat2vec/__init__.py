@@ -179,8 +179,7 @@ from .util.compile_requirements import (
     append_to_file, process_requirements, run_pip_compile
 )
 from .util.config_pat2vec import (
-    config_class, get_test_options_dict, update_global_start_date,
-    validate_and_fix_global_dates
+    config_class, update_global_start_date, validate_and_fix_global_dates
 )
 from .util.current_pat_batch_path_methods import (
     PathsClass
@@ -266,14 +265,13 @@ from .util.methods_annotation_regex import (
     append_regex_term_counts
 )
 from .util.methods_get import (
-    add_offset_column, build_patient_dict, check_sftp_connection, convert_date,
-    convert_date, convert_timestamp_to_tuple, create_folders,
-    create_folders_annot_csv_wrapper, create_folders_for_pat, create_local_folders,
-    create_remote_folders, dump_results, enum_exact_target_date_vector,
-    enum_target_date_vector, exist_check, filter_stripped_list, get_empty_date_vector,
-    get_free_gpu, list_dir_wrapper, list_dir_wrapper, list_dir_wrapper, method1,
-    method1, method2, method2, read_csv_wrapper, read_remote, sftp_exists,
-    test_datetime_formats, update_pbar, write_csv_wrapper, write_remote
+    add_offset_column, build_patient_dict, convert_date, convert_timestamp_to_tuple,
+    create_folders, create_folders_annot_csv_wrapper, create_folders_for_pat,
+    create_local_folders, create_remote_folders, dump_results,
+    enum_exact_target_date_vector, enum_target_date_vector, exist_check,
+    filter_stripped_list, get_empty_date_vector, get_free_gpu, list_dir_wrapper,
+    read_csv_wrapper, read_remote, sftp_exists, test_datetime_formats, update_pbar,
+    write_csv_wrapper, write_remote
 )
 from .util.methods_get_medcat import (
     get_cat
@@ -358,9 +356,9 @@ __all__ = [
     "calculate_pretty_name_count_features", "calculate_smoking_features",
     "calculate_vte_features", "check_csv_files_in_directory", "check_csv_integrity",
     "check_list_presence", "check_pat_document_annotation_complete",
-    "check_sftp_connection", "clean_observation_value",
-    "coerce_document_df_to_medcat_trainer_input", "cohort_searcher_no_terms",
-    "cohort_searcher_no_terms_fuzzy", "cohort_searcher_with_terms_and_search",
+    "clean_observation_value", "coerce_document_df_to_medcat_trainer_input",
+    "cohort_searcher_no_terms", "cohort_searcher_no_terms_fuzzy",
+    "cohort_searcher_with_terms_and_search",
     "cohort_searcher_with_terms_and_search_dummy",
     "cohort_searcher_with_terms_and_search_multi",
     "cohort_searcher_with_terms_no_search", "collapse_df_to_mean",
@@ -421,7 +419,7 @@ __all__ = [
     "get_pat_document_annotation_batch", "get_pat_document_annotation_batch_mct",
     "get_pat_document_annotation_batch_reports", "get_pat_ipw_record",
     "get_patient_timeline_dummy", "get_search_client_idcode_list_from_nhs_number_list",
-    "get_smoking", "get_start_end_year_month", "get_test_options_dict",
+    "get_smoking", "get_start_end_year_month",
     "get_treatment_docs_by_iterative_multi_term_cohort_searcher_no_terms_fuzzy",
     "get_treatment_records_by_drug_order_name", "get_vte_status",
     "group_images_by_suffix", "guess_datetime_columns", "handle_inconsistent_dtypes",
@@ -435,7 +433,7 @@ __all__ = [
     "list_dir_wrapper", "main", "main_batch", "manually_label_annotation_df", "matcher",
     "maybe_nan", "mean_impute_dataframe", "medcat_trainer_export_to_df",
     "merge_appointments_csv", "merge_bmi_csv", "merge_demographics_csv",
-    "merge_diagnostics_csv", "merge_drugs_csv", "merge_news_csv", "method1", "method2",
+    "merge_diagnostics_csv", "merge_drugs_csv", "merge_news_csv",
     "missing_percentage_df", "multi_annots_to_df", "multi_annots_to_df_mct",
     "multi_annots_to_df_reports", "multi_annots_to_df_textual_obs", "nearest",
     "parse_medcat_trainer_project_json", "parse_meta_anns",
