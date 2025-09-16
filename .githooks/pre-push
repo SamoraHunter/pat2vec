@@ -15,7 +15,7 @@ fi
 
 # Generate __init__.py
 echo "Generating pat2vec/__init__.py..."
-"$VENV_PYTHON" generate_init.py > pat2vec/__init__.py
+"$VENV_PYTHON" generate_init.py
 
 # Run tests with PYTHONPATH=.
 echo "Running test suite under pat2vec/tests..."
