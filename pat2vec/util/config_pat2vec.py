@@ -204,11 +204,13 @@ class config_class:
             )
             prefetch_pat_batches = False
 
+        #: If `True`, fetches all raw data for all patients before processing. May use significant memory.
         self.prefetch_pat_batches = prefetch_pat_batches
 
+        #: If `True`, calculates feature vectors. If `False`, only extracts batches.
         self.calculate_vectors = calculate_vectors  # Calculate vectors for each patient else just extract batches
 
-        # Validate IPW configuration early to prevent TypeErrors
+        #: Validate IPW configuration early to prevent TypeErrors
         if individual_patient_window and individual_patient_window_df is None:
             raise ValueError(
                 "individual_patient_window_df must be provided when individual_patient_window is True."
@@ -216,150 +218,219 @@ class config_class:
 
 
         self.sanitize_pat_list = (
-            sanitize_pat_list  # Enforce all characters capitalized in patient list.
+            sanitize_pat_list
         )
-
+        #: If `True`, skips some `listdir` calls for performance.
         self.skip_additional_listdir = skip_additional_listdir
 
+        #: If enabled (`True`), the global time window filter will be reapplied after clinical note splitting.
         self.filter_split_notes = filter_split_notes
 
+        #: The path to the test data file, used when `testing` is `True`.
         self.test_data_path = test_data_path
 
+        #: Path to the credentials file.
         self.credentials_path = credentials_path
         print("credentials_path:" , credentials_path)
 
+        #: A suffix to append to output folder names.
         self.suffix = suffix
+        #: The filename for the input document containing the primary cohort list.
         self.treatment_doc_filename = treatment_doc_filename
+        #: The ratio of treatment to control patients.
         self.treatment_control_ratio_n = treatment_control_ratio_n
 
+        #: Path to the pre-annotation parts directory.
         self.pre_annotation_path = f"current_pat_annots_parts{self.suffix}/"
+        #: Path to the MRC pre-annotation parts directory.
         self.pre_annotation_path_mrc = f"current_pat_annots_mrc_parts{self.suffix}/"
 
+        #: Path to the document annotation batches directory.
         self.pre_document_annotation_batch_path = (
             f"current_pat_documents_annotations_batches{self.suffix}/"
         )
+        #: Path to the MCT document annotation batches directory.
         self.pre_document_annotation_batch_path_mct = (
             f"current_pat_documents_annotations_batches_mct{self.suffix}/"
         )
+        #: Path to the report annotation batches directory.
         self.pre_report_annotation_batch_path_report = (
             f"current_pat_documents_annotations_batches_report{self.suffix}/"
         )
 
+        #: Path to the document batches directory.
         self.pre_document_batch_path = f"current_pat_document_batches{self.suffix}/"
+        #: Path to the MCT document batches directory.
         self.pre_document_batch_path_mct = (
             f"current_pat_document_batches_mct{self.suffix}/"
         )
 
+        #: Path to the textual observation document batches directory.
         self.pre_textual_obs_document_batch_path = (
             f"current_pat_textual_obs_document_batches{self.suffix}/"
         )
 
+        #: Path to the textual observation annotation batches directory.
         self.pre_textual_obs_annotation_batch_path = (
             f"current_pat_textual_obs_annotation_batches{self.suffix}/"
         )
 
+        #: Path to the report batches directory.
         self.pre_report_batch_path = f"current_pat_report_batches{self.suffix}/"
 
+        #: Path to the bloods batches directory.
         self.pre_bloods_batch_path = f"current_pat_bloods_batches{self.suffix}/"
 
+        #: Path to the drugs batches directory.
         self.pre_drugs_batch_path = f"current_pat_drugs_batches{self.suffix}/"
 
+        #: Path to the diagnostics batches directory.
         self.pre_diagnostics_batch_path = (
             f"current_pat_diagnostics_batches{self.suffix}/"
         )
 
+        #: Path to the NEWS batches directory.
         self.pre_news_batch_path = f"current_pat_news_batches{self.suffix}/"
 
+        #: Path to the observations batches directory.
         self.pre_obs_batch_path = f"current_pat_obs_batches{self.suffix}/"
 
+        #: Path to the BMI batches directory.
         self.pre_bmi_batch_path = f"current_pat_bmi_batches{self.suffix}/"
 
+        #: Path to the demographics batches directory.
         self.pre_demo_batch_path = f"current_pat_demo_batches{self.suffix}/"
 
+        #: Path to the miscellaneous batches directory.
         self.pre_misc_batch_path = f"current_pat_misc_batches{self.suffix}/"
 
+        #: Path to the patient line directory.
         self.current_pat_line_path = f"current_pat_line_path{self.suffix}/"
 
+        #: Path to the appointments batches directory.
         self.pre_appointments_batch_path = (
             f"current_pat_appointments_batches{self.suffix}/"
         )
 
+        #: If `True`, stores patient document batches.
         self.store_pat_batch_docs = store_pat_batch_docs
 
+        #: If `True`, stores patient observation batches.
         self.store_pat_batch_observations = store_pat_batch_observations
 
+        #: The name of the current project, used for creating project-specific folders.
         self.proj_name = proj_name
+        #: A dictionary of boolean flags to enable or disable specific feature extractions.
         self.main_options = main_options
 
+        #: Flag for negating biochemistry features.
         self.negate_biochem = negate_biochem
+        #: Column name for patient IDs in input files.
         self.patient_id_column_name = patient_id_column_name
 
+        #: If `True`, appends ICD-10 codes to annotation batches.
         self.add_icd10 = add_icd10
+        #: If `True`, appends OPC4S codes to annotation batches. Requires `add_icd10` to be `True`.
         self.add_opc4s = add_opc4s
 
+        #: Dictionary for data type filtering.
         self.data_type_filter_dict = data_type_filter_dict
 
+        #: Flag for batch processing mode.
         self.batch_mode = batch_mode
+        #: If `True`, data will be dumped to a remote server via SFTP.
         self.remote_dump = remote_dump
 
+        #: Flag to store annotations. Partially deprecated.
         self.store_annot = store_annot
+        #: Flag for sharing SFTP connection. Partially deprecated.
         self.share_sftp = share_sftp
+        #: Flag for multi-process execution. Deprecated.
         self.multi_process = multi_process
+        #: If `True`, checks for completed patients before starting to avoid redundancy.
         self.strip_list = strip_list
+        #: Verbosity level for logging (0-9).
         self.verbosity = verbosity
+        #: Random seed for reproducibility.
         self.random_seed_val = random_seed_val
 
+        #: Hostname for SFTP connection.
         self.hostname = hostname
+        #: Username for SFTP connection.
         self.username = username
+        #: Password for SFTP connection.
         self.password = password
 
+        #: GPU memory threshold in MB for MedCAT.
         self.gpu_mem_threshold = gpu_mem_threshold
 
+        #: If `True`, enables testing mode, which may use dummy data generators.
         self.testing = testing
+        #: If `True`, adds the desired ratio of controls at random from the global pool.
         self.use_controls = use_controls
 
+        #: Counter for skipped items.
         self.skipped_counter = 0  # init start
 
+        #: Flag for MedCAT processing. If `True`, MedCAT will be used for annotating.
         self.medcat = medcat
 
+        #: The root directory for the project.
         self.root_path = root_path
 
+        #: If `True`, overwrites existing stored patient documents.
         self.overwrite_stored_pat_docs = overwrite_stored_pat_docs
 
+        #: If `True`, overwrites existing stored patient observations.
         self.overwrite_stored_pat_observations = overwrite_stored_pat_observations
 
+        #: Dictionary for filtering MedCAT annotations.
         self.annot_filter_options = annot_filter_options
 
+        #: Start time for logging.
         self.start_time = start_time
 
+        #: Flag for shuffling the patient list.
         self.shuffle_pat_list = shuffle_pat_list
 
+        #: If `True`, uses patient-specific time windows.
         self.individual_patient_window = individual_patient_window
 
+        #: DataFrame with patient IDs and their individual start dates.
         self.individual_patient_window_df = individual_patient_window_df
 
+        #: The column name for start dates in `individual_patient_window_df`.
         self.individual_patient_window_start_column_name = (
             individual_patient_window_start_column_name
         )
 
+        #: The column name for patient IDs in `individual_patient_window_df`.
         self.individual_patient_id_column_name = individual_patient_id_column_name
 
+        #: Method for handling control patients in IPW mode ('full' or 'random').
         self.individual_patient_window_controls_method = (
             individual_patient_window_controls_method
         )
 
+        #: Path to the control list pickle file.
         self.control_list_path = "control_path.pkl"
 
+        #: If `True`, drops documents with missing timestamps.
         self.dropna_doc_timestamps = dropna_doc_timestamps
 
+        #: The step/interval for each time slice vector.
         self.time_window_interval_delta = time_window_interval_delta
 
+        #: If `True`, clinical notes will be split by date.
         self.split_clinical_notes = split_clinical_notes
 
+        #: Path to a file containing all patient IDs, used for sampling controls.
         self.all_epr_patient_list_path = all_epr_patient_list_path
 
+        #: If `True`, the time window is calculated backward from the start date.
         self.lookback = lookback
 
+        #: Path to a MedCAT model pack to override the default.
         self.override_medcat_model_path = override_medcat_model_path
 
         if dummy_medcat_model == None:
@@ -370,19 +441,25 @@ class config_class:
         if start_time == None:
             self.start_time = datetime.now()
 
+        #: The time field to use for drug orders.
         self.drug_time_field = "order_createdwhen"  # order_createdwhen: none missing, #"order_performeddtm" order performed empty for medication  # alt #order_createdwhen
 
+        #: The time field to use for diagnostic orders.
         self.diagnostic_time_field = "order_createdwhen"  # order_createdwhen: none missing, #"order_performeddtm" order performed empty for medication  # alt #order_createdwhen
 
+        #: The time field to use for appointments.
         self.appointments_time_field = "AppointmentDateTime"  # alt #DateModified
 
+        #: The time field to use for bloods.
         self.bloods_time_field = "basicobs_entered"
 
         if client_idcode_term_name is None:
             self.client_idcode_term_name = "client_idcode.keyword"  # alt client_idcode.keyword #warn excludes on case basis.
         else:
+            #: The Elasticsearch field name for patient ID searches.
             self.client_idcode_term_name = client_idcode_term_name
 
+        #: If `True` and in testing mode, simulates a MedCAT model.
         if self.client_idcode_term_name == "client_idcode.keyword":
             print("Warning keyword not case inclusive.")
 
@@ -446,6 +523,7 @@ class config_class:
             }
 
         if feature_engineering_arg_dict == None:
+            #: Dictionary of arguments for feature engineering.
             self.feature_engineering_arg_dict = {
                 "drugs": {
                     "_num-drug-order": True,
@@ -456,6 +534,7 @@ class config_class:
         else:
             self.feature_engineering_arg_dict = feature_engineering_arg_dict
 
+        #: Flag for handling negated presence annotations.
         self.negated_presence_annotations = self.main_options.get(
             "negated_presence_annotations"
         )
@@ -465,6 +544,7 @@ class config_class:
             if self.root_path == None:
                 self.root_path = f"{os.getcwd()}/{self.proj_name}/"
 
+            #: Path to the pre-annotation parts directory.
             self.pre_annotation_path = os.path.join(
                 self.root_path, f"current_pat_annots_parts{self.suffix}/"
             )
@@ -472,6 +552,7 @@ class config_class:
                 self.root_path, f"current_pat_annots_mrc_parts{self.suffix}/"
             )
 
+            #: Path to the document annotation batches directory.
             self.pre_document_annotation_batch_path = os.path.join(
                 self.root_path,
                 f"current_pat_documents_annotations_batches{self.suffix}/",
@@ -482,6 +563,7 @@ class config_class:
                 f"current_pat_documents_annotations_batches_mct{self.suffix}/",
             )
 
+            #: Path to the textual observation annotation batches directory.
             self.pre_textual_obs_annotation_batch_path = os.path.join(
                 self.root_path,
                 f"current_pat_textual_obs_annotation_batches{self.suffix}/",
@@ -492,6 +574,7 @@ class config_class:
                 f"current_pat_textual_obs_document_batches{self.suffix}/",
             )
 
+            #: Path to the document batches directory.
             self.pre_document_batch_path = os.path.join(
                 self.root_path, f"current_pat_document_batches{self.suffix}/"
             )
@@ -499,6 +582,7 @@ class config_class:
                 self.root_path, f"current_pat_document_batches_mct{self.suffix}/"
             )
 
+            #: Path to the report document batches directory.
             self.pre_document_batch_path_reports = os.path.join(
                 self.root_path, f"current_pat_document_batches_reports{self.suffix}/"
             )
@@ -508,6 +592,7 @@ class config_class:
                 f"current_pat_documents_annotations_batches_reports{self.suffix}/",
             )
 
+            #: Path to the bloods batches directory.
             self.pre_bloods_batch_path = os.path.join(
                 self.root_path, f"current_pat_bloods_batches{self.suffix}/"
             )
@@ -516,6 +601,7 @@ class config_class:
                 self.root_path, f"current_pat_drugs_batches{self.suffix}/"
             )
 
+            #: Path to the diagnostics batches directory.
             self.pre_diagnostics_batch_path = os.path.join(
                 self.root_path, f"current_pat_diagnostics_batches{self.suffix}/"
             )
@@ -524,6 +610,7 @@ class config_class:
                 self.root_path, f"current_pat_news_batches{self.suffix}/"
             )
 
+            #: Path to the observations batches directory.
             self.pre_obs_batch_path = os.path.join(
                 self.root_path, f"current_pat_obs_batches{self.suffix}/"
             )
@@ -532,6 +619,7 @@ class config_class:
                 self.root_path, f"current_pat_bmi_batches{self.suffix}/"
             )
 
+            #: Path to the demographics batches directory.
             self.pre_demo_batch_path = os.path.join(
                 self.root_path, f"current_pat_demo_batches{self.suffix}/"
             )
@@ -540,6 +628,7 @@ class config_class:
                 self.root_path, f"current_pat_misc_batches{self.suffix}/"
             )
 
+            #: Path to the patient lines parts directory.
             self.current_pat_lines_path = os.path.join(
                 self.root_path, f"current_pat_lines_parts{self.suffix}/"
             )
@@ -548,28 +637,36 @@ class config_class:
                 self.root_path, f"current_pat_appointments_batches{self.suffix}/"
             )
 
+            #: Path to the merged input batches directory.
             self.pre_merged_input_batches_path = os.path.join(
                 self.root_path, f"merged_input_pat_batches{self.suffix}/"
             )
 
+            #: The name of the output folder.
             self.output_folder = "outputs"
 
+            #: An instance of the PathsClass for managing directory paths.
             self.PathsClass_instance = PathsClass(
                 self.root_path, self.suffix, self.output_folder
             )
 
         print(f"Setting start_date to: {start_date}")
+        #: The anchor date for generating time windows.
         self.start_date = start_date
 
         print(f"Setting years to: {years}")
+        #: The number of years in the time window duration.
         self.years = years
 
         print(f"Setting months to: {months}")
+        #: The number of months in the time window duration.
         self.months = months
 
         print(f"Setting days to: {days}")
+        #: The number of days in the time window duration.
         self.days = days
 
+        #: The total time delta for the window.
         self.time_delta = relativedelta(days=days, weeks=0, months=months, years=years)
 
         num = calculate_interval(
@@ -589,10 +686,14 @@ class config_class:
             start_date + self.time_delta,
         )
 
+        #: Threshold for low slow execution warning.
         self.slow_execution_threshold_low = timedelta(seconds=10)
+        #: Threshold for high slow execution warning.
         self.slow_execution_threshold_high = timedelta(seconds=30)
+        #: Threshold for extreme slow execution warning.
         self.slow_execution_threshold_extreme = timedelta(seconds=60)
 
+        #: Number of patients to sample from the initial cohort list. `0` means no sampling.
         self.sample_treatment_docs = sample_treatment_docs
 
         priority_list_bool: bool = False
@@ -631,6 +732,7 @@ class config_class:
             self.sftp_obj = None
 
         if self.remote_dump:
+            #: SFTP client object.
 
             if self.root_path == None:
 
@@ -647,6 +749,7 @@ class config_class:
             username = self.username
             password = self.password
 
+            #: SSH client for remote connections.
             # Create an SSH client and connect to the remote machine
             self.ssh_client = paramiko.SSHClient()
             self.ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
@@ -660,6 +763,7 @@ class config_class:
                 hostname=self.hostname, username=self.username, password=self.password
             )
 
+            #: SFTP client for remote file operations.
             self.sftp_client = self.ssh_client.open_sftp()
 
             if self.remote_dump:
@@ -670,10 +774,13 @@ class config_class:
                     # Create remote_path
                     self.sftp_client.mkdir(self.root_path)
 
+            #: Path to the pre-annotation parts directory on the remote server.
             self.pre_annotation_path = f"{self.root_path}{self.pre_annotation_path}"
+            #: Path to the MRC pre-annotation parts directory on the remote server.
             self.pre_annotation_path_mrc = (
                 f"{self.root_path}{self.pre_annotation_path_mrc}"
             )
+            #: Path to the patient line directory on the remote server.
             self.current_pat_line_path = f"{self.root_path}{self.current_pat_line_path}"
             self.current_pat_lines_path = self.current_pat_line_path
 
@@ -706,6 +813,7 @@ class config_class:
                     self.sftp_client.mkdir(self.current_pat_line_path)
 
             self.sftp_obj = self.sftp_client
+            #: SFTP object for file operations.
 
         else:
             self.sftp_client = None
@@ -756,6 +864,7 @@ class config_class:
         self = update_global_start_date(self, self.start_date)
 
         if not self.individual_patient_window:
+            #: List of datetime objects for time window generation.
             self.date_list: List[datetime] = generate_date_list(
                 self.start_date,
                 self.years,
@@ -769,6 +878,7 @@ class config_class:
                 for date in self.date_list[0:5]:
                     print(date)
 
+            #: Number of patient lines (time slices) to generate.
             self.n_pat_lines = len(self.date_list)
 
         if self.individual_patient_window:
@@ -891,6 +1001,7 @@ class config_class:
                     end_column=f"{start_column_name}_offset",
                 )
 
+            #: Number of patient lines, dynamic for IPW.
             self.n_pat_lines = (
                 None  # N_pat_lines will be dynamic for each pat... or potentially?
             )
