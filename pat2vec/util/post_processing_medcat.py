@@ -20,6 +20,7 @@ def sample_by_terms(
     groups.
 
     The sampling process is as follows:
+
     1.  It ensures a `min_samples_per_term` for each group of terms.
     2.  It then proportionally samples from the remaining available documents
         to reach the `total_sample_size`.
@@ -156,6 +157,7 @@ def coerce_document_df_to_medcat_trainer_input(
     identifiers and a 'text' column for the document content.
 
     It performs the following steps:
+
     1.  Renames the specified `name_value` and `text_column_value` columns to
         'name' and 'text', respectively.
     2.  Ensures that all values in the 'name' column are unique. If duplicates

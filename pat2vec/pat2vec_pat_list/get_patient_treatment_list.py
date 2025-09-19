@@ -245,6 +245,7 @@ def get_all_patients_list(config_obj: Any) -> List[str]:
 
     This function serves as the main entry point for generating the patient cohort.
     It orchestrates several steps:
+
     1.  Extracts the initial list of patient IDs, either from a treatment document,
         an individual patient window (IPW) DataFrame, or a test data file.
     2.  If `use_controls` is enabled in the config, it generates a corresponding

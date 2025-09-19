@@ -10,6 +10,7 @@ def get_cat(config_obj: Any) -> Optional[Union["CAT", dummy_CAT]]:  # type: igno
 
     This function determines which MedCAT model to load based on the provided
     configuration object. It supports several loading strategies:
+
     1.  **Dummy Model**: If `config_obj.testing` and `config_obj.dummy_medcat_model`
         are `True`, it returns a `dummy_CAT` instance for testing without a real model.
     2.  **Automatic Path Detection**: If `config_obj.override_medcat_model_path` is

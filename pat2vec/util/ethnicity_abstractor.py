@@ -25,6 +25,7 @@ class EthnicityAbstractor:
         ethnicities, nationalities, and countries.
 
         The mapping logic relies on several assumptions and configurations:
+
         - It uses exact (case-insensitive) keyword matching, not fuzzy matching.
         - It can be configured to assume default ethnicities for certain
           nationalities (e.g., British -> White, Nigerian -> Black).

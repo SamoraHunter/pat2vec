@@ -9,7 +9,7 @@ from typing import Any, Dict, List, Union
 from ast import literal_eval
 import matplotlib.pyplot as plt
 import seaborn as sns
-
+import os
 
 def medcat_trainer_export_to_df(file_path: str) -> pd.DataFrame:
     """

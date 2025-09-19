@@ -11,6 +11,7 @@ def setup_logger() -> logging.Logger:
     """Sets up a logger that writes to a file and redirects stdout.
 
     This function configures a logger with two handlers:
+
     1.  A file handler that saves DEBUG level logs to a timestamped file in a
         `logs` directory.
     2.  A stream handler that prints INFO level logs to the console.

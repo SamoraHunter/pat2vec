@@ -143,7 +143,7 @@ class DeIdAnonymizer:
 
         Args:
             text: The input text to anonymize.
-            redact: If True, replaces PII with asterisks ('***'). If False,
+            redact: If True, replaces PII with asterisks ('\***'). If False,
                 replaces PII with type tags (e.g., '<PERSON>').
             verify: If True, returns a tuple containing the anonymized text and
                 a dictionary with verification information.

@@ -46,6 +46,7 @@ class main:
     and orchestrates the feature extraction process for each patient.
 
     The typical workflow is as follows:
+
     1.  An instance of this class is created with a `config_obj` that defines
         all pipeline parameters (e.g., time windows, enabled features, paths).
     2.  It establishes a connection to the data source (e.g., Elasticsearch via CogStack).
@@ -612,6 +613,7 @@ class main:
         feature vectors.
 
         The key steps for each patient are:
+
         1.  **Check for Completion**: Skips the patient if their feature vectors have
             already been generated, based on the `stripped_list_start`.
         2.  **Set Time Window**: If `individual_patient_window` is enabled, it
@@ -633,9 +635,11 @@ class main:
             filtering the data for that specific slice and generating the final
             feature vector CSV file.
 
+
         Args:
             i (int): The index of the patient within `self.all_patient_list` to be
                 processed.
+
 
         Side Effects:
             - Creates output directories for the patient's feature vectors if they
@@ -647,6 +651,7 @@ class main:
             - Updates the `tqdm` progress bar to reflect the current status.
             - Can modify `self.config_obj` attributes (like `date_list` and global
               start/end dates) on-the-fly when `individual_patient_window` is enabled.
+
 
         Returns:
             None: This method orchestrates the processing pipeline and manages file
