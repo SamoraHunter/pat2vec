@@ -62,9 +62,10 @@ dev = [
     "nbstripout",
     "nbmake",
     "pre-commit",
-    "sphinx",
-    "sphinx-rtd-theme",
-    "sphinx-autodoc-typehints"
+    "sphinx==7.3.0",
+    "myst-parser>=2.0.0",
+    "sphinx-rtd-theme>=2.0.0",
+    "sphinx-autodoc-typehints>=2.0.0"
 ]
 
 [tool.setuptools.packages.find]
