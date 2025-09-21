@@ -5,11 +5,15 @@
 
 import os
 import sys
+import typing
 
 # -- Path setup --------------------------------------------------------------
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
+
+# Make type-only imports available for Sphinx autodoc
+#typing.TYPE_CHECKING = True # Breaks make HTML, no resolution available.
 
 # Point to the project root (one level up from docs/source)
 sys.path.insert(0, os.path.abspath('../..'))
@@ -33,12 +37,19 @@ extensions = [
     'sphinx.ext.autosummary',  # Create summary tables
     'sphinx.ext.napoleon',  # Support for Google and NumPy style docstrings
     'sphinx.ext.viewcode',  # Add links to highlighted source code
-    'sphinx_rtd_theme',     # Read the Docs theme
-    'sphinx_autodoc_typehints',  # Automatically document typehints
+    'sphinx_autodoc_typehints',  # Use the compatible version from pyproject.toml
+    'myst_parser',  # For Markdown support
+    'sphinxcontrib.mermaid'
 ]
 
+# Tell Sphinx to parse both reStructuredText and Markdown files.
+source_suffix = {
+    '.rst': 'restructuredtext',
+    '.md': 'markdown',
+}
+
 templates_path = ['_templates']
-exclude_patterns = []
+exclude_patterns = ['_Sidebar.md']
 
 # -- Options for autodoc -----------------------------------------------------
 autodoc_default_options = {

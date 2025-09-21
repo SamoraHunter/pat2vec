@@ -6,13 +6,32 @@
 Welcome to pat2vec's documentation!
 ====================================
 
-`pat2vec` is a powerful tool for converting individual patient records into structured time-interval feature vectors, making them suitable for machine learning tasks.
+.. toctree::
+   :maxdepth: 2
+   :caption: Getting Started
 
-This documentation provides a detailed overview of the package's API.
+   Home
+   Installation
+   Configuration-Guide
+   Usage
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
+   :caption: Guides & Examples
+
+   Searches
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Project Information
+
+   Architecture-and-Diagrams
+   Frequently-Asked-Questions
+   Contributing
+
+.. toctree::
+   :maxdepth: 2
+   :caption: API Reference
 
    api
 
