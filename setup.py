@@ -1,13 +1,5 @@
 from setuptools import find_packages, setup
 
-# Define dependencies for different installation options
-extras = {
-    "dev": [
-        "sphinx",
-        "sphinx-rtd-theme",
-        "sphinx-autodoc-typehints",
-    ]
-}
 setup(
     name="pat2vec",
     version="1.0.0",
@@ -24,7 +16,6 @@ setup(
     author_email="samorahunter@gmail.com",
     url="https://github.com/SamoraHunter/pat2vec.git",
     packages=find_packages(),
-    extras_require=extras,
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
