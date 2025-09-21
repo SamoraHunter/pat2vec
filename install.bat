@@ -123,24 +123,42 @@ if errorlevel 1 (
 )
 
 echo.
-echo Installing project dependencies...
-set EXTRAS=
-if "%INSTALL_MODE%"=="all" (set EXTRAS=all)
-if "%DEV_MODE%"=="true" (
-    if defined EXTRAS (set EXTRAS=%EXTRAS%,dev) else (set EXTRAS=dev)
+echo Installing/upgrading build tools...
+set PIP_BUILD_ARGS=--upgrade "setuptools>=61.0" wheel
+if "%PROXY_MODE%"=="true" (set PIP_BUILD_ARGS=%PIP_BUILD_ARGS% %PROXY_PIP_ARGS%)
+pip install %PIP_BUILD_ARGS%
+if %errorlevel% neq 0 (
+    echo ERROR: Failed to install build tools.
+    goto :deactivate_and_exit
 )
 
-set INSTALL_TARGET=.
-if defined EXTRAS (set INSTALL_TARGET=.[%EXTRAS%])
+echo.
+echo Installing main project dependencies...
+set MAIN_EXTRAS=
+if "%INSTALL_MODE%"=="all" (set MAIN_EXTRAS=all)
 
-echo Running: pip install -e "%INSTALL_TARGET%"
-set PIP_INSTALL_ARGS=-e "%INSTALL_TARGET%"
+set INSTALL_TARGET=.
+if defined MAIN_EXTRAS (set INSTALL_TARGET=.[%MAIN_EXTRAS%])
+
+echo Running: pip install --no-build-isolation -e "%INSTALL_TARGET%"
+set PIP_INSTALL_ARGS=--no-build-isolation -e "%INSTALL_TARGET%"
 if "%PROXY_MODE%"=="true" (set PIP_INSTALL_ARGS=%PIP_INSTALL_ARGS% %PROXY_PIP_ARGS% --retries 5 --timeout 60)
 
-pip install "%PIP_INSTALL_ARGS%"
+pip install %PIP_INSTALL_ARGS%
 if %errorlevel% neq 0 (
     echo ERROR: Failed to install project dependencies.
     goto :deactivate_and_exit
+)
+
+REM Install development dependencies separately from public PyPI
+if "%DEV_MODE%"=="true" (
+    echo.
+    echo Installing development dependencies from public PyPI...
+    REM We do not use the proxy for these, as they are often missing from internal mirrors.
+    pip install "pytest" "nbformat" "nbconvert" "nbstripout" "nbmake" "pre-commit" "sphinx~=7.3.0" "myst-parser>=2.0.0" "sphinx-rtd-theme>=2.0.0" "sphinx-autodoc-typehints>=2.0.0"
+    if %errorlevel% neq 0 (
+        echo WARNING: Failed to install one or more dev dependencies. Docs build may fail.
+    )
 )
 
 echo.

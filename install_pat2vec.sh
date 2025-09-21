@@ -238,27 +238,43 @@ if [ "$PROXY_MODE" = true ]; then
 fi
 python -m pip install "${pip_upgrade_args[@]}"
 
-echo "Installing project dependencies..."
-
-extras=""
-if [ "$INSTALL_MODE" = "all" ]; then
-    extras="all"
+echo "Installing/upgrading build tools..."
+pip_build_args=("--upgrade" "setuptools>=61.0" "wheel")
+if [ "$PROXY_MODE" = true ]; then
+    pip_build_args+=("--trusted-host" "dh-cap02" "-i" "http://dh-cap02:8008/mirrors/pat2vec")
 fi
-if [ "$DEV_MODE" = true ]; then
-    [ -n "$extras" ] && extras+=","
-    extras+="dev"
+pip install "${pip_build_args[@]}"
+
+echo "Installing main project dependencies..."
+
+main_extras=""
+if [ "$INSTALL_MODE" = "all" ]; then
+    main_extras="all"
 fi
 
 INSTALL_TARGET="."
-[ -n "$extras" ] && INSTALL_TARGET=".[$extras]"
+[ -n "$main_extras" ] && INSTALL_TARGET=".[$main_extras]"
 
 echo "Running pip install -e \"$INSTALL_TARGET\""
-pip_install_args=("-e" "$INSTALL_TARGET")
-if [ "$PROXY_MODE" = true ]; then
+pip_install_args=("--no-build-isolation" "-e" "$INSTALL_TARGET")
+if [ "$DEV_MODE" = true ]; then
     pip_install_args+=("--trusted-host" "dh-cap02" "-i" "http://dh-cap02:8008/mirrors/pat2vec" "--retries" "5" "--timeout" "60")
 fi
 
 pip install "${pip_install_args[@]}"
+
+# Install development dependencies separately.
+# These are often not on internal mirrors, so we install from public PyPI.
+if [ "$DEV_MODE" = true ]; then
+    echo "Installing development dependencies from public PyPI..."
+    DEV_DEPS=(
+        "pytest" "nbformat" "nbconvert" "nbstripout" "nbmake" "pre-commit"
+        "sphinx~=7.3.0" "myst-parser>=2.0.0" "sphinx-rtd-theme>=2.0.0"
+        "sphinx-autodoc-typehints>=2.0.0"
+    )
+    # We do not use the proxy for these, as they are missing from the mirror.
+    pip install "${DEV_DEPS[@]}" || echo "WARNING: Failed to install one or more dev dependencies. Docs build may fail."
+fi
 
 echo "Installing SpaCy model..."
 SPACY_MODEL_URL="https://github.com/explosion/spacy-models/releases/download/en_core_web_md-3.7.1/en_core_web_md-3.7.1-py3-none-any.whl"
