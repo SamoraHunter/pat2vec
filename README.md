@@ -1,4 +1,6 @@
 [![Documentation Status](https://github.com/SamoraHunter/pat2vec/actions/workflows/docs.yml/badge.svg)](https://samorahunter.github.io/pat2vec/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)
 
 ## Table of Contents
 - [Overview](#overview)
@@ -18,7 +20,9 @@
   - [Unix/Linux](#unixlinux)
 - [Usage](#usage)
 - [FAQ](#faq)
+- [Citation](#citation)
 - [Contributing](#contributing)
+- [Code of Conduct](#code-of-conduct)
 - [License](#license)
 
 
@@ -320,10 +324,28 @@ For answers to common questions, troubleshooting tips, and more detailed explana
 - [FAQ](./docs/FAQ.md)
 - [FAQ config_class](./docs/FAQ config_class.md)
 
+## Citation
+
+If you use `pat2vec` in your research, please cite it. This helps to credit the work and allows others to find the tool.
+
+```bibtex
+@software{hunter_pat2vec_2024,
+  author = {Hunter, Samora and Others},
+  title = {pat2vec: A tool for transforming EHR data into feature vectors for machine learning},
+  year = {2024},
+  publisher = {GitHub},
+  journal = {GitHub repository},
+  howpublished = {\url{https://github.com/SamoraHunter/pat2vec}}
+}
+```
 
 ## Contributing
 
 Contributions are welcome! Please see the contributing guidelines for more information.
+
+## Code of Conduct
+
+This project and everyone participating in it is governed by a Code of Conduct. By participating, you are expected to uphold this code. Please report any unacceptable behavior.
 
 ## License
 This project is licensed under the MIT License - see the LICENSE file for details
