@@ -109,6 +109,14 @@ def check_csv_integrity(
     try:
         df = pd.read_csv(file_path)
 
+        def _delete_and_log(reason: str):
+            """Helper to remove a file and log the action."""
+            warnings.warn(f"{reason}: {file_path}", UserWarning)
+            _, filename_ext = os.path.split(file_path)
+            filename, _ = os.path.splitext(filename_ext)
+            remove_file_from_paths(filename)
+            print(f"Deleted broken file: {filename} : {file_path}")
+
         # Perform integrity checks on the DataFrame
         non_nullable_columns = ['client_idcode']  # Add more columns as needed
 
@@ -117,11 +125,8 @@ def check_csv_integrity(
                 warning_message = f"Column {column} contains missing values in CSV: {file_path}"
                 warnings.warn(warning_message, UserWarning)
                 if delete_broken:
-                    _, filename_ext = os.path.split(file_path)
-                    filename, _ = os.path.splitext(filename_ext)
-                    remove_file_from_paths(filename)
-                    print(f"Deleted broken file: {filename} : {file_path}")
-                    return  # Stop further processing as the file is deleted
+                    _delete_and_log(f"Column {column} contains missing values")
+                    return
             elif verbosity > 1:
                 warning_message = f"Column {column} in CSV file has no missing values: {file_path}"
                 warnings.warn(warning_message, UserWarning)
@@ -130,22 +135,12 @@ def check_csv_integrity(
             print("CSV file integrity is good.")
 
     except pd.errors.EmptyDataError:
-        warning_message = f"CSV file is empty: {file_path}"
-        warnings.warn(warning_message, UserWarning)
         if delete_broken:
-            _, filename_ext = os.path.split(file_path)
-            filename, _ = os.path.splitext(filename_ext)
-            remove_file_from_paths(filename)
-            print(f"Deleted broken file: {filename} : {file_path}")
+            _delete_and_log("CSV file is empty")
 
     except pd.errors.ParserError:
-        warning_message = f"Error parsing CSV file: {file_path}"
-        warnings.warn(warning_message, UserWarning)
         if delete_broken:
-            _, filename_ext = os.path.split(file_path)
-            filename, _ = os.path.splitext(filename_ext)
-            remove_file_from_paths(filename)
-            print(f"Deleted broken file: {filename} : {file_path}")
+            _delete_and_log("Error parsing CSV file")
 
     except FileNotFoundError:
         warning_message = f"File not found: {file_path}"

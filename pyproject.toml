@@ -5,9 +5,29 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "pat2vec"
 version = "0.1.0"
-description = "A project for pat2vec."
+authors = [
+    { name = "Samora Hunter", email = "samorahunter@gmail.com" },
+]
+description = (
+    "A comprehensive Python package for healthcare data engineering, designed to "
+    "extract, transform, and feature engineer patient data from CogStack-based "
+    "electronic health record (EHR) datalakes. It provides tools for cohort "
+    "building, batch data processing, clinical note analysis, and creating "
+    "machine learning-ready datasets."
+)
 readme = "README.md"
 requires-python = ">=3.10" # Based on requirements.txt generation environment
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+Homepage = "https://github.com/SamoraHunter/pat2vec"
+Documentation = "https://samorahunter.github.io/pat2vec/"
+Repository = "https://github.com/SamoraHunter/pat2vec"
+Changelog = "https://github.com/SamoraHunter/pat2vec/releases"
 
 # Core dependencies from requirements_lite.txt for the 'lite' installation.
 dependencies = [

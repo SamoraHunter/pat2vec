@@ -77,37 +77,35 @@ If you are performing time-series analysis, you will also need a column containi
 
 ### How do I choose which features to extract?
 
-How do I choose which features to extract?
-Feature extraction is controlled via the main_options_dict dictionary in your configuration file. Each feature type can be enabled or disabled by setting it to True or False. The modular design allows you to easily enable or disable features based on your research needs.
-Example configuration snippet:
+Feature extraction is controlled via the `main_options` dictionary passed to the `config_class`. Each feature type can be enabled or disabled by setting its value to `True` or `False`. This modular design allows you to easily customize the feature set for your research needs.
 
-
+Here is an example configuration snippet:
 ```python
-
+# 1. Define your feature set
 main_options_dict = {
-    'demo': True,           # Enable demographic information
-    'bmi': True,            # Enable BMI information
-    'bloods': True,         # Enable blood-related information
-    'drugs': True,          # Enable drug-related information
-    'diagnostics': True,    # Enable diagnostic information
-    'core_02': True,        # Enable core_02 information
-    'bed': True,            # Enable bed information
-    'vte_status': True,     # Enable VTE status information
-    'hosp_site': True,      # Enable hospital site information
-    'core_resus': True,     # Enable core resuscitation information
-    'news': True,           # Enable NEWS (National Early Warning Score)
-    'smoking': True,        # Enable smoking-related information
-    'annotations': True,    # Enable EPR document annotations via MedCat
-    'annotations_mrc': True,# Enable MRC annotations via MedCat
-    'negated_presence_annotations': False,  # Disable negated presence annotations
-    'appointments': False,  # Disable appointments information
-    'annotations_reports': False,  # Disable reports information
-    'textual_obs': False,   # Disable textual observations
+    'demo': True,           # Demographic information
+    'bmi': True,            # BMI information
+    'bloods': True,         # Blood-related information
+    'drugs': True,          # Drug-related information
+    'diagnostics': True,    # Diagnostic information
+    'core_02': True,        # core_02 information
+    'bed': True,            # Bed information
+    'vte_status': True,     # VTE status information
+    'hosp_site': True,      # Hospital site information
+    'core_resus': True,     # Core resuscitation information
+    'news': True,           # NEWS (National Early Warning Score)
+    'smoking': True,        # Smoking-related information
+    'annotations': True,    # EPR document annotations via MedCAT
+    'annotations_mrc': True,# MRC annotations via MedCat
+    'negated_presence_annotations': False,  # Negated presence annotations
+    'appointments': False,  # Appointments information
+    'annotations_reports': False,  # Reports information
+    'textual_obs': False,   # Textual observations
 }
-```
-# Pass this dictionary to your config_class
+
+# 2. Pass the dictionary to your config_class instance
 config_obj = config_class(
     main_options=main_options_dict,
     # ... other configuration parameters
 )
-This dictionary is then passed to the config_class constructor via the main_options parameter to control which features are extracted during processing.
+```

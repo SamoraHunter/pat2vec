@@ -12,8 +12,9 @@ import typing
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 
-# Make type-only imports available for Sphinx autodoc
-#typing.TYPE_CHECKING = True # Breaks make HTML, no resolution available.
+# This allows Sphinx to understand forward-referenced type hints (e.g., 'ClassName'
+# instead of ClassName), which is common in modern Python.
+autodoc_typehints = "description"
 
 # Point to the project root (one level up from docs/source)
 sys.path.insert(0, os.path.abspath('../..'))

@@ -265,7 +265,7 @@ SPACY_MODEL_URL="https://github.com/explosion/spacy-models/releases/download/en_
 pip_spacy_args=()
 if [ "$PROXY_MODE" = true ]; then
     # If using proxy, install the package by name from the local mirror index.
-    pip_spacy_args+=("en-core-web-md==3.6.0")
+    pip_spacy_args+=("en-core-web-md==3.7.1")
     pip_spacy_args+=("--trusted-host" "dh-cap02")
     pip_spacy_args+=("-i" "http://dh-cap02:8008/mirrors/pat2vec")
 else
