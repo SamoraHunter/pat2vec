@@ -8,13 +8,7 @@ version = "0.1.0"
 authors = [
     { name = "Samora Hunter", email = "samorahunter@gmail.com" },
 ]
-description = (
-    "A comprehensive Python package for healthcare data engineering, designed to "
-    "extract, transform, and feature engineer patient data from CogStack-based "
-    "electronic health record (EHR) datalakes. It provides tools for cohort "
-    "building, batch data processing, clinical note analysis, and creating "
-    "machine learning-ready datasets."
-)
+description = "A comprehensive Python package for healthcare data engineering, designed to extract, transform, and feature engineer patient data from CogStack-based electronic health record (EHR) datalakes. It provides tools for cohort building, batch data processing, clinical note analysis, and creating machine learning-ready datasets."
 readme = "README.md"
 requires-python = ">=3.10" # Based on requirements.txt generation environment
 classifiers = [
@@ -23,13 +17,6 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 
-[project.urls]
-Homepage = "https://github.com/SamoraHunter/pat2vec"
-Documentation = "https://samorahunter.github.io/pat2vec/"
-Repository = "https://github.com/SamoraHunter/pat2vec"
-Changelog = "https://github.com/SamoraHunter/pat2vec/releases"
-
-# Core dependencies from requirements_lite.txt for the 'lite' installation.
 dependencies = [
     "medcat==1.16.0", # Main NLP library
     "paramiko", # For SSH
@@ -50,6 +37,12 @@ dependencies = [
     "pandas>=1.5.3", # Data manipulation and analysis
     "numpy>=1.25.2", # Fundamental package for scientific computing
 ]
+
+[project.urls]
+Homepage = "https://github.com/SamoraHunter/pat2vec"
+Documentation = "https://samorahunter.github.io/pat2vec/"
+Repository = "https://github.com/SamoraHunter/pat2vec"
+Changelog = "https://github.com/SamoraHunter/pat2vec/releases"
 
 [project.optional-dependencies]
 # Additional packages for the 'all' installation, derived from the full requirements.txt.

@@ -121,10 +121,26 @@ This project includes a collection of diagrams illustrating the system architect
 
 </details>
 
-
 ## Installation
 
-### Windows
+### From PyPI (Recommended for Users)
+
+Once `pat2vec` is installed, you can use it as a library in your Python projects.
+
+1.  **Install the package:**
+    ```shell
+    pip install pat2vec
+    ```
+
+2.  **Install all optional dependencies (for full functionality):**
+    ```shell
+    pip install pat2vec[all]
+    ```
+
+### From Source (For Developers/Contributors)
+The following instructions are for setting up a development environment from the source code.
+
+#### Windows
 
 1.  **Clone the repository:**
     Navigate to the directory where you want to store your projects. It's recommended to have a parent directory to hold `pat2vec` and its related assets.
@@ -161,7 +177,7 @@ This project includes a collection of diagrams illustrating the system architect
 
     Your final directory structure should look like the one described in the Usage section.
 
-### Unix/Linux
+#### Unix/Linux
 
 There are two installation scripts provided for Unix-like systems. The comprehensive script (`install_pat2vec.sh`) is recommended as it handles the complete project setup.
 
