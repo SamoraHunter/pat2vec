@@ -179,31 +179,13 @@ The following instructions are for setting up a development environment from the
 
 #### Unix/Linux
 
-There are two installation scripts provided for Unix-like systems. The comprehensive script (`install_pat2vec.sh`) is recommended as it handles the complete project setup.
-
-#### **Option 1: Comprehensive Installation (Recommended)**
-
-The `install_pat2vec.sh` script automates the full setup, including:
+The `install_pat2vec.sh` script is the recommended way to set up a development environment on Unix-like systems. It automates the full setup, including:
 - Creating a Python virtual environment (`pat2vec_env`).
 - Installing Python dependencies (including development and testing tools).
 - Cloning the `snomed_methods` helper repository.
 - Creating required directories and template files (e.g., for MedCAT models and credentials).
 
-**Prerequisites**
-
-Before running, you will need:
-- A MedCAT model pack (`.zip` file).
-- Your CogStack/Elasticsearch credentials.
-
-**Installation Steps**
-
-1.  **Clone the repository:**
-    ```shell
-    git clone https://github.com/SamoraHunter/pat2vec.git
-    cd pat2vec
-    ```
-
-2.  **Run the installation script:**
+To install, clone the repository, navigate into it, and run the script:
     Grant execution permissions and run the script. It must be run from within the `pat2vec` directory.
 
     ```shell
@@ -223,37 +205,12 @@ Before running, you will need:
     ./install_pat2vec.sh --proxy --dev
     ```
 
-3.  **Post-Installation Setup:**
+After running the script, you must perform two manual steps:
     The script creates a directory structure in the parent folder of `pat2vec`.
     -   **Place MedCAT model:** Copy your model pack into the `medcat_models` directory created by the script.
     -   **Populate credentials:** Edit the `credentials.py` file created by the script and fill in your details.
 
-4.  **Activate the environment:**
-    ```shell
-    source pat2vec_env/bin/activate
-    ```
-
-#### **Option 2: Basic Installation**
-
-The `install.sh` script provides a basic setup. It creates a virtual environment and installs Python packages from `requirements.txt`. It does **not** clone helper repositories or create configuration files.
-
-1.  **Clone the repository:**
-    ```shell
-    git clone https://github.com/SamoraHunter/pat2vec.git
-    cd pat2vec
-    ```
-
-2.  **Run the installation script:**
-    This script requires `python3` and the `venv` module to be available.
-    ```shell
-    chmod +x install.sh
-    ./install.sh
-    ```
-
-3.  **Manual Setup:**
-    You will need to manually clone `snomed_methods` and create the `credentials.py` file if you use this method.
-
-4.  **Activate the environment:**
+Finally, activate the environment to begin working:
     ```shell
     source pat2vec_env/bin/activate
     ```
