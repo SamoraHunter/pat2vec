@@ -1,0 +1,23 @@
+en-core-web-md @ http://dh-cap02:8008/mirrors/pat2vec/en-core-web-md/en_core_web_md-3.6.0-py3-none-any.whl # hypenated path for _ in actual dir
+medcat==1.16.0
+paramiko
+colorama
+elasticsearch==8.17.0
+eland==8.17.0
+faker
+fuzzywuzzy
+pytest
+nbformat
+nbconvert
+nbstripout
+pre-commit
+nbmake
+seaborn
+rapidfuzz
+python-pptx
+ipykernel
+transformers==4.48.1
+accelerate==1.3.0
+peft==0.8.2
+huggingface-hub==0.27.1
+polars
