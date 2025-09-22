@@ -302,7 +302,7 @@ If you use `pat2vec` in your research, please cite it. This helps to credit the 
 
 ```bibtex
 @software{hunter_pat2vec_2024,
-  author = {Hunter, Samora and Others},
+  author = {Hunter, Samora},
   title = {pat2vec: A tool for transforming EHR data into feature vectors for machine learning},
   year = {2024},
   publisher = {GitHub},
