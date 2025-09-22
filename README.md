@@ -320,9 +320,8 @@ This project uses Sphinx to generate documentation from the source code's docstr
 
 ## FAQ
 
-For answers to common questions, troubleshooting tips, and more detailed explanations of project concepts, please see the FAQ.md file.
-- [FAQ](./docs/FAQ.md)
-- [FAQ config_class](./docs/FAQ config_class.md)
+For answers to common questions, troubleshooting tips, and more detailed explanations of project concepts, please see our Frequently Asked Questions page.
+- [Frequently Asked Questions](./docs/source/Frequently-Asked-Questions.md)
 
 ## Citation
 

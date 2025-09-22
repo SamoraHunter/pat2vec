@@ -1,15 +1,6 @@
 ---
 name: Bug report
 about: Create a report to help us improve
-title: ''
-labels: ''
-assignees: ''
-
----
-
----
-name: Bug Report
-about: Report an issue with pat2vec
 title: "[Bug] <Brief description>"
 labels: bug
 assignees: ''
@@ -47,7 +38,7 @@ Describe what actually happened, including any error messages.
 ## Environment Details
 - **Operating System:** (e.g., Ubuntu 20.04, Windows 11)  
 - **Python Version:** (e.g., 3.8.10)  
-- **pat2vec Version:** (e.g., v4.4.6)  
+- **pat2vec Version:** (e.g., 0.1.0)  
 - **Installation Method:** (e.g., `install.sh`, `install_pat2vec.sh`, `pip`, `conda`)  
 
 ## Additional Context
