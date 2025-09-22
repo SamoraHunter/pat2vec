@@ -13,7 +13,7 @@ This project includes a collection of diagrams illustrating the system architect
 |---|---|---|
 | **Data Pipeline** | [assets/data_pipeline.mmd](https://github.com/SamoraHunter/pat2vec/blob/main/assets/data_pipeline.mmd) | ![Data Pipeline](https://github.com/SamoraHunter/pat2vec/blob/main/assets/data_pipeline.png) |
 | **Main Batch Processing** | [assets/main_batch.mmd](https://github.com/SamoraHunter/pat2vec/blob/main/assets/main_batch.mmd) | ![Main Batch](https://github.com/SamoraHunter/pat2vec/blob/main/assets/main_batch.svg) |
-| **Example Ingestion** | [assets/example_ingestion.mmd](https://github.com/SamoraHunter/pat2vec/blob/main/assets/example_ingestion.mmd) | ![Example Ingestion](https://github.com/SamoraHunter/pat2vec/blob/main/assets/example_ingestion.png) |
+| **Example Ingestion** | [assets/example_ingestion.mmd](https://github.com/SamoraHunter/pat2vec/blob/main/assets/example_ingestion.mmd) | <img src="https://github.com/SamoraHunter/pat2vec/blob/main/assets/example_ingestion.png?raw=true" alt="Example Ingestion" height="400"/> |
 
 ## 🧩 Methods & Post-Processing
 | Diagram | Mermaid | Image |
