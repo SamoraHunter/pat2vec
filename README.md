@@ -224,7 +224,7 @@ Finally, activate the environment to begin working:
 
 This guide outlines the steps to run a `pat2vec` analysis after completing the installation.
 
-### 1. Finalize Project Setup
+### 1. Finalise Project Setup
 
 Before running an analysis, ensure your project directory is set up correctly. If you used the `install_pat2vec.sh` script, much of this is done for you.
 
