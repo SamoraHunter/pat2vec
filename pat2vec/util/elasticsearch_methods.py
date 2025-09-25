@@ -8,6 +8,9 @@ from IPython.display import display
 from tqdm import tqdm
 from elasticsearch.helpers import BulkIndexError
 from elasticsearch import Elasticsearch, helpers
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def ingest_data_to_elasticsearch(
@@ -52,22 +55,22 @@ def ingest_data_to_elasticsearch(
         if not es.ping():
             raise ConnectionError("Elasticsearch server not reachable.")
     except Exception as e:
-        print(f"Error connecting to Elasticsearch: {e}")
+        logger.error(f"Error connecting to Elasticsearch: {e}")
         raise
 
     # Replace index if requested
     if es.indices.exists(index=index_name) and replace_index:
         response = es.indices.delete(index=index_name)
-        print(f"Index {index_name} deleted successfully.")
-        print(response)
+        logger.info(f"Index {index_name} deleted successfully.")
+        logger.info(response)
 
     # Create the index if it does not exist
     if not es.indices.exists(index=index_name):
         try:
             es.indices.create(index=index_name, body=index_mapping)
-            print(f"Index {index_name} created successfully.")
+            logger.info(f"Index {index_name} created successfully.")
         except Exception as e:
-            print(f"Error creating index: {e}")
+            logger.error(f"Error creating index: {e}")
             raise
 
     # Prepare documents for bulk indexing
@@ -104,46 +107,46 @@ def ingest_data_to_elasticsearch(
             else:
                 success_count += 1
 
-        print(f"Successfully ingested {success_count} documents.")
-        print(f"Failed to ingest {len(failed_docs)} documents.")
+        logger.info(f"Successfully ingested {success_count} documents.")
+        logger.warning(f"Failed to ingest {len(failed_docs)} documents.")
 
         # Log details of failed documents
         if failed_docs:
-            print("\nDetails of failed documents:")
+            logger.warning("\nDetails of failed documents:")
             for fail in failed_docs:
                 error_info = fail.get("index", {}).get("error", {})
                 doc_id = fail.get("index", {}).get("_id", "N/A")
-                print(f"Failed Document ID: {doc_id}")
-                print(f"Error Type: {error_info.get('type', 'Unknown')}")
-                print(f"Error Reason: {error_info.get('reason', 'Unknown')}")
+                logger.warning(f"Failed Document ID: {doc_id}")
+                logger.warning(f"Error Type: {error_info.get('type', 'Unknown')}")
+                logger.warning(f"Error Reason: {error_info.get('reason', 'Unknown')}")
 
             # Log problematic fields summary
-            print("\nProblematic fields summary:")
+            logger.warning("\nProblematic fields summary:")
             for field, issues in problematic_fields.items():
-                print(f"Field: {field}")
+                logger.warning(f"Field: {field}")
                 for issue in set(issues):
-                    print(f"  - {issue}")
+                    logger.warning(f"  - {issue}")
 
         return {"success": success_count, "failed": len(failed_docs)}
 
     except BulkIndexError as bulk_error:
         # Handle BulkIndexError and log detailed information
-        print(f"BulkIndexError: {bulk_error}")
+        logger.error(f"BulkIndexError: {bulk_error}")
         failed_docs = bulk_error.errors
 
         # Log failed documents
-        print("\nDetailed failure report:")
+        logger.error("\nDetailed failure report:")
         for error in failed_docs:
             error_info = error.get("index", {}).get("error", {})
             doc_id = error.get("index", {}).get("_id", "N/A")
-            print(f"Failed Document ID: {doc_id}")
-            print(f"Error Type: {error_info.get('type', 'Unknown')}")
-            print(f"Error Reason: {error_info.get('reason', 'Unknown')}")
+            logger.warning(f"Failed Document ID: {doc_id}")
+            logger.warning(f"Error Type: {error_info.get('type', 'Unknown')}")
+            logger.warning(f"Error Reason: {error_info.get('reason', 'Unknown')}")
 
         return {"success": success_count, "failed": len(failed_docs)}
 
     except Exception as e:
-        print(f"Unexpected error during bulk ingestion: {e}")
+        logger.critical(f"Unexpected error during bulk ingestion: {e}")
         raise
 
 
@@ -176,7 +179,7 @@ def handle_inconsistent_dtypes(df: pd.DataFrame) -> pd.DataFrame:
 
         total_valid = dt_count + str_count + int_count + float_count
         if total_valid == 0:
-            print(f"No valid data types found in column '{column}'")
+            logger.warning(f"No valid data types found in column '{column}'")
             continue
 
         dt_percent = dt_count / total_valid
@@ -186,10 +189,10 @@ def handle_inconsistent_dtypes(df: pd.DataFrame) -> pd.DataFrame:
 
         majority_dtype = max(dt_percent, str_percent, int_percent, float_percent)
         if dt_percent > 0.5:
-            display(f"Casting column '{column}' to datetime...")
+            logger.info(f"Casting column '{column}' to datetime...")
             df[column] = pd.to_datetime(df[column], errors="ignore")
         else:
-            display(f"Casting column '{column}' to majority datatype...")
+            logger.info(f"Casting column '{column}' to majority datatype...")
             if majority_dtype == dt_percent:
                 df[column] = pd.to_datetime(df[column], errors="ignore")
             elif majority_dtype == str_percent:

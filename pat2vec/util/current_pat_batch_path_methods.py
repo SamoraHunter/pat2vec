@@ -4,6 +4,8 @@ from typing import List
 import logging
 
 
+logger = logging.getLogger(__name__)
+
 class PathsClass:
     """Manages the creation and organization of directory paths for the pipeline."""
 
@@ -79,6 +81,6 @@ class PathsClass:
         This is intended for verification and debugging purposes to show the
         fully resolved paths that have been configured.
         """
-        logging.info("Created and verified the following paths:")
+        logger.info("Created and verified the following paths:")
         for path in sorted(self.all_paths):
-            print(path)
+            logger.info(path)

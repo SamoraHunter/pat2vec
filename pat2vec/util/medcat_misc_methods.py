@@ -1,5 +1,6 @@
 import json
 import pandas as pd
+import logging
 import numpy as np
 from tqdm import tqdm
 from typing import Optional
@@ -10,6 +11,8 @@ from ast import literal_eval
 import matplotlib.pyplot as plt
 import seaborn as sns
 import os
+
+logger = logging.getLogger(__name__)
 
 def medcat_trainer_export_to_df(file_path: str) -> pd.DataFrame:
     """
@@ -101,9 +104,9 @@ def medcat_trainer_export_to_df(file_path: str) -> pd.DataFrame:
 
 
 # Example usage:
-# df = medcat_trainer_export_to_df('merge4.json')
-# print(df)
-
+# # df = medcat_trainer_export_to_df('merge4.json')
+# # logger.info(df)
+#
 
 def extract_labels_from_medcat_annotation_export(
     df: pd.DataFrame,
@@ -252,12 +255,12 @@ def recreate_json(df: pd.DataFrame, output_file: Optional[str] = None) -> str:
 
 
 # Example usage:
-# # Call the function with your DataFrame and output filename
-# output_filename = 'recreated_annotations.json'
-# recreated_json = recreate_json(df, output_file=output_filename)
-
-# # Print the recreated JSON
-# print(recreated_json)
+# # # Call the function with your DataFrame and output filename
+# # output_filename = 'recreated_annotations.json'
+# # recreated_json = recreate_json(df, output_file=output_filename)
+#
+# # # Print the recreated JSON
+# # logger.info(recreated_json)
 
 
 def manually_label_annotation_df(
@@ -288,11 +291,11 @@ def manually_label_annotation_df(
     counter = 0
     if os.path.exists(file_path):
         if verbose:
-            print("Reading human labels from file...")
+            logger.info("Reading human labels from file...")
         human_labels = pd.read_csv(file_path)
     else:
         if verbose:
-            print("Creating new human labels DataFrame...")
+            logger.info("Creating new human labels DataFrame...")
         human_labels = pd.DataFrame(columns=["human_label"])
 
     if "human_label" not in df.columns:
@@ -300,10 +303,10 @@ def manually_label_annotation_df(
 
     for index, row in tqdm(df.iterrows()):
         if confirmatory:
-            if pd.notnull(row["client_idcode"]):
+            if pd.notnull(row["client_idcode"]): # type: ignore
                 existing_labels = [
                     df[
-                        (df["client_idcode"] == row["client_idcode"])
+                        (df["client_idcode"] == row["client_idcode"]) # type: ignore
                         & (df["human_label"] == 1)
                         & (df["cui"].isin(filter_codes))
                     ]
@@ -313,7 +316,7 @@ def manually_label_annotation_df(
                 if not all(label.empty for label in existing_labels):
                     continue  # Skip rows if there is at least one label from each of the supplied lists
 
-        if pd.isnull(row["human_label"]):
+        if pd.isnull(row["human_label"]): # type: ignore
             remaining_labels_info = [
                 (
                     len(
@@ -334,7 +337,7 @@ def manually_label_annotation_df(
             ]
 
             if verbose:
-                print("Printing text sample for user input...")
+                logger.info("Printing text sample for user input...")
             text_sample = row["text_sample"]
             source_value = row["source_value"]
             highlighted_text = text_sample.replace(
@@ -346,7 +349,7 @@ def manually_label_annotation_df(
 
             # Wrap the text to fit within standard scroll window width
             wrapped_text = textwrap.fill(highlighted_text, width=80)
-            print(wrapped_text)
+            logger.info(wrapped_text)
 
             clear_output(wait=True)  # Clear Jupyter notebook display
             label = input(
@@ -363,27 +366,25 @@ def manually_label_annotation_df(
 
             if counter % 10 == 0:
                 df.to_csv(file_path, index=False)  # Write to file immediately
-                print("saved df!")
+                logger.info("Saved human labels progress to file.")
             counter += 1
 
-            print(
-                df[df["human_label"].isna()].shape[0],
-                df[df["human_label"].notna()].shape[0],
+            logger.info(
+                f"Remaining unlabeled rows: {df[df['human_label'].isna()].shape[0]}, Labeled rows: {df[df['human_label'].notna()].shape[0]}"
             )
-            print(
-                df[df["human_label"].isna()]["client_idcode"].unique().shape,
-                df[df["human_label"].notna()]["client_idcode"].unique().shape,
+            logger.info(
+                f"Remaining unlabeled clients: {df[df['human_label'].isna()]['client_idcode'].nunique()}, Labeled clients: {df[df['human_label'].notna()]['client_idcode'].nunique()}"
             )
             for i, filter_codes in enumerate(filter_codes_list):
-                print(
+                logger.info(
                     f"Remaining labels for filter {i + 1} as a total of codes: {remaining_labels_info[i][0]}/{remaining_labels_info[i][1]}"
                 )
 
     if verbose:
-        print("Writing human labels to file...")
+        logger.info("Writing final human labels to file...")
 
     df.to_csv(file_path, index=False)
-    print("saved df!")
+    logger.info("Saved human labels to file.")
     counter += 1
 
 def parse_medcat_trainer_project_json(json_path: str) -> pd.DataFrame:
@@ -515,9 +516,9 @@ def parse_medcat_trainer_project_json(json_path: str) -> pd.DataFrame:
     # Final DataFrame
     df_final = pd.DataFrame(final_data)
 
-    print(f"Final DataFrame shape: {df_final.shape}")
-    print("\nColumns available:")
-    print(df_final.columns.tolist())
+    logger.info(f"Final DataFrame shape: {df_final.shape}")
+    logger.info("Columns available:")
+    logger.info(df_final.columns.tolist())
 
 
 def create_ner_results_dataframe(
@@ -583,7 +584,7 @@ def plot_ner_results(results_df: pd.DataFrame) -> None:
             'tps', and 'cui_counts'.
     """
     if "cui_name" not in results_df.columns:
-        print("Error: 'cui_name' column is required in the DataFrame.")
+        logger.error("Error: 'cui_name' column is required in the DataFrame.")
         return
 
     results_df = results_df.sort_values(by="cui_f1")

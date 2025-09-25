@@ -2,6 +2,9 @@ import subprocess
 from tqdm import tqdm
 from typing import List
 
+import logging
+
+logger = logging.getLogger(__name__)
 
 def run_pip_compile() -> bool:
     """Runs pip-compile on requirements.in.
@@ -22,7 +25,7 @@ def run_pip_compile() -> bool:
         )
         return True
     except subprocess.CalledProcessError as e:
-        print(f"pip-compile failed: {e.stderr}")
+        logger.error(f"pip-compile failed: {e.stderr}")
         return False
 
 
@@ -60,16 +63,16 @@ def process_requirements() -> None:
         if not requirement:
             continue  # Skip empty lines
 
-        print(f"\nAdding requirement: {requirement}")
+        logger.info(f"\nAdding requirement: {requirement}")
 
         # Append the requirement to requirements.in
         append_to_file("requirements.in", requirement)
 
         # Run pip-compile
         if run_pip_compile():
-            print(f"Successfully compiled with {requirement}")
+            logger.info(f"Successfully compiled with {requirement}")
         else:
-            print(f"Failed to compile with {requirement}, skipping")
+            logger.warning(f"Failed to compile with {requirement}, skipping")
             failed_requirements.append(requirement)
 
             # Revert by removing the last requirement (remove the last line from requirements.in)
@@ -84,13 +87,13 @@ def process_requirements() -> None:
             for failed in failed_requirements:
                 f.write(failed + "\n")
 
-    print("\nProcessing completed.")
+    logger.info("\nProcessing completed.")
     if failed_requirements:
-        print(
+        logger.warning(
             f"Failed requirements saved in failed_requirements.txt: {failed_requirements}"
         )
     else:
-        print("All requirements were successfully added and compiled.")
+        logger.info("All requirements were successfully added and compiled.")
 
 
 # if __name__ == "__main__":

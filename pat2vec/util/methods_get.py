@@ -20,7 +20,7 @@ import pandas as pd
 import logging
 
 from pat2vec.util.generate_date_list import generate_date_list
-
+logger = logging.getLogger(__name__)
 # Configure basic logging
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 
@@ -290,10 +290,10 @@ def get_free_gpu() -> Tuple[int, str]:
         names=["memory.used", "memory.free"],
         skiprows=1,
     )
-    print("GPU usage:\n{}".format(gpu_df))
+    logger.info("GPU usage:\n{}".format(gpu_df))
     gpu_df["memory.free"] = gpu_df["memory.free"].map(lambda x: x.rstrip(" [MiB]"))
     idx = gpu_df["memory.free"].astype(int).idxmax()  # type: ignore
-    print(
+    logger.info(
         "Returning GPU{} with {} free MiB".format(idx, gpu_df.iloc[idx]["memory.free"])
     )
     return int(idx), gpu_df.iloc[idx]["memory.free"]
@@ -631,7 +631,7 @@ def filter_stripped_list(
                     pass
         else:
             if config_obj.verbosity > 0:
-                print("Stripping list...")
+                logger.info("Stripping list...")
             for i in tqdm(range(len(stripped_list))):
                 if (
                     len(
@@ -681,7 +681,7 @@ def create_folders(all_patient_list: List[str], config_obj: Any = None) -> None:
             if not os.path.exists(folder_path):
                 os.makedirs(folder_path)
     if config_obj.verbosity > 0:
-        print(f"Folders created: {current_pat_lines_path}...")
+        logger.info(f"Folders created: {current_pat_lines_path}...")
 
 
 def create_folders_for_pat(patient_id: str, config_obj: Any = None) -> None:
@@ -707,7 +707,7 @@ def create_folders_for_pat(patient_id: str, config_obj: Any = None) -> None:
             os.makedirs(folder_path)
 
     if config_obj.verbosity > 0:
-        print(f"Folders created for patient {patient_id}: {current_pat_lines_path}...")
+        logger.info(f"Folders created for patient {patient_id}: {current_pat_lines_path}...")
 
 
 def add_offset_column(
@@ -814,7 +814,7 @@ def add_offset_column(
 
     # Apply the flexible parsing
     if verbose >= 1:
-        print(f"Processing {len(df)} rows for datetime conversion...")
+        logger.info(f"Processing {len(df)} rows for datetime conversion...")
 
     # Convert the datetime column
     converted_column = df[start_column_name].apply(parse_datetime_flexible)
@@ -824,23 +824,23 @@ def add_offset_column(
     total_rows = len(df)
 
     if verbose >= 1:
-        print(
+        logger.info(
             f"Successfully converted {successful_conversions}/{total_rows} datetime values"
         )
         if successful_conversions < total_rows:
             failed_count = total_rows - successful_conversions
-            print(
+            logger.warning(
                 f"Warning: {failed_count} values could not be converted and will be NaT"
             )
 
     if verbose >= 2:
         # Show some examples of the original and converted values
-        print("\nSample conversions:")
+        logger.info("\nSample conversions:")
         sample_size = min(5, len(df))
         for i in range(sample_size):
             orig = df[start_column_name].iloc[i]
             conv = converted_column.iloc[i]
-            print(f"  '{orig}' -> {conv}")
+            logger.info(f"  '{orig}' -> {conv}")
 
     # Define a function to apply the offset
     def apply_offset(dt):
@@ -849,7 +849,7 @@ def add_offset_column(
                 return dt + time_offset
             except Exception as e:
                 if verbose >= 2:
-                    print(f"Error applying offset to {dt}: {e}")
+                    logger.error(f"Error applying offset to {dt}: {e}")
                 return pd.NaT
         else:
             return pd.NaT
@@ -861,7 +861,7 @@ def add_offset_column(
     successful_offsets = df[offset_column_name].notna().sum()
 
     if verbose >= 1:
-        print(
+        logger.info(
             f"Successfully applied offset to {successful_offsets}/{successful_conversions} converted values"
         )
 
@@ -899,8 +899,7 @@ def test_datetime_formats():
 
     result = add_offset_column(df, "timestamps", "offset_timestamps", offset, verbose=2)
 
-    print("\nTest Results:")
-    print(result[["timestamps", "offset_timestamps"]])
+    logger.info("\nTest Results:\n%s", result[["timestamps", "offset_timestamps"]].to_string())
 
     return result
 
@@ -946,7 +945,7 @@ def build_patient_dict(
             # Add the patient_id and corresponding start and end times to the dictionary
             patient_dict[patient_id] = (start_time, end_time)
         else:
-            print(
+            logger.warning(
                 f"Ignoring patient {patient_id}: start or end time is null. "
                 f"start: {start_time}, end: {end_time}"
             )

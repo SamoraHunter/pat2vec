@@ -1,5 +1,6 @@
 import os
 import random
+import logging
 from typing import Any, List, Optional
 
 import pandas as pd
@@ -10,6 +11,8 @@ from pat2vec.pat2vec_search.cogstack_search_methods import \
 from pat2vec.util.get_dummy_data_cohort_searcher import \
     cohort_searcher_with_terms_and_search_dummy
 from pat2vec.util.pre_processing import generate_uuid_list
+
+logger = logging.getLogger(__name__)
 
 # Functions to get cohort by drug order name.
 # Example: I want the records of everyone who has an order of these three drugs...
@@ -229,9 +232,9 @@ def get_treatment_records_by_drug_order_name(
     ]
 
     if verbose >= 5:
-        print(f"[INFO] Searching for term: {term}")
-        print(f"[INFO] Searching in columns: {column_fields_to_match}")
-        print(f"[INFO] Date range: {start_date} to {end_date}")
+        logger.info(f"Searching for term: {term}")
+        logger.info(f"Searching in columns: {column_fields_to_match}")
+        logger.info(f"Date range: {start_date} to {end_date}")
 
     if pat2vec_obj.config_obj.testing == False:
         # Perform search in the 'order' index
@@ -256,11 +259,11 @@ def get_treatment_records_by_drug_order_name(
 
     if drug_treatment_docs.empty:
         if verbose >= 1:
-            print("[WARNING] No treatment records found.")
+            logger.warning("No treatment records found.")
         return pd.DataFrame()
 
     if verbose >= 9:
-        print(
+        logger.debug(
             f"[DEBUG] Retrieved {len(drug_treatment_docs)} records from database.")
 
     # Function to find matching columns for the search term
@@ -274,7 +277,7 @@ def get_treatment_records_by_drug_order_name(
                 if match_score >= 80:
                     matched_cols.append(field)
                     if verbose >= 20:
-                        print(
+                        logger.debug(
                             f"[DEBUG] Match found! Term: '{search_term}' | Column: '{field}' | Score: {match_score}"
                         )
         return matched_cols if matched_cols else None
@@ -286,7 +289,7 @@ def get_treatment_records_by_drug_order_name(
     )
 
     if verbose >= 5:
-        print(f"[INFO] Processed matching for term: '{term}'")
+        logger.info(f"Processed matching for term: '{term}'")
 
     # Filter out rows where the term didn't match
     filtered_drug_records = drug_treatment_docs[
@@ -294,7 +297,7 @@ def get_treatment_records_by_drug_order_name(
     ]
 
     if verbose >= 5:
-        print(
+        logger.info(
             f"[INFO] Filtered dataset contains {len(filtered_drug_records)} records after fuzzy matching."
         )
 
@@ -353,8 +356,8 @@ def iterative_drug_treatment_search(
         if os.path.exists(output_file_path):
 
             if verbose >= 1:
-                print("output_file_path exists: %s" % output_file_path)
-                print("removing existing file: %s" % output_file_path)
+                logger.info(f"output_file_path exists: {output_file_path}")
+                logger.info(f"removing existing file: {output_file_path}")
 
             # remove file
             os.remove(output_file_path)
@@ -363,7 +366,7 @@ def iterative_drug_treatment_search(
 
     for term in search_terms:
         if verbose >= 1:
-            print(f"[INFO] Searching for term: {term}")
+            logger.info(f"Searching for term: {term}")
 
         # Retrieve treatment records for the current search term
         treatment_records = get_treatment_records_by_drug_order_name(
@@ -376,7 +379,7 @@ def iterative_drug_treatment_search(
 
         if treatment_records.empty:
             if verbose >= 1:
-                print(f"[WARNING] No results found for term: {term}")
+                logger.warning(f"No results found for term: {term}")
             continue
 
         # Add columns for search term and matched fields
@@ -396,12 +399,12 @@ def iterative_drug_treatment_search(
         all_results.append(treatment_records)
 
         if verbose >= 1:
-            print(
+            logger.info(
                 f"[INFO] Retrieved {len(treatment_records)} records for term: {term}")
 
     if not all_results:
         if verbose >= 1:
-            print("[WARNING] No records found for any search terms.")
+            logger.warning("No records found for any search terms.")
         return
 
     # Combine all results into a single DataFrame
@@ -428,7 +431,7 @@ def iterative_drug_treatment_search(
         after_dedup = len(final_results)
 
         if verbose >= 1:
-            print(
+            logger.info(
                 f"[INFO] Dropped {before_dedup - after_dedup} duplicate records by order_guid."
             )
 
@@ -441,7 +444,7 @@ def iterative_drug_treatment_search(
     )
 
     if verbose >= 1:
-        print(
+        logger.info(
             f"[INFO] Final dataset contains {len(final_results)} records. Appended to {output_file_path}"
         )
 

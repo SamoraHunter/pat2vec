@@ -1,5 +1,6 @@
 import os
 import shutil
+import logging
 import pandas as pd
 from typing import Any, Dict, List, Optional
 from IPython.display import display
@@ -10,6 +11,8 @@ from pat2vec.util.post_processing import (
     join_icd10_codes_to_annot,
     join_icd10_OPC4S_codes_to_annot,
 )
+
+logger = logging.getLogger(__name__)
 
 
 def check_pat_document_annotation_complete(
@@ -184,7 +187,7 @@ def multi_annots_to_df_textual_obs(
         ]
 
         if config_obj.verbosity >= 14:
-            print("multi_annots_to_df_textualObs", len(doc_to_annot_df))
+            logger.debug(f"multi_annots_to_df_textualObs: {len(doc_to_annot_df)}")
         rows_with_nan = doc_to_annot_df[
             doc_to_annot_df[col_list_drop_nan].isna().any(axis=1)
         ]
@@ -192,7 +195,7 @@ def multi_annots_to_df_textual_obs(
         # Drop rows with NaN values
         doc_to_annot_df = doc_to_annot_df.drop(rows_with_nan.index).copy()
         if config_obj.verbosity >= 14:
-            print("multi_annots_to_df_textualObs", len(doc_to_annot_df))
+            logger.debug(f"multi_annots_to_df_textualObs: {len(doc_to_annot_df)}")
 
         doc_to_annot_df.to_csv(temp_file_path, mode="a", header=False, index=False)
 
@@ -314,7 +317,7 @@ def multi_annots_to_df_reports(
         ]
 
         if config_obj.verbosity >= 14:
-            print("multi_annots_to_df_reports", len(doc_to_annot_df))
+            logger.debug(f"multi_annots_to_df_reports: {len(doc_to_annot_df)}")
         rows_with_nan = doc_to_annot_df[
             doc_to_annot_df[col_list_drop_nan].isna().any(axis=1)
         ]
@@ -322,7 +325,7 @@ def multi_annots_to_df_reports(
         # Drop rows with NaN values
         doc_to_annot_df = doc_to_annot_df.drop(rows_with_nan.index).copy()
         if config_obj.verbosity >= 14:
-            print("multi_annots_to_df_reports", len(doc_to_annot_df))
+            logger.debug(f"multi_annots_to_df_reports: {len(doc_to_annot_df)}")
 
         doc_to_annot_df.to_csv(temp_file_path, mode="a", header=False, index=False)
 
@@ -444,7 +447,7 @@ def multi_annots_to_df_mct(
         ]
 
         if config_obj.verbosity >= 3:
-            print("multi_annots_to_df", len(doc_to_annot_df))
+            logger.debug(f"multi_annots_to_df: {len(doc_to_annot_df)}")
         rows_with_nan = doc_to_annot_df[
             doc_to_annot_df[col_list_drop_nan].isna().any(axis=1)
         ]
@@ -452,7 +455,7 @@ def multi_annots_to_df_mct(
         # Drop rows with NaN values
         doc_to_annot_df = doc_to_annot_df.drop(rows_with_nan.index).copy()
         if config_obj.verbosity >= 3:
-            print("multi_annots_to_df", len(doc_to_annot_df))
+            logger.debug(f"multi_annots_to_df: {len(doc_to_annot_df)}")
 
         doc_to_annot_df.to_csv(temp_file_path, mode="a", header=False, index=False)
 

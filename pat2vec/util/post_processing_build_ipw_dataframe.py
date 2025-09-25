@@ -3,6 +3,9 @@ import pandas as pd
 import os
 from typing import Any, Dict, List, Optional
 
+import logging
+
+logger = logging.getLogger(__name__)
 
 def build_ipw_dataframe(
     annot_filter_arguments: Optional[Dict[str, Any]] = None,
@@ -45,7 +48,7 @@ def build_ipw_dataframe(
     df = pd.DataFrame()
 
     if custom_pat_list is not None:
-        print(f"Using custom pat list, len:", len(custom_pat_list))
+        logger.info(f"Using custom pat list, len: {len(custom_pat_list)}")
         pat_list_stripped = custom_pat_list
     else:
         pat_list = os.listdir(config_obj.pre_document_batch_path)

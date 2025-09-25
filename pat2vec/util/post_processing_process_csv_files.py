@@ -1,11 +1,14 @@
 from multiprocessing import Pool, cpu_count
 from pat2vec.util.post_processing import extract_datetime_to_column, process_chunk
+import logging
 import pandas as pd
 from tqdm import tqdm
 import csv
 import os
 from datetime import datetime
 from typing import Optional, Union
+
+logger = logging.getLogger(__name__)
 
 
 def process_csv_files(
@@ -77,8 +80,8 @@ def process_csv_files(
     if os.path.exists(output_file):
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         base_name, extension = os.path.splitext(output_file)
-        backup_file = f"{base_name}_{timestamp}_backup{extension}"
-        print(f"Warning: Output file already exists. Creating backup: {backup_file}")
+        backup_file = f"{base_name}_{timestamp}_backup{extension}" # type: ignore
+        logger.warning(f"Output file already exists. Creating backup: {backup_file}")
         os.rename(output_file, backup_file)
 
     # Keep track of all unique column names found across all CSV files
@@ -87,7 +90,7 @@ def process_csv_files(
     # Sample files if needed
     sampled_files = all_file_paths[:sample_size]
 
-    print(f"Processing {len(sampled_files)} CSV files...")
+    logger.info(f"Processing {len(sampled_files)} CSV files...")
 
     # First pass: collect all unique column names
     for file in tqdm(sampled_files, desc="Analyzing columns"):
@@ -99,9 +102,9 @@ def process_csv_files(
                     # Strip whitespace from column names and add to unique_columns
                     unique_columns.update([col.strip() for col in header])
                 except StopIteration:
-                    print(f"Warning: Empty file skipped: {file}")
+                    logger.warning(f"Empty file skipped: {file}")
         except Exception as e:
-            print(f"Warning: Could not read file {file}: {e}")
+            logger.warning(f"Could not read file {file}: {e}")
 
     if not unique_columns:
         raise ValueError("No valid columns found in any CSV files")
@@ -143,7 +146,7 @@ def process_csv_files(
                         chunk_data.append(clean_row)
 
             except Exception as e:
-                print(f"Warning: Error processing file {file}: {e}")
+                logger.warning(f"Error processing file {file}: {e}")
 
         # Append chunk data to output file
         if chunk_data:
@@ -153,22 +156,22 @@ def process_csv_files(
 
             total_rows_processed += len(chunk_data)
 
-    print(
+    logger.info(
         f"Processed {total_rows_processed} total rows from {len(sampled_files)} files"
     )
 
     # Add timestamp column if requested
     if append_timestamp_column:
-        print("Reading results and appending timestamp column...")
+        logger.info("Reading results and appending timestamp column...")
         try:
             df = pd.read_csv(output_file)
             df = extract_datetime_to_column(df)
             df.to_csv(output_file, index=False)
-            print("Timestamp column added successfully")
+            logger.info("Timestamp column added successfully")
         except Exception as e:
-            print(f"Warning: Could not add timestamp column: {e}")
+            logger.warning(f"Could not add timestamp column: {e}")
 
-    print(f"Concatenated data saved to {output_file}")
+    logger.info(f"Concatenated data saved to {output_file}")
     return output_file
 
 
@@ -219,7 +222,7 @@ def process_csv_files_multi(
 
     all_files = all_file_paths if sample_size is None else all_file_paths[:sample_size]
 
-    print("all files size", len(all_files))
+    logger.info(f"all files size: {len(all_files)}")
 
     if not curate_columns:
         for file in tqdm(all_files):
@@ -235,8 +238,8 @@ def process_csv_files_multi(
     if os.path.exists(output_file):
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         base_name, extension = os.path.splitext(output_file)
-        new_output_file = f"{base_name}_{timestamp}_overwritten{extension}"
-        print(
+        new_output_file = f"{base_name}_{timestamp}_overwritten{extension}" # type: ignore
+        logger.warning(
             f"Warning: Output file already exists. Renaming {output_file} to {new_output_file}"
         )
         os.rename(output_file, new_output_file)
@@ -263,7 +266,7 @@ def process_csv_files_multi(
             n_proc_val = desired_half_processes
         elif type(n_proc) == int:
             n_proc_val = n_proc
-    print("desried cores:", n_proc_val)
+    logger.info(f"Desired cores for multiprocessing: {n_proc_val}")
 
     with Pool(processes=n_proc_val) as pool:
         args_list = [
@@ -283,11 +286,11 @@ def process_csv_files_multi(
                 )
 
     if append_timestamp_column:
-        print("Reading results and appending updatetime column")
+        logger.info("Reading results and appending updatetime column")
         df = pd.read_csv(output_file)
         df = extract_datetime_to_column(df)
         df.to_csv(output_file)
 
-    print(f"Concatenated data saved to {output_file}")
+    logger.info(f"Concatenated data saved to {output_file}")
 
     return output_file

@@ -3,6 +3,9 @@ import torch
 
 from pat2vec.util.methods_get import get_free_gpu
 
+import logging
+
+logger = logging.getLogger(__name__)
 
 def set_best_gpu(gpu_mem_threshold: int) -> None:
     """Selects the best available GPU based on free memory.
@@ -25,7 +28,7 @@ def set_best_gpu(gpu_mem_threshold: int) -> None:
 
     if int(free_mem) > gpu_mem_threshold:
         os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu_index)
-        print(f"Setting GPU {gpu_index} with {free_mem} MB free")
+        logger.info(f"Setting GPU {gpu_index} with {free_mem} MB free")
     else:
         os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
-        print(f"Setting NO GPU, most free memory: {free_mem} MB!")
+        logger.info(f"Setting NO GPU, most free memory: {free_mem} MB!")

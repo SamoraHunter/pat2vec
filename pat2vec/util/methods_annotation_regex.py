@@ -1,7 +1,9 @@
 import re
 import pandas as pd
 from typing import List
+import logging
 
+logger = logging.getLogger(__name__)
 
 def append_regex_term_counts(
     df: pd.DataFrame,
@@ -25,9 +27,9 @@ def append_regex_term_counts(
         The original DataFrame with new columns for the counts of each term.
     """
     if debug:
-        print("append_regex_term_counts df:")
-        print(df.columns)
-        print(df.head())
+        logger.debug("append_regex_term_counts df:")
+        logger.debug(df.columns)
+        logger.debug(df.head())
 
     # Iterate through each term
     for term in terms:

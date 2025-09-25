@@ -1,4 +1,5 @@
 from pat2vec.util.methods_annotation_json_to_dataframe import json_to_dataframe
+import logging
 from pat2vec.util.methods_get import update_pbar
 from pat2vec.util.post_processing import (
     join_icd10_OPC4S_codes_to_annot,
@@ -12,6 +13,8 @@ import tempfile
 from contextlib import contextmanager
 from typing import Any, Dict, Iterator, List
 from IPython.display import display
+
+logger = logging.getLogger(__name__)
 
 
 @contextmanager
@@ -106,7 +109,7 @@ def multi_annots_to_df(
                     processed_dfs.append(doc_to_annot_df)
         except Exception as e:
             if config_obj.verbosity >= 1:
-                print(f"Error processing document {i}: {str(e)}")
+                logger.warning(f"Error processing document {i}: {str(e)}")
             continue
 
     if processed_dfs:
@@ -151,7 +154,7 @@ def multi_annots_to_df(
                 final_df = join_icd10_codes_to_annot(df=final_df, inner=False)
     except Exception as e:
         if config_obj.verbosity >= 1:
-            print(f"Error joining ICD10/OPC4S codes: {str(e)}")
+            logger.warning(f"Error joining ICD10/OPC4S codes: {str(e)}")
 
     # Write the final DataFrame to CSV. This will now run every time.
     destination_path = os.path.join(

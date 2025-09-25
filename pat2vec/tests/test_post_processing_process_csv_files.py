@@ -155,15 +155,14 @@ class TestProcessCsvFiles(unittest.TestCase):
 
         mock_extract_dt.assert_called_once()
 
-    @patch("builtins.print")
     @patch("pat2vec.util.post_processing_process_csv_files.tqdm", lambda x, **kwargs: x)
-    def test_empty_csv_file_handling(self, mock_print):
+    def test_empty_csv_file_handling(self):
         """Test that empty CSV files are skipped with a warning."""
         self._create_csv("file1.csv", ["id"], [["1"]])
         # Create an empty file
         empty_file_path = os.path.join(self.input_path, "empty.csv")
         open(empty_file_path, "w").close()
 
-        process_csv_files(self.input_path, self.output_path)
-
-        mock_print.assert_any_call(f"Warning: Empty file skipped: {empty_file_path}")
+        with self.assertLogs('pat2vec.util.post_processing_process_csv_files', level='WARNING') as cm:
+            process_csv_files(self.input_path, self.output_path)
+            self.assertTrue(any(f"Empty file skipped: {empty_file_path}" in log for log in cm.output))

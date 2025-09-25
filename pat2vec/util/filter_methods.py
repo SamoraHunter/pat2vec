@@ -1,9 +1,11 @@
 import pandas as pd
 from typing import Any, List
+import logging
 from fuzzywuzzy import process
 from pat2vec.util.methods_annotation_regex import append_regex_term_counts
 from IPython.display import display
 
+logger = logging.getLogger(__name__)
 
 def filter_dataframe_by_fuzzy_terms(
     df: pd.DataFrame,
@@ -27,20 +29,20 @@ def filter_dataframe_by_fuzzy_terms(
         A new DataFrame containing only the rows with fuzzy-matched terms.
     """
     if verbose >= 1:
-        print("Filtering DataFrame by fuzzy terms...")
+        logger.info("Filtering DataFrame by fuzzy terms...")
 
     matched_indices = set()
     for term in filter_term_list:
         if verbose >= 1:
-            print(f"Processing term: {term}")
+            logger.info(f"Processing term: {term}")
         matches = process.extractBests(term, df[column_name], score_cutoff=80)
         for match, score, idx in matches:
             if verbose >= 2:
-                print(f"Found match: {match} with similarity score: {score}")
+                logger.debug(f"Found match: {match} with similarity score: {score}")
             matched_indices.add(idx)
 
     if verbose >= 1:
-        print("Filtering complete.")
+        logger.info("Filtering complete.")
 
     filtered_df = df[df.index.isin(matched_indices)]
     return filtered_df
@@ -69,9 +71,8 @@ def apply_data_type_epr_docs_filters(
             is not None
         ):
             if config_obj.verbosity >= 1:
-                print(
-                    "Applying document type filter to EPR documents",
-                    config_obj.data_type_filter_dict,
+                logger.info(
+                    f"Applying document type filter to EPR documents: {config_obj.data_type_filter_dict}"
                 )
             filter_term_list = config_obj.data_type_filter_dict.get(
                 "filter_term_lists"
@@ -90,9 +91,9 @@ def apply_data_type_epr_docs_filters(
             is not None
         ):
             if config_obj.verbosity > 1:
-                print("Appending regex term counts...")
-                if config_obj.verbosity > 5:
-                    display(batch_target)
+                logger.info("Appending regex term counts...")
+                if config_obj.verbosity > 5 and not batch_target.empty:
+                    logger.debug(f"DataFrame before regex term counts:\n{batch_target.head().to_string()}")
             batch_target = append_regex_term_counts(
                 df=batch_target,
                 terms=config_obj.data_type_filter_dict.get("filter_term_lists").get(
@@ -103,7 +104,7 @@ def apply_data_type_epr_docs_filters(
             )
     else:
         if config_obj.verbosity >= 1:
-            print(
+            logger.info(
                 "Data type filter dictionary is None or batch target is empty. No filtering applied."
             )
     return batch_target
@@ -131,9 +132,8 @@ def apply_bloods_data_type_filter(
             is not None
         ):
             if config_obj.verbosity >= 1:
-                print(
-                    "Applying document type filter to bloods",
-                    config_obj.data_type_filter_dict,
+                logger.info(
+                    f"Applying document type filter to bloods: {config_obj.data_type_filter_dict}"
                 )
             filter_term_list = config_obj.data_type_filter_dict.get(
                 "filter_term_lists"
@@ -146,7 +146,7 @@ def apply_bloods_data_type_filter(
             )
     else:
         if config_obj.verbosity >= 1:
-            print("Data type filter dictionary is None. No filtering applied.")
+            logger.info("Data type filter dictionary is None. No filtering applied.")
     return batch_target
 
 
@@ -173,9 +173,8 @@ def apply_data_type_mct_docs_filters(
             is not None
         ):
             if config_obj.verbosity >= 1:
-                print(
-                    "Applying document type filter to MCT documents",
-                    config_obj.data_type_filter_dict,
+                logger.info(
+                    f"Applying document type filter to MCT documents: {config_obj.data_type_filter_dict}"
                 )
             filter_term_list = config_obj.data_type_filter_dict.get(
                 "filter_term_lists"
@@ -194,9 +193,9 @@ def apply_data_type_mct_docs_filters(
             is not None
         ):
             if config_obj.verbosity > 1:
-                print("Appending regex term counts...")
-                if config_obj.verbosity > 5:
-                    display(batch_target)
+                logger.info("Appending regex term counts...")
+                if config_obj.verbosity > 5 and not batch_target.empty:
+                    logger.debug(f"DataFrame before regex term counts:\n{batch_target.head().to_string()}")
             batch_target = append_regex_term_counts(
                 df=batch_target,
                 terms=config_obj.data_type_filter_dict.get("filter_term_lists").get(
@@ -207,7 +206,7 @@ def apply_data_type_mct_docs_filters(
             )
     else:
         if config_obj.verbosity >= 1:
-            print(
+            logger.info(
                 "Data type filter dictionary is None or batch target is empty. No filtering applied."
             )
     return batch_target

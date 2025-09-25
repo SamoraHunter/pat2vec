@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import logging
 from typing import Any, Dict
 
 
@@ -38,6 +39,8 @@ def json_to_dataframe(
         A pandas DataFrame where each row is a single annotation, or an empty
         DataFrame if no entities are present in the input.
     """
+    logger = logging.getLogger(__name__)
+
     if any(json_data.values()):
         done = False
 
@@ -164,10 +167,10 @@ def json_to_dataframe(
             return super_df
 
         except Exception as e:
-            print(e)
-            print("json_date", json_data)
-            print(type(json_data))
-            print(len(json_data))
+            logger.error(e)
+            logger.error(f"json_date: {json_data}")
+            logger.error(f"type(json_data): {type(json_data)}")
+            logger.error(f"len(json_data): {len(json_data)}")
             raise e
 
     else:
