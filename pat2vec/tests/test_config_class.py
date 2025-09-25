@@ -152,7 +152,7 @@ class TestConfigClass(unittest.TestCase):
 
     def test_global_date_validation_swap(self):
         """Test that global dates are swapped if in the wrong order."""
-        with patch("builtins.print") as mock_print:
+        with self.assertLogs('pat2vec.util.config_pat2vec', level='WARNING') as cm:
             config = config_class(
                 global_start_year=2022,
                 global_start_month=1,
@@ -164,9 +164,7 @@ class TestConfigClass(unittest.TestCase):
             )
             self.assertEqual(config.global_start_year, "2021")
             self.assertEqual(config.global_end_year, "2022")
-            mock_print.assert_any_call(
-                "Swapping dates to ensure Elasticsearch compatibility..."
-            )
+            self.assertTrue(any("Swapping dates" in log for log in cm.output))
 
     @patch("pat2vec.util.config_pat2vec.paramiko")
     def test_remote_dump_sftp_setup(self, mock_ssh_client):

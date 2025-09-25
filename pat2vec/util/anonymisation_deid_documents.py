@@ -48,8 +48,7 @@ class DeIdAnonymizer:
         self.anonymization_log: List[Dict[str, Any]] = []
 
         # Setup logging
-        logging.basicConfig(level=getattr(logging, log_level.upper()))
-        self.logger = logging.getLogger(__name__)
+        self.logger = logging.getLogger(f"{__name__}.DeIdAnonymizer")
 
         # Check if MedCAT is available
         if not MEDCAT_AVAILABLE:
@@ -526,91 +525,91 @@ def anonymize_dataframe_quick(
 # if __name__ == "__main__":
 #     # --- IMPORTANT ---
 #     # This example requires a pre-trained MedCAT DeIdModel pack.
-#     # You need to provide the path to your model pack below.
-#     # For demonstration, we use a placeholder path.
-#     # Replace this with the actual path to your model.
-#     model_path = "/path/to/your/deid_model_pack"
+    # # # You need to provide the path to your model pack below.
+    # # # For demonstration, we use a placeholder path.
+    # # # Replace this with the actual path to your model.
+    # # model_path = "/path/to/your/deid_model_pack"
 
-#     # Check if the model path is a placeholder
-#     if model_path == "/path/to/your/deid_model_pack" or not os.path.exists(model_path):
-#         print("=" * 80)
-#         print("WARNING: De-identification model path is not set or is invalid.")
-#         print(f"Please update 'model_path' in the __main__ block of this script.")
-#         print(f"Current path: {model_path}")
-#         print("Skipping anonymization example.")
-#         print("=" * 80)
-#     else:
-#         # Initialize anonymizer
-#         anonymizer = DeIdAnonymizer(model_path)
+    # # # Check if the model path is a placeholder
+    # # if model_path == "/path/to/your/deid_model_pack" or not os.path.exists(model_path):
+    # #     logger.warning("=" * 80)
+    # #     logger.warning("WARNING: De-identification model path is not set or is invalid.")
+    # #     logger.warning(f"Please update 'model_path' in the __main__ block of this script.")
+    # #     logger.warning(f"Current path: {model_path}")
+    # #     logger.warning("Skipping anonymization example.")
+    # #     logger.warning("=" * 80)
+    # # else:
+    # #     # Initialize anonymizer
+    # #     anonymizer = DeIdAnonymizer(model_path)
 
-#         # Test single text anonymization
-#         test_text = (
-#             "Patient John Doe, born on 1980-01-15, visited Dr. Smith on 2023-10-26."
-#         )
-#         anonymized, verification = anonymizer.anonymize_text(
-#             test_text, redact=True, verify=True
-#         )
-#         print("--- Single Text Anonymization ---")
-#         print(f"Original: {test_text}")
-#         print(f"Anonymized: {anonymized}")
-#         print(f"Verification: {verification}")
+    # #     # Test single text anonymization
+    # #     test_text = (
+    # #         "Patient John Doe, born on 1980-01-15, visited Dr. Smith on 2023-10-26."
+    # #     )
+    # #     anonymized, verification = anonymizer.anonymize_text(
+    # #         test_text, redact=True, verify=True
+    # #     )
+    # #     logger.info("--- Single Text Anonymization ---")
+    # #     logger.info(f"Original: {test_text}")
+    # #     logger.info(f"Anonymized: {anonymized}")
+    # #     logger.info(f"Verification: {verification}")
 
-#         # Add diagnostic check if anonymization did not change the text
-#         if anonymized == test_text:
-#             print("\n" + "=" * 20 + " DIAGNOSTIC " + "=" * 20)
-#             print("WARNING: Anonymized text is identical to the original text.")
-#             print("This indicates that no PII was redacted.")
-#             print("Running inspection to see what PII entities the model detected...")
-#             anonymizer.inspect_text(test_text)
-#             print("\nPossible reasons for no redaction:")
-#             print(
-#                 "1. The model did not detect any PII in the text (see inspection results above)."
-#             )
-#             print(
-#                 "2. The model's `pii_labels` list is empty or misconfigured. "
-#                 f"Current labels: {anonymizer.pii_labels}"
-#             )
-#             print("=" * 52)
+    # #     # Add diagnostic check if anonymization did not change the text
+    # #     if anonymized == test_text:
+    # #         logger.warning("\n" + "=" * 20 + " DIAGNOSTIC " + "=" * 20)
+    # #         logger.warning("WARNING: Anonymized text is identical to the original text.")
+    # #         logger.warning("This indicates that no PII was redacted.")
+    # #         logger.warning("Running inspection to see what PII entities the model detected...")
+    # #         anonymizer.inspect_text(test_text)
+    # #         logger.warning("\nPossible reasons for no redaction:")
+    # #         logger.warning(
+    # #             "1. The model did not detect any PII in the text (see inspection results above)."
+    # #         )
+    # #         logger.warning(
+    # #             "2. The model's `pii_labels` list is empty or misconfigured. "
+    # #             f"Current labels: {anonymizer.pii_labels}"
+    # #         )
+    # #         logger.warning("=" * 52)
 
-#         print("\n" + "=" * 50 + "\n")
+    # #     logger.info("\n" + "=" * 50 + "\n")
 
-#         # Test DataFrame anonymization
-#         test_df = pd.DataFrame(
-#             {
-#                 "id": [1, 2, 3],
-#                 "body_analysed": [
-#                     "Patient Jane Smith was seen on 2023-01-15",
-#                     "Dr. Brown reviewed case P12345 at Kings Hospital",
-#                     "Contact number: 07123456789, address: 123 Oak Street",
-#                 ],
-#             }
-#         )
+    # #     # Test DataFrame anonymization
+    # #     test_df = pd.DataFrame(
+    # #         {
+    # #             "id": [1, 2, 3],
+    # #             "body_analysed": [
+    # #                 "Patient Jane Smith was seen on 2023-01-15",
+    # #                 "Dr. Brown reviewed case P12345 at Kings Hospital",
+    # #                 "Contact number: 07123456789, address: 123 Oak Street",
+    # #             ],
+    # #         }
+    # #     )
 
-#         print("--- DataFrame Anonymization ---")
-#         print("Original DataFrame:")
-#         print(test_df)
+    # #     logger.info("--- DataFrame Anonymization ---")
+    # #     logger.info("Original DataFrame:")
+    # #     logger.info(test_df)
 
-#         anonymized_df = anonymizer.anonymize_dataframe(test_df, ["body_analysed"])
+    # #     anonymized_df = anonymizer.anonymize_dataframe(test_df, ["body_analysed"])
 
-#         print("\nAnonymized DataFrame:")
-#         print(anonymized_df)
+    # #     logger.info("\nAnonymized DataFrame:")
+    # #     logger.info(anonymized_df)
 
-#         # Add diagnostic check for the DataFrame
-#         if anonymized_df["body_analysed_anonymized"].equals(test_df["body_analysed"]):
-#             print("\n" + "=" * 20 + " DIAGNOSTIC " + "=" * 20)
-#             print("WARNING: Anonymized DataFrame column is identical to the original.")
-#             print("Running inspection on the first row of the DataFrame...")
-#             anonymizer.inspect_text(test_df["body_analysed"].iloc[0])
-#             print("=" * 52)
+    # #     # Add diagnostic check for the DataFrame
+    # #     if anonymized_df["body_analysed_anonymized"].equals(test_df["body_analysed"]):
+    # #         logger.warning("\n" + "=" * 20 + " DIAGNOSTIC " + "=" * 20)
+    # #         logger.warning("WARNING: Anonymized DataFrame column is identical to the original.")
+    # #         logger.warning("Running inspection on the first row of the DataFrame...")
+    # #         anonymizer.inspect_text(test_df["body_analysed"].iloc[0])
+    # #         logger.warning("=" * 52)
 
-#         print("\n" + "=" * 50 + "\n")
+    # #     logger.info("\n" + "=" * 50 + "\n")
 
-#         # Generate and print a report
-#         report = anonymizer.generate_report()
-#         print("--- Anonymization Report ---")
-#         print(report)
+    # #     # Generate and print a report
+    # #     report = anonymizer.generate_report()
+    # #     logger.info("--- Anonymization Report ---")
+    # #     logger.info(report)
 
-#         # Save the log
-#         anonymizer.save_log("anonymization_log.json")
+    # #     # Save the log
+    # #     anonymizer.save_log("anonymization_log.json")
 
-#     print("\nDeIdAnonymizer module execution finished.")
+    # # logger.info("\nDeIdAnonymizer module execution finished.")

@@ -248,12 +248,14 @@ class TestMultiAnnotsToDf(unittest.TestCase):
         self.mock_config.verbosity = 1 # To cover the print statement in the except block
 
         # Act
-        with patch('builtins.print') as mock_print:
+        with self.assertLogs('pat2vec.util.methods_annotation_multi_annots_to_df', level='WARNING') as cm:
             result_df = multi_annots_to_df(
                 self.pat_id, self.pat_batch, self.multi_annots, config_obj=self.mock_config, t=self.mock_t
             )
 
         # Assert
-        mock_print.assert_any_call("Error processing document 0: Simulated processing error")
+        self.assertIn("Error processing document 0: Simulated processing error", cm.output[0])
+
+        # The final DataFrame should only contain data from the successful call
         self.assertEqual(len(result_df), 1)
         self.assertEqual(result_df.iloc[0]["cui"], "C0010200")

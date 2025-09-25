@@ -5,6 +5,7 @@
 import os
 import random
 from datetime import datetime
+import logging
 from typing import Any, List, Optional
 
 import numpy as np
@@ -16,6 +17,8 @@ from pat2vec.pat2vec_search.cogstack_search_methods import (
     iterative_multi_term_cohort_searcher_no_terms_fuzzy_textual_obs)
 from pat2vec.util.get_dummy_data_cohort_searcher import (
     cohort_searcher_with_terms_and_search_dummy, generate_uuid_list)
+
+logger = logging.getLogger(__name__)
 
 random_state = 42
 
@@ -66,9 +69,8 @@ def get_treatment_docs_by_iterative_multi_term_cohort_searcher_no_terms_fuzzy(
         A DataFrame containing the search results.
     """
     if verbose >= 1:
-        print(
-            "pat2vec_obj.treatment_doc_filename: ", pat2vec_obj.treatment_doc_filename
-        )
+        logger.info(f"pat2vec_obj.treatment_doc_filename: {pat2vec_obj.treatment_doc_filename}")
+
     # output_path = os.join(pat2vec_obj.proj_name, pat2vec_obj.treatment_doc_filename)
     output_path = os.path.join(pat2vec_obj.treatment_doc_filename)
 
@@ -76,7 +78,7 @@ def get_treatment_docs_by_iterative_multi_term_cohort_searcher_no_terms_fuzzy(
 
     if pat2vec_obj.config_obj.lookback == False:
         if verbose >= 1:
-            print("Using global start date.")
+            logger.info("Using global start date.")
         global_start_day = pat2vec_obj.config_obj.global_start_day
         global_start_month = pat2vec_obj.config_obj.global_start_month
         global_start_year = pat2vec_obj.config_obj.global_start_year
@@ -85,7 +87,7 @@ def get_treatment_docs_by_iterative_multi_term_cohort_searcher_no_terms_fuzzy(
         global_end_year = pat2vec_obj.config_obj.global_end_year
     else:
         if verbose >= 1:
-            print("Using global end date. as start")
+            logger.info("Using global end date as start.")
         global_start_day = pat2vec_obj.config_obj.global_end_day
         global_start_month = pat2vec_obj.config_obj.global_end_month
         global_start_year = pat2vec_obj.config_obj.global_start_year
@@ -95,31 +97,25 @@ def get_treatment_docs_by_iterative_multi_term_cohort_searcher_no_terms_fuzzy(
 
     if verbose >= 1:
         # Printing results
-        print("Lookback", pat2vec_obj.config_obj.lookback)
-        print(
-            "Global Start Date:",
-            global_start_day,
-            global_start_month,
-            global_start_year,
-        )
-        print("Global End Date:", global_end_day,
-              global_end_month, global_end_year)
+        logger.info(f"Lookback: {pat2vec_obj.config_obj.lookback}")
+        logger.info(f"Global Start Date: {global_start_day}/{global_start_month}/{global_start_year}")
+        logger.info(f"Global End Date: {global_end_day}/{global_end_month}/{global_end_year}")
 
     if pat2vec_obj.config_obj.testing == True:
         random.seed(random_state)
         if verbose >= 1:
-            print("Running in testing mode, doing dummy search.")
+            logger.info("Running in testing mode, doing dummy search.")
         results_holder = []
         for i in range(0, len(term_list)):
             for j in range(0, random.randint(1, 3)):
                 if overwrite_search_term is None:
                     term_to_search = f'body_analysed:"{term_list[i]}"'
                     if verbose >= 1:
-                        print("term_to_search: ", term_to_search)
+                        logger.info(f"term_to_search: {term_to_search}")
                 else:
                     term_to_search = overwrite_search_term
                     if verbose >= 1:
-                        print("overwrite_search_term: ", overwrite_search_term)
+                        logger.info(f"overwrite_search_term: {overwrite_search_term}")
 
                 search_string = (
                     term_to_search
@@ -131,7 +127,7 @@ def get_treatment_docs_by_iterative_multi_term_cohort_searcher_no_terms_fuzzy(
                 if additional_filters:
                     search_string += " " + " ".join(additional_filters)
 
-                print("search_string", search_string)
+                logger.info(f"search_string: {search_string}")
 
                 search_results = cohort_searcher_with_terms_and_search_dummy(
                     index_name="epr_documents",
@@ -145,26 +141,20 @@ def get_treatment_docs_by_iterative_multi_term_cohort_searcher_no_terms_fuzzy(
                 results_holder.append(search_results)
 
                 if verbose >= 1:
-                    print("i: ", i)
-                    print("search_results: ")
-                    print(search_results)
+                    logger.info(f"i: {i}")
+                    logger.info("search_results: ")
+                    logger.info(search_results)
 
         search_results = pd.concat(results_holder, ignore_index=True)
 
     else:
         if verbose >= 1:
-            print("Running in live mode, doing real search.")
+            logger.info("Running in live mode, doing real search.")
 
-        print(
-            "epr:",
-            global_start_day,
-            global_start_month,
-            global_start_year,
-            global_end_day,
-            global_end_month,
-            global_end_year,
-            "lookback: ",
-            pat2vec_obj.config_obj.lookback,
+        logger.info(
+            f"epr: {global_start_day}/{global_start_month}/{global_start_year} to "
+            f"{global_end_day}/{global_end_month}/{global_end_year}, "
+            f"lookback: {pat2vec_obj.config_obj.lookback}"
         )
 
         search_results = iterative_multi_term_cohort_searcher_no_terms_fuzzy(
@@ -185,7 +175,7 @@ def get_treatment_docs_by_iterative_multi_term_cohort_searcher_no_terms_fuzzy(
             slop=slop,
         )
     if verbose > 8:
-        print("search_results: ", search_results.head())
+        logger.debug(f"search_results: {search_results.head()}")
 
     if (os.path.exists(output_path) and overwrite) or os.path.exists(
         output_path
@@ -196,36 +186,31 @@ def get_treatment_docs_by_iterative_multi_term_cohort_searcher_no_terms_fuzzy(
             if not os.path.exists(output_directory):
                 os.makedirs(output_directory)
         except Exception as e:
-            print(e)
+            logger.error(e)
 
         # Save the DataFrame to CSV
         search_results.to_csv(output_path, index=False, escapechar="\\")
     elif os.path.exists(output_path) and append:
         if verbose >= 1:
-            print("treatment docs already exist, appending...")
+            logger.info("treatment docs already exist, appending...")
             search_results.to_csv(
                 output_path, index=False, mode="a", header=False, escapechar="\\"
             )
 
     elif os.path.exists(output_path) and not overwrite:
         if verbose >= 1:
-            print("treatment docs already exist")
+            logger.info("treatment docs already exist")
 
     elif os.path.exists(output_path) and overwrite == False:
         if verbose >= 1:
-            print("treatment docs already exist, reading and returning")
+            logger.info("treatment docs already exist, reading and returning")
 
         search_results = pd.read_csv(output_path)
 
     if mct:
-        print(
-            "mct:",
-            global_start_day,
-            global_start_month,
-            global_start_year,
-            global_end_day,
-            global_end_month,
-            global_end_year,
+        logger.info(
+            f"mct: {global_start_day}/{global_start_month}/{global_start_year} to "
+            f"{global_end_day}/{global_end_month}/{global_end_year}"
         )
 
         docs = iterative_multi_term_cohort_searcher_no_terms_fuzzy_mct(
@@ -424,7 +409,7 @@ def search_cohort(
     if additional_filters:
         search_string += " " + " ".join(additional_filters)
 
-    print("search_string", search_string)
+    logger.info(f"search_string: {search_string}")
 
     demo_df = pat2vec_obj.cohort_searcher_with_terms_and_search(
         index_name="epr_documents",

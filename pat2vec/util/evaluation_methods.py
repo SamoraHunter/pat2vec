@@ -1,10 +1,13 @@
 import os
 import traceback
+import logging
 from typing import List, Optional, Union
 import pandas as pd
 from IPython.display import clear_output
 from tqdm import tqdm
 
+
+logger = logging.getLogger(__name__)
 
 def compare_ipw_annotation_rows(
     dataframes: List[pd.DataFrame], columns_to_print: Optional[List[str]] = None
@@ -61,14 +64,14 @@ def compare_ipw_annotation_rows(
 
             # Print 'text_sample' column from each dataframe
             for i, df in enumerate(dataframes):
-                print(f"{df.name}['text_sample']: {rows[i]['text_sample']}")
+                logger.info(f"{df.name}['text_sample']: {rows[i]['text_sample']}")
 
             # Print specified columns
             for column in columns_to_print:
-                print(f"{column}:")
+                logger.info(f"{column}:")
                 for i, df in enumerate(dataframes):
-                    print(f"{df.name}: {rows[i][column]}")
-                print("\n")
+                    logger.info(f"{df.name}: {rows[i][column]}")
+                logger.info("\n")
 
             # Wait for user input to proceed
             input("Press Enter to continue...")
@@ -181,16 +184,16 @@ class CsvProfiler:
                 report_path = os.path.join(profile_reports_dir, report_name)
                 profile.to_file(report_path)
 
-                print(f"✅ Profile report for {csv_file} created at: {report_path}")
+                logger.info(f"✅ Profile report for {csv_file} created at: {report_path}")
 
             except Exception as e:
-                print(f"❌ Error processing {csv_file}: {type(e).__name__} - {e}")
+                logger.error(f"❌ Error processing {csv_file}: {type(e).__name__} - {e}")
                 traceback.print_exc()
 
 
 if __name__ == "__main__":
     # This block demonstrates how to use the CsvProfiler class.
-    print("Setting up a dummy directory with CSV files for demonstration...")
+    logger.info("Setting up a dummy directory with CSV files for demonstration...")
     dummy_dir = "epr_batches_dummy"
     os.makedirs(dummy_dir, exist_ok=True)
 
@@ -221,12 +224,12 @@ if __name__ == "__main__":
     }
     pd.DataFrame(data2).to_csv(os.path.join(dummy_dir, "batch_02.csv"), index=False)
 
-    print("Dummy files created.")
-    print("-" * 30)
+    logger.info("Dummy files created.")
+    logger.info("-" * 30)
 
-    print("\nRunning example...")
+    logger.info("\nRunning example...")
     CsvProfiler.create_profile_reports(
         epr_batchs_fp=dummy_dir, prefix="class_import_profile"
     )
 
-    print("\nDemonstration complete. Check the 'profile_reports' directory for output.")
+    logger.info("\nDemonstration complete. Check the 'profile_reports' directory for output.")

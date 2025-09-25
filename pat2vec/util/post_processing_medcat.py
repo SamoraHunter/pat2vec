@@ -3,6 +3,9 @@ from rapidfuzz import fuzz
 import random
 from typing import List, Dict, Any
 
+import logging
+
+logger = logging.getLogger(__name__)
 
 def sample_by_terms(
     df: pd.DataFrame,
@@ -65,14 +68,14 @@ def sample_by_terms(
             sampled_indices.update(indices)
             if len(indices) < min_samples_per_term:
                 warnings.append(
-                    f"Warning: Could not meet minimum samples ({min_samples_per_term}) for term group {group}. Found {len(indices)} matches."
+                    f"Could not meet minimum samples ({min_samples_per_term}) for term group {group}. Found {len(indices)} matches."
                 )
 
     # Calculate remaining quota for proportional sampling
     remaining_quota = total_sample_size - len(sampled_indices)
     if remaining_quota < 0:
         warnings.append(
-            f"Warning: Total sample size ({total_sample_size}) is less than required minimum samples ({len(sampled_indices)}). Adjusting to {len(sampled_indices)}."
+            f"Total sample size ({total_sample_size}) is less than required minimum samples ({len(sampled_indices)}). Adjusting to {len(sampled_indices)}."
         )
         remaining_quota = 0
 
@@ -99,7 +102,7 @@ def sample_by_terms(
 
     # Print warnings
     for warning in warnings:
-        print(warning)
+        logger.warning(warning)
 
     return final_sampled_df
 
@@ -186,7 +189,7 @@ def coerce_document_df_to_medcat_trainer_input(
             f"Expected columns '{name_value}' or '{text_column_value}' are missing from the DataFrame"
         )
 
-    print("Columns before renaming:", df.columns.tolist())
+    logger.debug(f"Columns before renaming: {df.columns.tolist()}")
 
     # Rename columns
     rename_mapping = {name_value: "name", text_column_value: "text"}
@@ -207,8 +210,8 @@ def coerce_document_df_to_medcat_trainer_input(
                 seen[value] = 0
             else:
                 # print warning about duplicate values in the 'name' column
-                print(
-                    f"Warning: Duplicate value '{value}' found in 'name' column. Renaming to '{value}_{seen[value]}'"
+                logger.warning(
+                    f"Duplicate value '{value}' found in 'name' column. Renaming to '{value}_{seen[value]}'"
                 )
 
                 seen[value] += 1
@@ -222,7 +225,7 @@ def coerce_document_df_to_medcat_trainer_input(
     # Select the renamed columns and return a copy
     df = df[["name", "text"]].copy()
 
-    print("Columns after processing:", df.columns.tolist())
+    logger.debug(f"Columns after processing: {df.columns.tolist()}")
 
     return df
 

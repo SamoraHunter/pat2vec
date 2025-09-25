@@ -1,5 +1,8 @@
 import pandas as pd
 from typing import Optional
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def read_test_data(file_path: str) -> Optional[pd.DataFrame]:
@@ -19,11 +22,11 @@ def read_test_data(file_path: str) -> Optional[pd.DataFrame]:
     try:
         df = pd.read_csv(file_path)
         if len(df) == 0:
-            print(f"Warning: Test data file is empty: {file_path}")
+            logger.warning(f"Test data file is empty: {file_path}")
         return df
     except FileNotFoundError:
-        print(f"Error: Test data file not found at: {file_path}")
+        logger.error(f"Test data file not found at: {file_path}")
         return None
     except Exception as e:
-        print(f"An error occurred while reading {file_path}: {e}")
+        logger.error(f"An error occurred while reading {file_path}: {e}")
         return None

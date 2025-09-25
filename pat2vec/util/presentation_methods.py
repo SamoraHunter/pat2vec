@@ -3,6 +3,9 @@ from typing import Dict, List
 
 from pptx import Presentation
 from pptx.util import Inches
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def group_images_by_suffix(folder_path: str) -> Dict[str, List[str]]:
@@ -50,7 +53,7 @@ def create_powerpoint_slides_client_idcode_groups(image_groups: Dict[str, List[s
             pic = slide.shapes.add_picture(image_path, left, top, height=Inches(5))
 
     presentation.save(output_path)
-    print(f"PowerPoint file '{output_path}' created successfully.")
+    logger.info(f"PowerPoint file '{output_path}' created successfully.")
 
 def create_powerpoint_from_images_group(folder_path: str) -> None:
     """Creates a PowerPoint presentation by grouping images in a folder.
@@ -86,7 +89,7 @@ def create_powerpoint_slides(images: List[str], folder_path: str, output_path: s
         pic = slide.shapes.add_picture(image_path, left, top, height=Inches(5))
 
     presentation.save(output_path)
-    print(f"PowerPoint file '{output_path}' created successfully.")
+    logger.info(f"PowerPoint file '{output_path}' created successfully.")
 
 def create_powerpoint_from_images(folder_path: str) -> None:
     """

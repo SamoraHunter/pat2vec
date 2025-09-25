@@ -1,12 +1,17 @@
 import os
 import sys
+import logging
 from typing import Any, Optional, Union
 
 from pat2vec.util.get_dummy_data_medcat_annotation import dummy_CAT
 
 
+logger = logging.getLogger(__name__)
+
 def get_cat(config_obj: Any) -> Optional[Union["CAT", dummy_CAT]]:  # type: ignore
     """Loads and returns a MedCAT model instance based on configuration.
+
+    This function determines which MedCAT model to load based on the provided
 
     This function determines which MedCAT model to load based on the provided
     configuration object. It supports several loading strategies:
@@ -30,15 +35,15 @@ def get_cat(config_obj: Any) -> Optional[Union["CAT", dummy_CAT]]:  # type: igno
         or `None` if MedCAT processing is disabled.
 
     Raises:
-        ValueError: If MedCAT is enabled but no valid model path can be found.
+        ValueError: If MedCAT is enabled but no valid model path can be found. # type: ignore
     """
     if config_obj.verbosity >= 1:
-        print(config_obj.override_medcat_model_path)
+        logger.info(f"Override MedCAT model path: {config_obj.override_medcat_model_path}")
 
     if config_obj.testing:
 
         if config_obj.dummy_medcat_model:
-            print("Returning dummy_CAT, TESTING")
+            logger.info("Returning dummy_CAT for testing.")
 
             cat = dummy_CAT()
 
@@ -53,20 +58,20 @@ def get_cat(config_obj: Any) -> Optional[Union["CAT", dummy_CAT]]:  # type: igno
         # Check if the file exists
         if os.path.exists("paths.py") and config_obj.override_medcat_model_path == None:
             if config_obj.verbosity >= 1:
-                print("paths file found, importing..")
+                logger.info("paths.py file found, importing medcat_path...")
             # If the file exists, try to import the variable
             try:
                 from paths import medcat_path
 
-                print(
+                logger.info(
                     "Variable 'medcat_path' imported successfully from 'paths.py' file."
                 )
                 # Now you can use medcat_path variable here
-                print("medcat_path:", medcat_path)
+                logger.info(f"medcat_path from paths.py: {medcat_path}")
             except ImportError:
-                print("Error: Could not import 'medcat_path' from 'paths.py' file.")
+                logger.error("Error: Could not import 'medcat_path' from 'paths.py' file.")
         else:
-            print("The 'paths.py' file does not exist.")
+            logger.info("The 'paths.py' file does not exist or is being overridden.")
 
         from medcat.cat import CAT
 
@@ -74,7 +79,7 @@ def get_cat(config_obj: Any) -> Optional[Union["CAT", dummy_CAT]]:  # type: igno
 
         if config_obj.override_medcat_model_path == "auto":
             if config_obj.verbosity >= 1:
-                print(f"{config_obj.override_medcat_model_path} == auto")
+                logger.info("override_medcat_model_path is set to 'auto'. Searching sys.path.")
             # Search for 'medcat_models/' in each directory in sys.path
             for directory in sys.path:
                 medcat_models_path = os.path.join(directory, "medcat_models")
@@ -85,18 +90,18 @@ def get_cat(config_obj: Any) -> Optional[Union["CAT", dummy_CAT]]:  # type: igno
                         model_path = os.path.join(medcat_models_path, zip_files[0])
                     else:
                         # Handle case where no zip files are found
-                        print("No ZIP files found in the directory.")
+                        logger.warning(f"No .zip files found in {medcat_models_path}.")
                 else:
                     # Handle case where medcat_models_path doesn't exist
-                    print("The specified path does not exist.")
-                    print(
-                        "auto selected: Path to 'medcat_models/':", medcat_models_path
+                    logger.debug(
+                        f"Path does not exist: {medcat_models_path}"
                     )
-                    path_found = True
-                    break
+                if model_path:
+                    path_found = True # type: ignore
+                    break # type: ignore
             else:
-                print(
-                    "Directory 'medcat_models/' not found in any directory in sys.path."
+                logger.warning(
+                    "Directory 'medcat_models/' not found in any directory in sys.path." # type: ignore
                 )
 
         if path_found == False:
@@ -109,7 +114,7 @@ def get_cat(config_obj: Any) -> Optional[Union["CAT", dummy_CAT]]:  # type: igno
 
         if model_path is not None:
             if config_obj.verbosity > 0:
-                print(f"Loading medcat model at {model_path}")
+                logger.info(f"Loading MedCAT model from: {model_path}")
 
             cat = CAT.load_model_pack(model_path)
             return cat

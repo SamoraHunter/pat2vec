@@ -26,6 +26,8 @@ import random
 random_state = 42
 Faker.seed(random_state)
 # Set random seed
+
+logger = logging.getLogger(__name__)
 np.random.seed(random_state)
 random.seed(random_state)
 
@@ -119,9 +121,8 @@ def generate_epr_documents_data(
     Returns:
         A pandas DataFrame with generated dummy EPR document data.
     """
-
-    print(f"entered_list: {entered_list}")
-    print(f"num_rows: {num_rows}")
+    if len(entered_list) > 0:
+        logger.info(f"Generating {num_rows} dummy EPR docs for {len(entered_list)} patients, e.g., {entered_list[0]}")
 
     df_holder_list = []
 
@@ -162,12 +163,12 @@ def generate_epr_documents_data(
         df_holder_list.append(df)
 
     try:
-        # print(f"Number of DataFrames in df_holder_list: {len(df_holder_list)}")
+        # logger.debug(f"Number of DataFrames in df_holder_list: {len(df_holder_list)}")
         df = pd.concat(df_holder_list, axis=0, ignore_index=True)
 
         return df
     except Exception as e:
-        print(e)
+        logger.error(e)
         raise e
 
 
@@ -359,7 +360,6 @@ def generate_diagnostic_orders_data(
                 for _ in range(num_rows)
             ],
         }
-        # print("generate_diagnostic_orders_data")
         df = pd.DataFrame(data)
         df_holder_list.append(df)
 
@@ -405,7 +405,6 @@ def generate_drug_orders_data(
     Returns:
         A pandas DataFrame with generated dummy drug order data.
     """
-    # print("generate_drug_orders_data")
     df_holder_list = []
 
     for i in range(0, len(entered_list)):
@@ -592,7 +591,6 @@ def generate_observations_Reports_text_data(
     Returns:
         A pandas DataFrame with generated dummy report data.
     """
-    # print("generate_observations_Reports_text_data")
     random.seed(random_state)
     df_holder_list = []
 
@@ -904,7 +902,7 @@ def generate_basic_observations_data(
     Returns:
         A pandas DataFrame with generated dummy basic observation data.
     """
-    # print("generate_basic_observations_data")
+    # logger.debug("generate_basic_observations_data")
     random.seed(random_state)
     df_holder_list = []
 
@@ -989,7 +987,7 @@ def generate_basic_observations_textual_obs_data(
     ],
 ) -> pd.DataFrame:
 
-    # print("generate_basic_observations_textual_obs_data")
+    # logger.debug("generate_basic_observations_textual_obs_data")
     """
     Generates dummy textual data for the 'basic_observations' index.
 
@@ -1133,11 +1131,11 @@ def cohort_searcher_with_terms_and_search_dummy(
     ) = extract_date_range(search_string)  # type: ignore
 
     if verbose:
-        print("cohort_searcher_with_terms_and_search_dummy:", search_string)
+        logger.debug(f"cohort_searcher_with_terms_and_search_dummy: {search_string}")
 
     if "client_firstname" in fields_list:
         if verbose:
-            print("Generating data for 'client_firstname'")
+            logger.debug("Generating data for 'client_firstname'")
         num_rows = random.randint(0, 10)
         df = generate_epr_documents_personal_data(
             num_rows, entered_list, global_start_year, global_start_month,
@@ -1147,7 +1145,7 @@ def cohort_searcher_with_terms_and_search_dummy(
 
     elif index_name == "epr_documents":
         if verbose:
-            print("Generating data for 'epr_documents'")
+            logger.debug("Generating data for 'epr_documents'")
         probabilities = [0.7, 0.1, 0.05, 0.05, 0.05]
         num_rows = random.choices(range(1, 6), probabilities)[0]
         df = generate_epr_documents_data(
@@ -1160,7 +1158,7 @@ def cohort_searcher_with_terms_and_search_dummy(
         # Nested checks for 'basic_observations' index
         if "basicobs_itemname_analysed:report" in search_string:
             if verbose:
-                print("Generating text data for 'basic_observations, reports'")
+                logger.debug("Generating text data for 'basic_observations, reports'")
             probabilities = [0.7, 0.1, 0.05, 0.05, 0.05]
             num_rows = random.choices(range(1, 6), probabilities)[0]
             df = generate_observations_Reports_text_data(
@@ -1171,7 +1169,7 @@ def cohort_searcher_with_terms_and_search_dummy(
 
         elif fields_list == [ "client_idcode", "basicobs_itemname_analysed", "basicobs_value_numeric", "basicobs_value_analysed", "basicobs_entered", "clientvisit_serviceguid", "basicobs_guid", "updatetime", "textualObs"]:
             if verbose:
-                print("Generating data for 'basic_observations textualObs'")
+                logger.debug("Generating data for 'basic_observations textualObs'")
             probabilities = [0.7, 0.1, 0.05, 0.05, 0.05]
             num_rows = random.choices(range(1, 6), probabilities)[0]
             df = generate_basic_observations_textual_obs_data(
@@ -1182,7 +1180,7 @@ def cohort_searcher_with_terms_and_search_dummy(
 
         else: # Fallback for other basic_observations
             if verbose:
-                print("Generating data for 'basicobs_value_numeric'")
+                logger.debug("Generating data for 'basicobs_value_numeric'")
             num_rows = random.randint(0, 10)
             df = generate_basic_observations_data(
                 num_rows, entered_list, global_start_year, global_start_month,
@@ -1194,7 +1192,7 @@ def cohort_searcher_with_terms_and_search_dummy(
         # Single entry point for the 'observations' index with nested triage
         if any(term in search_string for term in ["OBS BMI", "OBS Weight", "OBS Height"]):
             if verbose:
-                print("Generating data for 'bmi'")
+                logger.debug("Generating data for 'bmi'")
             probabilities = [0.1, 0.2, 0.4, 0.2, 0.1]
             num_rows = random.choices(range(1, 6), probabilities)[0]
             df = generate_bmi_data(
@@ -1205,7 +1203,7 @@ def cohort_searcher_with_terms_and_search_dummy(
 
         elif '"CORE_SpO2"' in search_string:
             if verbose:
-                print("Generating data for 'core_o2'")
+                logger.debug("Generating data for 'core_o2'")
             probabilities = [0.1, 0.2, 0.4, 0.2, 0.1]
             num_rows = random.choices(range(1, 6), probabilities)[0]
             df = generate_core_o2_data(
@@ -1216,7 +1214,7 @@ def cohort_searcher_with_terms_and_search_dummy(
 
         elif '"CORE_RESUS_STATUS"' in search_string:
             if verbose:
-                print("Generating data for 'core_resus_status'")
+                logger.debug("Generating data for 'core_resus_status'")
             probabilities = [0.7, 0.25, 0.05]
             num_rows = random.choices(range(1, 4), probabilities)[0]
             df = generate_core_resus_data(
@@ -1227,7 +1225,7 @@ def cohort_searcher_with_terms_and_search_dummy(
 
         elif "CORE_HospitalSite" in search_string:
             if verbose:
-                print("Generating data for 'hospital_site'")
+                logger.debug("Generating data for 'hospital_site'")
             probabilities = [0.8, 0.1, 0.05, 0.03, 0.02]
             num_rows = random.choices(range(1, 6), probabilities)[0]
             df = generate_hospital_site_data(
@@ -1238,7 +1236,7 @@ def cohort_searcher_with_terms_and_search_dummy(
 
         elif "AoMRC_ClinicalSummary_FT" in search_string:
             if verbose:
-                print("Generating mrc text data for 'observations'")
+                logger.debug("Generating mrc text data for 'observations'")
             probabilities = [0.7, 0.1, 0.05, 0.05, 0.05]
             num_rows = random.choices(range(1, 6), probabilities)[0]
             df = generate_observations_MRC_text_data(
@@ -1249,7 +1247,7 @@ def cohort_searcher_with_terms_and_search_dummy(
 
         else: # Generic fallback for any other 'observations' request
             if verbose:
-                print("Generating data for generic 'observations'")
+                logger.debug("Generating data for generic 'observations'")
             probabilities = [0.7, 0.1, 0.05, 0.05, 0.05]
             num_rows = random.choices(range(1, 6), probabilities)[0]
             search_term = str(extract_search_term_obscatalogmasteritem_displayname(search_string))
@@ -1262,7 +1260,7 @@ def cohort_searcher_with_terms_and_search_dummy(
     elif index_name == "order":
         if "medication" in search_string:
             if verbose:
-                print("Generating data for 'orders' with medication")
+                logger.debug("Generating data for 'orders' with medication")
             num_rows = random.randint(0, 10)
             df = generate_drug_orders_data(
                 num_rows, entered_list, global_start_year, global_start_month,
@@ -1272,7 +1270,7 @@ def cohort_searcher_with_terms_and_search_dummy(
 
         elif "diagnostic" in search_string:
             if verbose:
-                print("Generating data for 'orders' with diagnostic")
+                logger.debug("Generating data for 'orders' with diagnostic")
             num_rows = random.randint(0, 10)
             df = generate_diagnostic_orders_data(
                 num_rows, entered_list, global_start_year, global_start_month,
@@ -1282,7 +1280,7 @@ def cohort_searcher_with_terms_and_search_dummy(
 
     elif index_name == "pims_apps*":
         if verbose:
-            print("Generating data for 'pims_apps'")
+            logger.debug("Generating data for 'pims_apps'")
         num_rows = random.randint(0, 10)
         df = generate_appointments_data(
             num_rows, entered_list, global_start_year, global_start_month,
@@ -1291,9 +1289,8 @@ def cohort_searcher_with_terms_and_search_dummy(
         return df
 
     else:
-        print(
-            "No matching triage rule found. Returning an empty DataFrame.",
-            search_string,
+        logger.warning(
+            f"No matching triage rule found for '{search_string}'. Returning an empty DataFrame."
         )
         return pd.DataFrame(columns=["updatetime", "_index", "_id", "_score"] + fields_list)
 
@@ -1485,10 +1482,10 @@ def run_generate_patient_timeline_and_append(
             df = pd.read_csv(output_path)  # Read existing CSV file
         else:  # If the CSV file doesn't exist
             df = pd.DataFrame(
-                columns=["client_idcode", "body_analysed"]
+                columns=["client_idcode", "body_analysed"] # type: ignore
             )  # Create a new DataFrame with two columns
     except FileNotFoundError:
-        print(f"FileNotFoundError: {output_path} doesn't exist!")
+        logger.error(f"FileNotFoundError: {output_path} doesn't exist!")
         return
 
     for _ in range(n):  # Loop n times
@@ -1501,7 +1498,7 @@ def run_generate_patient_timeline_and_append(
         try:
             patient_timeline_text = generate_patient_timeline(client_idcode)
         except Exception as e:
-            print(f"Exception: {e}")
+            logger.error(f"Exception: {e}")
             return
 
         # Append to DataFrame
@@ -1514,7 +1511,7 @@ def run_generate_patient_timeline_and_append(
                 ignore_index=True,
             )  # Append a new row to the DataFrame
         except Exception as e:
-            print(f"Exception: {e}")
+            logger.error(f"Exception: {e}")
             return
 
     # Write DataFrame to CSV with append mode
@@ -1523,7 +1520,7 @@ def run_generate_patient_timeline_and_append(
             output_path, mode="a", header=not os.path.exists(output_path), index=False
         )  # Write to CSV file
     except Exception as e:
-        print(f"Exception: {e}")
+        logger.error(f"Exception: {e}")
         return
 
 
@@ -1545,22 +1542,22 @@ def get_patient_timeline_dummy(
     try:
         df: pd.DataFrame = pd.read_csv(output_path)
     except FileNotFoundError:
-        print(f"FileNotFoundError: {output_path} doesn't exist!")
+        logger.error(f"FileNotFoundError: {output_path} doesn't exist!")
         return None
 
     # Check if the DataFrame is empty
     if df.empty:
-        print("DataFrame is empty!")
+        logger.warning("DataFrame is empty!")
         return None
 
     # Check if the 'client_idcode' column exists in the DataFrame
     if "client_idcode" not in df.columns:
-        print("'client_idcode' column doesn't exist in the DataFrame!")
+        logger.error("'client_idcode' column doesn't exist in the DataFrame!")
         return None
 
     # Check if the 'body_analysed' column exists in the DataFrame
     if "body_analysed" not in df.columns:
-        print("'body_analysed' column doesn't exist in the DataFrame!")
+        logger.error("'body_analysed' column doesn't exist in the DataFrame!")
         return None
 
     # Get a random row from the DataFrame, we don't care which one we get
@@ -1568,14 +1565,14 @@ def get_patient_timeline_dummy(
 
     # Check if we got a valid row
     if len(sample) == 0:
-        print("Sample is empty!")
+        logger.warning("Sample is empty!")
         return None
 
     # Get the value of the 'body_analysed' column from the random row
     try:
         return cast(str, sample.iloc[0]["body_analysed"])
     except KeyError:
-        print("KeyError: 'body_analysed' column doesn't exist in the DataFrame!")
+        logger.error("KeyError: 'body_analysed' column doesn't exist in the DataFrame!")
         return None
 
 

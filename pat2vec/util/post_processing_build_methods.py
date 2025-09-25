@@ -1,11 +1,14 @@
 import os
 from pathlib import Path
+import logging
 
 from typing import Any, Dict, List, Optional
 import pandas as pd
 from tqdm import tqdm
 
 from pat2vec.util.post_processing import retrieve_pat_annots_mct_epr
+
+logger = logging.getLogger(__name__)
 
 
 def filter_annot_dataframe(
@@ -95,12 +98,12 @@ def build_merged_epr_mct_annot_df(
     output_file_path = directory_path + "annots_mct_epr.csv"
 
     if not overwrite and Path(output_file_path).is_file():
-        print(f"File already exists at {output_file_path}. Skipping.")
+        logger.info(f"File already exists at {output_file_path}. Skipping.")
         return output_file_path  # Return existing path
 
     # --- Step 1: Collect all patient DataFrames in a list ---
     all_patient_dfs = []
-    print("Reading and collecting all patient annotation batches...")
+    logger.info("Reading and collecting all patient annotation batches...")
     for current_pat_idcode in tqdm(all_pat_list):
         # This function reads the individual patient CSV
         pat_annots_df = retrieve_pat_annots_mct_epr(
@@ -116,18 +119,18 @@ def build_merged_epr_mct_annot_df(
 
     # --- Step 3: Merge, Save, and Return ---
     if not all_patient_dfs:
-        print("No annotation data found for any patient. No file will be created.")
+        logger.warning("No annotation data found for any patient. No file will be created.")
         return None  # Return None if there's nothing to save
 
-    print(f"\nConcatenating data for {len(all_patient_dfs)} patients...")
+    logger.info(f"\nConcatenating data for {len(all_patient_dfs)} patients...")
     # Create one large, final DataFrame from the list of clean DataFrames
     final_merged_df = pd.concat(all_patient_dfs, ignore_index=True)
 
-    print(f"Saving merged file to {output_file_path}...")
+    logger.info(f"Saving merged file to {output_file_path}...")
     # Save the final, clean DataFrame to a CSV in a single operation
     final_merged_df.to_csv(output_file_path, index=False)
 
-    print("Done.")
+    logger.info("Done.")
     return output_file_path
 
 
@@ -157,18 +160,18 @@ def build_merged_bloods(
     file_exists = os.path.isfile(output_file_path)
 
     if not overwrite and file_exists:
-        print("Output file already exists. Appending to the existing file.")
+        logger.info("Output file already exists. Appending to the existing file.")
     else:
         file_exists = False  # Reset to False to trigger overwrite if needed
-        print("Creating a new output file.")
+        logger.info("Creating a new output file.")
 
     for i in tqdm(range(0, len(all_pat_list)), total=len(all_pat_list)):
         current_pat_idcode = all_pat_list[i]
         try:
             all_bloods = retrieve_pat_bloods(current_pat_idcode, config_obj)
         except Exception as e:
-            print("Error retrieving patient bloods for:", current_pat_idcode)
-            print(e)
+            logger.error(f"Error retrieving patient bloods for: {current_pat_idcode}")
+            logger.error(e)
             continue  # Skip to the next patient in case of an error
 
         if file_exists:
@@ -219,10 +222,10 @@ def build_merged_epr_mct_doc_df(
     file_exists = os.path.isfile(output_file_path)
 
     if not overwrite and file_exists:
-        print("Output file already exists. Appending to the existing file.")
+        logger.info("Output file already exists. Appending to the existing file.")
     else:
         file_exists = False  # Reset to False to trigger overwrite if needed
-        print("Creating a new output file.")
+        logger.info("Creating a new output file.")
 
     for i in tqdm(range(0, len(all_pat_list)), total=len(all_pat_list)):
         current_pat_idcode = all_pat_list[i]
@@ -230,8 +233,8 @@ def build_merged_epr_mct_doc_df(
             all_docs = retrieve_pat_docs_mct_epr(
                 current_pat_idcode, config_obj)
         except Exception as e:
-            print("Error retrieving patient documents for:", current_pat_idcode)
-            print(e)
+            logger.error(f"Error retrieving patient documents for: {current_pat_idcode}")
+            logger.error(e)
             continue  # Skip to the next patient in case of an error
 
         if file_exists:
@@ -271,7 +274,7 @@ def retrieve_pat_bloods(client_idcode: str, config_obj: Any) -> pd.DataFrame:
     try:
         pat_bloods = pd.read_csv(pat_bloods_path)
     except Exception as e:
-        print(e)
+        logger.error(e)
         pat_bloods = pd.DataFrame()
 
     return pat_bloods
@@ -390,7 +393,7 @@ def join_docs_to_annots(
         # Assuming 'document_guid' is a unique identifier
         duplicated_columns.remove("document_guid")
         if duplicated_columns:
-            print("Duplicated columns found:", duplicated_columns)
+            logger.info(f"Duplicated columns found: {duplicated_columns}")
             # Drop duplicated columns from docs_temp
             docs_temp_dropped = docs_temp.drop(columns=duplicated_columns)
         else:
@@ -459,7 +462,7 @@ def merge_demographics_csv(
     demographics_folder = config_obj.pre_demo_batch_path
 
     if not overwrite and Path(output_file_path).is_file():
-        print("Output file already exists. Overwrite is set to False.")
+        logger.info("Output file already exists. Overwrite is set to False.")
         return output_file_path
 
     merged_df = pd.DataFrame()
@@ -470,10 +473,10 @@ def merge_demographics_csv(
             df = pd.read_csv(file_path)
             merged_df = pd.concat([merged_df, df], ignore_index=True)
         else:
-            print(f"Warning: File {file_path} not found.")
+            logger.warning(f"Warning: File {file_path} not found.")
 
     merged_df.to_csv(output_file_path, index=False)
-    print(f"Merged CSV saved to {output_file_path}")
+    logger.info(f"Merged CSV saved to {output_file_path}")
     return output_file_path
 
 
@@ -497,7 +500,7 @@ def merge_bmi_csv(
     bmi_folder = config_obj.pre_bmi_batch_path
 
     if not overwrite and Path(output_file_path).is_file():
-        print("Output file already exists. Overwrite is set to False.")
+        logger.info("Output file already exists. Overwrite is set to False.")
         return output_file_path
 
     merged_df = pd.DataFrame()
@@ -508,10 +511,10 @@ def merge_bmi_csv(
             df = pd.read_csv(file_path)
             merged_df = pd.concat([merged_df, df], ignore_index=True)
         else:
-            print(f"Warning: File {file_path} not found.")
+            logger.warning(f"File {file_path} not found.")
 
     merged_df.to_csv(output_file_path, index=False)
-    print(f"Merged CSV saved to {output_file_path}")
+    logger.info(f"Merged CSV saved to {output_file_path}")
     return output_file_path
 
 
@@ -535,7 +538,7 @@ def merge_news_csv(
     news_folder = config_obj.pre_news_batch_path
 
     if not overwrite and Path(output_file_path).is_file():
-        print("Output file already exists. Overwrite is set to False.")
+        logger.info("Output file already exists. Overwrite is set to False.")
         return output_file_path
 
     merged_df = pd.DataFrame()
@@ -546,10 +549,10 @@ def merge_news_csv(
             df = pd.read_csv(file_path)
             merged_df = pd.concat([merged_df, df], ignore_index=True)
         else:
-            print(f"Warning: File {file_path} not found.")
+            logger.warning(f"File {file_path} not found.")
 
     merged_df.to_csv(output_file_path, index=False)
-    print(f"Merged CSV saved to {output_file_path}")
+    logger.info(f"Merged CSV saved to {output_file_path}")
     return output_file_path
 
 
@@ -573,7 +576,7 @@ def merge_diagnostics_csv(
     diagnostics_folder = config_obj.pre_diagnostics_batch_path
 
     if not overwrite and Path(output_file_path).is_file():
-        print("Output file already exists. Overwrite is set to False.")
+        logger.info("Output file already exists. Overwrite is set to False.")
         return output_file_path
 
     merged_df = pd.DataFrame()
@@ -584,10 +587,10 @@ def merge_diagnostics_csv(
             df = pd.read_csv(file_path)
             merged_df = pd.concat([merged_df, df], ignore_index=True)
         else:
-            print(f"Warning: File {file_path} not found.")
+            logger.warning(f"File {file_path} not found.")
 
     merged_df.to_csv(output_file_path, index=False)
-    print(f"Merged CSV saved to {output_file_path}")
+    logger.info(f"Merged CSV saved to {output_file_path}")
     return output_file_path
 
 
@@ -613,7 +616,7 @@ def merge_drugs_csv(
 
     # If overwrite is False and the file already exists, return early
     if not overwrite and Path(output_file_path).is_file():
-        print("Output file already exists. Overwrite is set to False.")
+        logger.info("Output file already exists. Overwrite is set to False.")
         return output_file_path
 
     # Initialize an empty DataFrame to store merged data
@@ -627,11 +630,11 @@ def merge_drugs_csv(
             df = pd.read_csv(file_path)
             merged_df = pd.concat([merged_df, df], ignore_index=True)
         else:
-            print(f"Warning: File {file_path} not found.")
+            logger.warning(f"File {file_path} not found.")
 
     # Save the merged DataFrame to a CSV file
     merged_df.to_csv(output_file_path, index=False)
-    print(f"Merged CSV saved to {output_file_path}")
+    logger.info(f"Merged CSV saved to {output_file_path}")
 
     # Return the path to the merged CSV
     return output_file_path
@@ -659,7 +662,7 @@ def merge_appointments_csv(
 
     # If overwrite is False and the file already exists, return early
     if not overwrite and Path(output_file_path).is_file():
-        print("Output file already exists. Overwrite is set to False.")
+        logger.info("Output file already exists. Overwrite is set to False.")
         return output_file_path
 
     # Initialize an empty DataFrame to store merged data
@@ -673,11 +676,11 @@ def merge_appointments_csv(
             df = pd.read_csv(file_path)
             merged_df = pd.concat([merged_df, df], ignore_index=True)
         else:
-            print(f"Warning: File {file_path} not found.")
+            logger.warning(f"File {file_path} not found.")
 
     # Save the merged DataFrame to a CSV file
     merged_df.to_csv(output_file_path, index=False)
-    print(f"Merged CSV saved to {output_file_path}")
+    logger.info(f"Merged CSV saved to {output_file_path}")
 
     # Return the path to the merged CSV
     return output_file_path

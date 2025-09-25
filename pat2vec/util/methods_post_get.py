@@ -1,11 +1,13 @@
 import warnings
 from typing import Any, List, Optional
 import os
+import logging
 import pandas as pd
 from tqdm import tqdm
 import shutil
 from pat2vec.util.post_processing import remove_file_from_paths
 
+logger = logging.getLogger(__name__)
 
 def retrieve_pat_annotations(
     current_pat_client_idcode: str, config_obj: Any = None
@@ -82,11 +84,11 @@ def copy_project_folders_with_substring_match(
             dest_path = os.path.join(new_project_name, folder)
             shutil.copytree(src_path, dest_path)
 
-    print("Folders copied successfully.")
+    logger.info("Folders copied successfully.")
 
 
 def check_csv_integrity(
-    file_path: str, verbosity: int = 0, delete_broken: bool = False
+    file_path: str, verbosity: int = 0, delete_broken: bool = False, config_obj: Any = None
 ) -> None:
     """Checks the integrity of a single CSV file.
 
@@ -99,6 +101,8 @@ def check_csv_integrity(
         file_path: The path to the CSV file to check.
         verbosity: The level of detail for logging warnings.
         delete_broken: If True, deletes files that fail integrity checks.
+        config_obj: The configuration object, required if `delete_broken` is
+            True to pass to `remove_file_from_paths`.
 
     Raises:
         UserWarning: If the CSV file is empty, cannot be parsed, a key column
@@ -114,8 +118,8 @@ def check_csv_integrity(
             warnings.warn(f"{reason}: {file_path}", UserWarning)
             _, filename_ext = os.path.split(file_path)
             filename, _ = os.path.splitext(filename_ext)
-            remove_file_from_paths(filename)
-            print(f"Deleted broken file: {filename} : {file_path}")
+            remove_file_from_paths(filename, config_obj=config_obj)
+            logger.info(f"Deleted broken file: {filename} : {file_path}")
 
         # Perform integrity checks on the DataFrame
         non_nullable_columns = ['client_idcode']  # Add more columns as needed
@@ -132,7 +136,7 @@ def check_csv_integrity(
                 warnings.warn(warning_message, UserWarning)
 
         if verbosity == 2:
-            print("CSV file integrity is good.")
+            logger.info("CSV file integrity is good.")
 
     except pd.errors.EmptyDataError:
         if delete_broken:
@@ -151,7 +155,7 @@ def check_csv_files_in_directory(
     directory: str,
     verbosity: int = 0,
     ignore_outputs: bool = True,
-    ignore_output_vectors: bool = True,
+    ignore_output_vectors: bool = True, # type: ignore
     delete_broken: bool = False,
 ) -> None:
     """Recursively checks the integrity of all CSV files in a directory.
@@ -184,7 +188,7 @@ def check_csv_files_in_directory(
             if file_path.lower().endswith('.csv'):
                 progress_bar.set_description(
                     f"Checking CSV integrity for: {file_path}")
-                check_csv_integrity(file_path, verbosity, delete_broken)
+                check_csv_integrity(file_path, verbosity, delete_broken, config_obj=None) # type: ignore
                 progress_bar.update(1)
 
     progress_bar.close()

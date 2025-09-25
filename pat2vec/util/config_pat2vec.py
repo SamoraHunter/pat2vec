@@ -1,5 +1,6 @@
 import math
 import os
+import logging
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional, Type, TypeVar, Union
 import pandas as pd
@@ -14,6 +15,8 @@ from pat2vec.util.methods_get import (
     build_patient_dict,
 )
 
+
+logger = logging.getLogger(__name__)
 
 T_config = TypeVar("T_config", bound="config_class")
 
@@ -193,13 +196,13 @@ class config_class:
         """
 
         if prefetch_pat_batches and individual_patient_window:
-            print(
+            logger.warning(
                 "Warning: 'prefetch_pat_batches' is not compatible with 'individual_patient_window'."
             )
-            print(
+            logger.warning(
                 "The prefetch mechanism uses a global time window, while IPW requires patient-specific windows."
             )
-            print(
+            logger.warning(
                 "Disabling 'prefetch_pat_batches' to ensure correct time windows are used for each patient."
             )
             prefetch_pat_batches = False
@@ -231,7 +234,7 @@ class config_class:
 
         #: Path to the credentials file.
         self.credentials_path = credentials_path
-        print("credentials_path:" , credentials_path)
+        logger.info(f"credentials_path: {credentials_path}")
 
         #: A suffix to append to output folder names.
         self.suffix = suffix
@@ -461,20 +464,20 @@ class config_class:
 
         #: If `True` and in testing mode, simulates a MedCAT model.
         if self.client_idcode_term_name == "client_idcode.keyword":
-            print("Warning keyword not case inclusive.")
+            logger.warning("Warning: client_idcode_term_name 'client_idcode.keyword' is not case inclusive.")
 
         if self.verbosity >= 1:
-            print("self.drug_time_field", self.drug_time_field)
+            logger.info(f"self.drug_time_field: {self.drug_time_field}")
 
-            print("self.diagnostic_time_field", self.diagnostic_time_field)
+            logger.info(f"self.diagnostic_time_field: {self.diagnostic_time_field}")
 
-            print("self.appointments_time_field", self.appointments_time_field)
+            logger.info(f"self.appointments_time_field: {self.appointments_time_field}")
 
-            print("self.bloods_time_field", self.bloods_time_field)
+            logger.info(f"self.bloods_time_field: {self.bloods_time_field}")
 
         if self.main_options == None:
             if self.verbosity >= 1:
-                print("default main_options set!")
+                logger.info("Default main_options set!")
 
             self.main_options = {
                 "demo": True,
@@ -496,7 +499,7 @@ class config_class:
                 "textual_obs": False,
             }
             if self.verbosity >= 1:
-                print(self.main_options)
+                logger.info(self.main_options)
 
         if self.annot_filter_options == None:
             self.filter_arguments = {
@@ -650,19 +653,19 @@ class config_class:
                 self.root_path, self.suffix, self.output_folder
             )
 
-        print(f"Setting start_date to: {start_date}")
+        logger.info(f"Setting start_date to: {start_date}")
         #: The anchor date for generating time windows.
         self.start_date = start_date
 
-        print(f"Setting years to: {years}")
+        logger.info(f"Setting years to: {years}")
         #: The number of years in the time window duration.
         self.years = years
 
-        print(f"Setting months to: {months}")
+        logger.info(f"Setting months to: {months}")
         #: The number of months in the time window duration.
         self.months = months
 
-        print(f"Setting days to: {days}")
+        logger.info(f"Setting days to: {days}")
         #: The number of days in the time window duration.
         self.days = days
 
@@ -675,15 +678,13 @@ class config_class:
             interval_delta=time_window_interval_delta,
         )
 
-        print(
+        logger.info(
             f"Number of {time_window_interval_delta} intervals in {self.time_delta}: {num}"
         )
-        print("Expected time interval vectors per patient:", num)
+        logger.info(f"Expected time interval vectors per patient: {num}")
 
-        print(
-            "Time interval vectors will span the following dates: ",
-            start_date,
-            start_date + self.time_delta,
+        logger.info(
+            f"Time interval vectors will span the following dates: {start_date} to {start_date + self.time_delta}"
         )
 
         #: Threshold for low slow execution warning.
@@ -716,15 +717,15 @@ class config_class:
             all_patient_list = priority_list  # + all_patient_list
 
         if self.testing:
-            print("Setting test options")
+            logger.info("Setting test options")
 
             # If in testing mode and no specific test data path is provided,
             # set it to the default path. This allows overriding it if needed.
             if self.test_data_path is None:
                 self.test_data_path = "test_files/treatment_docs.csv"
-                print(f"Defaulting test_data_path to: {self.test_data_path}")
+                logger.info(f"Defaulting test_data_path to: {self.test_data_path}")
 
-            print("Updating main options with implemented test options")
+            logger.info("Updating main options with implemented test options")
             # Enforce implemented testing options
             self._update_main_options()
 
@@ -737,10 +738,10 @@ class config_class:
             if self.root_path == None:
 
                 self.root_path = f"../{self.proj_name}/"
-                print(f"sftp root_path: {self.root_path}")
+                logger.info(f"sftp root_path: {self.root_path}")
 
             else:
-                print(f"sftp root_path: {self.root_path}")
+                logger.info(f"sftp root_path: {self.root_path}")
 
             # Set the hostname, username, and password for the remote machine
 
@@ -876,13 +877,13 @@ class config_class:
 
             if self.verbosity > 0:
                 for date in self.date_list[0:5]:
-                    print(date)
+                    logger.info(date)
 
             #: Number of patient lines (time slices) to generate.
             self.n_pat_lines = len(self.date_list)
 
         if self.individual_patient_window:
-            print("individual_patient_window set!")
+            logger.info("individual_patient_window set!")
 
             # check if user uploaded ipw dataframe already contains offset, if so do not compute and print warning.
 
@@ -898,9 +899,9 @@ class config_class:
                 raise ValueError(f"Column '{id_column_name}' does not exist.")
             # print debug message about start column name, offset column name, end date column name, median time between start and end date
             if self.verbosity >= 1:
-                print(f"Start column name: {start_column_name}")
-                print(f"Offset column name: {offset_column_name}")
-                print(f"End date column name: {end_date_column_name}")
+                logger.info(f"Start column name: {start_column_name}")
+                logger.info(f"Offset column name: {offset_column_name}")
+                logger.info(f"End date column name: {end_date_column_name}")
                 if end_date_column_name in self.individual_patient_window_df.columns:
                     median_days = (
                         (
@@ -918,7 +919,7 @@ class config_class:
                         .median()
                         .days
                     )
-                    print(
+                    logger.info(
                         f"Median time between {start_column_name} and {end_date_column_name}: {median_days} days"
                     )
 
@@ -929,12 +930,12 @@ class config_class:
                 time_offset = relativedelta(days=days, months=months, years=years)
 
             if offset_column_name in self.individual_patient_window_df.columns:
-                print("individual_patient_window already contains offset column")
-                print("skipping offset computation", "using existing offset column")
-                print(
+                logger.info("individual_patient_window already contains offset column")
+                logger.info("skipping offset computation, using existing offset column")
+                logger.info(
                     "if you want to recompute offset, delete offset column from dataframe"
                 )
-                print('using existing offset column: "{}"'.format(offset_column_name))
+                logger.info(f'using existing offset column: "{offset_column_name}"')
                 self.individual_patient_window_df[
                     self.individual_patient_window_start_column_name
                 ] = pd.to_datetime(
@@ -965,7 +966,7 @@ class config_class:
                 )
 
             else:
-                print("computing offset column")
+                logger.info("computing offset column")
 
                 self.individual_patient_window_df = add_offset_column(
                     self.individual_patient_window_df,
@@ -1009,21 +1010,21 @@ class config_class:
 
         if self.verbosity > 1:
 
-            print("Debug message: global_start_year =", self.global_start_year)
-            print("Debug message: global_start_month =", self.global_start_month)
-            print("Debug message: global_end_year =", self.global_end_year)
-            print("Debug message: global_end_month =", self.global_end_month)
-            print("Debug message: global_start_day =", self.global_start_day)
-            print("Debug message: global_end_day =", self.global_end_day)
+            logger.debug(f"Debug message: global_start_year = {self.global_start_year}")
+            logger.debug(f"Debug message: global_start_month = {self.global_start_month}")
+            logger.debug(f"Debug message: global_end_year = {self.global_end_year}")
+            logger.debug(f"Debug message: global_end_month = {self.global_end_month}")
+            logger.debug(f"Debug message: global_start_day = {self.global_start_day}")
+            logger.debug(f"Debug message: global_end_day = {self.global_end_day}")
 
             if self.individual_patient_window:
                 if self.patient_dict:
                     first_key = next(iter(self.patient_dict))
                     display(self.patient_dict[first_key])
             if self.data_type_filter_dict is not None:
-                print("data_type_filter_dict")
-                print(self.data_type_filter_dict)
-                print(self.data_type_filter_dict.keys())
+                logger.info("data_type_filter_dict")
+                logger.info(self.data_type_filter_dict)
+                logger.info(self.data_type_filter_dict.keys())
 
     def _get_test_options_dict(self) -> Dict[str, bool]:
         """Returns a dictionary of implemented testing functions.
@@ -1089,13 +1090,13 @@ class config_class:
 
 
             if self.global_start_date and self.global_end_date and self.global_start_date > self.global_end_date:
-                print(
+                logger.warning(
                     f"Warning: Global start date ({global_start.date()}) is after "
                     f"global end date ({global_end.date()})."
-                    f"Warning: Global start date ({self.global_start_date.date()}) is after "
-                    f"global end date ({self.global_end_date.date()})."
                 )
-                print("Swapping dates to ensure Elasticsearch compatibility...")
+                logger.warning(
+                    "Swapping dates to ensure Elasticsearch compatibility..."
+                )
 
                 # Swap the date attributes
                 (
@@ -1123,7 +1124,7 @@ class config_class:
                 )
 
         except (ValueError, TypeError) as e:
-            print(f"Warning: Could not validate global dates due to invalid values: {e}")
+            logger.warning(f"Warning: Could not validate global dates due to invalid values: {e}")
 
 
 def update_global_start_date(self: T_config, start_date: datetime) -> T_config:
@@ -1146,7 +1147,7 @@ def update_global_start_date(self: T_config, start_date: datetime) -> T_config:
 
     try:
         if self.global_start_date and start_date > self.global_start_date:
-            print(
+            logger.warning(
                 "Warning: Updating global start date because the provided "
                 "start_date is later."
             )
@@ -1156,7 +1157,7 @@ def update_global_start_date(self: T_config, start_date: datetime) -> T_config:
             # Also update the datetime object to maintain consistency
             self.global_start_date = start_date
     except (ValueError, TypeError):
-        print("Warning: Invalid global date attributes in config. Cannot update.")
+        logger.warning("Warning: Invalid global date attributes in config. Cannot update.")
 
     return self
 
@@ -1186,11 +1187,11 @@ def validate_and_fix_global_dates(config: T_config) -> T_config:
         )
 
         if global_start > global_end:
-            print(
+            logger.warning(
                 f"Warning: Global start date ({global_start.date()}) is after "
                 f"global end date ({global_end.date()})."
             )
-            print("Swapping dates to ensure Elasticsearch compatibility...")
+            logger.warning("Swapping dates to ensure Elasticsearch compatibility...")
 
             # Swap the date attributes
             (
@@ -1211,6 +1212,6 @@ def validate_and_fix_global_dates(config: T_config) -> T_config:
                 )
 
     except (ValueError, TypeError) as e:
-        print(f"Warning: Could not validate global dates due to invalid values: {e}")
+        logger.warning(f"Warning: Could not validate global dates due to invalid values: {e}")
 
     return config

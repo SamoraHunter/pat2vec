@@ -12,6 +12,9 @@ import pandas as pd
 from IPython.display import display
 from tqdm import tqdm
 
+import logging
+
+logger = logging.getLogger(__name__)
 
 def count_files(path: str) -> int:
     """Recursively counts the number of files in a directory.
@@ -60,14 +63,14 @@ def extract_datetime_to_column(df: pd.DataFrame, drop: bool = True) -> pd.DataFr
                 df.at[index, "extracted_datetime_stamp"] = datetime_obj
 
     # Display the count of extracted datetime values
-    print("Extracted datetime values:")
-    print(df["extracted_datetime_stamp"].value_counts())
+    logger.info("Extracted datetime values:")
+    logger.info(df["extracted_datetime_stamp"].value_counts())
 
     if drop:
         columns_to_drop = [
             col for col in df.columns if "date_time_stamp" in col]
         if columns_to_drop:
-            print(f"Dropping {len(columns_to_drop)} date_time_stamp columns")
+            logger.info(f"Dropping {len(columns_to_drop)} date_time_stamp columns")
             df = df.drop(columns=columns_to_drop)
 
     return df
@@ -150,7 +153,7 @@ def produce_filtered_annotation_dataframe(
 
     if meta_annot_filter:
         if filter_custom_args is None:
-            print("Using config obj filter arguments..")
+            logger.info("Using config obj filter arguments..")
             filter_args = config_obj.filter_arguments
         else:
             filter_args = filter_custom_args
@@ -158,8 +161,7 @@ def produce_filtered_annotation_dataframe(
     results = []
 
     if pat_list is None:
-
-        print("Using all patient list", len(config_obj.all_patient_list))
+        logger.info(f"Using all patient list of length {len(config_obj.all_patient_list)}")
         pat_list = config_obj.all_patient_list
 
     for i in tqdm(range(len(pat_list))):
@@ -211,7 +213,7 @@ def produce_filtered_annotation_dataframe(
                         current_pat_annot_batch, filter_args
                     )
                 except Exception as e:
-                    print(e, i)
+                    logger.error(f"Error filtering annotations for patient at index {i}: {e}")
                     display(current_pat_annot_batch)
                     raise e
 
@@ -241,7 +243,7 @@ def extract_types_from_csv(directory: str) -> List[str]:
 
     # Traverse the directory and its subdirectories
     for root, dirs, files in os.walk(directory):
-        print(files)
+        logger.debug(f"Scanning files in {root}: {files}")
         for file in files:
             if file.endswith(".csv"):
                 # Construct the full file path
@@ -316,23 +318,23 @@ def remove_file_from_paths(
 
     # Print debug messages:
 
-    print(f"Removing files for patient {current_pat_idcode}...")
-    print("Project_name: ", project_name)
-    print("Searching for files in the following paths:")
-    print(pat_file_paths)
+    logger.info(f"Attempting to remove files for patient {current_pat_idcode}...")
+    logger.debug(f"Project_name: {project_name}")
+    logger.debug("Searching for files in the following paths:")
+    logger.debug(pat_file_paths)
 
     for path in pat_file_paths:
         file_path = path + current_pat_idcode + ".csv"
         try:
             os.remove(file_path)
             if verbosity > 0:
-                print(f"{file_path} successfully removed")
+                logger.info(f"{file_path} successfully removed")
         except FileNotFoundError:
             if verbosity > 0:
-                print(f"{file_path} not found")
+                logger.debug(f"{file_path} not found, skipping.")
         except Exception as e:
             if verbosity > 0:
-                print(f"Error removing {file_path}: {e}")
+                logger.error(f"Error removing {file_path}: {e}")
 
 
 def process_chunk(args: tuple) -> Dict[str, List[str]]:
@@ -470,9 +472,9 @@ def filter_and_select_rows(
         raise ValueError("Invalid mode. Please choose 'earliest' or 'latest'.")
 
     if verbosity > 10:
-        print("Filtered DataFrame:")
+        logger.debug("Filtered DataFrame:")
         display(filtered_df)
-        print(f"Selected {mode} {n_rows} row(s):")
+        logger.debug(f"Selected {mode} {n_rows} row(s):")
         display(selected_rows)
 
     return selected_rows
@@ -513,7 +515,7 @@ def filter_dataframe_by_cui(
 
     # Debug statement for verbosity
     if verbosity > 0:
-        print(f"Filtered DataFrame based on {filter_column} codes:\n")
+        logger.debug(f"Filtered DataFrame based on {filter_column} codes:\n")
         display(filtered_df.head())
 
     # Find the earliest or latest entry for each CUI code
@@ -531,7 +533,7 @@ def filter_dataframe_by_cui(
     filter_row = result_df.copy()  # preserve row used for filter
     # Debug statement for verbosity
     if verbosity > 0:
-        print(f"Result DataFrame based on {mode} mode:\n")
+        logger.debug(f"Result DataFrame based on {mode} mode:\n")
         display(result_df.head())
 
     # Merge with the original DataFrame to get the full rows
@@ -553,7 +555,7 @@ def filter_dataframe_by_cui(
 
     # Debug statement for verbosity
     if verbosity > 0:
-        print(f"Filtered original DataFrame based on {temporal} temporal:\n")
+        logger.debug(f"Filtered original DataFrame based on {temporal} temporal:\n")
         display(filtered_original_df.head())
 
     return filtered_original_df, filter_row, filtered_df
@@ -723,8 +725,8 @@ def filter_and_update_csv(
                         )
                         update_column = "basicobs_entered"
                     else:
-                        print(
-                            f"Warning: Neither 'updatetime', 'observationdocument_recordeddtm', 'order_entered', nor 'basicobs_entered' found in {file_path}"
+                        logger.warning(
+                            f"Neither 'updatetime', 'observationdocument_recordeddtm', 'order_entered', nor 'basicobs_entered' found in {file_path}"
                         )
 
                     # Drop rows with NaT values in the updated column
@@ -732,6 +734,7 @@ def filter_and_update_csv(
 
                     if verbosity:
                         print(f"Updating CSV file based on {update_column}")
+                        logger.info(f"Updating CSV file based on {update_column}")
 
                     df[update_column] = pd.to_datetime(
                         df[update_column], utc=True)
@@ -744,7 +747,7 @@ def filter_and_update_csv(
                     filtered_df.to_csv(file_path, index=False)
 
                     if verbosity:
-                        print("CSV file updated successfully")
+                        logger.info("CSV file updated successfully")
 
 
 def retrieve_pat_annots_mct_epr(
@@ -1128,7 +1131,7 @@ def save_missing_values_pickle(df: pd.DataFrame, out_file_path: str, overwrite: 
 
     # Check if the pickle file already exists
     if os.path.exists(pickle_file_path) and not overwrite:
-        print(
+        logger.info(
             f"Skipping saving as '{pickle_filename}' already exists and overwrite is set to False."
         )
     else:
@@ -1136,7 +1139,7 @@ def save_missing_values_pickle(df: pd.DataFrame, out_file_path: str, overwrite: 
         with open(pickle_file_path, "wb") as f:
             pickle.dump(missing_dict, f)
 
-        print(f"Missing values dictionary written to: {pickle_file_path}")
+        logger.info(f"Missing values dictionary written to: {pickle_file_path}")
 
 
 # Example usage:
@@ -1199,15 +1202,15 @@ def impute_datetime(
     """
     start_time = time.time()
     if verbose:
-        print("Converting datetime column to datetime type...")
+        logger.info("Converting datetime column to datetime type...")
     df[datetime_column] = pd.to_datetime(df[datetime_column])
 
     if verbose:
-        print("Sorting DataFrame by patient_column and datetime_column...")
+        logger.info("Sorting DataFrame by patient_column and datetime_column...")
     df = df.sort_values(by=[patient_column, datetime_column])
     end_time = time.time()
     if verbose:
-        print(
+        logger.info(
             "Sorting complete. Time taken: {:.2f} seconds.".format(
                 end_time - start_time
             )
@@ -1216,11 +1219,11 @@ def impute_datetime(
     if forward:
         start_time = time.time()
         if verbose:
-            print("Forward filling missing values per patient_column...")
+            logger.info("Forward filling missing values per patient_column...")
         df = df.groupby(patient_column).ffill()
         end_time = time.time()
         if verbose:
-            print(
+            logger.info(
                 "Forward filling complete. Time taken: {:.2f} seconds.".format(
                     end_time - start_time
                 )
@@ -1229,11 +1232,11 @@ def impute_datetime(
     if backward:
         start_time = time.time()
         if verbose:
-            print("Backward filling missing values per patient_column...")
+            logger.info("Backward filling missing values per patient_column...")
         df = df.groupby(patient_column).bfill()
         end_time = time.time()
         if verbose:
-            print(
+            logger.info(
                 "Backward filling complete. Time taken: {:.2f} seconds.".format(
                     end_time - start_time
                 )
@@ -1242,18 +1245,18 @@ def impute_datetime(
     if mean_impute:
         start_time = time.time()
         if verbose:
-            print("Mean imputing missing values...")
+            logger.info("Mean imputing missing values...")
         df = df.fillna(df.mean())
         end_time = time.time()
         if verbose:
-            print(
+            logger.info(
                 "Mean imputing complete. Time taken: {:.2f} seconds.".format(
                     end_time - start_time
                 )
             )
 
     if verbose:
-        print("Imputation complete.")
+        logger.info("Imputation complete.")
 
     return df
 
@@ -1303,7 +1306,7 @@ def impute_dataframe(
             )
 
     if verbose:
-        print("Preprocessing took: %s seconds" % (time.time() - start_time))
+        logger.info(f"Preprocessing took: {time.time() - start_time:.2f} seconds")
 
     return df
 

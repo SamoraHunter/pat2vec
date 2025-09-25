@@ -403,14 +403,14 @@ class TestGetPatIpwRecord(unittest.TestCase):
             df if not df.empty else df
         )
 
-        with patch("builtins.print") as mock_print:
+        with self.assertLogs('pat2vec.util.post_processing_get_pat_ipw_record', level='DEBUG') as cm:
             get_pat_ipw_record(
                 current_pat_idcode=self.patient_id,
                 config_obj=self.mock_config,
                 filter_codes=[101],
             )
-            # Should print verbose messages when verbosity >= 10
-            mock_print.assert_called()
+            # Should log debug messages when verbosity >= 10
+            self.assertTrue(len(cm.output) > 0)
 
     @patch("pat2vec.util.post_processing_get_pat_ipw_record.filter_and_select_rows")
     @patch("pat2vec.util.post_processing_get_pat_ipw_record.filter_annot_dataframe2")

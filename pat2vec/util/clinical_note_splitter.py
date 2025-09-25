@@ -3,6 +3,9 @@ from typing import Any, Dict, List, Optional, Tuple
 import pandas as pd
 import regex
 from pandas import Timestamp
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def find_date(
@@ -38,12 +41,12 @@ def find_date(
     text_start = 0
     chunks = []
     for match in m:
-        # print("end",match.span()[1])
+        # logger.debug("end",match.span()[1])
         date_window_start = match.span()[1]
         date_window_end = date_window_start + window
         dw = txt[date_window_start:date_window_end]
         dw = dw.strip()
-        # print(dw)
+        # logger.debug(dw)
 
         ts = regex.findall(r"[\d]{2}-\w{3}-[\d]{4} [\d]{2}:[\d]{2}", dw)
         date_l = 0  # used to find start of next section
@@ -57,14 +60,14 @@ def find_date(
             if len(ts) == 0:
                 # no timestamp found
                 if verbosity > 1:
-                    print("no timestamp found in ", dw)
+                    logger.debug(f"no timestamp found in '{dw}'")
                 else:
                     pass
 
             else:
                 if verbosity > 1:
                     # multiple matches
-                    print("too many timestamps found in ", dw)
+                    logger.debug(f"too many timestamps found in '{dw}'")
                 else:
                     pass
 
@@ -286,12 +289,12 @@ def split_and_append_chunks(
         clinical_notes = docs[docs[column_name] == "Clinical Note"]
         non_clinical_notes = docs[docs[column_name] != "Clinical Note"]
         if verbosity > 1:
-            print(f"Found column '{column_name}' in DataFrame.")
+            logger.debug(f"Found column '{column_name}' in DataFrame.")
     elif column_name_mct in docs.columns:
         clinical_notes = docs[docs[column_name_mct] == "AoMRC_ClinicalSummary_FT"]
         non_clinical_notes = docs[docs[column_name_mct] != "AoMRC_ClinicalSummary_FT"]
         if verbosity > 1:
-            print(f"Found column '{column_name_mct}' in DataFrame.")
+            logger.debug(f"Found column '{column_name_mct}' in DataFrame.")
     else:
         raise ValueError(
             f"Neither {column_name} nor {column_name_mct} found in DataFrame columns."
@@ -299,8 +302,8 @@ def split_and_append_chunks(
 
     # Check verbosity and print sizes if needed
     if verbosity > 1:
-        print(f"Size of clinical_notes dataframe: {len(clinical_notes)}")
-        print(f"Size of non_clinical_notes dataframe: {len(non_clinical_notes)}")
+        logger.debug(f"Size of clinical_notes dataframe: {len(clinical_notes)}")
+        logger.debug(f"Size of non_clinical_notes dataframe: {len(non_clinical_notes)}")
 
     # Rename the '_id' column to 'id'
     clinical_notes.rename(columns={"_id": "id"}, inplace=True)
