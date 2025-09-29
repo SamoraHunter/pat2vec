@@ -34,7 +34,12 @@ This tool converts individual patient records into structured time-interval feat
 
 The full API documentation for `pat2vec` is automatically generated and hosted on GitHub Pages.
 
-**View the Live Documentation**
+<p align="center">
+  <a href="https://samorahunter.github.io/pat2vec/" target="_blank">
+    <b>📖 View the Live Documentation</b>
+  </a>
+</p>
+
 
 ## Example Use Cases
 
