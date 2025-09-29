@@ -1,4 +1,3 @@
-
 name: Notebook Test
 
 on: [push, pull_request]
@@ -6,6 +5,7 @@ on: [push, pull_request]
 jobs:
   test:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     env:
       DEBIAN_FRONTEND: noninteractive
       PYTHON_VERSION: '3.10'
@@ -14,24 +14,40 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
-
-      - name: Install sudo (for local act runner)
+      - name: Configure Proxy for Corporate Network (Local Runner Only)
         if: ${{ env.ACT }}
         run: |
-          apt-get update && apt-get install -y sudo
+          if ping -c 1 dh-cap02 &> /dev/null; then
+            echo "✅ Proxy server 'dh-cap02' is available. Configuring environment variables."
+            echo "http_proxy=http://dh-cap02:8008" >> $GITHUB_ENV
+            echo "https_proxy=http://dh-cap02:8008" >> $GITHUB_ENV
 
-      - name: Set Timezone
-        run: |
-          # Set the timezone to prevent interactive prompts from tzdata during package installations.
-          echo "Europe/London" | sudo tee /etc/timezone
-          sudo apt-get update && sudo apt-get install -y tzdata
-          sudo ln -fs /usr/share/zoneinfo/Europe/London /etc/localtime
-          sudo dpkg-reconfigure -f noninteractive tzdata
+            NO_PROXY_LIST="localhost,127.0.0.1,kch-cap.kingsch.nhs.uk,${ACTIONS_CACHE_URL#http://}"
+            echo "NO_PROXY=$NO_PROXY_LIST" >> $GITHUB_ENV
+          fi
 
-      - name: Install ping utility
+      - name: Install System Dependencies and Python ${{ env.PYTHON_VERSION }}
         run: |
-          echo "Installing ping for proxy detection..."
-          sudo apt-get update && sudo apt-get install -y iputils-ping
+          apt-get update
+          ln -fs /usr/share/zoneinfo/Europe/London /etc/localtime
+          apt-get install -y --no-install-recommends \
+            sudo \
+            tzdata \
+            iputils-ping \
+            ca-certificates \
+            lsb-release \
+            software-properties-common \
+            gnupg \
+            nodejs \
+            npm
+
+          # Add the deadsnakes PPA to get specific Python versions
+          sudo gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys F23C5A6CF475977595C89F51BA6932366A755776
+          sudo gpg --export F23C5A6CF475977595C89F51BA6932366A755776 | sudo gpg --dearmor -o /usr/share/keyrings/deadsnakes-archive-keyring.gpg
+          echo "deb [signed-by=/usr/share/keyrings/deadsnakes-archive-keyring.gpg] http://ppa.launchpadcontent.net/deadsnakes/ppa/ubuntu $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/deadsnakes-ppa.list
+
+          sudo apt-get update
+          sudo apt-get install -y python${{ env.PYTHON_VERSION }} python${{ env.PYTHON_VERSION }}-venv python${{ env.PYTHON_VERSION }}-distutils python3-pip
 
       - name: Trust Corporate Certificate (Local Runner Only)
         if: ${{ env.ACT }}
@@ -39,104 +55,80 @@ jobs:
           CERT_PATH="/usr/local/share/ca-certificates/kch_oct_2024_root.crt"
           if [ -f "$CERT_PATH" ]; then
             echo "✅ Corporate certificate found. Updating system trust store..."
-            sudo apt-get update && sudo apt-get install -y ca-certificates
             sudo update-ca-certificates
           else
             echo "⚠️ Corporate certificate not found. Proceeding without it."
           fi
 
-      - name: Install Node.js (for local act runner)
-        # Node.js is sometimes needed by actions, keeping it for robustness.
-        run: |
-          echo "Installing Node.js..."
-          sudo apt-get update && sudo apt-get install -y nodejs npm
-
-      - name: Configure Proxy for Corporate Network (Local Runner Only)
-        if: ${{ env.ACT }}
-        run: |
-          # This step checks for the availability of the corporate proxy/mirror
-          # and sets the necessary environment variables for subsequent steps.
-          if ping -c 1 dh-cap02 &> /dev/null; then
-            echo "✅ Proxy server 'dh-cap02' is available. Configuring environment variables."
-            echo "http_proxy=http://dh-cap02:8008" >> $GITHUB_ENV
-            echo "https_proxy=http://dh-cap02:8008" >> $GITHUB_ENV
-            echo "NO_PROXY=localhost,127.0.0.1,kch-cap.kingsch.nhs.uk" >> $GITHUB_ENV
-          fi
-
-      - name: Install Python ${{ env.PYTHON_VERSION }} via apt and Set CA Environment
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y lsb-release software-properties-common gnupg
-
-          # Add the deadsnakes PPA to get specific Python versions
-          sudo gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys F23C5A6CF475977595C89F51BA6932366A755776
-          sudo gpg --export F23C5A6CF475977595C89F51BA6932366A755776 | sudo gpg --dearmor -o /usr/share/keyrings/deadsnakes-archive-keyring.gpg
-          echo "deb [signed-by=/usr/share/keyrings/deadsnakes-archive-keyring.gpg] http://ppa.launchpadcontent.net/deadsnakes/ppa/ubuntu $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/deadsnakes-ppa.list
-          
-          sudo apt-get update
-          sudo apt-get install -y python${{ env.PYTHON_VERSION }} python${{ env.PYTHON_VERSION }}-venv python${{ env.PYTHON_VERSION }}-distutils
-
-          # Set Python 3.10 as default
           sudo update-alternatives --install /usr/bin/python3 python3 /usr/bin/python${{ env.PYTHON_VERSION }} 1
           python3 --version
 
-          # Set certificate paths for Python tools (like pip) to use the system trust store
           echo "SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt" >> $GITHUB_ENV
           echo "REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt" >> $GITHUB_ENV
 
+      - name: Get pip cache directory
+        id: pip-cache
+        run: |
+          echo "dir=$(python3 -m pip cache dir)" >> $GITHUB_OUTPUT
+
       - name: Cache pip dependencies
-        uses: actions/cache@v4
+        # Conditionally disable caching when running with act to diagnose hanging issues.
+        # The 'actions/cache' action's post-job hook (for saving) might be causing the hang.
+        if: ${{ !env.ACT }}
+        uses: actions/cache@v3
         with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/pyproject.toml') }}
+          path: ${{ steps.pip-cache.outputs.dir }}
+          key: ${{ runner.os }}-pip-${{ env.PYTHON_VERSION }}-${{ hashFiles('**/pyproject.toml') }}
           restore-keys: |
-            ${{ runner.os }}-pip-
-        
-      - name: Debug certificates
-        run: |
-          ls -la /usr/local/share/ca-certificates/
-          openssl x509 -in /usr/local/share/ca-certificates/kch_certauth.crt -text -noout | head -20
+            ${{ runner.os }}-pip-${{ env.PYTHON_VERSION }}-
 
-      - name: Configure Git for Docker
-        if: ${{ env.ACT }}
+      - name: Install dependencies
         run: |
-          git config --global http.sslCAInfo /usr/local/share/ca-certificates/kch_certauth.crt
-          git config --global http.lowSpeedLimit 1000
-          git config --global http.lowSpeedTime 300
-
-      - name: Setup pat2vec
-        run: |
-          # The install script handles proxy vs non-proxy.
-          # We use the --dev flag to get testing tools (pytest, nbmake).
-          if ping -c 1 dh-cap02 &> /dev/null; then
-            echo "✅ Mirror server is available. Installing with --proxy and --dev."
-            bash install_pat2vec.sh --proxy --dev
-          else
-            echo "ℹ️ Mirror server not available. Performing standard dev installation."
-            bash install_pat2vec.sh --dev
+          # For local act runner, temporarily remove hash requirements
+          if [[ "${ACT:-false}" != "false" ]]; then
+              echo "🔧 Running in act - removing hash requirements for local mirror compatibility"
+              # Remove hashes from any requirements files
+              find . -name "requirements*.txt" -type f -exec sed -i 's/ --hash=sha256:[a-f0-9]*//g' {} \;
           fi
 
-      - name: Debug virtual environment
+          # Build pip install arguments
+          pip_install_args=()
+
+          # Check if proxy is configured and add it
+          if [[ -n "${http_proxy:-}" ]]; then
+              echo "🔧 Using proxy: ${http_proxy}"
+              pip_install_args+=("--proxy" "${http_proxy}")
+          fi
+
+          echo "Installing with: python3 -m pip install ${pip_install_args[*]} -e .[dev]"
+          python3 -m pip install "${pip_install_args[@]}" -e ".[dev]"
+          python3 -m ipykernel install --user --name=pat2vec_env --display-name "Python (pat2vec_env)"
+          jupyter kernelspec list
+
+      - name: List installed packages
         run: |
-          VENV_PATH=$(find $GITHUB_WORKSPACE -type d -name "pat2vec_env")
-          echo "VENV_PATH=$VENV_PATH" >> $GITHUB_ENV
-          source "$VENV_PATH/bin/activate"
-          which python
-          python --version
+          which python3
+          python3 --version
           pip list
 
       - name: Run notebook test
         run: |
-          set -e
-          source "$VENV_PATH/bin/activate"
-          pytest --nbmake --nbmake-timeout=1200 notebooks/test_notebook.py
+          pytest --nbmake --nbmake-timeout=1200 --exitfirst notebooks/test_notebook.py
+
+      - name: Clean up Jupyter kernels
+        if: always()
+        run: |
+          # Kill any remaining Jupyter kernel processes
+          pkill -f ipykernel || true
+          pkill -f jupyter || true
+          exit 0
 
       - name: Clean Up Generated Files for Local Act Runner
-        if: ${{ env.ACT }}
+        if: ${{ env.ACT && always() }}
         run: |
           echo "INFO: Cleaning up directories created during the test run..."
 
-          # Remove generated directories
           rm -rf notebooks/new_project
           rm -rf notebooks/new_project_ipw
           rm -rf notebooks/treatment_doc_extract
+          exit 0

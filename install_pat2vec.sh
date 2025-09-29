@@ -126,24 +126,29 @@ clone_repositories() {
     saved_git_http_proxy=$(git config --global --get http.proxy 2>/dev/null || echo "")
     saved_git_https_proxy=$(git config --global --get https.proxy 2>/dev/null || echo "")
 
-    echo "Temporarily disabling proxy for Git operations..."
+    # Only disable the proxy if we are NOT in proxy mode.
+    if [ "$PROXY_MODE" = false ]; then
+        echo "Temporarily disabling proxy for Git operations..."
 
-    # Unset environment proxy variables for git operations
-    unset http_proxy
-    unset https_proxy
-    unset HTTP_PROXY
-    unset HTTPS_PROXY
+        # Unset environment proxy variables for git operations
+        unset http_proxy
+        unset https_proxy
+        unset HTTP_PROXY
+        unset HTTPS_PROXY
 
-    # Unset git proxy configuration temporarily
-    git config --global --unset http.proxy 2>/dev/null || true
-    git config --global --unset https.proxy 2>/dev/null || true
+        # Unset git proxy configuration temporarily
+        git config --global --unset http.proxy 2>/dev/null || true
+        git config --global --unset https.proxy 2>/dev/null || true
+    fi
 
     for repo in "${repos[@]}"; do
         local repo_name=$(basename "$repo" .git)
         if [ ! -d "$repo_name" ]; then
-            echo "Cloning $repo (bypassing proxy)..."
+            echo "Cloning $repo..."
             if ! git clone "$repo"; then
                 echo "WARNING: Failed to clone $repo_name. This might be due to a permission issue or network problem. Continuing installation..."
+            else
+                echo "Successfully cloned $repo_name."
             fi
         else
             echo "$repo_name already exists, skipping..."
@@ -151,18 +156,20 @@ clone_repositories() {
     done
 
     # Restore proxy settings
-    echo "Restoring proxy settings..."
-    if [ -n "$saved_http_proxy" ]; then
-        export http_proxy="$saved_http_proxy"
-    fi
-    if [ -n "$saved_https_proxy" ]; then
-        export https_proxy="$saved_https_proxy"
-    fi
-    if [ -n "$saved_git_http_proxy" ]; then
-        git config --global http.proxy "$saved_git_http_proxy"
-    fi
-    if [ -n "$saved_git_https_proxy" ]; then
-        git config --global https.proxy "$saved_git_https_proxy"
+    if [ "$PROXY_MODE" = false ]; then
+        echo "Restoring proxy settings..."
+        if [ -n "$saved_http_proxy" ]; then
+            export http_proxy="$saved_http_proxy"
+        fi
+        if [ -n "$saved_https_proxy" ]; then
+            export https_proxy="$saved_https_proxy"
+        fi
+        if [ -n "$saved_git_http_proxy" ]; then
+            git config --global http.proxy "$saved_git_http_proxy"
+        fi
+        if [ -n "$saved_git_https_proxy" ]; then
+            git config --global https.proxy "$saved_git_https_proxy"
+        fi
     fi
 
     # Return to original directory
