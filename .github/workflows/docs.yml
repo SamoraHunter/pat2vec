@@ -23,8 +23,16 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Detect Runner Environment
+        id: detect_env
+        run: |
+          if [ -f "/usr/local/share/ca-certificates/kch_certauth.crt" ]; then
+            echo "is_act_runner=true" >> $GITHUB_OUTPUT
+          fi
+
       - name: Perform Local Runner Setup
-        if: ${{ env.ACT }}
+        id: local_setup
+        if: steps.detect_env.outputs.is_act_runner == 'true'
         uses: ./.github/actions/local-setup
         with:
           gitea-token: ${{ secrets.GITEA_TOKEN }}
@@ -43,7 +51,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          if [[ "${ACT:-false}" != "false" ]]; then
+          if [[ "${{ steps.detect_env.outputs.is_act_runner }}" == "true" ]]; then
               echo "🔧 Running in act - removing hash requirements"
               find . -name "requirements*.txt" -type f -exec sed -i 's/ --hash=sha256:[a-f0-9]*//g' {} \;
           fi

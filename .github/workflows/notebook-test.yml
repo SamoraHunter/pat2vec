@@ -14,8 +14,16 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
+      - name: Detect Runner Environment
+        id: detect_env
+        run: |
+          if [ -f "/usr/local/share/ca-certificates/kch_certauth.crt" ]; then
+            echo "is_act_runner=true" >> $GITHUB_OUTPUT
+          fi
+
       - name: Perform Local Runner Setup
-        if: ${{ env.ACT }}
+        id: local_setup
+        if: steps.detect_env.outputs.is_act_runner == 'true'
         uses: ./.github/actions/local-setup
         with:
           gitea-token: ${{ secrets.GITEA_TOKEN }}
@@ -37,7 +45,7 @@ jobs:
           echo "dir=$(pip cache dir)" >> $GITHUB_OUTPUT
 
       - name: Cache pip dependencies
-        if: ${{ !env.ACT }}
+        if: steps.detect_env.outputs.is_act_runner != 'true'
         uses: actions/cache@v4
         with:
           path: ${{ steps.pip-cache.outputs.dir }}
@@ -47,7 +55,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          if [[ "${ACT:-false}" != "false" ]]; then
+          if [[ "${{ steps.detect_env.outputs.is_act_runner }}" == "true" ]]; then
               echo "🔧 Running in act - removing hash requirements"
               find . -name "requirements*.txt" -type f -exec sed -i 's/ --hash=sha256:[a-f0-9]*//g' {} \;
           fi
@@ -80,7 +88,7 @@ jobs:
           pkill -f jupyter || true
 
       - name: Clean Up Generated Files for Local Act Runner
-        if: ${{ env.ACT && always() }}
+        if: steps.detect_env.outputs.is_act_runner == 'true' && always()
         run: |
           echo "INFO: Cleaning up directories created during the test run..."
           rm -rf notebooks/new_project
