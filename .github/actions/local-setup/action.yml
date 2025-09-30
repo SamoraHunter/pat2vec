@@ -1,0 +1,86 @@
+# .github/actions/local-setup/action.yml
+name: 'Local Runner Setup'
+description: 'Configures proxy, certificates, and pre-installs Python for local act runs.'
+
+inputs:
+  gitea-token:
+    description: 'Token for authenticating with Gitea'
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Configure Proxy for Corporate Network
+      shell: bash
+      run: |
+        if ping -c 1 dh-cap02 &> /dev/null; then
+          echo "✅ Proxy server 'dh-cap02' is available. Configuring environment variables."
+          echo "http_proxy=http://dh-cap02:8008" >> $GITHUB_ENV
+          echo "https_proxy=http://dh-cap02:8008" >> $GITHUB_ENV
+
+          NO_PROXY_LIST="localhost,127.0.0.1,kch-cap.kingsch.nhs.uk,${ACTIONS_CACHE_URL#http://}"
+          echo "NO_PROXY=$NO_PROXY_LIST" >> $GITHUB_ENV
+        fi
+
+    - name: Install System Dependencies
+      shell: bash
+      run: |
+        apt-get -qq update
+        apt-get -qq install -y --no-install-recommends \
+          git tzdata apt-utils ca-certificates curl nodejs npm file > /dev/null
+        ln -sf /usr/share/zoneinfo/Europe/London /etc/localtime
+        echo "TZ=Europe/London" >> $GITHUB_ENV
+
+    - name: Trust Corporate Certificate
+      shell: bash
+      run: |
+        CERT_PATH="/usr/local/share/ca-certificates/kch_certauth.crt"
+        if [ -f "$CERT_PATH" ]; then
+          echo "✅ Corporate certificate found. Updating system trust store..."
+          update-ca-certificates > /dev/null
+        else
+          echo "⚠️ Corporate certificate not found. Proceeding without it."
+        fi
+        echo "SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt" >> $GITHUB_ENV
+        echo "REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt" >> $GITHUB_ENV
+
+    - name: Pre-install Python from Gitea Mirror
+      env:
+        GITEA_TOKEN: ${{ inputs.gitea-token }}
+      shell: bash
+      run: |
+        if [[ -z "${GITEA_TOKEN}" ]]; then
+          echo "❌ Error: GITEA_TOKEN is not set. Please provide it using the -s/--secret flag when running 'act'."
+          exit 1
+        fi
+
+        PYTHON_BINARY_URL="https://kch-cap.kingsch.nhs.uk:3000/KCH_Cogstack/python-versions/releases/download/3.10.18-15433209320/python-3.10.18-linux-24.04-x64.tar.gz"
+        INSTALL_DIR="/opt/hostedtoolcache/Python/3.10.18/x64"
+        mkdir -p "$INSTALL_DIR"
+
+        echo "📥 Downloading Python from Gitea..."
+        # Explicitly use the corporate certificate path for curl
+        curl -L --fail --show-error -H "Authorization: token ${GITEA_TOKEN}" \
+            --cacert /usr/local/share/ca-certificates/kch_certauth.crt \
+            -o python.tar.gz "$PYTHON_BINARY_URL"
+
+        FILE_TYPE=$(file -b --mime-type python.tar.gz)
+        echo "🔎 Downloaded file type: $FILE_TYPE"
+        if [[ "$FILE_TYPE" != "application/gzip" && "$FILE_TYPE" != "application/x-gzip" ]]; then
+          echo "❌ Error: Downloaded file is not a gzipped tar archive. It might be an HTML login page due to an authentication error."
+          head -n 20 python.tar.gz
+          exit 1
+        fi
+
+        echo "📦 Extracting Python..."
+        tar -xzf python.tar.gz -C "$INSTALL_DIR" --strip-components=1
+        rm python.tar.gz
+
+        echo "✅ Python successfully installed"
+        "$INSTALL_DIR/bin/python3" --version
+
+        # Create the marker file for setup-python
+        touch "${INSTALL_DIR}.complete"
+
+        # Set the AGENT_TOOLSDIRECTORY to tell setup-python where to look
+        echo "AGENT_TOOLSDIRECTORY=/opt/hostedtoolcache" >> $GITHUB_ENV

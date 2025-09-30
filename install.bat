@@ -21,15 +21,21 @@ REM   /dev           - Install development dependencies.
 REM ============================================================================
 
 REM --- Configuration ---
-set SCRIPT_DIR=%~dp0
-pushd "%SCRIPT_DIR%.."
-set GLOBAL_FILES_DIR=%CD%
+set "PYTHON_EXE=python"
+set "VENV_DIR=%~dp0pat2vec_env"
+set "SPACY_MODEL_URL=https://github.com/explosion/spacy-models/releases/download/en_core_web_md-3.7.1/en_core_web_md-3.7.1-py3-none-any.whl"
+set "PROXY_HOST=dh-cap02"
+set "PROXY_PORT=8008"
+set "PROXY_PIP_ARGS=--trusted-host %PROXY_HOST% -i http://%PROXY_HOST%:%PROXY_PORT%/mirrors/pat2vec"
+set "SNOMED_REPO_URL=https://github.com/SamoraHunter/snomed_methods.git"
+
+pushd "%~dp0.."
+set "GLOBAL_FILES_DIR=%CD%"
 popd
-set VENV_DIR=%SCRIPT_DIR%pat2vec_env
-set SPACY_MODEL_URL=https://github.com/explosion/spacy-models/releases/download/en_core_web_md-3.7.1/en_core_web_md-3.7.1-py3-none-any.whl
-set PROXY_PIP_ARGS=--trusted-host dh-cap02 -i http://dh-cap02:8008/mirrors/pat2vec
 
 REM --- Default Flags ---
+set "ESC="
+for /F "tokens=1,2 delims=#" %%a in ('"prompt #$H#$E# & echo on & for %%b in (1) do rem"') do set "ESC=%%b"
 set PROXY_MODE=false
 set CLONE_REPOS=true
 set FORCE_CLEAN=false
@@ -56,24 +62,24 @@ goto :arg_loop
 REM --- Prerequisite Checks ---
 echo Checking prerequisites...
 python --version >nul 2>&1
-if %errorlevel% neq 0 (
-    echo ERROR: Python is not found. Please install Python and add it to your PATH.
+if errorlevel 1 (
+    echo %ESC%[91mERROR: Python is not found. Please install Python and add it to your PATH.%ESC%[0m
     goto :fatal_error
 )
 git --version >nul 2>&1
-if %errorlevel% neq 0 (
-    echo ERROR: Git is not found. Please install Git and add it to your PATH.
+if errorlevel 1 (
+    echo %ESC%[91mERROR: Git is not found. Please install Git and add it to your PATH.%ESC%[0m
     goto :fatal_error
 )
-echo Prerequisites found.
+echo %ESC%[92mPrerequisites found.%ESC%[0m
 
 REM --- Pre-flight check for write permissions ---
 echo.
 echo Checking write permissions in %GLOBAL_FILES_DIR%...
 echo. > "%GLOBAL_FILES_DIR%\perm.tmp" 2>nul
-if %errorlevel% neq 0 (
-    echo ERROR: No write permission in the target directory: '%GLOBAL_FILES_DIR%'.
-    echo Please run this script from a location where you have write permissions.
+if errorlevel 1 (
+    echo %ESC%[91mERROR: No write permission in the target directory: '%GLOBAL_FILES_DIR%'.%ESC%[0m
+    echo %ESC%[91mPlease run this script from a location where you have write permissions.%ESC%[0m
     goto :fatal_error
 )
 del "%GLOBAL_FILES_DIR%\perm.tmp"
@@ -87,7 +93,7 @@ call :copy_credentials
 
 if "%FORCE_CLEAN%"=="true" (
     if exist "%VENV_DIR%" (
-        echo Force clean enabled, removing existing virtual environment...
+        echo %ESC%[93mForce clean enabled, removing existing virtual environment...%ESC%[0m
         rmdir /s /q "%VENV_DIR%"
     )
 )
@@ -95,11 +101,11 @@ if "%FORCE_CLEAN%"=="true" (
 echo.
 echo Creating virtual environment...
 if exist "%VENV_DIR%" (
-    echo Virtual environment already exists. Skipping creation.
+    echo Virtual environment already exists in "%VENV_DIR%". Skipping creation.
 ) else (
     python -m venv "%VENV_DIR%"
-    if %errorlevel% neq 0 (
-        echo ERROR: Failed to create virtual environment.
+    if errorlevel 1 (
+        echo %ESC%[91mERROR: Failed to create virtual environment.%ESC%[0m
         goto :fatal_error
     )
 )
@@ -108,7 +114,7 @@ echo.
 echo Activating virtual environment...
 call "%VENV_DIR%\Scripts\activate.bat"
 if not defined VIRTUAL_ENV (
-    echo ERROR: Failed to activate virtual environment.
+    echo %ESC%[91mERROR: Failed to activate virtual environment.%ESC%[0m
     goto :fatal_error
 )
 
@@ -118,7 +124,7 @@ set PIP_UPGRADE_ARGS=--upgrade pip
 if "%PROXY_MODE%"=="true" (set PIP_UPGRADE_ARGS=%PIP_UPGRADE_ARGS% %PROXY_PIP_ARGS%)
 python -m pip install %PIP_UPGRADE_ARGS%
 if errorlevel 1 (
-    echo ERROR: Failed to upgrade pip.
+    echo %ESC%[91mERROR: Failed to upgrade pip.%ESC%[0m
     goto :deactivate_and_exit
 )
 
@@ -127,8 +133,8 @@ echo Installing/upgrading build tools...
 set PIP_BUILD_ARGS=--upgrade "setuptools>=61.0" wheel
 if "%PROXY_MODE%"=="true" (set PIP_BUILD_ARGS=%PIP_BUILD_ARGS% %PROXY_PIP_ARGS%)
 pip install %PIP_BUILD_ARGS%
-if %errorlevel% neq 0 (
-    echo ERROR: Failed to install build tools.
+if errorlevel 1 (
+    echo %ESC%[91mERROR: Failed to install build tools.%ESC%[0m
     goto :deactivate_and_exit
 )
 
@@ -145,8 +151,8 @@ set PIP_INSTALL_ARGS=--no-build-isolation -e "%INSTALL_TARGET%"
 if "%PROXY_MODE%"=="true" (set PIP_INSTALL_ARGS=%PIP_INSTALL_ARGS% %PROXY_PIP_ARGS% --retries 5 --timeout 60)
 
 pip install %PIP_INSTALL_ARGS%
-if %errorlevel% neq 0 (
-    echo ERROR: Failed to install project dependencies.
+if errorlevel 1 (
+    echo %ESC%[91mERROR: Failed to install project dependencies.%ESC%[0m
     goto :deactivate_and_exit
 )
 
@@ -154,10 +160,11 @@ REM Install development dependencies separately from public PyPI
 if "%DEV_MODE%"=="true" (
     echo.
     echo Installing development dependencies from public PyPI...
+    set "DEV_DEPS="pytest" "nbformat" "nbconvert" "nbstripout" "nbmake" "pre-commit" "sphinx~=7.3.0" "myst-parser>=2.0.0" "sphinx-rtd-theme>=2.0.0" "sphinx-autodoc-typehints>=2.0.0""
     REM We do not use the proxy for these, as they are often missing from internal mirrors.
-    pip install "pytest" "nbformat" "nbconvert" "nbstripout" "nbmake" "pre-commit" "sphinx~=7.3.0" "myst-parser>=2.0.0" "sphinx-rtd-theme>=2.0.0" "sphinx-autodoc-typehints>=2.0.0"
-    if %errorlevel% neq 0 (
-        echo WARNING: Failed to install one or more dev dependencies. Docs build may fail.
+    pip install %DEV_DEPS%
+    if errorlevel 1 (
+        echo %ESC%[93mWARNING: Failed to install one or more dev dependencies. Docs build may fail.%ESC%[0m
     )
 )
 
@@ -170,8 +177,8 @@ if "%PROXY_MODE%"=="true" (
     set PIP_SPACY_ARGS=%SPACY_MODEL_URL%
 )
 pip install "%PIP_SPACY_ARGS%"
-if %errorlevel% neq 0 (
-    echo WARNING: Failed to install SpaCy model. You may need to install it manually.
+if errorlevel 1 (
+    echo %ESC%[93mWARNING: Failed to install SpaCy model. You may need to install it manually.%ESC%[0m
 )
 
 echo.
@@ -180,7 +187,7 @@ python -m ipykernel install --user --name=pat2vec_env --display-name "Python (pa
 
 echo.
 echo ----------------------------------------------------
-echo Installation completed successfully!
+echo %ESC%[92mInstallation completed successfully!%ESC%[0m
 echo ----------------------------------------------------
 
 :deactivate_and_exit
@@ -212,16 +219,15 @@ goto :eof
 :clone_repositories
 echo.
 echo Cloning additional repositories...
-set SNOMED_REPO_URL=https://github.com/SamoraHunter/snomed_methods.git
 
 pushd "%GLOBAL_FILES_DIR%"
 
 set REPO_NAME=snomed_methods
 if not exist "%REPO_NAME%" (
     echo Cloning %SNOMED_REPO_URL%...
-    git clone "%SNOMED_REPO_URL%"
-    if %errorlevel% neq 0 (
-        echo WARNING: Failed to clone %REPO_NAME%. This might be due to a permission issue or network problem.
+    git clone "%SNOMED_REPO_URL%" "%REPO_NAME%"
+    if errorlevel 1 (
+        echo %ESC%[93mWARNING: Failed to clone %REPO_NAME%. This might be due to a permission issue or network problem.%ESC%[0m
     )
 ) else (
     echo %REPO_NAME% already exists, skipping clone.
@@ -236,8 +242,8 @@ echo Setting up MedCAT models directory...
 set MEDCAT_MODELS_DIR=%GLOBAL_FILES_DIR%\medcat_models
 if not exist "%MEDCAT_MODELS_DIR%" (
     echo Creating directory: %MEDCAT_MODELS_DIR%
-    mkdir "%MEDCAT_MODELS_DIR%"
-    if %errorlevel% neq 0 (
+    mkdir "%MEDCAT_MODELS_DIR%" >nul 2>&1
+    if errorlevel 1 (
         echo ERROR: Failed to create medcat_models directory.
         goto :deactivate_and_exit
     )
@@ -250,13 +256,13 @@ goto :eof
 :create_paths_file
 echo.
 echo Setting up paths.py file...
-set "NOTEBOOKS_DIR=%SCRIPT_DIR%notebooks"
+set "NOTEBOOKS_DIR=%~dp0notebooks"
 set "PATHS_FILE=%NOTEBOOKS_DIR%\paths.py"
 
 if not exist "%NOTEBOOKS_DIR%" (
     echo Creating notebooks directory...
     mkdir "%NOTEBOOKS_DIR%"
-    if %errorlevel% neq 0 (
+    if errorlevel 1 (
         echo ERROR: Failed to create notebooks directory.
         goto :deactivate_and_exit
     )
@@ -274,14 +280,11 @@ goto :eof
 :copy_credentials
 echo.
 echo Setting up credentials.py file...
-set SOURCE_CREDS=%SCRIPT_DIR%pat2vec\util\credentials.py
+set SOURCE_CREDS=%~dp0pat2vec\util\credentials.py
 set TARGET_CREDS=%GLOBAL_FILES_DIR%\credentials.py
 
-echo DEBUG: SOURCE_CREDS = "%SOURCE_CREDS%"
-echo DEBUG: TARGET_CREDS = "%TARGET_CREDS%"
-
 if not exist "%SOURCE_CREDS%" (
-    echo WARNING: Source credentials file not found at "%SOURCE_CREDS%". Skipping copy.
+    echo %ESC%[93mWARNING: Source credentials file not found at "%SOURCE_CREDS%". Skipping copy.%ESC%[0m
     goto :eof
 )
 
@@ -300,7 +303,7 @@ if errorlevel 1 (
     echo ERROR: Failed to copy credentials file.
     goto :deactivate_and_exit
 )
-echo IMPORTANT: Make sure to populate the new credentials.py file with your actual credentials!
+echo %ESC%[93mIMPORTANT: Make sure to populate the new credentials.py file with your actual credentials!%ESC%[0m
 goto :eof
 
 :fatal_error
