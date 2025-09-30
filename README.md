@@ -162,6 +162,13 @@ The following instructions are for setting up a development environment from the
     install.bat
     ```
 
+    The script accepts several flags to customize the installation:
+    -   `/p` or `/proxy`: Use if you are behind a corporate proxy.
+    -   `/dev`: Installs development dependencies (e.g., `pytest`, `sphinx`).
+    -   `/a` or `/all`: Installs all optional feature dependencies.
+    -   `/f` or `/force`: Removes any existing virtual environment for a clean install.
+    -   `/no-clone`: Skips cloning the `snomed_methods` helper repository.
+
 3.  **Activate the environment:**
     To use the installed packages, activate the virtual environment:
     ```shell
