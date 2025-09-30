@@ -30,26 +30,21 @@ def generate_init_file_content(package_path="pat2vec"):
                     try:
                         tree = ast.parse(f.read(), filename=file_path)
 
-                        # Instead of ast.walk(), iterate over top-level nodes only.
-                        # This finds functions and classes but ignores methods inside classes.
+                        # Iterate over top-level nodes only
                         for node in tree.body:
-                            # Check for top-level functions
-                            if isinstance(node, ast.FunctionDef):
-                                if not node.name.startswith("_"):
-                                    name = node.name
-                                    module_to_imports[import_path].append(name)
-                                    all_import_names.add(name)
-                            # Check for top-level classes
-                            elif isinstance(node, ast.ClassDef):
-                                if not node.name.startswith("_"):
-                                    name = node.name
-                                    module_to_imports[import_path].append(name)
-                                    all_import_names.add(name)
+                            if isinstance(node, ast.FunctionDef) and not node.name.startswith("_"):
+                                name = node.name
+                                module_to_imports[import_path].append(name)
+                                all_import_names.add(name)
+                            elif isinstance(node, ast.ClassDef) and not node.name.startswith("_"):
+                                name = node.name
+                                module_to_imports[import_path].append(name)
+                                all_import_names.add(name)
 
                     except SyntaxError as e:
                         print(f"Skipping {file_path} due to syntax error: {e}")
 
-    # --- THE REST OF THE SCRIPT BUILDS THE FILE CONTENT ---
+    # --- Build the file content ---
     output_lines = [
         '"""',
         "pat2vec: A package for processing patient data.",
@@ -93,6 +88,8 @@ def generate_init_file_content(package_path="pat2vec"):
 
 if __name__ == "__main__":
     init_content = generate_init_file_content()
+    # Remove trailing whitespace/newlines at the end, ensure exactly one newline
+    init_content = init_content.rstrip() + "\n"
     output_path = os.path.join("pat2vec", "__init__.py")
 
     print(f"Writing __init__.py to {output_path}...")
