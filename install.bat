@@ -172,7 +172,7 @@ echo.
 echo Installing SpaCy model...
 set PIP_SPACY_ARGS=
 if "%PROXY_MODE%"=="true" (
-    set PIP_SPACY_ARGS=en-core-web-md==3.6.0 %PROXY_PIP_ARGS%
+    set PIP_SPACY_ARGS=en-core-web-md==3.7.1 %PROXY_PIP_ARGS%
 ) else (
     set PIP_SPACY_ARGS=%SPACY_MODEL_URL%
 )
