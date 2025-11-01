@@ -1,7 +1,6 @@
 import unittest
 from unittest.mock import patch, MagicMock
 from datetime import datetime
-import sys
 
 # Mock the imports that might not be available in test environment
 # sys.modules["pat2vec.util.current_pat_batch_path_methods"] = MagicMock()

@@ -1,13 +1,10 @@
-from getpass import getpass
 import pandas as pd
 from typing import Any, Dict, List, Optional
 from .credentials import *
 from elasticsearch import Elasticsearch
-from elasticsearch.helpers import bulk
-from IPython.display import display
 from tqdm import tqdm
 from elasticsearch.helpers import BulkIndexError
-from elasticsearch import Elasticsearch, helpers
+from elasticsearch import helpers
 import logging
 
 logger = logging.getLogger(__name__)

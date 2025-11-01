@@ -3,7 +3,6 @@ from unittest.mock import patch, MagicMock
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 import pandas as pd
-import os
 
 # The class to be tested
 from pat2vec.util.config_pat2vec import config_class

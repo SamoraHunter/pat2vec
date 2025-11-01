@@ -1,6 +1,5 @@
 from pat2vec.util.methods_annotation_json_to_dataframe import json_to_dataframe
 import logging
-from pat2vec.util.methods_get import update_pbar
 from pat2vec.util.post_processing import (
     join_icd10_OPC4S_codes_to_annot,
     join_icd10_codes_to_annot,
@@ -8,11 +7,9 @@ from pat2vec.util.post_processing import (
 
 import pandas as pd
 import os
-import shutil
 import tempfile
 from contextlib import contextmanager
 from typing import Any, Dict, Iterator, List
-from IPython.display import display
 
 logger = logging.getLogger(__name__)
 

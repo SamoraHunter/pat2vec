@@ -4,7 +4,7 @@ import pickle
 import shutil
 import time
 from datetime import datetime
-from itertools import chain, zip_longest
+from itertools import chain
 from typing import Any, Dict, List, Optional
 
 import matplotlib.pyplot as plt

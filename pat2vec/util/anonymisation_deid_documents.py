@@ -1,4 +1,3 @@
-import os
 import logging
 from typing import List, Union, Optional, Dict, Any, Tuple, Type
 from pathlib import Path
@@ -316,7 +315,7 @@ class DeIdAnonymizer:
             A list of dictionaries, each representing a found PII entity.
         """
         self._check_model_loaded()
-        self.logger.info(f"Inspecting text for PII entities...")
+        self.logger.info("Inspecting text for PII entities...")
         entities = self.get_structured_annotations(text)
 
         if not entities:

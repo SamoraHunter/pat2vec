@@ -3,7 +3,6 @@ from typing import Any, List
 import logging
 from fuzzywuzzy import process
 from pat2vec.util.methods_annotation_regex import append_regex_term_counts
-from IPython.display import display
 
 logger = logging.getLogger(__name__)
 

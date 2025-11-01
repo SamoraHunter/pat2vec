@@ -8,7 +8,6 @@ from pat2vec.util.methods_annotation_multi_annots_to_df import multi_annots_to_d
 import pandas as pd
 import os
 from typing import Any
-from IPython.display import display
 
 
 def get_pat_document_annotation_batch(

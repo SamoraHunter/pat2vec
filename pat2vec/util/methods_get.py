@@ -9,9 +9,8 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import paramiko
-from colorama import Back, Fore, Style
+from colorama import Fore, Style
 from dateutil.parser import parse
-from IPython.display import display
 from tqdm import tqdm
 
 import pandas as pd

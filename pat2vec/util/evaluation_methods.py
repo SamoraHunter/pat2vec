@@ -1,7 +1,7 @@
 import os
 import traceback
 import logging
-from typing import List, Optional, Union
+from typing import List, Optional
 import pandas as pd
 from IPython.display import clear_output
 from tqdm import tqdm

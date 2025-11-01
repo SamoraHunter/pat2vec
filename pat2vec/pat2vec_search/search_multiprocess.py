@@ -1,7 +1,7 @@
 import csv
 import multiprocessing
 from multiprocessing import Pool
-from typing import Any, List
+from typing import List
 
 import pandas as pd
 from tqdm.notebook import tqdm

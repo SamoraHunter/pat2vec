@@ -1,15 +1,12 @@
-import os
 import random
 import time
 import traceback
 from datetime import datetime
-from multiprocessing import Pool
 from typing import Any, Dict, List, Optional
 
 import pandas as pd
 
 # from pat2vec.pat2vec_search.cogstack_search_methods import *
-from colorama import Back, Fore, Style
 from tqdm import trange
 
 from pat2vec.pat2vec_main_methods.main_batch import main_batch
@@ -46,7 +43,6 @@ from pat2vec.util.get_dummy_data_cohort_searcher import (
 from pat2vec.util.methods_get import (
     create_folders_for_pat,
     filter_stripped_list,
-    get_free_gpu,
     list_dir_wrapper,
     update_pbar,
 )

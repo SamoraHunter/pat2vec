@@ -13,7 +13,7 @@ from pat2vec.patvec_get_batch_methods.get_merged_batches import (
     split_and_save_csv,
 )
 import tqdm
-from typing import Optional, Dict, List, Any
+from typing import Optional, List, Any
 from dataclasses import dataclass
 
 

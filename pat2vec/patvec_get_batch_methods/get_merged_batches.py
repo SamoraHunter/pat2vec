@@ -11,9 +11,7 @@ from pat2vec.util.methods_annotation_regex import append_regex_term_counts
 from pat2vec.util.filter_methods import filter_dataframe_by_fuzzy_terms
 from pat2vec.util.filter_methods import (
     apply_bloods_data_type_filter,
-    apply_data_type_epr_docs_filters,
     apply_data_type_mct_docs_filters,
-    filter_dataframe_by_fuzzy_terms,
 )
 
 

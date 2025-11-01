@@ -8,9 +8,7 @@ from pat2vec.util.clinical_note_splitter import split_and_append_chunks
 from pat2vec.util.filter_methods import filter_dataframe_by_fuzzy_terms
 from pat2vec.util.filter_methods import (
     apply_bloods_data_type_filter,
-    apply_data_type_epr_docs_filters,
     apply_data_type_mct_docs_filters,
-    filter_dataframe_by_fuzzy_terms,
 )
 from pat2vec.util.methods_annotation_get_pat_document_annotation_batch import (
     get_pat_document_annotation_batch_reports,
@@ -1242,7 +1240,7 @@ def get_pat_batch_textual_obs_docs(
                 ],
                 term_name=config_obj.client_idcode_term_name,
                 entered_list=[current_pat_client_id_code],
-                search_string=f""
+                search_string=""
                 + f"{bloods_time_field}:[{global_start_year}-{global_start_month}-{global_start_day} TO {global_end_year}-{global_end_month}-{global_end_day}]",
             )
 

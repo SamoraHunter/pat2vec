@@ -420,7 +420,7 @@ def main_batch(
 
                 if config_obj.verbosity >= 9:
                     print("Reached end main batch")
-            except RuntimeError as RuntimeError_exception:
+            except RuntimeError:
                 print("Caught runtime error... is torch?")
                 print(RuntimeError)
                 print("sleeping 1h")

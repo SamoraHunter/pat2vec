@@ -2,26 +2,19 @@ from datetime import datetime, timedelta
 import logging
 import os
 import re
-from datetime import datetime, timedelta, timezone
 import string
 from typing import Optional, cast
 import uuid
-from typing import Any, Dict, List, Tuple, Union
+from typing import Any, List, Tuple, Union
 import pandas as pd
 from faker import Faker
-import pytz
 from pat2vec.pat2vec_get_methods.get_method_bmi import BMI_FIELDS
 from pat2vec.pat2vec_get_methods.get_method_core02 import CORE_O2_FIELDS
 from pat2vec.pat2vec_get_methods.get_method_core_resus import CORE_RESUS_FIELDS
 from transformers import pipeline
 import random
-import string
-import numpy as np
-from IPython import display
 import numpy as np
 import calendar
-from datetime import datetime, timedelta
-import random
 
 random_state = 42
 Faker.seed(random_state)
@@ -135,7 +128,7 @@ def generate_epr_documents_data(
         data = {
             "client_idcode": [current_pat_client_id_code for _ in range(num_rows)],
             "document_guid": [str(uuid.uuid4()).split("-")[0] for _ in range(num_rows)],
-            "document_description": [f"clinical_note_summary" for i in range(num_rows)],
+            "document_description": ["clinical_note_summary" for i in range(num_rows)],
             # "body_analysed": [faker.paragraph() for _ in range(num_rows)],
             "body_analysed": [
                 (

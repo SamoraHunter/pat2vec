@@ -1,8 +1,5 @@
 import unittest
 import pandas as pd
-from datetime import datetime
-import pytz
-import numpy as np
 
 from pat2vec.util.filter_dataframe_by_timestamp import filter_dataframe_by_timestamp
 

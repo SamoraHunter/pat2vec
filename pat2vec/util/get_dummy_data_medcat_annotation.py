@@ -4,7 +4,6 @@ import random
 from typing import Any, Dict, List
 
 # from pat2vec.util.get_dummy_data_cohort_searcher import random_state
-from IPython.display import display
 
 random_state = 42
 import numpy as np

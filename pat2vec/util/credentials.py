@@ -1,4 +1,3 @@
-import getpass
 from typing import List
 
 # CogStack login details

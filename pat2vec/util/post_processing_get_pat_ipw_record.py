@@ -3,7 +3,6 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional
 import logging
 import pandas as pd
-from IPython.display import display
 
 from pat2vec.util.post_processing import filter_and_select_rows, filter_annot_dataframe2
 

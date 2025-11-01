@@ -110,7 +110,7 @@ def get_cat(config_obj: Any) -> Optional[Union["CAT", dummy_CAT]]:  # type: igno
                 )
 
         if path_found == False:
-            if medcat_path is not None or medcat_path is "auto":
+            if medcat_path is not None or medcat_path == "auto":
                 model_path = medcat_path
             elif config_obj.override_medcat_model_path is not None:
                 model_path = config_obj.override_medcat_model_path

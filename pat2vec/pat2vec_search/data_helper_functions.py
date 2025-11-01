@@ -69,7 +69,7 @@ def append_age_at_record_series(series: pd.Series) -> pd.Series:
             born = datetime.strptime(
                 row["client_dob"].split(".")[0], "%Y-%m-%dT%H:%M:%S"
             ).date()
-        except Exception as e:
+        except Exception:
             born = datetime.strptime(
                 row["client_dob"].iloc[0].split(".")[0], "%Y-%m-%dT%H:%M:%S"
             ).date()

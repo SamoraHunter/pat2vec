@@ -143,7 +143,7 @@ def split_clinical_notes(
             document_guid_list.append(row["document_guid"])
             clientvisit_visitidcode_list.append(row["clientvisit_visitidcode"])
             index_list.append(row["_index"])
-        except Exception as e:
+        except Exception:
             ch = []
 
         if len(ch) == 0:
@@ -225,7 +225,7 @@ def split_clinical_notes_mct(
             clientvisit_visitidcode_list.append(row["clientvisit_visitidcode"])
             index_list.append(row["_index"])
 
-        except Exception as e:
+        except Exception:
             ch = []
 
         if len(ch) == 0:

@@ -1049,7 +1049,7 @@ def initialize_cogstack_client(config_obj=None):
                     "hosts": ["https://your-actual-elasticsearch-host:9200"],
                 }
 
-    print(f"Imported cogstack_v8_lite from pat2vec.util .")
+    print("Imported cogstack_v8_lite from pat2vec.util .")
     print(f"Username: {creds.get('username')}")
 
     if creds.get("api_key"):

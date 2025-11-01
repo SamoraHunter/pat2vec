@@ -1,4 +1,3 @@
-import pytest
 import nbformat
 from nbconvert.preprocessors import ExecutePreprocessor
 import os

@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-from typing import Callable, List, Optional, Tuple, Union
+from typing import Union
 
 import numpy as np
 import pandas as pd

@@ -3,7 +3,6 @@ import shutil
 import logging
 import pandas as pd
 from typing import Any, Dict, List, Optional
-from IPython.display import display
 
 from pat2vec.util.methods_annotation_json_to_dataframe import json_to_dataframe
 from pat2vec.util.methods_get import exist_check, update_pbar
