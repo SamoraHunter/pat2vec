@@ -53,6 +53,10 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pip-${{ env.PYTHON_VERSION }}-
 
+      - name: Install compatible torch and torchvision
+        run: |
+          python3 -m pip install torch==2.8.0
+
       - name: Install dependencies
         run: |
           if [[ "${{ steps.detect_env.outputs.is_act_runner }}" == "true" ]]; then
