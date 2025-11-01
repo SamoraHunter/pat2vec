@@ -257,7 +257,7 @@ class TestMultiAnnotsToDf(unittest.TestCase):
         with self.assertLogs(
             "pat2vec.util.methods_annotation_multi_annots_to_df", level="WARNING"
         ) as cm:
-            result_df = multi_annots_to_df(
+            multi_annots_to_df(
                 self.pat_id,
                 self.pat_batch,
                 self.multi_annots,
