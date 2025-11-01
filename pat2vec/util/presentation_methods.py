@@ -59,7 +59,7 @@ def create_powerpoint_slides_client_idcode_groups(
             slide = presentation.slides.add_slide(slide_layout)
 
             left = top = Inches(1)
-            pic = slide.shapes.add_picture(image_path, left, top, height=Inches(5))
+            slide.shapes.add_picture(image_path, left, top, height=Inches(5))
 
     presentation.save(output_path)
     logger.info(f"PowerPoint file '{output_path}' created successfully.")
@@ -101,7 +101,7 @@ def create_powerpoint_slides(
         slide = presentation.slides.add_slide(slide_layout)
 
         left = top = Inches(1)
-        pic = slide.shapes.add_picture(image_path, left, top, height=Inches(5))
+        slide.shapes.add_picture(image_path, left, top, height=Inches(5))
 
     presentation.save(output_path)
     logger.info(f"PowerPoint file '{output_path}' created successfully.")

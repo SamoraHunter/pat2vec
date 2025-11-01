@@ -40,10 +40,9 @@ def extract_treatment_id_list_from_docs(config_obj: Any) -> List[str]:
     try:
         with open(config_obj.treatment_doc_filename, "r") as file:
             # Process the file here, for example, read its content into a list
-            content = file.readlines()
+            file.readlines()
     except FileNotFoundError:
         print("Warning: File doesn't exist. Returning an empty list.")
-        content = []
         return []
 
     # Determine the file format based on the file extension
@@ -284,7 +283,7 @@ def get_all_patients_list(config_obj: Any) -> List[str]:
 
         patient_ids = ipw_df[id_column].unique().tolist()
 
-    elif config_obj.testing == False:
+    elif not config_obj.testing:
 
         patient_ids = extract_treatment_id_list_from_docs(config_obj)
 

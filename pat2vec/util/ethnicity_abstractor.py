@@ -60,15 +60,13 @@ class EthnicityAbstractor:
 
         targetList = dataFrame
 
-        fileOutputName = outputNameString + ".csv"
+        outputNameString + ".csv"
 
         targetList.columns
 
         targetColumnString = ethnicityColumnString
 
-        additionalColumsToAppend = ["client_idcode"]
 
-        additionalColumnsToAppend = targetList.columns
 
         len(targetList[targetColumnString].unique())
 
@@ -107,36 +105,10 @@ class EthnicityAbstractor:
             "Any other White background",
         ]
 
-        mixedOrMultipleEthnicGroups = [
-            "White and Black Caribbean",
-            "White and Black African",
-            "White and Asian",
-            "Any other Mixed or Multiple ethnic background",
-        ]
 
-        asianOrAsianBritish = [
-            "Indian",
-            "Pakistani",
-            "Bangladeshi",
-            "Chinese",
-            "Any other Asian background",
-        ]
 
-        blackOrAfricanOrCaribbeanOrBlackBritish = [
-            "African",
-            "Caribbean",
-            "Any other Black, African or Caribbean background",
-        ]
 
-        Arab = ["Arab", "Any other ethnic group"]
 
-        censusList = [
-            whiteList,
-            mixedOrMultipleEthnicGroups,
-            asianOrAsianBritish,
-            blackOrAfricanOrCaribbeanOrBlackBritish,
-            Arab,
-        ]
 
         # Groups derived from https://www.ethnicity-facts-figures.service.gov.uk/style-guide/ethnic-groups
 
@@ -559,42 +531,7 @@ class EthnicityAbstractor:
             "cornish",
         ]
 
-        northAmericanNationalities = [
-            "bahamian",
-            "barbadian",
-            "belizean",
-            "costa rican",
-            "cuban",
-            "dominican",
-            "grenadian",
-            "guatemalan",
-            "haitian",
-            "honduran",
-            "mexican",
-            "nicaraguan",
-            "panamanian",
-            "paraguayan",
-            "salvadorean",
-            "trinidadian",
-        ]
 
-        southAmericanNationalities = [
-            "argentinian",
-            "armenian",
-            "bolivian",
-            "brazilian",
-            "chilean",
-            "colombian",
-            "ecuadorean",
-            "ghanaian",
-            "guyanese",
-            "nicaraguan",
-            "paraguayan",
-            "peruvian",
-            "surinamese",
-            "uruguayan",
-            "venezuelan",
-        ]
 
         if assumeBritishWhite:
             whiteList.append("british")

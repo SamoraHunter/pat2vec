@@ -178,7 +178,7 @@ class TestGenerateDateList(unittest.TestCase):
 
     def test_timezone_aware_inputs(self):
         """Test that timezone-aware inputs are handled correctly."""
-        utc_tz = ZoneInfo("UTC")
+        ZoneInfo("UTC")
         est_tz = ZoneInfo("America/New_York")
 
         # Global dates are naive, start_date is aware

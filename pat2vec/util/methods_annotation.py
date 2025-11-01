@@ -30,7 +30,7 @@ def check_pat_document_annotation_complete(
 
     pre_document_annotation_batch_path = config_obj.pre_document_annotation_batch_path
 
-    current_pat_batch_path = os.path.join(
+    os.path.join(
         pre_document_batch_path, current_pat_client_id_code
     )
 

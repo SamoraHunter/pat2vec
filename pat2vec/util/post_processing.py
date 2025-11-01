@@ -169,7 +169,7 @@ def produce_filtered_annotation_dataframe(
     for i in tqdm(range(len(pat_list))):
         current_pat_client_idcode = str(pat_list[i])
 
-        if mct == False:
+        if not mct:
             current_pat_annot_batch_path = (
                 config_obj.pre_document_annotation_batch_path
                 + current_pat_client_idcode
@@ -279,7 +279,7 @@ def remove_file_from_paths(
             If provided, `project_name` is overridden by `config_obj.proj_name`. Defaults to None.
     """
 
-    if config_obj == None:
+    if config_obj is None:
         pat_file_paths = [
             f"{project_name}/current_pat_document_batches/",
             f"{project_name}/current_pat_document_batches_mct/",
@@ -387,7 +387,7 @@ def join_icd10_codes_to_annot(df: pd.DataFrame, inner: bool = False) -> pd.DataF
 
     mdf = pd.read_csv(mfp, sep="\t")
 
-    if inner == True:
+    if inner:
         result = pd.merge(
             df, mdf, left_on="cui", right_on="referencedComponentId", how="inner"
         )
@@ -421,7 +421,7 @@ def join_icd10_OPC4S_codes_to_annot(
 
     mdf = pd.read_csv(mfp)
 
-    if inner == True:
+    if inner:
         result = pd.merge(df, mdf, left_on="cui", right_on="conceptId", how="inner")
 
     else:
@@ -1423,7 +1423,7 @@ def collapse_df_to_mean(
                 **mean_values,
                 **first_non_numeric_values,
             }
-            if started == False and len_out_df == 0:
+            if not started and len_out_df == 0:
                 pd.DataFrame([row_data]).to_csv(
                     output_filename, mode="a", index=False, header=True
                 )

@@ -71,7 +71,7 @@ class DeIdAnonymizer:
             True if the model was loaded successfully, False otherwise.
         """
         try:
-            model_path_p = Path(model_path)
+            Path(model_path)
             if not model_path.exists():
                 self.logger.error(f"Model path does not exist: {model_path}")
                 return False

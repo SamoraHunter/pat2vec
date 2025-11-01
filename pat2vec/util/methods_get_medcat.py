@@ -59,7 +59,7 @@ def get_cat(config_obj: Any) -> Optional[Union["CAT", dummy_CAT]]:  # type: igno
         medcat_path = None
 
         # Check if the file exists
-        if os.path.exists("paths.py") and config_obj.override_medcat_model_path == None:
+        if os.path.exists("paths.py") and config_obj.override_medcat_model_path is None:
             if config_obj.verbosity >= 1:
                 logger.info("paths.py file found, importing medcat_path...")
             # If the file exists, try to import the variable
@@ -109,7 +109,7 @@ def get_cat(config_obj: Any) -> Optional[Union["CAT", dummy_CAT]]:  # type: igno
                     "Directory 'medcat_models/' not found in any directory in sys.path."  # type: ignore
                 )
 
-        if path_found == False:
+        if not path_found:
             if medcat_path is not None or medcat_path == "auto":
                 model_path = medcat_path
             elif config_obj.override_medcat_model_path is not None:

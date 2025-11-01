@@ -432,12 +432,12 @@ class config_class:
         #: Path to a MedCAT model pack to override the default.
         self.override_medcat_model_path = override_medcat_model_path
 
-        if dummy_medcat_model == None:
+        if dummy_medcat_model is None:
             self.dummy_medcat_model = True
         else:
             self.dummy_medcat_model = dummy_medcat_model
 
-        if start_time == None:
+        if start_time is None:
             self.start_time = datetime.now()
 
         #: The time field to use for drug orders.
@@ -473,7 +473,7 @@ class config_class:
 
             logger.info(f"self.bloods_time_field: {self.bloods_time_field}")
 
-        if self.main_options == None:
+        if self.main_options is None:
             if self.verbosity >= 1:
                 logger.info("Default main_options set!")
 
@@ -499,7 +499,7 @@ class config_class:
             if self.verbosity >= 1:
                 logger.info(self.main_options)
 
-        if self.annot_filter_options == None:
+        if self.annot_filter_options is None:
             self.filter_arguments = {
                 "Confidence": 0.8,
                 "Accuracy": 0.8,
@@ -523,7 +523,7 @@ class config_class:
                 "Subject_Confidence": 0.8,  # Specify the confidence threshold as a float
             }
 
-        if feature_engineering_arg_dict == None:
+        if feature_engineering_arg_dict is None:
             #: Dictionary of arguments for feature engineering.
             self.feature_engineering_arg_dict = {
                 "drugs": {
@@ -540,9 +540,9 @@ class config_class:
             "negated_presence_annotations"
         )
 
-        if remote_dump == False:
+        if not remote_dump:
 
-            if self.root_path == None:
+            if self.root_path is None:
                 self.root_path = f"{os.getcwd()}/{self.proj_name}/"
 
             #: Path to the pre-annotation parts directory.
@@ -708,11 +708,10 @@ class config_class:
                 ],
             )
 
-            priority_list = df_old_done[
+            df_old_done[
                 df_old_done["Hemochromatosis (disorder)_count_subject_present"] > 0
             ]["client_idcode"].to_list()
 
-            all_patient_list = priority_list  # + all_patient_list
 
         if self.testing:
             logger.info("Setting test options")
@@ -727,13 +726,13 @@ class config_class:
             # Enforce implemented testing options
             self._update_main_options()
 
-        if self.remote_dump == False:
+        if not self.remote_dump:
             self.sftp_obj = None
 
         if self.remote_dump:
             #: SFTP client object.
 
-            if self.root_path == None:
+            if self.root_path is None:
 
                 self.root_path = f"../{self.proj_name}/"
                 logger.info(f"sftp root_path: {self.root_path}")
@@ -783,7 +782,7 @@ class config_class:
             self.current_pat_line_path = f"{self.root_path}{self.current_pat_line_path}"
             self.current_pat_lines_path = self.current_pat_line_path
 
-            if self.remote_dump == False:
+            if not self.remote_dump:
                 # Path(self.current_pat_annot_path).mkdir(parents=True, exist_ok=True)
                 # Path(self.pre_annotation_path_mrc).mkdir(parents=True, exist_ok=True)
                 pass  #'deprecated'
@@ -817,7 +816,7 @@ class config_class:
         else:
             self.sftp_client = None
 
-        if global_start_year == None:
+        if global_start_year is None:
             (
                 self.global_start_year,
                 self.global_start_month,

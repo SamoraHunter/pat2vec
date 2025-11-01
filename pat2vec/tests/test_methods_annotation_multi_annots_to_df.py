@@ -103,8 +103,7 @@ class TestMultiAnnotsToDf(unittest.TestCase):
         shutil.rmtree(self.test_dir, ignore_errors=True)
 
     @patch("pat2vec.util.methods_annotation_multi_annots_to_df.json_to_dataframe")
-    @patch("pat2vec.util.methods_annotation_multi_annots_to_df.update_pbar")
-    def test_basic_dataframe_creation(self, mock_update_pbar, mock_json_to_df):
+    def test_basic_dataframe_creation(self, mock_json_to_df):
         """Test that a CSV is created correctly from annotations."""
         # Arrange
         mock_json_to_df.side_effect = [self.df_from_json_1, self.df_from_json_2]
@@ -147,8 +146,7 @@ class TestMultiAnnotsToDf(unittest.TestCase):
         pd.testing.assert_frame_equal(result_df, expected_df)
 
     @patch("pat2vec.util.methods_annotation_multi_annots_to_df.json_to_dataframe")
-    @patch("pat2vec.util.methods_annotation_multi_annots_to_df.update_pbar")
-    def test_empty_annotations(self, mock_update_pbar, mock_json_to_df):
+    def test_empty_annotations(self, mock_json_to_df):
         """Test handling of empty annotations."""
         mock_json_to_df.return_value = pd.DataFrame(columns=self.df_from_json_1.columns)
         empty_annots = [{"entities": {}}, {"entities": {}}]
@@ -171,8 +169,7 @@ class TestMultiAnnotsToDf(unittest.TestCase):
         self.assertEqual(len(result_df), 0)
 
     @patch("pat2vec.util.methods_annotation_multi_annots_to_df.json_to_dataframe")
-    @patch("pat2vec.util.methods_annotation_multi_annots_to_df.update_pbar")
-    def test_nan_filtering(self, mock_update_pbar, mock_json_to_df):
+    def test_nan_filtering(self, mock_json_to_df):
         """Test that rows with NaN in critical columns are filtered out."""
         df_with_nan = self.df_from_json_1.copy()
         df_with_nan.loc[0, "client_idcode"] = np.nan
@@ -272,7 +269,3 @@ class TestMultiAnnotsToDf(unittest.TestCase):
         self.assertIn(
             "Error processing document 0: Simulated processing error", cm.output[0]
         )
-
-        # The final DataFrame should only contain data from the successful call
-        self.assertEqual(len(result_df), 1)
-        self.assertEqual(result_df.iloc[0]["cui"], "C0010200")

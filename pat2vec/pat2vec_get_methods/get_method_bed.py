@@ -164,7 +164,7 @@ def get_bed(
 
     features_data.dropna(subset=["observation_valuetext_analysed"], inplace=True)
 
-    term = "bed".lower()
+    "bed".lower()
 
     if len(features_data) > 0:
         all_bed_terms = list(features_data["observation_valuetext_analysed"].unique())

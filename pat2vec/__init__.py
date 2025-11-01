@@ -118,51 +118,6 @@ from .patvec_get_batch_methods.main import (
     get_pat_batch_reports, get_pat_batch_reports_docs_annotations,
     get_pat_batch_textual_obs_annotations, get_pat_batch_textual_obs_docs
 )
-from .tests.test_calculate_interval import (
-    TestCalculateInterval
-)
-from .tests.test_config_class import (
-    TestConfigClass
-)
-from .tests.test_filter_dataframe_by_timestamp_extended import (
-    TestFilterDataFrameByTimestampExtended
-)
-from .tests.test_generate_date_list import (
-    TestGenerateDateList
-)
-from .tests.test_get_dummy_data_cohort_searcher_get_date import (
-    TestCreateRandomDateFromGlobals
-)
-from .tests.test_get_start_end_year_month import (
-    MockConfig, TestGetStartEndYearMonth
-)
-from .tests.test_global_date_validation import (
-    TestGlobalDateValidation
-)
-from .tests.test_individual_patient_window import (
-    TestIndividualPatientWindow
-)
-from .tests.test_methods_annotation_filter_annot_dataframe import (
-    TestFilterAnnotDataframe
-)
-from .tests.test_methods_annotation_multi_annots_to_df import (
-    TestMultiAnnotsToDf
-)
-from .tests.test_methods_get import (
-    TestFilterDataFrameByTimestamp
-)
-from .tests.test_parse_date import (
-    TestDateValidationForElasticsearch
-)
-from .tests.test_post_processing_build_ipw_dataframe import (
-    TestBuildIpwDataframe
-)
-from .tests.test_post_processing_get_pat_ipw_record import (
-    TestGetPatIpwRecord
-)
-from .tests.test_post_processing_process_csv_files import (
-    TestProcessCsvFiles
-)
 from .util.anonymisation_data_methods import (
     anonymize_feature_names, deanonymize_feature_names
 )
@@ -334,16 +289,11 @@ from .util.testing_helpers import (
 
 # Define the public API of the package
 __all__ = [
-    "BatchConfig", "CogStack", "CsvProfiler", "DeIdAnonymizer", "EthnicityAbstractor",
-    "MockConfig", "PathsClass", "TestBuildIpwDataframe", "TestCalculateInterval",
-    "TestConfigClass", "TestCreateRandomDateFromGlobals",
-    "TestDateValidationForElasticsearch", "TestFilterAnnotDataframe",
-    "TestFilterDataFrameByTimestamp", "TestFilterDataFrameByTimestampExtended",
-    "TestGenerateDateList", "TestGetPatIpwRecord", "TestGetStartEndYearMonth",
-    "TestGlobalDateValidation", "TestIndividualPatientWindow", "TestMultiAnnotsToDf",
-    "TestProcessCsvFiles", "add_offset_column", "aggregate_dataframe_mean",
-    "analyze_client_codes", "annot_pat_batch_docs", "anonymize_dataframe_quick",
-    "anonymize_feature_names", "anonymize_single_text", "appendAge",
+    "BatchConfig", "CogStack", "CsvProfiler", "DeIdAnonymizer",
+    "EthnicityAbstractor", "PathsClass", "add_offset_column",
+    "aggregate_dataframe_mean", "analyze_client_codes", "annot_pat_batch_docs",
+    "anonymize_dataframe_quick", "anonymize_feature_names",
+    "anonymize_single_text", "appendAge",
     "appendAgeAtRecord", "append_age_at_record_series", "append_regex_term_counts",
     "append_to_file", "apply_bloods_data_type_filter",
     "apply_data_type_epr_docs_filters", "apply_data_type_mct_docs_filters",

@@ -69,7 +69,7 @@ def _get_source_record(
         logger.debug(df.head())
 
     # Check if necessary columns exist before dropping NaNs
-    existing_necessary_columns = [col for col in necessary_columns if col in df.columns]
+    [col for col in necessary_columns if col in df.columns]
     missing_columns = [col for col in necessary_columns if col not in df.columns]
 
     if missing_columns:

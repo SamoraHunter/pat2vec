@@ -48,7 +48,7 @@ def list_dir_wrapper(path: str, config_obj: Any = None) -> List[str]:
     sftp_obj = config_obj.sftp_obj
     sftp_client = None  # Initialize to avoid UnboundLocalError
     if remote_dump:
-        if share_sftp == False:
+        if not share_sftp:
             ssh_client = paramiko.SSHClient()
             ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
             ssh_client.connect(hostname=hostname, username=username, password=password)
@@ -160,7 +160,7 @@ def dump_results(file_data: Any, path: str, config_obj: Any = None) -> None:
     remote_dump = config_obj.remote_dump
     sftp_client = None
     if remote_dump:
-        if share_sftp == False:
+        if not share_sftp:
             ssh_client = paramiko.SSHClient()
             ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
             ssh_client.connect(hostname=hostname, username=username, password=password)
@@ -170,7 +170,7 @@ def dump_results(file_data: Any, path: str, config_obj: Any = None) -> None:
 
         with sftp_obj.open(path, "w") as file:
             pickle.dump(file_data, file)
-        if share_sftp == False:
+        if not share_sftp:
             if sftp_client:
                 sftp_client.close()
             sftp_obj.close()
@@ -694,7 +694,6 @@ def create_folders_for_pat(patient_id: str, config_obj: Any = None) -> None:
     pre_annotation_path = config_obj.pre_annotation_path
     pre_annotation_path_mrc = config_obj.pre_annotation_path_mrc
     current_pat_lines_path = config_obj.current_pat_lines_path
-    pre_annotation_path_reports = config_obj.pre_document_annotation_batch_path_reports
 
     for path in [
         pre_annotation_path,

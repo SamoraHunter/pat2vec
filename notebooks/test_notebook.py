@@ -5,7 +5,7 @@ import os
 
 def test_notebook():
     notebook_filename = "notebooks/example_usage.ipynb"
-    notebook_dir = os.path.dirname(notebook_filename)
+    os.path.dirname(notebook_filename)
 
     # Get absolute path to ensure proper directory resolution
     notebook_abs_path = os.path.abspath(notebook_filename)

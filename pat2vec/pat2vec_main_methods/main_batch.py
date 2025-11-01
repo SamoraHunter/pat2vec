@@ -126,7 +126,6 @@ def main_batch(
 
     remote_dump = config_obj.remote_dump
     sftp_client = config_obj.sftp_client
-    sftp_obj = config_obj.sftp_obj
     multi_process = config_obj.multi_process
     main_options = config_obj.main_options
 
@@ -134,7 +133,6 @@ def main_batch(
 
     already_done = False
 
-    done_list = []
     if current_pat_client_id_code not in stripped_list_start:
 
         if skip_additional_listdir:
@@ -159,7 +157,7 @@ def main_batch(
                     stripped_list_start.append(current_pat_client_id_code)
             stripped_list = stripped_list_start.copy()
 
-        if current_pat_client_id_code not in stripped_list and already_done == False:
+        if current_pat_client_id_code not in stripped_list and not already_done:
 
             try:
                 patient_vector = []
@@ -383,7 +381,7 @@ def main_batch(
                     + ".csv"
                 )
 
-                if remote_dump == False:
+                if not remote_dump:
                     if len(pat_concatted) > 1:
                         print(pat_concatted)
                         raise ValueError("Batch too large for local dump")
@@ -391,7 +389,7 @@ def main_batch(
                     pat_concatted.to_csv(output_path)
                 else:
 
-                    if multi_process == True:
+                    if multi_process:
 
                         write_remote(output_path, pat_concatted, config_obj=config_obj)
                     else:
@@ -436,7 +434,7 @@ def main_batch(
                 raise
 
         else:
-            if multi_process == False:
+            if not multi_process:
                 skipped_counter = skipped_counter + 1
             else:
                 with skipped_counter.get_lock():

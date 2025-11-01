@@ -118,7 +118,7 @@ class main:
         self.hostname = config_obj.hostname  # Deprecated
         self.config_obj = config_obj
 
-        if self.config_obj == None:
+        if self.config_obj is None:
             print("Init default config on config_pat2vec")
             self.config_obj = config_pat2vec.config_class()
 
@@ -134,7 +134,7 @@ class main:
         self.current_pat_lines_path = config_obj.current_pat_lines_path
         self.sftp_client = config_obj.sftp_obj
 
-        if cogstack == True:
+        if cogstack:
             # Initialize the CogStack client with the config object
             self.cs = initialize_cogstack_client(self.config_obj)
 
@@ -175,7 +175,7 @@ class main:
         set_best_gpu(config_obj.gpu_mem_threshold)
 
         random.seed(self.config_obj.random_seed_val)
-        if config_obj.shuffle_pat_list == True:
+        if config_obj.shuffle_pat_list:
             random.shuffle(self.all_patient_list)
 
         if self.config_obj.verbosity > 0:
@@ -196,14 +196,13 @@ class main:
             else None
         )
 
-        stripped_list = [
+        [
             x.replace(".csv", "")
             for x in list_dir_wrapper(
                 path=self.current_pat_lines_path, config_obj=config_obj
             )
         ]
 
-        skipped_counter = 0
         self.t = trange(
             len(self.all_patient_list),
             desc="Bar desc",
@@ -221,7 +220,7 @@ class main:
                 path=self.current_pat_lines_path, config_obj=config_obj
             )
         ]
-        if self.config_obj.individual_patient_window == False:
+        if not self.config_obj.individual_patient_window:
             self.stripped_list, self.stripped_list_start = filter_stripped_list(
                 self.stripped_list, config_obj=self.config_obj
             )

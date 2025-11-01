@@ -187,7 +187,7 @@ class CogStack(object):
             request_timeout=request_timeout,
         )
         temp_results = []
-        results = self.elastic.count(
+        self.elastic.count(
             index=index, query=query["query"], request_timeout=30
         )
         for hit in docs_generator:
@@ -635,7 +635,7 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy(
             ]
             all_field_list = list(set(all_field_list))
 
-            if all_fields == True:
+            if all_fields:
                 field_list = all_field_list
             else:
                 field_list = "client_idcode document_guid document_description body_analysed updatetime clientvisit_visitidcode".split()
@@ -862,14 +862,14 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy_mct(
 
             all_field_list = list(set(all_field_list))
 
-            if all_fields == True:
+            if all_fields:
                 field_list = all_field_list
             else:
                 field_list = """observation_guid client_idcode obscatalogmasteritem_displayname
                                 observation_valuetext_analysed observationdocument_recordeddtm
                                 clientvisit_visitidcode""".split()
 
-            if testing == True:
+            if testing:
                 term_docs = cohort_searcher_with_terms_and_search_dummy(
                     index_name="observations",
                     fields_list=field_list,
@@ -1247,7 +1247,7 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy_textual_obs(
 
             all_field_list = list(set(all_field_list))
 
-            if all_fields == True:
+            if all_fields:
                 field_list = all_field_list
             else:
                 field_list = [
@@ -1262,7 +1262,7 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy_textual_obs(
                     "textualObs",
                 ]
 
-            if testing == False:
+            if not testing:
                 # Perform the search
                 term_docs = cohort_searcher_no_terms_fuzzy(
                     index_name="basic_observations",

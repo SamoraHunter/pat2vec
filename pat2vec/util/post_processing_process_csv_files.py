@@ -259,7 +259,7 @@ def process_csv_files_multi(
     # Set the desired number of processes (e.g., half of the available cores)
     desired_half_processes = available_cores // 2
 
-    if n_proc != None:
+    if n_proc is not None:
         if n_proc == "all":
             n_proc_val = available_cores
         if n_proc == "half":

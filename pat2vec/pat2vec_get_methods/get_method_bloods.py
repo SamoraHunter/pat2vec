@@ -191,13 +191,11 @@ def get_current_pat_bloods(
 
     df_unique.reset_index(inplace=True)
 
-    filtered_list = []
 
     obs_columns_list = basicobs_itemname_analysed_list
 
     obs_columns_set = list(set(obs_columns_list))
 
-    filtered_column_list = filtered_list
 
     obs_columns_set_columns_for_df = []
     for i in range(0, len(obs_columns_set)):
@@ -254,7 +252,6 @@ def get_current_pat_bloods(
     else:
         today = datetime.today()
 
-    clients_id = current_pat_client_id_code
 
     df_unique_filtered = df_unique.copy()
 

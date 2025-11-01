@@ -81,7 +81,7 @@ def get_treatment_docs_by_iterative_multi_term_cohort_searcher_no_terms_fuzzy(
 
     # create function that takes a list of terms, runs iterative_multi_term_cohort_searcher_no_terms_fuzzy and returns terms
 
-    if pat2vec_obj.config_obj.lookback == False:
+    if not pat2vec_obj.config_obj.lookback:
         if verbose >= 1:
             logger.info("Using global start date.")
         global_start_day = pat2vec_obj.config_obj.global_start_day
@@ -110,7 +110,7 @@ def get_treatment_docs_by_iterative_multi_term_cohort_searcher_no_terms_fuzzy(
             f"Global End Date: {global_end_day}/{global_end_month}/{global_end_year}"
         )
 
-    if pat2vec_obj.config_obj.testing == True:
+    if pat2vec_obj.config_obj.testing:
         random.seed(random_state)
         if verbose >= 1:
             logger.info("Running in testing mode, doing dummy search.")
@@ -186,9 +186,9 @@ def get_treatment_docs_by_iterative_multi_term_cohort_searcher_no_terms_fuzzy(
     if verbose > 8:
         logger.debug(f"search_results: {search_results.head()}")
 
-    if (os.path.exists(output_path) and overwrite) or os.path.exists(
+    if (os.path.exists(output_path) and overwrite) or not os.path.exists(
         output_path
-    ) == False:
+    ):
         output_directory = os.path.dirname(output_path)
         # Check if the directory exists, if not, create it
         try:
@@ -210,7 +210,7 @@ def get_treatment_docs_by_iterative_multi_term_cohort_searcher_no_terms_fuzzy(
         if verbose >= 1:
             logger.info("treatment docs already exist")
 
-    elif os.path.exists(output_path) and overwrite == False:
+    elif os.path.exists(output_path) and not overwrite:
         if verbose >= 1:
             logger.info("treatment docs already exist, reading and returning")
 

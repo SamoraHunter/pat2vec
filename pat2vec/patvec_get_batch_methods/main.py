@@ -535,7 +535,6 @@ def get_pat_batch_epr_docs(
         raise ValueError("Invalid or missing configuration object.")
 
     overwrite_stored_pat_docs = config_obj.overwrite_stored_pat_docs
-    store_pat_batch_docs = config_obj.store_pat_batch_docs
 
     split_clinical_notes_bool = config_obj.split_clinical_notes
 
@@ -939,7 +938,6 @@ def get_pat_batch_mct_docs(
     global_end_day = config_obj.global_end_day
 
     overwrite_stored_pat_docs = config_obj.overwrite_stored_pat_docs
-    store_pat_batch_docs = config_obj.store_pat_batch_docs
 
     split_clinical_notes_bool = config_obj.split_clinical_notes
 

@@ -147,7 +147,6 @@ def get_appointments(
     start_year, start_month, end_year, end_month, start_day, end_day = (
         get_start_end_year_month(target_date_range, config_obj=config_obj)
     )
-    search_term = ""
 
     appointments_time_field = config_obj.appointments_time_field
 
