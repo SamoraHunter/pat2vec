@@ -108,9 +108,10 @@ class TestIndividualPatientWindow(unittest.TestCase):
             }
         )
 
-        with patch(
-            "pat2vec.util.config_pat2vec.add_offset_column"
-        ) as mock_add_offset, patch("builtins.print"):
+        with (
+            patch("pat2vec.util.config_pat2vec.add_offset_column") as mock_add_offset,
+            patch("builtins.print"),
+        ):
             config = config_class(
                 years=5,  # This should be ignored
                 days=0,
@@ -213,7 +214,7 @@ class TestIndividualPatientWindow(unittest.TestCase):
     def test_ipw_and_prefetch_incompatibility(self):
         """Test that prefetch_pat_batches is disabled when individual_patient_window is True."""
         mock_df = pd.DataFrame({"patient_id": ["P001"], "start_date": ["2020-01-01"]})
-        with self.assertLogs('pat2vec.util.config_pat2vec', level='WARNING') as cm:
+        with self.assertLogs("pat2vec.util.config_pat2vec", level="WARNING") as cm:
             config = config_class(
                 individual_patient_window=True,
                 prefetch_pat_batches=True,
@@ -224,8 +225,15 @@ class TestIndividualPatientWindow(unittest.TestCase):
             )
 
             self.assertFalse(config.prefetch_pat_batches)
-            self.assertTrue(any("not compatible with 'individual_patient_window'" in log for log in cm.output))
-            self.assertTrue(any("Disabling 'prefetch_pat_batches'" in log for log in cm.output))
+            self.assertTrue(
+                any(
+                    "not compatible with 'individual_patient_window'" in log
+                    for log in cm.output
+                )
+            )
+            self.assertTrue(
+                any("Disabling 'prefetch_pat_batches'" in log for log in cm.output)
+            )
 
     def test_ipw_with_missing_column_raises_error(self):
         """Test that a missing start_date or patient_id column raises an error."""

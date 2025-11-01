@@ -14,9 +14,12 @@ import pandas as pd
 from pat2vec.pat2vec_search.cogstack_search_methods import (
     iterative_multi_term_cohort_searcher_no_terms_fuzzy,
     iterative_multi_term_cohort_searcher_no_terms_fuzzy_mct,
-    iterative_multi_term_cohort_searcher_no_terms_fuzzy_textual_obs)
+    iterative_multi_term_cohort_searcher_no_terms_fuzzy_textual_obs,
+)
 from pat2vec.util.get_dummy_data_cohort_searcher import (
-    cohort_searcher_with_terms_and_search_dummy, generate_uuid_list)
+    cohort_searcher_with_terms_and_search_dummy,
+    generate_uuid_list,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -69,7 +72,9 @@ def get_treatment_docs_by_iterative_multi_term_cohort_searcher_no_terms_fuzzy(
         A DataFrame containing the search results.
     """
     if verbose >= 1:
-        logger.info(f"pat2vec_obj.treatment_doc_filename: {pat2vec_obj.treatment_doc_filename}")
+        logger.info(
+            f"pat2vec_obj.treatment_doc_filename: {pat2vec_obj.treatment_doc_filename}"
+        )
 
     # output_path = os.join(pat2vec_obj.proj_name, pat2vec_obj.treatment_doc_filename)
     output_path = os.path.join(pat2vec_obj.treatment_doc_filename)
@@ -98,8 +103,12 @@ def get_treatment_docs_by_iterative_multi_term_cohort_searcher_no_terms_fuzzy(
     if verbose >= 1:
         # Printing results
         logger.info(f"Lookback: {pat2vec_obj.config_obj.lookback}")
-        logger.info(f"Global Start Date: {global_start_day}/{global_start_month}/{global_start_year}")
-        logger.info(f"Global End Date: {global_end_day}/{global_end_month}/{global_end_year}")
+        logger.info(
+            f"Global Start Date: {global_start_day}/{global_start_month}/{global_start_year}"
+        )
+        logger.info(
+            f"Global End Date: {global_end_day}/{global_end_month}/{global_end_year}"
+        )
 
     if pat2vec_obj.config_obj.testing == True:
         random.seed(random_state)
@@ -356,8 +365,7 @@ def calculate_age_append(df: pd.DataFrame) -> pd.DataFrame:
     df.dropna(subset=["client_dob"], inplace=True)
 
     # Ensure 'client_dob' is in datetime format and remove timezone
-    df["client_dob"] = pd.to_datetime(
-        df["client_dob"], errors="coerce", utc=True)
+    df["client_dob"] = pd.to_datetime(df["client_dob"], errors="coerce", utc=True)
     df.dropna(subset=["client_dob"], inplace=True)
     df["client_dob"] = df["client_dob"].dt.tz_localize(None)
 

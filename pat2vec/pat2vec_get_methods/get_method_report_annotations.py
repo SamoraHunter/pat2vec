@@ -4,11 +4,9 @@ import pandas as pd
 from IPython.display import display
 from IPython.utils import io
 
-from pat2vec.util.filter_dataframe_by_timestamp import \
-    filter_dataframe_by_timestamp
+from pat2vec.util.filter_dataframe_by_timestamp import filter_dataframe_by_timestamp
 from pat2vec.util.get_start_end_year_month import get_start_end_year_month
-from pat2vec.util.methods_annotation import \
-    calculate_pretty_name_count_features
+from pat2vec.util.methods_annotation import calculate_pretty_name_count_features
 from pat2vec.util.methods_get import update_pbar
 
 

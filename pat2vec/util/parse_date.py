@@ -1,6 +1,7 @@
 import datetime
 from typing import Union
 
+
 def validate_input_dates(
     start_year: Union[int, str],
     start_month: Union[int, str],
@@ -56,13 +57,13 @@ def validate_input_dates(
         raise ValueError(f"Invalid end date component: {e}") from e
 
     # Step 3: Format components into strings. strftime handles the zfill.
-    s_year_str = start_date_obj.strftime('%Y')
-    s_month_str = start_date_obj.strftime('%m')
-    s_day_str = start_date_obj.strftime('%d')
+    s_year_str = start_date_obj.strftime("%Y")
+    s_month_str = start_date_obj.strftime("%m")
+    s_day_str = start_date_obj.strftime("%d")
 
-    e_year_str = end_date_obj.strftime('%Y')
-    e_month_str = end_date_obj.strftime('%m')
-    e_day_str = end_date_obj.strftime('%d')
+    e_year_str = end_date_obj.strftime("%Y")
+    e_month_str = end_date_obj.strftime("%m")
+    e_day_str = end_date_obj.strftime("%d")
 
     return (
         s_year_str,

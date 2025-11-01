@@ -17,47 +17,47 @@ import typing
 autodoc_typehints = "description"
 
 # Point to the project root (one level up from docs/source)
-sys.path.insert(0, os.path.abspath('../..'))
+sys.path.insert(0, os.path.abspath("../.."))
 
 
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
-project = 'pat2vec'
-copyright = '2024, Samora Hunter'
-author = 'Samora Hunter'
+project = "pat2vec"
+copyright = "2024, Samora Hunter"
+author = "Samora Hunter"
 
 # The full version, including alpha/beta/rc tags
-release = '0.1.0'
+release = "0.1.0"
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
 extensions = [
-    'sphinx.ext.autodoc',  # Core library to pull in documentation from docstrings
-    'sphinx.ext.autosummary',  # Create summary tables
-    'sphinx.ext.napoleon',  # Support for Google and NumPy style docstrings
-    'sphinx.ext.viewcode',  # Add links to highlighted source code
-    'sphinx_autodoc_typehints',  # Use the compatible version from pyproject.toml
-    'myst_parser',  # For Markdown support
-    'sphinxcontrib.mermaid'
+    "sphinx.ext.autodoc",  # Core library to pull in documentation from docstrings
+    "sphinx.ext.autosummary",  # Create summary tables
+    "sphinx.ext.napoleon",  # Support for Google and NumPy style docstrings
+    "sphinx.ext.viewcode",  # Add links to highlighted source code
+    "sphinx_autodoc_typehints",  # Use the compatible version from pyproject.toml
+    "myst_parser",  # For Markdown support
+    "sphinxcontrib.mermaid",
 ]
 
 # Tell Sphinx to parse both reStructuredText and Markdown files.
 source_suffix = {
-    '.rst': 'restructuredtext',
-    '.md': 'markdown',
+    ".rst": "restructuredtext",
+    ".md": "markdown",
 }
 
-templates_path = ['_templates']
-exclude_patterns = ['_Sidebar.md']
+templates_path = ["_templates"]
+exclude_patterns = ["_Sidebar.md"]
 
 # -- Options for autodoc -----------------------------------------------------
 autodoc_default_options = {
-    'members': True,
-    'member-order': 'bysource',
-    'undoc-members': False,  # Set to True if you want to see items without docstrings
-    'show-inheritance': True,
+    "members": True,
+    "member-order": "bysource",
+    "undoc-members": False,  # Set to True if you want to see items without docstrings
+    "show-inheritance": True,
 }
 
 # -- Options for Napoleon ----------------------------------------------------
@@ -77,5 +77,5 @@ napoleon_use_rtype = True
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
-html_theme = 'sphinx_rtd_theme'
-html_static_path = ['_static']
+html_theme = "sphinx_rtd_theme"
+html_static_path = ["_static"]

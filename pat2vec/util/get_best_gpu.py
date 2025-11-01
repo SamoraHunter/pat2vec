@@ -7,6 +7,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
 def set_best_gpu(gpu_mem_threshold: int) -> None:
     """Selects the best available GPU based on free memory.
 

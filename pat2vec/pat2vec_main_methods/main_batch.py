@@ -168,60 +168,161 @@ def main_batch(
                 # Define which functions require special or optional arguments.
                 # This makes the calling mechanism more robust and easier to extend.
                 funcs_with_cohort_searcher = {
-                    get_current_pat_drugs, get_current_pat_diagnostics, get_current_pat_annotations,
-                    get_current_pat_annotations_mrc_cs, get_core_02, get_bed, get_vte_status,
-                    get_hosp_site, get_core_resus, get_news, get_smoking,
-                    get_current_pat_report_annotations, get_current_pat_textual_obs_annotations,
-                    get_appointments
+                    get_current_pat_drugs,
+                    get_current_pat_diagnostics,
+                    get_current_pat_annotations,
+                    get_current_pat_annotations_mrc_cs,
+                    get_core_02,
+                    get_bed,
+                    get_vte_status,
+                    get_hosp_site,
+                    get_core_resus,
+                    get_news,
+                    get_smoking,
+                    get_current_pat_report_annotations,
+                    get_current_pat_textual_obs_annotations,
+                    get_appointments,
                 }
                 funcs_with_cat = {
-                    get_current_pat_annotations, get_current_pat_annotations_mrc_cs
+                    get_current_pat_annotations,
+                    get_current_pat_annotations_mrc_cs,
                 }
                 funcs_with_t = {
-                    get_current_pat_annotations, get_current_pat_annotations_mrc_cs,
-                    get_current_pat_textual_obs_annotations
+                    get_current_pat_annotations,
+                    get_current_pat_annotations_mrc_cs,
+                    get_current_pat_textual_obs_annotations,
                 }
 
                 feature_configs = [
                     # Simple functions (no optional cohort_searcher, cat, or t)
-                    {"option": "demo", "pbar": "demo", "func": get_demo, "batch_arg": "pat_batch", "batch_key": "batch_demo"},
-                    {"option": "bmi", "pbar": "bmi", "func": get_bmi_features, "batch_arg": "pat_batch", "batch_key": "batch_bmi"},
-                    {"option": "bloods", "pbar": "bloods", "func": get_current_pat_bloods, "batch_arg": "pat_batch", "batch_key": "batch_bloods"},
-
+                    {
+                        "option": "demo",
+                        "pbar": "demo",
+                        "func": get_demo,
+                        "batch_arg": "pat_batch",
+                        "batch_key": "batch_demo",
+                    },
+                    {
+                        "option": "bmi",
+                        "pbar": "bmi",
+                        "func": get_bmi_features,
+                        "batch_arg": "pat_batch",
+                        "batch_key": "batch_bmi",
+                    },
+                    {
+                        "option": "bloods",
+                        "pbar": "bloods",
+                        "func": get_current_pat_bloods,
+                        "batch_arg": "pat_batch",
+                        "batch_key": "batch_bloods",
+                    },
                     # Functions that can accept cohort_searcher
-                    {"option": "drugs", "pbar": "drugs", "func": get_current_pat_drugs, "batch_arg": "pat_batch", "batch_key": "batch_drugs"},
-                    {"option": "diagnostics", "pbar": "diagnostics", "func": get_current_pat_diagnostics, "batch_arg": "pat_batch", "batch_key": "batch_diagnostics"},
-                    {"option": "core_02", "pbar": "core_02", "func": get_core_02, "batch_arg": "pat_batch", "batch_key": "batch_core_02"},
-                    {"option": "bed", "pbar": "bed", "func": get_bed, "batch_arg": "pat_batch", "batch_key": "batch_bednumber"},
-                    {"option": "vte_status", "pbar": "vte_status", "func": get_vte_status, "batch_arg": "pat_batch", "batch_key": "batch_vte"},
-                    {"option": "hosp_site", "pbar": "hosp_site", "func": get_hosp_site, "batch_arg": "pat_batch", "batch_key": "batch_hospsite"},
-                    {"option": "core_resus", "pbar": "core_resus", "func": get_core_resus, "batch_arg": "pat_batch", "batch_key": "batch_resus"},
-                    {"option": "news", "pbar": "news", "func": get_news, "batch_arg": "pat_batch", "batch_key": "batch_news"},
-                    {"option": "smoking", "pbar": "smoking", "func": get_smoking, "batch_arg": "pat_batch", "batch_key": "batch_smoking"},
-                    {"option": "appointments", "pbar": "appointments", "func": get_appointments, "batch_arg": "pat_batch", "batch_key": "batch_appointments"},
-
+                    {
+                        "option": "drugs",
+                        "pbar": "drugs",
+                        "func": get_current_pat_drugs,
+                        "batch_arg": "pat_batch",
+                        "batch_key": "batch_drugs",
+                    },
+                    {
+                        "option": "diagnostics",
+                        "pbar": "diagnostics",
+                        "func": get_current_pat_diagnostics,
+                        "batch_arg": "pat_batch",
+                        "batch_key": "batch_diagnostics",
+                    },
+                    {
+                        "option": "core_02",
+                        "pbar": "core_02",
+                        "func": get_core_02,
+                        "batch_arg": "pat_batch",
+                        "batch_key": "batch_core_02",
+                    },
+                    {
+                        "option": "bed",
+                        "pbar": "bed",
+                        "func": get_bed,
+                        "batch_arg": "pat_batch",
+                        "batch_key": "batch_bednumber",
+                    },
+                    {
+                        "option": "vte_status",
+                        "pbar": "vte_status",
+                        "func": get_vte_status,
+                        "batch_arg": "pat_batch",
+                        "batch_key": "batch_vte",
+                    },
+                    {
+                        "option": "hosp_site",
+                        "pbar": "hosp_site",
+                        "func": get_hosp_site,
+                        "batch_arg": "pat_batch",
+                        "batch_key": "batch_hospsite",
+                    },
+                    {
+                        "option": "core_resus",
+                        "pbar": "core_resus",
+                        "func": get_core_resus,
+                        "batch_arg": "pat_batch",
+                        "batch_key": "batch_resus",
+                    },
+                    {
+                        "option": "news",
+                        "pbar": "news",
+                        "func": get_news,
+                        "batch_arg": "pat_batch",
+                        "batch_key": "batch_news",
+                    },
+                    {
+                        "option": "smoking",
+                        "pbar": "smoking",
+                        "func": get_smoking,
+                        "batch_arg": "pat_batch",
+                        "batch_key": "batch_smoking",
+                    },
+                    {
+                        "option": "appointments",
+                        "pbar": "appointments",
+                        "func": get_appointments,
+                        "batch_arg": "pat_batch",
+                        "batch_key": "batch_appointments",
+                    },
                     # Annotation functions with more complex signatures
                     {
-                        "option": "annotations", "pbar": "annotations_epr", "func": get_current_pat_annotations,
-                        "batch_arg": "batch_epr_docs_annotations", "batch_key": "batch_epr_docs_annotations"
+                        "option": "annotations",
+                        "pbar": "annotations_epr",
+                        "func": get_current_pat_annotations,
+                        "batch_arg": "batch_epr_docs_annotations",
+                        "batch_key": "batch_epr_docs_annotations",
                     },
                     {
-                        "option": "annotations_mrc", "pbar": "annotations_mrc", "func": get_current_pat_annotations_mrc_cs,
-                        "batch_arg": "batch_mct_docs_annotations", "batch_key": "batch_epr_docs_annotations_mct"
+                        "option": "annotations_mrc",
+                        "pbar": "annotations_mrc",
+                        "func": get_current_pat_annotations_mrc_cs,
+                        "batch_arg": "batch_mct_docs_annotations",
+                        "batch_key": "batch_epr_docs_annotations_mct",
                     },
                     {
-                        "option": "annotations_reports", "pbar": "annotations_reports", "func": get_current_pat_report_annotations,
-                        "batch_arg": "report_annotations", "batch_key": "batch_report_docs_annotations"
+                        "option": "annotations_reports",
+                        "pbar": "annotations_reports",
+                        "func": get_current_pat_report_annotations,
+                        "batch_arg": "report_annotations",
+                        "batch_key": "batch_report_docs_annotations",
                     },
                     {
-                        "option": "textual_obs", "pbar": "textual_obs", "func": get_current_pat_textual_obs_annotations,
-                        "batch_arg": "textual_obs_annotations", "batch_key": "batch_textual_obs_annotations"
+                        "option": "textual_obs",
+                        "pbar": "textual_obs",
+                        "func": get_current_pat_textual_obs_annotations,
+                        "batch_arg": "textual_obs_annotations",
+                        "batch_key": "batch_textual_obs_annotations",
                     },
                 ]
 
                 for i, config in enumerate(feature_configs):
                     if main_options.get(config["option"]):
-                        update_pbar(p_bar_entry, start_time, i, config["pbar"], t, config_obj)
+                        update_pbar(
+                            p_bar_entry, start_time, i, config["pbar"], t, config_obj
+                        )
 
                         # Dynamically build the arguments dictionary for each function
                         args = {
@@ -235,7 +336,9 @@ def main_batch(
 
                         # Add optional arguments only if the function expects them
                         if config["func"] in funcs_with_cohort_searcher:
-                            args["cohort_searcher_with_terms_and_search"] = cohort_searcher_with_terms_and_search
+                            args["cohort_searcher_with_terms_and_search"] = (
+                                cohort_searcher_with_terms_and_search
+                            )
                         if config["func"] in funcs_with_cat:
                             args["cat"] = cat
                         if config["func"] in funcs_with_t:

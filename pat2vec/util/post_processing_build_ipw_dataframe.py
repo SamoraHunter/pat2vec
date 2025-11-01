@@ -7,6 +7,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
 def build_ipw_dataframe(
     annot_filter_arguments: Optional[Dict[str, Any]] = None,
     filter_codes: Optional[List[int]] = None,

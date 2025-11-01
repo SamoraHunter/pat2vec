@@ -12,11 +12,14 @@ def appendAge(dataFrame: pd.DataFrame) -> pd.DataFrame:
     Returns:
         The DataFrame with an added 'age' column.
     """
+
     def age(born):
         born = born.split(".")[0]
         born = datetime.strptime(born, "%Y-%m-%dT%H:%M:%S").date()
         today = date.today()
-        return today.year - born.year - ((today.month, today.day) < (born.month, born.day))
+        return (
+            today.year - born.year - ((today.month, today.day) < (born.month, born.day))
+        )
 
     dataFrame["age"] = dataFrame["client_dob"].apply(age)
 
@@ -32,6 +35,7 @@ def appendAgeAtRecord(dataFrame: pd.DataFrame) -> pd.DataFrame:
     Returns:
         The DataFrame with an added 'ageAtRecord' column.
     """
+
     def ageAtRecord(row):
         born = datetime.strptime(
             row["client_dob"].split(".")[0], "%Y-%m-%dT%H:%M:%S"
@@ -41,7 +45,9 @@ def appendAgeAtRecord(dataFrame: pd.DataFrame) -> pd.DataFrame:
         ).date()
 
         today = updateTime
-        return today.year - born.year - ((today.month, today.day) < (born.month, born.day))
+        return (
+            today.year - born.year - ((today.month, today.day) < (born.month, born.day))
+        )
 
     dataFrame["ageAtRecord"] = dataFrame.apply(ageAtRecord, axis=1)
     return dataFrame
@@ -57,6 +63,7 @@ def append_age_at_record_series(series: pd.Series) -> pd.Series:
     Returns:
         The input Series with an added 'age' value.
     """
+
     def age_at_record(row):
         try:
             born = datetime.strptime(
@@ -73,7 +80,9 @@ def append_age_at_record_series(series: pd.Series) -> pd.Series:
             updateTime = row["updatetime"].iloc[0].date()
 
         today = updateTime
-        return today.year - born.year - ((today.month, today.day) < (born.month, born.day))
+        return (
+            today.year - born.year - ((today.month, today.day) < (born.month, born.day))
+        )
 
     series["age"] = age_at_record(series)
 

@@ -7,6 +7,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
 def sample_by_terms(
     df: pd.DataFrame,
     column: str,

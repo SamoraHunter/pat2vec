@@ -122,7 +122,9 @@ def generate_epr_documents_data(
         A pandas DataFrame with generated dummy EPR document data.
     """
     if len(entered_list) > 0:
-        logger.info(f"Generating {num_rows} dummy EPR docs for {len(entered_list)} patients, e.g., {entered_list[0]}")
+        logger.info(
+            f"Generating {num_rows} dummy EPR docs for {len(entered_list)} patients, e.g., {entered_list[0]}"
+        )
 
     df_holder_list = []
 
@@ -1058,7 +1060,9 @@ def generate_basic_observations_textual_obs_data(
     return df
 
 
-def extract_date_range(date_string: str) -> Optional[Tuple[int, int, int, int, int, int]]:
+def extract_date_range(
+    date_string: str,
+) -> Optional[Tuple[int, int, int, int, int, int]]:
     """Extracts a date range from a string.
 
     The expected format is "YYYY-MM-DD TO YYYY-MM-DD".
@@ -1128,7 +1132,9 @@ def cohort_searcher_with_terms_and_search_dummy(
         global_end_year,
         global_end_month,
         global_end_day,
-    ) = extract_date_range(search_string)  # type: ignore
+    ) = extract_date_range(
+        search_string
+    )  # type: ignore
 
     if verbose:
         logger.debug(f"cohort_searcher_with_terms_and_search_dummy: {search_string}")
@@ -1138,8 +1144,13 @@ def cohort_searcher_with_terms_and_search_dummy(
             logger.debug("Generating data for 'client_firstname'")
         num_rows = random.randint(0, 10)
         df = generate_epr_documents_personal_data(
-            num_rows, entered_list, global_start_year, global_start_month,
-            global_end_year, global_end_month, fields_list=fields_list,
+            num_rows,
+            entered_list,
+            global_start_year,
+            global_start_month,
+            global_end_year,
+            global_end_month,
+            fields_list=fields_list,
         )
         return df
 
@@ -1149,8 +1160,14 @@ def cohort_searcher_with_terms_and_search_dummy(
         probabilities = [0.7, 0.1, 0.05, 0.05, 0.05]
         num_rows = random.choices(range(1, 6), probabilities)[0]
         df = generate_epr_documents_data(
-            num_rows, entered_list, global_start_year, global_start_month,
-            global_end_year, global_end_month, use_GPT=use_GPT, fields_list=fields_list,
+            num_rows,
+            entered_list,
+            global_start_year,
+            global_start_month,
+            global_end_year,
+            global_end_month,
+            use_GPT=use_GPT,
+            fields_list=fields_list,
         )
         return df
 
@@ -1162,42 +1179,75 @@ def cohort_searcher_with_terms_and_search_dummy(
             probabilities = [0.7, 0.1, 0.05, 0.05, 0.05]
             num_rows = random.choices(range(1, 6), probabilities)[0]
             df = generate_observations_Reports_text_data(
-                num_rows, entered_list, global_start_year, global_start_month,
-                global_end_year, global_end_month, use_GPT=use_GPT, fields_list=fields_list,
+                num_rows,
+                entered_list,
+                global_start_year,
+                global_start_month,
+                global_end_year,
+                global_end_month,
+                use_GPT=use_GPT,
+                fields_list=fields_list,
             )
             return df
 
-        elif fields_list == [ "client_idcode", "basicobs_itemname_analysed", "basicobs_value_numeric", "basicobs_value_analysed", "basicobs_entered", "clientvisit_serviceguid", "basicobs_guid", "updatetime", "textualObs"]:
+        elif fields_list == [
+            "client_idcode",
+            "basicobs_itemname_analysed",
+            "basicobs_value_numeric",
+            "basicobs_value_analysed",
+            "basicobs_entered",
+            "clientvisit_serviceguid",
+            "basicobs_guid",
+            "updatetime",
+            "textualObs",
+        ]:
             if verbose:
                 logger.debug("Generating data for 'basic_observations textualObs'")
             probabilities = [0.7, 0.1, 0.05, 0.05, 0.05]
             num_rows = random.choices(range(1, 6), probabilities)[0]
             df = generate_basic_observations_textual_obs_data(
-                num_rows, entered_list, global_start_year, global_start_month,
-                global_end_year, global_end_month, fields_list=fields_list,
+                num_rows,
+                entered_list,
+                global_start_year,
+                global_start_month,
+                global_end_year,
+                global_end_month,
+                fields_list=fields_list,
             )
             return df
 
-        else: # Fallback for other basic_observations
+        else:  # Fallback for other basic_observations
             if verbose:
                 logger.debug("Generating data for 'basicobs_value_numeric'")
             num_rows = random.randint(0, 10)
             df = generate_basic_observations_data(
-                num_rows, entered_list, global_start_year, global_start_month,
-                global_end_year, global_end_month, fields_list=fields_list,
+                num_rows,
+                entered_list,
+                global_start_year,
+                global_start_month,
+                global_end_year,
+                global_end_month,
+                fields_list=fields_list,
             )
             return df
 
     elif index_name == "observations":
         # Single entry point for the 'observations' index with nested triage
-        if any(term in search_string for term in ["OBS BMI", "OBS Weight", "OBS Height"]):
+        if any(
+            term in search_string for term in ["OBS BMI", "OBS Weight", "OBS Height"]
+        ):
             if verbose:
                 logger.debug("Generating data for 'bmi'")
             probabilities = [0.1, 0.2, 0.4, 0.2, 0.1]
             num_rows = random.choices(range(1, 6), probabilities)[0]
             df = generate_bmi_data(
-                num_rows, entered_list, global_start_year, global_start_month,
-                global_end_year, global_end_month, fields_list=fields_list,
+                num_rows,
+                entered_list,
+                global_start_year,
+                global_start_month,
+                global_end_year,
+                global_end_month,
+                fields_list=fields_list,
             )
             return df
 
@@ -1207,8 +1257,13 @@ def cohort_searcher_with_terms_and_search_dummy(
             probabilities = [0.1, 0.2, 0.4, 0.2, 0.1]
             num_rows = random.choices(range(1, 6), probabilities)[0]
             df = generate_core_o2_data(
-                num_rows, entered_list, global_start_year, global_start_month,
-                global_end_year, global_end_month, fields_list=fields_list,
+                num_rows,
+                entered_list,
+                global_start_year,
+                global_start_month,
+                global_end_year,
+                global_end_month,
+                fields_list=fields_list,
             )
             return df
 
@@ -1218,8 +1273,13 @@ def cohort_searcher_with_terms_and_search_dummy(
             probabilities = [0.7, 0.25, 0.05]
             num_rows = random.choices(range(1, 4), probabilities)[0]
             df = generate_core_resus_data(
-                num_rows, entered_list, global_start_year, global_start_month,
-                global_end_year, global_end_month, fields_list=fields_list,
+                num_rows,
+                entered_list,
+                global_start_year,
+                global_start_month,
+                global_end_year,
+                global_end_month,
+                fields_list=fields_list,
             )
             return df
 
@@ -1229,8 +1289,13 @@ def cohort_searcher_with_terms_and_search_dummy(
             probabilities = [0.8, 0.1, 0.05, 0.03, 0.02]
             num_rows = random.choices(range(1, 6), probabilities)[0]
             df = generate_hospital_site_data(
-                num_rows, entered_list, global_start_year, global_start_month,
-                global_end_year, global_end_month, fields_list=fields_list,
+                num_rows,
+                entered_list,
+                global_start_year,
+                global_start_month,
+                global_end_year,
+                global_end_month,
+                fields_list=fields_list,
             )
             return df
 
@@ -1240,20 +1305,34 @@ def cohort_searcher_with_terms_and_search_dummy(
             probabilities = [0.7, 0.1, 0.05, 0.05, 0.05]
             num_rows = random.choices(range(1, 6), probabilities)[0]
             df = generate_observations_MRC_text_data(
-                num_rows, entered_list, global_start_year, global_start_month,
-                global_end_year, global_end_month, use_GPT=use_GPT, fields_list=fields_list,
+                num_rows,
+                entered_list,
+                global_start_year,
+                global_start_month,
+                global_end_year,
+                global_end_month,
+                use_GPT=use_GPT,
+                fields_list=fields_list,
             )
             return df
 
-        else: # Generic fallback for any other 'observations' request
+        else:  # Generic fallback for any other 'observations' request
             if verbose:
                 logger.debug("Generating data for generic 'observations'")
             probabilities = [0.7, 0.1, 0.05, 0.05, 0.05]
             num_rows = random.choices(range(1, 6), probabilities)[0]
-            search_term = str(extract_search_term_obscatalogmasteritem_displayname(search_string))
+            search_term = str(
+                extract_search_term_obscatalogmasteritem_displayname(search_string)
+            )
             df = generate_observations_data(
-                num_rows, entered_list, global_start_year, global_start_month,
-                global_end_year, global_end_month, search_term, fields_list=fields_list,
+                num_rows,
+                entered_list,
+                global_start_year,
+                global_start_month,
+                global_end_year,
+                global_end_month,
+                search_term,
+                fields_list=fields_list,
             )
             return df
 
@@ -1263,8 +1342,13 @@ def cohort_searcher_with_terms_and_search_dummy(
                 logger.debug("Generating data for 'orders' with medication")
             num_rows = random.randint(0, 10)
             df = generate_drug_orders_data(
-                num_rows, entered_list, global_start_year, global_start_month,
-                global_end_year, global_end_month, fields_list=fields_list,
+                num_rows,
+                entered_list,
+                global_start_year,
+                global_start_month,
+                global_end_year,
+                global_end_month,
+                fields_list=fields_list,
             )
             return df
 
@@ -1273,8 +1357,13 @@ def cohort_searcher_with_terms_and_search_dummy(
                 logger.debug("Generating data for 'orders' with diagnostic")
             num_rows = random.randint(0, 10)
             df = generate_diagnostic_orders_data(
-                num_rows, entered_list, global_start_year, global_start_month,
-                global_end_year, global_end_month, fields_list=fields_list,
+                num_rows,
+                entered_list,
+                global_start_year,
+                global_start_month,
+                global_end_year,
+                global_end_month,
+                fields_list=fields_list,
             )
             return df
 
@@ -1283,8 +1372,13 @@ def cohort_searcher_with_terms_and_search_dummy(
             logger.debug("Generating data for 'pims_apps'")
         num_rows = random.randint(0, 10)
         df = generate_appointments_data(
-            num_rows, entered_list, global_start_year, global_start_month,
-            global_end_year, global_end_month, fields_list=fields_list,
+            num_rows,
+            entered_list,
+            global_start_year,
+            global_start_month,
+            global_end_year,
+            global_end_month,
+            fields_list=fields_list,
         )
         return df
 
@@ -1292,7 +1386,9 @@ def cohort_searcher_with_terms_and_search_dummy(
         logger.warning(
             f"No matching triage rule found for '{search_string}'. Returning an empty DataFrame."
         )
-        return pd.DataFrame(columns=["updatetime", "_index", "_id", "_score"] + fields_list)
+        return pd.DataFrame(
+            columns=["updatetime", "_index", "_id", "_score"] + fields_list
+        )
 
 
 # # Example usage for epr_documents with personal information:
@@ -1482,7 +1578,7 @@ def run_generate_patient_timeline_and_append(
             df = pd.read_csv(output_path)  # Read existing CSV file
         else:  # If the CSV file doesn't exist
             df = pd.DataFrame(
-                columns=["client_idcode", "body_analysed"] # type: ignore
+                columns=["client_idcode", "body_analysed"]  # type: ignore
             )  # Create a new DataFrame with two columns
     except FileNotFoundError:
         logger.error(f"FileNotFoundError: {output_path} doesn't exist!")
@@ -1657,16 +1753,15 @@ def generate_hospital_site_data(
         data = {
             "observation_guid": [faker.uuid4() for _ in range(num_rows)],
             "client_idcode": [client_id_code for _ in range(num_rows)],
-
             # This field is constant based on the SEARCH_TERM in your code.
-            "obscatalogmasteritem_displayname": ["CORE_HospitalSite" for _ in range(num_rows)],
-
+            "obscatalogmasteritem_displayname": [
+                "CORE_HospitalSite" for _ in range(num_rows)
+            ],
             # This field contains the actual site name.
             "observation_valuetext_analysed": [
                 maybe_nan(faker.random_element(elements=hospital_site_values))
                 for _ in range(num_rows)
             ],
-
             # Generate a random date for when the observation was recorded.
             "observationdocument_recordeddtm": [
                 create_random_date_from_globals(
@@ -1677,7 +1772,10 @@ def generate_hospital_site_data(
                 )
                 for _ in range(num_rows)
             ],
-            "clientvisit_visitidcode": [f"visit_{faker.random_number(digits=8, fix_len=True)}" for _ in range(num_rows)],
+            "clientvisit_visitidcode": [
+                f"visit_{faker.random_number(digits=8, fix_len=True)}"
+                for _ in range(num_rows)
+            ],
         }
         df = pd.DataFrame(data)
         df_holder_list.append(df)
@@ -1692,6 +1790,7 @@ def generate_hospital_site_data(
     final_df = final_df[fields_list]
 
     return final_df
+
 
 def generate_bmi_data(
     num_rows: int,
@@ -1742,11 +1841,16 @@ def generate_bmi_data(
             "observation_valuetext_analysed": values,
             "observationdocument_recordeddtm": [
                 create_random_date_from_globals(
-                    global_start_year, global_start_month,
-                    global_end_year, global_end_month
-                ) for _ in range(num_rows)
+                    global_start_year,
+                    global_start_month,
+                    global_end_year,
+                    global_end_month,
+                )
+                for _ in range(num_rows)
             ],
-            "clientvisit_visitidcode": [f"visit_{faker.random_number(digits=8)}" for _ in range(num_rows)],
+            "clientvisit_visitidcode": [
+                f"visit_{faker.random_number(digits=8)}" for _ in range(num_rows)
+            ],
         }
         df_holder_list.append(pd.DataFrame(data))
 
@@ -1783,21 +1887,39 @@ def generate_core_o2_data(
     df_holder_list = []
 
     # Realistic categorical values for SpO2 and oxygen delivery
-    spo2_values = ['98%', '97%', '96%', '95%', '94%', '93%', 'On Air', '2L O2 NP', '4L O2 NP', 'NRB Mask']
+    spo2_values = [
+        "98%",
+        "97%",
+        "96%",
+        "95%",
+        "94%",
+        "93%",
+        "On Air",
+        "2L O2 NP",
+        "4L O2 NP",
+        "NRB Mask",
+    ]
 
     for client_id_code in entered_list:
         data = {
             "observation_guid": [faker.uuid4() for _ in range(num_rows)],
             "client_idcode": [client_id_code for _ in range(num_rows)],
             "obscatalogmasteritem_displayname": ["CORE_SpO2" for _ in range(num_rows)],
-            "observation_valuetext_analysed": [random.choice(spo2_values) for _ in range(num_rows)],
+            "observation_valuetext_analysed": [
+                random.choice(spo2_values) for _ in range(num_rows)
+            ],
             "observationdocument_recordeddtm": [
                 create_random_date_from_globals(
-                    global_start_year, global_start_month,
-                    global_end_year, global_end_month
-                ) for _ in range(num_rows)
+                    global_start_year,
+                    global_start_month,
+                    global_end_year,
+                    global_end_month,
+                )
+                for _ in range(num_rows)
             ],
-            "clientvisit_visitidcode": [f"visit_{faker.random_number(digits=8)}" for _ in range(num_rows)],
+            "clientvisit_visitidcode": [
+                f"visit_{faker.random_number(digits=8)}" for _ in range(num_rows)
+            ],
         }
         df_holder_list.append(pd.DataFrame(data))
 
@@ -1806,6 +1928,7 @@ def generate_core_o2_data(
 
     final_df = pd.concat(df_holder_list, ignore_index=True)
     return final_df[fields_list]
+
 
 def generate_core_resus_data(
     num_rows: int,
@@ -1835,22 +1958,31 @@ def generate_core_resus_data(
     # These are the exact values the feature calculation function looks for.
     resuscitation_statuses = [
         "For cardiopulmonary resuscitation",
-        "Not for cardiopulmonary resuscitation"
+        "Not for cardiopulmonary resuscitation",
     ]
 
     for client_id_code in entered_list:
         data = {
             "observation_guid": [faker.uuid4() for _ in range(num_rows)],
             "client_idcode": [client_id_code for _ in range(num_rows)],
-            "obscatalogmasteritem_displayname": ["CORE_RESUS_STATUS" for _ in range(num_rows)],
-            "observation_valuetext_analysed": [random.choice(resuscitation_statuses) for _ in range(num_rows)],
+            "obscatalogmasteritem_displayname": [
+                "CORE_RESUS_STATUS" for _ in range(num_rows)
+            ],
+            "observation_valuetext_analysed": [
+                random.choice(resuscitation_statuses) for _ in range(num_rows)
+            ],
             "observationdocument_recordeddtm": [
                 create_random_date_from_globals(
-                    global_start_year, global_start_month,
-                    global_end_year, global_end_month
-                ) for _ in range(num_rows)
+                    global_start_year,
+                    global_start_month,
+                    global_end_year,
+                    global_end_month,
+                )
+                for _ in range(num_rows)
             ],
-            "clientvisit_visitidcode": [f"visit_{faker.random_number(digits=8)}" for _ in range(num_rows)],
+            "clientvisit_visitidcode": [
+                f"visit_{faker.random_number(digits=8)}" for _ in range(num_rows)
+            ],
         }
         df_holder_list.append(pd.DataFrame(data))
 

@@ -80,7 +80,7 @@ def process_csv_files(
     if os.path.exists(output_file):
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         base_name, extension = os.path.splitext(output_file)
-        backup_file = f"{base_name}_{timestamp}_backup{extension}" # type: ignore
+        backup_file = f"{base_name}_{timestamp}_backup{extension}"  # type: ignore
         logger.warning(f"Output file already exists. Creating backup: {backup_file}")
         os.rename(output_file, backup_file)
 
@@ -238,7 +238,7 @@ def process_csv_files_multi(
     if os.path.exists(output_file):
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         base_name, extension = os.path.splitext(output_file)
-        new_output_file = f"{base_name}_{timestamp}_overwritten{extension}" # type: ignore
+        new_output_file = f"{base_name}_{timestamp}_overwritten{extension}"  # type: ignore
         logger.warning(
             f"Warning: Output file already exists. Renaming {output_file} to {new_output_file}"
         )

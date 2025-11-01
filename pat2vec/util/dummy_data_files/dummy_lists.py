@@ -119,7 +119,7 @@ drug_names = [
     "Epinephrine",
     "Flunisolide",
     "Ipratropium",
-    "Omalizumab"
+    "Omalizumab",
 ]
 
 # diagnostic_names.py
@@ -312,7 +312,6 @@ diagnostic_names = [
     "Breast Lesion Localization",
     "Breast Tumor Localization",
     "Breast Lumpectomy Localization",
-
 ]
 
 # blood_test_names.py
@@ -590,7 +589,7 @@ blood_test_names = [
     "Clot Retraction Time",
     "Coagulation Factor Activity Assays",
     "Activated Clotting Time (ACT)",
-    "Thromboelastography (TEG)"
+    "Thromboelastography (TEG)",
 ]
 
 
@@ -1895,5 +1894,5 @@ ethnicity_list = [
     "Mauritian British",
     "Malagasy British",
     "Comoran British",
-    "Mozambican British"
+    "Mozambican British",
 ]

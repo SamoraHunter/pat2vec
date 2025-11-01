@@ -68,7 +68,9 @@ def date_cleaner(df: pd.DataFrame, cols: List[str], date_format: str) -> None:
 
 
 def bulk_str_findall(
-    target_colname_regex_pairs: Dict[str, str], source_colname: str, df_name: pd.DataFrame
+    target_colname_regex_pairs: Dict[str, str],
+    source_colname: str,
+    df_name: pd.DataFrame,
 ) -> None:
     """Applies multiple regex `findall` operations to a source column.
 

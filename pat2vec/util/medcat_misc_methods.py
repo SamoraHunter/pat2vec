@@ -14,6 +14,7 @@ import os
 
 logger = logging.getLogger(__name__)
 
+
 def medcat_trainer_export_to_df(file_path: str) -> pd.DataFrame:
     """
     Converts a MedCATTrainer export JSON file to a pandas DataFrame.
@@ -107,6 +108,7 @@ def medcat_trainer_export_to_df(file_path: str) -> pd.DataFrame:
 # # df = medcat_trainer_export_to_df('merge4.json')
 # # logger.info(df)
 #
+
 
 def extract_labels_from_medcat_annotation_export(
     df: pd.DataFrame,
@@ -303,10 +305,10 @@ def manually_label_annotation_df(
 
     for index, row in tqdm(df.iterrows()):
         if confirmatory:
-            if pd.notnull(row["client_idcode"]): # type: ignore
+            if pd.notnull(row["client_idcode"]):  # type: ignore
                 existing_labels = [
                     df[
-                        (df["client_idcode"] == row["client_idcode"]) # type: ignore
+                        (df["client_idcode"] == row["client_idcode"])  # type: ignore
                         & (df["human_label"] == 1)
                         & (df["cui"].isin(filter_codes))
                     ]
@@ -316,7 +318,7 @@ def manually_label_annotation_df(
                 if not all(label.empty for label in existing_labels):
                     continue  # Skip rows if there is at least one label from each of the supplied lists
 
-        if pd.isnull(row["human_label"]): # type: ignore
+        if pd.isnull(row["human_label"]):  # type: ignore
             remaining_labels_info = [
                 (
                     len(
@@ -386,6 +388,7 @@ def manually_label_annotation_df(
     df.to_csv(file_path, index=False)
     logger.info("Saved human labels to file.")
     counter += 1
+
 
 def parse_medcat_trainer_project_json(json_path: str) -> pd.DataFrame:
     """Parses a MedCAT trainer project JSON into a structured DataFrame.

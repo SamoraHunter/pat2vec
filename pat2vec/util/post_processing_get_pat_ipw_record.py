@@ -5,8 +5,7 @@ import logging
 import pandas as pd
 from IPython.display import display
 
-from pat2vec.util.post_processing import (filter_and_select_rows,
-                                          filter_annot_dataframe2)
+from pat2vec.util.post_processing import filter_and_select_rows, filter_annot_dataframe2
 
 logger = logging.getLogger(__name__)
 
@@ -63,8 +62,7 @@ def _get_source_record(
 
     except Exception as e:
         if verbose >= 10:
-            logger.error(
-                f"Error reading CSV for patient {pat_id} at {base_path}: {e}")
+            logger.error(f"Error reading CSV for patient {pat_id} at {base_path}: {e}")
         return pd.DataFrame()
 
     if verbose > 12:
@@ -72,15 +70,14 @@ def _get_source_record(
         logger.debug(df.head())
 
     # Check if necessary columns exist before dropping NaNs
-    existing_necessary_columns = [
-        col for col in necessary_columns if col in df.columns]
-    missing_columns = [
-        col for col in necessary_columns if col not in df.columns]
+    existing_necessary_columns = [col for col in necessary_columns if col in df.columns]
+    missing_columns = [col for col in necessary_columns if col not in df.columns]
 
     if missing_columns:
         if verbose >= 10:
             logger.warning(
-                f"Missing necessary columns in {base_path}: {missing_columns}")
+                f"Missing necessary columns in {base_path}: {missing_columns}"
+            )
         # Create missing columns with appropriate default values
         for col in missing_columns:
             if col == time_column:
@@ -291,16 +288,15 @@ def get_pat_ipw_record(
         if "updatetime" in df.columns and not df["updatetime"].isna().all():
             valid_dfs.append(df)
         elif verbose > 10:
-            source = df.iloc[0].get(
-                "source", "unknown") if not df.empty else "unknown"
+            source = df.iloc[0].get("source", "unknown") if not df.empty else "unknown"
             logger.debug(
-                f"Excluding DataFrame from {source} due to invalid updatetime.")
+                f"Excluding DataFrame from {source} due to invalid updatetime."
+            )
 
     # Find the earliest record among valid DataFrames
     if valid_dfs:
         try:
-            earliest_df = min(
-                valid_dfs, key=lambda df: df.iloc[0]["updatetime"])
+            earliest_df = min(valid_dfs, key=lambda df: df.iloc[0]["updatetime"])
             if verbose >= 10:
                 source = earliest_df.iloc[0].get("source", "unknown")
                 timestamp = earliest_df.iloc[0]["updatetime"]
@@ -317,7 +313,9 @@ def get_pat_ipw_record(
     # Handle case where no valid records found
     if earliest_df.empty or len(earliest_df) == 0:
         if verbose >= 1:
-            logger.info("No valid annotations available from EPR, MCT, or textual_obs. Creating fallback.")
+            logger.info(
+                "No valid annotations available from EPR, MCT, or textual_obs. Creating fallback."
+            )
 
         # Create a fallback record
         earliest_df = pd.DataFrame()
@@ -341,11 +339,9 @@ def get_pat_ipw_record(
         )
 
         if not config_obj.lookback:
-            earliest_df["updatetime"] = [
-                pd.to_datetime(start_datetime, utc=True)]
+            earliest_df["updatetime"] = [pd.to_datetime(start_datetime, utc=True)]
         else:
-            earliest_df["updatetime"] = [
-                pd.to_datetime(end_datetime, utc=True)]
+            earliest_df["updatetime"] = [pd.to_datetime(end_datetime, utc=True)]
 
         earliest_df["source"] = ["fallback"]
 
@@ -363,8 +359,7 @@ def get_pat_ipw_record(
         if check_columns:
             all_nan_mask = result_df[check_columns].isna().all(axis=1)
             if all_nan_mask.any() and verbose > 10:
-                logger.warning(
-                    f"Found {all_nan_mask.sum()} rows with all NaN values.")
+                logger.warning(f"Found {all_nan_mask.sum()} rows with all NaN values.")
 
         # Ensure client_idcode is not NaN
         result_df.loc[result_df["client_idcode"].isna(), "client_idcode"] = (

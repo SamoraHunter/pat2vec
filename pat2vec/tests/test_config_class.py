@@ -8,6 +8,7 @@ import os
 # The class to be tested
 from pat2vec.util.config_pat2vec import config_class
 
+
 class TestConfigClass(unittest.TestCase):
     """Unit tests for the config_class."""
 
@@ -49,14 +50,17 @@ class TestConfigClass(unittest.TestCase):
         """Test that global start/end datetime objects are created correctly."""
         with patch("builtins.print"):
             config = config_class(
-                global_start_year=2021, global_start_month=2, global_start_day=3,
-                global_end_year=2022, global_end_month=4, global_end_day=5,
-                testing=True
+                global_start_year=2021,
+                global_start_month=2,
+                global_start_day=3,
+                global_end_year=2022,
+                global_end_month=4,
+                global_end_day=5,
+                testing=True,
             )
 
         self.assertEqual(config.global_start_date, datetime(2021, 2, 3))
         self.assertEqual(config.global_end_date, datetime(2022, 4, 5))
-
 
     def test_custom_parameter_override(self):
         """Test that custom parameters correctly override the defaults."""
@@ -92,8 +96,8 @@ class TestConfigClass(unittest.TestCase):
         self.assertFalse(config.main_options["bmi"])
         # The filename should be updated
         self.assertEqual(
-        config.treatment_doc_filename,
-        "treatment_docs.csv",
+            config.treatment_doc_filename,
+            "treatment_docs.csv",
         )
 
     @patch("pat2vec.util.config_pat2vec.generate_date_list")
@@ -152,7 +156,7 @@ class TestConfigClass(unittest.TestCase):
 
     def test_global_date_validation_swap(self):
         """Test that global dates are swapped if in the wrong order."""
-        with self.assertLogs('pat2vec.util.config_pat2vec', level='WARNING') as cm:
+        with self.assertLogs("pat2vec.util.config_pat2vec", level="WARNING") as cm:
             config = config_class(
                 global_start_year=2022,
                 global_start_month=1,
@@ -194,7 +198,7 @@ class TestConfigClass(unittest.TestCase):
         """Test ValueError is raised if IPW is True but no DataFrame is provided."""
         with self.assertRaisesRegex(
             ValueError,
-            "individual_patient_window_df must be provided when individual_patient_window is True."
+            "individual_patient_window_df must be provided when individual_patient_window is True.",
         ):
             with patch("builtins.print"):
                 config_class(
@@ -207,12 +211,12 @@ class TestConfigClass(unittest.TestCase):
         """Test ValueError is raised if remote_dump is True but credentials are missing."""
         with self.assertRaisesRegex(
             ValueError,
-            "Hostname, username, and password must be provided for remote dump."
+            "Hostname, username, and password must be provided for remote dump.",
         ):
             with patch("builtins.print"):
                 config_class(
                     remote_dump=True,
-                    hostname=None, # Missing credential
+                    hostname=None,  # Missing credential
                     username="user",
                     password="pw",
                     testing=True,

@@ -7,33 +7,49 @@ from multiprocessing import Pool
 from typing import Any, Dict, List, Optional
 
 import pandas as pd
+
 # from pat2vec.pat2vec_search.cogstack_search_methods import *
 from colorama import Back, Fore, Style
 from tqdm import trange
 
 from pat2vec.pat2vec_main_methods.main_batch import main_batch
-from pat2vec.pat2vec_pat_list.get_patient_treatment_list import \
-    get_all_patients_list
+from pat2vec.pat2vec_pat_list.get_patient_treatment_list import get_all_patients_list
 from pat2vec.pat2vec_search.cogstack_search_methods import (
-    cohort_searcher_with_terms_and_search, initialize_cogstack_client)
-from pat2vec.patvec_get_batch_methods.get_prefetch_batches import \
-    prefetch_batches
+    cohort_searcher_with_terms_and_search,
+    initialize_cogstack_client,
+)
+from pat2vec.patvec_get_batch_methods.get_prefetch_batches import prefetch_batches
 from pat2vec.patvec_get_batch_methods.main import (
-    get_pat_batch_appointments, get_pat_batch_bloods, get_pat_batch_bmi,
-    get_pat_batch_demo, get_pat_batch_diagnostics, get_pat_batch_drugs,
-    get_pat_batch_epr_docs, get_pat_batch_epr_docs_annotations,
-    get_pat_batch_mct_docs, get_pat_batch_mct_docs_annotations,
-    get_pat_batch_news, get_pat_batch_obs, get_pat_batch_reports,
+    get_pat_batch_appointments,
+    get_pat_batch_bloods,
+    get_pat_batch_bmi,
+    get_pat_batch_demo,
+    get_pat_batch_diagnostics,
+    get_pat_batch_drugs,
+    get_pat_batch_epr_docs,
+    get_pat_batch_epr_docs_annotations,
+    get_pat_batch_mct_docs,
+    get_pat_batch_mct_docs_annotations,
+    get_pat_batch_news,
+    get_pat_batch_obs,
+    get_pat_batch_reports,
     get_pat_batch_reports_docs_annotations,
-    get_pat_batch_textual_obs_annotations, get_pat_batch_textual_obs_docs)
+    get_pat_batch_textual_obs_annotations,
+    get_pat_batch_textual_obs_docs,
+)
 from pat2vec.util import config_pat2vec
 from pat2vec.util.generate_date_list import generate_date_list
 from pat2vec.util.get_best_gpu import set_best_gpu
-from pat2vec.util.get_dummy_data_cohort_searcher import \
-    cohort_searcher_with_terms_and_search_dummy
-from pat2vec.util.methods_get import (create_folders_for_pat,
-                                      filter_stripped_list, get_free_gpu,
-                                      list_dir_wrapper, update_pbar)
+from pat2vec.util.get_dummy_data_cohort_searcher import (
+    cohort_searcher_with_terms_and_search_dummy,
+)
+from pat2vec.util.methods_get import (
+    create_folders_for_pat,
+    filter_stripped_list,
+    get_free_gpu,
+    list_dir_wrapper,
+    update_pbar,
+)
 from pat2vec.util.methods_get_medcat import get_cat
 
 
@@ -179,8 +195,7 @@ class main:
         ]
 
         (
-            print(
-                f"Length of stripped_list_start: {len(self.stripped_list_start)}")
+            print(f"Length of stripped_list_start: {len(self.stripped_list_start)}")
             if self.config_obj.verbosity > 0
             else None
         )
@@ -252,14 +267,16 @@ class main:
             disabled or returns no data, the value will be an empty DataFrame.
         """
         empty_return = pd.DataFrame()
-        empty_return_epr = pd.DataFrame(
-            columns=["updatetime", "body_analysed"])
+        empty_return_epr = pd.DataFrame(columns=["updatetime", "body_analysed"])
         empty_return_mct = pd.DataFrame(
-            columns=["observationdocument_recordeddtm",
-                     "observation_valuetext_analysed"]
+            columns=[
+                "observationdocument_recordeddtm",
+                "observation_valuetext_analysed",
+            ]
         )
         empty_return_textual_obs = pd.DataFrame(
-            columns=["basicobs_entered", "textualObs"])
+            columns=["basicobs_entered", "textualObs"]
+        )
         empty_return_reports = pd.DataFrame(
             columns=["updatetime", "observation_valuetext_analysed"]
         )
@@ -267,92 +284,151 @@ class main:
         # Configuration for standard data batches
         batch_configs = [
             {
-                "option": "annotations", "var": "batch_epr", "func": get_pat_batch_epr_docs,
-                "args": {"search_term": None}, "empty": empty_return_epr
+                "option": "annotations",
+                "var": "batch_epr",
+                "func": get_pat_batch_epr_docs,
+                "args": {"search_term": None},
+                "empty": empty_return_epr,
             },
             {
-                "option": "annotations_mrc", "var": "batch_mct", "func": get_pat_batch_mct_docs,
-                "args": {"search_term": None}, "empty": empty_return_mct
+                "option": "annotations_mrc",
+                "var": "batch_mct",
+                "func": get_pat_batch_mct_docs,
+                "args": {"search_term": None},
+                "empty": empty_return_mct,
             },
             {
-                "option": "textual_obs", "var": "batch_textual_obs_docs", "func": get_pat_batch_textual_obs_docs,
-                "args": {"search_term": None}, "empty": empty_return_textual_obs
+                "option": "textual_obs",
+                "var": "batch_textual_obs_docs",
+                "func": get_pat_batch_textual_obs_docs,
+                "args": {"search_term": None},
+                "empty": empty_return_textual_obs,
             },
             {
-                "option": "annotations_reports", "var": "batch_reports", "func": get_pat_batch_reports,
-                "args": {"search_term": None}, "empty": empty_return_reports
+                "option": "annotations_reports",
+                "var": "batch_reports",
+                "func": get_pat_batch_reports,
+                "args": {"search_term": None},
+                "empty": empty_return_reports,
             },
             {
-                "option": "smoking", "var": "batch_smoking", "func": get_pat_batch_obs,
-                "args": {"search_term": "CORE_SmokingStatus"}, "empty": empty_return
+                "option": "smoking",
+                "var": "batch_smoking",
+                "func": get_pat_batch_obs,
+                "args": {"search_term": "CORE_SmokingStatus"},
+                "empty": empty_return,
             },
             {
-                "option": "core_02", "var": "batch_core_02", "func": get_pat_batch_obs,
-                "args": {"search_term": "CORE_SpO2"}, "empty": empty_return
+                "option": "core_02",
+                "var": "batch_core_02",
+                "func": get_pat_batch_obs,
+                "args": {"search_term": "CORE_SpO2"},
+                "empty": empty_return,
             },
             {
-                "option": "bed", "var": "batch_bednumber", "func": get_pat_batch_obs,
-                "args": {"search_term": "CORE_BedNumber3"}, "empty": empty_return
+                "option": "bed",
+                "var": "batch_bednumber",
+                "func": get_pat_batch_obs,
+                "args": {"search_term": "CORE_BedNumber3"},
+                "empty": empty_return,
             },
             {
-                "option": "vte_status", "var": "batch_vte", "func": get_pat_batch_obs,
-                "args": {"search_term": "CORE_VTE_STATUS"}, "empty": empty_return
+                "option": "vte_status",
+                "var": "batch_vte",
+                "func": get_pat_batch_obs,
+                "args": {"search_term": "CORE_VTE_STATUS"},
+                "empty": empty_return,
             },
             {
-                "option": "hosp_site", "var": "batch_hospsite", "func": get_pat_batch_obs,
-                "args": {"search_term": "CORE_HospitalSite"}, "empty": empty_return
+                "option": "hosp_site",
+                "var": "batch_hospsite",
+                "func": get_pat_batch_obs,
+                "args": {"search_term": "CORE_HospitalSite"},
+                "empty": empty_return,
             },
             {
-                "option": "core_resus", "var": "batch_resus", "func": get_pat_batch_obs,
-                "args": {"search_term": "CORE_RESUS_STATUS"}, "empty": empty_return
+                "option": "core_resus",
+                "var": "batch_resus",
+                "func": get_pat_batch_obs,
+                "args": {"search_term": "CORE_RESUS_STATUS"},
+                "empty": empty_return,
             },
             {
-                "option": "news", "var": "batch_news", "func": get_pat_batch_news,
-                "args": {"search_term": None}, "empty": empty_return
+                "option": "news",
+                "var": "batch_news",
+                "func": get_pat_batch_news,
+                "args": {"search_term": None},
+                "empty": empty_return,
             },
             {
-                "option": "bmi", "var": "batch_bmi", "func": get_pat_batch_bmi,
-                "args": {"search_term": None}, "empty": empty_return
+                "option": "bmi",
+                "var": "batch_bmi",
+                "func": get_pat_batch_bmi,
+                "args": {"search_term": None},
+                "empty": empty_return,
             },
             {
-                "option": "diagnostics", "var": "batch_diagnostics", "func": get_pat_batch_diagnostics,
-                "args": {"search_term": None}, "empty": empty_return
+                "option": "diagnostics",
+                "var": "batch_diagnostics",
+                "func": get_pat_batch_diagnostics,
+                "args": {"search_term": None},
+                "empty": empty_return,
             },
             {
-                "option": "drugs", "var": "batch_drugs", "func": get_pat_batch_drugs,
-                "args": {"search_term": None}, "empty": empty_return
+                "option": "drugs",
+                "var": "batch_drugs",
+                "func": get_pat_batch_drugs,
+                "args": {"search_term": None},
+                "empty": empty_return,
             },
             {
-                "option": "demo", "var": "batch_demo", "func": get_pat_batch_demo,
-                "args": {"search_term": None}, "empty": empty_return
+                "option": "demo",
+                "var": "batch_demo",
+                "func": get_pat_batch_demo,
+                "args": {"search_term": None},
+                "empty": empty_return,
             },
             {
-                "option": "bloods", "var": "batch_bloods", "func": get_pat_batch_bloods,
-                "args": {"search_term": None}, "empty": empty_return
+                "option": "bloods",
+                "var": "batch_bloods",
+                "func": get_pat_batch_bloods,
+                "args": {"search_term": None},
+                "empty": empty_return,
             },
             {
-                "option": "appointments", "var": "batch_appointments", "func": get_pat_batch_appointments,
-                "args": {"search_term": None}, "empty": empty_return
+                "option": "appointments",
+                "var": "batch_appointments",
+                "func": get_pat_batch_appointments,
+                "args": {"search_term": None},
+                "empty": empty_return,
             },
         ]
 
         # Configuration for annotation batches
         annotation_batch_configs = [
             {
-                "option": "annotations", "var": "batch_epr_docs_annotations",
-                "func": get_pat_batch_epr_docs_annotations, "empty": empty_return_epr
+                "option": "annotations",
+                "var": "batch_epr_docs_annotations",
+                "func": get_pat_batch_epr_docs_annotations,
+                "empty": empty_return_epr,
             },
             {
-                "option": "annotations_mrc", "var": "batch_epr_docs_annotations_mct",
-                "func": get_pat_batch_mct_docs_annotations, "empty": empty_return_mct
+                "option": "annotations_mrc",
+                "var": "batch_epr_docs_annotations_mct",
+                "func": get_pat_batch_mct_docs_annotations,
+                "empty": empty_return_mct,
             },
             {
-                "option": "textual_obs", "var": "batch_textual_obs_annotations",
-                "func": get_pat_batch_textual_obs_annotations, "empty": empty_return_textual_obs
+                "option": "textual_obs",
+                "var": "batch_textual_obs_annotations",
+                "func": get_pat_batch_textual_obs_annotations,
+                "empty": empty_return_textual_obs,
             },
             {
-                "option": "annotations_reports", "var": "batch_reports_docs_annotations",
-                "func": get_pat_batch_reports_docs_annotations, "empty": empty_return_reports
+                "option": "annotations_reports",
+                "var": "batch_reports_docs_annotations",
+                "func": get_pat_batch_reports_docs_annotations,
+                "empty": empty_return_reports,
             },
         ]
 
@@ -365,7 +441,7 @@ class main:
                     current_pat_client_id_code=current_pat_client_id_code,
                     config_obj=self.config_obj,
                     cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search,
-                    **config["args"]
+                    **config["args"],
                 )
             else:
                 batches[config["var"]] = config["empty"]
@@ -412,8 +488,7 @@ class main:
         if not self.config_obj.individual_patient_window:
             return self.config_obj.date_list
 
-        pat_dates = self.config_obj.patient_dict.get(
-            current_pat_client_id_code)
+        pat_dates = self.config_obj.patient_dict.get(current_pat_client_id_code)
 
         if not pat_dates:  # It's a control patient
             if self.config_obj.individual_patient_window_controls_method == "full":
@@ -429,7 +504,8 @@ class main:
                 )
                 if self.config_obj.verbosity >= 4:
                     print(
-                        f"Control pat full {current_pat_client_id_code} ipw dates set:")
+                        f"Control pat full {current_pat_client_id_code} ipw dates set:"
+                    )
                     print("Start Date:", current_pat_start_date)
                     print("End Date:", current_pat_end_date)
 
@@ -438,31 +514,41 @@ class main:
                 patient_ids = list(self.config_obj.patient_dict.keys())
                 if not patient_ids:
                     print(
-                        "Warning: Cannot use 'random' control method with an empty patient_dict. Skipping.")
+                        "Warning: Cannot use 'random' control method with an empty patient_dict. Skipping."
+                    )
                     return None
                 random_pat_id = random.choice(patient_ids)
                 pat_dates = self.config_obj.patient_dict.get(random_pat_id)
                 current_pat_start_date, current_pat_end_date = pat_dates
             else:
                 print(
-                    f"Unknown control method: {self.config_obj.individual_patient_window_controls_method}")
+                    f"Unknown control method: {self.config_obj.individual_patient_window_controls_method}"
+                )
                 return None
         else:  # It's a treatment patient
             if len(pat_dates) != 2:
                 print(
-                    f"Warning: Invalid dates for patient {current_pat_client_id_code}. Skipping.")
+                    f"Warning: Invalid dates for patient {current_pat_client_id_code}. Skipping."
+                )
                 return None
             current_pat_start_date, current_pat_end_date = pat_dates
 
         # Safeguard against invalid date types
-        if pd.isna(current_pat_start_date) or pd.isna(current_pat_end_date) or not isinstance(current_pat_start_date, datetime) or not isinstance(current_pat_end_date, datetime):
+        if (
+            pd.isna(current_pat_start_date)
+            or pd.isna(current_pat_end_date)
+            or not isinstance(current_pat_start_date, datetime)
+            or not isinstance(current_pat_end_date, datetime)
+        ):
             print(
-                f"Warning: Dates for patient {current_pat_client_id_code} are invalid. Skipping.")
+                f"Warning: Dates for patient {current_pat_client_id_code} are invalid. Skipping."
+            )
             return None
 
         # Determine anchor date for generation and clamping boundaries
-        p_real_start, p_real_end = min(current_pat_start_date, current_pat_end_date), max(
-            current_pat_start_date, current_pat_end_date)
+        p_real_start, p_real_end = min(
+            current_pat_start_date, current_pat_end_date
+        ), max(current_pat_start_date, current_pat_end_date)
         date_for_generate = p_real_end if self.config_obj.lookback else p_real_start
 
         # Override global dates as a workaround for generate_date_list
@@ -502,20 +588,48 @@ class main:
             The dictionary of DataFrames with cleaned timestamp columns.
         """
         doc_configs = [
-            {"key": "batch_epr", "time_col": "updatetime",
-                "text_col": "body_analysed", "option": "annotations"},
-            {"key": "batch_mct", "time_col": "observationdocument_recordeddtm",
-                "text_col": "observation_valuetext_analysed", "option": "annotations_mrc"},
-            {"key": "batch_reports", "time_col": "updatetime",
-                "text_col": None, "option": "annotations_reports"},
-            {"key": "batch_textual_obs_docs", "time_col": "basicobs_entered",
-                "text_col": None, "option": "textual_obs"},
-            {"key": "batch_epr_docs_annotations", "time_col": "updatetime",
-                "text_col": None, "option": "annotations"},
-            {"key": "batch_epr_docs_annotations_mct", "time_col": "observationdocument_recordeddtm",
-                "text_col": None, "option": "annotations_mrc"},
-            {"key": "batch_reports_docs_annotations", "time_col": "updatetime",
-                "text_col": None, "option": "annotations_reports"},
+            {
+                "key": "batch_epr",
+                "time_col": "updatetime",
+                "text_col": "body_analysed",
+                "option": "annotations",
+            },
+            {
+                "key": "batch_mct",
+                "time_col": "observationdocument_recordeddtm",
+                "text_col": "observation_valuetext_analysed",
+                "option": "annotations_mrc",
+            },
+            {
+                "key": "batch_reports",
+                "time_col": "updatetime",
+                "text_col": None,
+                "option": "annotations_reports",
+            },
+            {
+                "key": "batch_textual_obs_docs",
+                "time_col": "basicobs_entered",
+                "text_col": None,
+                "option": "textual_obs",
+            },
+            {
+                "key": "batch_epr_docs_annotations",
+                "time_col": "updatetime",
+                "text_col": None,
+                "option": "annotations",
+            },
+            {
+                "key": "batch_epr_docs_annotations_mct",
+                "time_col": "observationdocument_recordeddtm",
+                "text_col": None,
+                "option": "annotations_mrc",
+            },
+            {
+                "key": "batch_reports_docs_annotations",
+                "time_col": "updatetime",
+                "text_col": None,
+                "option": "annotations_reports",
+            },
         ]
 
         for config in doc_configs:
@@ -527,13 +641,15 @@ class main:
 
                     try:
                         batch[time_col] = pd.to_datetime(
-                            batch[time_col], errors="coerce", utc=True)
+                            batch[time_col], errors="coerce", utc=True
+                        )
                         batch.dropna(subset=[time_col], inplace=True)
 
                         if text_col:
                             batch.dropna(subset=[text_col], inplace=True)
-                            batch = batch[batch[text_col].apply(
-                                lambda x: isinstance(x, str))]
+                            batch = batch[
+                                batch[text_col].apply(lambda x: isinstance(x, str))
+                            ]
 
                         batches[config["key"]] = batch
                     except Exception as e:
@@ -545,15 +661,19 @@ class main:
             print("post batch timestamp na drop:")
             print("EPR:", len(batches["batch_epr"]))
             print("MCT:", len(batches["batch_mct"]))
-            print("EPR annotations:", len(
-                batches["batch_epr_docs_annotations"]))
-            print("EPR annotations mct:", len(
-                batches["batch_epr_docs_annotations_mct"]))
+            print("EPR annotations:", len(batches["batch_epr_docs_annotations"]))
+            print(
+                "EPR annotations mct:", len(batches["batch_epr_docs_annotations_mct"])
+            )
             print("textual obs docs:", len(batches["batch_textual_obs_docs"]))
-            print("textual obs annotations:", len(
-                batches["batch_textual_obs_annotations"]))
-            print("batch_report_docs_annotations:", len(
-                batches["batch_reports_docs_annotations"]))
+            print(
+                "textual obs annotations:",
+                len(batches["batch_textual_obs_annotations"]),
+            )
+            print(
+                "batch_report_docs_annotations:",
+                len(batches["batch_reports_docs_annotations"]),
+            )
 
         return batches
 
@@ -575,7 +695,8 @@ class main:
         if current_pat_client_id_code in self.stripped_list_start:
             if self.config_obj.verbosity > 3:
                 print(
-                    f"Patient {current_pat_client_id_code} already processed, skipping slice processing.")
+                    f"Patient {current_pat_client_id_code} already processed, skipping slice processing."
+                )
             return
 
         # The only_check_last logic from the original function is implicitly handled by this loop.
@@ -583,7 +704,8 @@ class main:
             try:
                 if self.config_obj.verbosity > 5:
                     print(
-                        f"Processing date {date_slice} for patient {current_pat_client_id_code}...")
+                        f"Processing date {date_slice} for patient {current_pat_client_id_code}..."
+                    )
 
                 if self.config_obj.calculate_vectors:
                     main_batch(
@@ -600,7 +722,8 @@ class main:
             except Exception as e:
                 print(e)
                 print(
-                    f"Exception in patmaker on {current_pat_client_id_code, date_slice}")
+                    f"Exception in patmaker on {current_pat_client_id_code, date_slice}"
+                )
                 print(traceback.format_exc())
                 raise e
 
@@ -711,8 +834,7 @@ class main:
             batches = self._clean_document_batches(batches)
 
         # 4. Process patient data in time slices
-        self._process_patient_slices(
-            current_pat_client_id_code, date_list, batches)
+        self._process_patient_slices(current_pat_client_id_code, date_list, batches)
 
         # 5. Finalize
         if self.config_obj.remote_dump:

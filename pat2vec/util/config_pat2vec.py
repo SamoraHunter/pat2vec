@@ -219,10 +219,7 @@ class config_class:
                 "individual_patient_window_df must be provided when individual_patient_window is True."
             )
 
-
-        self.sanitize_pat_list = (
-            sanitize_pat_list
-        )
+        self.sanitize_pat_list = sanitize_pat_list
         #: If `True`, skips some `listdir` calls for performance.
         self.skip_additional_listdir = skip_additional_listdir
 
@@ -464,7 +461,9 @@ class config_class:
 
         #: If `True` and in testing mode, simulates a MedCAT model.
         if self.client_idcode_term_name == "client_idcode.keyword":
-            logger.warning("Warning: client_idcode_term_name 'client_idcode.keyword' is not case inclusive.")
+            logger.warning(
+                "Warning: client_idcode_term_name 'client_idcode.keyword' is not case inclusive."
+            )
 
         if self.verbosity >= 1:
             logger.info(f"self.drug_time_field: {self.drug_time_field}")
@@ -1011,7 +1010,9 @@ class config_class:
         if self.verbosity > 1:
 
             logger.debug(f"Debug message: global_start_year = {self.global_start_year}")
-            logger.debug(f"Debug message: global_start_month = {self.global_start_month}")
+            logger.debug(
+                f"Debug message: global_start_month = {self.global_start_month}"
+            )
             logger.debug(f"Debug message: global_end_year = {self.global_end_year}")
             logger.debug(f"Debug message: global_end_month = {self.global_end_month}")
             logger.debug(f"Debug message: global_start_day = {self.global_start_day}")
@@ -1088,8 +1089,11 @@ class config_class:
                 int(self.global_end_day),
             )
 
-
-            if self.global_start_date and self.global_end_date and self.global_start_date > self.global_end_date:
+            if (
+                self.global_start_date
+                and self.global_end_date
+                and self.global_start_date > self.global_end_date
+            ):
                 logger.warning(
                     f"Warning: Global start date ({global_start.date()}) is after "
                     f"global end date ({global_end.date()})."
@@ -1115,16 +1119,15 @@ class config_class:
                     self.global_start_day,
                 )
                 # Also swap the datetime objects
-                (
-                    self.global_start_date,
-                    self.global_end_date
-                ) = (
+                (self.global_start_date, self.global_end_date) = (
                     self.global_end_date,
-                    self.global_start_date
+                    self.global_start_date,
                 )
 
         except (ValueError, TypeError) as e:
-            logger.warning(f"Warning: Could not validate global dates due to invalid values: {e}")
+            logger.warning(
+                f"Warning: Could not validate global dates due to invalid values: {e}"
+            )
 
 
 def update_global_start_date(self: T_config, start_date: datetime) -> T_config:
@@ -1157,7 +1160,9 @@ def update_global_start_date(self: T_config, start_date: datetime) -> T_config:
             # Also update the datetime object to maintain consistency
             self.global_start_date = start_date
     except (ValueError, TypeError):
-        logger.warning("Warning: Invalid global date attributes in config. Cannot update.")
+        logger.warning(
+            "Warning: Invalid global date attributes in config. Cannot update."
+        )
 
     return self
 
@@ -1195,23 +1200,32 @@ def validate_and_fix_global_dates(config: T_config) -> T_config:
 
             # Swap the date attributes
             (
-                config.global_start_year, config.global_start_month, config.global_start_day,
-                config.global_end_year, config.global_end_month, config.global_end_day,
+                config.global_start_year,
+                config.global_start_month,
+                config.global_start_day,
+                config.global_end_year,
+                config.global_end_month,
+                config.global_end_day,
             ) = (
-                config.global_end_year, config.global_end_month, config.global_end_day,
-                config.global_start_year, config.global_start_month, config.global_start_day,
+                config.global_end_year,
+                config.global_end_month,
+                config.global_end_day,
+                config.global_start_year,
+                config.global_start_month,
+                config.global_start_day,
             )
             # Also swap the datetime objects if they exist
-            if hasattr(config, 'global_start_date') and hasattr(config, 'global_end_date'):
-                (
-                    config.global_start_date,
-                    config.global_end_date
-                ) = (
+            if hasattr(config, "global_start_date") and hasattr(
+                config, "global_end_date"
+            ):
+                (config.global_start_date, config.global_end_date) = (
                     config.global_end_date,
-                    config.global_start_date
+                    config.global_start_date,
                 )
 
     except (ValueError, TypeError) as e:
-        logger.warning(f"Warning: Could not validate global dates due to invalid values: {e}")
+        logger.warning(
+            f"Warning: Could not validate global dates due to invalid values: {e}"
+        )
 
     return config

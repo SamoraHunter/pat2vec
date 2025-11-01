@@ -3,8 +3,7 @@ from typing import Callable, Dict, List, Optional, Tuple, Union
 import pandas as pd
 from IPython.display import display
 
-from pat2vec.util.filter_dataframe_by_timestamp import \
-    filter_dataframe_by_timestamp
+from pat2vec.util.filter_dataframe_by_timestamp import filter_dataframe_by_timestamp
 from pat2vec.util.get_start_end_year_month import get_start_end_year_month
 from pat2vec.util.parse_date import validate_input_dates
 
@@ -21,13 +20,13 @@ CORE_O2_FIELDS = [
 def search_core_o2_observations(
     cohort_searcher_with_terms_and_search=None,
     client_id_codes=None,
-    observations_time_field='observationdocument_recordeddtm',
-    start_year='1995',
-    start_month='01',
-    start_day='01',
-    end_year='2025',
-    end_month='12',
-    end_day='12',
+    observations_time_field="observationdocument_recordeddtm",
+    start_year="1995",
+    start_month="01",
+    start_day="01",
+    end_year="2025",
+    end_month="12",
+    end_day="12",
     search_term="CORE_SpO2",
     additional_custom_search_string=None,
 ):
@@ -61,8 +60,7 @@ def search_core_o2_observations(
         ValueError: If essential arguments are None.
     """
     if cohort_searcher_with_terms_and_search is None:
-        raise ValueError(
-            "cohort_searcher_with_terms_and_search cannot be None.")
+        raise ValueError("cohort_searcher_with_terms_and_search cannot be None.")
     if client_id_codes is None:
         raise ValueError("client_id_codes cannot be None.")
     if observations_time_field is None:
@@ -77,8 +75,10 @@ def search_core_o2_observations(
     if isinstance(client_id_codes, str):
         client_id_codes = [client_id_codes]
 
-    start_year, start_month, start_day, end_year, end_month, end_day = validate_input_dates(
-        start_year, start_month, start_day, end_year, end_month, end_day
+    start_year, start_month, start_day, end_year, end_month, end_day = (
+        validate_input_dates(
+            start_year, start_month, start_day, end_year, end_month, end_day
+        )
     )
 
     # Base search string for CORE_SpO2 observations
@@ -133,8 +133,7 @@ def calculate_core_o2_features(features_data, search_term="CORE_SpO2"):
 
     if len(features_data) > 0:
         # Get all unique observation values, excluding NaN values
-        all_terms = features_data["observation_valuetext_analysed"].dropna(
-        ).unique()
+        all_terms = features_data["observation_valuetext_analysed"].dropna().unique()
 
         # Create binary features for each unique observation value
         for term in all_terms:
@@ -234,8 +233,7 @@ def get_core_02(
     ].copy()
 
     # Remove rows with NaN values in the observation_valuetext_analysed column
-    features_data = features_data.dropna(
-        subset=["observation_valuetext_analysed"])
+    features_data = features_data.dropna(subset=["observation_valuetext_analysed"])
 
     # Calculate features
     o2_stats = calculate_core_o2_features(features_data, search_term)

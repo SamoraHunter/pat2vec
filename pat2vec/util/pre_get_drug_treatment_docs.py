@@ -6,10 +6,12 @@ from typing import Any, List, Optional
 import pandas as pd
 from fuzzywuzzy import fuzz
 
-from pat2vec.pat2vec_search.cogstack_search_methods import \
-    cohort_searcher_no_terms_fuzzy
-from pat2vec.util.get_dummy_data_cohort_searcher import \
-    cohort_searcher_with_terms_and_search_dummy
+from pat2vec.pat2vec_search.cogstack_search_methods import (
+    cohort_searcher_no_terms_fuzzy,
+)
+from pat2vec.util.get_dummy_data_cohort_searcher import (
+    cohort_searcher_with_terms_and_search_dummy,
+)
 from pat2vec.util.pre_processing import generate_uuid_list
 
 logger = logging.getLogger(__name__)
@@ -264,7 +266,8 @@ def get_treatment_records_by_drug_order_name(
 
     if verbose >= 9:
         logger.debug(
-            f"[DEBUG] Retrieved {len(drug_treatment_docs)} records from database.")
+            f"[DEBUG] Retrieved {len(drug_treatment_docs)} records from database."
+        )
 
     # Function to find matching columns for the search term
     def find_matching_columns(row, search_term):
@@ -400,7 +403,8 @@ def iterative_drug_treatment_search(
 
         if verbose >= 1:
             logger.info(
-                f"[INFO] Retrieved {len(treatment_records)} records for term: {term}")
+                f"[INFO] Retrieved {len(treatment_records)} records for term: {term}"
+            )
 
     if not all_results:
         if verbose >= 1:

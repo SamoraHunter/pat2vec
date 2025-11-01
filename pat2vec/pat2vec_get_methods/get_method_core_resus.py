@@ -4,8 +4,7 @@ import numpy as np
 import pandas as pd
 from IPython.display import display
 
-from pat2vec.util.filter_dataframe_by_timestamp import \
-    filter_dataframe_by_timestamp
+from pat2vec.util.filter_dataframe_by_timestamp import filter_dataframe_by_timestamp
 from pat2vec.util.get_start_end_year_month import get_start_end_year_month
 from pat2vec.util.parse_date import validate_input_dates
 
@@ -22,13 +21,13 @@ CORE_RESUS_FIELDS = [
 def search_core_resus_observations(
     cohort_searcher_with_terms_and_search=None,
     client_id_codes=None,
-    observations_time_field='observationdocument_recordeddtm',
-    start_year='1995',
-    start_month='01',
-    start_day='01',
-    end_year='2025',
-    end_month='12',
-    end_day='12',
+    observations_time_field="observationdocument_recordeddtm",
+    start_year="1995",
+    start_month="01",
+    start_day="01",
+    end_year="2025",
+    end_month="12",
+    end_day="12",
     additional_custom_search_string=None,
 ):
     """Searches for CORE_RESUS_STATUS observation data within a date range.
@@ -59,8 +58,7 @@ def search_core_resus_observations(
         ValueError: If essential arguments are None.
     """
     if cohort_searcher_with_terms_and_search is None:
-        raise ValueError(
-            "cohort_searcher_with_terms_and_search cannot be None.")
+        raise ValueError("cohort_searcher_with_terms_and_search cannot be None.")
     if client_id_codes is None:
         raise ValueError("client_id_codes cannot be None.")
     if observations_time_field is None:
@@ -75,8 +73,10 @@ def search_core_resus_observations(
     if isinstance(client_id_codes, str):
         client_id_codes = [client_id_codes]
 
-    start_year, start_month, start_day, end_year, end_month, end_day = validate_input_dates(
-        start_year, start_month, start_day, end_year, end_month, end_day
+    start_year, start_month, start_day, end_year, end_month, end_day = (
+        validate_input_dates(
+            start_year, start_month, start_day, end_year, end_month, end_day
+        )
     )
 
     # Base search string for CORE_RESUS_STATUS observations
@@ -98,7 +98,9 @@ def search_core_resus_observations(
     )
 
 
-def calculate_core_resus_features(features_data, term_prefix="core_resus_status", negate_biochem=False):
+def calculate_core_resus_features(
+    features_data, term_prefix="core_resus_status", negate_biochem=False
+):
     """Calculates resuscitation status features from observations.
 
     Counts the occurrences of "For cardiopulmonary resuscitation" and "Not for
@@ -221,7 +223,8 @@ def get_core_resus(
     # Calculate features
     term = "CORE_RESUS_STATUS".lower()
     resus_stats = calculate_core_resus_features(
-        features_data, term, config_obj.negate_biochem)
+        features_data, term, config_obj.negate_biochem
+    )
 
     # Add calculated features to the DataFrame
     for key, value in resus_stats.items():
@@ -234,6 +237,10 @@ def get_core_resus(
 
 
 CORE_RESUS_FIELDS = [
-    "observation_guid", "client_idcode", "obscatalogmasteritem_displayname",
-    "observation_valuetext_analysed", "observationdocument_recordeddtm", "clientvisit_visitidcode"
+    "observation_guid",
+    "client_idcode",
+    "obscatalogmasteritem_displayname",
+    "observation_valuetext_analysed",
+    "observationdocument_recordeddtm",
+    "clientvisit_visitidcode",
 ]

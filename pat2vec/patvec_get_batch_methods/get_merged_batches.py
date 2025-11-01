@@ -105,9 +105,7 @@ def verify_split_data_individual(
     print("Verification successful: All CSVs match the original DataFrame.")
 
 
-def save_group(
-    client_idcode_group: Tuple[str, pd.DataFrame], save_folder: str
-) -> None:
+def save_group(client_idcode_group: Tuple[str, pd.DataFrame], save_folder: str) -> None:
     """Saves a single patient's data group to a CSV file.
 
     Args:

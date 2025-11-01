@@ -7,6 +7,7 @@ from IPython.display import display
 
 logger = logging.getLogger(__name__)
 
+
 def filter_dataframe_by_fuzzy_terms(
     df: pd.DataFrame,
     filter_term_list: List[str],
@@ -93,7 +94,9 @@ def apply_data_type_epr_docs_filters(
             if config_obj.verbosity > 1:
                 logger.info("Appending regex term counts...")
                 if config_obj.verbosity > 5 and not batch_target.empty:
-                    logger.debug(f"DataFrame before regex term counts:\n{batch_target.head().to_string()}")
+                    logger.debug(
+                        f"DataFrame before regex term counts:\n{batch_target.head().to_string()}"
+                    )
             batch_target = append_regex_term_counts(
                 df=batch_target,
                 terms=config_obj.data_type_filter_dict.get("filter_term_lists").get(
@@ -195,7 +198,9 @@ def apply_data_type_mct_docs_filters(
             if config_obj.verbosity > 1:
                 logger.info("Appending regex term counts...")
                 if config_obj.verbosity > 5 and not batch_target.empty:
-                    logger.debug(f"DataFrame before regex term counts:\n{batch_target.head().to_string()}")
+                    logger.debug(
+                        f"DataFrame before regex term counts:\n{batch_target.head().to_string()}"
+                    )
             batch_target = append_regex_term_counts(
                 df=batch_target,
                 terms=config_obj.data_type_filter_dict.get("filter_term_lists").get(

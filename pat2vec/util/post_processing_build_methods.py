@@ -25,7 +25,9 @@ def filter_annot_dataframe(
     """
 
     # Define a function to handle non-numeric values in float columns
-    def filter_float_column(df: pd.DataFrame, column_name: str, threshold: float) -> pd.DataFrame:
+    def filter_float_column(
+        df: pd.DataFrame, column_name: str, threshold: float
+    ) -> pd.DataFrame:
         if column_name in df.columns and column_name in annot_filter_arguments:
             # Convert the column to numeric values (assuming it contains only convertible values)
             df[column_name] = pd.to_numeric(df[column_name], errors="coerce")
@@ -54,13 +56,11 @@ def filter_annot_dataframe(
 
     # Check if 'Presence_Value' column exists in the DataFrame
     if "Presence_Value" in df.columns and "Presence_Value" in annot_filter_arguments:
-        df = df[df["Presence_Value"].isin(
-            annot_filter_arguments["Presence_Value"])]
+        df = df[df["Presence_Value"].isin(annot_filter_arguments["Presence_Value"])]
 
     # Check if 'Subject_Value' column exists in the DataFrame
     if "Subject_Value" in df.columns and "Subject_Value" in annot_filter_arguments:
-        df = df[df["Subject_Value"].isin(
-            annot_filter_arguments["Subject_Value"])]
+        df = df[df["Subject_Value"].isin(annot_filter_arguments["Subject_Value"])]
 
     return df
 
@@ -106,8 +106,7 @@ def build_merged_epr_mct_annot_df(
     logger.info("Reading and collecting all patient annotation batches...")
     for current_pat_idcode in tqdm(all_pat_list):
         # This function reads the individual patient CSV
-        pat_annots_df = retrieve_pat_annots_mct_epr(
-            current_pat_idcode, config_obj)
+        pat_annots_df = retrieve_pat_annots_mct_epr(current_pat_idcode, config_obj)
 
         # --- Step 2: Clean each DataFrame as we get it ---
         # Robustly handle the inconsistent index column
@@ -119,7 +118,9 @@ def build_merged_epr_mct_annot_df(
 
     # --- Step 3: Merge, Save, and Return ---
     if not all_patient_dfs:
-        logger.warning("No annotation data found for any patient. No file will be created.")
+        logger.warning(
+            "No annotation data found for any patient. No file will be created."
+        )
         return None  # Return None if there's nothing to save
 
     logger.info(f"\nConcatenating data for {len(all_patient_dfs)} patients...")
@@ -230,10 +231,11 @@ def build_merged_epr_mct_doc_df(
     for i in tqdm(range(0, len(all_pat_list)), total=len(all_pat_list)):
         current_pat_idcode = all_pat_list[i]
         try:
-            all_docs = retrieve_pat_docs_mct_epr(
-                current_pat_idcode, config_obj)
+            all_docs = retrieve_pat_docs_mct_epr(current_pat_idcode, config_obj)
         except Exception as e:
-            logger.error(f"Error retrieving patient documents for: {current_pat_idcode}")
+            logger.error(
+                f"Error retrieving patient documents for: {current_pat_idcode}"
+            )
             logger.error(e)
             continue  # Skip to the next patient in case of an error
 
@@ -400,15 +402,12 @@ def join_docs_to_annots(
             docs_temp_dropped = docs_temp
 
     # Merge the DataFrames on 'document_guid' column
-    merged_df = pd.merge(annots_df, docs_temp_dropped,
-                         on="document_guid", how="left")
+    merged_df = pd.merge(annots_df, docs_temp_dropped, on="document_guid", how="left")
 
     return merged_df
 
 
-def get_annots_joined_to_docs(
-    config_obj: Any, pat2vec_obj: Any
-) -> pd.DataFrame:
+def get_annots_joined_to_docs(config_obj: Any, pat2vec_obj: Any) -> pd.DataFrame:
     """Builds and merges document and annotation dataframes, then joins them.
 
     This function orchestrates the process of creating comprehensive, patient-level

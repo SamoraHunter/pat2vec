@@ -4,8 +4,7 @@ import numpy as np
 import pandas as pd
 from IPython.display import display
 
-from pat2vec.util.filter_dataframe_by_timestamp import \
-    filter_dataframe_by_timestamp
+from pat2vec.util.filter_dataframe_by_timestamp import filter_dataframe_by_timestamp
 from pat2vec.util.get_start_end_year_month import get_start_end_year_month
 from pat2vec.util.parse_date import validate_input_dates
 
@@ -46,13 +45,13 @@ APPOINTMENT_FIELDS = [
 def search_appointments(
     cohort_searcher_with_terms_and_search=None,
     client_id_codes=None,
-    appointments_time_field='AppointmentDateTime',
-    start_year='1995',
-    start_month='01',
-    start_day='01',
-    end_year='2025',
-    end_month='12',
-    end_day='12',
+    appointments_time_field="AppointmentDateTime",
+    start_year="1995",
+    start_month="01",
+    start_day="01",
+    end_year="2025",
+    end_month="12",
+    end_day="12",
     additional_custom_search_string=None,
 ):
     """Searches for appointment data for a specific patient within a date range.
@@ -79,8 +78,7 @@ def search_appointments(
         pd.DataFrame: A DataFrame containing the raw appointment data.
     """
     if cohort_searcher_with_terms_and_search is None:
-        raise ValueError(
-            "cohort_searcher_with_terms_and_search cannot be None.")
+        raise ValueError("cohort_searcher_with_terms_and_search cannot be None.")
     if client_id_codes is None:
         raise ValueError("client_id_codes cannot be None.")
     if appointments_time_field is None:
@@ -94,8 +92,11 @@ def search_appointments(
     if isinstance(client_id_codes, str):
         client_id_codes = [client_id_codes]
 
-    start_year, start_month, start_day, end_year, end_month, end_day = validate_input_dates(
-        start_year, start_month, start_day, end_year, end_month, end_day)
+    start_year, start_month, start_day, end_year, end_month, end_day = (
+        validate_input_dates(
+            start_year, start_month, start_day, end_year, end_month, end_day
+        )
+    )
 
     search_string = f"{appointments_time_field}:[{start_year}-{start_month}-{start_day} TO {end_year}-{end_month}-{end_day}]"
 
@@ -176,43 +177,55 @@ def get_appointments(
             end_day=end_day,
         )
 
-    current_pat_raw.rename(
-        columns={"HospitalID": "client_idcode"}, inplace=True)
+    current_pat_raw.rename(columns={"HospitalID": "client_idcode"}, inplace=True)
 
     if len(current_pat_raw) == 0:
         return pd.DataFrame({"client_idcode": [current_pat_client_id_code]})
 
     else:
-        current_pat_raw = current_pat_raw[current_pat_raw["Attended"].astype(
-            int) == 1]
+        current_pat_raw = current_pat_raw[current_pat_raw["Attended"].astype(int) == 1]
 
         if not current_pat_raw.empty:
             # One-hot encode and sum up attendances per patient
-            consultant_features = pd.get_dummies(
-                current_pat_raw, columns=["ConsultantCode"], prefix="ConsultantCode"
-            ).groupby("client_idcode").sum(numeric_only=True).reset_index()
-            clinic_features = pd.get_dummies(
-                current_pat_raw, columns=["ClinicCode"], prefix="ClinicCode"
-            ).groupby("client_idcode").sum(numeric_only=True).reset_index()
-            appointment_type_features = pd.get_dummies(
-                current_pat_raw, columns=["AppointmentType"], prefix="AppointmentType"
-            ).groupby("client_idcode").sum(numeric_only=True).reset_index()
+            consultant_features = (
+                pd.get_dummies(
+                    current_pat_raw, columns=["ConsultantCode"], prefix="ConsultantCode"
+                )
+                .groupby("client_idcode")
+                .sum(numeric_only=True)
+                .reset_index()
+            )
+            clinic_features = (
+                pd.get_dummies(
+                    current_pat_raw, columns=["ClinicCode"], prefix="ClinicCode"
+                )
+                .groupby("client_idcode")
+                .sum(numeric_only=True)
+                .reset_index()
+            )
+            appointment_type_features = (
+                pd.get_dummies(
+                    current_pat_raw,
+                    columns=["AppointmentType"],
+                    prefix="AppointmentType",
+                )
+                .groupby("client_idcode")
+                .sum(numeric_only=True)
+                .reset_index()
+            )
 
             # Merge all features
             features = consultant_features.merge(
                 clinic_features, on="client_idcode", how="outer"
             ).merge(appointment_type_features, on="client_idcode", how="outer")
         else:
-            features = pd.DataFrame(
-                {"client_idcode": [current_pat_client_id_code]})
+            features = pd.DataFrame({"client_idcode": [current_pat_client_id_code]})
 
         # Ensure all requested patients are in the output, filling missing ones with NaN/0
-        all_clients_df = pd.DataFrame(
-            {"client_idcode": [current_pat_client_id_code]})
+        all_clients_df = pd.DataFrame({"client_idcode": [current_pat_client_id_code]})
         if "client_idcode" not in features.columns:
-            features['client_idcode'] = current_pat_client_id_code
-        features = pd.merge(all_clients_df, features,
-                            on="client_idcode", how="left")
+            features["client_idcode"] = current_pat_client_id_code
+        features = pd.merge(all_clients_df, features, on="client_idcode", how="left")
 
     if config_obj.verbosity >= 6:
         display(features)

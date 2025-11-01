@@ -41,7 +41,7 @@ def mean_impute_dataframe(
     random.seed(seed)
 
     # Drop columns that are completely empty (no values at all)
-    data = data.dropna(axis=1, how='all')
+    data = data.dropna(axis=1, how="all")
     logger.info(f"After dropping completely empty columns, data shape: {data.shape}")
 
     # Ensure y_vars is a list
@@ -52,16 +52,24 @@ def mean_impute_dataframe(
     y = data[y_vars]
 
     # Split into train, test, and validation sets
-    X_train_orig, X_test_orig, y_train_orig, y_test_orig = train_test_split(X, y, test_size=test_size, random_state=random_state)
-    X_train, X_val, y_train, y_val = train_test_split(X_train_orig, y_train_orig, test_size=val_size, random_state=random_state)
+    X_train_orig, X_test_orig, y_train_orig, y_test_orig = train_test_split(
+        X, y, test_size=test_size, random_state=random_state
+    )
+    X_train, X_val, y_train, y_val = train_test_split(
+        X_train_orig, y_train_orig, test_size=val_size, random_state=random_state
+    )
 
     # Print shapes after split
-    logger.info(f"Train shape: {X_train.shape}, Validation shape: {X_val.shape}, Test shape: {X_test_orig.shape}")
+    logger.info(
+        f"Train shape: {X_train.shape}, Validation shape: {X_val.shape}, Test shape: {X_test_orig.shape}"
+    )
 
     # Identify numeric and non-numeric columns
     numeric_cols = X.select_dtypes(include=[np.number]).columns
     non_numeric_cols = X.select_dtypes(exclude=[np.number]).columns
-    logger.info(f"Numeric columns: {len(numeric_cols)}, Non-numeric columns: {len(non_numeric_cols)}")
+    logger.info(
+        f"Numeric columns: {len(numeric_cols)}, Non-numeric columns: {len(non_numeric_cols)}"
+    )
 
     # Initialize imputed DataFrames
     X_train_imputed = X_train.copy()
@@ -70,7 +78,7 @@ def mean_impute_dataframe(
 
     # Impute missing values with the mean for numeric columns
     if len(numeric_cols) > 0:
-        imputer = SimpleImputer(strategy='mean')
+        imputer = SimpleImputer(strategy="mean")
 
         # Process each numeric column separately
         for col in numeric_cols:
@@ -116,10 +124,10 @@ def mean_impute_dataframe(
 
     logger.info(f"Final data shape: {final_data.shape}")
 
-
     return final_data
 
-#df_merged = mean_impute_dataframe(df_merged, y_vars=outcome_columns, test_size=0.25, val_size=0.25, random_state=1, seed=1)
+
+# df_merged = mean_impute_dataframe(df_merged, y_vars=outcome_columns, test_size=0.25, val_size=0.25, random_state=1, seed=1)
 
 
 def save_missing_percentage(
@@ -138,14 +146,16 @@ def save_missing_percentage(
     percent_missing = df.isnull().mean() * 100
     percent_missing = percent_missing.to_dict()
 
-    with open(output_file, 'wb') as file:
+    with open(output_file, "wb") as file:
         pickle.dump(percent_missing, file)
 
-    logger.warning("Ensure you rename the pickle file: training_data_filename + _percent_missing.pkl")
+    logger.warning(
+        "Ensure you rename the pickle file: training_data_filename + _percent_missing.pkl"
+    )
 
     return percent_missing
 
 
 # Assuming df_merged is defined
-#result = save_missing_percentage(df_merged)
-#print(result)
+# result = save_missing_percentage(df_merged)
+# print(result)

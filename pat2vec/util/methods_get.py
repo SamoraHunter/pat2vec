@@ -20,6 +20,7 @@ import pandas as pd
 import logging
 
 from pat2vec.util.generate_date_list import generate_date_list
+
 logger = logging.getLogger(__name__)
 # Configure basic logging
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
@@ -707,7 +708,9 @@ def create_folders_for_pat(patient_id: str, config_obj: Any = None) -> None:
             os.makedirs(folder_path)
 
     if config_obj.verbosity > 0:
-        logger.info(f"Folders created for patient {patient_id}: {current_pat_lines_path}...")
+        logger.info(
+            f"Folders created for patient {patient_id}: {current_pat_lines_path}..."
+        )
 
 
 def add_offset_column(
@@ -899,7 +902,9 @@ def test_datetime_formats():
 
     result = add_offset_column(df, "timestamps", "offset_timestamps", offset, verbose=2)
 
-    logger.info("\nTest Results:\n%s", result[["timestamps", "offset_timestamps"]].to_string())
+    logger.info(
+        "\nTest Results:\n%s", result[["timestamps", "offset_timestamps"]].to_string()
+    )
 
     return result
 

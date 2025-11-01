@@ -8,6 +8,7 @@ from pat2vec.util.get_dummy_data_medcat_annotation import dummy_CAT
 
 logger = logging.getLogger(__name__)
 
+
 def get_cat(config_obj: Any) -> Optional[Union["CAT", dummy_CAT]]:  # type: ignore
     """Loads and returns a MedCAT model instance based on configuration.
 
@@ -38,7 +39,9 @@ def get_cat(config_obj: Any) -> Optional[Union["CAT", dummy_CAT]]:  # type: igno
         ValueError: If MedCAT is enabled but no valid model path can be found. # type: ignore
     """
     if config_obj.verbosity >= 1:
-        logger.info(f"Override MedCAT model path: {config_obj.override_medcat_model_path}")
+        logger.info(
+            f"Override MedCAT model path: {config_obj.override_medcat_model_path}"
+        )
 
     if config_obj.testing:
 
@@ -69,7 +72,9 @@ def get_cat(config_obj: Any) -> Optional[Union["CAT", dummy_CAT]]:  # type: igno
                 # Now you can use medcat_path variable here
                 logger.info(f"medcat_path from paths.py: {medcat_path}")
             except ImportError:
-                logger.error("Error: Could not import 'medcat_path' from 'paths.py' file.")
+                logger.error(
+                    "Error: Could not import 'medcat_path' from 'paths.py' file."
+                )
         else:
             logger.info("The 'paths.py' file does not exist or is being overridden.")
 
@@ -79,7 +84,9 @@ def get_cat(config_obj: Any) -> Optional[Union["CAT", dummy_CAT]]:  # type: igno
 
         if config_obj.override_medcat_model_path == "auto":
             if config_obj.verbosity >= 1:
-                logger.info("override_medcat_model_path is set to 'auto'. Searching sys.path.")
+                logger.info(
+                    "override_medcat_model_path is set to 'auto'. Searching sys.path."
+                )
             # Search for 'medcat_models/' in each directory in sys.path
             for directory in sys.path:
                 medcat_models_path = os.path.join(directory, "medcat_models")
@@ -93,15 +100,13 @@ def get_cat(config_obj: Any) -> Optional[Union["CAT", dummy_CAT]]:  # type: igno
                         logger.warning(f"No .zip files found in {medcat_models_path}.")
                 else:
                     # Handle case where medcat_models_path doesn't exist
-                    logger.debug(
-                        f"Path does not exist: {medcat_models_path}"
-                    )
+                    logger.debug(f"Path does not exist: {medcat_models_path}")
                 if model_path:
-                    path_found = True # type: ignore
-                    break # type: ignore
+                    path_found = True  # type: ignore
+                    break  # type: ignore
             else:
                 logger.warning(
-                    "Directory 'medcat_models/' not found in any directory in sys.path." # type: ignore
+                    "Directory 'medcat_models/' not found in any directory in sys.path."  # type: ignore
                 )
 
         if path_found == False:

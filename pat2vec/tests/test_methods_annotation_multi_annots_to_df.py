@@ -195,7 +195,9 @@ class TestMultiAnnotsToDf(unittest.TestCase):
         result_df = pd.read_csv(expected_dest_path)
         self.assertEqual(len(result_df), 0)
 
-    @patch("pat2vec.util.methods_annotation_multi_annots_to_df.join_icd10_codes_to_annot")
+    @patch(
+        "pat2vec.util.methods_annotation_multi_annots_to_df.join_icd10_codes_to_annot"
+    )
     @patch("pat2vec.util.methods_annotation_multi_annots_to_df.json_to_dataframe")
     def test_icd10_join_logic(self, mock_json_to_df, mock_join_icd10):
         """Test that ICD10 codes are joined when add_icd10 is True."""
@@ -217,7 +219,9 @@ class TestMultiAnnotsToDf(unittest.TestCase):
         # Assert
         mock_join_icd10.assert_called_once()
 
-    @patch("pat2vec.util.methods_annotation_multi_annots_to_df.join_icd10_OPC4S_codes_to_annot")
+    @patch(
+        "pat2vec.util.methods_annotation_multi_annots_to_df.join_icd10_OPC4S_codes_to_annot"
+    )
     @patch("pat2vec.util.methods_annotation_multi_annots_to_df.json_to_dataframe")
     def test_icd10_opcs4_join_logic(self, mock_json_to_df, mock_join_opcs4):
         """Test that ICD10 and OPC4S codes are joined when both flags are True."""
@@ -244,17 +248,30 @@ class TestMultiAnnotsToDf(unittest.TestCase):
         """Test that an error in one document doesn't halt processing of others."""
         # Arrange
         # First call raises an error, second call returns a valid DataFrame
-        mock_json_to_df.side_effect = [Exception("Simulated processing error"), self.df_from_json_2]
-        self.mock_config.verbosity = 1 # To cover the print statement in the except block
+        mock_json_to_df.side_effect = [
+            Exception("Simulated processing error"),
+            self.df_from_json_2,
+        ]
+        self.mock_config.verbosity = (
+            1  # To cover the print statement in the except block
+        )
 
         # Act
-        with self.assertLogs('pat2vec.util.methods_annotation_multi_annots_to_df', level='WARNING') as cm:
+        with self.assertLogs(
+            "pat2vec.util.methods_annotation_multi_annots_to_df", level="WARNING"
+        ) as cm:
             result_df = multi_annots_to_df(
-                self.pat_id, self.pat_batch, self.multi_annots, config_obj=self.mock_config, t=self.mock_t
+                self.pat_id,
+                self.pat_batch,
+                self.multi_annots,
+                config_obj=self.mock_config,
+                t=self.mock_t,
             )
 
         # Assert
-        self.assertIn("Error processing document 0: Simulated processing error", cm.output[0])
+        self.assertIn(
+            "Error processing document 0: Simulated processing error", cm.output[0]
+        )
 
         # The final DataFrame should only contain data from the successful call
         self.assertEqual(len(result_df), 1)

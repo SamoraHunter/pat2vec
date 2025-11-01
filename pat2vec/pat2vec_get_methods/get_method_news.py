@@ -4,8 +4,7 @@ import numpy as np
 import pandas as pd
 from IPython.display import display
 
-from pat2vec.util.filter_dataframe_by_timestamp import \
-    filter_dataframe_by_timestamp
+from pat2vec.util.filter_dataframe_by_timestamp import filter_dataframe_by_timestamp
 from pat2vec.util.get_start_end_year_month import get_start_end_year_month
 
 
@@ -69,8 +68,8 @@ def get_news(
         pd.DataFrame: A DataFrame containing NEWS features for the specified patient.
     """
 
-    start_year, start_month, end_year, end_month, start_day, end_day = get_start_end_year_month(
-        target_date_range, config_obj=config_obj
+    start_year, start_month, end_year, end_month, start_day, end_day = (
+        get_start_end_year_month(target_date_range, config_obj=config_obj)
     )
 
     if config_obj.batch_mode:
@@ -141,7 +140,8 @@ def get_news(
             ]
 
         stats = compute_feature_stats(
-            subset, "observation_valuetext_analysed", feature_name, config_obj)
+            subset, "observation_valuetext_analysed", feature_name, config_obj
+        )
         news_features.update(stats)
 
     news_features_df = pd.DataFrame([news_features])

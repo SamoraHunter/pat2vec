@@ -6,8 +6,7 @@ import pandas as pd
 from IPython.display import display
 from scipy import stats
 
-from pat2vec.util.filter_dataframe_by_timestamp import \
-    filter_dataframe_by_timestamp
+from pat2vec.util.filter_dataframe_by_timestamp import filter_dataframe_by_timestamp
 from pat2vec.util.get_start_end_year_month import get_start_end_year_month
 from pat2vec.util.parse_date import validate_input_dates
 
@@ -65,16 +64,18 @@ def search_bloods_data(
             is None.
     """
     if cohort_searcher_with_terms_and_search is None:
-        raise ValueError(
-            "cohort_searcher_with_terms_and_search cannot be None.")
+        raise ValueError("cohort_searcher_with_terms_and_search cannot be None.")
     if client_id_codes is None:
         raise ValueError("client_id_codes cannot be None.")
 
     if isinstance(client_id_codes, str):
         client_id_codes = [client_id_codes]
 
-    start_year, start_month, start_day, end_year, end_month, end_day = validate_input_dates(
-        start_year, start_month, start_day, end_year, end_month, end_day)
+    start_year, start_month, start_day, end_year, end_month, end_day = (
+        validate_input_dates(
+            start_year, start_month, start_day, end_year, end_month, end_day
+        )
+    )
 
     search_string = f"basicobs_value_numeric:* AND {bloods_time_field}:[{start_year}-{start_month}-{start_day} TO {end_year}-{end_month}-{end_day}]"
 
@@ -169,8 +170,7 @@ def get_current_pat_bloods(
     ]
 
     if batch_mode:
-        current_pat_bloods["datetime"] = current_pat_bloods[bloods_time_field].copy(
-        )
+        current_pat_bloods["datetime"] = current_pat_bloods[bloods_time_field].copy()
     else:
         current_pat_bloods["datetime"] = pd.to_datetime(
             current_pat_bloods[bloods_time_field], errors="coerce"
@@ -205,17 +205,14 @@ def get_current_pat_bloods(
         obs_columns_set_columns_for_df.append(obs_columns_set[i] + "_median")
         obs_columns_set_columns_for_df.append(obs_columns_set[i] + "_mode")
         obs_columns_set_columns_for_df.append(obs_columns_set[i] + "_std")
-        obs_columns_set_columns_for_df.append(
-            obs_columns_set[i] + "_num-tests")
+        obs_columns_set_columns_for_df.append(obs_columns_set[i] + "_num-tests")
         obs_columns_set_columns_for_df.append(
             obs_columns_set[i] + "_days-since-last-test"
         )
         obs_columns_set_columns_for_df.append(obs_columns_set[i] + "_max")
         obs_columns_set_columns_for_df.append(obs_columns_set[i] + "_min")
-        obs_columns_set_columns_for_df.append(
-            obs_columns_set[i] + "_most-recent")
-        obs_columns_set_columns_for_df.append(
-            obs_columns_set[i] + "_earliest-test")
+        obs_columns_set_columns_for_df.append(obs_columns_set[i] + "_most-recent")
+        obs_columns_set_columns_for_df.append(obs_columns_set[i] + "_earliest-test")
         obs_columns_set_columns_for_df.append(
             obs_columns_set[i] + "_days-between-first-last"
         )
@@ -301,15 +298,13 @@ def get_current_pat_bloods(
             df_unique_filtered.at[i, col_name + "_earliest-test"] = agg_val
 
             # days-since-last-test
-            date_object = filtered_df.sort_values(
-                by="datetime").iloc[-1]["datetime"]
+            date_object = filtered_df.sort_values(by="datetime").iloc[-1]["datetime"]
 
             delta = today - date_object
 
             agg_val = delta.days
 
-            df_unique_filtered.at[i, col_name +
-                                  "_days-since-last-test"] = agg_val
+            df_unique_filtered.at[i, col_name + "_days-since-last-test"] = agg_val
 
             # n tests
 
@@ -354,31 +349,26 @@ def get_current_pat_bloods(
             col_name_low = col_name_mean - (col_name_std * 3)
 
             agg_val = int(float(min(filtered_column_values)) < col_name_low)
-            df_unique_filtered.at[i, col_name +
-                                  "_contains-extreme-low"] = agg_val
+            df_unique_filtered.at[i, col_name + "_contains-extreme-low"] = agg_val
 
             # contains extreme high
             col_name_high = col_name_mean + (col_name_std * 3)
 
             agg_val = int(float(max(filtered_column_values)) > col_name_high)
 
-            df_unique_filtered.at[i, col_name +
-                                  "_contains-extreme-high"] = agg_val
+            df_unique_filtered.at[i, col_name + "_contains-extreme-high"] = agg_val
 
             # days_between earliest and last
 
-            earliest = filtered_df.sort_values(
-                by="datetime").iloc[-1]["datetime"]
+            earliest = filtered_df.sort_values(by="datetime").iloc[-1]["datetime"]
 
-            oldest = filtered_df.sort_values(
-                by="datetime").iloc[-1]["datetime"]
+            oldest = filtered_df.sort_values(by="datetime").iloc[-1]["datetime"]
 
             delta = earliest - oldest
 
             agg_val = delta.days
 
-            df_unique_filtered.at[i, col_name +
-                                  "_days-between-first-last"] = agg_val
+            df_unique_filtered.at[i, col_name + "_days-between-first-last"] = agg_val
 
             # current_pat_bloods = df_unique_filtered
 

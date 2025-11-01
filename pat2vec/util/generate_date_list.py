@@ -70,7 +70,10 @@ def generate_date_list(
             global_end_date.year,
             global_end_date.month,
             global_end_date.day,
-            23, 59, 59, 999999
+            23,
+            59,
+            59,
+            999999,
         ).replace(tzinfo=utc_tz)
 
     # Clamp the calculated range to the global boundaries

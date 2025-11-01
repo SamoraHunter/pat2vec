@@ -7,6 +7,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
 def anonymize_feature_names(df: pd.DataFrame) -> Tuple[pd.DataFrame, Dict[str, str]]:
     """Anonymizes DataFrame column names, preserving prefixes and suffixes.
 
@@ -187,60 +188,60 @@ def deanonymize_feature_names(
 
 ## --- Example Usage ---
 # if __name__ == '__main__':
-    # # Sample feature names
+# # Sample feature names
 
-    # sample_df = pd.read_csv('../notebooks/new_project/output_directory/concatenated_data_output_file.csv.csv')
+# sample_df = pd.read_csv('../notebooks/new_project/output_directory/concatenated_data_output_file.csv.csv')
 
-    # sample_columns = sample_df.columns.tolist()
+# sample_columns = sample_df.columns.tolist()
 
-    # logger.info("Original DataFrame Columns:")
-    # logger.info(sample_df.columns.tolist())
-    # logger.info("\n" + "="*50 + "\n")
+# logger.info("Original DataFrame Columns:")
+# logger.info(sample_df.columns.tolist())
+# logger.info("\n" + "="*50 + "\n")
 
-    # # Anonymize the DataFrame columns
-    # anonymized_df, anonymization_key = anonymize_feature_names(sample_df)
+# # Anonymize the DataFrame columns
+# anonymized_df, anonymization_key = anonymize_feature_names(sample_df)
 
-    # # --- Saving the anonymization key ---
-    # key_filename = 'anonymization_key.pkl'
-    # try:
-    #     with open(key_filename, 'wb') as f:
-    #         pickle.dump(anonymization_key, f)
-    #     logger.info(f"Anonymization key successfully saved to '{key_filename}'")
-    # except Exception as e:
-    #     logger.error(f"Error saving anonymization key: {e}")
-    # logger.info("\n" + "="*50 + "\n")
+# # --- Saving the anonymization key ---
+# key_filename = 'anonymization_key.pkl'
+# try:
+#     with open(key_filename, 'wb') as f:
+#         pickle.dump(anonymization_key, f)
+#     logger.info(f"Anonymization key successfully saved to '{key_filename}'")
+# except Exception as e:
+#     logger.error(f"Error saving anonymization key: {e}")
+# logger.info("\n" + "="*50 + "\n")
 
-    # # --- Loading the anonymization key ---
-    # loaded_anonymization_key = {}
-    # try:
-    #     with open(key_filename, 'rb') as f:
-    #         loaded_anonymization_key = pickle.load(f)
-    #     logger.info(f"Anonymization key successfully loaded from '{key_filename}'")
-    #     logger.info(f"Loaded key preview: {list(loaded_anonymization_key.items())[:2]}")
-    # except FileNotFoundError:
-    #     logger.error(f"Error: Anonymization key file '{key_filename}' not found.")
-    # except Exception as e:
-    #     logger.error(f"Error loading anonymization key: {e}")
-    # logger.info("\n" + "="*50 + "\n")
+# # --- Loading the anonymization key ---
+# loaded_anonymization_key = {}
+# try:
+#     with open(key_filename, 'rb') as f:
+#         loaded_anonymization_key = pickle.load(f)
+#     logger.info(f"Anonymization key successfully loaded from '{key_filename}'")
+#     logger.info(f"Loaded key preview: {list(loaded_anonymization_key.items())[:2]}")
+# except FileNotFoundError:
+#     logger.error(f"Error: Anonymization key file '{key_filename}' not found.")
+# except Exception as e:
+#     logger.error(f"Error loading anonymization key: {e}")
+# logger.info("\n" + "="*50 + "\n")
 
-    # logger.info("Anonymized DataFrame Columns:")
-    # logger.info(anonymized_df.columns.tolist())
-    # logger.info("\n" + "="*50 + "\n")
+# logger.info("Anonymized DataFrame Columns:")
+# logger.info(anonymized_df.columns.tolist())
+# logger.info("\n" + "="*50 + "\n")
 
-    # logger.info("Anonymization Key (Anonymized -> Original):")
-    # for k, v in anonymization_key.items():
-    #     logger.info(f"- {k}: {v}")
-    # logger.info("\n" + "="*50 + "\n")
+# logger.info("Anonymization Key (Anonymized -> Original):")
+# for k, v in anonymization_key.items():
+#     logger.info(f"- {k}: {v}")
+# logger.info("\n" + "="*50 + "\n")
 
-    # # Demonstrate deanonymization of the anonymized DataFrame's columns
-    # deanonymized_columns = deanonymize_feature_names(anonymized_df.columns.tolist(), anonymization_key)
+# # Demonstrate deanonymization of the anonymized DataFrame's columns
+# deanonymized_columns = deanonymize_feature_names(anonymized_df.columns.tolist(), anonymization_key)
 
-    # logger.info("De-anonymized DataFrame Columns (should match original list):")
-    # logger.info(deanonymized_columns)
-    # logger.info("\n" + "="*50 + "\n")
+# logger.info("De-anonymized DataFrame Columns (should match original list):")
+# logger.info(deanonymized_columns)
+# logger.info("\n" + "="*50 + "\n")
 
-    # # Verify if fully deanonymized list matches original list
-    # if deanonymized_columns == sample_columns:
-    #     logger.info("Verification successful: Full de-anonymization of DataFrame columns matches original list!")
-    # else:
-    #     logger.warning("Verification failed: De-anonymized DataFrame columns do NOT match original list.")
+# # Verify if fully deanonymized list matches original list
+# if deanonymized_columns == sample_columns:
+#     logger.info("Verification successful: Full de-anonymization of DataFrame columns matches original list!")
+# else:
+#     logger.warning("Verification failed: De-anonymized DataFrame columns do NOT match original list.")

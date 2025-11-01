@@ -4,8 +4,7 @@ from typing import Callable, Dict, List, Optional, Tuple, Union
 import pandas as pd
 from IPython.display import display
 
-from pat2vec.util.filter_dataframe_by_timestamp import \
-    filter_dataframe_by_timestamp
+from pat2vec.util.filter_dataframe_by_timestamp import filter_dataframe_by_timestamp
 from pat2vec.util.get_start_end_year_month import get_start_end_year_month
 from pat2vec.util.methods_get import convert_date
 from pat2vec.util.parse_date import validate_input_dates
@@ -78,8 +77,7 @@ def search_drug_orders(
         ValueError: If essential arguments are None.
     """
     if cohort_searcher_with_terms_and_search is None:
-        raise ValueError(
-            "cohort_searcher_with_terms_and_search cannot be None.")
+        raise ValueError("cohort_searcher_with_terms_and_search cannot be None.")
     if client_id_codes is None:
         raise ValueError("client_id_codes cannot be None.")
     if drug_time_field is None:
@@ -88,8 +86,10 @@ def search_drug_orders(
     if isinstance(client_id_codes, str):
         client_id_codes = [client_id_codes]
 
-    start_year, start_month, start_day, end_year, end_month, end_day = validate_input_dates(
-        start_year, start_month, start_day, end_year, end_month, end_day
+    start_year, start_month, start_day, end_year, end_month, end_day = (
+        validate_input_dates(
+            start_year, start_month, start_day, end_year, end_month, end_day
+        )
     )
 
     search_string = (
@@ -130,11 +130,7 @@ def prepare_drug_datetime(
     if batch_mode:
         data["datetime"] = data[drug_time_field].copy()
     else:
-        data["datetime"] = (
-            pd.Series(data[drug_time_field])
-            .dropna()
-            .apply(convert_date)
-        )
+        data["datetime"] = pd.Series(data[drug_time_field]).dropna().apply(convert_date)
 
     return data
 
@@ -186,8 +182,7 @@ def calculate_drug_features(
                     delta = today - date_object
                     features[f"{col_name}_days-since-last-drug-order"] = delta.days
                 except Exception as e:
-                    print(
-                        f"Error calculating days since last drug for {col_name}: {e}")
+                    print(f"Error calculating days since last drug for {col_name}: {e}")
                     features[f"{col_name}_days-since-last-drug-order"] = None
 
         if df_len >= 2 and drugs_arg_dict.get("_days-between-first-last-drug"):
@@ -199,7 +194,8 @@ def calculate_drug_features(
                 features[f"{col_name}_days-between-first-last-drug"] = delta.days
             except Exception as e:
                 print(
-                    f"Error calculating days between first-last drug for {col_name}: {e}")
+                    f"Error calculating days between first-last drug for {col_name}: {e}"
+                )
                 features[f"{col_name}_days-between-first-last-drug"] = None
 
     return features
@@ -225,8 +221,11 @@ def create_drug_features_dataframe(
 
     if len(original_data) > 0:
         sample_row = original_data.iloc[0:1].copy()
-        columns_to_keep = [col for col in sample_row.columns
-                           if col not in COLUMNS_TO_DROP and col not in drug_features.keys()]
+        columns_to_keep = [
+            col
+            for col in sample_row.columns
+            if col not in COLUMNS_TO_DROP and col not in drug_features.keys()
+        ]
         for col in columns_to_keep:
             if col != "client_idcode":
                 base_df[col] = sample_row[col].iloc[0]
@@ -304,8 +303,7 @@ def get_current_pat_drugs(
         return pd.DataFrame({"client_idcode": [current_pat_client_id_code]})
 
     # Prepare datetime
-    current_pat_drugs = prepare_drug_datetime(
-        drugs, drug_time_field, batch_mode)
+    current_pat_drugs = prepare_drug_datetime(drugs, drug_time_field, batch_mode)
 
     # Group by order_name
     order_name_list = list(current_pat_drugs["order_name"].unique())

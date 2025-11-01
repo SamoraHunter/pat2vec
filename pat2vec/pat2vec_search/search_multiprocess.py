@@ -82,7 +82,9 @@ def cohort_searcher_with_terms_and_search_multi(
 
     # Split the list of terms into chunks for each process
     pat_list_master = [l[i : i + n] for i in range(0, len(l), n)]
-    print(f"Splitting {len(l)} items into {len(pat_list_master)} chunks for parallel processing.")
+    print(
+        f"Splitting {len(l)} items into {len(pat_list_master)} chunks for parallel processing."
+    )
 
     # Prepare arguments for each process
     args_list = [

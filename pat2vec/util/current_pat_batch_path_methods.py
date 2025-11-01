@@ -6,6 +6,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
 class PathsClass:
     """Manages the creation and organization of directory paths for the pipeline."""
 

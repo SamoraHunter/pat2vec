@@ -16,6 +16,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
 def count_files(path: str) -> int:
     """Recursively counts the number of files in a directory.
 
@@ -67,8 +68,7 @@ def extract_datetime_to_column(df: pd.DataFrame, drop: bool = True) -> pd.DataFr
     logger.info(df["extracted_datetime_stamp"].value_counts())
 
     if drop:
-        columns_to_drop = [
-            col for col in df.columns if "date_time_stamp" in col]
+        columns_to_drop = [col for col in df.columns if "date_time_stamp" in col]
         if columns_to_drop:
             logger.info(f"Dropping {len(columns_to_drop)} date_time_stamp columns")
             df = df.drop(columns=columns_to_drop)
@@ -161,7 +161,9 @@ def produce_filtered_annotation_dataframe(
     results = []
 
     if pat_list is None:
-        logger.info(f"Using all patient list of length {len(config_obj.all_patient_list)}")
+        logger.info(
+            f"Using all patient list of length {len(config_obj.all_patient_list)}"
+        )
         pat_list = config_obj.all_patient_list
 
     for i in tqdm(range(len(pat_list))):
@@ -213,7 +215,9 @@ def produce_filtered_annotation_dataframe(
                         current_pat_annot_batch, filter_args
                     )
                 except Exception as e:
-                    logger.error(f"Error filtering annotations for patient at index {i}: {e}")
+                    logger.error(
+                        f"Error filtering annotations for patient at index {i}: {e}"
+                    )
                     display(current_pat_annot_batch)
                     raise e
 
@@ -353,7 +357,7 @@ def process_chunk(args: tuple) -> Dict[str, List[str]]:
     """
     part_chunk, all_files, part_size, unique_columns = args
     concatenated_data = {column: [] for column in unique_columns}
-    for file in all_files[part_chunk: part_chunk + part_size]:
+    for file in all_files[part_chunk : part_chunk + part_size]:
         if file.endswith(".csv"):
             with open(file, "r", newline="") as infile:
                 reader = csv.DictReader(infile)
@@ -396,7 +400,9 @@ def join_icd10_codes_to_annot(df: pd.DataFrame, inner: bool = False) -> pd.DataF
     return result
 
 
-def join_icd10_OPC4S_codes_to_annot(df: pd.DataFrame, inner: bool = False) -> pd.DataFrame:
+def join_icd10_OPC4S_codes_to_annot(
+    df: pd.DataFrame, inner: bool = False
+) -> pd.DataFrame:
     """Joins ICD-10 and OPCS-4 codes to an annotation DataFrame.
 
     This function merges the input DataFrame `df` with a predefined ICD-10/OPCS-4 mapping
@@ -416,12 +422,10 @@ def join_icd10_OPC4S_codes_to_annot(df: pd.DataFrame, inner: bool = False) -> pd
     mdf = pd.read_csv(mfp)
 
     if inner == True:
-        result = pd.merge(df, mdf, left_on="cui",
-                          right_on="conceptId", how="inner")
+        result = pd.merge(df, mdf, left_on="cui", right_on="conceptId", how="inner")
 
     else:
-        result = pd.merge(df, mdf, left_on="cui",
-                          right_on="conceptId", how="left")
+        result = pd.merge(df, mdf, left_on="cui", right_on="conceptId", how="left")
 
     return result
 
@@ -456,8 +460,7 @@ def filter_and_select_rows(
         )
 
     if filter_column not in dataframe.columns:
-        raise ValueError(
-            f"{filter_column} not found in the dataframe columns.")
+        raise ValueError(f"{filter_column} not found in the dataframe columns.")
 
     filtered_df = dataframe[dataframe[filter_column].isin(filter_list)]
 
@@ -684,8 +687,7 @@ def filter_and_update_csv(
         client_idcode = row["client_idcode"]
         # print(client_idcode, row['updatetime'])
         # filter_date = pd.to_datetime(row['updatetime']).tz_convert('UTC')  # Convert filter_date to UTC
-        filter_date = pd.to_datetime(
-            row["updatetime"], utc=True, errors="coerce")
+        filter_date = pd.to_datetime(row["updatetime"], utc=True, errors="coerce")
 
         if verbosity:
             print(f"Processing client_idcode: {client_idcode}")
@@ -736,8 +738,7 @@ def filter_and_update_csv(
                         print(f"Updating CSV file based on {update_column}")
                         logger.info(f"Updating CSV file based on {update_column}")
 
-                    df[update_column] = pd.to_datetime(
-                        df[update_column], utc=True)
+                    df[update_column] = pd.to_datetime(df[update_column], utc=True)
                     filter_condition = (
                         df[update_column] > filter_date
                         if filter_type == "after"
@@ -829,8 +830,7 @@ def retrieve_pat_annots_mct_epr(
         dfr["annotation_batch_source"] = "report"
 
     # Concatenate all dataframes
-    all_annots = pd.concat([dfa, dfa_mct, dfa_to, dfr],
-                           axis=0, ignore_index=True)
+    all_annots = pd.concat([dfa, dfa_mct, dfa_to, dfr], axis=0, ignore_index=True)
 
     # Merge columns if required
     if merge_columns and not all_annots.empty:
@@ -904,12 +904,13 @@ def check_list_presence(df, column, lst, annot_filter_arguments=None):
 
     str_lst = list(map(str, lst))  # Convert elements to strings
     return any(
-        df[column].astype(str).str.contains(
-            "|".join(str_lst), case=False, na=False)
+        df[column].astype(str).str.contains("|".join(str_lst), case=False, na=False)
     )
 
 
-def filter_dataframe_n_lists(df: pd.DataFrame, column_name: str, n_lists: List[List[Any]]) -> pd.DataFrame:
+def filter_dataframe_n_lists(
+    df: pd.DataFrame, column_name: str, n_lists: List[List[Any]]
+) -> pd.DataFrame:
     """Filters a DataFrame to include rows where the value in a specified column
     is present in *all* of the provided lists.
 
@@ -966,20 +967,17 @@ def get_all_target_annots(
 
         current_pat_idcode = all_pat_list[i]
 
-        all_annots = retrieve_pat_annots_mct_epr(
-            current_pat_idcode, config_obj)
+        all_annots = retrieve_pat_annots_mct_epr(current_pat_idcode, config_obj)
 
         all_annots.dropna(subset="acc", inplace=True)
 
         if annot_filter_arguments is not None:
-            all_annots = filter_annot_dataframe2(
-                all_annots, annot_filter_arguments)
+            all_annots = filter_annot_dataframe2(all_annots, annot_filter_arguments)
 
         annots_to_return = filter_dataframe_n_lists(all_annots, "cui", n_lists)
 
         if annots_to_return:
-            filtered_df = all_annots[all_annots["cui"].isin(
-                list(chain(*n_lists)))]
+            filtered_df = all_annots[all_annots["cui"].isin(list(chain(*n_lists)))]
             results_df = pd.concat([results_df, filtered_df])
 
     results_df.to_csv("all_target_annots.csv")
@@ -1057,8 +1055,7 @@ def extract_datetime_from_binary_columns_chunk_reader(filepath: str) -> pd.DataF
             for col in chunk.columns
             if "_date_time_stamp" in col
         ]
-        date_columns_raw = [
-            col for col in chunk.columns if "_date_time_stamp" in col]
+        date_columns_raw = [col for col in chunk.columns if "_date_time_stamp" in col]
 
         # Iterate over each row in the chunk
         for index, row in tqdm(chunk.iterrows(), total=len(chunk)):
@@ -1070,8 +1067,7 @@ def extract_datetime_from_binary_columns_chunk_reader(filepath: str) -> pd.DataF
                     date_string = date_columns[i]
 
                     # Split the date string and convert each part to integer
-                    date_parts = [int(part)
-                                  for part in date_string.split(", ")]
+                    date_parts = [int(part) for part in date_string.split(", ")]
 
                     # Unpack date_parts and create a datetime object
                     formatted_date = datetime(*date_parts)
@@ -1104,7 +1100,9 @@ def drop_columns_with_all_nan(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.Index]
     return df, nan_columns
 
 
-def save_missing_values_pickle(df: pd.DataFrame, out_file_path: str, overwrite: bool = False) -> None:
+def save_missing_values_pickle(
+    df: pd.DataFrame, out_file_path: str, overwrite: bool = False
+) -> None:
     """Calculates the percentage of missing values for each column in a DataFrame
     and saves the result as a pickle file.
 
@@ -1349,6 +1347,7 @@ def aggregate_dataframe_mean(
     Returns:
         The aggregated DataFrame.
     """
+
     def custom_aggregation(x):
         agg_values = {}
         for col in x.columns:
@@ -1444,8 +1443,7 @@ def plot_missing_pattern_bloods(dfb: pd.DataFrame) -> None:
     """
 
     # Step 1: Identify the top 50 basicobs_itemname_analysed by frequency
-    top_items = dfb["basicobs_itemname_analysed"].value_counts().nlargest(
-        50).index
+    top_items = dfb["basicobs_itemname_analysed"].value_counts().nlargest(50).index
 
     # Filter the data for these top items
     filtered_dfb = dfb[dfb["basicobs_itemname_analysed"].isin(top_items)]

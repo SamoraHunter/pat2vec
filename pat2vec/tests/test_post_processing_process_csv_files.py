@@ -141,9 +141,7 @@ class TestProcessCsvFiles(unittest.TestCase):
         backup_found = any("backup" in f for f in os.listdir(self.output_path))
         self.assertTrue(backup_found)
 
-    @patch(
-        "pat2vec.util.post_processing_process_csv_files.extract_datetime_to_column"
-    )
+    @patch("pat2vec.util.post_processing_process_csv_files.extract_datetime_to_column")
     @patch("pat2vec.util.post_processing_process_csv_files.tqdm", lambda x, **kwargs: x)
     def test_append_timestamp_column_true(self, mock_extract_dt):
         """Test that extract_datetime_to_column is called when append_timestamp_column is True."""
@@ -163,6 +161,12 @@ class TestProcessCsvFiles(unittest.TestCase):
         empty_file_path = os.path.join(self.input_path, "empty.csv")
         open(empty_file_path, "w").close()
 
-        with self.assertLogs('pat2vec.util.post_processing_process_csv_files', level='WARNING') as cm:
+        with self.assertLogs(
+            "pat2vec.util.post_processing_process_csv_files", level="WARNING"
+        ) as cm:
             process_csv_files(self.input_path, self.output_path)
-            self.assertTrue(any(f"Empty file skipped: {empty_file_path}" in log for log in cm.output))
+            self.assertTrue(
+                any(
+                    f"Empty file skipped: {empty_file_path}" in log for log in cm.output
+                )
+            )

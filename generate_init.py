@@ -32,11 +32,15 @@ def generate_init_file_content(package_path="pat2vec"):
 
                         # Iterate over top-level nodes only
                         for node in tree.body:
-                            if isinstance(node, ast.FunctionDef) and not node.name.startswith("_"):
+                            if isinstance(
+                                node, ast.FunctionDef
+                            ) and not node.name.startswith("_"):
                                 name = node.name
                                 module_to_imports[import_path].append(name)
                                 all_import_names.add(name)
-                            elif isinstance(node, ast.ClassDef) and not node.name.startswith("_"):
+                            elif isinstance(
+                                node, ast.ClassDef
+                            ) and not node.name.startswith("_"):
                                 name = node.name
                                 module_to_imports[import_path].append(name)
                                 all_import_names.add(name)

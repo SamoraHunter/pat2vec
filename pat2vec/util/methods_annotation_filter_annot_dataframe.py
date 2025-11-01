@@ -39,13 +39,15 @@ def filter_annot_dataframe(
                         # Parse the string like "['disease', 'finding']" into a list
                         type_list = ast.literal_eval(row_str)
                         # Check if any of the desired types are in the parsed list
-                        return any(item.lower() in [t.lower() for t in type_list] for item in value)
+                        return any(
+                            item.lower() in [t.lower() for t in type_list]
+                            for item in value
+                        )
                     except (ValueError, SyntaxError):
                         # If the string is malformed, it's not a match
                         return False
-                mask &= dataframe[column].apply(
-                    check_type
-                )
+
+                mask &= dataframe[column].apply(check_type)
             elif column in ["Time_Value", "Presence_Value", "Subject_Value"]:
                 # Include rows where the column is in the specified list of values
                 mask &= (

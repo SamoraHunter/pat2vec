@@ -21,13 +21,13 @@ DEMOGRAPHICS_FIELDS = [
 def search_demographics(
     cohort_searcher_with_terms_and_search: Optional[Callable] = None,
     client_id_codes: Optional[Union[str, List[str]]] = None,
-    demographics_time_field: str = 'updatetime',
-    start_year: str = '1995',
-    start_month: str = '01',
-    start_day: str = '01',
-    end_year: str = '2025',
-    end_month: str = '12',
-    end_day: str = '12',
+    demographics_time_field: str = "updatetime",
+    start_year: str = "1995",
+    start_month: str = "01",
+    start_day: str = "01",
+    end_year: str = "2025",
+    end_month: str = "12",
+    end_day: str = "12",
     additional_custom_search_string: Optional[str] = None,
 ) -> pd.DataFrame:
     """Searches for demographics data for patients within a date range.
@@ -55,8 +55,7 @@ def search_demographics(
         ValueError: If essential arguments are None.
     """
     if cohort_searcher_with_terms_and_search is None:
-        raise ValueError(
-            "cohort_searcher_with_terms_and_search cannot be None.")
+        raise ValueError("cohort_searcher_with_terms_and_search cannot be None.")
     if client_id_codes is None:
         raise ValueError("client_id_codes cannot be None.")
     if demographics_time_field is None:
@@ -71,8 +70,10 @@ def search_demographics(
     if isinstance(client_id_codes, str):
         client_id_codes = [client_id_codes]
 
-    start_year, start_month, start_day, end_year, end_month, end_day = validate_input_dates(
-        start_year, start_month, start_day, end_year, end_month, end_day
+    start_year, start_month, start_day, end_year, end_month, end_day = (
+        validate_input_dates(
+            start_year, start_month, start_day, end_year, end_month, end_day
+        )
     )
 
     # Base search string for demographics
@@ -91,7 +92,9 @@ def search_demographics(
     )
 
 
-def process_demographics_data(demo_data: pd.DataFrame, patlist: List[str]) -> pd.DataFrame:
+def process_demographics_data(
+    demo_data: pd.DataFrame, patlist: List[str]
+) -> pd.DataFrame:
     """Processes raw demographics data to return the most recent record per patient.
 
     Args:
@@ -131,7 +134,7 @@ def get_demographics3(
     patlist: List[str],
     target_date_range: Tuple,
     cohort_searcher_with_terms_and_search: Callable,
-    config_obj: Optional[object] = None
+    config_obj: Optional[object] = None,
 ) -> pd.DataFrame:
     """Gets demographics information for patients within a specified date range.
 
@@ -156,9 +159,7 @@ def get_demographics3(
         )
 
     if cohort_searcher_with_terms_and_search is None:
-        raise ValueError(
-            "cohort_searcher_with_terms_and_search cannot be None."
-        )
+        raise ValueError("cohort_searcher_with_terms_and_search cannot be None.")
 
     if not patlist:
         raise ValueError("patlist cannot be empty.")

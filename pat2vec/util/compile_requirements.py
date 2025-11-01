@@ -6,6 +6,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
 def run_pip_compile() -> bool:
     """Runs pip-compile on requirements.in.
 

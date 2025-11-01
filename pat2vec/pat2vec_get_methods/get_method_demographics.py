@@ -5,13 +5,12 @@ import pandas as pd
 from IPython.display import display
 
 from pat2vec.pat2vec_get_methods.get_method_demo import search_demographics
-from pat2vec.pat2vec_search.data_helper_functions import \
-    append_age_at_record_series
+from pat2vec.pat2vec_search.data_helper_functions import append_age_at_record_series
+
 # from COGStats import EthnicityAbstractor
 # from COGStats import *
 from pat2vec.util.ethnicity_abstractor import EthnicityAbstractor
-from pat2vec.util.filter_dataframe_by_timestamp import \
-    filter_dataframe_by_timestamp
+from pat2vec.util.filter_dataframe_by_timestamp import filter_dataframe_by_timestamp
 from pat2vec.util.get_start_end_year_month import get_start_end_year_month
 
 

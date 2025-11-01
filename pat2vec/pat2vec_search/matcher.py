@@ -68,14 +68,10 @@ def matcher(
         max_time_before = timedelta(days=before)
         max_time_after = timedelta(days=after)
 
-        h_id_bloods = lab_results[
-            lab_results[source_patid_colname] == h_id
-        ]
+        h_id_bloods = lab_results[lab_results[source_patid_colname] == h_id]
         for blood_code_type, sub_df in h_id_bloods[
             h_id_bloods[result_testname].isin(bloods_filter)
-        ].groupby(
-            result_testname
-        ):
+        ].groupby(result_testname):
             vals[blood_code_type] = nearest(
                 target_time,
                 sub_df,

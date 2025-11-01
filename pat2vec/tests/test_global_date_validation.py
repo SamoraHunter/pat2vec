@@ -112,11 +112,14 @@ class TestGlobalDateValidation(unittest.TestCase):
 
         later_date = datetime(2021, 6, 15)
 
-        with self.assertLogs('pat2vec.util.config_pat2vec', level='WARNING') as cm:
+        with self.assertLogs("pat2vec.util.config_pat2vec", level="WARNING") as cm:
             result = update_global_start_date(mock_config, later_date)
 
             # Should log a warning and return unchanged config
-            self.assertIn("Warning: Invalid global date attributes in config. Cannot update.", cm.output[0])
+            self.assertIn(
+                "Warning: Invalid global date attributes in config. Cannot update.",
+                cm.output[0],
+            )
 
         self.assertEqual(result, mock_config)
 

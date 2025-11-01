@@ -3,8 +3,7 @@ from typing import Callable, List, Optional, Union
 import pandas as pd
 from IPython.display import display
 
-from pat2vec.util.filter_dataframe_by_timestamp import \
-    filter_dataframe_by_timestamp
+from pat2vec.util.filter_dataframe_by_timestamp import filter_dataframe_by_timestamp
 from pat2vec.util.get_start_end_year_month import get_start_end_year_month
 from pat2vec.util.parse_date import validate_input_dates
 
@@ -59,8 +58,7 @@ def search_bed_data(
         pd.DataFrame: A DataFrame containing the raw bed data.
     """
     if cohort_searcher_with_terms_and_search is None:
-        raise ValueError(
-            "cohort_searcher_with_terms_and_search cannot be None.")
+        raise ValueError("cohort_searcher_with_terms_and_search cannot be None.")
     if client_id_codes is None:
         raise ValueError("client_id_codes cannot be None.")
     if bed_time_field is None:
@@ -74,8 +72,11 @@ def search_bed_data(
     if isinstance(client_id_codes, str):
         client_id_codes = [client_id_codes]
 
-    start_year, start_month, start_day, end_year, end_month, end_day = validate_input_dates(
-        start_year, start_month, start_day, end_year, end_month, end_day)
+    start_year, start_month, start_day, end_year, end_month, end_day = (
+        validate_input_dates(
+            start_year, start_month, start_day, end_year, end_month, end_day
+        )
+    )
 
     search_string = f'obscatalogmasteritem_displayname:("{search_term}") AND {bed_time_field}:[{start_year}-{start_month}-{start_day} TO {end_year}-{end_month}-{end_day}]'
 
@@ -162,14 +163,12 @@ def get_bed(
         current_pat_raw["obscatalogmasteritem_displayname"] == search_term
     ].copy()
 
-    features_data.dropna(
-        subset=["observation_valuetext_analysed"], inplace=True)
+    features_data.dropna(subset=["observation_valuetext_analysed"], inplace=True)
 
     term = "bed".lower()
 
     if len(features_data) > 0:
-        all_bed_terms = list(
-            features_data["observation_valuetext_analysed"].unique())
+        all_bed_terms = list(features_data["observation_valuetext_analysed"].unique())
 
         for bed_term in all_bed_terms:
             features[f"bed_{bed_term}"] = 1

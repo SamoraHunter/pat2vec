@@ -403,7 +403,9 @@ class TestGetPatIpwRecord(unittest.TestCase):
             df if not df.empty else df
         )
 
-        with self.assertLogs('pat2vec.util.post_processing_get_pat_ipw_record', level='DEBUG') as cm:
+        with self.assertLogs(
+            "pat2vec.util.post_processing_get_pat_ipw_record", level="DEBUG"
+        ) as cm:
             get_pat_ipw_record(
                 current_pat_idcode=self.patient_id,
                 config_obj=self.mock_config,

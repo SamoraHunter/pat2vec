@@ -4,8 +4,7 @@ from typing import Callable, Dict, List, Optional, Tuple, Union
 import pandas as pd
 from IPython.display import display
 
-from pat2vec.util.filter_dataframe_by_timestamp import \
-    filter_dataframe_by_timestamp
+from pat2vec.util.filter_dataframe_by_timestamp import filter_dataframe_by_timestamp
 from pat2vec.util.get_start_end_year_month import get_start_end_year_month
 from pat2vec.util.methods_get import convert_date
 from pat2vec.util.parse_date import validate_input_dates
@@ -42,13 +41,13 @@ COLUMNS_TO_DROP = [
 def search_diagnostic_orders(
     cohort_searcher_with_terms_and_search: Optional[Callable] = None,
     client_id_codes: Optional[Union[str, List[str]]] = None,
-    diagnostic_time_field: str = 'order_createdwhen',
-    start_year: str = '1995',
-    start_month: str = '01',
-    start_day: str = '01',
-    end_year: str = '2025',
-    end_month: str = '12',
-    end_day: str = '12',
+    diagnostic_time_field: str = "order_createdwhen",
+    start_year: str = "1995",
+    start_month: str = "01",
+    start_day: str = "01",
+    end_year: str = "2025",
+    end_month: str = "12",
+    end_day: str = "12",
     additional_custom_search_string: Optional[str] = None,
 ) -> pd.DataFrame:
     """Searches for diagnostic order data for patients within a date range.
@@ -78,8 +77,7 @@ def search_diagnostic_orders(
         ValueError: If essential arguments are None.
     """
     if cohort_searcher_with_terms_and_search is None:
-        raise ValueError(
-            "cohort_searcher_with_terms_and_search cannot be None.")
+        raise ValueError("cohort_searcher_with_terms_and_search cannot be None.")
     if client_id_codes is None:
         raise ValueError("client_id_codes cannot be None.")
     if diagnostic_time_field is None:
@@ -94,8 +92,10 @@ def search_diagnostic_orders(
     if isinstance(client_id_codes, str):
         client_id_codes = [client_id_codes]
 
-    start_year, start_month, start_day, end_year, end_month, end_day = validate_input_dates(
-        start_year, start_month, start_day, end_year, end_month, end_day
+    start_year, start_month, start_day, end_year, end_month, end_day = (
+        validate_input_dates(
+            start_year, start_month, start_day, end_year, end_month, end_day
+        )
     )
 
     # Base search string for diagnostic orders
@@ -118,9 +118,7 @@ def search_diagnostic_orders(
 
 
 def prepare_diagnostic_datetime(
-    diagnostics_data: pd.DataFrame,
-    diagnostic_time_field: str,
-    batch_mode: bool = False
+    diagnostics_data: pd.DataFrame, diagnostic_time_field: str, batch_mode: bool = False
 ) -> pd.DataFrame:
     """Prepares the datetime column for diagnostic data processing.
 
@@ -142,9 +140,7 @@ def prepare_diagnostic_datetime(
         data["datetime"] = data[diagnostic_time_field].copy()
     else:
         data["datetime"] = (
-            pd.Series(data[diagnostic_time_field])
-            .dropna()
-            .apply(convert_date)
+            pd.Series(data[diagnostic_time_field]).dropna().apply(convert_date)
         )
 
     return data
@@ -153,7 +149,7 @@ def prepare_diagnostic_datetime(
 def calculate_diagnostic_features(
     order_name_df_dict: Dict[str, pd.DataFrame],
     order_name_list: List[str],
-    batch_mode: bool = False
+    batch_mode: bool = False,
 ) -> Dict:
     """Calculates diagnostic features for each order type.
 
@@ -198,7 +194,8 @@ def calculate_diagnostic_features(
                 features[f"{col_name}_days-since-last-diagnostic-order"] = delta.days
             except Exception as e:
                 print(
-                    f"Error calculating days since last diagnostic for {col_name}: {e}")
+                    f"Error calculating days since last diagnostic for {col_name}: {e}"
+                )
                 features[f"{col_name}_days-since-last-diagnostic-order"] = None
 
         if df_len >= 2:
@@ -213,7 +210,8 @@ def calculate_diagnostic_features(
                 features[f"{col_name}_days-between-first-last-diagnostic"] = delta.days
             except Exception as e:
                 print(
-                    f"Error calculating days between first-last diagnostic for {col_name}: {e}")
+                    f"Error calculating days between first-last diagnostic for {col_name}: {e}"
+                )
                 features[f"{col_name}_days-between-first-last-diagnostic"] = None
 
     return features
@@ -222,7 +220,7 @@ def calculate_diagnostic_features(
 def create_diagnostic_features_dataframe(
     current_pat_client_id_code: str,
     diagnostic_features: Dict,
-    original_data: pd.DataFrame
+    original_data: pd.DataFrame,
 ) -> pd.DataFrame:
     """Creates the final diagnostic features DataFrame.
 
@@ -245,8 +243,11 @@ def create_diagnostic_features_dataframe(
         sample_row = original_data.iloc[0:1].copy()
 
         # Keep only columns that aren't in our drop list
-        columns_to_keep = [col for col in sample_row.columns
-                           if col not in COLUMNS_TO_DROP and col not in diagnostic_features.keys()]
+        columns_to_keep = [
+            col
+            for col in sample_row.columns
+            if col not in COLUMNS_TO_DROP and col not in diagnostic_features.keys()
+        ]
 
         for col in columns_to_keep:
             if col != "client_idcode":  # Don't duplicate client_idcode

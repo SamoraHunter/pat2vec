@@ -1039,7 +1039,9 @@ def initialize_cogstack_client(config_obj=None):
                     "hosts": hosts,
                 }
             except ImportError:
-                print("WARNING: Still no credentials file found. Using dummy credentials.")
+                print(
+                    "WARNING: Still no credentials file found. Using dummy credentials."
+                )
                 creds = {
                     "username": "dummy_user",
                     "password": "dummy_password",
@@ -1050,12 +1052,14 @@ def initialize_cogstack_client(config_obj=None):
     print(f"Imported cogstack_v8_lite from pat2vec.util .")
     print(f"Username: {creds.get('username')}")
 
-    if creds.get('api_key'):
+    if creds.get("api_key"):
         print("Using API key authentication")
-        cs = CogStack(creds['hosts'], api_key=creds['api_key'], api=True)
+        cs = CogStack(creds["hosts"], api_key=creds["api_key"], api=True)
     else:
         print(f"Using basic authentication, username: {creds.get('username')}")
-        cs = CogStack(creds['hosts'], creds.get('username'), creds.get('password'), api=False)
+        cs = CogStack(
+            creds["hosts"], creds.get("username"), creds.get("password"), api=False
+        )
 
     try:
         cs.elastic.info()

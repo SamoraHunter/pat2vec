@@ -4,7 +4,8 @@ from dateutil.relativedelta import relativedelta
 
 from pat2vec.util.calculate_interval import calculate_interval
 
-#PYTHONPATH=. pytest pat2vec/tests
+
+# PYTHONPATH=. pytest pat2vec/tests
 class TestCalculateInterval(unittest.TestCase):
     """Unit tests for the calculate_interval function."""
 
@@ -138,7 +139,9 @@ class TestCalculateInterval(unittest.TestCase):
         total_delta_month = relativedelta(months=1)
         interval_delta_week = relativedelta(weeks=1)
         # 4 full weeks fit in Jan (1, 8, 15, 22, 29). The 5th week starts on Feb 5.
-        result_jan = calculate_interval(start_jan, total_delta_month, interval_delta_week)
+        result_jan = calculate_interval(
+            start_jan, total_delta_month, interval_delta_week
+        )
         self.assertEqual(result_jan, 4)
 
 

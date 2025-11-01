@@ -4,8 +4,7 @@ import numpy as np
 import pandas as pd
 from IPython.display import display
 
-from pat2vec.util.filter_dataframe_by_timestamp import \
-    filter_dataframe_by_timestamp
+from pat2vec.util.filter_dataframe_by_timestamp import filter_dataframe_by_timestamp
 from pat2vec.util.get_start_end_year_month import get_start_end_year_month
 from pat2vec.util.parse_date import validate_input_dates
 
@@ -36,16 +35,17 @@ def search_hospital_site(
 ):
     """Search hospital site observations via cohort search API."""
     if cohort_searcher_with_terms_and_search is None:
-        raise ValueError(
-            "cohort_searcher_with_terms_and_search cannot be None.")
+        raise ValueError("cohort_searcher_with_terms_and_search cannot be None.")
     if client_id_codes is None:
         raise ValueError("client_id_codes cannot be None.")
 
     if isinstance(client_id_codes, str):
         client_id_codes = [client_id_codes]
 
-    start_year, start_month, start_day, end_year, end_month, end_day = validate_input_dates(
-        start_year, start_month, start_day, end_year, end_month, end_day
+    start_year, start_month, start_day, end_year, end_month, end_day = (
+        validate_input_dates(
+            start_year, start_month, start_day, end_year, end_month, end_day
+        )
     )
 
     search_string = (
@@ -67,23 +67,22 @@ def search_hospital_site(
 
 def prepare_hospital_site_data(raw_data):
     """Filter to valid CORE_HospitalSite records and drop NAs."""
-    data = raw_data[raw_data["obscatalogmasteritem_displayname"]
-                    == SEARCH_TERM].copy()
+    data = raw_data[raw_data["obscatalogmasteritem_displayname"] == SEARCH_TERM].copy()
     data.dropna(inplace=True)
     return data
 
 
-def calculate_hospital_site_features(features_data, current_pat_client_id_code, negate_biochem=False):
+def calculate_hospital_site_features(
+    features_data, current_pat_client_id_code, negate_biochem=False
+):
     """Generate binary hospital site features from observation values."""
     term = "hosp_site".lower()
     features = pd.DataFrame({"client_idcode": [current_pat_client_id_code]})
 
     if len(features_data) > 0:
         value_array = features_data["observation_valuetext_analysed"].dropna()
-        features[f"{term}_dh"] = value_array.str.contains(
-            "DH").astype(int).max()
-        features[f"{term}_ph"] = value_array.str.contains(
-            "PRUH").astype(int).max()
+        features[f"{term}_dh"] = value_array.str.contains("DH").astype(int).max()
+        features[f"{term}_ph"] = value_array.str.contains("PRUH").astype(int).max()
 
     elif negate_biochem:
         features[f"{term}_dh"] = np.nan
@@ -119,11 +118,12 @@ def get_hosp_site(
     """
     if config_obj is None:
         raise ValueError(
-            "config_obj cannot be None. Please provide a valid configuration.")
+            "config_obj cannot be None. Please provide a valid configuration."
+        )
 
     batch_mode = config_obj.batch_mode
-    start_year, start_month, end_year, end_month, start_day, end_day = get_start_end_year_month(
-        target_date_range, config_obj=config_obj
+    start_year, start_month, end_year, end_month, start_day, end_day = (
+        get_start_end_year_month(target_date_range, config_obj=config_obj)
     )
 
     # Retrieve data

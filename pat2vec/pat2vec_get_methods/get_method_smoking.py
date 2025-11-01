@@ -4,8 +4,7 @@ import numpy as np
 import pandas as pd
 from IPython.display import display
 
-from pat2vec.util.filter_dataframe_by_timestamp import \
-    filter_dataframe_by_timestamp
+from pat2vec.util.filter_dataframe_by_timestamp import filter_dataframe_by_timestamp
 from pat2vec.util.get_start_end_year_month import get_start_end_year_month
 from pat2vec.util.parse_date import validate_input_dates
 
@@ -62,16 +61,17 @@ def search_smoking(
             is None.
     """
     if cohort_searcher_with_terms_and_search is None:
-        raise ValueError(
-            "cohort_searcher_with_terms_and_search cannot be None.")
+        raise ValueError("cohort_searcher_with_terms_and_search cannot be None.")
     if client_id_codes is None:
         raise ValueError("client_id_codes cannot be None.")
 
     if isinstance(client_id_codes, str):
         client_id_codes = [client_id_codes]
 
-    start_year, start_month, start_day, end_year, end_month, end_day = validate_input_dates(
-        start_year, start_month, start_day, end_year, end_month, end_day
+    start_year, start_month, start_day, end_year, end_month, end_day = (
+        validate_input_dates(
+            start_year, start_month, start_day, end_year, end_month, end_day
+        )
     )
 
     search_string = (
@@ -99,8 +99,7 @@ def prepare_smoking_data(raw_data: pd.DataFrame) -> pd.DataFrame:
     Returns:
         pd.DataFrame: A cleaned DataFrame containing only valid smoking status records.
     """
-    data = raw_data[raw_data["obscatalogmasteritem_displayname"]
-                    == SEARCH_TERM].copy()
+    data = raw_data[raw_data["obscatalogmasteritem_displayname"] == SEARCH_TERM].copy()
     data.dropna(inplace=True)
     return data
 
@@ -135,8 +134,9 @@ def calculate_smoking_features(
     if len(features_data) > 0:
         value_array = features_data["observation_valuetext_analysed"].dropna()
         for suffix, match_str in categories.items():
-            features[f"{term}_{suffix}"] = value_array.str.contains(
-                match_str).astype(int)
+            features[f"{term}_{suffix}"] = value_array.str.contains(match_str).astype(
+                int
+            )
     elif negate_biochem:
         for suffix in categories:
             features[f"{term}_{suffix}"] = np.nan
@@ -173,12 +173,11 @@ def get_smoking(
         ValueError: If `config_obj` is None.
     """
     if config_obj is None:
-        raise ValueError(
-            "config_obj cannot be None. Provide a valid configuration.")
+        raise ValueError("config_obj cannot be None. Provide a valid configuration.")
 
     batch_mode = config_obj.batch_mode
-    start_year, start_month, end_year, end_month, start_day, end_day = get_start_end_year_month(
-        target_date_range, config_obj=config_obj
+    start_year, start_month, end_year, end_month, start_day, end_day = (
+        get_start_end_year_month(target_date_range, config_obj=config_obj)
     )
 
     # Retrieve data

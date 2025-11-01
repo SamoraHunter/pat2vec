@@ -5,6 +5,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
 def append_regex_term_counts(
     df: pd.DataFrame,
     terms: List[str],

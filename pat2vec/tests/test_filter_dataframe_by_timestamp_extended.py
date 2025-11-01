@@ -150,12 +150,18 @@ class TestFilterDataFrameByTimestampExtended(unittest.TestCase):
 
     def test_column_with_only_invalid_dates(self):
         """Test that an empty DataFrame is returned if the timestamp column has no valid dates."""
-        df = pd.DataFrame({"timestamp": ["not a date", "invalid", None], "value": [1, 2, 3]})
+        df = pd.DataFrame(
+            {"timestamp": ["not a date", "invalid", None], "value": [1, 2, 3]}
+        )
         filtered = filter_dataframe_by_timestamp(
             df,
-            start_year=2023, start_month=1, start_day=1,
-            end_year=2023, end_month=12, end_day=31,
-            timestamp_string="timestamp"
+            start_year=2023,
+            start_month=1,
+            start_day=1,
+            end_year=2023,
+            end_month=12,
+            end_day=31,
+            timestamp_string="timestamp",
         )
         self.assertTrue(filtered.empty)
 

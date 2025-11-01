@@ -9,6 +9,7 @@ from tqdm import tqdm
 
 logger = logging.getLogger(__name__)
 
+
 def compare_ipw_annotation_rows(
     dataframes: List[pd.DataFrame], columns_to_print: Optional[List[str]] = None
 ) -> None:
@@ -184,10 +185,14 @@ class CsvProfiler:
                 report_path = os.path.join(profile_reports_dir, report_name)
                 profile.to_file(report_path)
 
-                logger.info(f"✅ Profile report for {csv_file} created at: {report_path}")
+                logger.info(
+                    f"✅ Profile report for {csv_file} created at: {report_path}"
+                )
 
             except Exception as e:
-                logger.error(f"❌ Error processing {csv_file}: {type(e).__name__} - {e}")
+                logger.error(
+                    f"❌ Error processing {csv_file}: {type(e).__name__} - {e}"
+                )
                 traceback.print_exc()
 
 
@@ -232,4 +237,6 @@ if __name__ == "__main__":
         epr_batchs_fp=dummy_dir, prefix="class_import_profile"
     )
 
-    logger.info("\nDemonstration complete. Check the 'profile_reports' directory for output.")
+    logger.info(
+        "\nDemonstration complete. Check the 'profile_reports' directory for output."
+    )

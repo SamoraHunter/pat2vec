@@ -9,6 +9,7 @@ from pat2vec.util.post_processing import remove_file_from_paths
 
 logger = logging.getLogger(__name__)
 
+
 def retrieve_pat_annotations(
     current_pat_client_idcode: str, config_obj: Any = None
 ) -> pd.DataFrame:
@@ -29,18 +30,23 @@ def retrieve_pat_annotations(
     """
     # Specify the file paths
     current_pat_docs_epr = os.path.join(
-        config_obj.pre_document_annotation_batch_path, current_pat_client_idcode + '.csv')
+        config_obj.pre_document_annotation_batch_path,
+        current_pat_client_idcode + ".csv",
+    )
     current_pat_docs_mct = os.path.join(
-        config_obj.pre_document_annotation_batch_path_mct, current_pat_client_idcode + '.csv')
+        config_obj.pre_document_annotation_batch_path_mct,
+        current_pat_client_idcode + ".csv",
+    )
 
     # Read CSV files into dataframes
     df_epr = pd.read_csv(current_pat_docs_epr)
     df_mct = pd.read_csv(current_pat_docs_mct)
 
     # Check if 'updatetime' column exists in df_mct, if not, create it and map values
-    if 'updatetime' not in df_mct.columns:
-        df_mct['updatetime'] = df_mct['observationdocument_recordeddtm'].map(
-            lambda x: pd.to_datetime(x, errors='coerce'))
+    if "updatetime" not in df_mct.columns:
+        df_mct["updatetime"] = df_mct["observationdocument_recordeddtm"].map(
+            lambda x: pd.to_datetime(x, errors="coerce")
+        )
 
     # Concatenate dataframes
     result_df = pd.concat([df_epr, df_mct], axis=0, ignore_index=True)
@@ -64,7 +70,7 @@ def copy_project_folders_with_substring_match(
             to copy (e.g., ['batches', 'annots']).
     """
     if substrings_to_match is None:
-        substrings_to_match = ['batches', 'annots']
+        substrings_to_match = ["batches", "annots"]
 
     base_project_name = pat2vec_obj.config_obj.proj_name
     suffix = 1
@@ -88,7 +94,10 @@ def copy_project_folders_with_substring_match(
 
 
 def check_csv_integrity(
-    file_path: str, verbosity: int = 0, delete_broken: bool = False, config_obj: Any = None
+    file_path: str,
+    verbosity: int = 0,
+    delete_broken: bool = False,
+    config_obj: Any = None,
 ) -> None:
     """Checks the integrity of a single CSV file.
 
@@ -122,17 +131,21 @@ def check_csv_integrity(
             logger.info(f"Deleted broken file: {filename} : {file_path}")
 
         # Perform integrity checks on the DataFrame
-        non_nullable_columns = ['client_idcode']  # Add more columns as needed
+        non_nullable_columns = ["client_idcode"]  # Add more columns as needed
 
         for column in non_nullable_columns:
             if column in df.columns and df[column].isnull().any():
-                warning_message = f"Column {column} contains missing values in CSV: {file_path}"
+                warning_message = (
+                    f"Column {column} contains missing values in CSV: {file_path}"
+                )
                 warnings.warn(warning_message, UserWarning)
                 if delete_broken:
                     _delete_and_log(f"Column {column} contains missing values")
                     return
             elif verbosity > 1:
-                warning_message = f"Column {column} in CSV file has no missing values: {file_path}"
+                warning_message = (
+                    f"Column {column} in CSV file has no missing values: {file_path}"
+                )
                 warnings.warn(warning_message, UserWarning)
 
         if verbosity == 2:
@@ -155,7 +168,7 @@ def check_csv_files_in_directory(
     directory: str,
     verbosity: int = 0,
     ignore_outputs: bool = True,
-    ignore_output_vectors: bool = True, # type: ignore
+    ignore_output_vectors: bool = True,  # type: ignore
     delete_broken: bool = False,
 ) -> None:
     """Recursively checks the integrity of all CSV files in a directory.
@@ -171,24 +184,23 @@ def check_csv_files_in_directory(
         ignore_output_vectors: If True, skips paths for 'current_pat_lines_parts'.
         delete_broken: If True, deletes files that fail integrity checks.
     """
-    total_files = sum(1 for _ in os.walk(directory)
-                      for _ in os.listdir(directory))
+    total_files = sum(1 for _ in os.walk(directory) for _ in os.listdir(directory))
 
     # Initialize tqdm progrcommitess bar
-    progress_bar = tqdm(total=total_files, unit="file",
-                        desc=f"Checking CSV files in {directory}")
+    progress_bar = tqdm(
+        total=total_files, unit="file", desc=f"Checking CSV files in {directory}"
+    )
 
     for root, dirs, files in os.walk(directory):
         for file in files:
             file_path = os.path.join(root, file)
-            if ignore_outputs and 'output' in file_path.lower():
+            if ignore_outputs and "output" in file_path.lower():
                 continue  # Skip files with 'output' in the path
-            if ignore_output_vectors and 'current_pat_lines_parts' in file_path.lower():
+            if ignore_output_vectors and "current_pat_lines_parts" in file_path.lower():
                 continue  # Skip files with 'current_pat_lines_parts' in the path
-            if file_path.lower().endswith('.csv'):
-                progress_bar.set_description(
-                    f"Checking CSV integrity for: {file_path}")
-                check_csv_integrity(file_path, verbosity, delete_broken, config_obj=None) # type: ignore
+            if file_path.lower().endswith(".csv"):
+                progress_bar.set_description(f"Checking CSV integrity for: {file_path}")
+                check_csv_integrity(file_path, verbosity, delete_broken, config_obj=None)  # type: ignore
                 progress_bar.update(1)
 
     progress_bar.close()
