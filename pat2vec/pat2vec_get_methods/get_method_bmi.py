@@ -187,9 +187,7 @@ def get_bmi_features(
             specified patient.
     """
     if config_obj is None:
-        raise ValueError(
-            "config_obj cannot be None. Please provide a valid configuration."
-        )
+        raise ValueError("config_obj cannot be None. Please provide a valid configuration object.")
 
     batch_mode = config_obj.batch_mode
 

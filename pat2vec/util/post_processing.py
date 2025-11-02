@@ -690,7 +690,7 @@ def filter_and_update_csv(
         filter_date = pd.to_datetime(row["updatetime"], utc=True, errors="coerce")
 
         if verbosity:
-            print(f"Processing client_idcode: {client_idcode}")
+            logger.info(f"Processing client_idcode: {client_idcode}")
 
         # Recursively walk through the target directory
         for root, dirs, files in os.walk(target_directory):
@@ -699,7 +699,7 @@ def filter_and_update_csv(
                     file_path = os.path.join(root, file)
 
                     if verbosity:
-                        print(f"Found CSV file: {file_path}")
+                        logger.info(f"Found CSV file: {file_path}")
 
                     df = pd.read_csv(file_path)
 
@@ -735,7 +735,7 @@ def filter_and_update_csv(
                     df = df.dropna(subset=[update_column])
 
                     if verbosity:
-                        print(f"Updating CSV file based on {update_column}")
+                        logger.info(f"Updating CSV file based on {update_column}")
                         logger.info(f"Updating CSV file based on {update_column}")
 
                     df[update_column] = pd.to_datetime(df[update_column], utc=True)

@@ -1,4 +1,5 @@
 import os
+import logging
 import pandas as pd
 from typing import Any
 
@@ -103,7 +104,7 @@ def get_pat_batch_obs(
         return batch_target
     except Exception as e:
 
-        print(f"Error retrieving batch observations: {e}")
+        logging.error(f"Error retrieving batch observations: {e}")
         return pd.DataFrame()
 
 
@@ -175,7 +176,7 @@ def get_pat_batch_news(
         return batch_target
     except Exception as e:
 
-        print(f"Error retrieving batch NEWS observations: {e}")
+        logging.error(f"Error retrieving batch NEWS observations: {e}")
         return pd.DataFrame()
 
 
@@ -247,7 +248,7 @@ def get_pat_batch_bmi(
         return batch_target
     except Exception as e:
         """"""
-        print(f"Error retrieving batch BMI-related observations: {e}")
+        logging.error(f"Error retrieving batch BMI-related observations: {e}")
         return pd.DataFrame()
 
 
@@ -329,9 +330,9 @@ def get_pat_batch_bloods(
                 ):
 
                     if config_obj.verbosity >= 1:
-                        print(
+                        logging.info(
                             "applying doc type filter to bloods",
-                            config_obj.data_type_filter_dict,
+                            config_obj.data_type_filter_dict
                         )
 
                         filter_term_list = config_obj.data_type_filter_dict.get(
@@ -356,7 +357,7 @@ def get_pat_batch_bloods(
         return batch_target
     except Exception as e:
         """"""
-        print(f"Error retrieving batch blood test-related observations: {e}")
+        logging.error(f"Error retrieving batch blood test-related observations: {e}")
         return pd.DataFrame()
 
 
@@ -431,7 +432,7 @@ def get_pat_batch_drugs(
         return batch_target
     except Exception as e:
         """"""
-        print(f"Error retrieving batch medication orders: {e}")
+        logging.error(f"Error retrieving batch medication orders: {e}")
         return pd.DataFrame()
 
 
@@ -502,7 +503,7 @@ def get_pat_batch_diagnostics(
         return batch_target
     except Exception as e:
         """"""
-        print(f"Error retrieving batch diagnostic orders: {e}")
+        logging.error(f"Error retrieving batch diagnostic orders: {e}")
         return pd.DataFrame()
 
 
@@ -558,13 +559,13 @@ def get_pat_batch_epr_docs(
     global_end_day = str(global_end_day).zfill(2)
 
     if config_obj.verbosity >= 6:
-        print("batch_epr_target_path:", batch_epr_target_path)
-        print("global_start_year:", global_start_year)
-        print("global_start_month:", global_start_month)
-        print("global_end_year:", global_end_year)
-        print("global_end_month:", global_end_month)
-        print("global_start_day:", global_start_day)
-        print("global_end_day:", global_end_day)
+        logging.debug("batch_epr_target_path: %s", batch_epr_target_path)
+        logging.debug("global_start_year: %s", global_start_year)
+        logging.debug("global_start_month: %s", global_start_month)
+        logging.debug("global_end_year: %s", global_end_year)
+        logging.debug("global_end_month: %s", global_end_month)
+        logging.debug("global_start_day: %s", global_start_day)
+        logging.debug("global_end_day: %s", global_end_day)
 
     existence_check = exist_check(batch_epr_target_path, config_obj)
 
@@ -593,9 +594,9 @@ def get_pat_batch_epr_docs(
                 ):
 
                     if config_obj.verbosity >= 1:
-                        print(
+                        logging.info(
                             "applying doc type filter to EPR docs",
-                            config_obj.data_type_filter_dict,
+                            config_obj.data_type_filter_dict
                         )
 
                         filter_term_list = config_obj.data_type_filter_dict.get(
@@ -616,7 +617,7 @@ def get_pat_batch_epr_docs(
                     is not None
                 ):
                     if config_obj.verbosity > 1:
-                        print("append_regex_term_counts...")
+                        logging.debug("append_regex_term_counts...")
                         display(batch_target)
                     batch_target = append_regex_term_counts(
                         df=batch_target,
@@ -632,7 +633,7 @@ def get_pat_batch_epr_docs(
                 # batch_target.dropna(subset='body_analysed', inplace=True)
 
                 if config_obj.verbosity >= 3:
-                    print("get_epr_docs_predropna", len(batch_target))
+                    logging.debug("get_epr_docs_predropna: %d", len(batch_target))
 
                 col_list_drop_nan = ["body_analysed", "updatetime", "client_idcode"]
 
@@ -644,7 +645,7 @@ def get_pat_batch_epr_docs(
                 batch_target = batch_target.drop(rows_with_nan.index).copy()
 
                 if config_obj.verbosity >= 3:
-                    print("get_epr_docs_postdropna", len(batch_target))
+                    logging.debug("get_epr_docs_postdropna: %d", len(batch_target))
 
                 if split_clinical_notes_bool:
 
@@ -669,10 +670,10 @@ def get_pat_batch_epr_docs(
                             dropna=False,
                         )
                         if config_obj.verbosity > 2:
-                            print(
+                            logging.debug(
                                 f"pre_filter_split_notes_len: {pre_filter_split_notes_len}"
                             )
-                            print(f"post_filter_split_notes_len: {len(batch_target)}")
+                            logging.debug(f"post_filter_split_notes_len: {len(batch_target)}")
 
                 batch_target.to_csv(batch_epr_target_path)
 
@@ -682,7 +683,7 @@ def get_pat_batch_epr_docs(
         return batch_target
     except Exception as e:
         """"""
-        print(f"Error retrieving batch EPR documents: {e}")
+        logging.error(f"Error retrieving batch EPR documents: {e}")
         raise UnboundLocalError("Error retrieving batch EPR documents.")
         # return []
 
@@ -904,7 +905,7 @@ def get_pat_batch_reports_docs_annotations(
 
 def get_pat_batch_mct_docs(
     current_pat_client_id_code: str,
-    search_term: str,
+    search_term: str, # noqa
     config_obj: Any,
     cohort_searcher_with_terms_and_search: Any,
 ) -> pd.DataFrame:
@@ -965,7 +966,7 @@ def get_pat_batch_mct_docs(
             if config_obj.store_pat_batch_docs or overwrite_stored_pat_docs:
 
                 if config_obj.verbosity >= 3:
-                    print("get_epr_mct_docs_predropna", len(batch_target))
+                    logging.debug("get_epr_mct_docs_predropna: %d", len(batch_target))
                 col_list_drop_nan = [
                     "observation_valuetext_analysed",
                     "observationdocument_recordeddtm",
@@ -980,7 +981,7 @@ def get_pat_batch_mct_docs(
                 batch_target = batch_target.drop(rows_with_nan.index).copy()
 
                 if config_obj.verbosity >= 3:
-                    print("get_epr_mct_docs_postdropna", len(batch_target))
+                    logging.debug("get_epr_mct_docs_postdropna: %d", len(batch_target))
 
                 if split_clinical_notes_bool:
 
@@ -991,11 +992,11 @@ def get_pat_batch_mct_docs(
                 batch_target.to_csv(batch_epr_target_path_mct)
         else:
             batch_target = pd.read_csv(batch_epr_target_path_mct)
-
+        logging.warning("get_pat_batch_mct_docs has been deprecated in favour of iterative_multi_term_cohort_searcher_no_terms_fuzzy_mct")
         return batch_target
     except Exception as e:
         """"""
-        print(f"Error retrieving batch MCT documents: {e}")
+        logging.error(f"Error retrieving batch MCT documents: {e}")
         return pd.DataFrame()
 
 
@@ -1073,7 +1074,7 @@ def get_pat_batch_demo(
         return batch_target
     except Exception as e:
         """"""
-        print(f"Error retrieving batch demographic information: {e}")
+        logging.error(f"Error retrieving batch demographic information: {e}")
         return pd.DataFrame()
 
 
@@ -1164,7 +1165,7 @@ def get_pat_batch_reports(
         return batch_target
     except Exception as e:
         """"""
-        print(f"Error retrieving batch reports: {e}")
+        logging.error(f"Error retrieving batch reports: {e}")
         return pd.DataFrame()
 
 
@@ -1259,7 +1260,7 @@ def get_pat_batch_textual_obs_docs(
         return batch_target
     except Exception as e:
         """"""
-        print(f"Error retrieving batch textualObs: {e}")
+        logging.error(f"Error retrieving batch textualObs: {e}")
         return pd.DataFrame()
 
 
@@ -1362,5 +1363,5 @@ def get_pat_batch_appointments(
         return batch_target
     except Exception as e:
         """"""
-        print(f"Error retrieving batch appointments orders: {e}")
+        logging.error(f"Error retrieving batch appointments orders: {e}")
         return pd.DataFrame()

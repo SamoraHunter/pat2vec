@@ -1,4 +1,5 @@
 import os
+import logging
 import pandas as pd
 from multiprocessing import Pool, cpu_count
 from functools import partial
@@ -57,7 +58,7 @@ def verify_split_data_concatenated(
     # Compare with original DataFrame
     if not concatenated_df.equals(original_df):
         raise ValueError("Concatenated CSV data does not match the original DataFrame.")
-    print("Verification successful: All CSVs match the original DataFrame.")
+    logging.info("Verification successful: All CSVs match the original DataFrame.")
 
 
 def verify_split_data_individual(
@@ -100,7 +101,7 @@ def verify_split_data_individual(
             csv_data.sort_values(by=csv_data.columns.tolist())
         ):
             raise ValueError(f"Data mismatch for client: {client}")
-    print("Verification successful: All CSVs match the original DataFrame.")
+    logging.info("Verification successful: All CSVs match the original DataFrame.")
 
 
 def save_group(client_idcode_group: Tuple[str, pd.DataFrame], save_folder: str) -> None:
@@ -115,12 +116,10 @@ def save_group(client_idcode_group: Tuple[str, pd.DataFrame], save_folder: str) 
 
     # Check if the file already exists
     if os.path.exists(file_path):
-        # print(f"File {file_path} already exists. Skipping save.")
         return
 
     # Save the group to CSV
     group.to_csv(file_path, index=False, float_format="%.6f")
-    # print(f"Saved {file_path}")  # Optional: Might print out of order in multiprocessing
 
 
 def split_and_save_csv(
@@ -224,7 +223,7 @@ def get_merged_pat_batch_bloods(
 
     # Check if the merged file already exists and overwrite is not enabled
     if not overwrite_stored_pat_observations and os.path.exists(merged_batches_path):
-        print(
+        logging.info(
             f"Merged batches file already exists at {merged_batches_path}. Loading from disk."
         )
         return pd.read_csv(merged_batches_path)
@@ -254,9 +253,9 @@ def get_merged_pat_batch_bloods(
                 is not None
             ):
                 if config_obj.verbosity >= 1:
-                    print(
+                    logging.info(
                         "Applying doc type filter to bloods",
-                        config_obj.data_type_filter_dict,
+                        config_obj.data_type_filter_dict
                     )
 
                 filter_term_list = config_obj.data_type_filter_dict.get(
@@ -276,12 +275,12 @@ def get_merged_pat_batch_bloods(
         if store_pat_batch_observations or overwrite_stored_pat_observations:
             batch_target.to_csv(merged_batches_path, index=False)
             if config_obj.verbosity >= 1:
-                print(f"Merged batches saved to {merged_batches_path}")
+                logging.info(f"Merged batches saved to {merged_batches_path}")
 
         return batch_target
 
     except Exception as e:
-        print(f"Error retrieving batch blood test-related observations: {e}")
+        logging.error(f"Error retrieving batch blood test-related observations: {e}")
         return pd.DataFrame()  # Return an empty DataFrame in case of error
 
 
@@ -338,7 +337,7 @@ def get_merged_pat_batch_drugs(
 
     # Check if the merged file already exists and overwrite is not enabled
     if not overwrite_stored_pat_observations and os.path.exists(merged_batches_path):
-        print(
+        logging.info(
             f"Merged batches file already exists at {merged_batches_path}. Loading from disk."
         )
         return pd.read_csv(merged_batches_path)
@@ -371,9 +370,9 @@ def get_merged_pat_batch_drugs(
                 is not None
             ):
                 if config_obj.verbosity >= 1:
-                    print(
+                    logging.info(
                         "Applying doc type filter to drugs",
-                        config_obj.data_type_filter_dict,
+                        config_obj.data_type_filter_dict
                     )
 
                 filter_term_list = config_obj.data_type_filter_dict.get(
@@ -391,12 +390,12 @@ def get_merged_pat_batch_drugs(
         if store_pat_batch_observations or overwrite_stored_pat_observations:
             batch_target.to_csv(merged_batches_path, index=False)
             if config_obj.verbosity >= 1:
-                print(f"Merged batches saved to {merged_batches_path}")
+                logging.info(f"Merged batches saved to {merged_batches_path}")
 
         return batch_target
 
     except Exception as e:
-        print(f"Error retrieving batch drug orders: {e}")
+        logging.error(f"Error retrieving batch drug orders: {e}")
         return pd.DataFrame()  # Return an empty DataFrame in case of error
 
 
@@ -457,7 +456,7 @@ def get_merged_pat_batch_diagnostics(
 
     # Check if the merged file already exists and overwrite is not enabled
     if not overwrite_stored_pat_observations and os.path.exists(merged_batches_path):
-        print(
+        logging.info(
             f"Merged batches file already exists at {merged_batches_path}. Loading from disk."
         )
         return pd.read_csv(merged_batches_path)
@@ -492,9 +491,9 @@ def get_merged_pat_batch_diagnostics(
                 is not None
             ):
                 if config_obj.verbosity >= 1:
-                    print(
+                    logging.info(
                         "Applying doc type filter to diagnostics",
-                        config_obj.data_type_filter_dict,
+                        config_obj.data_type_filter_dict
                     )
 
                 filter_term_list = config_obj.data_type_filter_dict.get(
@@ -512,12 +511,12 @@ def get_merged_pat_batch_diagnostics(
         if store_pat_batch_observations or overwrite_stored_pat_observations:
             batch_target.to_csv(merged_batches_path, index=False)
             if config_obj.verbosity >= 1:
-                print(f"Merged batches saved to {merged_batches_path}")
+                logging.info(f"Merged batches saved to {merged_batches_path}")
 
         return batch_target
 
     except Exception as e:
-        print(f"Error retrieving batch diagnostic orders: {e}")
+        logging.error(f"Error retrieving batch diagnostic orders: {e}")
         return pd.DataFrame()  # Return an empty DataFrame in case of error
 
 
@@ -576,7 +575,7 @@ def get_merged_pat_batch_mct_docs(
 
     # Check if the merged file already exists and overwrite is not enabled
     if not overwrite_stored_pat_docs and os.path.exists(merged_batches_path):
-        print(
+        logging.info(
             f"Merged batches file already exists at {merged_batches_path}. Loading from disk."
         )
         return pd.read_csv(merged_batches_path)
@@ -607,7 +606,7 @@ def get_merged_pat_batch_mct_docs(
         batch_target = batch_target.drop(rows_with_nan.index).copy()
 
         if config_obj.verbosity >= 3:
-            print(f"Post-drop NaN rows: {len(batch_target)}")
+            logging.debug(f"Post-drop NaN rows: {len(batch_target)}")
 
         # Split clinical notes if enabled
         if split_clinical_notes_bool:
@@ -617,12 +616,12 @@ def get_merged_pat_batch_mct_docs(
         if store_pat_batch_docs or overwrite_stored_pat_docs:
             batch_target.to_csv(merged_batches_path, index=False)
             if config_obj.verbosity >= 1:
-                print(f"Merged batches saved to {merged_batches_path}")
+                logging.info(f"Merged batches saved to {merged_batches_path}")
 
         return batch_target
 
     except Exception as e:
-        print(f"Error retrieving batch MCT documents: {e}")
+        logging.error(f"Error retrieving batch MCT documents: {e}")
         return pd.DataFrame()  # Return an empty DataFrame in case of error
 
 
@@ -681,7 +680,7 @@ def get_merged_pat_batch_epr_docs(
 
     # Check if the merged file already exists and overwrite is not enabled
     if not overwrite_stored_pat_docs and os.path.exists(merged_batches_path):
-        print(
+        logging.info(
             f"Merged batches file already exists at {merged_batches_path}. Loading from disk."
         )
         return pd.read_csv(merged_batches_path)
@@ -705,9 +704,9 @@ def get_merged_pat_batch_epr_docs(
                 is not None
             ):
                 if config_obj.verbosity >= 1:
-                    print(
+                    logging.info(
                         "Applying doc type filter to EPR docs",
-                        config_obj.data_type_filter_dict,
+                        config_obj.data_type_filter_dict
                     )
 
                 filter_term_list = config_obj.data_type_filter_dict.get(
@@ -728,7 +727,7 @@ def get_merged_pat_batch_epr_docs(
                 is not None
             ):
                 if config_obj.verbosity > 1:
-                    print("Appending regex term counts...")
+                    logging.debug("Appending regex term counts...")
                 batch_target = append_regex_term_counts(
                     df=batch_target,
                     terms=config_obj.data_type_filter_dict.get("filter_term_lists").get(
@@ -744,7 +743,7 @@ def get_merged_pat_batch_epr_docs(
         batch_target = batch_target.drop(rows_with_nan.index).copy()
 
         if config_obj.verbosity >= 3:
-            print(f"Post-drop NaN rows: {len(batch_target)}")
+            logging.debug(f"Post-drop NaN rows: {len(batch_target)}")
 
         # Split clinical notes if enabled
         if split_clinical_notes_bool:
@@ -765,21 +764,21 @@ def get_merged_pat_batch_epr_docs(
                     dropna=False,
                 )
                 if config_obj.verbosity > 2:
-                    print(
+                    logging.debug(
                         f"Pre-filter split notes length: {pre_filter_split_notes_len}"
                     )
-                    print(f"Post-filter split notes length: {len(batch_target)}")
+                    logging.debug(f"Post-filter split notes length: {len(batch_target)}")
 
         # Save the merged DataFrame to the dynamically constructed directory
         if store_pat_batch_docs or overwrite_stored_pat_docs:
             batch_target.to_csv(merged_batches_path, index=False)
             if config_obj.verbosity >= 1:
-                print(f"Merged batches saved to {merged_batches_path}")
+                logging.info(f"Merged batches saved to {merged_batches_path}")
 
         return batch_target
 
     except Exception as e:
-        print(f"Error retrieving batch EPR documents: {e}")
+        logging.error(f"Error retrieving batch EPR documents: {e}")
         raise UnboundLocalError("Error retrieving batch EPR documents.")
 
 
@@ -833,7 +832,7 @@ def get_merged_pat_batch_textual_obs_docs(
 
     # Check if the merged file already exists and overwrite is not enabled
     if not overwrite_stored_pat_observations and os.path.exists(merged_batches_path):
-        print(
+        logging.info(
             f"Merged batches file already exists at {merged_batches_path}. Loading from disk."
         )
         return pd.read_csv(merged_batches_path)
@@ -877,12 +876,12 @@ def get_merged_pat_batch_textual_obs_docs(
         if store_pat_batch_observations or overwrite_stored_pat_observations:
             batch_target.to_csv(merged_batches_path, index=False)
             if config_obj.verbosity >= 1:
-                print(f"Merged batches saved to {merged_batches_path}")
+                logging.info(f"Merged batches saved to {merged_batches_path}")
 
         return batch_target
 
     except Exception as e:
-        print(f"Error retrieving batch textual observations: {e}")
+        logging.error(f"Error retrieving batch textual observations: {e}")
         return pd.DataFrame()  # Return an empty DataFrame in case of error
 
 
@@ -942,7 +941,7 @@ def get_merged_pat_batch_appointments(
     if not config_obj.overwrite_stored_pat_observations and os.path.exists(
         merged_batches_path
     ):
-        print(
+        logging.info(
             f"Merged batches file already exists at {merged_batches_path}. Loading from disk."
         )
         return pd.read_csv(merged_batches_path)
@@ -995,12 +994,12 @@ def get_merged_pat_batch_appointments(
         ):
             batch_target.to_csv(merged_batches_path, index=False)
             if config_obj.verbosity >= 1:
-                print(f"Merged batches saved to {merged_batches_path}")
+                logging.info(f"Merged batches saved to {merged_batches_path}")
 
         return batch_target
 
     except Exception as e:
-        print(f"Error retrieving batch appointments: {e}")
+        logging.error(f"Error retrieving batch appointments: {e}")
         return pd.DataFrame()  # Return an empty DataFrame in case of error
 
 
@@ -1056,7 +1055,7 @@ def get_merged_pat_batch_demo(
     if not config_obj.overwrite_stored_pat_observations and os.path.exists(
         merged_batches_path
     ):
-        print(
+        logging.info(
             f"Merged batches file already exists at {merged_batches_path}. Loading from disk."
         )
         return pd.read_csv(merged_batches_path)
@@ -1087,12 +1086,12 @@ def get_merged_pat_batch_demo(
         ):
             batch_target.to_csv(merged_batches_path, index=False)
             if config_obj.verbosity >= 1:
-                print(f"Merged batches saved to {merged_batches_path}")
+                logging.info(f"Merged batches saved to {merged_batches_path}")
 
         return batch_target
 
     except Exception as e:
-        print(f"Error retrieving batch demographic information: {e}")
+        logging.error(f"Error retrieving batch demographic information: {e}")
         return pd.DataFrame()  # Return an empty DataFrame in case of error
 
 
@@ -1148,7 +1147,7 @@ def get_merged_pat_batch_bmi(
     if not config_obj.overwrite_stored_pat_observations and os.path.exists(
         merged_batches_path
     ):
-        print(
+        logging.info(
             f"Merged batches file already exists at {merged_batches_path}. Loading from disk."
         )
         return pd.read_csv(merged_batches_path)
@@ -1173,12 +1172,12 @@ def get_merged_pat_batch_bmi(
         ):
             batch_target.to_csv(merged_batches_path, index=False)
             if config_obj.verbosity >= 1:
-                print(f"Merged batches saved to {merged_batches_path}")
+                logging.info(f"Merged batches saved to {merged_batches_path}")
 
         return batch_target
 
     except Exception as e:
-        print(f"Error retrieving batch BMI-related observations: {e}")
+        logging.error(f"Error retrieving batch BMI-related observations: {e}")
         return pd.DataFrame()  # Return an empty DataFrame in case of error
 
 
@@ -1236,7 +1235,7 @@ def get_merged_pat_batch_obs(
     if not config_obj.overwrite_stored_pat_observations and os.path.exists(
         merged_batches_path
     ):
-        print(
+        logging.info(
             f"Merged batches file already exists at {merged_batches_path}. Loading from disk."
         )
         return pd.read_csv(merged_batches_path)
@@ -1261,12 +1260,12 @@ def get_merged_pat_batch_obs(
         ):
             batch_target.to_csv(merged_batches_path, index=False)
             if config_obj.verbosity >= 1:
-                print(f"Merged batches saved to {merged_batches_path}")
+                logging.info(f"Merged batches saved to {merged_batches_path}")
 
         return batch_target
 
     except Exception as e:
-        print(f"Error retrieving batch observations: {e}")
+        logging.error(f"Error retrieving batch observations: {e}")
         return pd.DataFrame()  # Return an empty DataFrame in case of error
 
 
@@ -1322,7 +1321,7 @@ def get_merged_pat_batch_news(
     if not config_obj.overwrite_stored_pat_observations and os.path.exists(
         merged_batches_path
     ):
-        print(
+        logging.info(
             f"Merged batches file already exists at {merged_batches_path}. Loading from disk."
         )
         return pd.read_csv(merged_batches_path)
@@ -1347,12 +1346,12 @@ def get_merged_pat_batch_news(
         ):
             batch_target.to_csv(merged_batches_path, index=False)
             if config_obj.verbosity >= 1:
-                print(f"Merged batches saved to {merged_batches_path}")
+                logging.info(f"Merged batches saved to {merged_batches_path}")
 
         return batch_target
 
     except Exception as e:
-        print(f"Error retrieving batch NEWS observations: {e}")
+        logging.error(f"Error retrieving batch NEWS observations: {e}")
         return pd.DataFrame()  # Return an empty DataFrame in case of error
 
 
@@ -1409,7 +1408,7 @@ def get_merged_pat_batch_reports(
 
     # Check if the merged file already exists and overwrite is not enabled
     if not overwrite_stored_pat_observations and os.path.exists(merged_batches_path):
-        print(
+        logging.info(
             f"Merged batches file already exists at {merged_batches_path}. Loading from disk."
         )
         return pd.read_csv(merged_batches_path)
@@ -1443,10 +1442,10 @@ def get_merged_pat_batch_reports(
         if store_pat_batch_observations or overwrite_stored_pat_observations:
             batch_target.to_csv(merged_batches_path, index=False)
             if config_obj.verbosity >= 1:
-                print(f"Merged batches saved to {merged_batches_path}")
+                logging.info(f"Merged batches saved to {merged_batches_path}")
 
         return batch_target
 
     except Exception as e:
-        print(f"Error retrieving batch reports: {e}")
+        logging.error(f"Error retrieving batch reports: {e}")
         return pd.DataFrame()  # Return an empty DataFrame in case of error

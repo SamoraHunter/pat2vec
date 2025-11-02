@@ -161,10 +161,10 @@ class TestMultiAnnotsToDf(unittest.TestCase):
 
         expected_dest_path = os.path.join(self.test_dir, self.pat_id + ".csv")
 
-        # FIX: Assert that the file IS created.
+        # Assert that the file IS created.
         self.assertTrue(os.path.exists(expected_dest_path))
 
-        # Bonus: Check that the created file is empty (has 0 rows).
+        # Check that the created file is empty (has 0 rows).
         result_df = pd.read_csv(expected_dest_path)
         self.assertEqual(len(result_df), 0)
 
@@ -185,10 +185,10 @@ class TestMultiAnnotsToDf(unittest.TestCase):
 
         expected_dest_path = os.path.join(self.test_dir, self.pat_id + ".csv")
 
-        # FIX: Assert that the file IS created.
+        # Assert that the file IS created.
         self.assertTrue(os.path.exists(expected_dest_path))
 
-        # Bonus: Check that the created file is empty (has 0 rows).
+        # Check that the created file is empty (has 0 rows).
         result_df = pd.read_csv(expected_dest_path)
         self.assertEqual(len(result_df), 0)
 
