@@ -264,33 +264,28 @@ def get_free_gpu() -> Tuple[int, str]:
     """Identifies and returns the GPU with the most available free memory.
 
     This function executes the `nvidia-smi` command-line utility to query the
-    current memory usage of all available NVIDIA GPUs. It parses the output to
-    determine which GPU has the maximum amount of free memory and returns its
-    index along with the amount of free memory.
-
-    This is particularly useful for automatically selecting a GPU for a
-    compute-intensive task in a multi-GPU system.
-
-    Returns:
-        A tuple where the first element is the integer index of the GPU with
-        the most free memory, and the second element is a string representing
-        the amount of free memory in MiB (e.g., "1024").
-
-    Raises:
-        FileNotFoundError: If the `nvidia-smi` command is not found in the
-            system's PATH.
-        subprocess.CalledProcessError: If the `nvidia-smi` command fails or
-            returns a non-zero exit code.
+    GPU memory usage.
     """
-    gpu_stats = subprocess.check_output(
-        ["nvidia-smi", "--format=csv", "--query-gpu=memory.used,memory.free"]
-    )
+    try:
+        gpu_stats = subprocess.check_output(
+            ["nvidia-smi", "--format=csv", "--query-gpu=memory.used,memory.free"]
+        )
+    except subprocess.CalledProcessError as e:
+        # Handle cases where nvidia-smi fails (e.g., exit status 18)
+        logger.warning(f"nvidia-smi command failed with error: {e}. Defaulting to CPU.")
+        return -1, 0
+    except FileNotFoundError:
+        # Handle cases where nvidia-smi is not installed or not in PATH
+        logger.warning("nvidia-smi command not found. Defaulting to CPU.")
+        return -1, 0
+
     gpu_df = pd.read_csv(
         StringIO(gpu_stats.decode("utf-8")),
         names=["memory.used", "memory.free"],
         skiprows=1,
     )
     logger.info("GPU usage:\n{}".format(gpu_df))
+
     gpu_df["memory.free"] = gpu_df["memory.free"].map(lambda x: x.rstrip(" [MiB]"))
     idx = gpu_df["memory.free"].astype(int).idxmax()  # type: ignore
     logger.info(
