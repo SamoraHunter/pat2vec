@@ -212,6 +212,10 @@ def update_pbar(
             progress bar description. Useful for showing counts like the number of documents
             to annotate.
     """
+    # Early return if progress bar is None
+    if t is None:
+        return
+
     start_time = config_obj.start_time
 
     multi_process = config_obj.multi_process
@@ -219,44 +223,39 @@ def update_pbar(
     slow_execution_threshold_high = config_obj.slow_execution_threshold_high
     slow_execution_threshold_extreme = config_obj.slow_execution_threshold_extreme
 
-    colour_val = Fore.GREEN + Style.BRIGHT + stage_str
-    counter_disp = 0
+    # Determine counter display value based on process type
     if multi_process:
-        counter_disp = skipped_counter.value
+        counter_disp = skipped_counter.value if skipped_counter is not None else 0
     else:
-        counter_disp = skipped_counter
+        counter_disp = skipped_counter if skipped_counter is not None else 0
 
+    # Calculate elapsed time once
+    elapsed_time = datetime.now() - start_time
+
+    # Determine color and style based on elapsed time thresholds (checked in descending order)
+    if elapsed_time > slow_execution_threshold_extreme:
+        color_code = 'red'
+        colour_val = Fore.RED + Style.DIM + stage_str
+    elif elapsed_time > slow_execution_threshold_high:
+        color_code = 'red'
+        colour_val = Fore.RED + Style.BRIGHT + stage_str
+    elif elapsed_time > slow_execution_threshold_low:
+        color_code = 'yellow'
+        colour_val = Fore.YELLOW + stage_str
+    else:
+        color_code = 'green'
+        colour_val = Fore.GREEN + Style.DIM + stage_str
+
+    # Set tqdm color using the correct attribute
+    if hasattr(t, 'colour'):
+        t.colour = color_code
+    elif hasattr(t, 'color'):
+        t.color = color_code
+
+    # Update progress bar description with the determined color formatting
     t.set_description(
         f"s: {counter_disp} | {current_pat_client_id_code} | task: {colour_val} | {n_docs_to_annotate}"
     )
-    if (datetime.now() - start_time) > slow_execution_threshold_low:
-        t.colour = Fore.YELLOW
-        colour_val = Fore.YELLOW + stage_str
-        t.set_description(
-            f"s: {counter_disp} | {current_pat_client_id_code} | task: {colour_val} | {n_docs_to_annotate}"
-        )
-
-    elif (datetime.now() - start_time) > slow_execution_threshold_high:
-        t.colour = Fore.RED + Style.BRIGHT
-        colour_val = Fore.RED + Style.BRIGHT + stage_str
-        t.set_description(
-            f"s: {counter_disp} | {current_pat_client_id_code} | task: {colour_val} | {n_docs_to_annotate}"
-        )
-
-    elif (datetime.now() - start_time) > slow_execution_threshold_extreme:
-        t.colour = Fore.RED + Style.DIM
-        colour_val = Fore.RED + Style.DIM + stage_str
-        t.set_description(
-            f"s: {counter_disp} | {current_pat_client_id_code} | task: {colour_val} | {n_docs_to_annotate}"
-        )
-
-    else:
-        t.colour = Fore.GREEN + Style.DIM
-        colour_val = Fore.GREEN + Style.DIM + stage_str
-        t.set_description(
-            f"s: {counter_disp} | {current_pat_client_id_code} | task: {colour_val} | {n_docs_to_annotate}"
-        )
-
     t.refresh()
 
 
