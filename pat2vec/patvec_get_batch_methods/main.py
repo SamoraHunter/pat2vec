@@ -992,7 +992,7 @@ def get_pat_batch_mct_docs(
                 batch_target.to_csv(batch_epr_target_path_mct)
         else:
             batch_target = pd.read_csv(batch_epr_target_path_mct)
-        logging.warning("get_pat_batch_mct_docs has been deprecated in favour of iterative_multi_term_cohort_searcher_no_terms_fuzzy_mct")
+
         return batch_target
     except Exception as e:
         """"""
