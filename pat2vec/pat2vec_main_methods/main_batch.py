@@ -306,7 +306,7 @@ def main_batch(
                         "pbar": "annotations_reports",
                         "func": get_current_pat_report_annotations,
                         "batch_arg": "report_annotations",
-                        "batch_key": "batch_report_docs_annotations",
+                        "batch_key": "batch_reports_docs_annotations",
                     },
                     {
                         "option": "textual_obs",
