@@ -215,6 +215,42 @@ class main:
 
         self.cat = get_cat(config_obj)
 
+        # Only check/remove filters if we actually have a MedCAT model
+        if self.cat is not None and self.use_filter == False:
+            removed_filters = []
+
+            # Check and remove linking filters
+            if hasattr(self.cat.config, 'linking') and hasattr(self.cat.config.linking, 'filters'):
+                if self.cat.config.linking.filters:
+                    removed_filters.append(f"linking.filters: {self.cat.config.linking.filters}")
+                    self.cat.config.linking.filters = {}
+
+            # Check and remove cuis_exclude
+            if hasattr(self.cat.config, 'linking') and hasattr(self.cat.config.linking, 'filters'):
+                if hasattr(self.cat.config.linking.filters, 'cuis') and self.cat.config.linking.filters.get('cuis'):
+                    removed_filters.append(f"cuis_exclude: {self.cat.config.linking.filters.get('cuis')}")
+                    self.cat.config.linking.filters['cuis'] = set()
+
+            # Check and remove filter_before_disamb
+            if hasattr(self.cat.config, 'linking') and hasattr(self.cat.config.linking, 'filter_before_disamb'):
+                if self.cat.config.linking.filter_before_disamb:
+                    removed_filters.append(f"filter_before_disamb: {self.cat.config.linking.filter_before_disamb}")
+                    self.cat.config.linking.filter_before_disamb = False
+
+            # Alternative locations for CUI filters (depending on MedCAT version)
+            if hasattr(self.cat, 'cdb') and hasattr(self.cat.cdb, 'config') and hasattr(self.cat.cdb.config, 'linking'):
+                if hasattr(self.cat.cdb.config.linking, 'filters') and self.cat.cdb.config.linking.filters.get('cuis'):
+                    removed_filters.append(f"cdb.linking.filters.cuis: {self.cat.cdb.config.linking.filters.get('cuis')}")
+                    self.cat.cdb.config.linking.filters['cuis'] = set()
+
+            if removed_filters:
+                logging.warning(
+                    f"Model has pre-existing filters. Since use_filter=False, the following filters are being removed:\n" +
+                    "\n".join(f"  - {f}" for f in removed_filters)
+                )
+            else:
+                logging.info("No pre-existing filters found in model. Processing all entities.")
+
         self.stripped_list = [
             x.replace(".csv", "")
             for x in list_dir_wrapper(
