@@ -1,6 +1,5 @@
 import pandas as pd
 
-
 """The script is designed to process a column of free text entries in a CSV file under an "ethnicity" field. Its goal is to match these entries with corresponding categories from the UK census.
 
 It references groups outlined in the style guide provided by https://www.ethnicity-facts-figures.service.gov.uk/style-guide/ethnic-groups. The script doesn't use fuzzy matching, but it allows for handling edge cases by adding specific conditions within the script.
@@ -66,8 +65,6 @@ class EthnicityAbstractor:
 
         targetColumnString = ethnicityColumnString
 
-
-
         len(targetList[targetColumnString].unique())
 
         len(targetList[targetColumnString])
@@ -104,11 +101,6 @@ class EthnicityAbstractor:
             "Irish Traveller",
             "Any other White background",
         ]
-
-
-
-
-
 
         # Groups derived from https://www.ethnicity-facts-figures.service.gov.uk/style-guide/ethnic-groups
 
@@ -530,8 +522,6 @@ class EthnicityAbstractor:
             "soviet",
             "cornish",
         ]
-
-
 
         if assumeBritishWhite:
             whiteList.append("british")

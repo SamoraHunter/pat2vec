@@ -186,9 +186,7 @@ def get_treatment_docs_by_iterative_multi_term_cohort_searcher_no_terms_fuzzy(
     if verbose > 8:
         logger.debug(f"search_results: {search_results.head()}")
 
-    if (os.path.exists(output_path) and overwrite) or not os.path.exists(
-        output_path
-    ):
+    if (os.path.exists(output_path) and overwrite) or not os.path.exists(output_path):
         output_directory = os.path.dirname(output_path)
         # Check if the directory exists, if not, create it
         try:

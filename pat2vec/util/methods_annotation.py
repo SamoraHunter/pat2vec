@@ -30,9 +30,7 @@ def check_pat_document_annotation_complete(
 
     pre_document_annotation_batch_path = config_obj.pre_document_annotation_batch_path
 
-    os.path.join(
-        pre_document_batch_path, current_pat_client_id_code
-    )
+    os.path.join(pre_document_batch_path, current_pat_client_id_code)
 
     current_pat_batch_annot_path = os.path.join(
         pre_document_annotation_batch_path, current_pat_client_id_code + ".csv"

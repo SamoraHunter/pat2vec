@@ -255,7 +255,7 @@ def get_merged_pat_batch_bloods(
                 if config_obj.verbosity >= 1:
                     logging.info(
                         "Applying doc type filter to bloods",
-                        config_obj.data_type_filter_dict
+                        config_obj.data_type_filter_dict,
                     )
 
                 filter_term_list = config_obj.data_type_filter_dict.get(
@@ -372,7 +372,7 @@ def get_merged_pat_batch_drugs(
                 if config_obj.verbosity >= 1:
                     logging.info(
                         "Applying doc type filter to drugs",
-                        config_obj.data_type_filter_dict
+                        config_obj.data_type_filter_dict,
                     )
 
                 filter_term_list = config_obj.data_type_filter_dict.get(
@@ -493,7 +493,7 @@ def get_merged_pat_batch_diagnostics(
                 if config_obj.verbosity >= 1:
                     logging.info(
                         "Applying doc type filter to diagnostics",
-                        config_obj.data_type_filter_dict
+                        config_obj.data_type_filter_dict,
                     )
 
                 filter_term_list = config_obj.data_type_filter_dict.get(
@@ -706,7 +706,7 @@ def get_merged_pat_batch_epr_docs(
                 if config_obj.verbosity >= 1:
                     logging.info(
                         "Applying doc type filter to EPR docs",
-                        config_obj.data_type_filter_dict
+                        config_obj.data_type_filter_dict,
                     )
 
                 filter_term_list = config_obj.data_type_filter_dict.get(
@@ -767,7 +767,9 @@ def get_merged_pat_batch_epr_docs(
                     logging.debug(
                         f"Pre-filter split notes length: {pre_filter_split_notes_len}"
                     )
-                    logging.debug(f"Post-filter split notes length: {len(batch_target)}")
+                    logging.debug(
+                        f"Post-filter split notes length: {len(batch_target)}"
+                    )
 
         # Save the merged DataFrame to the dynamically constructed directory
         if store_pat_batch_docs or overwrite_stored_pat_docs:

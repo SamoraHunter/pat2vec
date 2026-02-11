@@ -1,4 +1,3 @@
-
 import pandas as pd
 from IPython.display import display
 
@@ -220,11 +219,10 @@ def get_appointments(
 
         # Ensure all requested patients are in the output, filling missing ones with NaN/0
         all_clients_df = pd.DataFrame({"client_idcode": [current_pat_client_id_code]})
-        all_clients_df['client_idcode'] = all_clients_df['client_idcode'].astype(str)
-        features['client_idcode'] = features['client_idcode'].astype(str)
+        all_clients_df["client_idcode"] = all_clients_df["client_idcode"].astype(str)
+        features["client_idcode"] = features["client_idcode"].astype(str)
 
         features = pd.merge(all_clients_df, features, on="client_idcode", how="left")
-
 
     if config_obj.verbosity >= 6:
         display(features)

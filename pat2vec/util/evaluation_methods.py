@@ -6,7 +6,6 @@ import pandas as pd
 from IPython.display import clear_output
 from tqdm import tqdm
 
-
 logger = logging.getLogger(__name__)
 
 

@@ -186,9 +186,7 @@ class CogStack(object):
             request_timeout=request_timeout,
         )
         temp_results = []
-        self.elastic.count(
-            index=index, query=query["query"], request_timeout=30
-        )
+        self.elastic.count(index=index, query=query["query"], request_timeout=30)
         for hit in docs_generator:
             row = dict()
             row["_index"] = hit["_index"]
@@ -670,7 +668,10 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy(
         )  # Explicitly set encoding)
         if debug:
             logging.debug(
-                "n_unique %s: %d/%d", uuid_column_name, len(docs[uuid_column_name].unique()), len(docs)
+                "n_unique %s: %d/%d",
+                uuid_column_name,
+                len(docs[uuid_column_name].unique()),
+                len(docs),
             )
 
     return docs
@@ -863,9 +864,11 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy_mct(
             if all_fields == True:
                 field_list = all_field_list
             else:
-                field_list = """observation_guid client_idcode obscatalogmasteritem_displayname
+                field_list = (
+                    """observation_guid client_idcode obscatalogmasteritem_displayname
                                 observation_valuetext_analysed observationdocument_recordeddtm
                                 clientvisit_visitidcode""".split()
+                )
 
             if testing == True:
                 term_docs = cohort_searcher_with_terms_and_search_dummy(
@@ -902,7 +905,9 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy_mct(
         if not all_docs:
             logging.warning("No documents were found for any of the terms.")
             docs_prev = pd.read_csv(treatment_doc_filename)
-            logging.info(f"Loaded existing file and no docs found: {treatment_doc_filename}")
+            logging.info(
+                f"Loaded existing file and no docs found: {treatment_doc_filename}"
+            )
 
             return docs_prev  # Return docs from previous step
             # return pd.DataFrame()  # Return an empty DataFrame explicitly if nothing was found
@@ -950,7 +955,10 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy_mct(
 
         if debug:
             logging.debug(
-                "n_unique %s: %d/%d", uuid_column_name, len(docs[uuid_column_name].unique()), len(docs)
+                "n_unique %s: %d/%d",
+                uuid_column_name,
+                len(docs[uuid_column_name].unique()),
+                len(docs),
             )
 
     return docs  # Return the final docs DataFrame
@@ -1010,7 +1018,9 @@ def initialize_cogstack_client(config_obj=None):
             logging.info(f"Loaded credentials from: {credentials_path}")
         except (ImportError, FileNotFoundError, TypeError) as e:
             logging.warning(
-                "Could not load credentials from %s. Error: %s. Falling back to default.", credentials_path, e
+                "Could not load credentials from %s. Error: %s. Falling back to default.",
+                credentials_path,
+                e,
             )
             credentials_path = None  # Force fallback
 
@@ -1294,7 +1304,9 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy_textual_obs(
         if not all_docs:
             logging.warning("No documents were found for any of the terms.")
             docs_prev = pd.read_csv(treatment_doc_filename)
-            logging.info(f"Loaded existing file and no docs found: {treatment_doc_filename}")
+            logging.info(
+                f"Loaded existing file and no docs found: {treatment_doc_filename}"
+            )
 
             return docs_prev  # Return docs from previous step
             # return pd.DataFrame()  # Return an empty DataFrame explicitly if nothing was found
@@ -1352,7 +1364,10 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy_textual_obs(
 
         if debug:
             logging.debug(
-                "n_unique %s: %d/%d", uuid_column_name, len(docs[uuid_column_name].unique()), len(docs)
+                "n_unique %s: %d/%d",
+                uuid_column_name,
+                len(docs[uuid_column_name].unique()),
+                len(docs),
             )
 
     return docs  # Return the final docs DataFrame

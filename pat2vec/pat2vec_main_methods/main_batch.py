@@ -384,7 +384,9 @@ def main_batch(
 
                 if not remote_dump:
                     if len(pat_concatted) > 1:
-                        logging.error(f"Batch too large for local dump. Shape: {pat_concatted.shape}")
+                        logging.error(
+                            f"Batch too large for local dump. Shape: {pat_concatted.shape}"
+                        )
                         logging.error(pat_concatted)
 
                     pat_concatted.to_csv(output_path)
@@ -428,7 +430,9 @@ def main_batch(
             except Exception as e:
                 logging.error(e)
                 logging.error(traceback.format_exc())
-                logging.error(f"Reproduce on {current_pat_client_id_code, target_date_range}")
+                logging.error(
+                    f"Reproduce on {current_pat_client_id_code, target_date_range}"
+                )
                 template = "An exception of type {0} occurred. Arguments:\n{1!r}"
                 message = template.format(type(e).__name__, e.args)
                 logging.error(message)

@@ -5,7 +5,6 @@ from typing import Any, Optional, Union
 
 from pat2vec.util.get_dummy_data_medcat_annotation import dummy_CAT
 
-
 logger = logging.getLogger(__name__)
 
 

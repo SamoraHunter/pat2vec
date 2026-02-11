@@ -62,23 +62,27 @@ class dummy_CAT(object):
 
     class DummyFilters(dict):
         """Dummy filters object that behaves like a dict with attribute access."""
+
         def __init__(self, *args, **kwargs):
             super().__init__(*args, **kwargs)
             self.cuis = set()
 
     class DummyLinkingConfig(object):
         """Dummy linking configuration."""
+
         def __init__(self):
             self.filters = dummy_CAT.DummyFilters()
             self.filter_before_disamb = False
 
     class DummyConfig(object):
         """Dummy config object."""
+
         def __init__(self):
             self.linking = dummy_CAT.DummyLinkingConfig()
 
     class DummyCDB(object):
         """Dummy CDB (Concept Database) object."""
+
         def __init__(self):
             self.config = dummy_CAT.DummyConfig()
 
@@ -94,12 +98,11 @@ class dummy_CAT(object):
 
         if with_filters:
             # Add some dummy filters for testing
-            self.config.linking.filters = self.DummyFilters({
-                'cuis': {'C0001234', 'C0005678'},
-                'type_ids': {'T047', 'T048'}
-            })
+            self.config.linking.filters = self.DummyFilters(
+                {"cuis": {"C0001234", "C0005678"}, "type_ids": {"T047", "T048"}}
+            )
             self.config.linking.filter_before_disamb = True
-            self.cdb.config.linking.filters['cuis'] = {'C9999999'}
+            self.cdb.config.linking.filters["cuis"] = {"C9999999"}
 
     def get_entities(self, text: str) -> Dict[str, Any]:
         """Returns a random subset of sample MedCAT annotations for a single text.

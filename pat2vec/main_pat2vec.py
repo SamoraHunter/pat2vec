@@ -143,10 +143,14 @@ class main:
                 self.cohort_searcher_with_terms_and_search = (
                     cohort_searcher_with_terms_and_search_dummy
                 )
-                logging.info("Initialized cohort_searcher_with_terms_and_search_dummy function.")
+                logging.info(
+                    "Initialized cohort_searcher_with_terms_and_search_dummy function."
+                )
             else:
                 if self.config_obj.verbosity > 0:
-                    logging.info("Initialized cohort_searcher_with_terms_and_search function.")
+                    logging.info(
+                        "Initialized cohort_searcher_with_terms_and_search function."
+                    )
                 self.cohort_searcher_with_terms_and_search = (
                     cohort_searcher_with_terms_and_search
                 )
@@ -192,7 +196,9 @@ class main:
         ]
 
         (
-            logging.info(f"Length of stripped_list_start: {len(self.stripped_list_start)}")
+            logging.info(
+                f"Length of stripped_list_start: {len(self.stripped_list_start)}"
+            )
             if self.config_obj.verbosity > 0
             else None
         )
@@ -220,36 +226,60 @@ class main:
             removed_filters = []
 
             # Check and remove linking filters
-            if hasattr(self.cat.config, 'linking') and hasattr(self.cat.config.linking, 'filters'):
+            if hasattr(self.cat.config, "linking") and hasattr(
+                self.cat.config.linking, "filters"
+            ):
                 if self.cat.config.linking.filters:
-                    removed_filters.append(f"linking.filters: {self.cat.config.linking.filters}")
+                    removed_filters.append(
+                        f"linking.filters: {self.cat.config.linking.filters}"
+                    )
                     self.cat.config.linking.filters = {}
 
             # Check and remove cuis_exclude
-            if hasattr(self.cat.config, 'linking') and hasattr(self.cat.config.linking, 'filters'):
-                if hasattr(self.cat.config.linking.filters, 'cuis') and self.cat.config.linking.filters.get('cuis'):
-                    removed_filters.append(f"cuis_exclude: {self.cat.config.linking.filters.get('cuis')}")
-                    self.cat.config.linking.filters['cuis'] = set()
+            if hasattr(self.cat.config, "linking") and hasattr(
+                self.cat.config.linking, "filters"
+            ):
+                if hasattr(
+                    self.cat.config.linking.filters, "cuis"
+                ) and self.cat.config.linking.filters.get("cuis"):
+                    removed_filters.append(
+                        f"cuis_exclude: {self.cat.config.linking.filters.get('cuis')}"
+                    )
+                    self.cat.config.linking.filters["cuis"] = set()
 
             # Check and remove filter_before_disamb
-            if hasattr(self.cat.config, 'linking') and hasattr(self.cat.config.linking, 'filter_before_disamb'):
+            if hasattr(self.cat.config, "linking") and hasattr(
+                self.cat.config.linking, "filter_before_disamb"
+            ):
                 if self.cat.config.linking.filter_before_disamb:
-                    removed_filters.append(f"filter_before_disamb: {self.cat.config.linking.filter_before_disamb}")
+                    removed_filters.append(
+                        f"filter_before_disamb: {self.cat.config.linking.filter_before_disamb}"
+                    )
                     self.cat.config.linking.filter_before_disamb = False
 
             # Alternative locations for CUI filters (depending on MedCAT version)
-            if hasattr(self.cat, 'cdb') and hasattr(self.cat.cdb, 'config') and hasattr(self.cat.cdb.config, 'linking'):
-                if hasattr(self.cat.cdb.config.linking, 'filters') and self.cat.cdb.config.linking.filters.get('cuis'):
-                    removed_filters.append(f"cdb.linking.filters.cuis: {self.cat.cdb.config.linking.filters.get('cuis')}")
-                    self.cat.cdb.config.linking.filters['cuis'] = set()
+            if (
+                hasattr(self.cat, "cdb")
+                and hasattr(self.cat.cdb, "config")
+                and hasattr(self.cat.cdb.config, "linking")
+            ):
+                if hasattr(
+                    self.cat.cdb.config.linking, "filters"
+                ) and self.cat.cdb.config.linking.filters.get("cuis"):
+                    removed_filters.append(
+                        f"cdb.linking.filters.cuis: {self.cat.cdb.config.linking.filters.get('cuis')}"
+                    )
+                    self.cat.cdb.config.linking.filters["cuis"] = set()
 
             if removed_filters:
                 logging.warning(
-                    f"Model has pre-existing filters. Since use_filter=False, the following filters are being removed:\n" +
-                    "\n".join(f"  - {f}" for f in removed_filters)
+                    "Model has pre-existing filters. Since use_filter=False, the following filters are being removed:\n"
+                    + "\n".join(f"  - {f}" for f in removed_filters)
                 )
             else:
-                logging.info("No pre-existing filters found in model. Processing all entities.")
+                logging.info(
+                    "No pre-existing filters found in model. Processing all entities."
+                )
 
         self.stripped_list = [
             x.replace(".csv", "")
@@ -262,7 +292,9 @@ class main:
                 self.stripped_list, config_obj=self.config_obj
             )
         else:
-            logging.info("Skipped stripping patient list because individual_patient_window is enabled.")
+            logging.info(
+                "Skipped stripping patient list because individual_patient_window is enabled."
+            )
 
         self.n_pat_lines = config_obj.n_pat_lines
 
@@ -514,7 +546,10 @@ class main:
             A list of date tuples, or None if the time window cannot be set up.
         """
         if self.config_obj.verbosity >= 4:
-            logging.debug("main_pat2vec>self.config_obj.individual_patient_window: %s", self.config_obj.individual_patient_window)
+            logging.debug(
+                "main_pat2vec>self.config_obj.individual_patient_window: %s",
+                self.config_obj.individual_patient_window,
+            )
 
         # Default to global date list if not using IPW
         if not self.config_obj.individual_patient_window:
@@ -693,11 +728,15 @@ class main:
             logging.debug("Post-batch timestamp NaN drop counts:")
             logging.debug("EPR: %d", len(batches["batch_epr"]))
             logging.debug("MCT: %d", len(batches["batch_mct"]))
-            logging.debug("EPR annotations: %d", len(batches["batch_epr_docs_annotations"]))
+            logging.debug(
+                "EPR annotations: %d", len(batches["batch_epr_docs_annotations"])
+            )
             logging.debug(
                 "EPR annotations mct:", len(batches["batch_epr_docs_annotations_mct"])
             )
-            logging.debug("textual obs docs: %d", len(batches["batch_textual_obs_docs"]))
+            logging.debug(
+                "textual obs docs: %d", len(batches["batch_textual_obs_docs"])
+            )
             logging.debug(
                 "textual obs annotations:",
                 len(batches["batch_textual_obs_annotations"]),

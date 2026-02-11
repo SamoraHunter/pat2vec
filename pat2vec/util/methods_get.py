@@ -234,22 +234,22 @@ def update_pbar(
 
     # Determine color and style based on elapsed time thresholds (checked in descending order)
     if elapsed_time > slow_execution_threshold_extreme:
-        color_code = 'red'
+        color_code = "red"
         colour_val = Fore.RED + Style.DIM + stage_str
     elif elapsed_time > slow_execution_threshold_high:
-        color_code = 'red'
+        color_code = "red"
         colour_val = Fore.RED + Style.BRIGHT + stage_str
     elif elapsed_time > slow_execution_threshold_low:
-        color_code = 'yellow'
+        color_code = "yellow"
         colour_val = Fore.YELLOW + stage_str
     else:
-        color_code = 'green'
+        color_code = "green"
         colour_val = Fore.GREEN + Style.DIM + stage_str
 
     # Set tqdm color using the correct attribute
-    if hasattr(t, 'colour'):
+    if hasattr(t, "colour"):
         t.colour = color_code
-    elif hasattr(t, 'color'):
+    elif hasattr(t, "color"):
         t.color = color_code
 
     # Update progress bar description with the determined color formatting

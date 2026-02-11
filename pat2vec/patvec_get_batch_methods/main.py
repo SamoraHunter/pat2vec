@@ -332,7 +332,7 @@ def get_pat_batch_bloods(
                     if config_obj.verbosity >= 1:
                         logging.info(
                             "applying doc type filter to bloods",
-                            config_obj.data_type_filter_dict
+                            config_obj.data_type_filter_dict,
                         )
 
                         filter_term_list = config_obj.data_type_filter_dict.get(
@@ -596,7 +596,7 @@ def get_pat_batch_epr_docs(
                     if config_obj.verbosity >= 1:
                         logging.info(
                             "applying doc type filter to EPR docs",
-                            config_obj.data_type_filter_dict
+                            config_obj.data_type_filter_dict,
                         )
 
                         filter_term_list = config_obj.data_type_filter_dict.get(
@@ -673,7 +673,9 @@ def get_pat_batch_epr_docs(
                             logging.debug(
                                 f"pre_filter_split_notes_len: {pre_filter_split_notes_len}"
                             )
-                            logging.debug(f"post_filter_split_notes_len: {len(batch_target)}")
+                            logging.debug(
+                                f"post_filter_split_notes_len: {len(batch_target)}"
+                            )
 
                 batch_target.to_csv(batch_epr_target_path)
 
@@ -905,7 +907,7 @@ def get_pat_batch_reports_docs_annotations(
 
 def get_pat_batch_mct_docs(
     current_pat_client_id_code: str,
-    search_term: str, # noqa
+    search_term: str,  # noqa
     config_obj: Any,
     cohort_searcher_with_terms_and_search: Any,
 ) -> pd.DataFrame:

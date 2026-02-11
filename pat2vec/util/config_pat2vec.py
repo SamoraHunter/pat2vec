@@ -14,7 +14,6 @@ from pat2vec.util.methods_get import (
     build_patient_dict,
 )
 
-
 logger = logging.getLogger(__name__)
 
 T_config = TypeVar("T_config", bound="config_class")
@@ -712,7 +711,6 @@ class config_class:
                 df_old_done["Hemochromatosis (disorder)_count_subject_present"] > 0
             ]["client_idcode"].to_list()
 
-
         if self.testing:
             logger.info("Setting test options")
 
@@ -1117,7 +1115,7 @@ class config_class:
                     self.global_start_day,
                 )
                 # Also swap the datetime objects
-                (self.global_start_date, self.global_end_date) = (
+                self.global_start_date, self.global_end_date = (
                     self.global_end_date,
                     self.global_start_date,
                 )
@@ -1216,7 +1214,7 @@ def validate_and_fix_global_dates(config: T_config) -> T_config:
             if hasattr(config, "global_start_date") and hasattr(
                 config, "global_end_date"
             ):
-                (config.global_start_date, config.global_end_date) = (
+                config.global_start_date, config.global_end_date = (
                     config.global_end_date,
                     config.global_start_date,
                 )
