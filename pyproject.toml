@@ -87,5 +87,5 @@ where = ["."]
 include = ["pat2vec*"]
 
 [tool.ruff]
-
-# extend-exclude = ["legacy"]
+extend-exclude = ["legacy",
+"legacy/Main-Pat2Vec v4.4.6-Time-Batch-Dev-lookback-Publish (1).ipynb"]
