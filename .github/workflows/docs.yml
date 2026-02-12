@@ -42,11 +42,9 @@ jobs:
         env:
           http_proxy: ${{ env.http_proxy }}
           https_proxy: ${{ env.https_proxy }}
-          # Tell setup-python where to find the pre-installed tools for local 'act' runs
           AGENT_TOOLSDIRECTORY: /opt/hostedtoolcache
         with:
           python-version: '3.10.18'
-          # Prevent checking for newer versions online
           check-latest: false
 
       - name: Install dependencies
@@ -69,17 +67,15 @@ jobs:
         run: |
           python -m sphinx.cmd.build -b html docs/source docs/build/html
 
-      - name: Package documentation
-        run: tar -czf artifact.tar.gz -C docs/build/html .
-
-      - name: Upload artifact for deployment
-        # This step is skipped on local 'act' runs to prevent hanging.
+      - name: Setup Pages
         if: steps.detect_env.outputs.is_act_runner != 'true'
-        uses: actions/upload-artifact@v4
-        # v4 is used here as v3 has been deprecated.
+        uses: actions/configure-pages@v4
+
+      - name: Upload artifact
+        if: steps.detect_env.outputs.is_act_runner != 'true'
+        uses: actions/upload-pages-artifact@v3
         with:
-          name: github-pages
-          path: artifact.tar.gz
+          path: docs/build/html
 
   deploy:
     environment:
@@ -87,7 +83,6 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     needs: build
-    # This job should only run on GitHub.com, as it deploys to GitHub Pages.
     if: github.server_url == 'https://github.com'
     steps:
       - name: Deploy to GitHub Pages
