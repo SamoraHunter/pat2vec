@@ -4,6 +4,7 @@
 
 # Project keys and sensitive data
 anonymization_key.pkl
+credentials.py
 
 # Project directories and outputs
 output_directory/
