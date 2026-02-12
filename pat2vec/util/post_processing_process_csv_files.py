@@ -210,7 +210,7 @@ def process_csv_files_multi(
         if os.path.splitext(f)[1] == ".csv"
     ]
 
-    if type(sample_size) == str or sample_size is None:
+    if isinstance(sample_size, str) or sample_size is None:
         if sample_size is None or sample_size.lower() == "all":
             sample_size = len(all_file_paths)
 
@@ -264,7 +264,7 @@ def process_csv_files_multi(
             n_proc_val = available_cores
         if n_proc == "half":
             n_proc_val = desired_half_processes
-        elif type(n_proc) == int:
+        elif isinstance(n_proc, int):
             n_proc_val = n_proc
     logger.info(f"Desired cores for multiprocessing: {n_proc_val}")
 

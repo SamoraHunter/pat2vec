@@ -630,7 +630,7 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy(
             ]
             all_field_list = list(set(all_field_list))
 
-            if all_fields == True:
+            if all_fields:
                 field_list = all_field_list
             else:
                 field_list = "client_idcode document_guid document_description body_analysed updatetime clientvisit_visitidcode".split()
@@ -861,14 +861,12 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy_mct(
 
             all_field_list = list(set(all_field_list))
 
-            if all_fields == True:
+            if all_fields:
                 field_list = all_field_list
             else:
-                field_list = (
-                    """observation_guid client_idcode obscatalogmasteritem_displayname
+                field_list = """observation_guid client_idcode obscatalogmasteritem_displayname
                                 observation_valuetext_analysed observationdocument_recordeddtm
                                 clientvisit_visitidcode""".split()
-                )
 
             if testing == True:
                 term_docs = cohort_searcher_with_terms_and_search_dummy(
@@ -1255,7 +1253,7 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy_textual_obs(
 
             all_field_list = list(set(all_field_list))
 
-            if all_fields == True:
+            if all_fields:
                 field_list = all_field_list
             else:
                 field_list = [

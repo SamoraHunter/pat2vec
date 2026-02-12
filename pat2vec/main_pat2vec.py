@@ -222,7 +222,7 @@ class main:
         self.cat = get_cat(config_obj)
 
         # Only check/remove filters if we actually have a MedCAT model
-        if self.cat is not None and self.use_filter == False:
+        if self.cat is not None and not self.use_filter:
             removed_filters = []
 
             # Check and remove linking filters

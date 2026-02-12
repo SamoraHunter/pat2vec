@@ -1,6 +1,6 @@
 import pandas as pd
 from typing import Any, Dict, List, Optional
-from .credentials import *
+from .credentials import username, password, host_name, port, scheme
 from elasticsearch import Elasticsearch
 from tqdm import tqdm
 from elasticsearch.helpers import BulkIndexError
