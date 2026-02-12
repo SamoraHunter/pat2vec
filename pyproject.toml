@@ -85,3 +85,7 @@ dev = [
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["pat2vec*"]
+
+[tool.ruff]
+
+# extend-exclude = ["legacy"]
