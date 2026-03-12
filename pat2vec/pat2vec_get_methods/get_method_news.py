@@ -1,4 +1,4 @@
-from typing import Callable, Dict, Optional, Tuple
+from typing import Callable, Dict, Optional, Tuple, List
 
 import numpy as np
 import pandas as pd
@@ -48,6 +48,7 @@ def get_news(
     pat_batch: pd.DataFrame,
     config_obj: Optional[object] = None,
     cohort_searcher_with_terms_and_search: Optional[Callable] = None,
+    fields_override: Optional[List[str]] = None,
 ) -> pd.DataFrame:
     """Retrieves NEWS/NEWS2 features for a patient within a date range.
 
@@ -63,6 +64,8 @@ def get_news(
             `batch_mode` and `client_idcode_term_name`. Defaults to None.
         cohort_searcher_with_terms_and_search (Optional[Callable]): The function for
             cohort searching. Defaults to None.
+        fields_override (Optional[List[str]]): A list of fields to override the
+            default search fields. Defaults to None.
 
     Returns:
         pd.DataFrame: A DataFrame containing NEWS features for the specified patient.
@@ -84,16 +87,20 @@ def get_news(
             "observationdocument_recordeddtm",
         )
     else:
+        fields_to_use = [
+            "observation_guid",
+            "client_idcode",
+            "obscatalogmasteritem_displayname",
+            "observation_valuetext_analysed",
+            "observationdocument_recordeddtm",
+            "clientvisit_visitidcode",
+        ]
+        if fields_override:
+            fields_to_use = fields_override
+
         current_pat_raw_news = cohort_searcher_with_terms_and_search(
             index_name="observations",
-            fields_list=[
-                "observation_guid",
-                "client_idcode",
-                "obscatalogmasteritem_displayname",
-                "observation_valuetext_analysed",
-                "observationdocument_recordeddtm",
-                "clientvisit_visitidcode",
-            ],
+            fields_list=fields_to_use,
             term_name=config_obj.client_idcode_term_name,
             entered_list=[current_pat_client_id_code],
             search_string=(

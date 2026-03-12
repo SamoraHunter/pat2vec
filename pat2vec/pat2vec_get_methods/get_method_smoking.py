@@ -24,6 +24,7 @@ def search_smoking(
     cohort_searcher_with_terms_and_search: Optional[Callable] = None,
     client_id_codes: Optional[Union[str, List[str]]] = None,
     observations_time_field: str = "observationdocument_recordeddtm",
+    fields_override: Optional[List[str]] = None,
     start_year: str = "1995",
     start_month: str = "01",
     start_day: str = "01",
@@ -42,6 +43,8 @@ def search_smoking(
             the patient(s). Defaults to None.
         observations_time_field (str): The timestamp field for filtering
             observations. Defaults to 'observationdocument_recordeddtm'.
+        fields_override (Optional[List[str]]): A list of fields to override the
+            default `SMOKING_FIELDS`. Defaults to None.
         start_year (str): Start year for the search. Defaults to '1995'.
         start_month (str): Start month for the search. Defaults to '01'.
         start_day (str): Start day for the search. Defaults to '01'.
@@ -81,9 +84,13 @@ def search_smoking(
     if additional_custom_search_string:
         search_string += f" {additional_custom_search_string}"
 
+    fields_to_use = SMOKING_FIELDS
+    if fields_override:
+        fields_to_use = fields_override
+
     return cohort_searcher_with_terms_and_search(
         index_name="observations",
-        fields_list=SMOKING_FIELDS,
+        fields_list=fields_to_use,
         term_name=client_idcode_term_name,
         entered_list=client_id_codes,
         search_string=search_string,

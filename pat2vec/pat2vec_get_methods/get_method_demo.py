@@ -22,6 +22,7 @@ def search_demographics(
     cohort_searcher_with_terms_and_search: Optional[Callable] = None,
     client_id_codes: Optional[Union[str, List[str]]] = None,
     demographics_time_field: str = "updatetime",
+    fields_override: Optional[List[str]] = None,
     start_year: str = "1995",
     start_month: str = "01",
     start_day: str = "01",
@@ -39,6 +40,8 @@ def search_demographics(
             the patient(s). Defaults to None.
         demographics_time_field (str): The timestamp field for filtering
             demographics. Defaults to 'updatetime'.
+        fields_override (Optional[List[str]]): A list of fields to override the
+            default `DEMOGRAPHICS_FIELDS`. Defaults to None.
         start_year (str): Start year for the search. Defaults to '1995'.
         start_month (str): Start month for the search. Defaults to '01'.
         start_day (str): Start day for the search. Defaults to '01'.
@@ -82,9 +85,13 @@ def search_demographics(
     if additional_custom_search_string:
         search_string += f" {additional_custom_search_string}"
 
+    fields_to_use = DEMOGRAPHICS_FIELDS
+    if fields_override:
+        fields_to_use = fields_override
+
     return cohort_searcher_with_terms_and_search(
         index_name="epr_documents",
-        fields_list=DEMOGRAPHICS_FIELDS,
+        fields_list=fields_to_use,
         # Note: using default, can be made configurable
         term_name="client_idcode.keyword",
         entered_list=client_id_codes,

@@ -1,4 +1,4 @@
-from typing import Union
+from typing import Union, Optional, List
 
 import pandas as pd
 
@@ -21,6 +21,7 @@ def search_bed_data(
     client_id_codes=None,
     client_idcode_name="client_idcode.keyword",
     bed_time_field="observationdocument_recordeddtm",
+    fields_override: Optional[List[str]] = None,
     start_year: Union[int, str] = 1995,
     start_month: Union[int, str] = 1,
     start_day: Union[int, str] = 1,
@@ -43,6 +44,8 @@ def search_bed_data(
             index. Defaults to "client_idcode.keyword".
         bed_time_field (str): The timestamp field for filtering bed data.
             Defaults to 'observationdocument_recordeddtm'.
+        fields_override (Optional[List[str]]): A list of fields to override the
+            default `BED_FIELDS`. Defaults to None.
         start_year (Union[int, str]): Start year for the search. Defaults to 1995.
         start_month (Union[int, str]): Start month for the search. Defaults to 1.
         start_day (Union[int, str]): Start day for the search. Defaults to 1.
@@ -82,9 +85,13 @@ def search_bed_data(
     if additional_custom_search_string:
         search_string += f" {additional_custom_search_string}"
 
+    fields_to_use = BED_FIELDS
+    if fields_override:
+        fields_to_use = fields_override
+
     return cohort_searcher_with_terms_and_search(
         index_name="observations",
-        fields_list=BED_FIELDS,
+        fields_list=fields_to_use,
         term_name=client_idcode_name,
         entered_list=client_id_codes,
         search_string=search_string,

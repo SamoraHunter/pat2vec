@@ -1,4 +1,4 @@
-from typing import Callable, Optional, Tuple
+from typing import Callable, Optional, Tuple, List
 
 import numpy as np
 import pandas as pd
@@ -24,6 +24,7 @@ def search_hospital_site(
     cohort_searcher_with_terms_and_search=None,
     client_id_codes=None,
     observations_time_field="observationdocument_recordeddtm",
+    fields_override: Optional[List[str]] = None,
     start_year="1995",
     start_month="01",
     start_day="01",
@@ -33,7 +34,12 @@ def search_hospital_site(
     additional_custom_search_string=None,
     client_idcode_term_name="client_idcode.keyword",
 ):
-    """Search hospital site observations via cohort search API."""
+    """Search hospital site observations via cohort search API.
+
+    Args:
+        fields_override (Optional[List[str]]): A list of fields to override the
+            default `HOSP_SITE_FIELDS`. Defaults to None.
+    """
     if cohort_searcher_with_terms_and_search is None:
         raise ValueError("cohort_searcher_with_terms_and_search cannot be None.")
     if client_id_codes is None:
@@ -56,9 +62,13 @@ def search_hospital_site(
     if additional_custom_search_string:
         search_string += f" {additional_custom_search_string}"
 
+    fields_to_use = HOSP_SITE_FIELDS
+    if fields_override:
+        fields_to_use = fields_override
+
     return cohort_searcher_with_terms_and_search(
         index_name="observations",
-        fields_list=HOSP_SITE_FIELDS,
+        fields_list=fields_to_use,
         term_name=client_idcode_term_name,
         entered_list=client_id_codes,
         search_string=search_string,

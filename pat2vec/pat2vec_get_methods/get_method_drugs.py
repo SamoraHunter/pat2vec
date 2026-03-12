@@ -42,6 +42,7 @@ def search_drug_orders(
     cohort_searcher_with_terms_and_search: Optional[Callable] = None,
     client_id_codes: Optional[Union[str, List[str]]] = None,
     drug_time_field: str = "order_createdwhen",
+    fields_override: Optional[List[str]] = None,
     start_year: str = "1995",
     start_month: str = "01",
     start_day: str = "01",
@@ -61,6 +62,8 @@ def search_drug_orders(
             the patient(s). Defaults to None.
         drug_time_field (str): The timestamp field for filtering drug orders.
             Defaults to 'order_createdwhen'.
+        fields_override (Optional[List[str]]): A list of fields to override the
+            default `DRUG_FIELDS`. Defaults to None.
         start_year (str): Start year for the search. Defaults to '1995'.
         start_month (str): Start month for the search. Defaults to '01'.
         start_day (str): Start day for the search. Defaults to '01'.
@@ -100,9 +103,13 @@ def search_drug_orders(
     if additional_custom_search_string:
         search_string += f" {additional_custom_search_string}"
 
+    fields_to_use = DRUG_FIELDS
+    if fields_override:
+        fields_to_use = fields_override
+
     return cohort_searcher_with_terms_and_search(
         index_name="order",
-        fields_list=DRUG_FIELDS,
+        fields_list=fields_to_use,
         term_name="client_idcode.keyword",
         entered_list=client_id_codes,
         search_string=search_string,
