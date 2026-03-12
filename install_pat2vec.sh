@@ -228,8 +228,24 @@ if [ "$FORCE_CLEAN" = true ] && [ -d "$VENV_DIR" ]; then
     rm -rf "$VENV_DIR"
 fi
 
+echo "Detecting Python interpreter..."
+if command -v python3.10 >/dev/null; then
+    PYTHON_CMD="python3.10"
+elif command -v python3.11 >/dev/null; then
+    PYTHON_CMD="python3.11"
+elif command -v python3 >/dev/null; then
+    PYTHON_CMD="python3"
+elif command -v python >/dev/null; then
+    PYTHON_CMD="python"
+else
+    echo "ERROR: Python is not installed." >&2
+    exit 1
+fi
+echo "Using Python interpreter: $PYTHON_CMD"
+
 echo "Creating virtual environment..."
-python3 -m venv "$VENV_DIR"
+
+$PYTHON_CMD -m venv "$VENV_DIR"
 
 echo "Activating virtual environment..."
 if [ ! -f "$VENV_DIR/bin/activate" ]; then
