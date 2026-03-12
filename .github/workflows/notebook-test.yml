@@ -33,11 +33,15 @@ jobs:
         env:
           http_proxy: ${{ env.http_proxy }}
           https_proxy: ${{ env.https_proxy }}
-          # Tell setup-python where to find the pre-installed tools for local 'act' runs
           AGENT_TOOLSDIRECTORY: /opt/hostedtoolcache
         with:
           python-version: '3.10.18'
           check-latest: false
+
+      - name: Fix pip installation  # <-- NEW STEP: force-reinstall pip to fix vendored resolvelib mismatch
+        run: |
+          curl -sS https://bootstrap.pypa.io/get-pip.py | python3 - --ignore-installed
+          python3 -m pip install --upgrade --ignore-installed pip setuptools wheel
 
       - name: Get pip cache directory
         id: pip-cache
@@ -53,25 +57,20 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pip-${{ env.PYTHON_VERSION }}-
 
-      - name: Install compatible torch and torchvision
-        run: |
-          python3 -m pip install torch==2.8.0
-
       - name: Install dependencies
+        env:
+          GITEA_TOKEN: ${{ secrets.GITEA_TOKEN }}
         run: |
-          if [[ "${{ steps.detect_env.outputs.is_act_runner }}" == "true" ]]; then
-              echo "🔧 Running in act - removing hash requirements"
-              find . -name "requirements*.txt" -type f -exec sed -i 's/ --hash=sha256:[a-f0-9]*//g' {} \;
-          fi
-
           pip_install_args=()
-          if [[ -n "${http_proxy:-}" ]]; then
-              echo "🔧 Using proxy: ${http_proxy}"
-              pip_install_args+=("--proxy" "${http_proxy}")
+          if [[ "${{ steps.detect_env.outputs.is_act_runner }}" == "true" ]] && [[ -n "${GITEA_TOKEN}" ]]; then
+              echo "🔧 Running in act - using local mirror and removing hash requirements"
+              find . -name "requirements*.txt" -type f -exec sed -i 's/ --hash=sha256:[a-f0-9]*//g' {} \;
+              pip_install_args+=("--trusted-host" "dh-cap02" "-i" "http://dh-cap02:8008/mirrors/pat2vec")
           fi
 
-          echo "Installing with: python3 -m pip install ${pip_install_args[*]} -e .[dev]"
-          python3 -m pip install "${pip_install_args[@]}" -e ".[dev]"
+          echo "Installing torch and project dependencies in a single step..."
+          python3 -m pip install "${pip_install_args[@]}" torch==2.8.0 -e ".[dev]"
+
           python3 -m ipykernel install --user --name=pat2vec_env --display-name "Python (pat2vec_env)"
           jupyter kernelspec list
 

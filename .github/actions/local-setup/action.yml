@@ -5,7 +5,7 @@ description: 'Configures proxy, certificates, and pre-installs Python for local 
 inputs:
   gitea-token:
     description: 'Token for authenticating with Gitea'
-    required: true
+    required: false
 
 runs:
   using: "composite"
@@ -50,19 +50,39 @@ runs:
       shell: bash
       run: |
         if [[ -z "${GITEA_TOKEN}" ]]; then
-          echo "❌ Error: GITEA_TOKEN is not set. Please provide it using the -s/--secret flag when running 'act'."
-          exit 1
+          echo "⚠️ GITEA_TOKEN is not set. Skipping pre-installation of Python from Gitea mirror."
+          exit 0
         fi
 
         PYTHON_BINARY_URL="https://kch-cap.kingsch.nhs.uk:3000/KCH_Cogstack/python-versions/releases/download/3.10.18-15433209320/python-3.10.18-linux-24.04-x64.tar.gz"
         INSTALL_DIR="/opt/hostedtoolcache/Python/3.10.18/x64"
         mkdir -p "$INSTALL_DIR"
 
-        echo "📥 Downloading Python from Gitea..."
-        # Explicitly use the corporate certificate path for curl
-        curl -L --fail --show-error -H "Authorization: token ${GITEA_TOKEN}" \
-            --cacert /usr/local/share/ca-certificates/kch_certauth.crt \
-            -o python.tar.gz "$PYTHON_BINARY_URL"
+        PYTHON_BINARY_FILENAME=$(basename "$PYTHON_BINARY_URL")
+
+        # Debug: List files to check if the local archive was copied by act (might be ignored by .gitignore)
+        echo "📂 Files in workspace:"
+        ls -lh
+
+        if [ -f "$PYTHON_BINARY_FILENAME" ]; then
+            echo "✅ Found local Python archive at '$PYTHON_BINARY_FILENAME'. Using it instead of downloading."
+            cp "$PYTHON_BINARY_FILENAME" "python.tar.gz"
+        elif [ -f "python.tar.gz" ] && gzip -t "python.tar.gz" 2>/dev/null; then
+            echo "✅ Found valid local 'python.tar.gz'. Using it."
+        else
+            echo "ℹ️ Local Python archive not found in repository root. Proceeding with download from Gitea..."
+            echo "📥 Downloading Python from Gitea (attempting resume if interrupted)..."
+            curl -L -C - --fail --show-error --retry 3 --retry-delay 5 \
+                -H "Authorization: token ${GITEA_TOKEN}" \
+                --cacert /usr/local/share/ca-certificates/kch_certauth.crt \
+                --noproxy "kch-cap.kingsch.nhs.uk" \
+                --write-out "\nHTTP status: %{http_code}\nDownloaded bytes: %{size_download}\nEffective URL: %{url_effective}\n" \
+                -o python.tar.gz "$PYTHON_BINARY_URL"
+        fi
+
+        echo "📏 File size on disk: $(stat -c%s python.tar.gz) bytes"
+        echo "📏 Expected ~67MB+. Testing integrity..."
+        gzip -t python.tar.gz && echo "✅ gzip OK" || echo "❌ gzip corrupt"
 
         FILE_TYPE=$(file -b --mime-type python.tar.gz)
         echo "🔎 Downloaded file type: $FILE_TYPE"
