@@ -69,6 +69,7 @@ all = [
 
 # Development and testing tools
 dev = [
+    "torch==2.8.0",
     "pytest",
     "nbformat",
     "nbconvert",

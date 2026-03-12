@@ -68,8 +68,8 @@ jobs:
               pip_install_args+=("--trusted-host" "dh-cap02" "-i" "http://dh-cap02:8008/mirrors/pat2vec")
           fi
 
-          echo "Installing torch and project dependencies in a single step..."
-          python3 -m pip install "${pip_install_args[@]}" torch==2.8.0 -e ".[dev]"
+          echo "Installing project dependencies..."
+          python3 -m pip install "${pip_install_args[@]}" -e ".[dev]"
 
           python3 -m ipykernel install --user --name=pat2vec_env --display-name "Python (pat2vec_env)"
           jupyter kernelspec list
@@ -87,8 +87,9 @@ jobs:
       - name: Clean up Jupyter kernels
         if: always()
         run: |
-          pkill -f ipykernel || true
-          pkill -f jupyter || true
+          echo "Forcefully cleaning up Jupyter kernels to prevent hanging..."
+          pkill -9 -f ipykernel || true
+          pkill -9 -f jupyter || true
 
       - name: Clean Up Generated Files for Local Act Runner
         if: steps.detect_env.outputs.is_act_runner == 'true' && always()

@@ -18,13 +18,14 @@ runs:
           echo "http_proxy=http://dh-cap02:8008" >> $GITHUB_ENV
           echo "https_proxy=http://dh-cap02:8008" >> $GITHUB_ENV
 
-          NO_PROXY_LIST="localhost,127.0.0.1,kch-cap.kingsch.nhs.uk,${ACTIONS_CACHE_URL#http://}"
+          NO_PROXY_LIST="localhost,127.0.0.1,kch-cap.kingsch.nhs.uk,github.com,*.blob.core.windows.net,${ACTIONS_CACHE_URL#http://}"
           echo "NO_PROXY=$NO_PROXY_LIST" >> $GITHUB_ENV
         fi
 
     - name: Install System Dependencies
       shell: bash
       run: |
+        export DEBIAN_FRONTEND=noninteractive
         apt-get -qq update
         apt-get -qq install -y --no-install-recommends \
           git tzdata apt-utils ca-certificates curl nodejs npm file > /dev/null
