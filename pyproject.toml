@@ -36,6 +36,7 @@ dependencies = [
     "polars", # High-performance DataFrame library
     "pandas>=1.5.3", # Data manipulation and analysis
     "numpy>=1.25.2", # Fundamental package for scientific computing
+    "torch==2.8.0", # Deep learning framework for transformers
 ]
 
 [project.urls]
@@ -47,7 +48,6 @@ Changelog = "https://github.com/SamoraHunter/pat2vec/releases"
 [project.optional-dependencies]
 # Additional packages for the 'all' installation, derived from the full requirements.txt.
 all = [
-    "torch>=2.5.1",
     "scikit-learn>=1.6.1",
     "jupyterlab",
     "lifelines==0.28.0",
@@ -69,7 +69,6 @@ all = [
 
 # Development and testing tools
 dev = [
-    "torch==2.8.0",
     "pytest",
     "nbformat",
     "nbconvert",
