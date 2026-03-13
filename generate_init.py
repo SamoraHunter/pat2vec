@@ -90,10 +90,25 @@ def generate_init_file_content(package_path="pat2vec"):
     return "\n".join(output_lines)
 
 
+def format_with_black(content: str) -> str:
+    """Run black on the generated content string and return the formatted result."""
+    import subprocess
+
+    result = subprocess.run(
+        [sys.executable, "-m", "black", "-"],
+        input=content,
+        capture_output=True,
+        text=True,
+    )
+    if result.returncode != 0:
+        print(f"Warning: black formatting failed:\n{result.stderr}", file=sys.stderr)
+        return content  # Fall back to unformatted content
+    return result.stdout
+
+
 if __name__ == "__main__":
     init_content = generate_init_file_content()
-    # Remove trailing whitespace/newlines at the end, ensure exactly one newline
-    init_content = init_content.rstrip() + "\n"
+    init_content = format_with_black(init_content)  # <-- replaces the manual rstrip
     output_path = os.path.join("pat2vec", "__init__.py")
 
     print(f"Writing __init__.py to {output_path}...")
