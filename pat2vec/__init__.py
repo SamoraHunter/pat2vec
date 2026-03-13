@@ -59,7 +59,6 @@ from .pat2vec_get_methods.get_method_diagnostics import (
     search_diagnostic_orders,
 )
 from .pat2vec_get_methods.get_method_drugs import (
-    COLUMNS_TO_DROP,
     DRUG_FIELDS,
     calculate_drug_features,
     create_drug_features_dataframe,
@@ -81,7 +80,6 @@ from .pat2vec_get_methods.get_method_report_annotations import (
     get_current_pat_report_annotations,
 )
 from .pat2vec_get_methods.get_method_smoking import (
-    SEARCH_TERM,
     SMOKING_FIELDS,
     calculate_smoking_features,
     get_smoking,
@@ -92,7 +90,6 @@ from .pat2vec_get_methods.get_method_textual_obs_annotations import (
     get_current_pat_textual_obs_annotations,
 )
 from .pat2vec_get_methods.get_method_vte_status import (
-    SEARCH_TERM,
     VTE_FIELDS,
     calculate_vte_features,
     get_vte_status,
@@ -399,7 +396,6 @@ from .util.post_processing_build_methods import (
     build_merged_bloods,
     build_merged_epr_mct_annot_df,
     build_merged_epr_mct_doc_df,
-    filter_annot_dataframe,
     get_annots_joined_to_docs,
     join_docs_to_annots,
     merge_appointments_csv,

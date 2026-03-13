@@ -70,17 +70,24 @@ def generate_init_file_content(package_path="pat2vec"):
         "",
     ]
 
+    imported_names = set()  # Keep track of names we've already imported.
+
     for module, imports in sorted(module_to_imports.items()):
-        if imports:
-            sorted_imports = sorted(imports)
+        unique_imports_for_module = []
+        for name in sorted(imports):
+            if name not in imported_names:
+                unique_imports_for_module.append(name)
+                imported_names.add(name)
+
+        if unique_imports_for_module:
             import_line = f"from {module} import ("
+            output_lines.append(import_line)
 
             wrapper = textwrap.TextWrapper(
                 width=88, initial_indent="    ", subsequent_indent="    "
             )
-            wrapped_imports = wrapper.fill(", ".join(sorted_imports))
+            wrapped_imports = wrapper.fill(", ".join(unique_imports_for_module))
 
-            output_lines.append(import_line)
             output_lines.append(wrapped_imports)
             output_lines.append(")")
 
