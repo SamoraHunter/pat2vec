@@ -33,17 +33,28 @@ def generate_init_file_content(package_path="pat2vec"):
                         # Iterate over top-level nodes only
                         for node in tree.body:
                             if isinstance(
-                                node, ast.FunctionDef
+                                node, (ast.FunctionDef, ast.ClassDef)
                             ) and not node.name.startswith("_"):
                                 name = node.name
                                 module_to_imports[import_path].append(name)
                                 all_import_names.add(name)
-                            elif isinstance(
-                                node, ast.ClassDef
-                            ) and not node.name.startswith("_"):
-                                name = node.name
-                                module_to_imports[import_path].append(name)
-                                all_import_names.add(name)
+                            elif isinstance(node, ast.Assign):
+                                for target in node.targets:
+                                    if isinstance(
+                                        target, ast.Name
+                                    ) and not target.id.startswith("_"):
+                                        name = target.id
+                                        # Heuristic: export all-caps variables as constants
+                                        if name.isupper():
+                                            module_to_imports[import_path].append(name)
+                                            all_import_names.add(name)
+                            elif isinstance(node, ast.AnnAssign) and isinstance(
+                                node.target, ast.Name
+                            ):
+                                name = node.target.id
+                                if not name.startswith("_") and name.isupper():
+                                    module_to_imports[import_path].append(name)
+                                    all_import_names.add(name)
 
                     except SyntaxError as e:
                         print(f"Skipping {file_path} due to syntax error: {e}")

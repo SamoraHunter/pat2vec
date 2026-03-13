@@ -7,26 +7,31 @@ It exposes the main functions and methods of the pat2vec library for easy access
 
 from .main_pat2vec import main
 from .pat2vec_get_methods.get_method_appointments import (
+    APPOINTMENT_FIELDS,
     get_appointments,
     search_appointments,
 )
-from .pat2vec_get_methods.get_method_bed import get_bed, search_bed_data
+from .pat2vec_get_methods.get_method_bed import BED_FIELDS, get_bed, search_bed_data
 from .pat2vec_get_methods.get_method_bloods import (
+    BLOODS_FIELDS,
     get_current_pat_bloods,
     search_bloods_data,
 )
 from .pat2vec_get_methods.get_method_bmi import (
+    BMI_FIELDS,
     calculate_bmi_features,
     get_bmi_features,
     search_bmi_observations,
 )
 from .pat2vec_get_methods.get_method_core02 import (
+    CORE_O2_FIELDS,
     calculate_core_o2_features,
     clean_observation_value,
     get_core_02,
     search_core_o2_observations,
 )
 from .pat2vec_get_methods.get_method_core_resus import (
+    CORE_RESUS_FIELDS,
     calculate_core_resus_features,
     get_core_resus,
     search_core_resus_observations,
@@ -35,6 +40,7 @@ from .pat2vec_get_methods.get_method_current_pat_annotations_mrc_cs import (
     get_current_pat_annotations_mrc_cs,
 )
 from .pat2vec_get_methods.get_method_demo import (
+    DEMOGRAPHICS_FIELDS,
     get_demographics3,
     process_demographics_data,
     search_demographics,
@@ -44,6 +50,8 @@ from .pat2vec_get_methods.get_method_demographics import (
     get_demographics3_batch,
 )
 from .pat2vec_get_methods.get_method_diagnostics import (
+    COLUMNS_TO_DROP,
+    DIAGNOSTICS_FIELDS,
     calculate_diagnostic_features,
     create_diagnostic_features_dataframe,
     get_current_pat_diagnostics,
@@ -51,6 +59,8 @@ from .pat2vec_get_methods.get_method_diagnostics import (
     search_diagnostic_orders,
 )
 from .pat2vec_get_methods.get_method_drugs import (
+    COLUMNS_TO_DROP,
+    DRUG_FIELDS,
     calculate_drug_features,
     create_drug_features_dataframe,
     get_current_pat_drugs,
@@ -58,6 +68,8 @@ from .pat2vec_get_methods.get_method_drugs import (
     search_drug_orders,
 )
 from .pat2vec_get_methods.get_method_hosp_site import (
+    HOSP_SITE_FIELDS,
+    SEARCH_TERM,
     calculate_hospital_site_features,
     get_hosp_site,
     prepare_hospital_site_data,
@@ -69,6 +81,8 @@ from .pat2vec_get_methods.get_method_report_annotations import (
     get_current_pat_report_annotations,
 )
 from .pat2vec_get_methods.get_method_smoking import (
+    SEARCH_TERM,
+    SMOKING_FIELDS,
     calculate_smoking_features,
     get_smoking,
     prepare_smoking_data,
@@ -78,6 +92,8 @@ from .pat2vec_get_methods.get_method_textual_obs_annotations import (
     get_current_pat_textual_obs_annotations,
 )
 from .pat2vec_get_methods.get_method_vte_status import (
+    SEARCH_TERM,
+    VTE_FIELDS,
     calculate_vte_features,
     get_vte_status,
     prepare_vte_data,
@@ -265,10 +281,15 @@ from .util.get_dummy_data_medcat_annotation import (
     random_sample,
 )
 from .util.get_method_default_fields_map import (
+    GET_METHOD_DEFAULT_FIELDS_MAP,
     get_all_method_default_fields,
     get_default_fields_for_method,
 )
-from .util.get_method_index_map import get_all_method_indices, get_index_for_method
+from .util.get_method_index_map import (
+    GET_METHOD_INDEX_MAP,
+    get_all_method_indices,
+    get_index_for_method,
+)
 from .util.get_start_end_year_month import get_start_end_year_month
 from .util.helper_functions import (
     extract_nhs_numbers,
@@ -378,6 +399,7 @@ from .util.post_processing_build_methods import (
     build_merged_bloods,
     build_merged_epr_mct_annot_df,
     build_merged_epr_mct_doc_df,
+    filter_annot_dataframe,
     get_annots_joined_to_docs,
     join_docs_to_annots,
     merge_appointments_csv,
@@ -420,13 +442,28 @@ from .util.testing_helpers import read_test_data
 
 # Define the public API of the package
 __all__ = [
+    "APPOINTMENT_FIELDS",
+    "BED_FIELDS",
+    "BLOODS_FIELDS",
+    "BMI_FIELDS",
     "BatchConfig",
+    "COLUMNS_TO_DROP",
+    "CORE_O2_FIELDS",
+    "CORE_RESUS_FIELDS",
     "CogStack",
     "CsvProfiler",
+    "DEMOGRAPHICS_FIELDS",
+    "DIAGNOSTICS_FIELDS",
+    "DRUG_FIELDS",
     "DeIdAnonymizer",
     "EthnicityAbstractor",
+    "GET_METHOD_DEFAULT_FIELDS_MAP",
+    "GET_METHOD_INDEX_MAP",
+    "HOSP_SITE_FIELDS",
     "MockConfig",
     "PathsClass",
+    "SEARCH_TERM",
+    "SMOKING_FIELDS",
     "TestBuildIpwDataframe",
     "TestCalculateInterval",
     "TestConfigClass",
@@ -442,6 +479,7 @@ __all__ = [
     "TestIndividualPatientWindow",
     "TestMultiAnnotsToDf",
     "TestProcessCsvFiles",
+    "VTE_FIELDS",
     "add_offset_column",
     "aggregate_dataframe_mean",
     "analyze_client_codes",
