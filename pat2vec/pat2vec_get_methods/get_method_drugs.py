@@ -50,6 +50,7 @@ def search_drug_orders(
     end_month: str = "12",
     end_day: str = "12",
     additional_custom_search_string: Optional[str] = None,
+    index_name: str = "order",
 ) -> pd.DataFrame:
     """Searches for drug/medication orders within a date range.
 
@@ -72,6 +73,8 @@ def search_drug_orders(
         end_day (str): End day for the search. Defaults to '12'.
         additional_custom_search_string (Optional[str]): An additional string to
             append to the search query. Defaults to None.
+        index_name (str): The name of the Elasticsearch index to search.
+            Defaults to "order".
 
     Returns:
         pd.DataFrame: A DataFrame containing the raw drug order data.
@@ -108,7 +111,7 @@ def search_drug_orders(
         fields_to_use = fields_override
 
     return cohort_searcher_with_terms_and_search(
-        index_name="order",
+        index_name=index_name,
         fields_list=fields_to_use,
         term_name="client_idcode.keyword",
         entered_list=client_id_codes,

@@ -33,12 +33,15 @@ def search_hospital_site(
     end_day="12",
     additional_custom_search_string=None,
     client_idcode_term_name="client_idcode.keyword",
+    index_name: str = "observations",
 ):
     """Search hospital site observations via cohort search API.
 
     Args:
         fields_override (Optional[List[str]]): A list of fields to override the
             default `HOSP_SITE_FIELDS`. Defaults to None.
+        index_name (str): The name of the Elasticsearch index to search.
+            Defaults to "observations".
     """
     if cohort_searcher_with_terms_and_search is None:
         raise ValueError("cohort_searcher_with_terms_and_search cannot be None.")
@@ -67,7 +70,7 @@ def search_hospital_site(
         fields_to_use = fields_override
 
     return cohort_searcher_with_terms_and_search(
-        index_name="observations",
+        index_name=index_name,
         fields_list=fields_to_use,
         term_name=client_idcode_term_name,
         entered_list=client_id_codes,

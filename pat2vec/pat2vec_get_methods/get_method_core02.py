@@ -29,6 +29,7 @@ def search_core_o2_observations(
     end_day="12",
     search_term="CORE_SpO2",
     additional_custom_search_string=None,
+    index_name: str = "observations",
 ):
     """Searches for CORE_SpO2 observation data within a date range.
 
@@ -54,6 +55,8 @@ def search_core_o2_observations(
             Defaults to "CORE_SpO2".
         additional_custom_search_string (Optional[str]): An additional string to
             append to the search query. Defaults to None.
+        index_name (str): The name of the Elasticsearch index to search.
+            Defaults to "observations".
 
     Returns:
         pd.DataFrame: A DataFrame containing the raw CORE_SpO2 observation data.
@@ -97,7 +100,7 @@ def search_core_o2_observations(
         fields_to_use = fields_override
 
     return cohort_searcher_with_terms_and_search(
-        index_name="observations",
+        index_name=index_name,
         fields_list=fields_to_use,
         # Note: using default, can be made configurable
         term_name="client_idcode.keyword",

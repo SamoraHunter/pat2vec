@@ -30,6 +30,7 @@ def search_bed_data(
     end_day: Union[int, str] = 12,
     search_term="CORE_BedNumber3",
     additional_custom_search_string=None,
+    index_name: str = "observations",
 ):
     """Searches for bed data for patients within a date range.
 
@@ -55,6 +56,8 @@ def search_bed_data(
         search_term (str): The search term for bed data. Defaults to "CORE_BedNumber3".
         additional_custom_search_string (Optional[str]): An additional string to
             append to the search query. Defaults to None.
+        index_name (str): The name of the Elasticsearch index to search.
+            Defaults to "observations".
 
     Returns:
         pd.DataFrame: A DataFrame containing the raw bed data.
@@ -90,7 +93,7 @@ def search_bed_data(
         fields_to_use = fields_override
 
     return cohort_searcher_with_terms_and_search(
-        index_name="observations",
+        index_name=index_name,
         fields_list=fields_to_use,
         term_name=client_idcode_name,
         entered_list=client_id_codes,

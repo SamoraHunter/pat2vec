@@ -30,6 +30,7 @@ def search_demographics(
     end_month: str = "12",
     end_day: str = "12",
     additional_custom_search_string: Optional[str] = None,
+    index_name: str = "epr_documents",
 ) -> pd.DataFrame:
     """Searches for demographics data for patients within a date range.
 
@@ -50,6 +51,8 @@ def search_demographics(
         end_day (str): End day for the search. Defaults to '12'.
         additional_custom_search_string (Optional[str]): An additional string to
             append to the search query. Defaults to None.
+        index_name (str): The name of the Elasticsearch index to search.
+            Defaults to "epr_documents".
 
     Returns:
         pd.DataFrame: A DataFrame containing the raw demographics data.
@@ -90,7 +93,7 @@ def search_demographics(
         fields_to_use = fields_override
 
     return cohort_searcher_with_terms_and_search(
-        index_name="epr_documents",
+        index_name=index_name,
         fields_list=fields_to_use,
         # Note: using default, can be made configurable
         term_name="client_idcode.keyword",

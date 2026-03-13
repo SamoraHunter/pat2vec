@@ -52,6 +52,7 @@ def search_appointments(
     end_month="12",
     end_day="12",
     additional_custom_search_string=None,
+    index_name: str = "pims_apps*",
 ):
     """Searches for appointment data for a specific patient within a date range.
 
@@ -74,6 +75,8 @@ def search_appointments(
         end_day (str): End day for the search. Defaults to '12'.
         additional_custom_search_string (Optional[str]): An additional string to
             append to the search query. Defaults to None.
+        index_name (str): The name of the Elasticsearch index to search.
+            Defaults to "pims_apps*".
 
     Returns:
         pd.DataFrame: A DataFrame containing the raw appointment data.
@@ -109,7 +112,7 @@ def search_appointments(
         fields_to_use = fields_override
 
     return cohort_searcher_with_terms_and_search(
-        index_name="pims_apps*",
+        index_name=index_name,
         fields_list=fields_to_use,
         term_name="HospitalID.keyword",
         entered_list=client_id_codes,

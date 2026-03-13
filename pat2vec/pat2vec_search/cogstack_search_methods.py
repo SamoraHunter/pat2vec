@@ -17,6 +17,7 @@ from pat2vec.util.get_dummy_data_cohort_searcher import (
     cohort_searcher_with_terms_and_search_dummy,
     generate_uuid_list,
 )
+from pat2vec.util.get_method_index_map import get_index_for_method
 
 import random
 import warnings
@@ -240,6 +241,26 @@ class CogStack(object):
             )
             return []
 
+    def get_available_indices(self) -> List[str]:
+        """Retrieves a list of all available index names from Elasticsearch.
+
+        Returns:
+            A sorted list of index names.
+        """
+        try:
+            # Use the cat API to get a list of indices
+            indices = self.elastic.cat.indices(format="json", h="index")
+
+            # Extract the index name from each dictionary in the list
+            index_names = [index["index"] for index in indices]
+
+            # Return a sorted list of unique index names
+            return sorted(list(set(index_names)))
+
+        except Exception as e:
+            logging.error(f"An error occurred while fetching indices: {e}")
+            return []
+
     def DataFrame(self, index: str) -> ed.DataFrame:
         """Returns an Eland DataFrame for the specified index.
 
@@ -252,6 +273,35 @@ class CogStack(object):
             An Eland DataFrame object.
         """
         return ed.DataFrame(es_client=self.elastic, es_index_pattern=index)
+
+
+def get_all_fields_for_method(
+    method_name: str, cs: Optional["CogStack"] = None
+) -> List[str]:
+    """Retrieves all available fields from the Elasticsearch index
+    associated with a given `get` method.
+
+    Args:
+        method_name: The name of the `get` method.
+        cs: An initialized CogStack client. If not provided, one will be
+            initialized.
+
+    Returns:
+        A list of all fields in the index, or an empty list if not found.
+    """
+    if cs is None:
+        cs = initialize_cogstack_client()
+
+    index_name = get_index_for_method(method_name)
+    if not index_name:
+        logging.warning(f"No index found for method '{method_name}'")
+        return []
+
+    if not cs:
+        logging.error("Could not initialize CogStack client.")
+        return []
+
+    return cs.get_index_fields(index_name)
 
 
 def list_chunker(entered_list: List[Any]) -> List[List[Any]]:

@@ -33,6 +33,7 @@ def search_vte(
     end_day: str = "12",
     additional_custom_search_string: Optional[str] = None,
     client_idcode_term_name: str = "client_idcode.keyword",
+    index_name: str = "observations",
 ) -> pd.DataFrame:
     """Searches for CORE_VTE_STATUS observations.
 
@@ -55,6 +56,8 @@ def search_vte(
             append to the search query. Defaults to None.
         client_idcode_term_name (str): The name of the client ID code field in
             the index. Defaults to "client_idcode.keyword".
+        index_name (str): The name of the Elasticsearch index to search.
+            Defaults to "observations".
 
     Returns:
         pd.DataFrame: A DataFrame containing the raw VTE status observation data.
@@ -89,7 +92,7 @@ def search_vte(
         fields_to_use = fields_to_use
 
     return cohort_searcher_with_terms_and_search(
-        index_name="observations",
+        index_name=index_name,
         fields_list=fields_to_use,
         term_name=client_idcode_term_name,
         entered_list=client_id_codes,

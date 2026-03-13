@@ -33,6 +33,7 @@ def search_bloods_data(
     end_month: Union[int, str] = 12,
     end_day: Union[int, str] = 12,
     additional_custom_search_string=None,
+    index_name: str = "basic_observations",
 ):
     """Searches for bloods data for patients within a date range.
 
@@ -58,6 +59,8 @@ def search_bloods_data(
         end_day (Union[int, str]): End day for the search. Defaults to 12.
         additional_custom_search_string (Optional[str]): An additional string to
             append to the search query. Defaults to None.
+        index_name (str): The name of the Elasticsearch index to search.
+            Defaults to "basic_observations".
 
     Returns:
         pd.DataFrame: A DataFrame containing the raw bloods data.
@@ -90,7 +93,7 @@ def search_bloods_data(
         fields_to_use = fields_override
 
     return cohort_searcher_with_terms_and_search(
-        index_name="basic_observations",
+        index_name=index_name,
         fields_list=fields_to_use,
         term_name=client_idcode_name,
         entered_list=client_id_codes,
