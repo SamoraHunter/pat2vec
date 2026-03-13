@@ -207,6 +207,39 @@ class CogStack(object):
             df = pd.DataFrame(temp_results)
         return df
 
+    def get_index_fields(self, index_name: str) -> List[str]:
+        """Retrieves a list of all unique field names for a given
+        Elasticsearch index or index pattern.
+
+        Args:
+            index_name: The name of the index or an index pattern (e.g., 'my-index-*').
+
+        Returns:
+            A sorted list of unique field names found across the matching indices.
+        """
+        try:
+            # Get the mapping for the given index or index pattern
+            mapping = self.elastic.indices.get_mapping(index=index_name)
+
+            all_fields = set()
+
+            # Iterate through each index returned in the mapping
+            for index_data in mapping.values():
+                # The properties dictionary contains the field mappings
+                properties = index_data.get("mappings", {}).get("properties", {})
+                all_fields.update(properties.keys())
+
+            return sorted(list(all_fields))
+
+        except elasticsearch.exceptions.NotFoundError:
+            logging.error(f"Index or pattern '{index_name}' not found.")
+            return []
+        except Exception as e:
+            logging.error(
+                f"An error occurred while fetching fields for index '{index_name}': {e}"
+            )
+            return []
+
     def DataFrame(self, index: str) -> ed.DataFrame:
         """Returns an Eland DataFrame for the specified index.
 
