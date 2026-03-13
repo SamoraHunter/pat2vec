@@ -1082,7 +1082,7 @@ def initialize_cogstack_client(config_obj=None):
 
     # If cs is already initialized and no new path is given, do nothing.
     if cs is not None and not credentials_path:
-        return
+        return cs
 
     creds = {}
     if credentials_path:
