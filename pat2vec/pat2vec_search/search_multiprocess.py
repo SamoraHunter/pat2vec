@@ -78,12 +78,14 @@ def cohort_searcher_with_terms_and_search_multi(
         writer.writerow(fields_list)
 
     n = multiprocessing.cpu_count()
-    l = entered_list
+    list_to_split = entered_list
 
     # Split the list of terms into chunks for each process
-    pat_list_master = [l[i : i + n] for i in range(0, len(l), n)]
+    pat_list_master = [
+        list_to_split[i : i + n] for i in range(0, len(list_to_split), n)
+    ]
     print(
-        f"Splitting {len(l)} items into {len(pat_list_master)} chunks for parallel processing."
+        f"Splitting {len(list_to_split)} items into {len(pat_list_master)} chunks for parallel processing."
     )
 
     # Prepare arguments for each process

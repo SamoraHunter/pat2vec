@@ -408,7 +408,7 @@ def main_batch(
                         t,
                         config_obj,
                     )
-                except:
+                except Exception:
                     update_pbar(
                         p_bar_entry,
                         start_time,

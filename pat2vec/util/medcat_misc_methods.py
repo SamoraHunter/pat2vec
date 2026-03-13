@@ -441,7 +441,7 @@ def parse_medcat_trainer_project_json(json_path: str) -> pd.DataFrame:
             except json.JSONDecodeError:
                 try:
                     return literal_eval(x)
-                except:
+                except Exception:
                     return []
         elif isinstance(x, list):
             return x

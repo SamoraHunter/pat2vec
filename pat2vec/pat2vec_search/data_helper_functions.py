@@ -76,7 +76,7 @@ def append_age_at_record_series(series: pd.Series) -> pd.Series:
 
         try:
             updateTime = row["updatetime"].date()
-        except:
+        except Exception:
             updateTime = row["updatetime"].iloc[0].date()
 
         today = updateTime

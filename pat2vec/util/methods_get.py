@@ -621,7 +621,7 @@ def filter_stripped_list(
                         >= n_pat_lines
                     ):
                         container_list.append(stripped_list[i])
-                except:
+                except Exception:
                     pass
         else:
             if config_obj.verbosity > 0:
@@ -777,7 +777,7 @@ def add_offset_column(
             result = pd.to_datetime(str_value, infer_datetime_format=True)
             if pd.notna(result):
                 return result
-        except:
+        except Exception:
             pass
 
         # Method 2: Try common formats
@@ -786,14 +786,14 @@ def add_offset_column(
                 result = pd.to_datetime(str_value, format=fmt)
                 if pd.notna(result):
                     return result
-            except:
+            except Exception:
                 continue
 
         # Method 3: Try dateutil parser (fuzzy parsing)
         try:
             result = parse(str_value, fuzzy=True)
             return pd.to_datetime(result)
-        except:
+        except Exception:
             pass
 
         # Method 4: Try pandas to_datetime with errors='coerce'
@@ -801,7 +801,7 @@ def add_offset_column(
             result = pd.to_datetime(str_value, errors="coerce")
             if pd.notna(result):
                 return result
-        except:
+        except Exception:
             pass
 
         # If all methods fail, return NaT

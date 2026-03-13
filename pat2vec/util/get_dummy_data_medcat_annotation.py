@@ -2,11 +2,11 @@ import os
 import pickle
 import random
 from typing import Any, Dict, List
+import numpy as np
 
 # from pat2vec.util.get_dummy_data_cohort_searcher import random_state
 
 random_state = 42
-import numpy as np
 
 # Set random seed
 np.random.seed(random_state)

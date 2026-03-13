@@ -83,16 +83,6 @@ from .pat2vec_get_methods.get_method_vte_status import (
     prepare_vte_data,
     search_vte,
 )
-from .util.get_method_index_map import (
-    GET_METHOD_INDEX_MAP,
-    get_all_method_indices,
-    get_index_for_method,
-)
-from .util.get_method_default_fields_map import (
-    GET_METHOD_DEFAULT_FIELDS_MAP,
-    get_all_method_default_fields,
-    get_default_fields_for_method,
-)
 from .pat2vec_main_methods.main_batch import main_batch
 from .pat2vec_pat_list.get_patient_treatment_list import (
     analyze_client_codes,
@@ -106,10 +96,10 @@ from .pat2vec_search.cogstack_search_methods import (
     cohort_searcher_no_terms,
     cohort_searcher_no_terms_fuzzy,
     cohort_searcher_with_terms_and_search,
-    get_all_fields_for_method,
     cohort_searcher_with_terms_no_search,
     create_credentials_file,
     dataframe_generator,
+    get_all_fields_for_method,
     initialize_cogstack_client,
     iterative_multi_term_cohort_searcher_no_terms_fuzzy,
     iterative_multi_term_cohort_searcher_no_terms_fuzzy_mct,
@@ -274,6 +264,11 @@ from .util.get_dummy_data_medcat_annotation import (
     dummy_medcat_annotation_generator,
     random_sample,
 )
+from .util.get_method_default_fields_map import (
+    get_all_method_default_fields,
+    get_default_fields_for_method,
+)
+from .util.get_method_index_map import get_all_method_indices, get_index_for_method
 from .util.get_start_end_year_month import get_start_end_year_month
 from .util.helper_functions import (
     extract_nhs_numbers,
@@ -383,7 +378,6 @@ from .util.post_processing_build_methods import (
     build_merged_bloods,
     build_merged_epr_mct_annot_df,
     build_merged_epr_mct_doc_df,
-    filter_annot_dataframe,
     get_annots_joined_to_docs,
     join_docs_to_annots,
     merge_appointments_csv,
@@ -428,8 +422,6 @@ from .util.testing_helpers import read_test_data
 __all__ = [
     "BatchConfig",
     "CogStack",
-    "GET_METHOD_DEFAULT_FIELDS_MAP",
-    "GET_METHOD_INDEX_MAP",
     "CsvProfiler",
     "DeIdAnonymizer",
     "EthnicityAbstractor",
@@ -573,10 +565,10 @@ __all__ = [
     "generate_pie_charts",
     "generate_uuid",
     "generate_uuid_list",
-    "get_all_patients_list",
+    "get_all_fields_for_method",
     "get_all_method_default_fields",
     "get_all_method_indices",
-    "get_all_fields_for_method",
+    "get_all_patients_list",
     "get_all_target_annots",
     "get_annots_joined_to_docs",
     "get_appointments",
@@ -591,8 +583,8 @@ __all__ = [
     "get_current_pat_diagnostics",
     "get_current_pat_drugs",
     "get_current_pat_report_annotations",
-    "get_default_fields_for_method",
     "get_current_pat_textual_obs_annotations",
+    "get_default_fields_for_method",
     "get_demo",
     "get_demographics3",
     "get_demographics3_batch",

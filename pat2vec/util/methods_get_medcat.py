@@ -2,8 +2,12 @@ import os
 import sys
 import logging
 from typing import Any, Optional, Union
+from typing import TYPE_CHECKING
 
 from pat2vec.util.get_dummy_data_medcat_annotation import dummy_CAT
+
+if TYPE_CHECKING:
+    from medcat.cat import CAT
 
 logger = logging.getLogger(__name__)
 

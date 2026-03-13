@@ -13,6 +13,12 @@ from pat2vec.pat2vec_get_methods.get_method_core02 import CORE_O2_FIELDS
 from pat2vec.pat2vec_get_methods.get_method_core_resus import CORE_RESUS_FIELDS
 from transformers import pipeline
 import random
+from pat2vec.util.dummy_data_files.dummy_lists import (
+    blood_test_names,
+    diagnostic_names,
+    drug_names,
+    ethnicity_list,
+)
 import numpy as np
 import calendar
 
@@ -25,13 +31,6 @@ np.random.seed(random_state)
 random.seed(random_state)
 
 faker = Faker()
-
-from pat2vec.util.dummy_data_files.dummy_lists import (
-    blood_test_names,
-    diagnostic_names,
-    drug_names,
-    ethnicity_list,
-)
 
 
 def maybe_nan(value: Any, probability: float = 0.2) -> Union[Any, float]:
@@ -1025,7 +1024,6 @@ def generate_basic_observations_textual_obs_data(
             "_index": [None for i in range(num_rows)],
             "_score": [None for i in range(num_rows)],
             "basicobs_guid": [f"obs_{i}" for i in range(num_rows)],
-            "clientvisit_serviceguid": ["{np.nan}" for i in range(num_rows)],
             "updatetime": [
                 create_random_date_from_globals(
                     global_start_year,
