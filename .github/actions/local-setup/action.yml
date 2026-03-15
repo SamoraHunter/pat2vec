@@ -6,21 +6,29 @@ inputs:
   gitea-token:
     description: 'Token for authenticating with Gitea'
     required: false
+outputs:
+  on-corp-network:
+    description: "True if the runner appears to be on the corporate network"
+    value: ${{ steps.proxy-config.outputs.on-corp-network }}
 
 runs:
   using: "composite"
   steps:
     - name: Configure Proxy for Corporate Network
+      id: proxy-config
       shell: bash
       run: |
+        ON_CORP=false
         if ping -c 1 dh-cap02 &> /dev/null; then
           echo "✅ Proxy server 'dh-cap02' is available. Configuring environment variables."
           echo "http_proxy=http://dh-cap02:8008" >> $GITHUB_ENV
           echo "https_proxy=http://dh-cap02:8008" >> $GITHUB_ENV
+          ON_CORP=true
 
           NO_PROXY_LIST="localhost,127.0.0.1,kch-cap.kingsch.nhs.uk,github.com,*.blob.core.windows.net,${ACTIONS_CACHE_URL#http://}"
           echo "NO_PROXY=$NO_PROXY_LIST" >> $GITHUB_ENV
         fi
+        echo "on-corp-network=${ON_CORP}" >> $GITHUB_OUTPUT
 
     - name: Install System Dependencies
       shell: bash
