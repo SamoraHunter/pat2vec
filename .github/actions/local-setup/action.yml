@@ -80,8 +80,8 @@ runs:
             echo "✅ Found valid local 'python.tar.gz'. Using it."
         else
             echo "ℹ️ Local Python archive not found in repository root. Proceeding with download from Gitea..."
-            echo "📥 Downloading Python from Gitea (attempting resume if interrupted)..."
-            curl -L -C - --fail --show-error --retry 3 --retry-delay 5 \
+            echo "📥 Downloading Python from Gitea..."
+            curl -L --fail --show-error --retry 3 --retry-delay 5 \
                 -H "Authorization: token ${GITEA_TOKEN}" \
                 --noproxy "kch-cap.kingsch.nhs.uk" \
                 --write-out "\nHTTP status: %{http_code}\nDownloaded bytes: %{size_download}\nEffective URL: %{url_effective}\n" \

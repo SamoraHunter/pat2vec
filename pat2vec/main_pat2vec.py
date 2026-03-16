@@ -16,6 +16,7 @@ from pat2vec.pat2vec_search.cogstack_search_methods import (
     cohort_searcher_with_terms_and_search,
     initialize_cogstack_client,
 )
+from pat2vec.pat2vec_get_methods.get_method_covid import SEARCH_TERM_ES
 from pat2vec.patvec_get_batch_methods.get_prefetch_batches import prefetch_batches
 from pat2vec.patvec_get_batch_methods.main import (
     get_pat_batch_appointments,
@@ -415,6 +416,13 @@ class main:
                 "var": "batch_resus",
                 "func": get_pat_batch_obs,
                 "args": {"search_term": "CORE_RESUS_STATUS"},
+                "empty": empty_return,
+            },
+            {
+                "option": "covid",
+                "var": "batch_covid",
+                "func": get_pat_batch_obs,
+                "args": {"search_term": SEARCH_TERM_ES},
                 "empty": empty_return,
             },
             {

@@ -131,6 +131,7 @@ main_options_dict = {
     'negated_presence_annotations': False,  # Negated presence annotations
     'appointments': False,  # Appointments information
     'annotations_reports': False,  # Reports information
+    'covid': False,         # COVID-19 test results
     'textual_obs': False,   # Textual observations
 }
 

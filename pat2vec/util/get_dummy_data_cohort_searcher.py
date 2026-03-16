@@ -1164,6 +1164,21 @@ def cohort_searcher_with_terms_and_search_dummy(
 
     elif index_name == "basic_observations":
         # Nested checks for 'basic_observations' index
+        if r"SARS CoV-2 \(COVID-19\) RNA" in search_string:
+            if verbose:
+                logger.debug("Generating data for 'covid'")
+            num_rows = random.randint(0, 5)
+            df = generate_covid_observations_data(
+                num_rows,
+                entered_list,
+                global_start_year,
+                global_start_month,
+                global_end_year,
+                global_end_month,
+                fields_list=fields_list,
+            )
+            return df
+
         if "basicobs_itemname_analysed:report" in search_string:
             if verbose:
                 logger.debug("Generating text data for 'basic_observations, reports'")
@@ -1696,6 +1711,73 @@ def generate_uuid_list(n: int, prefix: str, length: int = 7) -> List[str]:
     """
     uuid_list = [generate_uuid(prefix, length) for _ in range(n)]
     return uuid_list
+
+
+def generate_covid_observations_data(
+    num_rows: int,
+    entered_list: List[str],
+    global_start_year: int,
+    global_start_month: int,
+    global_end_year: int,
+    global_end_month: int,
+    fields_list: List[str],
+) -> pd.DataFrame:
+    """Generates dummy data for COVID-19 test observations.
+
+    Args:
+        num_rows: Number of rows to generate for each client.
+        entered_list: List of client IDs to generate data for.
+        global_start_year: Start year for the random date range.
+        global_start_month: Start month for the random date range.
+        global_end_year: End year for the random date range.
+        global_end_month: End month for the random date range.
+        fields_list: List of columns to include in the DataFrame.
+
+    Returns:
+        A pandas DataFrame with generated dummy COVID-19 observation data.
+    """
+    from pat2vec.pat2vec_get_methods.get_method_covid import (
+        COVID_FIELDS,
+        SEARCH_TERM_PLAIN,
+    )
+
+    if fields_list is None:
+        fields_list = COVID_FIELDS
+
+    df_holder_list = []
+
+    for client_id_code in entered_list:
+        data = {
+            "observation_guid": [faker.uuid4() for _ in range(num_rows)],
+            "client_idcode": [client_id_code for _ in range(num_rows)],
+            "basicobs_itemname_analysed": [SEARCH_TERM_PLAIN for _ in range(num_rows)],
+            "basicobs_value_analysed": [
+                random.choice(["Positive", "Negative"]) for _ in range(num_rows)
+            ],
+            "basicobs_entered": [
+                create_random_date_from_globals(
+                    global_start_year,
+                    global_start_month,
+                    global_end_year,
+                    global_end_month,
+                )
+                for _ in range(num_rows)
+            ],
+            "clientvisit_visitidcode": [faker.uuid4() for _ in range(num_rows)],
+        }
+        df_holder_list.append(pd.DataFrame(data))
+
+    if not df_holder_list:
+        return pd.DataFrame(columns=fields_list)
+
+    final_df = pd.concat(df_holder_list, ignore_index=True)
+
+    # Ensure all requested fields are present, even if empty
+    for col in fields_list:
+        if col not in final_df.columns:
+            final_df[col] = np.nan
+
+    return final_df[fields_list]
 
 
 def generate_hospital_site_data(

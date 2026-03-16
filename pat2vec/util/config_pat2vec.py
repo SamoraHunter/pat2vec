@@ -493,6 +493,7 @@ class config_class:
                 "negated_presence_annotations": False,
                 "appointments": False,
                 "annotations_reports": False,
+                "covid": False,
                 "textual_obs": False,
             }
             if self.verbosity >= 1:
@@ -1051,6 +1052,7 @@ class config_class:
             "negated_presence_annotations": False,
             "appointments": True,
             "annotations_reports": False,
+            "covid": True,
             "textual_obs": True,
         }
 
