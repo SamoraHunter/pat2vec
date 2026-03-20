@@ -5,7 +5,10 @@ import logging
 import pandas as pd
 from tqdm import tqdm
 import shutil
-from pat2vec.util.post_processing import remove_file_from_paths
+from pat2vec.util.post_processing import (
+    remove_file_from_paths,
+    retrieve_pat_annots_mct_epr,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -15,9 +18,9 @@ def retrieve_pat_annotations(
 ) -> pd.DataFrame:
     """Concatenates EPR and MCT annotation data for a single patient.
 
-    This function reads a patient's annotation data from two separate CSV
-    files—one for EPR documents and one for MCT documents. It then standardizes
-    the timestamp column and concatenates them into a single DataFrame.
+    This function retrieves a patient's annotation data from the configured
+    storage backend (Database or File). It standardizes the timestamp column
+    and concatenates data from EPR and MCT sources into a single DataFrame.
 
     Args:
         current_pat_client_idcode: The client ID code for the patient.
@@ -28,30 +31,12 @@ def retrieve_pat_annotations(
         A concatenated DataFrame containing annotations from both EPR and MCT
         sources, with a unified 'updatetime' column.
     """
-    # Specify the file paths
-    current_pat_docs_epr = os.path.join(
-        config_obj.pre_document_annotation_batch_path,
-        current_pat_client_idcode + ".csv",
+    # Use the existing function that handles both File and DB backends
+    # We only want EPR and MCT, so we can ignore other columns if needed,
+    # but retrieving everything is safer for backward compatibility here.
+    return retrieve_pat_annots_mct_epr(
+        current_pat_client_idcode, config_obj, merge_columns=True
     )
-    current_pat_docs_mct = os.path.join(
-        config_obj.pre_document_annotation_batch_path_mct,
-        current_pat_client_idcode + ".csv",
-    )
-
-    # Read CSV files into dataframes
-    df_epr = pd.read_csv(current_pat_docs_epr)
-    df_mct = pd.read_csv(current_pat_docs_mct)
-
-    # Check if 'updatetime' column exists in df_mct, if not, create it and map values
-    if "updatetime" not in df_mct.columns:
-        df_mct["updatetime"] = df_mct["observationdocument_recordeddtm"].map(
-            lambda x: pd.to_datetime(x, errors="coerce")
-        )
-
-    # Concatenate dataframes
-    result_df = pd.concat([df_epr, df_mct], axis=0, ignore_index=True)
-
-    return result_df
 
 
 def copy_project_folders_with_substring_match(

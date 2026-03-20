@@ -56,13 +56,19 @@ def list_dir_wrapper(path: str, config_obj: Any = None) -> List[str]:
             sftp_client = ssh_client.open_sftp()
             sftp_obj = sftp_client
 
-        res = sftp_obj.listdir(path)
+        try:
+            res = sftp_obj.listdir(path)
+        except (FileNotFoundError, IOError):
+            res = []
+
         if not share_sftp and sftp_client:
             sftp_client.close()
 
         return res
     else:
-        return os.listdir(path)
+        if os.path.exists(path):
+            return os.listdir(path)
+        return []
 
 
 def convert_timestamp_to_tuple(timestamp: str) -> Tuple[int, int]:
@@ -144,12 +150,17 @@ def enum_exact_target_date_vector(
 def dump_results(file_data: Any, path: str, config_obj: Any = None) -> None:
     """Saves data to a file using pickle, either locally or remotely via SFTP.
 
+    If `storage_backend` is set to 'database' in `config_obj`, this function returns without saving to file.
+
     Args:
         file_data: The Python object to be pickled.
         path: The destination file path.
         config_obj: The configuration object containing SFTP credentials and
             settings if `remote_dump` is True.
     """
+    if config_obj and getattr(config_obj, "storage_backend", "file") == "database":
+        return
+
     share_sftp = config_obj.share_sftp
     hostname = config_obj.hostname
     username = config_obj.username
@@ -313,12 +324,17 @@ def write_csv_wrapper(
 ) -> None:
     """Writes CSV data to a file either locally or remotely.
 
+    If `storage_backend` is set to 'database' in `config_obj`, this function returns without writing.
+
     Args:
         path: The path to the destination CSV file.
         csv_file_data: The DataFrame to write.
         config_obj: An object containing configuration settings, including
             'remote_dump'.
     """
+    if config_obj and getattr(config_obj, "storage_backend", "file") == "database":
+        return
+
     remote_dump = config_obj.remote_dump
 
     if not remote_dump:
@@ -397,10 +413,15 @@ def read_csv_wrapper(path: str, config_obj: Any = None) -> pd.DataFrame:
 def create_local_folders(config_obj: Any = None) -> None:
     """Creates local project directories for storing intermediate files.
 
+    If `storage_backend` is set to 'database' in `config_obj`, this function returns without creating folders.
+
     Args:
         config_obj: The configuration object containing `root_path` and
             `proj_name`.
     """
+    if config_obj and config_obj.storage_backend == "database":
+        return
+
     project_name = config_obj.proj_name
 
     root_path = config_obj.root_path
@@ -413,9 +434,14 @@ def create_local_folders(config_obj: Any = None) -> None:
     )
     Path(pat_doc_annot_vec_folder_path).mkdir(parents=True, exist_ok=True)
 
+    merged_batches_folder_path = root_path + "/" + project_name + "/merged_batches/"
+    Path(merged_batches_folder_path).mkdir(parents=True, exist_ok=True)
+
 
 def create_remote_folders(config_obj: Any = None) -> None:
     """Creates remote project directories for storing intermediate files via SFTP.
+
+    If `storage_backend` is set to 'database' in `config_obj`, this function returns without creating folders.
 
     Args:
         config_obj: An object containing configuration details like `root_path`,
@@ -429,6 +455,9 @@ def create_remote_folders(config_obj: Any = None) -> None:
 
     if config_obj is None:
         raise ValueError("Config object cannot be None.")
+
+    if config_obj.storage_backend == "database":
+        return
 
     hostname = config_obj.hostname
     username = config_obj.username
@@ -448,6 +477,7 @@ def create_remote_folders(config_obj: Any = None) -> None:
         pat_doc_annot_vec_folder_path = (
             root_path + "/" + project_name + "/pat_docs_annot_vecs/"
         )
+        merged_batches_folder_path = root_path + "/" + project_name + "/merged_batches/"
 
         try:
             sftp_obj.stat(pat_doc_folder_path)
@@ -458,6 +488,11 @@ def create_remote_folders(config_obj: Any = None) -> None:
             sftp_obj.stat(pat_doc_annot_vec_folder_path)
         except FileNotFoundError:
             sftp_obj.mkdir(pat_doc_annot_vec_folder_path)
+
+        try:
+            sftp_obj.stat(merged_batches_folder_path)
+        except FileNotFoundError:
+            sftp_obj.mkdir(merged_batches_folder_path)
 
     finally:
         if not share_sftp and sftp_client:
@@ -656,10 +691,15 @@ def filter_stripped_list(
 def create_folders(all_patient_list: List[str], config_obj: Any = None) -> None:
     """Creates folders for each patient in the specified paths.
 
+    If `storage_backend` is set to 'database' in `config_obj`, this function returns without creating folders.
+
     Args:
         all_patient_list: List of patient IDs.
         config_obj: Configuration object containing paths and verbosity level.
     """
+    if config_obj and config_obj.storage_backend == "database":
+        return
+
     pre_annotation_path = config_obj.pre_annotation_path
     pre_annotation_path_mrc = config_obj.pre_annotation_path_mrc
     current_pat_lines_path = config_obj.current_pat_lines_path
@@ -681,10 +721,15 @@ def create_folders(all_patient_list: List[str], config_obj: Any = None) -> None:
 def create_folders_for_pat(patient_id: str, config_obj: Any = None) -> None:
     """Creates folders for a single patient in the specified paths.
 
+    If `storage_backend` is set to 'database' in `config_obj`, this function returns without creating folders.
+
     Args:
         patient_id: The patient's ID.
         config_obj: Configuration object containing paths and verbosity level.
     """
+    if config_obj and config_obj.storage_backend == "database":
+        return
+
     pre_annotation_path = config_obj.pre_annotation_path
     pre_annotation_path_mrc = config_obj.pre_annotation_path_mrc
     current_pat_lines_path = config_obj.current_pat_lines_path
@@ -851,6 +896,9 @@ def add_offset_column(
 
     # Apply the offset function to create the new column
     df[offset_column_name] = converted_column.apply(apply_offset)
+
+    # Update the start column with the successfully converted values
+    df[start_column_name] = converted_column
 
     # Count successful offset applications
     successful_offsets = df[offset_column_name].notna().sum()

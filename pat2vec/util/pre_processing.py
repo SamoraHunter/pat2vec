@@ -76,8 +76,12 @@ def get_treatment_docs_by_iterative_multi_term_cohort_searcher_no_terms_fuzzy(
             f"pat2vec_obj.treatment_doc_filename: {pat2vec_obj.treatment_doc_filename}"
         )
 
-    # output_path = os.join(pat2vec_obj.proj_name, pat2vec_obj.treatment_doc_filename)
-    output_path = os.path.join(pat2vec_obj.treatment_doc_filename)
+    if pat2vec_obj.config_obj and hasattr(pat2vec_obj.config_obj, "root_path"):
+        output_path = os.path.join(
+            pat2vec_obj.config_obj.root_path, pat2vec_obj.treatment_doc_filename
+        )
+    else:
+        output_path = pat2vec_obj.treatment_doc_filename
 
     # create function that takes a list of terms, runs iterative_multi_term_cohort_searcher_no_terms_fuzzy and returns terms
 
@@ -190,7 +194,7 @@ def get_treatment_docs_by_iterative_multi_term_cohort_searcher_no_terms_fuzzy(
         output_directory = os.path.dirname(output_path)
         # Check if the directory exists, if not, create it
         try:
-            if not os.path.exists(output_directory):
+            if output_directory and not os.path.exists(output_directory):
                 os.makedirs(output_directory)
         except Exception as e:
             logger.error(e)
