@@ -171,6 +171,14 @@ def get_covid(
         get_start_end_year_month(target_date_range, config_obj=config_obj)
     )
 
+    if pat_batch.empty:
+        return pd.DataFrame(
+            {
+                "client_idcode": [current_pat_client_id_code],
+                "covid_positive": 0 if config_obj.negate_biochem else np.nan,
+            }
+        )
+
     if batch_mode:
         raw_data = filter_dataframe_by_timestamp(
             pat_batch,

@@ -308,6 +308,9 @@ def get_current_pat_diagnostics(
         get_start_end_year_month(target_date_range, config_obj=config_obj)
     )
 
+    if pat_batch.empty:
+        return pd.DataFrame({"client_idcode": [current_pat_client_id_code]})
+
     # Get diagnostic data
     if batch_mode:
         diagnostics = filter_dataframe_by_timestamp(

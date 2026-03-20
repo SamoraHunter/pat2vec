@@ -163,6 +163,9 @@ def get_appointments(
 
     appointments_time_field = config_obj.appointments_time_field
 
+    if pat_batch.empty:
+        return pd.DataFrame({"client_idcode": [current_pat_client_id_code]})
+
     if batch_mode:
         current_pat_raw = filter_dataframe_by_timestamp(
             pat_batch,

@@ -202,6 +202,9 @@ def get_core_02(
 
     search_term = "CORE_SpO2"
 
+    if pat_batch.empty:
+        return pd.DataFrame({"client_idcode": [current_pat_client_id_code]})
+
     if batch_mode:
         current_pat_raw = filter_dataframe_by_timestamp(
             pat_batch,

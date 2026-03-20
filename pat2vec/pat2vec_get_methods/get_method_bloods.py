@@ -139,6 +139,9 @@ def get_current_pat_bloods(
 
     bloods_time_field = config_obj.bloods_time_field
 
+    if pat_batch.empty:
+        return pd.DataFrame()
+
     if batch_mode:
         current_pat_bloods = filter_dataframe_by_timestamp(
             pat_batch,

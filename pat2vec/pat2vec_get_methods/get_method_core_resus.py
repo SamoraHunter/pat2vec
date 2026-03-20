@@ -190,6 +190,9 @@ def get_core_resus(
         get_start_end_year_month(target_date_range, config_obj=config_obj)
     )
 
+    if pat_batch.empty:
+        return pd.DataFrame({"client_idcode": [current_pat_client_id_code]})
+
     if batch_mode:
         current_pat_raw = filter_dataframe_by_timestamp(
             pat_batch,

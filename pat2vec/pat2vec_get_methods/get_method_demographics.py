@@ -282,6 +282,23 @@ def get_demographics3_batch(
     """
     batch_mode = config_obj.batch_mode
 
+    if pat_batch.empty:
+        demo = pd.DataFrame(data=None, columns=None)
+        demo["client_idcode"] = patlist
+        # Define the columns to be set to NaN
+        columns_to_set_nan = [
+            "client_firstname",
+            "client_lastname",
+            "client_dob",
+            "client_gendercode",
+            "client_racecode",
+            "client_deceaseddtm",
+            "updatetime",
+        ]
+        for column in columns_to_set_nan:
+            demo[column] = np.nan
+        return demo.head(1)
+
     # patlist = config_obj.patlist #is present?
 
     start_year, start_month, end_year, end_month, start_day, end_day = (
