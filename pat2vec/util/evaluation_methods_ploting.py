@@ -8,6 +8,7 @@ def generate_pie_charts(
     all_batch_annots: pd.DataFrame,
     save_plots: bool = True,
     types: Optional[List[str]] = None,
+    output_folder: str = "plot_outputs_folder_piechart",
 ) -> None:
     """Generates and saves pie charts of annotation distributions for each client.
 
@@ -24,12 +25,11 @@ def generate_pie_charts(
             like 'client_idcode', 'pretty_name', and 'types'.
         save_plots: If True, saves the charts as PNG files in a local
             'plot_outputs_folder_piechart' directory.
+        output_folder: Directory to save plots in. Defaults to 'plot_outputs_folder_piechart'.
         types: A list of annotation types (e.g., "['disorder']") to generate
             separate pie charts for. Defaults to a predefined list of common types.
     """
-
     # Create a folder for saving the plots
-    output_folder = "plot_outputs_folder_piechart"
     os.makedirs(output_folder, exist_ok=True)
 
     # Assuming all_batch_annots is your DataFrame

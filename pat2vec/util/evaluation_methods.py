@@ -86,6 +86,7 @@ class CsvProfiler:
         prefix: Optional[str] = None,
         cols: Optional[List[str]] = None,
         icd10_opc4s: bool = False,
+        output_dir: str = "profile_reports",
     ) -> None:
         """Generates profiling reports for CSV files in a directory.
 
@@ -101,6 +102,7 @@ class CsvProfiler:
             icd10_opc4s: If True, filters the DataFrame to only include rows
                 where the 'targetId' column is not empty before generating
                 the report. Defaults to False.
+            output_dir: Directory where reports will be saved. Defaults to 'profile_reports'.
         """
         from ydata_profiling import ProfileReport
 
@@ -131,8 +133,7 @@ class CsvProfiler:
         cols_to_use = cols or default_cols
 
         # Create the output directory for profile reports if it doesn't already exist
-        profile_reports_dir = "profile_reports"
-        os.makedirs(profile_reports_dir, exist_ok=True)
+        os.makedirs(output_dir, exist_ok=True)
 
         for csv_file in tqdm(
             os.listdir(epr_batchs_fp), desc="Generating Profile Reports"
@@ -181,7 +182,7 @@ class CsvProfiler:
                 report_name = (
                     f"{report_prefix}{os.path.splitext(csv_file)[0]}_profile.html"
                 )
-                report_path = os.path.join(profile_reports_dir, report_name)
+                report_path = os.path.join(output_dir, report_name)
                 profile.to_file(report_path)
 
                 logger.info(
