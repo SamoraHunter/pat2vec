@@ -1,6 +1,13 @@
 import pandas as pd
-from typing import Any, Dict, List, Optional
-from .credentials import username, password, host_name, port, scheme
+from typing import Any, Dict, List, Optional, Tuple, Union
+
+try:
+    from .credentials import username, password, host_name, port, scheme, api_key
+except ImportError:
+    from .credentials import username, password, host_name, port, scheme
+
+    api_key = None
+
 from elasticsearch import Elasticsearch
 from tqdm import tqdm
 from elasticsearch.helpers import BulkIndexError
@@ -41,11 +48,18 @@ def ingest_data_to_elasticsearch(
     }
 
     # Initialize Elasticsearch client
-    es = Elasticsearch(
-        [{"host": host_name, "port": port, "scheme": scheme}],
-        verify_certs=False,
-        http_auth=(username, password),
-    )
+    if api_key:
+        es = Elasticsearch(
+            [{"host": host_name, "port": int(port), "scheme": scheme}],
+            verify_certs=False,
+            api_key=api_key,
+        )
+    else:
+        es = Elasticsearch(
+            [{"host": host_name, "port": int(port), "scheme": scheme}],
+            verify_certs=False,
+            basic_auth=(username, password),
+        )
 
     # Check connection
     try:
@@ -282,3 +296,29 @@ def get_guess_datetime_column(
                 highest_column = column
 
     return highest_column
+
+
+def check_patients_existence(
+    patient_ids: List[str],
+    index_name: Union[str, List[Tuple[str, str]]] = "epr_documents",
+    id_field: str = "client_idcode.keyword",
+    config_obj: Optional[Any] = None,
+) -> List[str]:
+    """Checks which patient IDs exist in Elasticsearch using terms aggregation.
+    Supports checking multiple indices in a fallback manner.
+
+    Args:
+        patient_ids: List of patient IDs to check.
+        index_name: The Elasticsearch index to search against. Can be a string
+            (single index) or a list of tuples [(index_name, id_field), ...].
+        id_field: The field in the index containing the patient ID.
+        config_obj: Configuration object containing credentials path.
+
+    Returns:
+        A list of patient IDs that were found in the index.
+    """
+    from pat2vec.pat2vec_search.cogstack_search_methods import (
+        check_patients_existence as real_check,
+    )
+
+    return real_check(patient_ids, index_name, id_field, config_obj)

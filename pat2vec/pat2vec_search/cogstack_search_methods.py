@@ -9,7 +9,7 @@ import elasticsearch
 import elasticsearch.helpers
 import pandas as pd
 import importlib.util
-from typing import Any, Dict, Generator, List, Optional, Tuple
+from typing import Any, Dict, Generator, List, Optional, Tuple, Union
 
 import getpass
 
@@ -805,7 +805,6 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy_mct(
     logging.info(
         "Running iterative_multi_term_cohort_searcher_no_terms_fuzzy_mct from %s-%s-%s to %s-%s-%s",
         start_day,
-        start_day,
         start_month,
         start_year,
         end_day,
@@ -1045,6 +1044,96 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy_mct(
     return docs  # Return the final docs DataFrame
 
 
+def check_patients_existence(
+    patient_ids: List[str],
+    index_name: Union[str, List[Tuple[str, str]]] = "epr_documents",
+    id_field: str = "client_idcode.keyword",
+    config_obj: Optional[Any] = None,
+) -> List[str]:
+    """Checks which patient IDs exist in Elasticsearch using terms aggregation.
+    Supports checking multiple indices in a fallback manner.
+
+    Args:
+        patient_ids: List of patient IDs to check.
+        index_name: The Elasticsearch index to search against. Can be a string
+            (single index) or a list of tuples [(index_name, id_field), ...].
+        id_field: The field in the index containing the patient ID.
+        config_obj: Configuration object containing credentials path.
+
+    Returns:
+        A list of patient IDs that were found in the index.
+    """
+    if not patient_ids:
+        return []
+
+    # Ensure global cs is initialized
+    global cs
+    # Always attempt to initialize/update cs if config is provided.
+    # The initialize_cogstack_client function has internal checks to avoid
+    # redundant re-initialization if the credentials haven't changed,
+    # but this ensures we don't get stuck with a dummy/default client.
+    cs = initialize_cogstack_client(config_obj)
+
+    if cs is None:
+        logging.error(
+            "Failed to initialize CogStack client for patient existence check."
+        )
+        return []
+
+    # Normalize input to list of configs
+    if isinstance(index_name, str):
+        indices_to_check = [(index_name, id_field)]
+    else:
+        # index_name is already a list of tuples
+        indices_to_check = index_name
+
+    existing_ids = set()
+    chunk_size = 1000  # Safe chunk size for terms query
+
+    # Remove duplicates from input to avoid redundant checks
+    unique_ids = list(set(patient_ids))
+    ids_to_check = set(unique_ids)
+
+    for idx_name, idx_field in indices_to_check:
+        if not ids_to_check:
+            break
+
+        current_batch_list = list(ids_to_check)
+        logging.info(
+            f"Checking existence for {len(current_batch_list)} patients in index '{idx_name}' using field '{idx_field}'..."
+        )
+
+        for i in range(0, len(current_batch_list), chunk_size):
+            chunk = current_batch_list[i : i + chunk_size]
+            body = {
+                "query": {"terms": {idx_field: chunk}},
+                "size": 0,
+                "aggs": {
+                    "existing_ids": {
+                        "terms": {"field": idx_field, "size": len(chunk) + 50}
+                    }
+                },
+            }
+            try:
+                res = cs.elastic.search(index=idx_name, body=body)
+                buckets = (
+                    res.get("aggregations", {})
+                    .get("existing_ids", {})
+                    .get("buckets", [])
+                )
+                for bucket in buckets:
+                    found_id = bucket["key"]
+                    existing_ids.add(found_id)
+                    if found_id in ids_to_check:
+                        ids_to_check.remove(found_id)
+            except Exception as e:
+                logging.error(
+                    f"Error checking patient existence for chunk in {idx_name}: {e}"
+                )
+
+    return list(existing_ids)
+
+
 cs = None
 
 
@@ -1117,7 +1206,7 @@ def initialize_cogstack_client(config_obj=None):
             }
         except ImportError:
             logging.warning("No credentials file found. Attempting to create one.")
-            create_credentials_file()
+            # create_credentials_file()
             try:
                 from credentials import username, password, api_key, hosts
 
@@ -1129,14 +1218,9 @@ def initialize_cogstack_client(config_obj=None):
                 }
             except ImportError:
                 logging.warning(
-                    "Still no credentials file found. Using dummy credentials."
+                    "Still no credentials file found. CogStack client will not be initialized."
                 )
-                creds = {
-                    "username": "dummy_user",
-                    "password": "dummy_password",
-                    "api_key": "",
-                    "hosts": ["https://your-actual-elasticsearch-host:9200"],
-                }
+                return None
 
     logging.info("Imported cogstack_v8_lite from pat2vec.util .")
     logging.info(f"Username: {creds.get('username')}")

@@ -6,9 +6,18 @@ logger = logging.getLogger(__name__)
 
 
 class PathsClass:
-    """Manages the creation and organization of directory paths for the pipeline."""
+    """Manages the creation and organization of directory paths for the pipeline.
 
-    def __init__(self, root_path: str, suffix: str, output_folder: str) -> None:
+    Attributes:
+        root_path (str): The provided root directory path.
+        suffix (str): The provided suffix for directory names.
+        all_paths (List[str]): A list of all generated absolute directory paths.
+        output_folder_path (str): The absolute path to the main output directory.
+    """
+
+    def __init__(
+        self, root_path: str, suffix: str, output_folder: str, create_dirs: bool = True
+    ) -> None:
         """Initializes the PathsClass.
 
         Sets up and creates all necessary directory paths for a processing run.
@@ -18,13 +27,8 @@ class PathsClass:
             suffix: The suffix to be appended to each directory name for
                 differentiation.
             output_folder: The name of the main output folder (e.g., 'outputs').
-
-        Attributes:
-            root_path (str): The provided root directory path.
-            suffix (str): The provided suffix for directory names.
-            all_paths (List[str]): A list of all generated absolute directory paths.
-            output_folder_path (str): The absolute path to the main output
-                directory.
+            create_dirs: If True, creates the directories on the file system.
+                Defaults to True.
         """
         self.root_path = root_path
         self.suffix = suffix
@@ -61,8 +65,9 @@ class PathsClass:
         self.output_folder_path = os.path.join(self.root_path, output_folder)
         self.all_paths.append(self.output_folder_path)
 
-        self._create_directories()
-        self._print_paths()
+        if create_dirs:
+            self._create_directories()
+            self._print_paths()
 
     def _create_directories(self) -> None:
         """Creates directories from a list of paths.

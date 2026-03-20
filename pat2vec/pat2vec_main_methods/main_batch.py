@@ -366,38 +366,47 @@ def main_batch(
 
                 pat_concatted = pd.concat(patient_vector, axis=1)
 
-                pat_concatted.drop("client_idcode", axis=1, inplace=True)
+                if "client_idcode" in pat_concatted.columns:
+                    pat_concatted.drop("client_idcode", axis=1, inplace=True)
+
+                if pat_concatted.columns.duplicated().any():
+                    pat_concatted = pat_concatted.groupby(
+                        pat_concatted.columns, axis=1
+                    ).sum()
 
                 pat_concatted.insert(0, "client_idcode", current_pat_client_id_code)
 
                 update_pbar(p_bar_entry, start_time, 2, "saving...", t, config_obj)
 
-                output_path = (
-                    config_obj.current_pat_lines_path
-                    + current_pat_client_id_code
-                    + "/"
-                    + str(current_pat_client_id_code)
-                    + "_"
-                    + str(target_date_range)
-                    + ".csv"
-                )
+                if config_obj.storage_backend == "file":
+                    output_path = (
+                        config_obj.current_pat_lines_path
+                        + current_pat_client_id_code
+                        + "/"
+                        + str(current_pat_client_id_code)
+                        + "_"
+                        + str(target_date_range)
+                        + ".csv"
+                    )
 
-                if not remote_dump:
-                    if len(pat_concatted) > 1:
-                        logging.error(
-                            f"Batch too large for local dump. Shape: {pat_concatted.shape}"
-                        )
-                        logging.error(pat_concatted)
+                    if not remote_dump:
+                        if len(pat_concatted) > 1:
+                            logging.error(
+                                f"Batch too large for local dump. Shape: {pat_concatted.shape}"
+                            )
+                            logging.error(pat_concatted)
 
-                    pat_concatted.to_csv(output_path)
-                else:
-
-                    if multi_process:
-
-                        write_remote(output_path, pat_concatted, config_obj=config_obj)
+                        pat_concatted.to_csv(output_path)
                     else:
-                        with sftp_client.open(output_path, "w") as file:
-                            pat_concatted.to_csv(file)
+
+                        if multi_process:
+
+                            write_remote(
+                                output_path, pat_concatted, config_obj=config_obj
+                            )
+                        else:
+                            with sftp_client.open(output_path, "w") as file:
+                                pat_concatted.to_csv(file)
 
                 try:
                     update_pbar(
@@ -421,6 +430,8 @@ def main_batch(
 
                 if config_obj.verbosity >= 9:
                     logging.debug("Reached end main batch")
+
+                return pat_concatted
             except RuntimeError:
                 logging.error("Caught runtime error... is torch?")
                 logging.error(RuntimeError)

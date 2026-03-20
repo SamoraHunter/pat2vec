@@ -1,6 +1,7 @@
 import pickle
 import random
 import re
+import os
 from typing import Any, Dict, List
 
 import numpy as np
@@ -10,6 +11,7 @@ from sklearn.cluster import KMeans
 from sklearn.feature_extraction.text import CountVectorizer
 
 from pat2vec.util.testing_helpers import read_test_data
+from pat2vec.util.elasticsearch_methods import check_patients_existence
 
 
 def extract_treatment_id_list_from_docs(config_obj: Any) -> List[str]:
@@ -37,11 +39,7 @@ def extract_treatment_id_list_from_docs(config_obj: Any) -> List[str]:
     # Extract the treatment document filename from the configuration object
     treatment_doc_filename = config_obj.treatment_doc_filename
 
-    try:
-        with open(config_obj.treatment_doc_filename, "r") as file:
-            # Process the file here, for example, read its content into a list
-            file.readlines()
-    except FileNotFoundError:
+    if not os.path.exists(treatment_doc_filename):
         print("Warning: File doesn't exist. Returning an empty list.")
         return []
 
@@ -60,45 +58,50 @@ def extract_treatment_id_list_from_docs(config_obj: Any) -> List[str]:
 
     # If patient_id_column_name is 'auto', use regex to find the most likely column
     if config_obj.patient_id_column_name == "auto":
-        # Define regex patterns for sample IDs
-        sample_id_patterns = ["P\d{6}", "V\d{6}"]
-
-        # Iterate through columns and find the one with the most matches to sample ID patterns
-        best_match_column = None
-        max_matches = 0
-        for column in docs.columns:
-            column_matches = sum(
-                docs[column]
-                .astype(str)
-                .str.contains("|".join(sample_id_patterns), na=False)
-            )
-            if column_matches > max_matches:
-                max_matches = column_matches
-                best_match_column = column
-
-        if best_match_column is not None:
-            if config_obj.verbosity > 2:
-                print("best_match_column:", best_match_column)
-            config_obj.patient_id_column_name = best_match_column
-        else:
-            if config_obj.verbosity > 2:
-                print("best_match_column: None, attempting default client_idcode")
+        if "client_idcode" in docs.columns:
             config_obj.patient_id_column_name = "client_idcode"
+            if config_obj.verbosity > 0:
+                print("Auto-detected patient ID column: client_idcode (exact match)")
+        else:
+            # Define regex patterns for sample IDs
+            sample_id_patterns = ["P\d{6}", "V\d{6}"]
 
-        # drop the nan in column
-        docs[config_obj.patient_id_column_name].dropna(inplace=True)
+            # Iterate through columns and find the one with the most matches to sample ID patterns
+            best_match_column = None
+            max_matches = 0
+            for column in docs.columns:
+                column_matches = sum(
+                    docs[column]
+                    .astype(str)
+                    .str.contains("|".join(sample_id_patterns), na=False)
+                )
+                if column_matches > max_matches:
+                    max_matches = column_matches
+                    best_match_column = column
 
-        if config_obj.sample_treatment_docs > 0:
-            # Determine the number of samples by taking the smaller of the requested
-            # number and the total number of available rows.
-            n_samples = min(config_obj.sample_treatment_docs, len(docs))
+            if best_match_column is not None:
+                if config_obj.verbosity > 2:
+                    print("best_match_column:", best_match_column)
+                config_obj.patient_id_column_name = best_match_column
+            else:
+                if config_obj.verbosity > 2:
+                    print("best_match_column: None, attempting default client_idcode")
+                config_obj.patient_id_column_name = "client_idcode"
 
-            if config_obj.verbosity >= 1:
-                # The print statement now reflects the actual number of samples being taken.
-                print(f"Sampling {n_samples} of {len(docs)} available treatment docs.")
+    # drop the nan in column
+    docs.dropna(subset=[config_obj.patient_id_column_name], inplace=True)
 
-            # Safely sample the DataFrame.
-            docs = docs.sample(n_samples)
+    if config_obj.sample_treatment_docs > 0:
+        # Determine the number of samples by taking the smaller of the requested
+        # number and the total number of available rows.
+        n_samples = min(config_obj.sample_treatment_docs, len(docs))
+
+        if config_obj.verbosity >= 1:
+            # The print statement now reflects the actual number of samples being taken.
+            print(f"Sampling {n_samples} of {len(docs)} available treatment docs.")
+
+        # Safely sample the DataFrame.
+        docs = docs.sample(n_samples)
 
     # Extract the unique client IDs from the document
     treatment_client_id_list = list(docs[config_obj.patient_id_column_name].unique())
@@ -322,6 +325,92 @@ def get_all_patients_list(config_obj: Any) -> List[str]:
     all_patient_list = sanitize_hospital_ids(
         hospital_ids=all_patient_list, config_obj=config_obj
     )
+
+    # Validate patient existence in Elasticsearch (Live mode only)
+    if not config_obj.testing and getattr(config_obj, "check_patient_existence", True):
+        if config_obj.verbosity > 0:
+            print(
+                "Verifying patient existence in Elasticsearch based on enabled data sources..."
+            )
+
+        # Determine the term name for the ID field, defaulting to client_idcode.keyword
+        id_field_term = getattr(
+            config_obj, "client_idcode_term_name", "client_idcode.keyword"
+        )
+
+        # Construct indices to check based on enabled main_options
+        indices_to_check = []
+        seen_indices = set()
+        options = config_obj.main_options
+
+        def add_index(index, field):
+            if (index, field) not in seen_indices:
+                indices_to_check.append((index, field))
+                seen_indices.add((index, field))
+
+        # EPR Documents (annotations, demo)
+        if options.get("annotations", False) or options.get("demo", False):
+            add_index("epr_documents", id_field_term)
+
+        # Appointments
+        if options.get("appointments", False):
+            add_index("pims_apps*", "HospitalID")
+            add_index("pims_apps*", "HospitalID.keyword")
+
+        # Basic Observations (bloods, textual_obs, covid)
+        if (
+            options.get("bloods", False)
+            or options.get("textual_obs", False)
+            or options.get("covid", False)
+        ):
+            add_index("basic_observations", id_field_term)
+
+        # Observations (bmi, news, smoking, etc.)
+        obs_keys = [
+            "bmi",
+            "core_02",
+            "bed",
+            "vte_status",
+            "hosp_site",
+            "core_resus",
+            "news",
+            "smoking",
+            "annotations_mrc",
+            "annotations_reports",
+        ]
+        if any(options.get(k, False) for k in obs_keys):
+            add_index("observations", id_field_term)
+
+        # Orders (drugs, diagnostics)
+        if options.get("drugs", False) or options.get("diagnostics", False):
+            add_index("order", id_field_term)
+
+        # Default fallback if nothing specific is enabled
+        if not indices_to_check:
+            if config_obj.verbosity > 0:
+                print(
+                    "No specific data sources enabled for existence check. Defaulting to epr_documents."
+                )
+            add_index("epr_documents", id_field_term)
+
+        if config_obj.verbosity > 0:
+            print(f"Checking patient existence against indices: {indices_to_check}")
+
+        valid_patients = check_patients_existence(
+            all_patient_list, index_name=indices_to_check
+        )
+
+        missing_count = len(all_patient_list) - len(valid_patients)
+        if missing_count > 0:
+            print(
+                f"Warning: {missing_count} patients from the list were not found in Elasticsearch and will be skipped."
+            )
+            if config_obj.verbosity > 1:
+                print(
+                    f"Skipped IDs sample: {list(set(all_patient_list) - set(valid_patients))[:10]}"
+                )
+
+        all_patient_list = valid_patients
 
     try:
         analyze_client_codes(all_patient_list)
