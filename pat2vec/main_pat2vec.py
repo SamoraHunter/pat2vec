@@ -6,6 +6,7 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 import pandas as pd
+from sqlalchemy import text, inspect
 
 # from pat2vec.pat2vec_search.cogstack_search_methods import *
 from tqdm import trange
@@ -18,22 +19,44 @@ from pat2vec.pat2vec_search.cogstack_search_methods import (
 )
 from pat2vec.pat2vec_get_methods.get_method_covid import SEARCH_TERM_ES
 from pat2vec.patvec_get_batch_methods.get_prefetch_batches import prefetch_batches
-from pat2vec.patvec_get_batch_methods.main import (
+from pat2vec.patvec_get_batch_methods.main_get_pat_batch_appointments import (
     get_pat_batch_appointments,
+)
+from pat2vec.patvec_get_batch_methods.main_get_pat_batch_bloods import (
     get_pat_batch_bloods,
-    get_pat_batch_bmi,
-    get_pat_batch_demo,
+)
+from pat2vec.patvec_get_batch_methods.main_get_pat_batch_bmi import get_pat_batch_bmi
+from pat2vec.patvec_get_batch_methods.main_get_pat_batch_demo import get_pat_batch_demo
+from pat2vec.patvec_get_batch_methods.main_get_pat_batch_diagnostics import (
     get_pat_batch_diagnostics,
+)
+from pat2vec.patvec_get_batch_methods.main_get_pat_batch_drugs import (
     get_pat_batch_drugs,
+)
+from pat2vec.patvec_get_batch_methods.main_get_pat_batch_epr_docs import (
     get_pat_batch_epr_docs,
+)
+from pat2vec.patvec_get_batch_methods.main_get_pat_batch_epr_docs_annotations import (
     get_pat_batch_epr_docs_annotations,
+)
+from pat2vec.patvec_get_batch_methods.main_get_pat_batch_mct_docs import (
     get_pat_batch_mct_docs,
+)
+from pat2vec.patvec_get_batch_methods.main_get_pat_batch_mct_docs_annotations import (
     get_pat_batch_mct_docs_annotations,
-    get_pat_batch_news,
-    get_pat_batch_obs,
+)
+from pat2vec.patvec_get_batch_methods.main_get_pat_batch_news import get_pat_batch_news
+from pat2vec.patvec_get_batch_methods.main_get_pat_batch_obs import get_pat_batch_obs
+from pat2vec.patvec_get_batch_methods.main_get_pat_batch_reports import (
     get_pat_batch_reports,
+)
+from pat2vec.patvec_get_batch_methods.main_get_pat_batch_reports_docs_annotations import (
     get_pat_batch_reports_docs_annotations,
+)
+from pat2vec.patvec_get_batch_methods.main_get_pat_batch_textual_obs_annotations import (
     get_pat_batch_textual_obs_annotations,
+)
+from pat2vec.patvec_get_batch_methods.main_get_pat_batch_textual_obs_docs import (
     get_pat_batch_textual_obs_docs,
 )
 from pat2vec.util import config_pat2vec
@@ -42,11 +65,17 @@ from pat2vec.util.get_best_gpu import set_best_gpu
 from pat2vec.util.get_dummy_data_cohort_searcher import (
     cohort_searcher_with_terms_and_search_dummy,
 )
+
+from pat2vec.util.methods_get import update_pbar
+from pat2vec.util.helper_functions import (
+    clear_patient_features,
+    save_patient_features,
+    save_raw_patient_batch,
+)
 from pat2vec.util.methods_get import (
     create_folders_for_pat,
     filter_stripped_list,
     list_dir_wrapper,
-    update_pbar,
 )
 from pat2vec.util.methods_get_medcat import get_cat
 
@@ -71,7 +100,7 @@ class main:
     6.  For each time slice, it calls the `main_batch` function, which in turn calls
         the individual feature extraction modules (e.g., for demographics, bloods,
         NLP annotations) to generate a feature vector.
-    7.  The resulting feature vector is saved to a file.
+    7.  The resulting feature vector is saved to a file or database.
 
     This class relies heavily on the `config_obj` for its behavior.
 
@@ -132,9 +161,6 @@ class main:
         self.pre_annotation_path_mrc = config_obj.pre_annotation_path_mrc
         self.proj_name = config_obj.proj_name
         self.gpu_mem_threshold = config_obj.gpu_mem_threshold  # For medCat
-        self.all_patient_list = get_all_patients_list(self.config_obj)
-        self.current_pat_lines_path = config_obj.current_pat_lines_path
-        self.sftp_client = config_obj.sftp_obj
 
         if cogstack:
             # Initialize the CogStack client with the config object
@@ -159,6 +185,10 @@ class main:
             if self.config_obj.verbosity > 0:
                 logging.warning("cohort_searcher_with_terms_and_search is disabled.")
             self.cohort_searcher_with_terms_and_search = None
+
+        self.all_patient_list = get_all_patients_list(self.config_obj)
+        self.current_pat_lines_path = config_obj.current_pat_lines_path
+        self.sftp_client = config_obj.sftp_obj
 
         if self.verbosity > 0:
             logging.info("Pre-annotation path: %s", self.pre_annotation_path)
@@ -189,27 +219,23 @@ class main:
             logging.info("Pre-annotation path: %s", self.pre_annotation_path)
             logging.info("Pre-annotation path MRC: %s", self.pre_annotation_path_mrc)
 
-        self.stripped_list_start = [
-            x.replace(".csv", "")
-            for x in list_dir_wrapper(
-                path=self.current_pat_lines_path, config_obj=config_obj
-            )
-        ]
+        if self.config_obj.storage_backend == "file":
+            self.stripped_list_start = [
+                x.replace(".csv", "")
+                for x in list_dir_wrapper(
+                    path=self.current_pat_lines_path, config_obj=config_obj
+                )
+            ]
 
-        (
-            logging.info(
-                f"Length of stripped_list_start: {len(self.stripped_list_start)}"
+            (
+                logging.info(
+                    f"Length of stripped_list_start: {len(self.stripped_list_start)}"
+                )
+                if self.config_obj.verbosity > 0
+                else None
             )
-            if self.config_obj.verbosity > 0
-            else None
-        )
-
-        [
-            x.replace(".csv", "")
-            for x in list_dir_wrapper(
-                path=self.current_pat_lines_path, config_obj=config_obj
-            )
-        ]
+        else:
+            self.stripped_list_start = []
 
         self.t = trange(
             len(self.all_patient_list),
@@ -282,20 +308,54 @@ class main:
                     "No pre-existing filters found in model. Processing all entities."
                 )
 
-        self.stripped_list = [
-            x.replace(".csv", "")
-            for x in list_dir_wrapper(
-                path=self.current_pat_lines_path, config_obj=config_obj
-            )
-        ]
-        if not self.config_obj.individual_patient_window:
-            self.stripped_list, self.stripped_list_start = filter_stripped_list(
-                self.stripped_list, config_obj=self.config_obj
-            )
+        if self.config_obj.storage_backend == "database":
+            self.stripped_list_start = []
+            try:
+                engine = self.config_obj.db_engine
+                if not engine:
+                    logging.warning(
+                        "Database engine not initialized in config_obj. Cannot fetch existing patients."
+                    )
+                else:
+                    inspector = inspect(engine)
+                    # Check for table existence with SQLite support
+                    t_feat = (
+                        "features_features" if engine.name == "sqlite" else "features"
+                    )
+                    s_feat = None if engine.name == "sqlite" else "features"
+
+                    if inspector.has_table(t_feat, schema=s_feat):
+                        with engine.connect() as connection:
+                            full_t = (
+                                f'"{t_feat}"'
+                                if engine.name == "sqlite"
+                                else '"features"."features"'
+                            )
+                            id_col = self.config_obj.patient_id_column_name
+                            result = connection.execute(
+                                text(f'SELECT DISTINCT "{id_col}" FROM {full_t}')
+                            )
+                            self.stripped_list_start = [str(row[0]) for row in result]
+                            logging.info(
+                                f"Found {len(self.stripped_list_start)} existing patients in database."
+                            )
+            except Exception as e:
+                logging.warning(f"Could not fetch existing patients from DB: {e}")
         else:
-            logging.info(
-                "Skipped stripping patient list because individual_patient_window is enabled."
-            )
+            self.stripped_list = [
+                x.replace(".csv", "")
+                for x in list_dir_wrapper(
+                    path=self.current_pat_lines_path, config_obj=config_obj
+                )
+            ]
+            if not self.config_obj.individual_patient_window:
+                self.stripped_list, self.stripped_list_start = filter_stripped_list(
+                    self.stripped_list, config_obj=self.config_obj
+                )
+            else:
+                logging.info(
+                    "Skipped stripping patient list because individual_patient_window is enabled."
+                )
 
         self.n_pat_lines = config_obj.n_pat_lines
 
@@ -429,14 +489,14 @@ class main:
                 "option": "news",
                 "var": "batch_news",
                 "func": get_pat_batch_news,
-                "args": {"search_term": None},
+                "args": {},
                 "empty": empty_return,
             },
             {
                 "option": "bmi",
                 "var": "batch_bmi",
                 "func": get_pat_batch_bmi,
-                "args": {"search_term": None},
+                "args": {},
                 "empty": empty_return,
             },
             {
@@ -536,6 +596,47 @@ class main:
                     batches[config["var"]] = batch_result
             else:
                 batches[config["var"]] = config["empty"]
+
+        return batches
+
+    def _save_batches_to_db(
+        self, patient_id: str, batches: Dict[str, pd.DataFrame]
+    ) -> None:
+        """Saves fetched batches to the database if backend is enabled."""
+        if self.config_obj.storage_backend != "database":
+            return
+
+        batch_to_table = {
+            "batch_epr": ("raw_epr_docs", "client_idcode"),
+            "batch_mct": ("raw_mct_docs", "client_idcode"),
+            "batch_textual_obs_docs": ("raw_textual_obs", "client_idcode"),
+            "batch_reports": ("raw_reports", "client_idcode"),
+            "batch_bloods": ("raw_bloods", "client_idcode"),
+            "batch_drugs": ("raw_drugs", "client_idcode"),
+            "batch_diagnostics": ("raw_diagnostics", "client_idcode"),
+            "batch_news": ("raw_news", "client_idcode"),
+            "batch_bmi": ("raw_bmi", "client_idcode"),
+            "batch_demo": ("raw_demographics", "client_idcode"),
+            "batch_appointments": ("raw_appointments", "HospitalID"),
+            "batch_covid": ("raw_covid", "client_idcode"),
+            "batch_smoking": ("raw_smoking", "client_idcode"),
+            "batch_core_02": ("raw_core_02", "client_idcode"),
+            "batch_bednumber": ("raw_bed", "client_idcode"),
+            "batch_vte": ("raw_vte", "client_idcode"),
+            "batch_hospsite": ("raw_hospsite", "client_idcode"),
+            "batch_resus": ("raw_resus", "client_idcode"),
+            "batch_obs": ("raw_obs", "client_idcode"),
+        }
+
+        for batch_key, (table_name, id_col) in batch_to_table.items():
+            if batch_key in batches and not batches[batch_key].empty:
+                save_raw_patient_batch(
+                    batches[batch_key],
+                    patient_id,
+                    table_name,
+                    self.config_obj,
+                    id_column=id_col,
+                )
 
         return batches
 
@@ -787,7 +888,7 @@ class main:
                     )
 
                 if self.config_obj.calculate_vectors:
-                    main_batch(
+                    self.config_obj.last_lines = main_batch(
                         current_pat_client_id_code,
                         date_slice,
                         batches=batches,
@@ -797,6 +898,18 @@ class main:
                         cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search,
                         cat=self.cat,
                     )
+
+                if self.config_obj.calculate_vectors:
+                    if (
+                        hasattr(self.config_obj, "last_lines")
+                        and self.config_obj.last_lines is not None
+                    ):
+                        save_patient_features(
+                            features_df=self.config_obj.last_lines,
+                            patient_id=current_pat_client_id_code,
+                            config_obj=self.config_obj,
+                            overwrite=False,
+                        )
 
             except Exception as e:
                 logging.error(e)
@@ -837,11 +950,9 @@ class main:
             filtering the data for that specific slice and generating the final
             feature vector CSV file.
 
-
         Args:
             i (int): The index of the patient within `self.all_patient_list` to be
                 processed.
-
 
         Side Effects:
             - Creates output directories for the patient's feature vectors if they
@@ -872,18 +983,23 @@ class main:
             if self.config_obj.multi_process is False:
                 self.config_obj.skipped_counter += 1
             else:
-                with self.config_obj.skipped_counter.get_lock():
-                    self.config_obj.skipped_counter.value += 1
+                with self.config_obj.skipped_counter.get_lock():  # type: ignore
+                    self.config_obj.skipped_counter.value += 1  # type: ignore
             if self.config_obj.verbosity > 0:
-                logging.info(f"Skipped patient {i}")
+                logging.info(
+                    f"Patient {current_pat_client_id_code} already processed, skipping."
+                )
             return
 
-        create_folders_for_pat(current_pat_client_id_code, self.config_obj)
+        if self.config_obj.storage_backend == "file":
+            create_folders_for_pat(current_pat_client_id_code, self.config_obj)
+
         start_time = time.time()
 
         # 1. Set up time window for the patient
         date_list = self._setup_patient_time_window(current_pat_client_id_code)
         if date_list is None:
+
             return  # Skip patient if time window setup fails
 
         # 2. Update progress and fetch data batches
@@ -897,6 +1013,10 @@ class main:
             self.config_obj.skipped_counter,
         )
         batches = self._get_patient_data_batches(current_pat_client_id_code)
+
+        # Save raw batches to DB if applicable
+        if self.config_obj.storage_backend == "database":
+            self._save_batches_to_db(current_pat_client_id_code, batches)
 
         update_pbar(
             current_pat_client_id_code,
@@ -912,10 +1032,18 @@ class main:
         if self.config_obj.dropna_doc_timestamps:
             batches = self._clean_document_batches(batches)
 
+        # Clear existing data for patient if using database backend
+        if self.config_obj.storage_backend == "database":
+            clear_patient_features(current_pat_client_id_code, self.config_obj)
+
+        logging.info(
+            f"Processing {len(date_list)} time slices for patient {current_pat_client_id_code}"
+        )
+
         # 4. Process patient data in time slices
         self._process_patient_slices(current_pat_client_id_code, date_list, batches)
 
         # 5. Finalize
         if self.config_obj.remote_dump:
-            self.sftp_obj.close()
-            self.config_obj.ssh_client.close()
+            if self.sftp_client:
+                self.sftp_client.close()
