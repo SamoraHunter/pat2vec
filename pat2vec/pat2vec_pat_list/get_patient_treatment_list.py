@@ -220,7 +220,10 @@ def sanitize_hospital_ids(hospital_ids: List[str], config_obj: Any) -> List[str]
     if config_obj.sanitize_pat_list:
         sanitized_list = []
         for hospital_id in hospital_ids:
-            new_id = hospital_id.upper()
+            if re.match(r"^[a-zA-Z]\d{6}$", str(hospital_id)):
+                new_id = hospital_id.upper()
+            else:
+                new_id = hospital_id
             if new_id != hospital_id:
                 changes_made += 1
             sanitized_list.append(new_id)

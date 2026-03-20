@@ -87,7 +87,7 @@ class config_class:
         data_type_filter_dict: Optional[Dict[str, Any]] = None,
         filter_split_notes: bool = True,
         client_idcode_term_name: str = "client_idcode.keyword",
-        sanitize_pat_list: bool = True,
+        sanitize_pat_list: bool = False,
         calculate_vectors: bool = True,
         prefetch_pat_batches: bool = False,
         sample_treatment_docs: int = 0,
