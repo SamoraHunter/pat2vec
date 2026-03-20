@@ -13,6 +13,7 @@ from pat2vec.util.methods_get import (
     add_offset_column,
     build_patient_dict,
 )
+from sqlalchemy import create_engine
 
 logger = logging.getLogger(__name__)
 
@@ -81,7 +82,7 @@ class config_class:
         lookback: bool = True,
         add_icd10: bool = False,
         add_opc4s: bool = False,
-        all_epr_patient_list_path: str = "/home/samorah/_data/gloabl_files/all_client_idcodes_epr_unique.csv",
+        all_epr_patient_list_path: str = "../../all_client_idcodes_epr_unique.csv",
         override_medcat_model_path: Optional[str] = None,
         data_type_filter_dict: Optional[Dict[str, Any]] = None,
         filter_split_notes: bool = True,
@@ -92,9 +93,11 @@ class config_class:
         sample_treatment_docs: int = 0,
         test_data_path: Optional[str] = None,
         credentials_path: str = "../../credentials.py",
+        storage_backend: str = "database",
+        db_connection_string: Optional[str] = None,
+        check_patient_existence: bool = True,
     ) -> None:
         """Initializes the configuration object for the pat2vec pipeline.
-
         This class holds all configuration parameters for a pat2vec run, including
         file paths, time window settings, feature selection, and operational flags.
 
@@ -187,10 +190,17 @@ class config_class:
                 extracts batches.
             prefetch_pat_batches: If `True`, fetches all raw data for all patients before
                 processing. May use significant memory.
+            storage_backend: The backend for storing intermediate data. Can be
+                'database' (default) or 'file' (legacy).
+            db_connection_string: The connection string for the database, required
+                if `storage_backend` is 'database'.
             sample_treatment_docs: Number of patients to sample from the initial cohort
                 list. `0` means no sampling.
             test_data_path: The path to the test data file, used when `testing` is `True`.
             credentials_path: Path to the credentials file.
+            check_patient_existence: If `True`, verifies that patients exist in
+                the enabled data sources (Elasticsearch) before processing.
+                Defaults to `True`.
         """
 
         if prefetch_pat_batches and individual_patient_window:
@@ -216,6 +226,52 @@ class config_class:
             raise ValueError(
                 "individual_patient_window_df must be provided when individual_patient_window is True."
             )
+
+        #: The name of the current project, used for creating project-specific folders.
+        self.proj_name = proj_name
+
+        #: Verbosity level for logging (0-9).
+        self.verbosity = verbosity
+
+        #: The backend for storing intermediate data ('database' or 'file').
+        self.storage_backend = storage_backend
+        #: The connection string for the database.
+        self.db_connection_string = db_connection_string
+        #: If `True`, verifies that patients exist in the enabled data sources (Elasticsearch) before processing.
+        self.check_patient_existence = check_patient_existence
+
+        #: The root directory for the project.
+        self.root_path = root_path
+        if self.root_path is None:
+            self.root_path = f"{os.getcwd()}/{self.proj_name}/"
+
+        self.db_engine = None
+        if self.storage_backend == "database":
+            if not self.db_connection_string:
+                if testing:
+                    logger.warning(
+                        "`storage_backend` is 'database' but no `db_connection_string` provided during testing. Using in-memory SQLite."
+                    )
+                    self.db_connection_string = "sqlite:///:memory:"
+                else:
+                    # Default to SQLite in project folder if no connection string provided
+                    os.makedirs(self.root_path, exist_ok=True)
+                    db_path = os.path.join(self.root_path, f"{self.proj_name}.db")
+                    self.db_connection_string = f"sqlite:///{db_path}"
+                    logger.info(
+                        f"No `db_connection_string` provided. Using default SQLite database at: {self.db_connection_string}"
+                    )
+
+            if self.db_connection_string == "sqlite:///:memory:":
+                from sqlalchemy.pool import StaticPool
+
+                self.db_engine = create_engine(
+                    self.db_connection_string,
+                    connect_args={"check_same_thread": False},
+                    poolclass=StaticPool,
+                )
+            else:
+                self.db_engine = create_engine(self.db_connection_string)
 
         self.sanitize_pat_list = sanitize_pat_list
         #: If `True`, skips some `listdir` calls for performance.
@@ -302,9 +358,6 @@ class config_class:
         #: Path to the miscellaneous batches directory.
         self.pre_misc_batch_path = f"current_pat_misc_batches{self.suffix}/"
 
-        #: Path to the patient line directory.
-        self.current_pat_line_path = f"current_pat_line_path{self.suffix}/"
-
         #: Path to the appointments batches directory.
         self.pre_appointments_batch_path = (
             f"current_pat_appointments_batches{self.suffix}/"
@@ -316,8 +369,6 @@ class config_class:
         #: If `True`, stores patient observation batches.
         self.store_pat_batch_observations = store_pat_batch_observations
 
-        #: The name of the current project, used for creating project-specific folders.
-        self.proj_name = proj_name
         #: A dictionary of boolean flags to enable or disable specific feature extractions.
         self.main_options = main_options
 
@@ -347,8 +398,6 @@ class config_class:
         self.multi_process = multi_process
         #: If `True`, checks for completed patients before starting to avoid redundancy.
         self.strip_list = strip_list
-        #: Verbosity level for logging (0-9).
-        self.verbosity = verbosity
         #: Random seed for reproducibility.
         self.random_seed_val = random_seed_val
 
@@ -540,11 +589,18 @@ class config_class:
             "negated_presence_annotations"
         )
 
+        if self.root_path is None:
+            self.root_path = f"{os.getcwd()}/{self.proj_name}/"
+
         if not remote_dump:
+            #: Path to the patient lines parts directory for final outputs.
+            self.current_pat_lines_path = os.path.join(
+                self.root_path, f"current_pat_lines_parts{self.suffix}/"
+            )
+            if self.storage_backend == "file":
+                os.makedirs(self.current_pat_lines_path, exist_ok=True)
 
-            if self.root_path is None:
-                self.root_path = f"{os.getcwd()}/{self.proj_name}/"
-
+        if not remote_dump:
             #: Path to the pre-annotation parts directory.
             self.pre_annotation_path = os.path.join(
                 self.root_path, f"current_pat_annots_parts{self.suffix}/"
@@ -629,11 +685,6 @@ class config_class:
                 self.root_path, f"current_pat_misc_batches{self.suffix}/"
             )
 
-            #: Path to the patient lines parts directory.
-            self.current_pat_lines_path = os.path.join(
-                self.root_path, f"current_pat_lines_parts{self.suffix}/"
-            )
-
             self.pre_appointments_batch_path = os.path.join(
                 self.root_path, f"current_pat_appointments_batches{self.suffix}/"
             )
@@ -648,7 +699,10 @@ class config_class:
 
             #: An instance of the PathsClass for managing directory paths.
             self.PathsClass_instance = PathsClass(
-                self.root_path, self.suffix, self.output_folder
+                self.root_path,
+                self.suffix,
+                self.output_folder,
+                create_dirs=(self.storage_backend == "file"),
             )
 
         logger.info(f"Setting start_date to: {start_date}")
@@ -778,8 +832,9 @@ class config_class:
                 f"{self.root_path}{self.pre_annotation_path_mrc}"
             )
             #: Path to the patient line directory on the remote server.
-            self.current_pat_line_path = f"{self.root_path}{self.current_pat_line_path}"
-            self.current_pat_lines_path = self.current_pat_line_path
+            self.current_pat_lines_path = (
+                f"{self.root_path}current_pat_lines_parts{self.suffix}/"
+            )
 
             if not self.remote_dump:
                 # Path(self.current_pat_annot_path).mkdir(parents=True, exist_ok=True)
@@ -804,10 +859,10 @@ class config_class:
 
                 try:
                     # Test if remote_path exists
-                    self.sftp_client.chdir(self.current_pat_line_path)
+                    self.sftp_client.chdir(self.current_pat_lines_path)
                 except IOError:
                     # Create remote_path
-                    self.sftp_client.mkdir(self.current_pat_line_path)
+                    self.sftp_client.mkdir(self.current_pat_lines_path)
 
             self.sftp_obj = self.sftp_client
             #: SFTP object for file operations.
@@ -998,6 +1053,10 @@ class config_class:
                     end_column=f"{start_column_name}_offset",
                 )
 
+            logger.info(
+                f"Built patient_dict with {len(self.patient_dict)} patients from {len(self.individual_patient_window_df)} rows."
+            )
+
             #: Number of patient lines, dynamic for IPW.
             self.n_pat_lines = (
                 None  # N_pat_lines will be dynamic for each pat... or potentially?
@@ -1036,22 +1095,22 @@ class config_class:
         """
         return {
             "demo": True,
-            "bmi": False,
+            "bmi": True,
             "bloods": True,
             "drugs": True,
             "diagnostics": True,
-            "core_02": False,
-            "bed": False,
-            "vte_status": False,
-            "hosp_site": False,
-            "core_resus": False,
-            "news": False,
-            "smoking": False,
+            "core_02": True,
+            "bed": True,
+            "vte_status": True,
+            "hosp_site": True,
+            "core_resus": True,
+            "news": True,
+            "smoking": True,
             "annotations": True,
             "annotations_mrc": True,
             "negated_presence_annotations": False,
             "appointments": True,
-            "annotations_reports": False,
+            "annotations_reports": True,
             "covid": True,
             "textual_obs": True,
         }
