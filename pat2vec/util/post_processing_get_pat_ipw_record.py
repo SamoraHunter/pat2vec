@@ -4,6 +4,7 @@ from typing import Any, Dict, List, Optional
 import logging
 import pandas as pd
 
+from pat2vec.util.helper_functions import get_df_from_db
 from pat2vec.util.post_processing import filter_and_select_rows, filter_annot_dataframe2
 
 logger = logging.getLogger(__name__)
@@ -18,6 +19,8 @@ def _get_source_record(
     filter_codes: Optional[List[Any]],
     mode: str,
     verbose: int,
+    config_obj: Optional[Any] = None,
+    table_name: Optional[str] = None,
 ) -> pd.DataFrame:
     """Reads, cleans, and filters records from a single data source file.
 
@@ -36,36 +39,61 @@ def _get_source_record(
         filter_codes: A list of CUI codes to filter for.
         mode: The mode for `filter_and_select_rows` ('earliest' or 'latest').
         verbose: The verbosity level for logging.
+        config_obj: The configuration object (needed for DB connection).
+        table_name: The name of the database table to query (if using DB backend).
 
     Returns:
         A DataFrame containing the filtered records from the source.
             Returns an empty DataFrame if the file is not found, is empty, or if
             no rows remain after filtering.
     """
-    file_path = f"{base_path}/{pat_id}.csv"
-    if not os.path.exists(file_path):
+    if (
+        config_obj
+        and getattr(config_obj, "storage_backend", "file") == "database"
+        and table_name
+    ):
         if verbose >= 10:
-            logger.debug(f"File not found for patient {pat_id} at {base_path}")
-        return pd.DataFrame()
-
-    if verbose >= 10:
-        logger.debug(f"Reading annotations from {base_path}...")
-
-    try:
-        df = pd.read_csv(file_path)
-
+            logger.debug(
+                f"Reading annotations from DB table {table_name} for patient {pat_id}"
+            )
+        df = get_df_from_db(config_obj, "annotations", table_name, patient_ids=[pat_id])
         if df.empty:
             if verbose >= 10:
-                logger.warning(f"Empty CSV file for patient {pat_id} at {base_path}")
+                logger.debug(
+                    f"No records found in DB table {table_name} for patient {pat_id}"
+                )
+            return pd.DataFrame()
+    else:
+        # File-based fallback
+        file_path = f"{base_path}/{pat_id}.csv"
+        if not os.path.exists(file_path):
+            if verbose >= 10:
+                logger.debug(f"File not found for patient {pat_id} at {base_path}")
             return pd.DataFrame()
 
-    except Exception as e:
         if verbose >= 10:
-            logger.error(f"Error reading CSV for patient {pat_id} at {base_path}: {e}")
-        return pd.DataFrame()
+            logger.debug(f"Reading annotations from {base_path}...")
+
+        try:
+            df = pd.read_csv(file_path)
+
+            if df.empty:
+                if verbose >= 10:
+                    logger.warning(
+                        f"Empty CSV file for patient {pat_id} at {base_path}"
+                    )
+                return pd.DataFrame()
+
+        except Exception as e:
+            if verbose >= 10:
+                logger.error(
+                    f"Error reading CSV for patient {pat_id} at {base_path}: {e}"
+                )
+            return pd.DataFrame()
 
     if verbose > 12:
-        logger.debug(f"Sample annotations from {base_path}...")
+        source_msg = f"DB table {table_name}" if table_name else base_path
+        logger.debug(f"Sample annotations from {source_msg}...")
         logger.debug(df.head())
 
     # Check if necessary columns exist before dropping NaNs
@@ -112,6 +140,12 @@ def _get_source_record(
         if verbose >= 10:
             logger.debug(f"Filtering by filter_codes from {base_path}...")
         try:
+            # Robust CUI matching: normalize to string to handle int/str mismatches
+            # and remove potential float '.0' artifacts
+            if "cui" in df.columns:
+                df["cui"] = df["cui"].astype(str).str.replace(r"\.0$", "", regex=True)
+                filter_codes = [str(c).replace(".0", "") for c in filter_codes]
+
             filtered_df = filter_and_select_rows(
                 df,
                 filter_codes,
@@ -121,6 +155,10 @@ def _get_source_record(
                 mode=mode,
                 n_rows=1,
             )
+
+            if "cui" in filtered_df.columns:
+                filtered_df["cui"] = pd.to_numeric(filtered_df["cui"], errors="ignore")
+
             return filtered_df
         except Exception as e:
             if verbose >= 10:
@@ -207,6 +245,8 @@ def get_pat_ipw_record(
         filter_codes,
         mode,
         verbose,
+        config_obj,
+        "ann_epr_docs",
     )
 
     # Get MCT record
@@ -221,6 +261,8 @@ def get_pat_ipw_record(
             filter_codes,
             mode,
             verbose,
+            config_obj,
+            "ann_mct_docs",
         )
 
     # Get Textual Obs record
@@ -235,6 +277,8 @@ def get_pat_ipw_record(
             filter_codes,
             mode,
             verbose,
+            config_obj,
+            "ann_textual_obs",
         )
 
     # Prepare dataframes for comparison
@@ -313,7 +357,7 @@ def get_pat_ipw_record(
     if earliest_df.empty or len(earliest_df) == 0:
         if verbose >= 1:
             logger.info(
-                "No valid annotations available from EPR, MCT, or textual_obs. Creating fallback."
+                f"No valid annotations available from EPR, MCT, or textual_obs for {current_pat_idcode}. Creating fallback using global window."
             )
 
         # Create a fallback record
@@ -338,9 +382,16 @@ def get_pat_ipw_record(
         )
 
         if not config_obj.lookback:
-            earliest_df["updatetime"] = [pd.to_datetime(start_datetime, utc=True)]
+            fallback_date = pd.to_datetime(start_datetime, utc=True)
+            earliest_df["updatetime"] = [fallback_date]
         else:
-            earliest_df["updatetime"] = [pd.to_datetime(end_datetime, utc=True)]
+            fallback_date = pd.to_datetime(end_datetime, utc=True)
+            earliest_df["updatetime"] = [fallback_date]
+
+        if verbose >= 1:
+            logger.info(
+                f"Fallback date set to: {fallback_date} (lookback={config_obj.lookback})"
+            )
 
         earliest_df["source"] = ["fallback"]
 

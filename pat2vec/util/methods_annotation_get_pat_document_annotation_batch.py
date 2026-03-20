@@ -38,20 +38,24 @@ def get_pat_document_annotation_batch(
         current_pat_client_idcode, pat_batch, cat=cat, config_obj=config_obj, t=t
     )
     # create the file in its dir
-    multi_annots_to_df(
+    pat_document_annotation_batch = multi_annots_to_df(
         current_pat_client_idcode, pat_batch, multi_annots, config_obj=config_obj, t=t
     )
 
-    # read_newly created file:
-    pre_document_annotation_batch_path = config_obj.pre_document_annotation_batch_path
+    if getattr(config_obj, "storage_backend", "file") == "file":
+        # read_newly created file:
+        pre_document_annotation_batch_path = (
+            config_obj.pre_document_annotation_batch_path
+        )
 
-    current_pat_document_annotation_batch_path = os.path.join(
-        pre_document_annotation_batch_path, current_pat_client_idcode + ".csv"
-    )
+        current_pat_document_annotation_batch_path = os.path.join(
+            pre_document_annotation_batch_path, current_pat_client_idcode + ".csv"
+        )
 
-    pat_document_annotation_batch = pd.read_csv(
-        current_pat_document_annotation_batch_path
-    )
+        if os.path.exists(current_pat_document_annotation_batch_path):
+            pat_document_annotation_batch = pd.read_csv(
+                current_pat_document_annotation_batch_path
+            )
 
     return pat_document_annotation_batch
 
@@ -91,29 +95,28 @@ def get_pat_document_annotation_batch_mct(
     )
 
     # create the file in its dir
-    multi_annots_to_df_mct(
+    pat_document_annotation_batch = multi_annots_to_df_mct(
         current_pat_client_idcode,
         pat_batch,
         multi_annots,
         config_obj=config_obj,
         t=t,
-        text_column="observation_valuetext_analysed",
-        time_column="observationdocument_recordeddtm",
-        guid_column="observation_guid",
     )
 
-    # read_newly created file:
-    pre_document_annotation_batch_path_mct = (
-        config_obj.pre_document_annotation_batch_path_mct
-    )
+    if getattr(config_obj, "storage_backend", "file") == "file":
+        # read_newly created file:
+        pre_document_annotation_batch_path_mct = (
+            config_obj.pre_document_annotation_batch_path_mct
+        )
 
-    current_pat_document_annotation_batch_path = os.path.join(
-        pre_document_annotation_batch_path_mct, current_pat_client_idcode + ".csv"
-    )
+        current_pat_document_annotation_batch_path = os.path.join(
+            pre_document_annotation_batch_path_mct, current_pat_client_idcode + ".csv"
+        )
 
-    pat_document_annotation_batch = pd.read_csv(
-        current_pat_document_annotation_batch_path
-    )
+        if os.path.exists(current_pat_document_annotation_batch_path):
+            pat_document_annotation_batch = pd.read_csv(
+                current_pat_document_annotation_batch_path
+            )
 
     return pat_document_annotation_batch
 
@@ -153,29 +156,28 @@ def get_pat_batch_textual_obs_annotation_batch(
     )
 
     # create the file in its dir
-    multi_annots_to_df_textual_obs(
+    pat_document_annotation_batch = multi_annots_to_df_textual_obs(
         current_pat_client_idcode,
         pat_batch,
         multi_annots,
         config_obj=config_obj,
         t=t,
-        text_column="body_analysed",  # overwritten in batch collection method from textualObs
-        time_column="basicobs_entered",
-        guid_column="basicobs_guid",
     )
 
-    # read_newly created file:
-    pre_textual_obs_annotation_batch_path = (
-        config_obj.pre_textual_obs_annotation_batch_path
-    )
+    if getattr(config_obj, "storage_backend", "file") == "file":
+        # read_newly created file:
+        pre_textual_obs_annotation_batch_path = (
+            config_obj.pre_textual_obs_annotation_batch_path
+        )
 
-    current_pat_document_annotation_batch_path = os.path.join(
-        pre_textual_obs_annotation_batch_path, current_pat_client_idcode + ".csv"
-    )
+        current_pat_document_annotation_batch_path = os.path.join(
+            pre_textual_obs_annotation_batch_path, current_pat_client_idcode + ".csv"
+        )
 
-    pat_document_annotation_batch = pd.read_csv(
-        current_pat_document_annotation_batch_path
-    )
+        if os.path.exists(current_pat_document_annotation_batch_path):
+            pat_document_annotation_batch = pd.read_csv(
+                current_pat_document_annotation_batch_path
+            )
 
     return pat_document_annotation_batch
 
@@ -215,28 +217,28 @@ def get_pat_document_annotation_batch_reports(
     )
 
     # creaet the file in its dir
-    multi_annots_to_df_reports(
+    pat_document_annotation_batch = multi_annots_to_df_reports(
         current_pat_client_idcode,
         pat_batch,
         multi_annots,
         config_obj=config_obj,
         t=t,
-        text_column="body_analysed",
-        time_column="updatetime",
-        guid_column="basicobs_guid",
     )
 
-    # read_newly created file:
-    pre_document_annotation_batch_path_reports = (
-        config_obj.pre_document_annotation_batch_path_reports
-    )
+    if getattr(config_obj, "storage_backend", "file") == "file":
+        # read_newly created file:
+        pre_document_annotation_batch_path_reports = (
+            config_obj.pre_document_annotation_batch_path_reports
+        )
 
-    current_pat_document_annotation_batch_path = os.path.join(
-        pre_document_annotation_batch_path_reports, current_pat_client_idcode + ".csv"
-    )
+        current_pat_document_annotation_batch_path = os.path.join(
+            pre_document_annotation_batch_path_reports,
+            current_pat_client_idcode + ".csv",
+        )
 
-    pat_document_annotation_batch = pd.read_csv(
-        current_pat_document_annotation_batch_path
-    )
+        if os.path.exists(current_pat_document_annotation_batch_path):
+            pat_document_annotation_batch = pd.read_csv(
+                current_pat_document_annotation_batch_path
+            )
 
     return pat_document_annotation_batch
