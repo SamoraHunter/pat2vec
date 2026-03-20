@@ -37,6 +37,8 @@ dependencies = [
     "pandas>=1.5.3", # Data manipulation and analysis
     "numpy>=1.25.2", # Fundamental package for scientific computing
     "torch==2.8.0", # Deep learning framework for transformers
+    "SQLAlchemy",
+    "psycopg2-binary"
 ]
 
 [project.urls]

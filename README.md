@@ -100,6 +100,8 @@ This project includes a collection of diagrams illustrating the system architect
 |---|---|---|
 | **Data Pipeline** | [assets/data_pipeline.mmd](https://github.com/SamoraHunter/pat2vec/blob/main/assets/data_pipeline.mmd) | ![Data Pipeline](https://github.com/SamoraHunter/pat2vec/blob/main/assets/data_pipeline.png) |
 | **Main Batch Processing** | [assets/main_batch.mmd](https://github.com/SamoraHunter/pat2vec/blob/main/assets/main_batch.mmd) | ![Main Batch](https://github.com/SamoraHunter/pat2vec/blob/main/assets/main_batch.svg) |
+| **Database Architecture** | [assets/database_architecture.mmd](https://github.com/SamoraHunter/pat2vec/blob/main/assets/database_architecture.mmd) | ![Database Architecture](https://github.com/SamoraHunter/pat2vec/blob/main/assets/database_architecture.svg) |
+| **Database Schema** | [assets/database_schema.mmd](https://github.com/SamoraHunter/pat2vec/blob/main/assets/database_schema.mmd) | ![Database Schema](https://github.com/SamoraHunter/pat2vec/blob/main/assets/database_schema.svg) |
 | **Example Ingestion** | [assets/example_ingestion.mmd](https://github.com/SamoraHunter/pat2vec/blob/main/assets/example_ingestion.mmd) | <img src="https://github.com/SamoraHunter/pat2vec/blob/main/assets/example_ingestion.png?raw=true" alt="Example Ingestion" height="400"/> |
 
 #### 🧩 Methods & Post-Processing
@@ -272,8 +274,22 @@ The `example_usage.ipynb` notebook provides a template for running the pipeline.
     - Time windows for data extraction (look-back/look-forward periods).
 4.  **Run the Pipeline**: Execute the cells in the notebook to process your data.
 
-> **Note:** When working with real patient data, ensure the `testing` flag in the `config_class` is set to `False`.
 
+### 4. Database Backend Configuration
+
+By default, `pat2vec` uses a SQL database (e.g., PostgreSQL, SQLite) for storage.
+
+If no connection string is provided, it defaults to a local SQLite database named `{project_name}.db` in your project folder.
+
+To use a specific database (e.g. PostgreSQL):
+
+```python
+config_obj = config_class(
+    # ... other options ...
+    storage_backend='database',  # Default is 'database'
+    db_connection_string='postgresql://user:password@localhost/pat2vec_db'
+)
+```
 
 ## Building the Documentation
 
