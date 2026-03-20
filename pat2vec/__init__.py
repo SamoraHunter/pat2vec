@@ -114,6 +114,7 @@ from .pat2vec_pat_list.get_patient_treatment_list import (
 )
 from .pat2vec_search.cogstack_search_methods import (
     CogStack,
+    check_patients_existence,
     cohort_searcher_no_terms,
     cohort_searcher_no_terms_fuzzy,
     cohort_searcher_with_terms_and_search,
@@ -169,26 +170,39 @@ from .patvec_get_batch_methods.get_merged_batches import (
     verify_split_data_individual,
 )
 from .patvec_get_batch_methods.get_prefetch_batches import BatchConfig, prefetch_batches
-from .patvec_get_batch_methods.main import (
+from .patvec_get_batch_methods.main_get_pat_batch_appointments import (
     get_pat_batch_appointments,
-    get_pat_batch_bloods,
-    get_pat_batch_bmi,
-    get_pat_batch_demo,
+)
+from .patvec_get_batch_methods.main_get_pat_batch_bloods import get_pat_batch_bloods
+from .patvec_get_batch_methods.main_get_pat_batch_bmi import get_pat_batch_bmi
+from .patvec_get_batch_methods.main_get_pat_batch_demo import get_pat_batch_demo
+from .patvec_get_batch_methods.main_get_pat_batch_diagnostics import (
     get_pat_batch_diagnostics,
-    get_pat_batch_drugs,
-    get_pat_batch_epr_docs,
+)
+from .patvec_get_batch_methods.main_get_pat_batch_drugs import get_pat_batch_drugs
+from .patvec_get_batch_methods.main_get_pat_batch_epr_docs import get_pat_batch_epr_docs
+from .patvec_get_batch_methods.main_get_pat_batch_epr_docs_annotations import (
     get_pat_batch_epr_docs_annotations,
-    get_pat_batch_mct_docs,
+)
+from .patvec_get_batch_methods.main_get_pat_batch_mct_docs import get_pat_batch_mct_docs
+from .patvec_get_batch_methods.main_get_pat_batch_mct_docs_annotations import (
     get_pat_batch_mct_docs_annotations,
-    get_pat_batch_news,
-    get_pat_batch_obs,
-    get_pat_batch_reports,
+)
+from .patvec_get_batch_methods.main_get_pat_batch_news import get_pat_batch_news
+from .patvec_get_batch_methods.main_get_pat_batch_obs import get_pat_batch_obs
+from .patvec_get_batch_methods.main_get_pat_batch_reports import get_pat_batch_reports
+from .patvec_get_batch_methods.main_get_pat_batch_reports_docs_annotations import (
     get_pat_batch_reports_docs_annotations,
+)
+from .patvec_get_batch_methods.main_get_pat_batch_textual_obs_annotations import (
     get_pat_batch_textual_obs_annotations,
+)
+from .patvec_get_batch_methods.main_get_pat_batch_textual_obs_docs import (
     get_pat_batch_textual_obs_docs,
 )
 from .tests.test_calculate_interval import TestCalculateInterval
 from .tests.test_config_class import TestConfigClass
+from .tests.test_database_backend import TestDatabaseBackend
 from .tests.test_filter_dataframe_by_timestamp_extended import (
     TestFilterDataFrameByTimestampExtended,
 )
@@ -199,12 +213,18 @@ from .tests.test_get_dummy_data_cohort_searcher_get_date import (
 from .tests.test_get_start_end_year_month import MockConfig, TestGetStartEndYearMonth
 from .tests.test_global_date_validation import TestGlobalDateValidation
 from .tests.test_individual_patient_window import TestIndividualPatientWindow
+from .tests.test_integration_data_integrity import TestIntegrationDataIntegrity
 from .tests.test_methods_annotation_filter_annot_dataframe import (
     TestFilterAnnotDataframe,
 )
 from .tests.test_methods_annotation_multi_annots_to_df import TestMultiAnnotsToDf
 from .tests.test_methods_get import TestFilterDataFrameByTimestamp
 from .tests.test_parse_date import TestDateValidationForElasticsearch
+from .tests.test_pat_maker_full_flow import (
+    TestBatchRetrievalDB,
+    TestPatMakerFullFlow,
+    TestPatMakerLogic,
+)
 from .tests.test_post_processing_build_ipw_dataframe import TestBuildIpwDataframe
 from .tests.test_post_processing_get_pat_ipw_record import TestGetPatIpwRecord
 from .tests.test_post_processing_process_csv_files import TestProcessCsvFiles
@@ -261,6 +281,7 @@ from .util.get_dummy_data_cohort_searcher import (
     generate_appointments_data,
     generate_basic_observations_data,
     generate_basic_observations_textual_obs_data,
+    generate_bed_data,
     generate_bmi_data,
     generate_core_o2_data,
     generate_core_resus_data,
@@ -270,18 +291,22 @@ from .util.get_dummy_data_cohort_searcher import (
     generate_epr_documents_data,
     generate_epr_documents_personal_data,
     generate_hospital_site_data,
+    generate_news_data,
     generate_observations_MRC_text_data,
     generate_observations_Reports_text_data,
     generate_observations_data,
     generate_patient_timeline,
     generate_patient_timeline_faker,
+    generate_smoking_data,
     generate_uuid,
     generate_uuid_list,
+    generate_vte_data,
     get_patient_timeline_dummy,
     maybe_nan,
     run_generate_patient_timeline_and_append,
 )
 from .util.get_dummy_data_medcat_annotation import (
+    augment_dummy_annotations_file,
     dummy_CAT,
     dummy_medcat_annotation_generator,
     random_sample,
@@ -298,8 +323,16 @@ from .util.get_method_index_map import (
 )
 from .util.get_start_end_year_month import get_start_end_year_month
 from .util.helper_functions import (
+    clear_patient_features,
+    ensure_index,
     extract_nhs_numbers,
+    get_all_features,
+    get_df_from_db,
     get_search_client_idcode_list_from_nhs_number_list,
+    sanitize_for_path,
+    save_annotations_to_db,
+    save_patient_features,
+    save_raw_patient_batch,
 )
 from .util.impute_data_for_pipe import mean_impute_dataframe, save_missing_percentage
 from .util.logger_setup import setup_logger
@@ -369,8 +402,10 @@ from .util.methods_post_get import (
     copy_project_folders_with_substring_match,
     retrieve_pat_annotations,
 )
+from .util.migrate_to_db import create_indexes, migrate_csv_to_db
 from .util.parse_date import validate_input_dates
 from .util.post_processing import (
+    EMPTY_ANNOT_COLS,
     aggregate_dataframe_mean,
     check_list_presence,
     collapse_df_to_mean,
@@ -407,6 +442,7 @@ from .util.post_processing_build_methods import (
     build_merged_epr_mct_doc_df,
     get_annots_joined_to_docs,
     join_docs_to_annots,
+    load_merged_epr_mct_annots,
     merge_appointments_csv,
     merge_bmi_csv,
     merge_demographics_csv,
@@ -415,6 +451,7 @@ from .util.post_processing_build_methods import (
     merge_news_csv,
     retrieve_pat_bloods,
     retrieve_pat_docs_mct_epr,
+    retrieve_pat_epr_docs,
 )
 from .util.post_processing_get_pat_ipw_record import get_pat_ipw_record
 from .util.post_processing_medcat import (
@@ -443,6 +480,7 @@ from .util.presentation_methods import (
     create_powerpoint_slides_client_idcode_groups,
     group_images_by_suffix,
 )
+from .util.retrieve_data import DATA_TYPE_CONFIG, retrieve_patient_data
 from .util.testing_helpers import read_test_data
 
 # Define the public API of the package
@@ -458,10 +496,12 @@ __all__ = [
     "COVID_FIELDS",
     "CogStack",
     "CsvProfiler",
+    "DATA_TYPE_CONFIG",
     "DEMOGRAPHICS_FIELDS",
     "DIAGNOSTICS_FIELDS",
     "DRUG_FIELDS",
     "DeIdAnonymizer",
+    "EMPTY_ANNOT_COLS",
     "EthnicityAbstractor",
     "GET_METHOD_DEFAULT_FIELDS_MAP",
     "GET_METHOD_INDEX_MAP",
@@ -472,10 +512,12 @@ __all__ = [
     "SEARCH_TERM_ES",
     "SEARCH_TERM_PLAIN",
     "SMOKING_FIELDS",
+    "TestBatchRetrievalDB",
     "TestBuildIpwDataframe",
     "TestCalculateInterval",
     "TestConfigClass",
     "TestCreateRandomDateFromGlobals",
+    "TestDatabaseBackend",
     "TestDateValidationForElasticsearch",
     "TestFilterAnnotDataframe",
     "TestFilterDataFrameByTimestamp",
@@ -485,7 +527,10 @@ __all__ = [
     "TestGetStartEndYearMonth",
     "TestGlobalDateValidation",
     "TestIndividualPatientWindow",
+    "TestIntegrationDataIntegrity",
     "TestMultiAnnotsToDf",
+    "TestPatMakerFullFlow",
+    "TestPatMakerLogic",
     "TestProcessCsvFiles",
     "VTE_FIELDS",
     "add_offset_column",
@@ -503,6 +548,7 @@ __all__ = [
     "apply_bloods_data_type_filter",
     "apply_data_type_epr_docs_filters",
     "apply_data_type_mct_docs_filters",
+    "augment_dummy_annotations_file",
     "build_ipw_dataframe",
     "build_merged_bloods",
     "build_merged_epr_mct_annot_df",
@@ -527,7 +573,9 @@ __all__ = [
     "check_csv_integrity",
     "check_list_presence",
     "check_pat_document_annotation_complete",
+    "check_patients_existence",
     "clean_observation_value",
+    "clear_patient_features",
     "coerce_document_df_to_medcat_trainer_input",
     "cohort_searcher_no_terms",
     "cohort_searcher_no_terms_fuzzy",
@@ -551,6 +599,7 @@ __all__ = [
     "create_folders",
     "create_folders_annot_csv_wrapper",
     "create_folders_for_pat",
+    "create_indexes",
     "create_local_folders",
     "create_ner_results_dataframe",
     "create_powerpoint_from_images",
@@ -569,6 +618,7 @@ __all__ = [
     "dummy_CAT",
     "dummy_medcat_annotation_generator",
     "dump_results",
+    "ensure_index",
     "enum_exact_target_date_vector",
     "enum_target_date_vector",
     "exist_check",
@@ -594,6 +644,7 @@ __all__ = [
     "generate_appointments_data",
     "generate_basic_observations_data",
     "generate_basic_observations_textual_obs_data",
+    "generate_bed_data",
     "generate_bmi_data",
     "generate_control_list",
     "generate_core_o2_data",
@@ -605,14 +656,18 @@ __all__ = [
     "generate_epr_documents_data",
     "generate_epr_documents_personal_data",
     "generate_hospital_site_data",
+    "generate_news_data",
     "generate_observations_MRC_text_data",
     "generate_observations_Reports_text_data",
     "generate_observations_data",
     "generate_patient_timeline",
     "generate_patient_timeline_faker",
     "generate_pie_charts",
+    "generate_smoking_data",
     "generate_uuid",
     "generate_uuid_list",
+    "generate_vte_data",
+    "get_all_features",
     "get_all_fields_for_method",
     "get_all_method_default_fields",
     "get_all_method_indices",
@@ -637,6 +692,7 @@ __all__ = [
     "get_demo",
     "get_demographics3",
     "get_demographics3_batch",
+    "get_df_from_db",
     "get_empty_date_vector",
     "get_free_gpu",
     "get_guess_datetime_column",
@@ -700,6 +756,7 @@ __all__ = [
     "json_to_dataframe",
     "list_chunker",
     "list_dir_wrapper",
+    "load_merged_epr_mct_annots",
     "main",
     "main_batch",
     "manually_label_annotation_df",
@@ -713,6 +770,7 @@ __all__ = [
     "merge_diagnostics_csv",
     "merge_drugs_csv",
     "merge_news_csv",
+    "migrate_csv_to_db",
     "missing_percentage_df",
     "multi_annots_to_df",
     "multi_annots_to_df_mct",
@@ -747,13 +805,19 @@ __all__ = [
     "retrieve_pat_annots_mct_epr",
     "retrieve_pat_bloods",
     "retrieve_pat_docs_mct_epr",
+    "retrieve_pat_epr_docs",
+    "retrieve_patient_data",
     "run_generate_patient_timeline_and_append",
     "run_pip_compile",
     "sample_by_terms",
+    "sanitize_for_path",
     "sanitize_hospital_ids",
+    "save_annotations_to_db",
     "save_group",
     "save_missing_percentage",
     "save_missing_values_pickle",
+    "save_patient_features",
+    "save_raw_patient_batch",
     "search_appointments",
     "search_bed_data",
     "search_bloods_data",
