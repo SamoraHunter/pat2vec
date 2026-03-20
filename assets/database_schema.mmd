@@ -1,0 +1,345 @@
+erDiagram
+    %% ---------------------------------------------------------
+    %% SCHEMA: raw_data
+    %% ---------------------------------------------------------
+    raw_epr_docs {
+        string client_idcode FK
+        string document_guid PK
+        string document_description
+        string body_analysed
+        datetime updatetime
+        string clientvisit_visitidcode
+    }
+    raw_mct_docs {
+        string client_idcode FK
+        string observation_guid PK
+        string obscatalogmasteritem_displayname
+        string observation_valuetext_analysed
+        datetime observationdocument_recordeddtm
+        string clientvisit_visitidcode
+    }
+    raw_bloods {
+        string client_idcode FK
+        string basicobs_itemname_analysed
+        float basicobs_value_numeric
+        datetime basicobs_entered
+        string clientvisit_serviceguid
+        datetime updatetime
+    }
+    raw_drugs {
+        string client_idcode FK
+        string order_guid PK
+        string order_name
+        string order_summaryline
+        string order_holdreasontext
+        datetime order_entered
+        string clientvisit_visitidcode
+        datetime order_performeddtm
+        datetime order_createdwhen
+    }
+    raw_diagnostics {
+        string client_idcode FK
+        string order_guid PK
+        string order_name
+        string order_summaryline
+        string order_holdreasontext
+        datetime order_entered
+        string clientvisit_visitidcode
+        datetime order_performeddtm
+        datetime order_createdwhen
+    }
+    raw_news {
+        string client_idcode FK
+        string observation_guid PK
+        string obscatalogmasteritem_displayname
+        string observation_valuetext_analysed
+        datetime observationdocument_recordeddtm
+        string clientvisit_visitidcode
+    }
+    raw_bmi {
+        string client_idcode FK
+        string observation_guid PK
+        string obscatalogmasteritem_displayname
+        string observation_valuetext_analysed
+        datetime observationdocument_recordeddtm
+        string clientvisit_visitidcode
+    }
+    raw_demographics {
+        string client_idcode PK
+        string client_firstname
+        string client_lastname
+        datetime client_dob
+        string client_gendercode
+        string client_racecode
+        datetime client_deceaseddtm
+        datetime updatetime
+    }
+    raw_appointments {
+        string HospitalID FK
+        datetime AppointmentDateTime
+        string AppointmentType
+        string AttendanceReference
+        string ClinicCode
+        string ClinicDesc
+        string Consultant
+        datetime DateModified
+        string DNA
+        string PatNHSNo
+        string Popular
+        string Specialty
+        string Attended
+        string CancDesc
+        string CancRefNo
+        string ConsultantCode
+        datetime DateCreated
+        string Ethnicity
+        string Gender
+        string NHSNoStatusCode
+        string NotSpec
+        string PatDateOfBirth
+        string PatForename
+        string PatPostCode
+        string PatSurname
+        string PiMsPatRefNo
+        string Primarykeyfieldname
+        string Primarykeyfieldvalue
+        string SessionCode
+        string SpecialtyCode
+    }
+    raw_textual_obs {
+        string client_idcode FK
+        string basicobs_guid PK
+        string basicobs_itemname_analysed
+        float basicobs_value_numeric
+        string basicobs_value_analysed
+        datetime basicobs_entered
+        string clientvisit_serviceguid
+        string textualObs
+        datetime updatetime
+    }
+    raw_reports {
+        string client_idcode FK
+        string HospitalID
+        string basicobs_guid PK
+        string basicobs_itemname_analysed
+        string basicobs_value_analysed
+        string textualObs
+        datetime updatetime
+    }
+    %% Generic for other obs
+    raw_obs {
+        string client_idcode FK
+        string observation_guid PK
+        string obscatalogmasteritem_displayname
+        string observation_valuetext_analysed
+        datetime observationdocument_recordeddtm
+        string clientvisit_visitidcode
+    }
+    raw_resus {
+        string client_idcode FK
+        string observation_guid PK
+        string obscatalogmasteritem_displayname
+        string observation_valuetext_analysed
+        datetime observationdocument_recordeddtm
+        string clientvisit_visitidcode
+    }
+    raw_covid {
+        string client_idcode FK
+        string observation_guid PK
+        string obscatalogmasteritem_displayname
+        string observation_valuetext_analysed
+        datetime observationdocument_recordeddtm
+        string clientvisit_visitidcode
+    }
+    raw_smoking {
+        string client_idcode FK
+        string observation_guid PK
+        string obscatalogmasteritem_displayname
+        string observation_valuetext_analysed
+        datetime observationdocument_recordeddtm
+        string clientvisit_visitidcode
+    }
+    raw_core_02 {
+        string client_idcode FK
+        string observation_guid PK
+        string obscatalogmasteritem_displayname
+        string observation_valuetext_analysed
+        datetime observationdocument_recordeddtm
+        string clientvisit_visitidcode
+    }
+    raw_bed {
+        string client_idcode FK
+        string observation_guid PK
+        string obscatalogmasteritem_displayname
+        string observation_valuetext_analysed
+        datetime observationdocument_recordeddtm
+        string clientvisit_visitidcode
+    }
+    raw_vte {
+        string client_idcode FK
+        string observation_guid PK
+        string obscatalogmasteritem_displayname
+        string observation_valuetext_analysed
+        datetime observationdocument_recordeddtm
+        string clientvisit_visitidcode
+    }
+    raw_hospsite {
+        string client_idcode FK
+        string observation_guid PK
+        string obscatalogmasteritem_displayname
+        string observation_valuetext_analysed
+        datetime observationdocument_recordeddtm
+        string clientvisit_visitidcode
+    }
+
+    %% ---------------------------------------------------------
+    %% SCHEMA: annotations
+    %% ---------------------------------------------------------
+    ann_epr_docs {
+        string client_idcode FK
+        string document_guid FK
+        string cui
+        string pretty_name
+        string detected_name
+        string source_value
+        string types
+        string type_ids
+        float acc
+        float context_similarity
+        int start
+        int end
+        string id
+        string icd10
+        string snomed
+        string ontologies
+        datetime updatetime
+        string Time_Value
+        float Time_Confidence
+        string Presence_Value
+        float Presence_Confidence
+        string Subject_Value
+        float Subject_Confidence
+    }
+    ann_mct_docs {
+        string client_idcode FK
+        string observation_guid FK
+        string cui
+        string pretty_name
+        string detected_name
+        string source_value
+        string types
+        string type_ids
+        float acc
+        float context_similarity
+        int start
+        int end
+        string id
+        string icd10
+        string snomed
+        string ontologies
+        datetime observationdocument_recordeddtm
+        string Time_Value
+        float Time_Confidence
+        string Presence_Value
+        float Presence_Confidence
+        string Subject_Value
+        float Subject_Confidence
+    }
+    ann_textual_obs {
+        string client_idcode FK
+        string basicobs_guid FK
+        string cui
+        string pretty_name
+        string detected_name
+        string source_value
+        string types
+        string type_ids
+        float acc
+        float context_similarity
+        int start
+        int end
+        string id
+        string icd10
+        string snomed
+        string ontologies
+        datetime basicobs_entered
+        string Time_Value
+        float Time_Confidence
+        string Presence_Value
+        float Presence_Confidence
+        string Subject_Value
+        float Subject_Confidence
+    }
+    ann_reports {
+        string client_idcode FK
+        string basicobs_guid FK
+        string cui
+        string pretty_name
+        string detected_name
+        string source_value
+        string types
+        string type_ids
+        float acc
+        float context_similarity
+        int start
+        int end
+        string id
+        string icd10
+        string snomed
+        string ontologies
+        datetime updatetime
+        string Time_Value
+        float Time_Confidence
+        string Presence_Value
+        float Presence_Confidence
+        string Subject_Value
+        float Subject_Confidence
+    }
+
+    %% ---------------------------------------------------------
+    %% SCHEMA: features
+    %% ---------------------------------------------------------
+    features {
+        string client_idcode FK
+        float dynamic_feature_columns "Many columns generated from processing"
+    }
+
+    %% ---------------------------------------------------------
+    %% RELATIONSHIPS (Implicit via client_idcode)
+    %% ---------------------------------------------------------
+    %% 1. All data belongs to a Patient (raw_demographics)
+    raw_demographics ||--o{ raw_epr_docs : "has"
+    raw_demographics ||--o{ raw_mct_docs : "has"
+    raw_demographics ||--o{ raw_bloods : "has"
+    raw_demographics ||--o{ raw_drugs : "has"
+    raw_demographics ||--o{ raw_diagnostics : "has"
+    raw_demographics ||--o{ raw_news : "has"
+    raw_demographics ||--o{ raw_bmi : "has"
+    raw_demographics ||--o{ raw_textual_obs : "has"
+    raw_demographics ||--o{ raw_reports : "has"
+    raw_demographics ||--o{ raw_obs : "has"
+    raw_demographics ||--o{ raw_resus : "has"
+    raw_demographics ||--o{ raw_smoking : "has"
+    raw_demographics ||--o{ raw_core_02 : "has"
+    raw_demographics ||--o{ raw_bed : "has"
+    raw_demographics ||--o{ raw_vte : "has"
+    raw_demographics ||--o{ raw_hospsite : "has"
+    raw_demographics ||--o{ raw_covid : "has"
+
+    %% Appointments link via HospitalID -> client_idcode
+    raw_demographics ||--o{ raw_appointments : "has (HospitalID)"
+
+    %% 2. Annotations belong to a Patient (Denormalized link for vector creation)
+    raw_demographics ||--o{ ann_epr_docs : "has annotations"
+    raw_demographics ||--o{ ann_mct_docs : "has annotations"
+    raw_demographics ||--o{ ann_textual_obs : "has annotations"
+    raw_demographics ||--o{ ann_reports : "has annotations"
+
+    %% 3. Annotations belong to specific Source Documents (Structural link)
+    raw_epr_docs    ||--o{ ann_epr_docs : "is annotated by"
+    raw_mct_docs    ||--o{ ann_mct_docs : "is annotated by"
+    raw_textual_obs ||--o{ ann_textual_obs : "is annotated by"
+    raw_reports     ||--o{ ann_reports : "is annotated by"
+
+    %% 4. Final Output
+    raw_demographics ||--o{ features : "produces vector"

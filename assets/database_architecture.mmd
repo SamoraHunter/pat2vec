@@ -1,0 +1,260 @@
+flowchart TD
+    classDef db        fill:#e1f5fe,stroke:#01579b,stroke-width:1.5px
+    classDef process   fill:#f3e5f5,stroke:#4a148c,stroke-width:1.5px
+    classDef source    fill:#fff3e0,stroke:#e65100,stroke-width:1.5px
+    classDef helper    fill:#e8f5e9,stroke:#1b5e20,stroke-width:1.5px
+    classDef annot     fill:#fce4ec,stroke:#880e4f,stroke-width:1.5px
+    classDef filecache fill:#fffde7,stroke:#f57f17,stroke-width:1.5px
+
+    subgraph Config [Configuration]
+        ConfObj[config_class]
+        ParamBackend["storage_backend='database'"]
+        OverwriteFlag[overwrite_stored_pat_observations]
+        StoreFlag[store_pat_batch_observations]
+    end
+
+    subgraph Sources [External Sources]
+        ES[Elasticsearch / CogStack]:::source
+        MedCAT[MedCAT NLP model]:::source
+    end
+
+    subgraph Orchestrator [Main Orchestrator]
+        direction TB
+        PatMaker[pat_maker]:::process
+        GetBatches[_get_patient_data_batches]:::process
+        SaveRaw[_save_batches_to_db]:::process
+        CalcAnnot[Calculate Annotations]:::process
+        Process[main_batch]:::process
+        SaveFeat[save_patient_features]:::process
+        SaveAnnot[save_annotations_to_db]:::process
+    end
+
+    subgraph MergedBatch [Merged Batch Layer - all patients]
+        GetMergedBloods[get_merged_pat_batch_bloods]:::process
+        GetMergedDrugs[get_merged_pat_batch_drugs]:::process
+        GetMergedDiag[get_merged_pat_batch_diagnostics]:::process
+        GetMergedEPR[get_merged_pat_batch_epr_docs]:::process
+        GetMergedMCT[get_merged_pat_batch_mct_docs]:::process
+        GetMergedDemo[get_merged_pat_batch_demo]:::process
+        GetMergedBMI[get_merged_pat_batch_bmi]:::process
+        GetMergedNews[get_merged_pat_batch_news]:::process
+        GetMergedApps[get_merged_pat_batch_appointments]:::process
+        GetMergedOther[get_merged_pat_batch_obs_reports_etc]:::process
+    end
+
+    subgraph PerPatBatch [Per-Patient Batch Layer - one patient]
+        GetPatBloods[get_pat_batch_bloods]:::process
+        GetPatDrugs[get_pat_batch_drugs]:::process
+        GetPatDocs[get_pat_batch_epr_mct_docs]:::process
+    end
+
+    subgraph Helpers [DB Helper Layer]
+        GetDF[get_df_from_db]:::helper
+        EnsureIdx[ensure_index]:::helper
+        ClearFeat[clear_patient_features]:::helper
+        GetAllFeat[get_all_features]:::helper
+        ExistCheck[exist_check]:::helper
+    end
+
+    subgraph FileCache [Per-Patient File Cache]
+        FC_Bloods[pre_bloods_batch_path - patientid.csv]:::filecache
+        FC_Docs[pre_epr_docs_path - patientid.csv]:::filecache
+        FC_Merged[pre_merged_input_batches_path - merged_x.csv]:::filecache
+    end
+
+    subgraph DB [Database Layer]
+        direction TB
+
+        subgraph RawTablesProxy [raw_data schema]
+            RawProxy[raw_data tables]:::db
+        end
+        subgraph RawTables [Schema: raw_data]
+            direction TB
+            T_EPR[raw_epr_docs]:::db
+            T_MCT[raw_mct_docs]:::db
+            T_TxtObs[raw_textual_obs]:::db
+            T_Reports[raw_reports]:::db
+            T_Bloods[raw_bloods]:::db
+            T_Drugs[raw_drugs]:::db
+            T_Diag[raw_diagnostics]:::db
+            T_News[raw_news]:::db
+            T_BMI[raw_bmi]:::db
+            T_Demo[raw_demographics]:::db
+            T_Apps[raw_appointments]:::db
+            T_Covid[raw_covid]:::db
+            T_Smoking[raw_smoking]:::db
+            T_Core02[raw_core_02]:::db
+            T_Bed[raw_bed]:::db
+            T_VTE[raw_vte]:::db
+            T_Site[raw_hospsite]:::db
+            T_Resus[raw_resus]:::db
+            T_Obs[raw_obs]:::db
+        end
+
+        subgraph AnnotTablesProxy [annotations schema]
+            AnnotProxy[annotations tables]:::annot
+        end
+        subgraph AnnotTables [Schema: annotations]
+            A_EPR[ann_epr_docs]:::annot
+            A_MCT[ann_mct_docs]:::annot
+            A_Rep[ann_reports]:::annot
+            A_Txt[ann_textual_obs]:::annot
+        end
+
+        subgraph FeatTables [Schema: features]
+            TF[features]:::db
+        end
+    end
+
+    %% Config wiring
+    ConfObj       -.->|Configures| PatMaker
+    ParamBackend  -.->|Sets backend| PatMaker
+    OverwriteFlag -.->|Controls fetch and write| GetPatBloods
+    StoreFlag     -.->|Controls write-through| GetPatBloods
+    %% Flow Logic
+    ConfObj -.->|Configures| PatMaker
+    ParamBackend -.->|Sets Backend| PatMaker
+
+    %% External
+    MedCAT -.->|NLP model| Process
+    PatMaker -->|1. Fetch Data| GetBatches
+    GetBatches -->|1a. Check Cache| RawTables
+    RawTables -.->|Return if found| GetBatches
+    GetBatches -->|1b. Fetch if missing| ES
+
+    %% Orchestrator triggers both batch layers
+    PatMaker -->|1a. Bulk prefetch all patients| GetMergedBloods
+    PatMaker -->|1a. Bulk prefetch all patients| GetMergedDrugs
+    PatMaker -->|1a. Bulk prefetch all patients| GetMergedDiag
+    PatMaker -->|1a. Bulk prefetch all patients| GetMergedEPR
+    PatMaker -->|1a. Bulk prefetch all patients| GetMergedMCT
+    PatMaker -->|1a. Bulk prefetch all patients| GetMergedDemo
+    PatMaker -->|1a. Bulk prefetch all patients| GetMergedBMI
+    PatMaker -->|1a. Bulk prefetch all patients| GetMergedNews
+    PatMaker -->|1a. Bulk prefetch all patients| GetMergedApps
+    PatMaker -->|1a. Bulk prefetch all patients| GetMergedOther
+    PatMaker -->|1b. Per-patient fetch| GetPatBloods
+    PatMaker -->|1b. Per-patient fetch| GetPatDrugs
+    PatMaker -->|1b. Per-patient fetch| GetPatDocs
+    PatMaker -->|2. Persist Raw Data| SaveRaw
+    SaveRaw -->|INSERT/UPDATE| RawTables
+
+    %% Merged batch: DB cache check
+    GetMergedBloods -->|Cache lookup| GetDF
+    GetMergedDrugs  -->|Cache lookup| GetDF
+    GetMergedDiag   -->|Cache lookup| GetDF
+    GetMergedEPR    -->|Cache lookup| GetDF
+    GetMergedMCT    -->|Cache lookup| GetDF
+    GetMergedDemo   -->|Cache lookup| GetDF
+    GetMergedBMI    -->|Cache lookup| GetDF
+    GetMergedNews   -->|Cache lookup| GetDF
+    GetMergedApps   -->|Cache lookup| GetDF
+    GetMergedOther  -->|Cache lookup| GetDF
+    GetDF           -->|Query by patient IDs| RawProxy
+    RawProxy        -.->|Cached rows| GetDF
+    PatMaker -->|3. Calculate Annotations| CalcAnnot
+    CalcAnnot -.->|Using MedCAT| MedCAT
+    CalcAnnot -.->|Output| AnnotTables
+
+    %% Merged batch: ES fetch
+    GetMergedBloods -->|If missing - fetch| ES
+    GetMergedDrugs  -->|If missing - fetch| ES
+    GetMergedDiag   -->|If missing - fetch| ES
+    GetMergedEPR    -->|If missing - fetch| ES
+    GetMergedMCT    -->|If missing - fetch| ES
+    GetMergedDemo   -->|If missing - fetch| ES
+    GetMergedBMI    -->|If missing - fetch| ES
+    GetMergedNews   -->|If missing - fetch| ES
+    GetMergedApps   -->|If missing - fetch| ES
+    GetMergedOther  -->|If missing - fetch| ES
+    ES              -.->|Raw data| GetMergedBloods
+    ES              -.->|Raw data| GetMergedDrugs
+    ES              -.->|Raw data| GetMergedDiag
+    ES              -.->|Raw data| GetMergedEPR
+    ES              -.->|Raw data| GetMergedMCT
+
+    %% Merged batch: file cache fallback
+    GetMergedBloods -->|File backend write| FC_Merged
+    FC_Merged       -.->|File backend read| GetMergedBloods
+
+    %% Merged batch: DB write-through
+    GetMergedBloods -->|Write merged result| RawProxy
+    GetMergedDrugs  -->|Write merged result| RawProxy
+    GetMergedDiag   -->|Write merged result| RawProxy
+    GetMergedEPR    -->|Write merged result| RawProxy
+    GetMergedMCT    -->|Write merged result| RawProxy
+    GetMergedDemo   -->|Write merged result| RawProxy
+    GetMergedBMI    -->|Write merged result| RawProxy
+    GetMergedNews   -->|Write merged result| RawProxy
+    GetMergedApps   -->|Write merged result| RawProxy
+    GetMergedOther  -->|Write merged result| RawProxy
+
+    %% Per-patient batch: DB cache check
+    GetPatBloods -->|1. DB cache lookup| GetDF
+    GetPatDrugs  -->|1. DB cache lookup| GetDF
+    GetPatDocs   -->|1. DB cache lookup| GetDF
+
+    %% Per-patient batch: file exist check
+    GetPatBloods -->|2. File exist check| ExistCheck
+    GetPatDrugs  -->|2. File exist check| ExistCheck
+    GetPatDocs   -->|2. File exist check| ExistCheck
+    ExistCheck   -.->|File found| FC_Bloods
+    ExistCheck   -.->|File found| FC_Docs
+    FC_Bloods    -.->|Return cached CSV| GetPatBloods
+    FC_Docs      -.->|Return cached CSV| GetPatDocs
+
+    %% Per-patient batch: ES fetch
+    GetPatBloods -->|3. If missing - fetch| ES
+    GetPatDrugs  -->|3. If missing - fetch| ES
+    GetPatDocs   -->|3. If missing - fetch| ES
+    ES           -.->|Raw data| GetPatBloods
+    ES           -.->|Raw data| GetPatDrugs
+    ES           -.->|Raw data| GetPatDocs
+
+    %% Per-patient write-through
+    GetPatBloods -->|4a. DB write-through| RawProxy
+    GetPatBloods -->|4b. File write-through| FC_Bloods
+    GetPatDrugs  -->|4a. DB write-through| RawProxy
+    GetPatDocs   -->|4a. DB write-through| RawProxy
+    GetPatDocs   -->|4b. File write-through| FC_Docs
+    EnsureIdx    -.->|Add index after write| RawProxy
+
+    %% Persist raw
+    PatMaker    -->|2. Persist raw data| SaveRaw
+    SaveRaw -->|INSERT / REPLACE| RawProxy
+
+    %% batches dict to main_batch
+    GetMergedBloods -->|batches dict| Process
+    GetMergedDrugs  -->|batches dict| Process
+    GetMergedDiag   -->|batches dict| Process
+    GetMergedEPR    -->|batches dict| Process
+    GetMergedMCT    -->|batches dict| Process
+    GetMergedDemo   -->|batches dict| Process
+    GetMergedBMI    -->|batches dict| Process
+    GetMergedNews   -->|batches dict| Process
+    GetMergedApps   -->|batches dict| Process
+    GetMergedOther  -->|batches dict| Process
+    GetPatBloods    -->|batches dict| Process
+    GetPatDrugs     -->|batches dict| Process
+    GetPatDocs      -->|batches dict| Process
+
+    %% Annotations
+    Process   -->|4. Annotation results| SaveAnnot
+    SaveAnnot -->|INSERT| A_EPR
+    SaveAnnot -->|INSERT| A_MCT
+    SaveAnnot -->|INSERT| A_Rep
+    SaveAnnot -->|INSERT| A_Txt
+    EnsureIdx -.->|Add index after write| AnnotProxy
+
+    %% Features
+    Process   -->|5. Feature df| SaveFeat
+    ClearFeat -.->|DELETE existing rows| TF
+    SaveFeat  -->|INSERT features_json| TF
+    EnsureIdx -.->|Add index after write| TF
+
+    %% Retrieval
+    GetAllFeat -->|Full table read| TF
+    GetAllFeat -.->|Unpacks features_json| GetAllFeat
+    PatMaker -->|4. Calculate Features| Process
+    Process -->|Result DF| SaveFeat
+    SaveFeat -->|INSERT| TF
