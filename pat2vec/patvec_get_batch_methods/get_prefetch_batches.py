@@ -19,23 +19,25 @@ from dataclasses import dataclass
 
 @dataclass
 class BatchConfig:
-    """Configuration for a single data type batch processing operation.
-
-    Attributes:
-        name: A human-readable name for the batch type (e.g., "bloods").
-        enabled_option: The key in the main options config that enables/disables
-            this batch type.
-        get_function: The function used to retrieve the merged batch of data.
-        save_path_attr: The attribute name in the main config object that holds
-            the save path for the split patient files.
-        search_term: An optional search term required by the `get_function`.
-    """
+    """Configuration for a single data type batch processing operation."""
 
     name: str
+    """A human-readable name for the batch type (e.g., "bloods")."""
+
     enabled_option: str
+    """The key in the main options config that enables/disables this batch type."""
+
     get_function: callable
+    """The function used to retrieve the merged batch of data."""
+
     save_path_attr: str
+    """The attribute name in the main config object that holds the save path for the split patient files."""
+
+    id_column: str = "client_idcode"
+    """The name of the patient identifier column for this data type."""
+
     search_term: Optional[str] = None
+    """An optional search term required by the `get_function`."""
 
 
 def prefetch_batches(pat2vec_obj: Any) -> List[BatchConfig]:
@@ -166,6 +168,7 @@ def prefetch_batches(pat2vec_obj: Any) -> List[BatchConfig]:
             enabled_option="appointments",
             get_function=get_merged_pat_batch_appointments,
             save_path_attr="pre_appointments_batch_path",
+            id_column="HospitalID",
             search_term="",  # Search term is not used by the function
         ),
         BatchConfig(
@@ -204,16 +207,19 @@ def prefetch_batches(pat2vec_obj: Any) -> List[BatchConfig]:
             # Get batch data
             df = config.get_function(**func_kwargs)
 
-            # Get save path from config
-            save_path = getattr(pat2vec_obj.config_obj, config.save_path_attr)
+            # If using file backend, split and save the merged dataframe.
+            # If using database backend, the get_function has already saved the data.
+            if pat2vec_obj.config_obj.storage_backend == "file":
+                # Get save path from config
+                save_path = getattr(pat2vec_obj.config_obj, config.save_path_attr)
 
-            # Save batch data
-            split_and_save_csv(
-                df=df,
-                client_idcode_column="client_idcode",
-                save_folder=save_path,
-                num_processes=None,
-            )
+                # Save batch data
+                split_and_save_csv(
+                    df=df,
+                    client_idcode_column=config.id_column,
+                    save_folder=save_path,
+                    num_processes=None,
+                )
 
             if verbose > 0:
                 print(f"[INFO] Successfully processed and saved {config.name} batch")
