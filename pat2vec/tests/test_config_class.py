@@ -85,14 +85,14 @@ class TestConfigClass(unittest.TestCase):
     def test_testing_mode_updates_options(self):
         """Test that when testing=True, main_options are filtered."""
         # This option is True by default, but False in test_options
-        custom_options = {"demo": True, "bmi": True}
+        custom_options = {"demo": True, "negated_presence_annotations": True}
         with patch("builtins.print"):
             config = config_class(main_options=custom_options, testing=True)
 
         # 'demo' is True in test_options, so it should remain True
         self.assertTrue(config.main_options["demo"])
-        # 'bmi' is False in test_options, so it should be forced to False
-        self.assertFalse(config.main_options["bmi"])
+        # 'negated_presence_annotations' is False in test_options, so it should be forced to False
+        self.assertFalse(config.main_options["negated_presence_annotations"])
         # The filename should be updated
         self.assertEqual(
             config.treatment_doc_filename,

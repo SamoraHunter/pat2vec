@@ -1,6 +1,7 @@
 import unittest
 from unittest.mock import patch, Mock
 import pandas as pd
+from dateutil.relativedelta import relativedelta
 
 # The function to be tested
 from pat2vec.util.post_processing_build_ipw_dataframe import build_ipw_dataframe
@@ -312,6 +313,117 @@ class TestBuildIpwDataframe(unittest.TestCase):
             [p1_latest_record, p3_latest_record], ignore_index=True
         )
         pd.testing.assert_frame_equal(result_latest, expected_latest)
+
+    @patch("pat2vec.util.post_processing_build_ipw_dataframe.get_pat_ipw_record")
+    def test_cooccurrence_workflow_and_date_calculation(self, mock_get_ipw_record):
+        """
+        Test the full workflow:
+        1. Identification of patients with co-occurring concepts (Intersection).
+        2. Building the IPW dataframe for this specific cohort.
+        3. Calculating start/end dates with offsets (Buffer + Duration).
+        """
+        # 1. Setup Mock Annotation Data (Simulating dfa_s)
+        # P001: Has A (101) and B (102) -> Should be included (True Cohort)
+        # P002: Has A (101) only -> Should be excluded
+        # P003: Has B (102) only -> Should be excluded
+        # P004: Has A (101) and B (102) -> Should be included (True Cohort)
+
+        concept_A_codes = [101]
+        concept_B_codes = [102]
+
+        dfa_s = pd.DataFrame(
+            {
+                "client_idcode": ["P001", "P001", "P002", "P003", "P004", "P004"],
+                "cui": [101, 102, 101, 102, 101, 102],
+                # Use UTC timestamps
+                "updatetime": [
+                    pd.Timestamp("2023-01-01", tz="UTC"),
+                    pd.Timestamp("2023-01-05", tz="UTC"),
+                    pd.Timestamp("2023-02-01", tz="UTC"),
+                    pd.Timestamp("2023-03-01", tz="UTC"),
+                    pd.Timestamp("2023-04-01", tz="UTC"),
+                    pd.Timestamp("2023-04-02", tz="UTC"),
+                ],
+            }
+        )
+
+        # 2. Run Co-occurrence Logic (The "Manner" to test)
+        # Ensure numeric types for CUIs to avoid type mismatch issues
+        dfa_s["cui"] = pd.to_numeric(dfa_s["cui"], errors="coerce")
+
+        clients_with_A = set(dfa_s[dfa_s["cui"].isin(concept_A_codes)]["client_idcode"])
+        clients_with_B = set(dfa_s[dfa_s["cui"].isin(concept_B_codes)]["client_idcode"])
+        true_clients = list(clients_with_A.intersection(clients_with_B))
+
+        # Verify intersection logic correctly identifies P001 and P004
+        self.assertCountEqual(true_clients, ["P001", "P004"])
+
+        # 3. Setup Mocks for IPW Construction
+        # Mock get_pat_ipw_record to return the anchor date for the valid patients
+        def side_effect_get_record(current_pat_idcode, **kwargs):
+            if current_pat_idcode == "P001":
+                return pd.DataFrame(
+                    [
+                        {
+                            "client_idcode": "P001",
+                            "updatetime": pd.Timestamp("2023-01-01", tz="UTC"),
+                        }
+                    ]
+                )
+            elif current_pat_idcode == "P004":
+                return pd.DataFrame(
+                    [
+                        {
+                            "client_idcode": "P004",
+                            "updatetime": pd.Timestamp("2023-04-01", tz="UTC"),
+                        }
+                    ]
+                )
+            return pd.DataFrame()
+
+        mock_get_ipw_record.side_effect = side_effect_get_record
+
+        # 4. Build IPW Dataframe using the filtered patient list
+        ipw_dataframe = build_ipw_dataframe(
+            config_obj=self.mock_config,
+            custom_pat_list=true_clients,
+            filter_codes=concept_A_codes + concept_B_codes,
+            mode="earliest",
+        )
+
+        # 5. Calculate Window Dates (Buffer + Duration)
+        # Mock config.time_delta (Observation Window)
+        self.mock_config.time_delta = relativedelta(years=1)
+        buffer_period = relativedelta(months=3)
+
+        # Apply the logic from the notebook
+        ipw_dataframe["updatetime_offset"] = ipw_dataframe["updatetime"].apply(
+            lambda x: x + buffer_period
+        )
+        ipw_dataframe["updatetime_end_date"] = ipw_dataframe["updatetime_offset"].apply(
+            lambda x: x + self.mock_config.time_delta
+        )
+
+        # 6. Final Assertions
+        # Validate P001: Jan 1st + 3m buffer = Apr 1st. Apr 1st + 1y window = Apr 1st next year.
+        row_p1 = ipw_dataframe[ipw_dataframe["client_idcode"] == "P001"].iloc[0]
+        expected_offset_p1 = pd.Timestamp("2023-01-01", tz="UTC") + relativedelta(
+            months=3
+        )
+        expected_end_p1 = expected_offset_p1 + relativedelta(years=1)
+
+        self.assertEqual(row_p1["updatetime_offset"], expected_offset_p1)
+        self.assertEqual(row_p1["updatetime_end_date"], expected_end_p1)
+
+        # Validate P004
+        row_p4 = ipw_dataframe[ipw_dataframe["client_idcode"] == "P004"].iloc[0]
+        expected_offset_p4 = pd.Timestamp("2023-04-01", tz="UTC") + relativedelta(
+            months=3
+        )
+        expected_end_p4 = expected_offset_p4 + relativedelta(years=1)
+
+        self.assertEqual(row_p4["updatetime_offset"], expected_offset_p4)
+        self.assertEqual(row_p4["updatetime_end_date"], expected_end_p4)
 
 
 if __name__ == "__main__":
