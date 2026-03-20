@@ -10,6 +10,7 @@ import os
 import tempfile
 from contextlib import contextmanager
 from typing import Any, Dict, Iterator, List
+from pat2vec.util.helper_functions import save_annotations_to_db
 
 logger = logging.getLogger(__name__)
 
@@ -44,7 +45,7 @@ def multi_annots_to_df(
     time_column: str = "updatetime",
     guid_column: str = "document_guid",
 ) -> pd.DataFrame:
-    """Processes MedCAT annotations for a batch of documents, creating and saving a DataFrame.
+    """Processes MedCAT annotations for a batch of documents, creating and saving a DataFrame (file or DB).
 
     This function takes a list of MedCAT annotation results, corresponding to a
     batch of documents for a single patient. It iterates through each document's
@@ -56,7 +57,7 @@ def multi_annots_to_df(
     ICD-10 and OPCS-4 codes based on settings in the configuration object.
 
     Finally, the resulting DataFrame is saved as a CSV file in the patient's
-    designated annotation directory.
+    designated annotation directory or written to the configured database.
 
     Args:
         current_pat_client_idcode: The unique identifier for the patient.
@@ -153,12 +154,19 @@ def multi_annots_to_df(
         if config_obj.verbosity >= 1:
             logger.warning(f"Error joining ICD10/OPC4S codes: {str(e)}")
 
-    # Write the final DataFrame to CSV. This will now run every time.
-    destination_path = os.path.join(
-        config_obj.pre_document_annotation_batch_path,
-        current_pat_client_idcode + ".csv",
-    )
+    # Write to file only if backend is 'file'
+    if getattr(config_obj, "storage_backend", "file") != "database":
+        destination_path = os.path.join(
+            config_obj.pre_document_annotation_batch_path,
+            current_pat_client_idcode + ".csv",
+        )
 
-    final_df.to_csv(destination_path, index=False)
+        final_df.to_csv(destination_path, index=False)
+
+    # Write to Database if backend is 'database'
+    if getattr(config_obj, "storage_backend", "file") == "database":
+        save_annotations_to_db(
+            final_df, current_pat_client_idcode, "ann_epr_docs", config_obj
+        )
 
     return final_df

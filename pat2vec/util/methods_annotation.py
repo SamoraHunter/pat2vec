@@ -1,9 +1,9 @@
 import os
-import shutil
 import logging
 import pandas as pd
 from typing import Any, Dict, List, Optional
-
+from sqlalchemy import text
+from pat2vec.util.helper_functions import save_annotations_to_db
 from pat2vec.util.methods_annotation_json_to_dataframe import json_to_dataframe
 from pat2vec.util.methods_get import exist_check, update_pbar
 from pat2vec.util.post_processing import (
@@ -17,15 +17,39 @@ logger = logging.getLogger(__name__)
 def check_pat_document_annotation_complete(
     current_pat_client_id_code: str, config_obj: Any = None
 ) -> bool:
-    """Checks if a patient's document annotation file already exists.
+    """Checks if a patient's document annotation data already exists (file or database).
 
     Args:
         current_pat_client_id_code: The patient's ID code.
         config_obj: The configuration object containing file paths.
 
     Returns:
-        True if the annotation file exists, False otherwise.
+        True if the annotation data exists, False otherwise.
     """
+    if getattr(config_obj, "storage_backend", "file") == "database":
+        try:
+            engine = config_obj.db_engine
+            if not engine:
+                return False
+
+            # Check ann_epr_docs for existence
+            with engine.connect() as connection:
+                if engine.name == "sqlite":
+                    query = text(
+                        'SELECT 1 FROM "annotations_ann_epr_docs" WHERE "client_idcode" = :pat_id LIMIT 1'
+                    )
+                else:
+                    query = text(
+                        'SELECT 1 FROM "annotations"."ann_epr_docs" WHERE "client_idcode" = :pat_id LIMIT 1'
+                    )
+
+                result = connection.execute(
+                    query, {"pat_id": current_pat_client_id_code}
+                ).scalar()
+                return result is not None
+        except Exception:
+            return False
+
     pre_document_batch_path = config_obj.pre_document_batch_path
 
     pre_document_annotation_batch_path = config_obj.pre_document_annotation_batch_path
@@ -92,12 +116,12 @@ def multi_annots_to_df_textual_obs(
     text_column: str = "textualObs",
     time_column: str = "basicobs_entered",
     guid_column: str = "basicobs_guid",
-) -> None:
-    """Converts MedCAT annotations for textual observations to a DataFrame and saves it.
+) -> pd.DataFrame:
+    """Converts MedCAT annotations for textual observations to a DataFrame and saves it (file or DB).
 
     This function processes a list of annotations, converts them to a structured
     DataFrame, optionally joins ICD-10/OPCS-4 codes, and saves the result
-    to a patient-specific CSV file.
+    to a patient-specific CSV file or database table.
 
     Args:
         current_pat_client_idcode: The patient's ID code.
@@ -108,6 +132,9 @@ def multi_annots_to_df_textual_obs(
         text_column: The name of the text column in `pat_batch`.
         time_column: The name of the timestamp column in `pat_batch`.
         guid_column: The name of the document identifier column in `pat_batch`.
+
+    Returns:
+        pd.DataFrame: The annotated dataframe.
     """
     n_docs_to_annotate = len(pat_batch)
 
@@ -131,8 +158,6 @@ def multi_annots_to_df_textual_obs(
         config_obj=config_obj,
     )
 
-    temp_file_path = "temp_annot_file.csv"
-
     col_list = [
         "client_idcode",
         time_column,
@@ -161,7 +186,7 @@ def multi_annots_to_df_textual_obs(
         guid_column,
     ]
 
-    pd.DataFrame(None, columns=col_list).to_csv(temp_file_path)
+    all_annot_dfs = []
 
     for i in range(0, len(pat_batch)):
 
@@ -194,23 +219,26 @@ def multi_annots_to_df_textual_obs(
         if config_obj.verbosity >= 14:
             logger.debug(f"multi_annots_to_df_textualObs: {len(doc_to_annot_df)}")
 
-        doc_to_annot_df.to_csv(temp_file_path, mode="a", header=False, index=False)
+        all_annot_dfs.append(doc_to_annot_df)
 
-    shutil.copy(temp_file_path, current_pat_document_annotation_batch_path)
+    if all_annot_dfs:
+        final_df = pd.concat(all_annot_dfs, ignore_index=True)
+    else:
+        final_df = pd.DataFrame(columns=col_list)
 
     if config_obj.add_icd10 and config_obj.add_opc4s:
-
-        temp_df = pd.read_csv(current_pat_document_annotation_batch_path)
-        temp_result = join_icd10_OPC4S_codes_to_annot(df=temp_df, inner=False)
-
-        temp_result.to_csv(current_pat_document_annotation_batch_path)
-
+        final_df = join_icd10_OPC4S_codes_to_annot(df=final_df, inner=False)
     elif config_obj.add_icd10:
+        final_df = join_icd10_codes_to_annot(df=final_df, inner=False)
 
-        temp_df = pd.read_csv(current_pat_document_annotation_batch_path)
-        temp_result = join_icd10_codes_to_annot(df=temp_df, inner=False)
+    if getattr(config_obj, "storage_backend", "file") == "file":
+        final_df.to_csv(current_pat_document_annotation_batch_path, index=False)
 
-        temp_result.to_csv(current_pat_document_annotation_batch_path)
+    save_annotations_to_db(
+        final_df, current_pat_client_idcode, "ann_textual_obs", config_obj
+    )
+
+    return final_df
 
 
 def multi_annots_to_df_reports(
@@ -222,12 +250,12 @@ def multi_annots_to_df_reports(
     text_column: str = "body_analysed",
     time_column: str = "updatetime",
     guid_column: str = "basicobs_guid",
-) -> None:
-    """Converts MedCAT annotations for reports to a DataFrame and saves it.
+) -> pd.DataFrame:
+    """Converts MedCAT annotations for reports to a DataFrame and saves it (file or DB).
 
     This function processes a list of annotations from reports, converts them
     to a structured DataFrame, optionally joins ICD-10/OPCS-4 codes, and saves
-    the result to a patient-specific CSV file.
+    the result to a patient-specific CSV file or database table.
 
     Args:
         current_pat_client_idcode: The patient's ID code.
@@ -238,6 +266,9 @@ def multi_annots_to_df_reports(
         text_column: The name of the text column in `pat_batch`.
         time_column: The name of the timestamp column in `pat_batch`.
         guid_column: The name of the document identifier column in `pat_batch`.
+
+    Returns:
+        pd.DataFrame: The annotated dataframe.
     """
     n_docs_to_annotate = len(pat_batch)
 
@@ -261,8 +292,6 @@ def multi_annots_to_df_reports(
         config_obj=config_obj,
     )
 
-    temp_file_path = "temp_annot_file.csv"
-
     col_list = [
         "client_idcode",
         time_column,
@@ -291,7 +320,7 @@ def multi_annots_to_df_reports(
         guid_column,
     ]
 
-    pd.DataFrame(None, columns=col_list).to_csv(temp_file_path)
+    all_annot_dfs = []
 
     for i in range(0, len(pat_batch)):
 
@@ -324,23 +353,26 @@ def multi_annots_to_df_reports(
         if config_obj.verbosity >= 14:
             logger.debug(f"multi_annots_to_df_reports: {len(doc_to_annot_df)}")
 
-        doc_to_annot_df.to_csv(temp_file_path, mode="a", header=False, index=False)
+        all_annot_dfs.append(doc_to_annot_df)
 
-    shutil.copy(temp_file_path, current_pat_document_annotation_batch_path)
+    if all_annot_dfs:
+        final_df = pd.concat(all_annot_dfs, ignore_index=True)
+    else:
+        final_df = pd.DataFrame(columns=col_list)
 
     if config_obj.add_icd10 and config_obj.add_opc4s:
-
-        temp_df = pd.read_csv(current_pat_document_annotation_batch_path)
-        temp_result = join_icd10_OPC4S_codes_to_annot(df=temp_df, inner=False)
-
-        temp_result.to_csv(current_pat_document_annotation_batch_path)
-
+        final_df = join_icd10_OPC4S_codes_to_annot(df=final_df, inner=False)
     elif config_obj.add_icd10:
+        final_df = join_icd10_codes_to_annot(df=final_df, inner=False)
 
-        temp_df = pd.read_csv(current_pat_document_annotation_batch_path)
-        temp_result = join_icd10_codes_to_annot(df=temp_df, inner=False)
+    if getattr(config_obj, "storage_backend", "file") == "file":
+        final_df.to_csv(current_pat_document_annotation_batch_path, index=False)
 
-        temp_result.to_csv(current_pat_document_annotation_batch_path)
+    save_annotations_to_db(
+        final_df, current_pat_client_idcode, "ann_reports", config_obj
+    )
+
+    return final_df
 
 
 def multi_annots_to_df_mct(
@@ -352,12 +384,12 @@ def multi_annots_to_df_mct(
     text_column: str = "observation_valuetext_analysed",
     time_column: str = "observationdocument_recordeddtm",
     guid_column: str = "observation_guid",
-) -> None:
-    """Converts MedCAT annotations for MCT documents to a DataFrame and saves it.
+) -> pd.DataFrame:
+    """Converts MedCAT annotations for MCT documents to a DataFrame and saves it (file or DB).
 
     This function processes a list of annotations from MCT documents, converts
     them to a structured DataFrame, optionally joins ICD-10/OPCS-4 codes, and
-    saves the result to a patient-specific CSV file.
+    saves the result to a patient-specific CSV file or database table.
 
     Args:
         current_pat_client_idcode: The patient's ID code.
@@ -368,6 +400,9 @@ def multi_annots_to_df_mct(
         text_column: The name of the text column in `pat_batch`.
         time_column: The name of the timestamp column in `pat_batch`.
         guid_column: The name of the document identifier column in `pat_batch`.
+
+    Returns:
+        pd.DataFrame: The annotated dataframe.
     """
     n_docs_to_annotate = len(pat_batch)
 
@@ -391,8 +426,6 @@ def multi_annots_to_df_mct(
         config_obj=config_obj,
     )
 
-    temp_file_path = "temp_annot_file.csv"
-
     col_list = [
         "client_idcode",
         time_column,
@@ -421,7 +454,7 @@ def multi_annots_to_df_mct(
         guid_column,
     ]
 
-    pd.DataFrame(None, columns=col_list).to_csv(temp_file_path)
+    all_annot_dfs = []
 
     for i in range(0, len(pat_batch)):
 
@@ -454,23 +487,26 @@ def multi_annots_to_df_mct(
         if config_obj.verbosity >= 3:
             logger.debug(f"multi_annots_to_df: {len(doc_to_annot_df)}")
 
-        doc_to_annot_df.to_csv(temp_file_path, mode="a", header=False, index=False)
+        all_annot_dfs.append(doc_to_annot_df)
 
-    shutil.copy(temp_file_path, current_pat_document_annotation_batch_path)
+    if all_annot_dfs:
+        final_df = pd.concat(all_annot_dfs, ignore_index=True)
+    else:
+        final_df = pd.DataFrame(columns=col_list)
 
     if config_obj.add_icd10 and config_obj.add_opc4s:
-
-        temp_df = pd.read_csv(current_pat_document_annotation_batch_path)
-        temp_result = join_icd10_OPC4S_codes_to_annot(df=temp_df, inner=False)
-
-        temp_result.to_csv(current_pat_document_annotation_batch_path)
-
+        final_df = join_icd10_OPC4S_codes_to_annot(df=final_df, inner=False)
     elif config_obj.add_icd10:
+        final_df = join_icd10_codes_to_annot(df=final_df, inner=False)
 
-        temp_df = pd.read_csv(current_pat_document_annotation_batch_path)
-        temp_result = join_icd10_codes_to_annot(df=temp_df, inner=False)
+    if getattr(config_obj, "storage_backend", "file") == "file":
+        final_df.to_csv(current_pat_document_annotation_batch_path, index=False)
 
-        temp_result.to_csv(current_pat_document_annotation_batch_path)
+    save_annotations_to_db(
+        final_df, current_pat_client_idcode, "ann_mct_docs", config_obj
+    )
+
+    return final_df
 
 
 def calculate_pretty_name_count_features(
