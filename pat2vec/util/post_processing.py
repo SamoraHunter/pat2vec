@@ -11,10 +11,38 @@ import matplotlib.pyplot as plt
 import pandas as pd
 from IPython.display import display
 from tqdm import tqdm
+from sqlalchemy import text
 
+from pat2vec.util.helper_functions import get_df_from_db
 import logging
 
 logger = logging.getLogger(__name__)
+
+EMPTY_ANNOT_COLS = [
+    "client_idcode",
+    "pretty_name",
+    "cui",
+    "type_ids",
+    "types",
+    "source_value",
+    "detected_name",
+    "acc",
+    "context_similarity",
+    "start",
+    "end",
+    "icd10",
+    "ontologies",
+    "snomed",
+    "id",
+    "Time_Value",
+    "Time_Confidence",
+    "Presence_Value",
+    "Presence_Confidence",
+    "Subject_Value",
+    "Subject_Confidence",
+    "updatetime",
+    "annotation_batch_source",
+]
 
 
 def count_files(path: str) -> int:
@@ -95,13 +123,16 @@ def filter_annot_dataframe2(
     # Initialize a boolean mask with True values for all rows
     mask = pd.Series(True, index=dataframe.index)
 
+    if "cui" in dataframe.columns:
+        dataframe["cui"] = pd.to_numeric(dataframe["cui"], errors="coerce")
+
     # Apply filters based on the provided arguments
     for column, value in filter_args.items():
         if column in dataframe.columns:
             # Special case for 'types' column
             if column == "types":
                 mask &= dataframe[column].apply(
-                    lambda x: any(item.lower() in x for item in value)
+                    lambda x: any(item.lower() in str(x).lower() for item in value)
                 )
             elif column in ["Time_Value", "Presence_Value", "Subject_Value"]:
                 # Include rows where the column is in the specified list of values
@@ -116,11 +147,19 @@ def filter_annot_dataframe2(
                 "Subject_Confidence",
             ]:
                 # Include rows where the column is greater than or equal to the specified confidence threshold
+                # Ensure column is numeric before comparison to avoid string comparison issues
+                dataframe[column] = pd.to_numeric(dataframe[column], errors="coerce")
                 mask &= dataframe[column] >= value
             elif column in ["acc"]:
                 # Include rows where the column is greater than or equal to the specified confidence threshold
+                dataframe[column] = pd.to_numeric(dataframe[column], errors="coerce")
                 mask &= dataframe[column] >= value
             else:
+                # Attempt to convert to numeric if the value is numeric, to handle mixed types in CSV chunks
+                if isinstance(value, (int, float)):
+                    dataframe[column] = pd.to_numeric(
+                        dataframe[column], errors="ignore"
+                    )
                 mask &= dataframe[column] >= value
 
     # Return the filtered DataFrame
@@ -158,6 +197,68 @@ def produce_filtered_annotation_dataframe(
         else:
             filter_args = filter_custom_args
 
+    super_result = pd.DataFrame()
+
+    if config_obj and getattr(config_obj, "storage_backend", "file") == "database":
+        logger.info("Reading annotations from database...")
+        try:
+            table_name = "ann_mct_docs" if mct else "ann_epr_docs"
+            logger.info(f"Reading from annotations.{table_name}")
+            super_result = get_df_from_db(
+                config_obj, "annotations", table_name, patient_ids=pat_list
+            )
+
+        except Exception as e:
+            logger.error(f"Error reading annotations from database: {e}")
+            return pd.DataFrame(columns=EMPTY_ANNOT_COLS)
+
+    else:  # File-based logic
+        results = []
+        if pat_list is None:
+            if hasattr(config_obj, "all_patient_list"):
+                logger.info(
+                    f"Using all patient list of length {len(config_obj.all_patient_list)}"
+                )
+                pat_list = config_obj.all_patient_list
+            else:
+                logger.error(
+                    "pat_list is None and config_obj.all_patient_list is not available."
+                )
+                return pd.DataFrame(columns=EMPTY_ANNOT_COLS)
+
+        for i in tqdm(range(len(pat_list))):
+            current_pat_client_idcode = str(pat_list[i])
+
+            path_attr = (
+                "pre_document_annotation_batch_path_mct"
+                if mct
+                else "pre_document_annotation_batch_path"
+            )
+            base_path = getattr(config_obj, path_attr)
+            current_pat_annot_batch_path = os.path.join(
+                base_path, f"{current_pat_client_idcode}.csv"
+            )
+
+            if os.path.exists(current_pat_annot_batch_path):
+                try:
+                    current_pat_annot_batch = pd.read_csv(current_pat_annot_batch_path)
+                    results.append(current_pat_annot_batch)
+                except Exception as e:
+                    logger.warning(
+                        f"Could not read or process {current_pat_annot_batch_path}: {e}"
+                    )
+
+        if not results:
+            return pd.DataFrame(columns=EMPTY_ANNOT_COLS)
+        super_result = pd.concat(results, ignore_index=True)
+
+    # Apply patient list filter if provided (for both DB and file backends)
+    if pat_list and not super_result.empty:
+        super_result = super_result[super_result["client_idcode"].isin(pat_list)]
+
+    if super_result.empty:
+        return pd.DataFrame(columns=EMPTY_ANNOT_COLS)
+
     results = []
 
     if pat_list is None:
@@ -166,69 +267,37 @@ def produce_filtered_annotation_dataframe(
         )
         pat_list = config_obj.all_patient_list
 
-    for i in tqdm(range(len(pat_list))):
-        current_pat_client_idcode = str(pat_list[i])
+    # Common filtering logic for both DB and file paths
+    necessary_columns = [
+        "client_idcode",
+        "pretty_name",
+        "cui",
+        "type_ids",
+        "types",
+        "source_value",
+        "detected_name",
+        "acc",
+        "id",
+        "Time_Value",
+        "Time_Confidence",
+        "Presence_Value",
+        "Presence_Confidence",
+        "Subject_Value",
+        "Subject_Confidence",
+    ]
+    time_col = "observationdocument_recordeddtm" if mct else "updatetime"
+    if time_col not in necessary_columns:
+        necessary_columns.append(time_col)
 
-        if not mct:
-            current_pat_annot_batch_path = (
-                config_obj.pre_document_annotation_batch_path
-                + current_pat_client_idcode
-                + ".csv"
-            )
-        else:
-            current_pat_annot_batch_path = (
-                config_obj.pre_document_annotation_batch_path_mct
-                + current_pat_client_idcode
-                + ".csv"
-            )
+    super_result = super_result.dropna(
+        subset=[col for col in necessary_columns if col in super_result.columns]
+    )
 
-        if os.path.exists(current_pat_annot_batch_path):
-            current_pat_annot_batch = pd.read_csv(current_pat_annot_batch_path)
+    if meta_annot_filter:
+        super_result = filter_annot_dataframe2(super_result, filter_args)
 
-            # drop nan on any col:
-            necessary_columns = [
-                "client_idcode",
-                "updatetime",
-                "pretty_name",
-                "cui",
-                "type_ids",
-                "types",
-                "source_value",
-                "detected_name",
-                "acc",
-                "id",
-                "Time_Value",
-                "Time_Confidence",
-                "Presence_Value",
-                "Presence_Confidence",
-                "Subject_Value",
-                "Subject_Confidence",
-            ]
-
-            current_pat_annot_batch = current_pat_annot_batch.dropna(
-                subset=necessary_columns
-            )
-
-            if meta_annot_filter:
-                try:
-                    current_pat_annot_batch = filter_annot_dataframe2(
-                        current_pat_annot_batch, filter_args
-                    )
-                except Exception as e:
-                    logger.error(
-                        f"Error filtering annotations for patient at index {i}: {e}"
-                    )
-                    display(current_pat_annot_batch)
-                    raise e
-
-            if cui_filter:
-                current_pat_annot_batch = current_pat_annot_batch[
-                    current_pat_annot_batch["cui"].isin(cui_code_list)
-                ]
-
-            results.append(current_pat_annot_batch)
-
-    super_result = pd.concat(results)
+    if cui_filter:
+        super_result = super_result[super_result["cui"].isin(cui_code_list)]
 
     return super_result
 
@@ -269,7 +338,10 @@ def remove_file_from_paths(
     verbosity: int = 0,
     config_obj: Optional[Any] = None,
 ) -> None:
-    """Removes patient-specific CSV files from various predefined project paths.
+    """Removes patient-specific data from various predefined project paths or database tables.
+
+    If `storage_backend` is 'database', it removes records for the patient from relevant tables.
+    Otherwise, it removes CSV files.
 
     Args:
         current_pat_idcode: The unique identifier of the patient whose files are to be removed.
@@ -278,6 +350,103 @@ def remove_file_from_paths(
         config_obj: A configuration object containing project paths.
             If provided, `project_name` is overridden by `config_obj.proj_name`. Defaults to None.
     """
+    if config_obj and getattr(config_obj, "storage_backend", "file") == "database":
+        try:
+            # Use config_obj verbosity if available and verbosity arg is default (0)
+            effective_verbosity = max(verbosity, getattr(config_obj, "verbosity", 0))
+            if effective_verbosity > 0:
+                logger.info(
+                    f"Removing data for patient {current_pat_idcode} from database..."
+                )
+
+            engine = config_obj.db_engine
+            if not engine:
+                logger.error("Database engine not initialized in config_obj.")
+                return
+
+            with engine.begin() as connection:
+                is_sqlite = engine.name == "sqlite"
+
+                # Features
+                t_features = (
+                    '"features_features"' if is_sqlite else '"features"."features"'
+                )
+                try:
+                    connection.execute(
+                        text(
+                            f'DELETE FROM {t_features} WHERE "client_idcode" = :pat_id'
+                        ),
+                        {"pat_id": current_pat_idcode},
+                    )
+                except Exception:
+                    pass
+
+                # Raw Data
+                raw_tables = [
+                    "raw_epr_docs",
+                    "raw_mct_docs",
+                    "raw_bloods",
+                    "raw_drugs",
+                    "raw_diagnostics",
+                    "raw_news",
+                    "raw_bmi",
+                    "raw_demographics",
+                    "raw_textual_obs",
+                    "raw_reports",
+                ]
+                for t in raw_tables:
+                    t_name = f'"raw_data_{t}"' if is_sqlite else f'"raw_data"."{t}"'
+                    try:
+                        connection.execute(
+                            text(
+                                f'DELETE FROM {t_name} WHERE "client_idcode" = :pat_id'
+                            ),
+                            {"pat_id": current_pat_idcode},
+                        )
+                    except Exception:
+                        pass
+
+                # Appointments (special ID column)
+                t_app = (
+                    '"raw_data_raw_appointments"'
+                    if is_sqlite
+                    else '"raw_data"."raw_appointments"'
+                )
+                try:
+                    connection.execute(
+                        text(f'DELETE FROM {t_app} WHERE "HospitalID" = :pat_id'),
+                        {"pat_id": current_pat_idcode},
+                    )
+                except Exception:
+                    pass
+
+                # Annotations
+                ann_tables = [
+                    "ann_epr_docs",
+                    "ann_mct_docs",
+                    "ann_textual_obs",
+                    "ann_reports",
+                ]
+                for t in ann_tables:
+                    t_ann = (
+                        f'"annotations_{t}"' if is_sqlite else f'"annotations"."{t}"'
+                    )
+                    try:
+                        connection.execute(
+                            text(
+                                f'DELETE FROM {t_ann} WHERE "client_idcode" = :pat_id'
+                            ),
+                            {"pat_id": current_pat_idcode},
+                        )
+                    except Exception:
+                        pass
+            if effective_verbosity > 0:
+                logger.info("Database cleanup complete.")
+        except Exception as e:
+            logger.error(f"Error during database cleanup: {e}")
+
+        if not getattr(config_obj, "testing", False):
+            return
 
     if config_obj is None:
         pat_file_paths = [
@@ -736,7 +905,6 @@ def filter_and_update_csv(
 
                     if verbosity:
                         logger.info(f"Updating CSV file based on {update_column}")
-                        logger.info(f"Updating CSV file based on {update_column}")
 
                     df[update_column] = pd.to_datetime(df[update_column], utc=True)
                     filter_condition = (
@@ -760,7 +928,7 @@ def retrieve_pat_annots_mct_epr(
     columns_report: Optional[List[str]] = None,
     merge_columns: bool = True,
 ) -> pd.DataFrame:
-    """Retrieves and merges annotation data for a single patient from multiple sources.
+    """Retrieves and merges annotation data for a single patient from multiple sources (files or database).
 
     This function reads annotation data for a specified patient from four potential
     sources: EPR annotations, MCT annotations, textual observations annotations, and reports annotations.
@@ -785,55 +953,59 @@ def retrieve_pat_annots_mct_epr(
             merged annotation data for the patient. Returns an empty
             DataFrame if no data is found for the patient in any of the sources.
     """
-    # Define file paths based on the client_idcode and config paths
-    pre_document_annotation_batch_path = config_obj.pre_document_annotation_batch_path
-    pre_document_annotation_batch_path_mct = (
-        config_obj.pre_document_annotation_batch_path_mct
-    )
-    pre_textual_obs_annotation_batch_path = (
-        config_obj.pre_textual_obs_annotation_batch_path
-    )
-    pre_document_annotation_batch_path_reports = (
-        config_obj.pre_document_annotation_batch_path_reports
-    )
+    all_annots_dfs = []
 
-    epr_file_path = f"{pre_document_annotation_batch_path}/{client_idcode}.csv"
-    mct_file_path = f"{pre_document_annotation_batch_path_mct}/{client_idcode}.csv"
-    textual_obs_files_path = (
-        f"{pre_textual_obs_annotation_batch_path}/{client_idcode}.csv"
-    )
-    report_file_path = (
-        f"{pre_document_annotation_batch_path_reports}/{client_idcode}.csv"
-    )
+    if config_obj.storage_backend == "database":
+        source_map = {
+            "ann_epr_docs": ("epr", columns_epr),
+            "ann_mct_docs": ("mct", columns_mct),
+            "ann_textual_obs": ("textual_obs", columns_to),
+            "ann_reports": ("report", columns_report),
+        }
+        for table, (source_name, cols) in source_map.items():
+            df = get_df_from_db(
+                config_obj,
+                "annotations",
+                table,
+                patient_ids=[client_idcode],
+                columns=cols,
+            )
+            if not df.empty:
+                df["annotation_batch_source"] = source_name
+                all_annots_dfs.append(df)
+    else:
+        path_map = {
+            "epr": (config_obj.pre_document_annotation_batch_path, columns_epr),
+            "mct": (config_obj.pre_document_annotation_batch_path_mct, columns_mct),
+            "textual_obs": (
+                config_obj.pre_textual_obs_annotation_batch_path,
+                columns_to,
+            ),
+            "report": (
+                config_obj.pre_document_annotation_batch_path_reports,
+                columns_report,
+            ),
+        }
+        for source_name, (base_path, cols) in path_map.items():
+            file_path = f"{base_path}/{client_idcode}.csv"
+            if os.path.exists(file_path):
+                try:
+                    df = pd.read_csv(file_path, usecols=cols)
+                    df["annotation_batch_source"] = source_name
+                    all_annots_dfs.append(df)
+                except Exception as e:
+                    logger.warning(f"Could not read or process {file_path}: {e}")
 
-    # Initialize DataFrames
-    dfa = pd.DataFrame()
-    dfa_mct = pd.DataFrame()
-    dfa_to = pd.DataFrame()
-    dfr = pd.DataFrame()
+    if not all_annots_dfs:
+        return pd.DataFrame(columns=EMPTY_ANNOT_COLS)
 
-    # Load data if files exist
-    if os.path.exists(epr_file_path):
-        dfa = pd.read_csv(epr_file_path, usecols=columns_epr)
-        dfa["annotation_batch_source"] = "epr"
+    all_annots = pd.concat(all_annots_dfs, ignore_index=True)
 
-    if os.path.exists(mct_file_path):
-        dfa_mct = pd.read_csv(mct_file_path, usecols=columns_mct)
-        dfa_mct["annotation_batch_source"] = "mct"
+    if not all_annots.empty and "cui" in all_annots.columns:
+        all_annots["cui"] = pd.to_numeric(all_annots["cui"], errors="ignore")
 
-    if os.path.exists(textual_obs_files_path):
-        dfa_to = pd.read_csv(textual_obs_files_path, usecols=columns_to)
-        dfa_to["annotation_batch_source"] = "textual_obs"
-
-    if os.path.exists(report_file_path):
-        dfr = pd.read_csv(report_file_path, usecols=columns_report)
-        dfr["annotation_batch_source"] = "report"
-
-    # Concatenate all dataframes
-    all_annots = pd.concat([dfa, dfa_mct, dfa_to, dfr], axis=0, ignore_index=True)
-
-    # Merge columns if required
     if merge_columns and not all_annots.empty:
+        # Load data if files exist
         if "observationannotation_recordeddtm" in all_annots.columns:
             all_annots["updatetime"] = all_annots["updatetime"].fillna(
                 all_annots["observationannotation_recordeddtm"]
@@ -980,7 +1152,11 @@ def get_all_target_annots(
             filtered_df = all_annots[all_annots["cui"].isin(list(chain(*n_lists)))]
             results_df = pd.concat([results_df, filtered_df])
 
-    results_df.to_csv("all_target_annots.csv")
+    if config_obj and hasattr(config_obj, "root_path"):
+        out_path = os.path.join(config_obj.root_path, "all_target_annots.csv")
+    else:
+        out_path = "all_target_annots.csv"
+    results_df.to_csv(out_path)
 
     return results_df
 
