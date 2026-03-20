@@ -10,6 +10,9 @@ import pandas as pd
 from faker import Faker
 from pat2vec.pat2vec_get_methods.get_method_bmi import BMI_FIELDS
 from pat2vec.pat2vec_get_methods.get_method_core02 import CORE_O2_FIELDS
+from pat2vec.pat2vec_get_methods.get_method_bed import BED_FIELDS
+from pat2vec.pat2vec_get_methods.get_method_vte_status import VTE_FIELDS
+from pat2vec.pat2vec_get_methods.get_method_smoking import SMOKING_FIELDS
 from pat2vec.pat2vec_get_methods.get_method_core_resus import CORE_RESUS_FIELDS
 from transformers import pipeline
 import random
@@ -341,9 +344,9 @@ def generate_diagnostic_orders_data(
                 for _ in range(num_rows)
             ],
             "clientvisit_visitidcode": [f"visit_{i}" for i in range(num_rows)],
-            "_id": ["{i}" for i in range(num_rows)],
-            "_index": ["{np.nan}" for _ in range(num_rows)],
-            "_score": ["{np.nan}" for _ in range(num_rows)],
+            "_id": [f"{i}" for i in range(num_rows)],
+            "_index": [None for _ in range(num_rows)],
+            "_score": [None for _ in range(num_rows)],
             "order_performeddtm": [
                 create_random_date_from_globals(
                     global_start_year,
@@ -438,9 +441,9 @@ def generate_drug_orders_data(
                 for _ in range(num_rows)
             ],
             "clientvisit_visitidcode": [f"visit_{i}" for i in range(num_rows)],
-            "_id": ["{i}" for i in range(num_rows)],
-            "_index": ["{np.nan}" for i in range(num_rows)],
-            "_score": ["{np.nan}" for i in range(num_rows)],
+            "_id": [f"{i}" for i in range(num_rows)],
+            "_index": [None for i in range(num_rows)],
+            "_score": [None for i in range(num_rows)],
             "order_performeddtm": [
                 create_random_date_from_globals(
                     global_start_year,
@@ -515,7 +518,7 @@ def generate_observations_MRC_text_data(
                 (
                     generate_patient_timeline(current_pat_client_id_code)
                     if use_GPT
-                    else generate_patient_timeline_faker(current_pat_client_id_code)
+                    else get_patient_timeline_dummy(current_pat_client_id_code)
                 )
                 for _ in range(num_rows)
             ],
@@ -530,9 +533,9 @@ def generate_observations_MRC_text_data(
                 for _ in range(num_rows)
             ],
             "clientvisit_visitidcode": [f"visit_{i}" for i in range(num_rows)],
-            "_id": ["{i}" for i in range(num_rows)],
-            "_index": ["{np.nan}" for i in range(num_rows)],
-            "_score": ["{np.nan}" for i in range(num_rows)],
+            "_id": [f"{i}" for i in range(num_rows)],
+            "_index": [None for i in range(num_rows)],
+            "_score": [None for i in range(num_rows)],
         }
 
         df = pd.DataFrame(data)
@@ -601,7 +604,7 @@ def generate_observations_Reports_text_data(
                 (
                     generate_patient_timeline(current_pat_client_id_code)
                     if use_GPT
-                    else generate_patient_timeline_faker(current_pat_client_id_code)
+                    else get_patient_timeline_dummy(current_pat_client_id_code)
                 )
                 for _ in range(num_rows)
             ],
@@ -616,9 +619,9 @@ def generate_observations_Reports_text_data(
                 for _ in range(num_rows)
             ],
             "clientvisit_visitidcode": [f"visit_{i}" for i in range(num_rows)],
-            "_id": ["{i}" for i in range(num_rows)],
-            "_index": ["{np.nan}" for i in range(num_rows)],
-            "_score": ["{np.nan}" for i in range(num_rows)],
+            "_id": [f"{i}" for i in range(num_rows)],
+            "_index": [None for i in range(num_rows)],
+            "_score": [None for i in range(num_rows)],
         }
 
         df = pd.DataFrame(data)
@@ -726,9 +729,9 @@ def generate_appointments_data(
                 faker.random_element(["Specialty A", "Specialty B", "Specialty C"])
                 for _ in range(num_rows)
             ],
-            "_id": [str(i) for i in range(num_rows)],
-            "_index": [str(None) for _ in range(num_rows)],
-            "_score": [str(None) for _ in range(num_rows)],
+            "_id": [f"{i}" for i in range(num_rows)],
+            "_index": [None for _ in range(num_rows)],
+            "_score": [None for _ in range(num_rows)],
             "AppointmentDateTime": [
                 create_random_date_from_globals(
                     global_start_year,
@@ -826,7 +829,7 @@ def generate_observations_data(
         data = {
             "observation_guid": [f"obs_{i}" for i in range(num_rows)],
             "client_idcode": [current_pat_client_id_code for _ in range(num_rows)],
-            "obscatalogmasteritem_displayname": [search_term],
+            "obscatalogmasteritem_displayname": [search_term for _ in range(num_rows)],
             "observation_valuetext_analysed": [
                 random.uniform(0, 100) for _ in range(num_rows)
             ],
@@ -933,8 +936,8 @@ def generate_basic_observations_data(
                 maybe_nan(" ".join(faker.sentence() for _ in range(num_rows)))
                 for i in range(num_rows)
             ],
-            "order_entered": ["{np.nan}" for i in range(num_rows)],
-            "clientvisit_visitidcode": ["{np.nan}" for i in range(num_rows)],
+            "order_entered": [None for i in range(num_rows)],
+            "clientvisit_visitidcode": [None for i in range(num_rows)],
             "updatetime": [
                 create_random_date_from_globals(
                     global_start_year,
@@ -1164,7 +1167,7 @@ def cohort_searcher_with_terms_and_search_dummy(
 
     elif index_name == "basic_observations":
         # Nested checks for 'basic_observations' index
-        if r"SARS CoV-2 \(COVID-19\) RNA" in search_string:
+        if "SARS CoV-2" in search_string and "COVID-19" in search_string:
             if verbose:
                 logger.debug("Generating data for 'covid'")
             num_rows = random.randint(0, 5)
@@ -1196,17 +1199,7 @@ def cohort_searcher_with_terms_and_search_dummy(
             )
             return df
 
-        elif fields_list == [
-            "client_idcode",
-            "basicobs_itemname_analysed",
-            "basicobs_value_numeric",
-            "basicobs_value_analysed",
-            "basicobs_entered",
-            "clientvisit_serviceguid",
-            "basicobs_guid",
-            "updatetime",
-            "textualObs",
-        ]:
+        elif "textualObs" in fields_list:
             if verbose:
                 logger.debug("Generating data for 'basic_observations textualObs'")
             probabilities = [0.7, 0.1, 0.05, 0.05, 0.05]
@@ -1257,6 +1250,22 @@ def cohort_searcher_with_terms_and_search_dummy(
             )
             return df
 
+        elif "NEWS" in search_string:
+            if verbose:
+                logger.debug("Generating data for 'news'")
+            probabilities = [0.1, 0.2, 0.4, 0.2, 0.1]
+            num_rows = random.choices(range(1, 6), probabilities)[0]
+            df = generate_news_data(
+                num_rows,
+                entered_list,
+                global_start_year,
+                global_start_month,
+                global_end_year,
+                global_end_month,
+                fields_list=fields_list,
+            )
+            return df
+
         elif '"CORE_SpO2"' in search_string:
             if verbose:
                 logger.debug("Generating data for 'core_o2'")
@@ -1279,6 +1288,54 @@ def cohort_searcher_with_terms_and_search_dummy(
             probabilities = [0.7, 0.25, 0.05]
             num_rows = random.choices(range(1, 4), probabilities)[0]
             df = generate_core_resus_data(
+                num_rows,
+                entered_list,
+                global_start_year,
+                global_start_month,
+                global_end_year,
+                global_end_month,
+                fields_list=fields_list,
+            )
+            return df
+
+        elif "CORE_BedNumber3" in search_string:
+            if verbose:
+                logger.debug("Generating data for 'bed'")
+            probabilities = [0.1, 0.2, 0.4, 0.2, 0.1]
+            num_rows = random.choices(range(1, 6), probabilities)[0]
+            df = generate_bed_data(
+                num_rows,
+                entered_list,
+                global_start_year,
+                global_start_month,
+                global_end_year,
+                global_end_month,
+                fields_list=fields_list,
+            )
+            return df
+
+        elif "CORE_VTE_STATUS" in search_string:
+            if verbose:
+                logger.debug("Generating data for 'vte_status'")
+            probabilities = [0.1, 0.2, 0.4, 0.2, 0.1]
+            num_rows = random.choices(range(1, 6), probabilities)[0]
+            df = generate_vte_data(
+                num_rows,
+                entered_list,
+                global_start_year,
+                global_start_month,
+                global_end_year,
+                global_end_month,
+                fields_list=fields_list,
+            )
+            return df
+
+        elif "CORE_SmokingStatus" in search_string:
+            if verbose:
+                logger.debug("Generating data for 'smoking'")
+            probabilities = [0.8, 0.1, 0.05, 0.03, 0.02]
+            num_rows = random.choices(range(1, 6), probabilities)[0]
+            df = generate_smoking_data(
                 num_rows,
                 entered_list,
                 global_start_year,
@@ -1468,7 +1525,7 @@ def generate_patient_timeline(client_idcode: str) -> str:
         current_time = entry_timestamp
 
     # Construct the final timeline
-    patient_demographics = f"Patient Demographics:\client_idcode: {patient_info['client_idcode']}\client_idcode: {patient_info['Age']:.1f}\nGender: {patient_info['Gender']}\nDOB: {patient_info['DOB'].strftime('%Y-%m-%d')}"
+    patient_demographics = f"Patient Demographics:\nClient ID: {patient_info['client_idcode']}\nAge: {patient_info['Age']:.1f}\nGender: {patient_info['Gender']}\nDOB: {patient_info['DOB'].strftime('%Y-%m-%d')}"
     timeline.insert(0, f"{patient_demographics}\n\nClinical Note Timeline:\n")
     patient_timeline = "\n".join(timeline)
 
@@ -1741,6 +1798,9 @@ def generate_covid_observations_data(
         SEARCH_TERM_PLAIN,
     )
 
+    if SEARCH_TERM_PLAIN is None:
+        SEARCH_TERM_PLAIN = "SARS CoV-2 (COVID-19) RNA"
+
     if fields_list is None:
         fields_list = COVID_FIELDS
 
@@ -1815,11 +1875,11 @@ def generate_hospital_site_data(
     # Define possible values for hospital sites, including key terms 'DH' and 'PRUH'
     # for downstream feature calculation.
     hospital_site_values = [
-        "King's College Hospital (DH)",
-        "Princess Royal University Hospital (PRUH)",
-        "Orpington Hospital",
-        "Queen Mary's Hospital, Sidcup",
-        "St Thomas' Hospital",
+        "DH",
+        "PRUH",
+        "Orpington",
+        "Queen Mary's",
+        "St Thomas",
     ]
 
     for client_id_code in entered_list:
@@ -1863,6 +1923,61 @@ def generate_hospital_site_data(
     final_df = final_df[fields_list]
 
     return final_df
+
+
+def generate_news_data(
+    num_rows: int,
+    entered_list: List[str],
+    global_start_year: int,
+    global_start_month: int,
+    global_end_year: int,
+    global_end_month: int,
+    fields_list: List[str] = [
+        "observation_guid",
+        "client_idcode",
+        "obscatalogmasteritem_displayname",
+        "observation_valuetext_analysed",
+        "observationdocument_recordeddtm",
+        "clientvisit_visitidcode",
+    ],
+) -> pd.DataFrame:
+    """Generates dummy data for NEWS observations."""
+    df_holder_list = []
+
+    for client_id_code in entered_list:
+        data = {
+            "observation_guid": [faker.uuid4() for _ in range(num_rows)],
+            "client_idcode": [client_id_code for _ in range(num_rows)],
+            "obscatalogmasteritem_displayname": [
+                random.choice(["NEWS", "NEWS2"]) for _ in range(num_rows)
+            ],
+            "observation_valuetext_analysed": [
+                str(random.randint(0, 15)) for _ in range(num_rows)
+            ],
+            "observationdocument_recordeddtm": [
+                create_random_date_from_globals(
+                    global_start_year,
+                    global_start_month,
+                    global_end_year,
+                    global_end_month,
+                )
+                for _ in range(num_rows)
+            ],
+            "clientvisit_visitidcode": [
+                f"visit_{faker.random_number(digits=8)}" for _ in range(num_rows)
+            ],
+        }
+        df_holder_list.append(pd.DataFrame(data))
+
+    if not df_holder_list:
+        return pd.DataFrame(columns=fields_list)
+
+    final_df = pd.concat(df_holder_list, ignore_index=True)
+    # Ensure fields are present
+    for col in fields_list:
+        if col not in final_df.columns:
+            final_df[col] = np.nan
+    return final_df[fields_list]
 
 
 def generate_bmi_data(
@@ -1912,6 +2027,168 @@ def generate_bmi_data(
             "client_idcode": [client_id_code for _ in range(num_rows)],
             "obscatalogmasteritem_displayname": display_names,
             "observation_valuetext_analysed": values,
+            "observationdocument_recordeddtm": [
+                create_random_date_from_globals(
+                    global_start_year,
+                    global_start_month,
+                    global_end_year,
+                    global_end_month,
+                )
+                for _ in range(num_rows)
+            ],
+            "clientvisit_visitidcode": [
+                f"visit_{faker.random_number(digits=8)}" for _ in range(num_rows)
+            ],
+        }
+        df_holder_list.append(pd.DataFrame(data))
+
+    if not df_holder_list:
+        return pd.DataFrame(columns=fields_list)
+
+    final_df = pd.concat(df_holder_list, ignore_index=True)
+    return final_df[fields_list]
+
+
+def generate_bed_data(
+    num_rows: int,
+    entered_list: List[str],
+    global_start_year: int,
+    global_start_month: int,
+    global_end_year: int,
+    global_end_month: int,
+    fields_list: List[str] = BED_FIELDS,
+) -> pd.DataFrame:
+    """Generates dummy data for bed number observations.
+
+    Args:
+        num_rows: Number of rows to generate for each client.
+        entered_list: List of client IDs to generate data for.
+        global_start_year: Start year for the random date range.
+        global_start_month: Start month for the random date range.
+        global_end_year: End year for the random date range.
+        global_end_month: End month for the random date range.
+        fields_list: List of columns to include in the DataFrame.
+
+    Returns:
+        A pandas DataFrame with generated dummy bed data.
+    """
+    df_holder_list = []
+
+    # Realistic bed/location names
+    bed_values = [
+        "Bed 1",
+        "Bed 2",
+        "Bed 3",
+        "Side Room 1",
+        "Bay A Bed 1",
+        "Bay B Bed 4",
+        "HDU Bed 2",
+        "ITU Bed 5",
+    ]
+
+    for client_id_code in entered_list:
+        data = {
+            "observation_guid": [faker.uuid4() for _ in range(num_rows)],
+            "client_idcode": [client_id_code for _ in range(num_rows)],
+            "obscatalogmasteritem_displayname": [
+                "CORE_BedNumber3" for _ in range(num_rows)
+            ],
+            "observation_valuetext_analysed": [
+                maybe_nan(random.choice(bed_values)) for _ in range(num_rows)
+            ],
+            "observationdocument_recordeddtm": [
+                create_random_date_from_globals(
+                    global_start_year,
+                    global_start_month,
+                    global_end_year,
+                    global_end_month,
+                )
+                for _ in range(num_rows)
+            ],
+            "clientvisit_visitidcode": [
+                f"visit_{faker.random_number(digits=8)}" for _ in range(num_rows)
+            ],
+        }
+        df_holder_list.append(pd.DataFrame(data))
+
+    if not df_holder_list:
+        return pd.DataFrame(columns=fields_list)
+
+    final_df = pd.concat(df_holder_list, ignore_index=True)
+    return final_df[fields_list]
+
+
+def generate_vte_data(
+    num_rows: int,
+    entered_list: List[str],
+    global_start_year: int,
+    global_start_month: int,
+    global_end_year: int,
+    global_end_month: int,
+    fields_list: List[str] = VTE_FIELDS,
+) -> pd.DataFrame:
+    """Generates dummy data for VTE status observations."""
+    df_holder_list = []
+    vte_statuses = [
+        "High risk of VTE High risk of bleeding",
+        "High risk of VTE Low risk of bleeding",
+    ]
+
+    for client_id_code in entered_list:
+        data = {
+            "observation_guid": [faker.uuid4() for _ in range(num_rows)],
+            "client_idcode": [client_id_code for _ in range(num_rows)],
+            "obscatalogmasteritem_displayname": [
+                "CORE_VTE_STATUS" for _ in range(num_rows)
+            ],
+            "observation_valuetext_analysed": [
+                maybe_nan(random.choice(vte_statuses)) for _ in range(num_rows)
+            ],
+            "observationdocument_recordeddtm": [
+                create_random_date_from_globals(
+                    global_start_year,
+                    global_start_month,
+                    global_end_year,
+                    global_end_month,
+                )
+                for _ in range(num_rows)
+            ],
+            "clientvisit_visitidcode": [
+                f"visit_{faker.random_number(digits=8)}" for _ in range(num_rows)
+            ],
+        }
+        df_holder_list.append(pd.DataFrame(data))
+
+    if not df_holder_list:
+        return pd.DataFrame(columns=fields_list)
+
+    final_df = pd.concat(df_holder_list, ignore_index=True)
+    return final_df[fields_list]
+
+
+def generate_smoking_data(
+    num_rows: int,
+    entered_list: List[str],
+    global_start_year: int,
+    global_start_month: int,
+    global_end_year: int,
+    global_end_month: int,
+    fields_list: List[str] = SMOKING_FIELDS,
+) -> pd.DataFrame:
+    """Generates dummy data for smoking status observations."""
+    df_holder_list = []
+    smoking_statuses = ["Current smoker", "Ex-smoker", "Never smoked", "Smoker"]
+
+    for client_id_code in entered_list:
+        data = {
+            "observation_guid": [faker.uuid4() for _ in range(num_rows)],
+            "client_idcode": [client_id_code for _ in range(num_rows)],
+            "obscatalogmasteritem_displayname": [
+                "CORE_SmokingStatus" for _ in range(num_rows)
+            ],
+            "observation_valuetext_analysed": [
+                maybe_nan(random.choice(smoking_statuses)) for _ in range(num_rows)
+            ],
             "observationdocument_recordeddtm": [
                 create_random_date_from_globals(
                     global_start_year,

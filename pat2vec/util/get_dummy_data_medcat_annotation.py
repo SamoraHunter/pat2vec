@@ -1,4 +1,5 @@
 import os
+import copy
 import pickle
 import random
 from typing import Any, Dict, List
@@ -47,7 +48,7 @@ def dummy_medcat_annotation_generator() -> Dict[str, Any]:
     with open(pickle_file, "rb") as f:
         sample_annotations = pickle.load(f)
 
-    dummy_annotations = random_sample(sample_annotations, random.randint(0, 10))
+    dummy_annotations = random_sample(sample_annotations, random.randint(1, 50))
 
     return dummy_annotations
 
@@ -116,7 +117,9 @@ class dummy_CAT(object):
         """
         return dummy_medcat_annotation_generator()
 
-    def get_entities_multi_texts(self, texts: List[str]) -> List[Dict[str, Any]]:
+    def get_entities_multi_texts(
+        self, texts: List[str], n_process: int = 1, batch_size: int = 100, **kwargs
+    ) -> List[Dict[str, Any]]:
         """Returns a list of random annotations for a list of texts.
 
         For each text in the input list, it generates a separate random subset
@@ -125,6 +128,8 @@ class dummy_CAT(object):
         Args:
             texts: The list of texts to annotate. The content is ignored, but
                 the length determines the number of dummy annotations returned.
+            n_process: Number of processes to use (ignored).
+            batch_size: Batch size to use (ignored).
 
         Returns:
             A list of dictionaries, where each dictionary contains a random
@@ -141,3 +146,78 @@ class dummy_CAT(object):
                 "No results returned from dummy_medcat_annotation_generator"
             )
         return result
+
+
+def augment_dummy_annotations_file(target_count: int = 500) -> None:
+    """Increases the number of dummy annotations in the pickle file.
+
+    This function reads the sample annotations file, duplicates existing
+    entries with new IDs until the target count is reached, and saves the
+    result back to the file.
+
+    Args:
+        target_count: The desired minimum number of annotations in the file.
+    """
+    pickle_file = os.path.join("test_files", "sample_annotations.pickle")
+
+    # Handle path resolution if not running from root
+    if not os.path.exists(pickle_file):
+        pickle_file = os.path.join(
+            os.path.dirname(__file__),
+            "..",
+            "..",
+            "test_files",
+            "sample_annotations.pickle",
+        )
+
+    if not os.path.exists(pickle_file):
+        print(f"Error: Could not find {pickle_file}")
+        return
+
+    with open(pickle_file, "rb") as f:
+        data = pickle.load(f)
+
+    entities = data.get("entities", {})
+    keys = list(entities.keys())
+    current_count = len(entities)
+
+    if current_count < target_count and keys:
+        # Duplicate existing entities to reach target count
+        while len(entities) < target_count:
+            for key in keys:
+                if len(entities) >= target_count:
+                    break
+                new_key = f"{key}_copy_{len(entities)}"
+                new_entity = copy.deepcopy(entities[key])
+                new_entity["id"] = len(entities)  # Update ID if relevant
+
+                # Randomly perturb accuracy and similarity to create variance
+                new_entity["acc"] = random.uniform(0.1, 1.0)
+                new_entity["context_similarity"] = random.uniform(0.1, 1.0)
+
+                # Shift positions to avoid exact overlaps in tests
+                if "start" in new_entity and "end" in new_entity:
+                    shift = random.randint(1, 1000)
+                    new_entity["start"] += shift
+                    new_entity["end"] += shift
+
+                # Randomize meta-annotations to test filtering logic (e.g. negated presence)
+                if "meta_anns" in new_entity:
+                    if "Presence" in new_entity["meta_anns"]:
+                        new_entity["meta_anns"]["Presence"]["value"] = random.choice(
+                            ["True", "False"]
+                        )
+                    if "Time" in new_entity["meta_anns"]:
+                        new_entity["meta_anns"]["Time"]["value"] = random.choice(
+                            ["Recent", "Past"]
+                        )
+                    if "Subject" in new_entity["meta_anns"]:
+                        new_entity["meta_anns"]["Subject"]["value"] = random.choice(
+                            ["Patient", "Other"]
+                        )
+
+                entities[new_key] = new_entity
+
+        with open(pickle_file, "wb") as f:
+            pickle.dump(data, f)
+        print(f"Expanded annotation pool from {current_count} to {len(entities)}.")
