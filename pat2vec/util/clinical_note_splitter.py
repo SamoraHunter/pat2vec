@@ -319,6 +319,10 @@ def split_and_append_chunks(
             clinical_notes, verbosity_val=verbosity
         )
 
+    # Rename id back to _id in none_found to match existing schema and avoid "no column named id" errors
+    if not none_found.empty and "id" in none_found.columns:
+        none_found.rename(columns={"id": "_id"}, inplace=True)
+
     # Concatenate non-clinical and split clinical notes
     concatenated_notes = pd.concat([non_clinical_notes, split_clinical_notes_result])
 
