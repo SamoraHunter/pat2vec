@@ -114,7 +114,9 @@ def get_treatment_docs_by_iterative_multi_term_cohort_searcher_no_terms_fuzzy(
             f"Global End Date: {global_end_day}/{global_end_month}/{global_end_year}"
         )
 
-    if pat2vec_obj.config_obj.testing:
+    if pat2vec_obj.config_obj.testing and not getattr(
+        pat2vec_obj.config_obj, "testing_elastic", False
+    ):
         random.seed(random_state)
         if verbose >= 1:
             logger.info("Running in testing mode, doing dummy search.")
@@ -162,7 +164,10 @@ def get_treatment_docs_by_iterative_multi_term_cohort_searcher_no_terms_fuzzy(
 
     else:
         if verbose >= 1:
-            logger.info("Running in live mode, doing real search.")
+            if getattr(pat2vec_obj.config_obj, "testing_elastic", False):
+                logger.info("Running in testing mode (elastic), doing real search.")
+            else:
+                logger.info("Running in live mode, doing real search.")
 
         logger.info(
             f"epr: {global_start_day}/{global_start_month}/{global_start_year} to "
@@ -242,6 +247,7 @@ def get_treatment_docs_by_iterative_multi_term_cohort_searcher_no_terms_fuzzy(
             fuzzy=fuzzy,
             slop=slop,
             testing=pat2vec_obj.config_obj.testing,
+            testing_elastic=getattr(pat2vec_obj.config_obj, "testing_elastic", False),
         )
 
         search_results = pd.concat([search_results, docs], axis=0)
@@ -282,6 +288,7 @@ def get_treatment_docs_by_iterative_multi_term_cohort_searcher_no_terms_fuzzy(
             fuzzy=fuzzy,
             slop=slop,
             testing=pat2vec_obj.config_obj.testing,
+            testing_elastic=getattr(pat2vec_obj.config_obj, "testing_elastic", False),
         )
 
         search_results = pd.concat([search_results, docs], axis=0)

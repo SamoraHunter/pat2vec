@@ -1,0 +1,329 @@
+{
+  "epr_documents": {
+    "mappings": {
+      "properties": {
+        "body_analysed": {
+          "type": "text"
+        },
+        "client_deceaseddtm": {
+          "type": "date"
+        },
+        "client_dob": {
+          "type": "date"
+        },
+        "client_firstname": {
+          "type": "text"
+        },
+        "client_gendercode": {
+          "type": "keyword"
+        },
+        "client_idcode": {
+          "type": "keyword"
+        },
+        "client_lastname": {
+          "type": "text"
+        },
+        "client_racecode": {
+          "type": "keyword"
+        },
+        "clientvisit_visitidcode": {
+          "type": "keyword"
+        },
+        "document_description": {
+          "type": "text",
+          "fields": {
+            "keyword": {
+              "type": "keyword"
+            }
+          }
+        },
+        "document_guid": {
+          "type": "keyword"
+        },
+        "updatetime": {
+          "type": "date"
+        }
+      }
+    },
+    "settings": {
+      "index": {
+        "refresh_interval": "5m",
+        "routing_partition_size": "1"
+      }
+    }
+  },
+  "basic_observations": {
+    "mappings": {
+      "properties": {
+        "basicobs_entered": {
+          "type": "date"
+        },
+        "basicobs_guid": {
+          "type": "keyword"
+        },
+        "basicobs_itemname_analysed": {
+          "type": "text",
+          "fields": {
+            "keyword": {
+              "type": "keyword",
+              "ignore_above": 256
+            }
+          }
+        },
+        "basicobs_value_analysed": {
+          "type": "text",
+          "fields": {
+            "keyword": {
+              "type": "keyword",
+              "ignore_above": 256
+            }
+          }
+        },
+        "basicobs_value_numeric": {
+          "type": "float"
+        },
+        "client_idcode": {
+          "type": "keyword"
+        },
+        "clientvisit_serviceguid": {
+          "type": "keyword"
+        },
+        "clientvisit_visitidcode": {
+          "type": "keyword"
+        },
+        "order_entered": {
+          "type": "date"
+        },
+        "order_guid": {
+          "type": "keyword"
+        },
+        "order_holdreasontext": {
+          "type": "text",
+          "fields": {
+            "keyword": {
+              "type": "keyword",
+              "ignore_above": 256
+            }
+          }
+        },
+        "order_name": {
+          "type": "text",
+          "fields": {
+            "keyword": {
+              "type": "keyword",
+              "ignore_above": 256
+            }
+          }
+        },
+        "order_summaryline": {
+          "type": "text",
+          "fields": {
+            "keyword": {
+              "type": "keyword",
+              "ignore_above": 256
+            }
+          }
+        },
+        "textualObs": {
+          "type": "text",
+          "fields": {
+            "keyword": {
+              "type": "keyword",
+              "ignore_above": 256
+            }
+          }
+        },
+        "updatetime": {
+          "type": "date"
+        }
+      }
+    },
+    "settings": {
+      "index": {
+        "refresh_interval": "5m",
+        "routing_partition_size": "1"
+      }
+    }
+  },
+  "observations": {
+    "mappings": {
+      "properties": {
+        "client_idcode": {
+          "type": "keyword"
+        },
+        "clientvisit_visitidcode": {
+          "type": "keyword"
+        },
+        "obscatalogmasteritem_displayname": {
+          "type": "text",
+          "fields": {
+            "keyword": {
+              "type": "keyword"
+            }
+          }
+        },
+        "observation_guid": {
+          "type": "keyword"
+        },
+        "observation_valuetext_analysed": {
+          "type": "text"
+        },
+        "observationdocument_recordeddtm": {
+          "type": "date"
+        }
+      }
+    },
+    "settings": {
+      "index": {
+        "refresh_interval": "5m",
+        "routing_partition_size": "1"
+      }
+    }
+  },
+  "order": {
+    "mappings": {
+      "properties": {
+        "client_idcode": {
+          "type": "keyword"
+        },
+        "clientvisit_visitidcode": {
+          "type": "keyword"
+        },
+        "order_createdwhen": {
+          "type": "date"
+        },
+        "order_entered": {
+          "type": "date"
+        },
+        "order_guid": {
+          "type": "keyword"
+        },
+        "order_holdreasontext": {
+          "type": "text"
+        },
+        "order_name": {
+          "type": "text",
+          "fields": {
+            "keyword": {
+              "type": "keyword"
+            }
+          }
+        },
+        "order_performeddtm": {
+          "type": "date"
+        },
+        "order_summaryline": {
+          "type": "text"
+        }
+      }
+    },
+    "settings": {
+      "index": {
+        "refresh_interval": "5m",
+        "routing_partition_size": "1"
+      }
+    }
+  },
+  "pims_apps": {
+    "mappings": {
+      "properties": {
+        "AppointmentDateTime": {
+          "type": "date"
+        },
+        "AppointmentType": {
+          "type": "keyword"
+        },
+        "AttendanceReference": {
+          "type": "long"
+        },
+        "Attended": {
+          "type": "long"
+        },
+        "CancDesc": {
+          "type": "text"
+        },
+        "CancRefNo": {
+          "type": "long"
+        },
+        "ClinicCode": {
+          "type": "keyword"
+        },
+        "ClinicDesc": {
+          "type": "text"
+        },
+        "Consultant": {
+          "type": "text"
+        },
+        "ConsultantCode": {
+          "type": "keyword"
+        },
+        "DNA": {
+          "type": "long"
+        },
+        "DateCreated": {
+          "type": "date"
+        },
+        "DateModified": {
+          "type": "date"
+        },
+        "Ethnicity": {
+          "type": "keyword"
+        },
+        "Gender": {
+          "type": "keyword"
+        },
+        "HospitalID": {
+          "type": "keyword"
+        },
+        "NHSNoStatusCode": {
+          "type": "keyword"
+        },
+        "NotSpec": {
+          "type": "long"
+        },
+        "PatDateOfBirth": {
+          "type": "date"
+        },
+        "PatForename": {
+          "type": "text"
+        },
+        "PatNHSNo": {
+          "type": "keyword"
+        },
+        "PatPostCode": {
+          "type": "keyword"
+        },
+        "PatSurname": {
+          "type": "text"
+        },
+        "PiMsPatRefNo": {
+          "type": "long"
+        },
+        "Popular": {
+          "type": "long"
+        },
+        "Primarykeyfieldname": {
+          "type": "keyword"
+        },
+        "Primarykeyfieldvalue": {
+          "type": "keyword"
+        },
+        "SessionCode": {
+          "type": "keyword"
+        },
+        "Specialty": {
+          "type": "keyword"
+        },
+        "SpecialtyCode": {
+          "type": "keyword"
+        }
+      }
+    },
+    "settings": {
+      "index": {
+        "refresh_interval": "5m",
+        "routing_partition_size": "1"
+      }
+    }
+  }
+}

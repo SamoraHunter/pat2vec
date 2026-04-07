@@ -3,6 +3,7 @@ import logging
 import os
 import re
 import string
+import json
 from typing import Optional, cast
 import uuid
 from typing import Any, List, Tuple, Union
@@ -14,6 +15,7 @@ from pat2vec.pat2vec_get_methods.get_method_bed import BED_FIELDS
 from pat2vec.pat2vec_get_methods.get_method_vte_status import VTE_FIELDS
 from pat2vec.pat2vec_get_methods.get_method_smoking import SMOKING_FIELDS
 from pat2vec.pat2vec_get_methods.get_method_core_resus import CORE_RESUS_FIELDS
+from pat2vec.util.elasticsearch_methods import ingest_data_to_elasticsearch
 from transformers import pipeline
 import random
 from pat2vec.util.dummy_data_files.dummy_lists import (
@@ -148,7 +150,7 @@ def generate_epr_documents_data(
                     global_start_month,
                     global_end_year,
                     global_end_month,
-                )
+                ).strftime("%Y-%m-%dT%H:%M:%S")
                 for _ in range(num_rows)
             ],
             "clientvisit_visitidcode": [
@@ -162,6 +164,11 @@ def generate_epr_documents_data(
     try:
         # logger.debug(f"Number of DataFrames in df_holder_list: {len(df_holder_list)}")
         df = pd.concat(df_holder_list, axis=0, ignore_index=True)
+
+        for field in fields_list:
+            if field not in df.columns:
+                df[field] = np.nan
+        df = df[fields_list]
 
         return df
     except Exception as e:
@@ -260,10 +267,12 @@ def generate_epr_documents_personal_data(
         df_holder_list.append(df)
 
     df = pd.concat(df_holder_list)
-    # fields_list = fields_list + ["_id", "_index", "_score"]
+    for field in fields_list:
+        if field not in df.columns:
+            df[field] = np.nan
 
-    # df = df[fields_list]
-    # df.reset_index(drop=True, inplace=True)
+    df = df[fields_list]
+    df.reset_index(drop=True, inplace=True)
 
     return df
 
@@ -288,6 +297,7 @@ def generate_diagnostic_orders_data(
         "_index",
         "_score",
         "order_performeddtm",
+        "order_typecode",
     ],
 ) -> pd.DataFrame:
     """Generates dummy data for the 'diagnostic_orders' index.
@@ -312,7 +322,7 @@ def generate_diagnostic_orders_data(
         current_pat_client_id_code = entered_list[i]
 
         data = {
-            "order_guid": [f"order_{i}" for i in range(num_rows)],
+            "order_guid": [faker.uuid4() for _ in range(num_rows)],
             "client_idcode": [current_pat_client_id_code for _ in range(num_rows)],
             "order_name": [
                 faker.random_element(diagnostic_names) for _ in range(num_rows)
@@ -331,7 +341,7 @@ def generate_diagnostic_orders_data(
                     global_start_month,
                     global_end_year,
                     global_end_month,
-                )
+                ).strftime("%Y-%m-%dT%H:%M:%S")
                 for _ in range(num_rows)
             ],
             "order_createdwhen": [
@@ -340,20 +350,21 @@ def generate_diagnostic_orders_data(
                     global_start_month,
                     global_end_year,
                     global_end_month,
-                )
+                ).strftime("%Y-%m-%dT%H:%M:%S")
                 for _ in range(num_rows)
             ],
             "clientvisit_visitidcode": [f"visit_{i}" for i in range(num_rows)],
             "_id": [f"{i}" for i in range(num_rows)],
             "_index": [None for _ in range(num_rows)],
             "_score": [None for _ in range(num_rows)],
+            "order_typecode": ["diagnostic" for _ in range(num_rows)],
             "order_performeddtm": [
                 create_random_date_from_globals(
                     global_start_year,
                     global_start_month,
                     global_end_year,
                     global_end_month,
-                )
+                ).strftime("%Y-%m-%dT%H:%M:%S")
                 for _ in range(num_rows)
             ],
         }
@@ -361,8 +372,13 @@ def generate_diagnostic_orders_data(
         df_holder_list.append(df)
 
     df = pd.concat(df_holder_list)
-    fields_list = fields_list + ["_id", "_index", "_score"]
+    fields_list = list(dict.fromkeys(fields_list + ["_id", "_index", "_score"]))
 
+    for field in fields_list:
+        if field not in df.columns:
+            df[field] = np.nan
+    df = df[fields_list]
+    df.reset_index(drop=True, inplace=True)
     return df
 
 
@@ -386,6 +402,7 @@ def generate_drug_orders_data(
         "_index",
         "_score",
         "order_performeddtm",
+        "order_typecode",
     ],
 ) -> pd.DataFrame:
     """Generates dummy data for the 'drug_orders' index.
@@ -408,7 +425,7 @@ def generate_drug_orders_data(
 
         current_pat_client_id_code = entered_list[i]
         data = {
-            "order_guid": [f"order_{i}" for i in range(num_rows)],
+            "order_guid": [faker.uuid4() for _ in range(num_rows)],
             "client_idcode": [current_pat_client_id_code for _ in range(num_rows)],
             # New value for drug_name
             "order_name": [faker.random_element(drug_names) for _ in range(num_rows)],
@@ -428,7 +445,7 @@ def generate_drug_orders_data(
                     global_start_month,
                     global_end_year,
                     global_end_month,
-                )
+                ).strftime("%Y-%m-%dT%H:%M:%S")
                 for _ in range(num_rows)
             ],
             "order_createdwhen": [
@@ -437,20 +454,21 @@ def generate_drug_orders_data(
                     global_start_month,
                     global_end_year,
                     global_end_month,
-                )
+                ).strftime("%Y-%m-%dT%H:%M:%S")
                 for _ in range(num_rows)
             ],
             "clientvisit_visitidcode": [f"visit_{i}" for i in range(num_rows)],
             "_id": [f"{i}" for i in range(num_rows)],
             "_index": [None for i in range(num_rows)],
             "_score": [None for i in range(num_rows)],
+            "order_typecode": ["medication" for _ in range(num_rows)],
             "order_performeddtm": [
                 create_random_date_from_globals(
                     global_start_year,
                     global_start_month,
                     global_end_year,
                     global_end_month,
-                )
+                ).strftime("%Y-%m-%dT%H:%M:%S")
                 for _ in range(num_rows)
             ],
         }
@@ -459,7 +477,10 @@ def generate_drug_orders_data(
         df_holder_list.append(df)
 
     df = pd.concat(df_holder_list)
-    fields_list = fields_list + ["_id", "_index", "_score"]
+    fields_list = list(dict.fromkeys(fields_list + ["_id", "_index", "_score"]))
+    for field in fields_list:
+        if field not in df.columns:
+            df[field] = np.nan
 
     # Ensure only target columns are present. Useful if source data isn't directly from ES.
     df = df[fields_list]
@@ -485,7 +506,6 @@ def generate_observations_MRC_text_data(
         "_id",
         "_index",
         "_score",
-        "textualObs",
     ],
 ) -> pd.DataFrame:
     """Generates dummy MRC text data for the 'observations' index.
@@ -511,7 +531,7 @@ def generate_observations_MRC_text_data(
         current_pat_client_id_code = entered_list[i]
 
         data = {
-            "observation_guid": [f"obs_{i}" for i in range(num_rows)],
+            "observation_guid": [faker.uuid4() for _ in range(num_rows)],
             "client_idcode": [current_pat_client_id_code for _ in range(num_rows)],
             "obscatalogmasteritem_displayname": "AoMRC_ClinicalSummary_FT",
             "observation_valuetext_analysed": [
@@ -529,7 +549,7 @@ def generate_observations_MRC_text_data(
                     global_start_month,
                     global_end_year,
                     global_end_month,
-                )
+                ).strftime("%Y-%m-%dT%H:%M:%S")
                 for _ in range(num_rows)
             ],
             "clientvisit_visitidcode": [f"visit_{i}" for i in range(num_rows)],
@@ -544,7 +564,11 @@ def generate_observations_MRC_text_data(
     df = pd.concat(df_holder_list)
     # filter df by fields list except ['_id', '_index', '_score']
 
-    fields_list = fields_list + ["_id", "_index", "_score"]
+    fields_list = list(dict.fromkeys(fields_list + ["_id", "_index", "_score"]))
+
+    for field in fields_list:
+        if field not in df.columns:
+            df[field] = np.nan
 
     df = df[fields_list]
 
@@ -596,7 +620,7 @@ def generate_observations_Reports_text_data(
         current_pat_client_id_code = entered_list[i]
 
         data = {
-            "basicobs_guid": [f"obs_{i}" for i in range(num_rows)],
+            "basicobs_guid": [faker.uuid4() for _ in range(num_rows)],
             "client_idcode": [current_pat_client_id_code for _ in range(num_rows)],
             "basicobs_itemname_analysed": "Report",
             "basicobs_value_analysed": "",
@@ -615,7 +639,7 @@ def generate_observations_Reports_text_data(
                     global_start_month,
                     global_end_year,
                     global_end_month,
-                )
+                ).strftime("%Y-%m-%dT%H:%M:%S")
                 for _ in range(num_rows)
             ],
             "clientvisit_visitidcode": [f"visit_{i}" for i in range(num_rows)],
@@ -629,8 +653,11 @@ def generate_observations_Reports_text_data(
         df_holder_list.append(df)
 
     df = pd.concat(df_holder_list)
-    fields_list = fields_list + ["_id", "_index", "_score"]
+    fields_list = list(dict.fromkeys(fields_list + ["_id", "_index", "_score"]))
 
+    for field in fields_list:
+        if field not in df.columns:
+            df[field] = np.nan
     df = df[fields_list]
     df.reset_index(drop=True, inplace=True)
 
@@ -645,7 +672,6 @@ def generate_appointments_data(
     global_end_year: int,
     global_end_month: int,
     fields_list: List[str] = [
-        "client_idcode",
         "Popular",
         "AppointmentType",
         "AttendanceReference",
@@ -710,7 +736,7 @@ def generate_appointments_data(
             "AttendanceReference": [
                 faker.random_number(digits=6) for _ in range(num_rows)
             ],
-            "ClinicCode": [faker.random_number(digits=4) for _ in range(num_rows)],
+            "ClinicCode": [str(faker.random_number(digits=4)) for _ in range(num_rows)],
             "ClinicDesc": [faker.word() for _ in range(num_rows)],
             "Consultant": [faker.name() for _ in range(num_rows)],
             "DateModified": [
@@ -719,12 +745,12 @@ def generate_appointments_data(
                     global_start_month,
                     global_end_year,
                     global_end_month,
-                )
+                ).strftime("%Y-%m-%dT%H:%M:%S")
                 for _ in range(num_rows)
             ],
-            "DNA": [faker.random_element(["Y", "N"]) for _ in range(num_rows)],
+            "DNA": [faker.random_element([0, 1]) for _ in range(num_rows)],
             "HospitalID": [current_pat_client_id_code for _ in range(num_rows)],
-            "PatNHSNo": [faker.random_number(digits=10) for _ in range(num_rows)],
+            "PatNHSNo": [str(faker.random_number(digits=10)) for _ in range(num_rows)],
             "Specialty": [
                 faker.random_element(["Specialty A", "Specialty B", "Specialty C"])
                 for _ in range(num_rows)
@@ -738,14 +764,19 @@ def generate_appointments_data(
                     global_start_month,
                     global_end_year,
                     global_end_month,
-                )
+                ).strftime("%Y-%m-%dT%H:%M:%S")
                 for _ in range(num_rows)
             ],
             "Attended": [faker.random_element([0, 1]) for _ in range(num_rows)],
             "CancDesc": [faker.sentence() for _ in range(num_rows)],
             "CancRefNo": [faker.random_number(digits=8) for _ in range(num_rows)],
-            "ConsultantCode": [faker.random_number(digits=4) for _ in range(num_rows)],
-            "DateCreated": [faker.date_time_this_year() for _ in range(num_rows)],
+            "ConsultantCode": [
+                str(faker.random_number(digits=4)) for _ in range(num_rows)
+            ],
+            "DateCreated": [
+                faker.date_time_this_year().strftime("%Y-%m-%dT%H:%M:%S")
+                for _ in range(num_rows)
+            ],
             "Ethnicity": [
                 faker.random_element(["Ethnicity A", "Ethnicity B", "Ethnicity C"])
                 for _ in range(num_rows)
@@ -753,8 +784,10 @@ def generate_appointments_data(
             "Gender": [
                 faker.random_element(["Male", "Female"]) for _ in range(num_rows)
             ],
-            "NHSNoStatusCode": [faker.random_number(digits=2) for _ in range(num_rows)],
-            "NotSpec": [faker.random_element(["Y", "N"]) for _ in range(num_rows)],
+            "NHSNoStatusCode": [
+                str(faker.random_number(digits=2)) for _ in range(num_rows)
+            ],
+            "NotSpec": [faker.random_element([0, 1]) for _ in range(num_rows)],
             "PatDateOfBirth": [faker.date_of_birth() for _ in range(num_rows)],
             "PatForename": [faker.first_name() for _ in range(num_rows)],
             "PatPostCode": [faker.postcode() for _ in range(num_rows)],
@@ -762,10 +795,14 @@ def generate_appointments_data(
             "PiMsPatRefNo": [faker.random_number(digits=6) for _ in range(num_rows)],
             "Primarykeyfieldname": [faker.word() for _ in range(num_rows)],
             "Primarykeyfieldvalue": [
-                faker.random_number(digits=4) for _ in range(num_rows)
+                str(faker.random_number(digits=4)) for _ in range(num_rows)
             ],
-            "SessionCode": [faker.random_number(digits=3) for _ in range(num_rows)],
-            "SpecialtyCode": [faker.random_number(digits=4) for _ in range(num_rows)],
+            "SessionCode": [
+                str(faker.random_number(digits=3)) for _ in range(num_rows)
+            ],
+            "SpecialtyCode": [
+                str(faker.random_number(digits=4)) for _ in range(num_rows)
+            ],
         }
 
         df = pd.DataFrame(data)
@@ -773,7 +810,7 @@ def generate_appointments_data(
         df_holder_list.append(df)
 
     df = pd.concat(df_holder_list, ignore_index=True)
-    fields_list = fields_list + ["_id", "_index", "_score"]
+    fields_list = list(dict.fromkeys(fields_list + ["_id", "_index", "_score"]))
 
     # Ensure only target columns are present. Useful if source data isn't directly from ES.
     df = df[fields_list]
@@ -827,11 +864,11 @@ def generate_observations_data(
         current_pat_client_id_code = entered_list[i]
 
         data = {
-            "observation_guid": [f"obs_{i}" for i in range(num_rows)],
+            "observation_guid": [faker.uuid4() for _ in range(num_rows)],
             "client_idcode": [current_pat_client_id_code for _ in range(num_rows)],
             "obscatalogmasteritem_displayname": [search_term for _ in range(num_rows)],
             "observation_valuetext_analysed": [
-                random.uniform(0, 100) for _ in range(num_rows)
+                str(random.uniform(0, 100)) for _ in range(num_rows)
             ],
             "observationdocument_recordeddtm": [
                 create_random_date_from_globals(
@@ -839,21 +876,24 @@ def generate_observations_data(
                     global_start_month,
                     global_end_year,
                     global_end_month,
-                )
+                ).strftime("%Y-%m-%dT%H:%M:%S")
                 for _ in range(num_rows)
             ],
             "clientvisit_visitidcode": [f"visit_{i}" for i in range(num_rows)],
-            "_id": ["{i}" for i in range(num_rows)],
-            "_index": ["{np.nan}" for i in range(num_rows)],
-            "_score": ["{np.nan}" for i in range(num_rows)],
+            "_id": [f"{i}" for i in range(num_rows)],
+            "_index": [None for i in range(num_rows)],
+            "_score": [None for i in range(num_rows)],
         }
 
         df = pd.DataFrame(data)
         df_holder_list.append(df)
 
     df = pd.concat(df_holder_list, ignore_index=True)
-    fields_list = fields_list + ["_id", "_index", "_score"]
+    fields_list = list(dict.fromkeys(fields_list + ["_id", "_index", "_score"]))
 
+    for field in fields_list:
+        if field not in df.columns:
+            df[field] = np.nan
     df = df[fields_list]
     df.reset_index(drop=True, inplace=True)
 
@@ -883,6 +923,7 @@ def generate_basic_observations_data(
         "order_entered",
         "clientvisit_visitidcode",
         "updatetime",
+        "basicobs_guid",
     ],
 ) -> pd.DataFrame:
     """Generates dummy data for the 'basic_observations' index.
@@ -908,6 +949,7 @@ def generate_basic_observations_data(
         current_pat_client_id_code = entered_list[i]
 
         data = {
+            "basicobs_guid": [faker.uuid4() for _ in range(num_rows)],
             "client_idcode": [current_pat_client_id_code] * num_rows,
             "basicobs_itemname_analysed": [
                 faker.random_element(blood_test_names) for _ in range(num_rows)
@@ -926,8 +968,8 @@ def generate_basic_observations_data(
             "_id": [None for i in range(num_rows)],
             "_index": [None for i in range(num_rows)],
             "_score": [None for i in range(num_rows)],
-            "order_guid": [f"order_{i}" for i in range(num_rows)],
-            "order_name": [None for i in range(num_rows)],
+            "order_guid": [faker.uuid4() for i in range(num_rows)],
+            "order_name": [faker.word() for i in range(num_rows)],
             "order_summaryline": [
                 maybe_nan(" ".join(faker.sentence() for _ in range(num_rows)))
                 for i in range(num_rows)
@@ -936,8 +978,16 @@ def generate_basic_observations_data(
                 maybe_nan(" ".join(faker.sentence() for _ in range(num_rows)))
                 for i in range(num_rows)
             ],
-            "order_entered": [None for i in range(num_rows)],
-            "clientvisit_visitidcode": [None for i in range(num_rows)],
+            "order_entered": [
+                create_random_date_from_globals(
+                    global_start_year,
+                    global_start_month,
+                    global_end_year,
+                    global_end_month,
+                ).strftime("%Y-%m-%dT%H:%M:%S")
+                for _ in range(num_rows)
+            ],
+            "clientvisit_visitidcode": [str(uuid.uuid4()) for _ in range(num_rows)],
             "updatetime": [
                 create_random_date_from_globals(
                     global_start_year,
@@ -954,7 +1004,11 @@ def generate_basic_observations_data(
 
     df = pd.concat(df_holder_list, ignore_index=True)
     # fields_list = fields_list + ["_id", "_index", "_score"]
-    fields_list = fields_list + ["_id", "_index", "_score"]
+    fields_list = list(dict.fromkeys(fields_list + ["_id", "_index", "_score"]))
+
+    for field in fields_list:
+        if field not in df.columns:
+            df[field] = np.nan
     df = df[fields_list]
     df.reset_index(drop=True, inplace=True)
 
@@ -972,15 +1026,16 @@ def generate_basic_observations_textual_obs_data(
         "client_idcode",
         "basicobs_itemname_analysed",
         "basicobs_value_numeric",
+        "basicobs_value_analysed",
         "basicobs_entered",
         "clientvisit_serviceguid",
         "_id",
         "_index",
         "_score",
         "basicobs_guid",
-        "clientvisit_serviceguid",
         "updatetime",
         "textualObs",
+        "clientvisit_visitidcode",
     ],
 ) -> pd.DataFrame:
 
@@ -1026,7 +1081,8 @@ def generate_basic_observations_textual_obs_data(
             "_id": [None for i in range(num_rows)],
             "_index": [None for i in range(num_rows)],
             "_score": [None for i in range(num_rows)],
-            "basicobs_guid": [f"obs_{i}" for i in range(num_rows)],
+            "clientvisit_visitidcode": [str(uuid.uuid4()) for _ in range(num_rows)],
+            "basicobs_guid": [faker.uuid4() for _ in range(num_rows)],
             "updatetime": [
                 create_random_date_from_globals(
                     global_start_year,
@@ -1046,8 +1102,11 @@ def generate_basic_observations_textual_obs_data(
         df_holder_list.append(df)
 
     df = pd.concat(df_holder_list, ignore_index=True)
-    fields_list = fields_list + ["_id", "_index", "_score"]
+    fields_list = list(dict.fromkeys(fields_list + ["_id", "_index", "_score"]))
 
+    for field in fields_list:
+        if field not in df.columns:
+            df[field] = np.nan
     df = df[fields_list]
     df.reset_index(drop=True, inplace=True)
 
@@ -1433,7 +1492,7 @@ def cohort_searcher_with_terms_and_search_dummy(
     elif index_name == "pims_apps*":
         if verbose:
             logger.debug("Generating data for 'pims_apps'")
-        num_rows = random.randint(0, 10)
+        num_rows = random.randint(1, 10)
         df = generate_appointments_data(
             num_rows,
             entered_list,
@@ -1808,7 +1867,7 @@ def generate_covid_observations_data(
 
     for client_id_code in entered_list:
         data = {
-            "observation_guid": [faker.uuid4() for _ in range(num_rows)],
+            "basicobs_guid": [faker.uuid4() for _ in range(num_rows)],
             "client_idcode": [client_id_code for _ in range(num_rows)],
             "basicobs_itemname_analysed": [SEARCH_TERM_PLAIN for _ in range(num_rows)],
             "basicobs_value_analysed": [
@@ -1902,7 +1961,7 @@ def generate_hospital_site_data(
                     global_start_month,
                     global_end_year,
                     global_end_month,
-                )
+                ).strftime("%Y-%m-%dT%H:%M:%S")
                 for _ in range(num_rows)
             ],
             "clientvisit_visitidcode": [
@@ -1918,8 +1977,10 @@ def generate_hospital_site_data(
         return pd.DataFrame(columns=fields_list)
 
     final_df = pd.concat(df_holder_list, ignore_index=True)
+    for field in fields_list:
+        if field not in final_df.columns:
+            final_df[field] = np.nan
 
-    # Ensure only the specified columns are present in the final dataframe.
     final_df = final_df[fields_list]
 
     return final_df
@@ -1944,12 +2005,31 @@ def generate_news_data(
     """Generates dummy data for NEWS observations."""
     df_holder_list = []
 
+    # List of NEWS component names expected by get_method_news.py
+    news_components = [
+        "NEWS2_Score",
+        "NEWS_Systolic_BP",
+        "NEWS_Diastolic_BP",
+        "NEWS_Respiration_Rate",
+        "NEWS_Heart_Rate",
+        "NEWS_Oxygen_Saturation",
+        "NEWS Temperature",
+        "NEWS_AVPU",
+        "NEWS_Supplemental_Oxygen",
+        "NEWS2_Sp02_Target",
+        "NEWS2_Sp02_Scale",
+        "NEWS_Pulse_Type",
+        "NEWS_Pain_Score",
+        "NEWS Oxygen Litres",
+        "NEWS Oxygen Delivery",
+    ]
+
     for client_id_code in entered_list:
         data = {
             "observation_guid": [faker.uuid4() for _ in range(num_rows)],
             "client_idcode": [client_id_code for _ in range(num_rows)],
             "obscatalogmasteritem_displayname": [
-                random.choice(["NEWS", "NEWS2"]) for _ in range(num_rows)
+                random.choice(news_components) for _ in range(num_rows)
             ],
             "observation_valuetext_analysed": [
                 str(random.randint(0, 15)) for _ in range(num_rows)
@@ -1960,7 +2040,7 @@ def generate_news_data(
                     global_start_month,
                     global_end_year,
                     global_end_month,
-                )
+                ).strftime("%Y-%m-%dT%H:%M:%S")
                 for _ in range(num_rows)
             ],
             "clientvisit_visitidcode": [
@@ -2033,7 +2113,7 @@ def generate_bmi_data(
                     global_start_month,
                     global_end_year,
                     global_end_month,
-                )
+                ).strftime("%Y-%m-%dT%H:%M:%S")
                 for _ in range(num_rows)
             ],
             "clientvisit_visitidcode": [
@@ -2046,7 +2126,415 @@ def generate_bmi_data(
         return pd.DataFrame(columns=fields_list)
 
     final_df = pd.concat(df_holder_list, ignore_index=True)
+    for field in fields_list:
+        if field not in final_df.columns:
+            final_df[field] = np.nan
     return final_df[fields_list]
+
+
+def populate_elastic_with_dummy_data(
+    config_obj: Any, n_patients: int = 10
+) -> List[str]:
+    """Generates dummy data and ingests it into Elasticsearch.
+
+    This function generates random patient IDs and creates dummy data for
+    several indices (epr_documents, observations, basic_observations,
+    order, pims_apps). It then uses `ingest_data_to_elasticsearch` to
+    load this data into the configured Elasticsearch instance.
+
+    Args:
+        config_obj: The configuration object containing date ranges.
+        n_patients: The number of dummy patients to generate.
+
+    Returns:
+        A list of the generated dummy patient IDs.
+    """
+    # Safeguard: Ensure testing flags are enabled in config
+    if not getattr(config_obj, "testing", False) or not getattr(
+        config_obj, "testing_elastic", False
+    ):
+        logger.error(
+            "Safety Block: 'testing' and 'testing_elastic' must both be True to populate dummy data. Aborting."
+        )
+        return []
+
+    # Initialize CogStack client to interact with Elastic
+    # We avoid initialize_cogstack_client to prevent accidental usage of global/live clients
+    # We strictly require a specific credentials file in the root directory
+    from pat2vec.pat2vec_search.cogstack_search_methods import CogStack
+    import importlib.util
+
+    creds_filename = "test_elastic_credentials.py"
+    creds_path = os.path.abspath(creds_filename)
+
+    if not os.path.exists(creds_path):
+        logger.error(
+            f"Safety Block: Test credentials file '{creds_filename}' not found at {creds_path}. Aborting dummy data population."
+        )
+        return []
+
+    try:
+        spec = importlib.util.spec_from_file_location("test_creds_module", creds_path)
+        if spec is None or spec.loader is None:
+            raise ImportError(f"Could not load specs from {creds_path}")
+        test_creds = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(test_creds)
+
+        hosts = getattr(test_creds, "hosts", [])
+        username = getattr(test_creds, "username", None)
+        password = getattr(test_creds, "password", None)
+        api_key = getattr(test_creds, "api_key", None)
+
+        if api_key:
+            cs = CogStack(hosts=hosts, api_key=api_key, api=True)
+        else:
+            cs = CogStack(hosts=hosts, username=username, password=password, api=False)
+        logger.info(f"Loaded isolated test credentials from {creds_path}")
+    except Exception as e:
+        logger.error(
+            f"Failed to initialize CogStack client from credentials file {creds_path}: {e}"
+        )
+        return []
+
+    if cs:
+        # Safeguard: Check if connecting to a safe/test environment
+        # This prevents wiping production indices
+        nodes = cs.elastic.transport.node_pool.all()
+        hosts = [node.host for node in nodes]
+        safe_hosts = [
+            "localhost",
+            "127.0.0.1",
+            "0.0.0.0",
+            "::1",
+            "elasticsearch",
+            "es01",
+        ]
+        if any(h not in safe_hosts for h in hosts):
+            logger.error(
+                f"Unsafe operation: Attempting to populate dummy data on non-local host(s): {hosts}. Aborting."
+            )
+            return []
+
+        # Safeguard: Check username
+        safe_users = ["elastic", "test_user", "dummy_user"]
+        current_user = getattr(config_obj, "username", None)
+        if current_user and current_user not in safe_users:
+            logger.error(
+                f"Unsafe operation: Attempting to populate dummy data with non-test user '{current_user}'. Aborting."
+            )
+            return []
+
+        # Log cluster info for verification
+        try:
+            cluster_info = cs.elastic.info()
+            cluster_name = cluster_info.get("cluster_name")
+            logger.info(
+                f"Populating dummy data on cluster: {cluster_name} (version {cluster_info.get('version', {}).get('number')})"
+            )
+
+            # Safeguard: Cluster Name
+            safe_cluster_names = ["docker-cluster", "elasticsearch"]
+            if cluster_name not in safe_cluster_names:
+                logger.error(
+                    f"Unsafe operation: Cluster name '{cluster_name}' is not in safe list {safe_cluster_names}. Aborting."
+                )
+                return []
+        except Exception:
+            pass
+
+    else:
+        logger.error("Failed to initialize CogStack client. Aborting population.")
+        return []
+
+    global_start_year = int(config_obj.global_start_year)
+    global_start_month = int(config_obj.global_start_month)
+    global_end_year = int(config_obj.global_end_year)
+    global_end_month = int(config_obj.global_end_month)
+
+    # Load schema and create indices if schema file exists
+    # Prefer the path from config, fall back to default relative path
+    schema_path = getattr(config_obj, "test_schema_path", None) or os.path.join(
+        "test_files", "elastic_schemas.json"
+    )
+
+    if os.path.exists(schema_path):
+        try:
+            with open(schema_path, "r") as f:
+                schemas = json.load(f)
+
+            if cs:
+                # Safeguard: Check if connecting to a safe/test environment
+                # This prevents wiping production indices
+                nodes = cs.elastic.transport.node_pool.all()
+                hosts = [node.host for node in nodes]
+                safe_hosts = [
+                    "localhost",
+                    "127.0.0.1",
+                    "0.0.0.0",
+                    "::1",
+                    "elasticsearch",
+                    "es01",
+                ]
+                if any(h not in safe_hosts for h in hosts):
+                    logger.error(
+                        f"Unsafe operation: Attempting to populate dummy data on non-local host(s): {hosts}. Aborting."
+                    )
+                    return []
+
+                # Safeguard: Check username
+                safe_users = ["elastic", "test_user", "dummy_user"]
+                current_user = getattr(config_obj, "username", None)
+                if current_user and current_user not in safe_users:
+                    logger.error(
+                        f"Unsafe operation: Attempting to populate dummy data with non-test user '{current_user}'. Aborting."
+                    )
+                    return []
+
+                # Log cluster info for verification
+                try:
+                    cluster_info = cs.elastic.info()
+                    logger.info(
+                        f"Populating dummy data on cluster: {cluster_info.get('cluster_name')} (version {cluster_info.get('version', {}).get('number')})"
+                    )
+                except Exception:
+                    pass
+
+                # Safeguard: Verify cluster is empty of user indices
+                try:
+                    indices = cs.elastic.cat.indices(format="json")
+                    user_indices = [
+                        i["index"] for i in indices if not i["index"].startswith(".")
+                    ]
+                    if user_indices:
+                        logger.error(
+                            f"Unsafe operation: Target cluster is not empty. Found existing user indices: {user_indices}. Aborting."
+                        )
+                        return []
+                except Exception as e:
+                    logger.error(f"Failed to verify cluster emptiness: {e}. Aborting.")
+                    return []
+
+                logger.info(f"Applying schemas from {schema_path}...")
+                for index_name, schema_data in schemas.items():
+                    # Delete index if it exists to ensure clean state with correct mapping
+                    if cs.elastic.indices.exists(index=index_name):
+                        cs.elastic.indices.delete(index=index_name)
+                        logger.info(f"Deleted existing index: {index_name}")
+
+                    mappings = schema_data.get("mappings", {})
+                    settings = schema_data.get("settings", {})
+
+                    # Force dynamic mapping to True to ensure dummy fields are indexed
+                    mappings["dynamic"] = True
+
+                    # Create index
+                    cs.elastic.indices.create(
+                        index=index_name, mappings=mappings, settings=settings
+                    )
+                    logger.info(f"Created index: {index_name} with custom schema")
+            else:
+                logger.warning(
+                    "Could not initialize CogStack client for schema creation."
+                )
+        except Exception as e:
+            logger.error(f"Failed to apply Elastic schemas: {e}")
+
+    # 1. Generate Dummy Patient IDs
+    patient_ids = []
+    # Try to use existing IDs from the configured treatment doc to ensure consistency with static test files
+    try:
+        from pat2vec.pat2vec_pat_list.get_patient_treatment_list import (
+            extract_treatment_id_list_from_docs,
+        )
+
+        patient_ids = extract_treatment_id_list_from_docs(config_obj)
+    except Exception as e:
+        logger.debug(f"Could not load existing patient list: {e}")
+
+    if patient_ids:
+        logger.info(
+            f"Using {len(patient_ids)} existing patient IDs from treatment doc: {patient_ids[:5]}..."
+        )
+        if len(patient_ids) > n_patients:
+            patient_ids = patient_ids[:n_patients]
+    else:
+        patient_ids = generate_uuid_list(n_patients, "P")
+        logger.info(f"Generated {n_patients} dummy patient IDs: {patient_ids[:5]}...")
+
+    # 2. Generate and Ingest Data for Each Index
+
+    # Generate both parts of the EPR documents data first
+    df_epr = generate_epr_documents_data(
+        num_rows=random.randint(1, 5),
+        entered_list=patient_ids,
+        global_start_year=global_start_year,
+        global_start_month=global_start_month,
+        global_end_year=global_end_year,
+        global_end_month=global_end_month,
+        use_GPT=False,
+    )
+    df_epr_personal = generate_epr_documents_personal_data(
+        num_rows=1,
+        entered_list=patient_ids,
+        global_start_year=global_start_year,
+        global_start_month=global_start_month,
+        global_end_year=global_end_year,
+        global_end_month=global_end_month,
+    )
+
+    # Merge personal data into each EPR document to ensure it's always available
+    df_epr_merged = pd.merge(
+        df_epr,
+        df_epr_personal.drop(columns=["updatetime"]),
+        on="client_idcode",
+        how="left",
+    )
+    df_epr_merged = df_epr_merged.where(pd.notnull(df_epr_merged), None)
+    ingest_data_to_elasticsearch(df_epr_merged, "epr_documents", es_client=cs.elastic)
+    cs.elastic.indices.refresh(index="epr_documents")
+
+    # Save the generated cohort to treatment_docs.csv for testing_elastic workflow
+    # This ensures pat_maker uses the same IDs that were just populated
+    if getattr(config_obj, "testing_elastic", False):
+        try:
+            filename = getattr(
+                config_obj, "treatment_doc_filename", "treatment_docs.csv"
+            )
+            root_path = getattr(config_obj, "root_path", "")
+            if root_path:
+                os.makedirs(root_path, exist_ok=True)
+                output_path = os.path.join(root_path, filename)
+            else:
+                output_path = filename
+            logger.info(
+                f"Saving generated cohort to {output_path} for testing_elastic workflow."
+            )
+            df_epr.to_csv(output_path, index=False)
+        except Exception as e:
+            logger.error(f"Failed to save generated treatment docs: {e}")
+
+    # basic_observations
+    df_basic_obs = generate_basic_observations_data(
+        num_rows=random.randint(1, 10),
+        entered_list=patient_ids,
+        global_start_year=global_start_year,
+        global_start_month=global_start_month,
+        global_end_year=global_end_year,
+        global_end_month=global_end_month,
+    )
+    # Add textual obs to basic observations
+    df_basic_textual = generate_basic_observations_textual_obs_data(
+        num_rows=random.randint(1, 5),
+        entered_list=patient_ids,
+        global_start_year=global_start_year,
+        global_start_month=global_start_month,
+        global_end_year=global_end_year,
+        global_end_month=global_end_month,
+    )
+    df_basic_all = pd.concat([df_basic_obs, df_basic_textual], ignore_index=True)
+    df_basic_all = df_basic_all.where(pd.notnull(df_basic_all), None)
+    ingest_data_to_elasticsearch(
+        df_basic_all, "basic_observations", es_client=cs.elastic
+    )
+    cs.elastic.indices.refresh(index="basic_observations")
+
+    # observations (BMI, NEWS, MRC Text, Bed, etc.)
+    obs_dfs = []
+    # BMI
+    obs_dfs.append(
+        generate_bmi_data(
+            num_rows=random.randint(1, 5),
+            entered_list=patient_ids,
+            global_start_year=global_start_year,
+            global_start_month=global_start_month,
+            global_end_year=global_end_year,
+            global_end_month=global_end_month,
+        )
+    )
+    # NEWS
+    obs_dfs.append(
+        generate_news_data(
+            num_rows=random.randint(1, 5),
+            entered_list=patient_ids,
+            global_start_year=global_start_year,
+            global_start_month=global_start_month,
+            global_end_year=global_end_year,
+            global_end_month=global_end_month,
+        )
+    )
+    # MRC Text
+    obs_dfs.append(
+        generate_observations_MRC_text_data(
+            num_rows=random.randint(1, 5),
+            entered_list=patient_ids,
+            global_start_year=global_start_year,
+            global_start_month=global_start_month,
+            global_end_year=global_end_year,
+            global_end_month=global_end_month,
+            use_GPT=False,
+        )
+    )
+    # Generic observations (fallback/misc)
+    obs_dfs.append(
+        generate_observations_data(
+            num_rows=random.randint(1, 5),
+            entered_list=patient_ids,
+            global_start_year=global_start_year,
+            global_start_month=global_start_month,
+            global_end_year=global_end_year,
+            global_end_month=global_end_month,
+            search_term="Generic Observation",
+        )
+    )
+
+    df_obs = pd.concat(obs_dfs, ignore_index=True)
+    df_obs = df_obs.where(pd.notnull(df_obs), None)
+    ingest_data_to_elasticsearch(df_obs, "observations", es_client=cs.elastic)
+    cs.elastic.indices.refresh(index="observations")
+
+    # order (Drugs and Diagnostics)
+    order_dfs = []
+    order_dfs.append(
+        generate_drug_orders_data(
+            num_rows=random.randint(1, 5),
+            entered_list=patient_ids,
+            global_start_year=global_start_year,
+            global_start_month=global_start_month,
+            global_end_year=global_end_year,
+            global_end_month=global_end_month,
+        )
+    )
+    order_dfs.append(
+        generate_diagnostic_orders_data(
+            num_rows=random.randint(1, 5),
+            entered_list=patient_ids,
+            global_start_year=global_start_year,
+            global_start_month=global_start_month,
+            global_end_year=global_end_year,
+            global_end_month=global_end_month,
+        )
+    )
+    df_orders = pd.concat(order_dfs, ignore_index=True)
+    df_orders = df_orders.where(pd.notnull(df_orders), None)
+    ingest_data_to_elasticsearch(df_orders, "order", es_client=cs.elastic)
+    cs.elastic.indices.refresh(index="order")
+
+    # pims_apps (Appointments)
+    df_apps = generate_appointments_data(
+        num_rows=random.randint(1, 5),
+        entered_list=patient_ids,
+        global_start_year=global_start_year,
+        global_start_month=global_start_month,
+        global_end_year=global_end_year,
+        global_end_month=global_end_month,
+    )
+    # Index name in config usually pims_apps*, but we ingest to pims_apps
+    df_apps = df_apps.where(pd.notnull(df_apps), None)
+    ingest_data_to_elasticsearch(df_apps, "pims_apps", es_client=cs.elastic)
+    cs.elastic.indices.refresh(index="pims_apps")
+
+    logger.info("Successfully populated Elasticsearch with dummy data.")
+    return patient_ids
 
 
 def generate_bed_data(
@@ -2102,7 +2590,7 @@ def generate_bed_data(
                     global_start_month,
                     global_end_year,
                     global_end_month,
-                )
+                ).strftime("%Y-%m-%dT%H:%M:%S")
                 for _ in range(num_rows)
             ],
             "clientvisit_visitidcode": [
@@ -2115,6 +2603,9 @@ def generate_bed_data(
         return pd.DataFrame(columns=fields_list)
 
     final_df = pd.concat(df_holder_list, ignore_index=True)
+    for field in fields_list:
+        if field not in final_df.columns:
+            final_df[field] = np.nan
     return final_df[fields_list]
 
 
@@ -2150,7 +2641,7 @@ def generate_vte_data(
                     global_start_month,
                     global_end_year,
                     global_end_month,
-                )
+                ).strftime("%Y-%m-%dT%H:%M:%S")
                 for _ in range(num_rows)
             ],
             "clientvisit_visitidcode": [
@@ -2163,6 +2654,9 @@ def generate_vte_data(
         return pd.DataFrame(columns=fields_list)
 
     final_df = pd.concat(df_holder_list, ignore_index=True)
+    for field in fields_list:
+        if field not in final_df.columns:
+            final_df[field] = np.nan
     return final_df[fields_list]
 
 
@@ -2195,7 +2689,7 @@ def generate_smoking_data(
                     global_start_month,
                     global_end_year,
                     global_end_month,
-                )
+                ).strftime("%Y-%m-%dT%H:%M:%S")
                 for _ in range(num_rows)
             ],
             "clientvisit_visitidcode": [
@@ -2208,6 +2702,9 @@ def generate_smoking_data(
         return pd.DataFrame(columns=fields_list)
 
     final_df = pd.concat(df_holder_list, ignore_index=True)
+    for field in fields_list:
+        if field not in final_df.columns:
+            final_df[field] = np.nan
     return final_df[fields_list]
 
 
@@ -2264,7 +2761,7 @@ def generate_core_o2_data(
                     global_start_month,
                     global_end_year,
                     global_end_month,
-                )
+                ).strftime("%Y-%m-%dT%H:%M:%S")
                 for _ in range(num_rows)
             ],
             "clientvisit_visitidcode": [
@@ -2277,6 +2774,9 @@ def generate_core_o2_data(
         return pd.DataFrame(columns=fields_list)
 
     final_df = pd.concat(df_holder_list, ignore_index=True)
+    for field in fields_list:
+        if field not in final_df.columns:
+            final_df[field] = np.nan
     return final_df[fields_list]
 
 
@@ -2327,7 +2827,7 @@ def generate_core_resus_data(
                     global_start_month,
                     global_end_year,
                     global_end_month,
-                )
+                ).strftime("%Y-%m-%dT%H:%M:%S")
                 for _ in range(num_rows)
             ],
             "clientvisit_visitidcode": [
@@ -2340,4 +2840,7 @@ def generate_core_resus_data(
         return pd.DataFrame(columns=fields_list)
 
     final_df = pd.concat(df_holder_list, ignore_index=True)
+    for field in fields_list:
+        if field not in final_df.columns:
+            final_df[field] = np.nan
     return final_df[fields_list]

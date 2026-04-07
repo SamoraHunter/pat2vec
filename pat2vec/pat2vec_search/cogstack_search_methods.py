@@ -313,11 +313,7 @@ def list_chunker(entered_list: List[Any]) -> List[List[Any]]:
     Returns:
         A list of lists, where each sublist is a chunk of the original list.
     """
-    if len(entered_list) >= 10000:
-        chunks = [
-            entered_list[x : x + 10000] for x in range(0, len(entered_list), 10000)
-        ]
-    return chunks
+    return [entered_list[x : x + 10000] for x in range(0, len(entered_list), 10000)]
 
 
 def dataframe_generator(
@@ -778,6 +774,7 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy_mct(
     fuzzy: int = 2,
     slop: int = 1,
     testing: bool = False,
+    testing_elastic: bool = False,
 ) -> pd.DataFrame:
     """Iteratively searches for MCT documents matching multiple search terms.
 
@@ -798,6 +795,8 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy_mct(
         fuzzy: The fuzziness level for fuzzy search.
         slop: The slop value for phrase search.
         testing: Whether to use a dummy searcher for testing.
+        testing_elastic: If True, uses the real searcher against the configured ES
+                         instance even if `testing` is True.
 
     Returns:
         A DataFrame containing the search results.
@@ -950,7 +949,7 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy_mct(
                                 observation_valuetext_analysed observationdocument_recordeddtm
                                 clientvisit_visitidcode""".split()
 
-            if testing:
+            if testing and not testing_elastic:
                 term_docs = cohort_searcher_with_terms_and_search_dummy(
                     index_name="observations",
                     fields_list=field_list,
@@ -1262,6 +1261,7 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy_textual_obs(
     fuzzy: int = 2,
     slop: int = 1,
     testing: bool = False,
+    testing_elastic: bool = False,
 ) -> pd.DataFrame:
     """Iteratively searches for textual observations matching multiple terms.
 
@@ -1283,6 +1283,8 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy_textual_obs(
         fuzzy: The fuzziness level for fuzzy search.
         slop: The slop value for phrase search.
         testing: Whether to use a dummy searcher for testing.
+        testing_elastic: If True, uses the real searcher against the configured ES
+                         instance even if `testing` is True.
 
     Returns:
         A DataFrame containing the search results.
@@ -1435,7 +1437,7 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy_textual_obs(
                     "textualObs",
                 ]
 
-            if not testing:
+            if not testing or (testing and testing_elastic):
                 # Perform the search
                 term_docs = cohort_searcher_no_terms_fuzzy(
                     index_name="basic_observations",

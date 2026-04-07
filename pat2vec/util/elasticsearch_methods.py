@@ -22,6 +22,7 @@ def ingest_data_to_elasticsearch(
     index_name: str,
     index_mapping: Optional[Dict[str, Any]] = None,
     replace_index: bool = False,
+    es_client: Optional[Elasticsearch] = None,
 ) -> Dict[str, int]:
     """Ingests data from a DataFrame into Elasticsearch with error handling.
 
@@ -30,6 +31,7 @@ def ingest_data_to_elasticsearch(
         index_name: Name of the Elasticsearch index.
         index_mapping: Optional mapping for the index.
         replace_index: Whether to replace the index if it exists.
+        es_client: Optional Elasticsearch client instance.
 
     Returns:
         A summary containing the number of successful and failed operations.
@@ -47,19 +49,43 @@ def ingest_data_to_elasticsearch(
         }
     }
 
-    # Initialize Elasticsearch client
-    if api_key:
-        es = Elasticsearch(
-            [{"host": host_name, "port": int(port), "scheme": scheme}],
-            verify_certs=False,
-            api_key=api_key,
-        )
-    else:
-        es = Elasticsearch(
-            [{"host": host_name, "port": int(port), "scheme": scheme}],
-            verify_certs=False,
-            basic_auth=(username, password),
-        )
+    es = es_client
+
+    if es is None:
+        # Safeguard: Block ingestion to non-local/test hosts
+        safe_hosts = [
+            "localhost",
+            "127.0.0.1",
+            "0.0.0.0",
+            "::1",
+            "elasticsearch",
+            "es01",
+        ]
+        if host_name not in safe_hosts:
+            raise ConnectionError(
+                f"Safety Block: Ingestion to '{host_name}' denied. Only local/test clusters allowed."
+            )
+
+        # Safeguard: Block ingestion with non-test users
+        safe_users = ["elastic", "test_user"]
+        if not api_key and username not in safe_users:
+            raise ConnectionError(
+                f"Safety Block: Ingestion with user '{username}' denied. Only test users {safe_users} allowed."
+            )
+
+        # Initialize Elasticsearch client
+        if api_key:
+            es = Elasticsearch(
+                [{"host": host_name, "port": int(port), "scheme": scheme}],
+                verify_certs=False,
+                api_key=api_key,
+            )
+        else:
+            es = Elasticsearch(
+                [{"host": host_name, "port": int(port), "scheme": scheme}],
+                verify_certs=False,
+                basic_auth=(username, password),
+            )
 
     # Check connection
     try:
@@ -85,6 +111,12 @@ def ingest_data_to_elasticsearch(
             raise
 
     # Prepare documents for bulk indexing
+    # Clean up DataFrame: replace NaN with None and drop metadata columns
+    temp_df = temp_df.where(pd.notnull(temp_df), None)
+    cols_to_drop = [c for c in ["_id", "_index", "_score"] if c in temp_df.columns]
+    if cols_to_drop:
+        temp_df = temp_df.drop(columns=cols_to_drop)
+
     docs = temp_df.to_dict(orient="records")
     actions = [
         {"_op_type": "index", "_index": index_name, "_source": doc} for doc in docs

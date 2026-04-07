@@ -166,7 +166,7 @@ class main:
             # Initialize the CogStack client with the config object
             self.cs = initialize_cogstack_client(self.config_obj)
 
-            if config_obj.testing:
+            if self.config_obj.testing and not self.config_obj.testing_elastic:
                 self.cohort_searcher_with_terms_and_search = (
                     cohort_searcher_with_terms_and_search_dummy
                 )
@@ -970,6 +970,12 @@ class main:
             None: This method orchestrates the processing pipeline and manages file
                 I/O, but it does not return any value.
         """
+
+        if i >= len(self.all_patient_list):
+            logging.warning(
+                f"Patient index {i} out of bounds (list size: {len(self.all_patient_list)}). Cannot process."
+            )
+            return
 
         if self.config_obj.verbosity > 3:
             logging.debug(f"Processing patient {i} at {self.all_patient_list[i]}...")

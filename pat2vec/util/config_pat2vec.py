@@ -86,16 +86,18 @@ class config_class:
         override_medcat_model_path: Optional[str] = None,
         data_type_filter_dict: Optional[Dict[str, Any]] = None,
         filter_split_notes: bool = True,
-        client_idcode_term_name: str = "client_idcode.keyword",
+        client_idcode_term_name: Optional[str] = None,
         sanitize_pat_list: bool = False,
         calculate_vectors: bool = True,
         prefetch_pat_batches: bool = False,
         sample_treatment_docs: int = 0,
         test_data_path: Optional[str] = None,
+        test_schema_path: Optional[str] = None,
         credentials_path: str = "../../credentials.py",
         storage_backend: str = "database",
         db_connection_string: Optional[str] = None,
         check_patient_existence: bool = True,
+        testing_elastic: bool = False,
     ) -> None:
         """Initializes the configuration object for the pat2vec pipeline.
         This class holds all configuration parameters for a pat2vec run, including
@@ -197,10 +199,13 @@ class config_class:
             sample_treatment_docs: Number of patients to sample from the initial cohort
                 list. `0` means no sampling.
             test_data_path: The path to the test data file, used when `testing` is `True`.
+            test_schema_path: The path to the Elasticsearch schema JSON file, used when `testing_elastic` is `True`.
             credentials_path: Path to the credentials file.
             check_patient_existence: If `True`, verifies that patients exist in
                 the enabled data sources (Elasticsearch) before processing.
                 Defaults to `True`.
+            testing_elastic: If `True`, testing mode will interact with a real (mocked/test)
+                Elasticsearch instance instead of using dummy data generators.
         """
 
         if prefetch_pat_batches and individual_patient_window:
@@ -239,6 +244,8 @@ class config_class:
         self.db_connection_string = db_connection_string
         #: If `True`, verifies that patients exist in the enabled data sources (Elasticsearch) before processing.
         self.check_patient_existence = check_patient_existence
+        #: If `True`, tests run against a configured Elasticsearch instance.
+        self.testing_elastic = testing_elastic
 
         #: The root directory for the project.
         self.root_path = root_path
@@ -282,6 +289,9 @@ class config_class:
 
         #: The path to the test data file, used when `testing` is `True`.
         self.test_data_path = test_data_path
+
+        #: The path to the test schema file, used when `testing_elastic` is `True`.
+        self.test_schema_path = test_schema_path
 
         #: Path to the credentials file.
         self.credentials_path = credentials_path
@@ -501,7 +511,10 @@ class config_class:
         self.bloods_time_field = "basicobs_entered"
 
         if client_idcode_term_name is None:
-            self.client_idcode_term_name = "client_idcode.keyword"  # alt client_idcode.keyword #warn excludes on case basis.
+            if testing_elastic:
+                self.client_idcode_term_name = "client_idcode"
+            else:
+                self.client_idcode_term_name = "client_idcode.keyword"  # alt client_idcode.keyword #warn excludes on case basis.
         else:
             #: The Elasticsearch field name for patient ID searches.
             self.client_idcode_term_name = client_idcode_term_name
@@ -772,12 +785,21 @@ class config_class:
             # If in testing mode and no specific test data path is provided,
             # set it to the default path. This allows overriding it if needed.
             if self.test_data_path is None:
-                self.test_data_path = "test_files/treatment_docs.csv"
-                logger.info(f"Defaulting test_data_path to: {self.test_data_path}")
+                if not self.testing_elastic:
+                    self.test_data_path = "test_files/treatment_docs.csv"
+                    logger.info(f"Defaulting test_data_path to: {self.test_data_path}")
+                else:
+                    self.test_data_path = os.path.join(
+                        self.root_path, self.treatment_doc_filename
+                    )
+                    logger.info(
+                        f"Defaulting test_data_path to treatment_doc_filename: {self.test_data_path}"
+                    )
 
-            logger.info("Updating main options with implemented test options")
-            # Enforce implemented testing options
-            self._update_main_options()
+            if not self.testing_elastic:
+                logger.info("Updating main options with implemented test options")
+                # Enforce implemented testing options
+                self._update_main_options()
 
         if not self.remote_dump:
             self.sftp_obj = None
@@ -880,13 +902,24 @@ class config_class:
                 self.global_end_day,
             ) = ("1995", "01", "2023", "11", "01", "01")
         else:
-
-            self.global_start_year = str(global_start_year).zfill(4)
-            self.global_start_month = str(global_start_month).zfill(2)
-            self.global_end_year = str(global_end_year).zfill(4)
-            self.global_end_month = str(global_end_month).zfill(2)
-            self.global_start_day = str(global_start_day).zfill(2)
-            self.global_end_day = str(global_end_day).zfill(2)
+            self.global_start_year = str(
+                global_start_year if global_start_year is not None else "1995"
+            ).zfill(4)
+            self.global_start_month = str(
+                global_start_month if global_start_month is not None else "01"
+            ).zfill(2)
+            self.global_end_year = str(
+                global_end_year if global_end_year is not None else "2023"
+            ).zfill(4)
+            self.global_end_month = str(
+                global_end_month if global_end_month is not None else "12"
+            ).zfill(2)
+            self.global_start_day = str(
+                global_start_day if global_start_day is not None else "01"
+            ).zfill(2)
+            self.global_end_day = str(
+                global_end_day if global_end_day is not None else "01"
+            ).zfill(2)
 
         self.initial_global_start_year = self.global_start_year
         self.initial_global_start_month = self.global_start_month
