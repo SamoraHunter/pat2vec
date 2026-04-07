@@ -2100,7 +2100,7 @@ def get_merged_pat_batch_news(
                                 clientvisit_visitidcode""".split(),
                 term_name=config_obj.client_idcode_term_name,
                 entered_list=client_idcode_list,
-                search_string=f'obscatalogmasteritem_displayname:("NEWS" OR "NEWS2") AND '
+                search_string=f"obscatalogmasteritem_displayname:(NEWS*) AND "
                 f"observationdocument_recordeddtm:[{global_start_year}-{global_start_month}-{global_start_day} TO {global_end_year}-{global_end_month}-{global_end_day}]",
             )
 
@@ -2162,7 +2162,7 @@ def get_merged_pat_batch_news(
                                 clientvisit_visitidcode""".split(),
                 term_name=config_obj.client_idcode_term_name,
                 entered_list=client_idcode_list,
-                search_string=f'obscatalogmasteritem_displayname:("NEWS" OR "NEWS2") AND '
+                search_string=f"obscatalogmasteritem_displayname:(NEWS*) AND "
                 f"observationdocument_recordeddtm:[{global_start_year}-{global_start_month}-{global_start_day} TO {global_end_year}-{global_end_month}-{global_end_day}]",
             )
 
@@ -2218,12 +2218,12 @@ def get_merged_pat_batch_reports(
     overwrite_stored_pat_observations = config_obj.overwrite_stored_pat_observations
     store_pat_batch_observations = config_obj.store_pat_batch_observations
 
-    global_start_year = config_obj.global_start_year
-    global_start_month = config_obj.global_start_month
-    global_end_year = config_obj.global_end_year
-    global_end_month = config_obj.global_end_month
-    global_start_day = config_obj.global_start_day
-    global_end_day = config_obj.global_end_day
+    global_start_year = str(config_obj.global_start_year).zfill(4)
+    global_start_month = str(config_obj.global_start_month).zfill(2)
+    global_end_year = str(config_obj.global_end_year).zfill(4)
+    global_end_month = str(config_obj.global_end_month).zfill(2)
+    global_start_day = str(config_obj.global_start_day).zfill(2)
+    global_end_day = str(config_obj.global_end_day).zfill(2)
 
     # --- DATABASE BACKEND LOGIC ---
     if config_obj.storage_backend == "database":

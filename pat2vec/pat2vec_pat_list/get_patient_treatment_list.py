@@ -36,21 +36,47 @@ def extract_treatment_id_list_from_docs(config_obj: Any) -> List[str]:
     random.seed(config_obj.random_seed_val)
     np.random.seed(config_obj.random_seed_val)
 
-    # Extract the treatment document filename from the configuration object
-    treatment_doc_filename = config_obj.treatment_doc_filename
+    # Determine the path to the treatment document
+    # Priority 1: Check inside the project's root_path
+    treatment_doc_path = None
+    if hasattr(config_obj, "root_path") and config_obj.root_path:
+        potential_path = os.path.join(
+            config_obj.root_path, config_obj.treatment_doc_filename
+        )
+        if os.path.exists(potential_path):
+            treatment_doc_path = potential_path
 
-    if not os.path.exists(treatment_doc_filename):
-        print("Warning: File doesn't exist. Returning an empty list.")
+    # Priority 2: Check the path as provided (relative to CWD or absolute)
+    if treatment_doc_path is None:
+        if os.path.exists(config_obj.treatment_doc_filename):
+            treatment_doc_path = config_obj.treatment_doc_filename
+
+    # Priority 3: Check test_data_path if testing
+    if (
+        treatment_doc_path is None
+        and config_obj.testing
+        and hasattr(config_obj, "test_data_path")
+        and config_obj.test_data_path
+    ):
+        if os.path.exists(config_obj.test_data_path):
+            if config_obj.verbosity > 0:
+                print(f"Info: Using test_data_path: {config_obj.test_data_path}")
+            treatment_doc_path = config_obj.test_data_path
+
+    if treatment_doc_path is None:
+        print(
+            f"Warning: Treatment document not found. Checked project root and CWD for '{config_obj.treatment_doc_filename}'. Returning empty list."
+        )
         return []
 
     # Determine the file format based on the file extension
-    file_extension = treatment_doc_filename.split(".")[-1].lower()
+    file_extension = treatment_doc_path.split(".")[-1].lower()
 
     # Read the treatment document into a pandas DataFrame based on the file format
     if file_extension == "csv":
-        docs = pd.read_csv(treatment_doc_filename)
+        docs = pd.read_csv(treatment_doc_path)
     elif file_extension in ["xlsx", "xls"]:
-        docs = pd.read_excel(treatment_doc_filename)
+        docs = pd.read_excel(treatment_doc_path)
     else:
         raise ValueError(
             f"Unsupported file format: {file_extension}. Please provide a CSV or XLSX file."
@@ -191,12 +217,13 @@ def sanitize_hospital_ids(hospital_ids: List[str], config_obj: Any) -> List[str]
 
     # Debug and warnings before sanitization
     for hospital_id in hospital_ids:
-        if valid_format.match(hospital_id):
+        h_id_str = str(hospital_id)
+        if valid_format.match(h_id_str):
             valid_count += 1
         else:
-            if not re.match(r"^[A-Z]", hospital_id):
+            if not re.match(r"^[A-Z]", h_id_str):
                 uppercase_warning_count += 1
-            if not re.match(r"^\d{6}$", hospital_id[1:]):
+            if not re.match(r"^\d{6}$", h_id_str[1:]):
                 digit_warning_count += 1
 
     if config_obj.verbosity > 0:
@@ -220,10 +247,11 @@ def sanitize_hospital_ids(hospital_ids: List[str], config_obj: Any) -> List[str]
     if config_obj.sanitize_pat_list:
         sanitized_list = []
         for hospital_id in hospital_ids:
-            if re.match(r"^[a-zA-Z]\d{6}$", str(hospital_id)):
-                new_id = hospital_id.upper()
+            h_id_str = str(hospital_id)
+            if re.match(r"^[a-zA-Z]\d{6}$", h_id_str):
+                new_id = h_id_str.upper()
             else:
-                new_id = hospital_id
+                new_id = h_id_str
             if new_id != hospital_id:
                 changes_made += 1
             sanitized_list.append(new_id)
@@ -270,6 +298,10 @@ def get_all_patients_list(config_obj: Any) -> List[str]:
         ValueError: If required configuration parameters are missing (e.g.,
             `test_data_path` in testing mode).
     """
+    is_static_test = config_obj.testing and not getattr(
+        config_obj, "testing_elastic", False
+    )
+
     if config_obj.individual_patient_window:
         if config_obj.verbosity > 0:
             print("Using patient list from individual_patient_window_df")
@@ -289,11 +321,34 @@ def get_all_patients_list(config_obj: Any) -> List[str]:
 
         patient_ids = ipw_df[id_column].unique().tolist()
 
-    elif not config_obj.testing:
+    elif not is_static_test:  # Covers live mode and testing_elastic mode
 
         patient_ids = extract_treatment_id_list_from_docs(config_obj)
 
-    else:
+        # Fallback for testing_elastic: if generated file is missing, try static test data
+        if not patient_ids and getattr(config_obj, "testing_elastic", False):
+            fallback_path = None
+            if (
+                hasattr(config_obj, "test_data_path")
+                and config_obj.test_data_path
+                and os.path.exists(config_obj.test_data_path)
+            ):
+                fallback_path = config_obj.test_data_path
+            elif os.path.exists("test_files/treatment_docs.csv"):
+                fallback_path = "test_files/treatment_docs.csv"
+            elif os.path.exists("../test_files/treatment_docs.csv"):
+                fallback_path = "../test_files/treatment_docs.csv"
+
+            if fallback_path:
+                print(
+                    f"Info: Treatment docs not found. Falling back to static test data: {fallback_path}"
+                )
+                test_df = read_test_data(fallback_path)
+                if test_df is not None and "client_idcode" in test_df.columns:
+                    patient_ids = test_df["client_idcode"]
+                    config_obj.patient_id_column_name = "client_idcode"
+
+    else:  # This is now only for static testing
 
         if not hasattr(config_obj, "test_data_path") or not config_obj.test_data_path:
             raise ValueError(
@@ -310,7 +365,7 @@ def get_all_patients_list(config_obj: Any) -> List[str]:
 
     all_patient_list = patient_ids.copy()
 
-    all_patient_list = pd.Series(all_patient_list).dropna().to_list()
+    all_patient_list = pd.Series(all_patient_list).dropna().astype(str).to_list()
 
     all_epr_patient_list_path = config_obj.all_epr_patient_list_path
 
@@ -329,8 +384,12 @@ def get_all_patients_list(config_obj: Any) -> List[str]:
         hospital_ids=all_patient_list, config_obj=config_obj
     )
 
-    # Validate patient existence in Elasticsearch (Live mode only)
-    if not config_obj.testing and getattr(config_obj, "check_patient_existence", True):
+    # Validate patient existence in Elasticsearch (Live mode or Elastic Testing mode)
+    should_check = getattr(config_obj, "check_patient_existence", True)
+    is_live_or_elastic_test = not config_obj.testing or getattr(
+        config_obj, "testing_elastic", False
+    )
+    if is_live_or_elastic_test and should_check:
         if config_obj.verbosity > 0:
             print(
                 "Verifying patient existence in Elasticsearch based on enabled data sources..."
@@ -402,6 +461,26 @@ def get_all_patients_list(config_obj: Any) -> List[str]:
         valid_patients = check_patients_existence(
             all_patient_list, index_name=indices_to_check
         )
+
+        # Fallback: If 0 patients found and using .keyword, try base field (test schema handling)
+        if (
+            not valid_patients
+            and len(all_patient_list) > 0
+            and id_field_term.endswith(".keyword")
+        ):
+            fallback_field = id_field_term.replace(".keyword", "")
+            if config_obj.verbosity > 0:
+                print(
+                    f"Warning: No patients found with {id_field_term}. Retrying with fallback field: {fallback_field}"
+                )
+
+            indices_fallback = [
+                (idx, field.replace(".keyword", "")) for idx, field in indices_to_check
+            ]
+
+            valid_patients = check_patients_existence(
+                all_patient_list, index_name=indices_fallback
+            )
 
         missing_count = len(all_patient_list) - len(valid_patients)
         if missing_count > 0:

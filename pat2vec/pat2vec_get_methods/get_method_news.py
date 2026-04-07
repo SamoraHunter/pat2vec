@@ -26,7 +26,7 @@ def compute_feature_stats(
     """
     stats = {}
     if len(data) > 0:
-        values = data[column].dropna().astype(float)
+        values = pd.to_numeric(data[column], errors="coerce").dropna()
         if len(values) > 0:
             stats[f"{feature_name}_mean"] = values.mean()
             stats[f"{feature_name}_median"] = values.median()
@@ -107,7 +107,7 @@ def get_news(
             term_name=config_obj.client_idcode_term_name,
             entered_list=[current_pat_client_id_code],
             search_string=(
-                'obscatalogmasteritem_displayname:("NEWS" OR "NEWS2") AND '
+                "obscatalogmasteritem_displayname:(NEWS*) AND "
                 f"observationdocument_recordeddtm:[{start_year}-{start_month}-{start_day} "
                 f"TO {end_year}-{end_month}-{end_day}]"
             ),
@@ -144,10 +144,10 @@ def get_news(
 
         # special case: cap NEWS2 score at [-20, 20]
         if feature_name == "news_score" and len(subset) > 0:
-            subset = subset[
-                (subset["observation_valuetext_analysed"].astype(float) < 20)
-                & (subset["observation_valuetext_analysed"].astype(float) > -20)
-            ]
+            numeric_values = pd.to_numeric(
+                subset["observation_valuetext_analysed"], errors="coerce"
+            )
+            subset = subset[(numeric_values < 20) & (numeric_values > -20)].copy()
 
         stats = compute_feature_stats(
             subset, "observation_valuetext_analysed", feature_name, config_obj
