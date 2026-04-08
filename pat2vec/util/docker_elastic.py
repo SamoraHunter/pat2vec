@@ -239,7 +239,15 @@ class ElasticContainer:
         while time.time() - start_time < timeout:
             try:
                 # Check health
-                response = requests.get(url, auth=auth, verify=False, timeout=2)
+                # We explicitly disable proxies to ensure the health check hits the local
+                # container even if environment variables (http_proxy) are set on the runner.
+                response = requests.get(
+                    url,
+                    auth=auth,
+                    verify=False,
+                    timeout=2,
+                    proxies={"http": None, "https": None},
+                )
                 if response.status_code == 200:
                     status = response.json().get("status")
                     # Yellow is fine for single node
