@@ -79,7 +79,7 @@ jobs:
           fi
 
           echo "Installing project dependencies for docs..."
-          python3 -m pip install "${pip_install_args[@]}" -e ".[dev]"
+          python3 -m pip install "${pip_install_args[@]}" -e ".[all,dev]"
 
       - name: Build Sphinx documentation
         run: |

@@ -97,7 +97,7 @@ jobs:
           fi
 
           echo "Installing project dependencies..."
-          python3 -m pip install "${pip_install_args[@]}" -e ".[dev]"
+          python3 -m pip install "${pip_install_args[@]}" -e ".[all,dev]"
 
           python3 -m ipykernel install --user --name=pat2vec_env --display-name "Python (pat2vec_env)"
           jupyter kernelspec list

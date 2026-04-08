@@ -36,6 +36,8 @@ dependencies = [
     "polars", # High-performance DataFrame library
     "pandas>=1.5.3", # Data manipulation and analysis
     "numpy>=1.25.2", # Fundamental package for scientific computing
+    "scikit-learn>=1.6.1", # For cohort analysis and clustering
+    "sqlalchemy", # For database backend abstraction
     "torch==2.8.0", # Deep learning framework for transformers
     "psycopg2-binary"
 ]
@@ -49,7 +51,6 @@ Changelog = "https://github.com/SamoraHunter/pat2vec/releases"
 [project.optional-dependencies]
 # Additional packages for the 'all' installation, derived from the full requirements.txt.
 all = [
-    "scikit-learn>=1.6.1",
     "jupyterlab",
     "lifelines==0.28.0",
     "bokeh==3.6.2",
@@ -60,7 +61,6 @@ all = [
     "wordcloud",
     "matplotlib-venn",
     "nltk",
-    "sqlalchemy",
     "openpyxl",
     "pydot",
     "pyodbc",
