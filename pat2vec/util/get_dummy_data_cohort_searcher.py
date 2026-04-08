@@ -2339,27 +2339,35 @@ def populate_elastic_with_dummy_data(
         except Exception as e:
             logger.error(f"Failed to apply Elastic schemas: {e}")
 
-    # 1. Generate Dummy Patient IDs
-    patient_ids = []
-    # Try to use existing IDs from the configured treatment doc to ensure consistency with static test files
-    try:
-        from pat2vec.pat2vec_pat_list.get_patient_treatment_list import (
-            extract_treatment_id_list_from_docs,
-        )
-
-        patient_ids = extract_treatment_id_list_from_docs(config_obj)
-    except Exception as e:
-        logger.debug(f"Could not load existing patient list: {e}")
-
-    if patient_ids:
-        logger.info(
-            f"Using {len(patient_ids)} existing patient IDs from treatment doc: {patient_ids[:5]}..."
-        )
-        if len(patient_ids) > n_patients:
-            patient_ids = patient_ids[:n_patients]
-    else:
+    # 1. Generate Dummy Patient IDs.
+    # When testing_elastic is True, we always generate new IDs to ensure a clean, controlled test.
+    # The generated IDs will then be saved to treatment_docs.csv later in this function.
+    if getattr(config_obj, "testing_elastic", False):
         patient_ids = generate_uuid_list(n_patients, "P")
         logger.info(f"Generated {n_patients} dummy patient IDs: {patient_ids[:5]}...")
+    else:
+        # For other testing modes or future uses, try to load existing IDs
+        patient_ids = []
+        try:
+            from pat2vec.pat2vec_pat_list.get_patient_treatment_list import (
+                extract_treatment_id_list_from_docs,
+            )
+
+            patient_ids = extract_treatment_id_list_from_docs(config_obj)
+        except Exception as e:
+            logger.debug(f"Could not load existing patient list: {e}")
+
+        if patient_ids:
+            logger.info(
+                f"Using {len(patient_ids)} existing patient IDs from treatment doc: {patient_ids[:5]}..."
+            )
+            if len(patient_ids) > n_patients:
+                patient_ids = patient_ids[:n_patients]
+        else:
+            patient_ids = generate_uuid_list(n_patients, "P")
+            logger.info(
+                f"Generated {n_patients} dummy patient IDs: {patient_ids[:5]}..."
+            )
 
     # 2. Generate and Ingest Data for Each Index
 
