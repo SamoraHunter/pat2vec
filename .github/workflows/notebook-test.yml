@@ -17,9 +17,23 @@ jobs:
       - name: Detect Runner Environment
         id: detect_env
         run: |
-          if [ -f "/usr/local/share/ca-certificates/kch_certauth.crt" ]; then
-            echo "is_act_runner=true" >> $GITHUB_OUTPUT
+          IS_SELF_HOSTED=false
+          IS_ACT=false
+          IS_GITEA=false
+          if [ -n "$ACT" ] || [ -f "/usr/local/share/ca-certificates/kch_certauth.crt" ]; then
+            echo "Runner environment: local act"
+            IS_ACT=true
+            IS_SELF_HOSTED=true
+          elif [ "${{ github.server_url }}" != "https://github.com" ]; then
+            echo "Runner environment: Gitea"
+            IS_GITEA=true
+            IS_SELF_HOSTED=true
+          else
+            echo "Runner environment: GitHub.com"
           fi
+          echo "is_act_runner=$IS_ACT" >> $GITHUB_OUTPUT
+          echo "is_gitea=$IS_GITEA" >> $GITHUB_OUTPUT
+          echo "is_self_hosted=$IS_SELF_HOSTED" >> $GITHUB_OUTPUT
 
       - name: Perform Local Runner Setup
         id: local_setup
@@ -29,7 +43,7 @@ jobs:
           gitea-token: ${{ secrets.GITEA_TOKEN }}
 
       - name: Set up Docker (act runner only)
-        if: steps.detect_env.outputs.is_act_runner == 'true'
+        if: steps.detect_env.outputs.is_self_hosted == 'true'
         run: |
           if ! command -v docker &> /dev/null; then
             echo "Docker not found, installing..."
@@ -114,7 +128,7 @@ jobs:
             echo "⚠️  Docker not available — skipping notebook test"
             exit 0
           fi
-          pytest --nbmake --nbmake-timeout=1200 --exitfirst notebooks/test_notebook.py
+          pytest --nbmake --nbmake-timeout=1500 --exitfirst notebooks/example_usage.ipynb
 
       - name: Clean up Jupyter kernels
         if: always()

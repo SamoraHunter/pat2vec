@@ -32,7 +32,7 @@ class ElasticContainer:
         self.container_name = f"pat2vec-test-elastic-{uuid.uuid4().hex[:8]}"
         self.password = "test_password_123"
         self.container_id: Optional[str] = None
-        self.host = "localhost"
+        self.host = "127.0.0.1"
 
     def __enter__(self):
         if not self.start():
@@ -132,7 +132,7 @@ class ElasticContainer:
             logger.warning(f"Could not retrieve mapped port: {e}")
         return self.port
 
-    def start(self, timeout: int = 120) -> bool:
+    def start(self, timeout: int = 180) -> bool:
         """Starts an Elasticsearch container. Returns True if successful."""
         # First, clean up any containers from previous failed runs
         self.cleanup_orphans()
@@ -236,29 +236,32 @@ class ElasticContainer:
         auth = ("elastic", self.password)
 
         logger.info(f"Waiting for Elasticsearch to become ready at {url}...")
+
+        # Use a Session with trust_env=False to completely bypass environment proxy settings.
+        # This ensures the health check hits the local container loopback even if
+        # http_proxy is set, which is common in self-hosted CI runners.
+        session = requests.Session()
+        session.trust_env = False
+
         while time.time() - start_time < timeout:
             try:
                 # Check health
-                # We explicitly disable proxies to ensure the health check hits the local
-                # container even if environment variables (http_proxy) are set on the runner.
-                response = requests.get(
-                    url,
-                    auth=auth,
-                    verify=False,
-                    timeout=2,
-                    proxies={"http": None, "https": None},
-                )
+                response = session.get(url, auth=auth, verify=False, timeout=5)
                 if response.status_code == 200:
                     status = response.json().get("status")
                     # Yellow is fine for single node
                     if status in ["green", "yellow"]:
                         logger.info(f"Elasticsearch is ready (status: {status}).")
                         return
+                else:
+                    logger.debug(
+                        f"Health check: received status {response.status_code}"
+                    )
             except (requests.exceptions.RequestException, ConnectionError) as e:
                 logger.debug(f"Connection attempt failed: {e}")
             except Exception as e:
                 logger.warning(f"Health check error: {e}")
-            time.sleep(2)
+            time.sleep(5)
 
         raise TimeoutError("Elasticsearch container failed to start within timeout.")
 
