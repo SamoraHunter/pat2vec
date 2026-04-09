@@ -1,0 +1,147 @@
+# This workflow builds the distribution packages and uploads them to PyPI.
+# It runs whenever a tag starting with 'v' is pushed (e.g. v0.3.0).
+# This allows users to 'pip install pat2vec' from the public index.
+
+name: Publish to PyPI
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    env:
+      DEBIAN_FRONTEND: noninteractive
+      PYTHON_VERSION: '3.10.18'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Detect Runner Environment
+        id: detect_env
+        run: |
+          if [ -n "$ACT" ]; then
+            echo "is_act=true" >> $GITHUB_OUTPUT
+            echo "is_self_hosted=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Perform Local Runner Setup
+        id: local_setup
+        if: steps.detect_env.outputs.is_act == 'true'
+        uses: ./.github/actions/local-setup
+        with:
+          gitea-token: ${{ secrets.GITEA_TOKEN }}
+
+      - name: Copy Corporate Certificate to Workspace
+        if: steps.detect_env.outputs.is_act == 'true' && steps.local_setup.outputs.on-corp-network == 'true'
+        run: |
+          CERT_PATH="/usr/local/share/ca-certificates/kch_certauth.crt"
+          if [ -f "$CERT_PATH" ]; then
+            mkdir -p .github/certs
+            cp "$CERT_PATH" .github/certs/kch_certauth.crt
+            echo "CORPORATE_CA_CERT_PATH=/github/workspace/.github/certs/kch_certauth.crt" >> $GITHUB_ENV
+          else
+            echo "Corporate certificate not found at $CERT_PATH. Cannot copy."
+          fi
+
+      - name: Set up Docker (act runner only)
+        if: steps.detect_env.outputs.is_act == 'true'
+        run: |
+          if ! command -v docker &> /dev/null; then
+            echo "Docker not found, installing..."
+            curl -fsSL https://get.docker.com | sh || true
+            if command -v sudo &> /dev/null; then
+              sudo usermod -aG docker $USER || true
+              sudo chmod 666 /var/run/docker.sock || true
+            else
+              usermod -aG docker $USER || true
+              chmod 666 /var/run/docker.sock || true
+            fi
+          else
+            echo "Docker already available: $(docker --version)"
+            if command -v sudo &> /dev/null; then
+              sudo chmod 666 /var/run/docker.sock || true
+            else
+              chmod 666 /var/run/docker.sock || true
+            fi
+          fi
+          echo "Cleaning up dangling act containers..."
+          docker ps -a --filter "name=act-" --filter "status=created" --filter "status=exited" --filter "status=dead" -q | xargs -r docker rm -v || true
+          docker volume prune -f --filter "label=act" || true
+
+      - name: Verify Docker is available
+        if: steps.detect_env.outputs.is_act == 'true'
+        run: |
+          docker --version
+          docker ps
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        env:
+          http_proxy: ${{ env.http_proxy }}
+          https_proxy: ${{ env.https_proxy }}
+          AGENT_TOOLSDIRECTORY: /opt/hostedtoolcache
+        with:
+          # FIX: reference the single PYTHON_VERSION env var instead of duplicating the value
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Fix pip installation
+        if: steps.detect_env.outputs.is_self_hosted == 'true'
+        run: |
+          curl -sS https://bootstrap.pypa.io/get-pip.py | python3 - --ignore-installed
+          python3 -m pip install --upgrade --ignore-installed pip setuptools wheel
+
+      - name: Install build tools
+        env:
+          GITEA_TOKEN: ${{ secrets.GITEA_TOKEN }}
+        run: |
+          pip_install_args=()
+          if [[ "${{ steps.local_setup.outputs.on-corp-network }}" == "true" ]] && [[ -n "${GITEA_TOKEN}" ]]; then
+            echo "🔧 Running in act - using local mirror and removing hash requirements"
+            find . -name "requirements*.txt" -type f -exec sed -i 's/ --hash=sha256:[a-f0-9]*//g' {} \;
+            pip_install_args+=("--trusted-host" "dh-cap02" "-i" "http://dh-cap02:8008/mirrors/pat2vec")
+          fi
+
+          python3 -m pip install "${pip_install_args[@]}" --upgrade pip --break-system-packages || \
+            python3 -m pip install "${pip_install_args[@]}" --upgrade pip
+          python3 -m pip install "${pip_install_args[@]}" build --break-system-packages || \
+            python3 -m pip install "${pip_install_args[@]}" build
+
+      - name: Build package
+        run: |
+          python3 generate_init.py
+          # FIX: removed --no-isolation so `build` manages its own clean build environment,
+          # preventing missing/mismatched build-backend deps from causing silent failures.
+          python3 -m build
+
+      # FIX: set CA bundle env vars in a dedicated step so the values are available as
+      # plain strings, avoiding unreliable nested ${{ env.X }} interpolation inside
+      # conditional expressions.
+      - name: Set CA bundle env vars for PyPI upload
+        if: steps.local_setup.outputs.on-corp-network == 'true' && env.CORPORATE_CA_CERT_PATH != ''
+        run: |
+          echo "REQUESTS_CA_BUNDLE=$CORPORATE_CA_CERT_PATH" >> $GITHUB_ENV
+          echo "SSL_CERT_FILE=$CORPORATE_CA_CERT_PATH" >> $GITHUB_ENV
+          echo "CURL_CA_BUNDLE=$CORPORATE_CA_CERT_PATH" >> $GITHUB_ENV
+
+      - name: Publish to PyPI
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
+          TWINE_NON_INTERACTIVE: true
+          http_proxy: "" # Unset http_proxy for PyPI upload to avoid using the local PyPI mirror as a proxy.
+          https_proxy: "" # Unset https_proxy for PyPI upload to avoid using the local PyPI mirror as a proxy.
+          GITEA_TOKEN: ${{ secrets.GITEA_TOKEN }}
+        run: |
+          pip_install_args=()
+          if [[ "${{ steps.detect_env.outputs.is_act }}" == "true" ]] && [[ -n "${GITEA_TOKEN}" ]]; then
+            echo "🔧 Running in act - using local mirror for twine"
+            pip_install_args+=("--trusted-host" "dh-cap02" "-i" "http://dh-cap02:8008/mirrors/pat2vec")
+          fi
+          python3 -m pip install "${pip_install_args[@]}" twine --break-system-packages || \
+            python3 -m pip install "${pip_install_args[@]}" twine
+          python3 -m twine upload dist/* --skip-existing --verbose

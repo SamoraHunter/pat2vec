@@ -27,7 +27,7 @@ copyright = "2024, Samora Hunter"
 author = "Samora Hunter"
 
 # The full version, including alpha/beta/rc tags
-release = "0.1.0"
+release = "0.3.0"
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
@@ -52,13 +52,6 @@ templates_path = ["_templates"]
 exclude_patterns = ["_Sidebar.md"]
 
 # -- Options for autodoc -----------------------------------------------------
-autodoc_default_options = {
-    "members": True,
-    "member-order": "bysource",
-    "undoc-members": False,  # Set to True if you want to see items without docstrings
-    "show-inheritance": True,
-}
-
 # -- Options for Napoleon ----------------------------------------------------
 napoleon_google_docstring = True
 napoleon_numpy_docstring = True
@@ -77,4 +70,14 @@ napoleon_use_rtype = True
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
 html_theme = "sphinx_rtd_theme"
-html_static_path = ["_static"]
+
+# Only include _static if the directory exists to avoid warnings
+html_static_path = ["_static"] if os.path.exists("_static") else []
+
+# Mitigate duplicate object description warnings from autosummary + autodoc
+autodoc_member_order = "bysource"
+autodoc_default_options = {
+    "members": True,
+    "show-inheritance": True,
+    "no-index": False,
+}

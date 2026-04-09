@@ -5,14 +5,8 @@ import time
 import logging
 import uuid
 import requests
-import warnings
 import atexit
 from typing import Optional, Tuple
-
-# Suppress insecure request warnings for local test instance
-from urllib3.exceptions import InsecureRequestWarning
-
-warnings.simplefilter("ignore", InsecureRequestWarning)
 
 logger = logging.getLogger(__name__)
 
@@ -132,6 +126,38 @@ class ElasticContainer:
             logger.warning(f"Could not retrieve mapped port: {e}")
         return self.port
 
+    def _get_container_ip(self) -> Optional[str]:
+        """Retrieves the internal IP address of the container."""
+        if not self.container_id:
+            return None
+        try:
+            result = subprocess.run(
+                [
+                    "docker",
+                    "inspect",
+                    self.container_id,
+                    "-f",
+                    "{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}",
+                ],
+                capture_output=True,
+                text=True,
+            )
+            return result.stdout.strip()
+        except Exception:
+            return None
+
+    def _get_host_gateway_ip(self) -> str:
+        """Attempts to find the default gateway IP (usually the host)."""
+        try:
+            result = subprocess.run(
+                ["ip", "route", "show", "default"], capture_output=True, text=True
+            )
+            if result.returncode == 0 and "via" in result.stdout:
+                return result.stdout.split("via")[1].split()[0]
+        except Exception:
+            pass
+        return "127.0.0.1"
+
     def start(self, timeout: int = 180) -> bool:
         """Starts an Elasticsearch container. Returns True if successful."""
         # First, clean up any containers from previous failed runs
@@ -232,10 +258,9 @@ class ElasticContainer:
     def _wait_for_ready(self, timeout: int) -> None:
         """Waits for Elasticsearch to be responsive."""
         start_time = time.time()
-        url = f"http://{self.host}:{self.port}/_cluster/health"
         auth = ("elastic", self.password)
 
-        logger.info(f"Waiting for Elasticsearch to become ready at {url}...")
+        logger.info("Waiting for Elasticsearch to become ready...")
 
         # Use a Session with trust_env=False to completely bypass environment proxy settings.
         # This ensures the health check hits the local container loopback even if
@@ -243,24 +268,42 @@ class ElasticContainer:
         session = requests.Session()
         session.trust_env = False
 
+        # Determine connection targets: Localhost, Gateway, and internal Container IP
+        # Determine connection targets
+        container_ip = self._get_container_ip()
+        gateway_ip = self._get_host_gateway_ip()
+
+        # Target list: (host, port)
+        targets = [
+            ("127.0.0.1", self.port),
+            (gateway_ip, self.port),
+            ("host.docker.internal", self.port),
+        ]
+        if container_ip:
+            targets.append((container_ip, 9200))
+
         while time.time() - start_time < timeout:
-            try:
-                # Check health
-                response = session.get(url, auth=auth, verify=False, timeout=5)
-                if response.status_code == 200:
-                    status = response.json().get("status")
-                    # Yellow is fine for single node
-                    if status in ["green", "yellow"]:
-                        logger.info(f"Elasticsearch is ready (status: {status}).")
-                        return
-                else:
-                    logger.debug(
-                        f"Health check: received status {response.status_code}"
+            for test_host, test_port in targets:
+                test_url = f"http://{test_host}:{test_port}/_cluster/health"
+                try:
+                    response = session.get(test_url, auth=auth, timeout=2)
+                    if response.status_code == 200:
+                        status = response.json().get("status")
+                        if status in ["green", "yellow"]:
+                            logger.info(
+                                f"✅ Elasticsearch is ready at {test_url} (status: {status})."
+                            )
+                            # Update instance state to the successful connection info
+                            self.host = test_host
+                            self.port = test_port
+                            return
+                except (requests.exceptions.RequestException, ConnectionError):
+                    continue
+                except Exception as e:
+                    logger.warning(
+                        f"Unexpected health check error for {test_host}: {e}"
                     )
-            except (requests.exceptions.RequestException, ConnectionError) as e:
-                logger.debug(f"Connection attempt failed: {e}")
-            except Exception as e:
-                logger.warning(f"Health check error: {e}")
+
             time.sleep(5)
 
         raise TimeoutError("Elasticsearch container failed to start within timeout.")

@@ -9,6 +9,8 @@ jobs:
     env:
       DEBIAN_FRONTEND: noninteractive
       PYTHON_VERSION: '3.10'
+    outputs:
+      is_self_hosted: ${{ steps.detect_env.outputs.is_self_hosted }}
 
     steps:
       - name: Check out repository
@@ -20,7 +22,7 @@ jobs:
           IS_SELF_HOSTED=false
           IS_ACT=false
           IS_GITEA=false
-          if [ -n "$ACT" ] || [ -f "/usr/local/share/ca-certificates/kch_certauth.crt" ]; then
+          if [ -n "$ACT" ]; then
             echo "Runner environment: local act"
             IS_ACT=true
             IS_SELF_HOSTED=true
@@ -31,23 +33,25 @@ jobs:
           else
             echo "Runner environment: GitHub.com"
           fi
-          echo "is_act_runner=$IS_ACT" >> $GITHUB_OUTPUT
+          echo "is_act=$IS_ACT" >> $GITHUB_OUTPUT
           echo "is_gitea=$IS_GITEA" >> $GITHUB_OUTPUT
           echo "is_self_hosted=$IS_SELF_HOSTED" >> $GITHUB_OUTPUT
 
       - name: Perform Local Runner Setup
         id: local_setup
-        if: steps.detect_env.outputs.is_act_runner == 'true'
+        # This action performs general setup for self-hosted runners, including Gitea and local act
+        if: steps.detect_env.outputs.is_self_hosted == 'true'
         uses: ./.github/actions/local-setup
         with:
           gitea-token: ${{ secrets.GITEA_TOKEN }}
 
       - name: Set up Docker (act runner only)
+        # Docker is needed for Elasticsearch container in tests
         if: steps.detect_env.outputs.is_self_hosted == 'true'
         run: |
           if ! command -v docker &> /dev/null; then
             echo "Docker not found, installing..."
-          curl -fsSL https://get.docker.com | sh || true
+            curl -fs
           if command -v sudo &> /dev/null; then
             sudo usermod -aG docker $USER || true
             sudo chmod 666 /var/run/docker.sock || true
@@ -128,7 +132,7 @@ jobs:
             echo "⚠️  Docker not available — skipping notebook test"
             exit 0
           fi
-          pytest --nbmake --nbmake-timeout=1500 --exitfirst notebooks/example_usage.ipynb
+          pytest --nbmake --nbmake-timeout=1200 --exitfirst notebooks/test_notebook.py
 
       - name: Clean up Jupyter kernels
         if: always()

@@ -77,13 +77,11 @@ def ingest_data_to_elasticsearch(
         if api_key:
             es = Elasticsearch(
                 [{"host": host_name, "port": int(port), "scheme": scheme}],
-                verify_certs=False,
                 api_key=api_key,
             )
         else:
             es = Elasticsearch(
                 [{"host": host_name, "port": int(port), "scheme": scheme}],
-                verify_certs=False,
                 basic_auth=(username, password),
             )
 
