@@ -13,7 +13,7 @@ notebooks/output_directory/
 notebooks/output_directory
 backups/
 logs/
-
+notebooks/test_project/
 # Development and testing
 dev_test/
 test_dev.ipynb

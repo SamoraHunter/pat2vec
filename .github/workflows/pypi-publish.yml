@@ -108,8 +108,8 @@ jobs:
 
           python3 -m pip install "${pip_install_args[@]}" --upgrade pip --break-system-packages || \
             python3 -m pip install "${pip_install_args[@]}" --upgrade pip
-          python3 -m pip install "${pip_install_args[@]}" build --break-system-packages || \
-            python3 -m pip install "${pip_install_args[@]}" build
+          python3 -m pip install "${pip_install_args[@]}" build black --break-system-packages || \
+            python3 -m pip install "${pip_install_args[@]}" build black
 
       - name: Build package
         run: |
