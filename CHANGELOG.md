@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.3.1] - 2024-05-23
+
+### CI/CD & Automation
+- **Automated GitHub Releases**: Integrated `softprops/action-gh-release` to automatically create releases and attach build binaries (.whl and .tar.gz) upon tag push.
+- **Artifact Persistence**: Added workflow steps to store distribution packages as GitHub Action artifacts.
+- **Formatting**: Added `black` to the build environment to ensure generated package metadata is consistently formatted.
+
+### Improvements
+- **Testing**: Added `test_integration_elastic.py` to provide a reference implementation for the new Elasticsearch testing framework.
+
+---
+
 ## [0.3.0] - 2024-05-22
 
 ### New Features
