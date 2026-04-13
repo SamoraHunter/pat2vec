@@ -86,7 +86,11 @@ from .pat2vec_get_methods.get_method_hosp_site import (
     prepare_hospital_site_data,
     search_hospital_site,
 )
-from .pat2vec_get_methods.get_method_news import compute_feature_stats, get_news
+from .pat2vec_get_methods.get_method_news import (
+    compute_feature_stats,
+    get_news,
+    search_news_observations,
+)
 from .pat2vec_get_methods.get_method_pat_annotations import get_current_pat_annotations
 from .pat2vec_get_methods.get_method_report_annotations import (
     get_current_pat_report_annotations,
@@ -846,6 +850,7 @@ __all__ = [
     "search_diagnostic_orders",
     "search_drug_orders",
     "search_hospital_site",
+    "search_news_observations",
     "search_smoking",
     "search_vte",
     "set_best_gpu",

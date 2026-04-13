@@ -16,7 +16,7 @@ This page answers common questions about setting up and using `pat2vec`.
 
 ### I'm behind a corporate proxy. How do I install?
 
-The `install_pat2vec.sh` script for Unix/Linux includes a `--proxy` flag specifically for this purpose. This flag tells `pip` to use your organization's internal package mirror.
+Both the `install_pat2vec.sh` (Unix/Linux) and `install.bat` (Windows) scripts include a proxy flag (`--proxy` or `/proxy`) specifically for this purpose. This flag tells `pip` to use your organization's internal package mirror.
 
 ```shell
 ./install_pat2vec.sh --proxy

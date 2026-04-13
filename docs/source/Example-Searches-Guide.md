@@ -35,19 +35,19 @@ The notebook uses a `config_class` object to manage all search parameters. This 
 
 ### Key Configuration Steps:
 
-1.  **Import `config_class`**: The first few cells will handle necessary imports.
+1.  **Import `config_class`**: The first few cells will handle necessary imports from `pat2vec.util.config_pat2vec`.
 2.  **Instantiate `config_class`**: You will find a cell where `config_class` is instantiated.
     ```python
-    from pat2vec.util.config_class import ConfigClass
+    from pat2vec.util.config_pat2vec import config_class
 
     # Instantiate the configuration
-    config = ConfigClass(
+    config = config_class(
         # ... parameters will be here
     )
     ```
 3.  **Set `testing` mode**: For this example notebook, you will likely run in `testing=True` mode. This uses dummy data generators and does not require a live connection to a real patient data index. When you are ready to work with real data, you will set this to `False`.
     ```python
-    config = ConfigClass(
+    config = config_class(
         testing=True,
         # ... other parameters
     )
@@ -55,8 +55,10 @@ The notebook uses a `config_class` object to manage all search parameters. This 
 4.  **Define Search Parameters**: The notebook will demonstrate how to use different cohort searchers. You will configure parameters such as:
     - `index_name`: The Elasticsearch index to search against.
     - `search_terms`: Keywords or concepts to find.
+    - `method`: The search strategy to use (`"fuzzy"`, `"exact"`, or `"phrase"`).
+    - `fuzzy` and `slop`: Fine-grained controls for matching logic.
     - `date_columns`: Fields to use for temporal filtering.
-    - `start_date` and `end_date`: The time window for the search.
+    - `start_year`, `start_month`, etc.: Defining the time window for extraction.
 
 For a complete list of all possible configuration options, refer to the Comprehensive Configuration Guide.
 
@@ -75,5 +77,7 @@ The examples will likely cover:
 ## 6. Understanding the Results
 
 The primary output of each search is a **cohort DataFrame**. This DataFrame typically contains at least a `client_idcode` column, which you can then use as input for the main `pat2vec` feature extraction pipeline as shown in `example_usage.ipynb`.
+
+You can also use the `check_patients_existence` function to verify which IDs from an external list actually exist across your Elasticsearch indices.
 
 By experimenting with `example_searches_test.ipynb`, you can become proficient at defining and extracting the precise patient cohorts you need for your research.

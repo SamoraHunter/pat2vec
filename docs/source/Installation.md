@@ -42,7 +42,7 @@ The `install_pat2vec.sh` script automates the full setup.
 
 3.  **Activate the environment:**
     ```shell
-    source ../pat2vec_env/bin/activate
+    source pat2vec_env/bin/activate
     ```
 
 ---
@@ -79,3 +79,10 @@ Your credentials should be placed in a file named `credentials.py` in the parent
 **IMPORTANT**: This file contains sensitive information and should **never** be committed to version control.
 
 The structure should look like this:
+```
+your_project_folder/
+├── credentials.py              # <-- MUST EDIT: Your Elasticsearch credentials
+├── medcat_models/
+│   └── your_model.zip          # <-- MUST ADD: Your MedCAT model pack
+└── pat2vec/                    # <-- This repository root
+```

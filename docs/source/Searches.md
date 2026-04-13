@@ -1,4 +1,4 @@
-# Blood Test Data Search
+# Data Searching and Cohort Building
 
 The `pat2vec` library provides comprehensive functionality for searching and retrieving blood test data from clinical records. This section explains how to use the blood test search methods to extract laboratory results for your patient cohorts.
 
@@ -197,6 +197,32 @@ df_drugs = pat2vec.pat2vec_get_methods.get_method_drugs.search_drug_orders(
 3. **Data Validation**: Always check the retrieved data for completeness and expected ranges
 4. **Field Mapping**: Verify that field names match your Elasticsearch index schema
 5. **Error Handling**: Implement proper error handling for production use
+
+# Clinical Text Search
+
+`pat2vec` provides specialized searchers for clinical text across multiple CogStack indices (EPR documents, MCT notes, and textual observations). These searchers support advanced matching strategies.
+
+## Search Methods
+
+When performing text searches, you can specify the matching logic:
+
+- **`fuzzy`** (Default): Tolerates typos and spelling variations.
+- **`exact`**: Requires a perfect match against keyword fields.
+- **`phrase`**: Matches the exact sequence of words. Use the `slop` parameter to allow word reordering or intervening words.
+
+## Cohort Validation
+
+Use the `check_patients_existence` function to verify which IDs from a candidate list actually have records in your indices before starting long-running extraction jobs.
+
+```python
+from pat2vec.pat2vec_search.cogstack_search_methods import check_patients_existence
+
+found_ids = check_patients_existence(
+    patient_ids=["ID1", "ID2"],
+    index_name="epr_documents",
+    config_obj=config
+)
+```
 
 ## Troubleshooting
 
