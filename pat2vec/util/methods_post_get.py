@@ -155,6 +155,7 @@ def check_csv_files_in_directory(
     ignore_outputs: bool = True,
     ignore_output_vectors: bool = True,  # type: ignore
     delete_broken: bool = False,
+    config_obj: Any = None,
 ) -> None:
     """Recursively checks the integrity of all CSV files in a directory.
 
@@ -168,10 +169,11 @@ def check_csv_files_in_directory(
         ignore_outputs: If True, skips any path containing 'output'.
         ignore_output_vectors: If True, skips paths for 'current_pat_lines_parts'.
         delete_broken: If True, deletes files that fail integrity checks.
+        config_obj: The configuration object.
     """
     total_files = sum(1 for _ in os.walk(directory) for _ in os.listdir(directory))
 
-    # Initialize tqdm progrcommitess bar
+    # Initialize tqdm progress bar
     progress_bar = tqdm(
         total=total_files, unit="file", desc=f"Checking CSV files in {directory}"
     )
@@ -185,7 +187,9 @@ def check_csv_files_in_directory(
                 continue  # Skip files with 'current_pat_lines_parts' in the path
             if file_path.lower().endswith(".csv"):
                 progress_bar.set_description(f"Checking CSV integrity for: {file_path}")
-                check_csv_integrity(file_path, verbosity, delete_broken, config_obj=None)  # type: ignore
+                check_csv_integrity(
+                    file_path, verbosity, delete_broken, config_obj=config_obj
+                )
                 progress_bar.update(1)
 
     progress_bar.close()

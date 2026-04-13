@@ -26,7 +26,7 @@ If you are using Windows or the basic `install.sh` script, you will need to conf
 
 ### Where do I get a MedCAT model and where do I put it?
 
-You need to have a pre-trained MedCAT model pack (`.zip` file). These are typically pretrained trained and then fine tuned with exports from MedCAT trainer for your specific use case and data.
+You need to have a pre-trained MedCAT model pack (`.zip` file). These are typically pre-trained and then fine-tuned with exports from MedCAT trainer for your specific use case and data.
 
 Once you have the model pack, place it in the `medcat_models/` directory, which should be in the same parent folder as your `pat2vec` repository clone. The installation script creates this directory for you. See https://github.com/CogStack/MedCAT.
 

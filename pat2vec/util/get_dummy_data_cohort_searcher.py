@@ -1721,13 +1721,15 @@ def run_generate_patient_timeline_and_append(
 
         # Append to DataFrame
         try:
-            df = df.append(
-                {
-                    "client_idcode": client_idcode,
-                    "body_analysed": patient_timeline_text,
-                },
-                ignore_index=True,
-            )  # Append a new row to the DataFrame
+            new_row = pd.DataFrame(
+                [
+                    {
+                        "client_idcode": client_idcode,
+                        "body_analysed": patient_timeline_text,
+                    }
+                ]
+            )
+            df = pd.concat([df, new_row], ignore_index=True)
         except Exception as e:
             logger.error(f"Exception: {e}")
             return

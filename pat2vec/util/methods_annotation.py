@@ -50,11 +50,7 @@ def check_pat_document_annotation_complete(
         except Exception:
             return False
 
-    pre_document_batch_path = config_obj.pre_document_batch_path
-
     pre_document_annotation_batch_path = config_obj.pre_document_annotation_batch_path
-
-    os.path.join(pre_document_batch_path, current_pat_client_id_code)
 
     current_pat_batch_annot_path = os.path.join(
         pre_document_annotation_batch_path, current_pat_client_id_code + ".csv"
@@ -152,7 +148,7 @@ def multi_annots_to_df_textual_obs(
         current_pat_client_idcode,
         start_time,
         5,
-        "multi_annots_to_df_textualObs",
+        "multi_annots_to_df_textual_obs",
         n_docs_to_annotate=n_docs_to_annotate,
         t=t,
         config_obj=config_obj,
@@ -189,8 +185,6 @@ def multi_annots_to_df_textual_obs(
     all_annot_dfs = []
 
     for i in range(0, len(pat_batch)):
-
-        # current_pat_client_id_code = docs.iloc[0]['client_idcode']
 
         doc_to_annot_df = json_to_dataframe(
             json_data=multi_annots[i],
@@ -324,8 +318,6 @@ def multi_annots_to_df_reports(
 
     for i in range(0, len(pat_batch)):
 
-        # current_pat_client_id_code = docs.iloc[0]['client_idcode']
-
         doc_to_annot_df = json_to_dataframe(
             json_data=multi_annots[i],
             doc=pat_batch.iloc[i],
@@ -420,7 +412,7 @@ def multi_annots_to_df_mct(
         current_pat_client_idcode,
         start_time,
         5,
-        "multi_annots_to_df",
+        "multi_annots_to_df_mct",
         n_docs_to_annotate=n_docs_to_annotate,
         t=t,
         config_obj=config_obj,
@@ -457,8 +449,6 @@ def multi_annots_to_df_mct(
     all_annot_dfs = []
 
     for i in range(0, len(pat_batch)):
-
-        # current_pat_client_id_code = docs.iloc[0]['client_idcode']
 
         doc_to_annot_df = json_to_dataframe(
             json_data=multi_annots[i],
@@ -526,37 +516,18 @@ def calculate_pretty_name_count_features(
         input DataFrame is empty.
     """
     if len(df_copy) > 0:
-
-        additional_features = {
-            "count": ("pretty_name", "count"),
-            # Add more features as needed
-        }
-
         # Group by 'pretty_name' and apply the additional features
-        result_vector = df_copy.groupby("pretty_name").size().reset_index(name="count")
-
-        # Create a one-dimensional vector (single-row DataFrame)
-        result_vector = result_vector.set_index("pretty_name").T.rename(
-            columns={"count": f"pretty_name_count_{suffix}"}
+        result_vector = (
+            df_copy.groupby("pretty_name")
+            .size()
+            .to_frame(name=f"pretty_name_count_{suffix}")
+            .T
         )
 
-        # Add additional features
-        for feature_name, (column, function) in additional_features.items():
-            result_vector[feature_name] = df_copy.groupby("pretty_name")[column].agg(
-                function
-            )
-
         result_vector.reset_index(drop=True, inplace=True)
-        # Remove the 'pretty_name' column from the result
-        # result_vector = result_vector.drop('pretty_name', axis=1, errors='ignore')
-        result_vector = result_vector.drop("count", axis=1, errors="ignore")
 
         # Convert all values to float
         result_vector = result_vector.astype(float)
-
-        col_names = result_vector.columns  # [1:]
-
-        result_vector = pd.DataFrame(result_vector.values, columns=col_names)
     else:
         result_vector = None
 

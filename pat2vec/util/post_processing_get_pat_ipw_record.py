@@ -97,7 +97,6 @@ def _get_source_record(
         logger.debug(df.head())
 
     # Check if necessary columns exist before dropping NaNs
-    [col for col in necessary_columns if col in df.columns]
     missing_columns = [col for col in necessary_columns if col not in df.columns]
 
     if missing_columns:
@@ -143,8 +142,8 @@ def _get_source_record(
             # Robust CUI matching: normalize to string to handle int/str mismatches
             # and remove potential float '.0' artifacts
             if "cui" in df.columns:
-                df["cui"] = df["cui"].astype(str).str.replace(r"\.0$", "", regex=True)
-                filter_codes = [str(c).replace(".0", "") for c in filter_codes]
+                df["cui"] = df["cui"].astype(str).str.split(".").str[0]
+                filter_codes = [str(c).split(".")[0] for c in filter_codes]
 
             filtered_df = filter_and_select_rows(
                 df,

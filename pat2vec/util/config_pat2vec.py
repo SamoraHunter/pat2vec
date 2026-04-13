@@ -432,9 +432,6 @@ class config_class:
         #: Flag for MedCAT processing. If `True`, MedCAT will be used for annotating.
         self.medcat = medcat
 
-        #: The root directory for the project.
-        self.root_path = root_path
-
         #: If `True`, overwrites existing stored patient documents.
         self.overwrite_stored_pat_docs = overwrite_stored_pat_docs
 
@@ -602,9 +599,6 @@ class config_class:
             "negated_presence_annotations"
         )
 
-        if self.root_path is None:
-            self.root_path = f"{os.getcwd()}/{self.proj_name}/"
-
         if not remote_dump:
             #: Path to the patient lines parts directory for final outputs.
             self.current_pat_lines_path = os.path.join(
@@ -762,23 +756,6 @@ class config_class:
         #: Number of patients to sample from the initial cohort list. `0` means no sampling.
         self.sample_treatment_docs = sample_treatment_docs
 
-        priority_list_bool: bool = False
-
-        if priority_list_bool:
-            # add logic to prioritise pats from list.
-
-            df_old_done = pd.read_csv(
-                "..current_pat_lines__part_0_merged.csv",
-                usecols=[
-                    "client_idcode",
-                    "Hemochromatosis (disorder)_count_subject_present",
-                ],
-            )
-
-            df_old_done[
-                df_old_done["Hemochromatosis (disorder)_count_subject_present"] > 0
-            ]["client_idcode"].to_list()
-
         if self.testing:
             logger.info("Setting test options")
 
@@ -801,22 +778,10 @@ class config_class:
                 # Enforce implemented testing options
                 self._update_main_options()
 
-        if not self.remote_dump:
-            self.sftp_obj = None
-
         if self.remote_dump:
             #: SFTP client object.
 
-            if self.root_path is None:
-
-                self.root_path = f"../{self.proj_name}/"
-                logger.info(f"sftp root_path: {self.root_path}")
-
-            else:
-                logger.info(f"sftp root_path: {self.root_path}")
-
-            # Set the hostname, username, and password for the remote machine
-
+            logger.info(f"sftp root_path: {self.root_path}")
             hostname = self.hostname
 
             username = self.username
@@ -858,12 +823,7 @@ class config_class:
                 f"{self.root_path}current_pat_lines_parts{self.suffix}/"
             )
 
-            if not self.remote_dump:
-                # Path(self.current_pat_annot_path).mkdir(parents=True, exist_ok=True)
-                # Path(self.pre_annotation_path_mrc).mkdir(parents=True, exist_ok=True)
-                pass  #'deprecated'
-
-            elif root_path == f"../{self.proj_name}/":
+            if root_path == f"../{self.proj_name}/":
 
                 try:
                     # Test if remote_path exists
@@ -891,6 +851,7 @@ class config_class:
 
         else:
             self.sftp_client = None
+            self.sftp_obj = None
 
         if global_start_year is None:
             (

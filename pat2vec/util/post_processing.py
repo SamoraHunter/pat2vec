@@ -75,21 +75,19 @@ def extract_datetime_to_column(df: pd.DataFrame, drop: bool = True) -> pd.DataFr
     Returns:
         The DataFrame with a new 'extracted_datetime_stamp' column.
     """
-    # Initialize the new column
-    df["extracted_datetime_stamp"] = pd.to_datetime("")
+    date_cols = [col for col in df.columns if "_date_time_stamp" in col]
+    if date_cols:
+        # Find column name with 1 for each row. idxmax returns the first column with the max value (1).
+        col_names = df[date_cols].idxmax(axis=1)
+        # Mask rows where at least one date column is 1
+        any_one = df[date_cols].max(axis=1) == 1
 
-    # Iterate through rows using tqdm for progress bar
-    for index, row in tqdm(df.iterrows(), total=len(df), desc="Extracting datetime"):
-        # Iterate through columns
-        for column in df.columns:
-            # Check if the column contains '_date_time_stamp' and the value is 1
-            if "_date_time_stamp" in column and row[column] == 1:
-                # Extract date from column name and convert to datetime
-                date_str = column.replace("_date_time_stamp", "")
-                datetime_obj = pd.to_datetime(date_str, format="(%Y, %m, %d)")
-
-                # Assign the datetime value to the new column
-                df.at[index, "extracted_datetime_stamp"] = datetime_obj
+        df.loc[any_one, "extracted_datetime_stamp"] = col_names[any_one].str.replace(
+            "_date_time_stamp", ""
+        )
+        df["extracted_datetime_stamp"] = pd.to_datetime(
+            df["extracted_datetime_stamp"], format="(%Y, %m, %d)", errors="coerce"
+        )
 
     # Display the count of extracted datetime values
     logger.info("Extracted datetime values:")
@@ -1523,21 +1521,16 @@ def aggregate_dataframe_mean(
     Returns:
         The aggregated DataFrame.
     """
+    numeric_cols = df.select_dtypes(include="number").columns
+    non_numeric_cols = df.select_dtypes(exclude="number").columns.difference(
+        [group_by_column]
+    )
 
-    def custom_aggregation(x):
-        agg_values = {}
-        for col in x.columns:
-            if pd.api.types.is_numeric_dtype(x[col].dtype):
-                agg_values[col] = x[col].mean()
-            else:
-                agg_values[col] = x[col].iloc[0]
-        return pd.Series(agg_values)
+    agg_dict = {col: "mean" for col in numeric_cols}
+    agg_dict.update({col: "first" for col in non_numeric_cols})
 
-    grouped = df.groupby(group_by_column)
-    tqdm.pandas(desc="Aggregating")
-    aggregated_df = grouped.progress_apply(custom_aggregation)
-
-    return aggregated_df
+    logger.info(f"Aggregating {len(df)} rows by {group_by_column}...")
+    return df.groupby(group_by_column).agg(agg_dict).reset_index()
 
 
 def collapse_df_to_mean(
@@ -1564,50 +1557,18 @@ def collapse_df_to_mean(
         # Write the header to the output file
         # output_df.to_csv(output_filename, index=False)
 
-    # Function to check if a row exists in the output DataFrame
-    def row_exists(client_idcode):
-        return any(output_df[client_idcode_string] == client_idcode)
+    # This is effectively a persistent version of aggregate_dataframe_mean.
+    # Groupby is significantly faster than the previous row-by-row filtering.
+    aggregated_df = aggregate_dataframe_mean(df, group_by_column=client_idcode_string)
 
-    len_out_df = len(output_df)
-    started = False
-    # Iterate over unique client_idcodes with tqdm progress bar
-    for client_idcode in tqdm(
-        df[client_idcode_string].unique(),
-        desc="Processing",
-        total=len(df[client_idcode_string].unique()),
-    ):
-        # Check if the row already exists in output_df
-        if not row_exists(client_idcode):
-            # Filter rows for the current client_idcode
-            client_df = df[df[client_idcode_string] == client_idcode]
+    # If output file exists, we merge and save. Otherwise just save.
+    if os.path.exists(output_filename):
+        output_df = pd.read_csv(output_filename)
+        aggregated_df = pd.concat([output_df, aggregated_df]).drop_duplicates(
+            subset=[client_idcode_string]
+        )
 
-            # Initialize a dictionary to store mean values and first non-numeric values
-            mean_values = {}
-            first_non_numeric_values = {}
-
-            # Iterate over columns
-            for column in df.columns:
-                # Check if the column is numeric
-                if pd.api.types.is_numeric_dtype(df[column]):
-                    mean_values[column] = client_df[column].mean()
-                else:
-                    first_non_numeric_values[column] = client_df[column].iloc[0]
-
-            # Append mean values and first non-numeric values to output_df
-            row_data = {
-                client_idcode_string: client_idcode,
-                **mean_values,
-                **first_non_numeric_values,
-            }
-            if not started and len_out_df == 0:
-                pd.DataFrame([row_data]).to_csv(
-                    output_filename, mode="a", index=False, header=True
-                )
-                started = True
-            else:
-                pd.DataFrame([row_data]).to_csv(
-                    output_filename, mode="a", index=False, header=False
-                )
+    aggregated_df.to_csv(output_filename, index=False)
 
 
 def plot_missing_pattern_bloods(dfb: pd.DataFrame) -> None:

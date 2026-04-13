@@ -35,8 +35,6 @@ def find_date(
         and contains the text, the parsed date, and metadata about the match.
     """
 
-    reg = "Entered on -"
-    window = 20
     m = regex.finditer(reg, txt)
     text_start = 0
     chunks = []

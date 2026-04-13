@@ -76,8 +76,6 @@ def json_to_dataframe(
             guid_column,
         ]
 
-        empty_df = pd.DataFrame(data=None, columns=columns)
-
         for i in range(0, len(keys)):
 
             entities_data = json_data["entities"][keys[i]]
@@ -101,8 +99,6 @@ def json_to_dataframe(
             parsed_meta_anns = parse_meta_anns(meta_anns)
 
             mapped_annot_doc_entity = doc[text_column]
-
-            document_len = len(mapped_annot_doc_entity)
 
             document_len = len(mapped_annot_doc_entity)
 
@@ -163,7 +159,7 @@ def json_to_dataframe(
         try:
 
             super_df = pd.concat(df_parts)
-            super_df.reset_index(inplace=True)
+            super_df.reset_index(drop=True, inplace=True)
             return super_df
 
         except Exception as e:

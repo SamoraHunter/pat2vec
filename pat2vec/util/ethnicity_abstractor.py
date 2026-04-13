@@ -59,17 +59,7 @@ class EthnicityAbstractor:
 
         targetList = dataFrame
 
-        outputNameString + ".csv"
-
-        targetList.columns
-
         targetColumnString = ethnicityColumnString
-
-        len(targetList[targetColumnString].unique())
-
-        len(targetList[targetColumnString])
-
-        targetList[targetColumnString].nunique()
 
         racecodeEntries = targetList[targetColumnString].tolist()
 
@@ -86,22 +76,6 @@ class EthnicityAbstractor:
 
         df_testMap.insert(1, "census", "other_ethnic_group")
 
-        # Set default value as other
-        df_testMap["census"][0] = "other_ethnic_group"
-
-        whiteList = [
-            "English",
-            "Welsh",
-            "Scottish",
-            "Northern",
-            "Irish",
-            "British",
-            "Irish",
-            "Gypsy",
-            "Irish Traveller",
-            "Any other White background",
-        ]
-
         # Groups derived from https://www.ethnicity-facts-figures.service.gov.uk/style-guide/ethnic-groups
 
         blackList = [
@@ -114,9 +88,17 @@ class EthnicityAbstractor:
         ]
 
         whiteList = [
+            "English",
+            "Welsh",
+            "Scottish",
+            "Northern",
+            "Irish",
+            "British",
+            "Gypsy",
+            "Irish Traveller",
+            "Any other White background",
             "white",
             "caucasian",
-            "gypsy",
             "traveller",
             "other white",
             "white other",
@@ -138,8 +120,6 @@ class EthnicityAbstractor:
             "asian and white",
             "hispanic and white",
         ]
-
-        allEthList = blackList + whiteList + asianList + otherList + mixedList
 
         africanCountries = [
             "algeria",
@@ -518,7 +498,8 @@ class EthnicityAbstractor:
             "swiss",
             "ukrainian",
             "welsh",
-            "yugoslav" "ussr",
+            "yugoslav",
+            "ussr",
             "soviet",
             "cornish",
         ]
@@ -652,6 +633,6 @@ class EthnicityAbstractor:
                 pass
 
             # print("Returning ", res)
-            df_testMap["census"][i] = res
+            df_testMap.at[i, "census"] = res
 
         return df_testMap
