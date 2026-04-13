@@ -1,3 +1,4 @@
+import os
 from typing import Callable, Dict, Optional, Tuple, List
 
 import numpy as np
@@ -6,6 +7,7 @@ from IPython.display import display
 
 from pat2vec.util.filter_dataframe_by_timestamp import filter_dataframe_by_timestamp
 from pat2vec.util.get_start_end_year_month import get_start_end_year_month
+from pat2vec.util.parse_date import validate_input_dates
 
 
 def compute_feature_stats(
@@ -40,6 +42,103 @@ def compute_feature_stats(
         for suffix in ["mean", "median", "std", "max", "min", "n"]:
             stats[f"{feature_name}_{suffix}"] = np.nan
     return stats
+
+
+def search_news_observations(
+    cohort_searcher_with_terms_and_search=None,
+    client_id_codes=None,
+    observations_time_field="observationdocument_recordeddtm",
+    fields_override: Optional[List[str]] = None,
+    start_year="1995",
+    start_month="01",
+    start_day="01",
+    end_year="2025",
+    end_month="12",
+    end_day="12",
+    additional_custom_search_string=None,
+    index_name: str = "observations",
+    output_filename: Optional[str] = "news_search_results.csv",
+    overwrite: bool = False,
+    config_obj: Optional[object] = None,
+):
+    """Searches for NEWS/NEWS2 observation data within a date range.
+
+    Args:
+        output_filename (Optional[str]): The filename or path to a CSV file to
+            load from or save to. Defaults to "news_search_results.csv".
+        overwrite (bool): If True, perform the search even if `output_filename`
+            exists. Defaults to False.
+        config_obj (Optional[object]): Configuration object containing root_path.
+            Defaults to None.
+    """
+    if (
+        output_filename
+        and config_obj
+        and hasattr(config_obj, "root_path")
+        and hasattr(config_obj, "proj_name")
+    ):
+        output_filename = os.path.join(
+            config_obj.root_path, config_obj.proj_name, output_filename
+        )
+
+    if output_filename and os.path.exists(output_filename) and not overwrite:
+        print(f"Loading existing news data from {output_filename}")
+        return pd.read_csv(output_filename)
+
+    if cohort_searcher_with_terms_and_search is None:
+        raise ValueError("cohort_searcher_with_terms_and_search cannot be None.")
+    if client_id_codes is None:
+        raise ValueError("client_id_codes cannot be None.")
+
+    # Ensure client_id_codes is a list for the search function
+    if isinstance(client_id_codes, str):
+        client_id_codes = [client_id_codes]
+
+    start_year, start_month, start_day, end_year, end_month, end_day = (
+        validate_input_dates(
+            start_year, start_month, start_day, end_year, end_month, end_day
+        )
+    )
+
+    search_string = (
+        "obscatalogmasteritem_displayname:(NEWS*) AND "
+        f"{observations_time_field}:[{start_year}-{start_month}-{start_day} "
+        f"TO {end_year}-{end_month}-{end_day}]"
+    )
+
+    if additional_custom_search_string:
+        search_string += f" {additional_custom_search_string}"
+
+    fields_to_use = [
+        "observation_guid",
+        "client_idcode",
+        "obscatalogmasteritem_displayname",
+        "observation_valuetext_analysed",
+        "observationdocument_recordeddtm",
+        "clientvisit_visitidcode",
+    ]
+    if fields_override:
+        fields_to_use = fields_override
+
+    client_idcode_term_name = "client_idcode.keyword"
+    if config_obj and hasattr(config_obj, "client_idcode_term_name"):
+        client_idcode_term_name = config_obj.client_idcode_term_name
+
+    results = cohort_searcher_with_terms_and_search(
+        index_name=index_name,
+        fields_list=fields_to_use,
+        term_name=client_idcode_term_name,
+        entered_list=client_id_codes,
+        search_string=search_string,
+    )
+
+    if output_filename:
+        if os.path.dirname(output_filename):
+            os.makedirs(os.path.dirname(output_filename), exist_ok=True)
+        print(f"Saving news data to {output_filename}")
+        results.to_csv(output_filename, index=False)
+
+    return results
 
 
 def get_news(
@@ -90,27 +189,19 @@ def get_news(
             "observationdocument_recordeddtm",
         )
     else:
-        fields_to_use = [
-            "observation_guid",
-            "client_idcode",
-            "obscatalogmasteritem_displayname",
-            "observation_valuetext_analysed",
-            "observationdocument_recordeddtm",
-            "clientvisit_visitidcode",
-        ]
-        if fields_override:
-            fields_to_use = fields_override
-
-        current_pat_raw_news = cohort_searcher_with_terms_and_search(
-            index_name="observations",
-            fields_list=fields_to_use,
-            term_name=config_obj.client_idcode_term_name,
-            entered_list=[current_pat_client_id_code],
-            search_string=(
-                "obscatalogmasteritem_displayname:(NEWS*) AND "
-                f"observationdocument_recordeddtm:[{start_year}-{start_month}-{start_day} "
-                f"TO {end_year}-{end_month}-{end_day}]"
-            ),
+        current_pat_raw_news = search_news_observations(
+            cohort_searcher_with_terms_and_search=cohort_searcher_with_terms_and_search,
+            client_id_codes=current_pat_client_id_code,
+            observations_time_field="observationdocument_recordeddtm",
+            start_year=start_year,
+            start_month=start_month,
+            start_day=start_day,
+            end_year=end_year,
+            end_month=end_month,
+            end_day=end_day,
+            fields_override=fields_override,
+            output_filename=None,
+            config_obj=config_obj,
         )
 
     # Always start with client_idcode

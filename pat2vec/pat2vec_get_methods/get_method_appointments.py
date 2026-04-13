@@ -1,3 +1,4 @@
+import os
 import pandas as pd
 from IPython.display import display
 from typing import List, Optional
@@ -54,10 +55,15 @@ def search_appointments(
     additional_custom_search_string=None,
     index_name: str = "pims_apps*",
     term_name: str = "HospitalID.keyword",
+    output_filename: Optional[str] = "appointments_search_results.csv",
+    overwrite: bool = False,
+    config_obj: Optional[object] = None,
 ):
     """Searches for appointment data for a specific patient within a date range.
 
-    Uses a cohort searcher to find appointment data.
+    Uses a cohort searcher to find appointment data. If `output_filename` is
+    provided, the function will attempt to load existing data from disk or
+    save the search results to disk.
 
     Args:
         cohort_searcher_with_terms_and_search (Optional[Callable]): The function for
@@ -80,10 +86,30 @@ def search_appointments(
             Defaults to "pims_apps*".
         term_name (str): The field to filter on for the `client_id_codes`.
             Defaults to "HospitalID.keyword".
+        output_filename (Optional[str]): The filename or path to a CSV file to
+            load from or save to. Defaults to "appointments_search_results.csv".
+        overwrite (bool): If True, perform the search even if `output_filename`
+            exists. Defaults to False.
+        config_obj (Optional[object]): Configuration object containing root_path.
+            Defaults to None.
 
     Returns:
         pd.DataFrame: A DataFrame containing the raw appointment data.
     """
+    if (
+        output_filename
+        and config_obj
+        and hasattr(config_obj, "root_path")
+        and hasattr(config_obj, "proj_name")
+    ):
+        output_filename = os.path.join(
+            config_obj.root_path, config_obj.proj_name, output_filename
+        )
+
+    if output_filename and os.path.exists(output_filename) and not overwrite:
+        print(f"Loading existing appointment data from {output_filename}")
+        return pd.read_csv(output_filename)
+
     if cohort_searcher_with_terms_and_search is None:
         raise ValueError("cohort_searcher_with_terms_and_search cannot be None.")
     if client_id_codes is None:
@@ -114,13 +140,21 @@ def search_appointments(
     if fields_override:
         fields_to_use = fields_override
 
-    return cohort_searcher_with_terms_and_search(
+    results = cohort_searcher_with_terms_and_search(
         index_name=index_name,
         fields_list=fields_to_use,
         term_name=term_name,
         entered_list=client_id_codes,
         search_string=search_string,
     )
+
+    if output_filename:
+        if os.path.dirname(output_filename):
+            os.makedirs(os.path.dirname(output_filename), exist_ok=True)
+        print(f"Saving appointment data to {output_filename}")
+        results.to_csv(output_filename, index=False)
+
+    return results
 
 
 def get_appointments(
@@ -188,6 +222,8 @@ def get_appointments(
             end_year=end_year,
             end_month=end_month,
             end_day=end_day,
+            output_filename=None,
+            config_obj=config_obj,
         )
 
     current_pat_raw.rename(columns={"HospitalID": "client_idcode"}, inplace=True)

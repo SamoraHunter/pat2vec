@@ -1,3 +1,4 @@
+import os
 import pandas as pd
 from IPython.display import display
 from typing import List, Optional
@@ -30,6 +31,9 @@ def search_core_o2_observations(
     search_term="CORE_SpO2",
     additional_custom_search_string=None,
     index_name: str = "observations",
+    output_filename: Optional[str] = "core_o2_search_results.csv",
+    overwrite: bool = False,
+    config_obj: Optional[object] = None,
 ):
     """Searches for CORE_SpO2 observation data within a date range.
 
@@ -57,6 +61,12 @@ def search_core_o2_observations(
             append to the search query. Defaults to None.
         index_name (str): The name of the Elasticsearch index to search.
             Defaults to "observations".
+        output_filename (Optional[str]): The filename or path to a CSV file to
+            load from or save to. Defaults to "core_o2_search_results.csv".
+        overwrite (bool): If True, perform the search even if `output_filename`
+            exists. Defaults to False.
+        config_obj (Optional[object]): Configuration object containing root_path.
+            Defaults to None.
 
     Returns:
         pd.DataFrame: A DataFrame containing the raw CORE_SpO2 observation data.
@@ -64,6 +74,20 @@ def search_core_o2_observations(
     Raises:
         ValueError: If essential arguments are None.
     """
+    if (
+        output_filename
+        and config_obj
+        and hasattr(config_obj, "root_path")
+        and hasattr(config_obj, "proj_name")
+    ):
+        output_filename = os.path.join(
+            config_obj.root_path, config_obj.proj_name, output_filename
+        )
+
+    if output_filename and os.path.exists(output_filename) and not overwrite:
+        print(f"Loading existing core O2 data from {output_filename}")
+        return pd.read_csv(output_filename)
+
     if cohort_searcher_with_terms_and_search is None:
         raise ValueError("cohort_searcher_with_terms_and_search cannot be None.")
     if client_id_codes is None:
@@ -99,7 +123,7 @@ def search_core_o2_observations(
     if fields_override:
         fields_to_use = fields_override
 
-    return cohort_searcher_with_terms_and_search(
+    results = cohort_searcher_with_terms_and_search(
         index_name=index_name,
         fields_list=fields_to_use,
         # Note: using default, can be made configurable
@@ -107,6 +131,14 @@ def search_core_o2_observations(
         entered_list=client_id_codes,
         search_string=search_string,
     )
+
+    if output_filename:
+        if os.path.dirname(output_filename):
+            os.makedirs(os.path.dirname(output_filename), exist_ok=True)
+        print(f"Saving core O2 data to {output_filename}")
+        results.to_csv(output_filename, index=False)
+
+    return results
 
 
 def clean_observation_value(value):
@@ -228,6 +260,8 @@ def get_core_02(
             end_month=end_month,
             end_day=end_day,
             search_term=search_term,
+            output_filename=None,
+            config_obj=config_obj,
         )
 
     # Initialize features DataFrame

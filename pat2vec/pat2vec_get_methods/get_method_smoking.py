@@ -1,3 +1,4 @@
+import os
 from typing import Callable, List, Optional, Tuple, Union
 
 import numpy as np
@@ -34,6 +35,9 @@ def search_smoking(
     additional_custom_search_string: Optional[str] = None,
     client_idcode_term_name: str = "client_idcode.keyword",
     index_name: str = "observations",
+    output_filename: Optional[str] = "smoking_search_results.csv",
+    overwrite: bool = False,
+    config_obj: Optional[object] = None,
 ) -> pd.DataFrame:
     """Searches for CORE_SmokingStatus observations.
 
@@ -58,6 +62,12 @@ def search_smoking(
             the index. Defaults to "client_idcode.keyword".
         index_name (str): The name of the Elasticsearch index to search.
             Defaults to "observations".
+        output_filename (Optional[str]): The filename or path to a CSV file to
+            load from or save to. Defaults to "smoking_search_results.csv".
+        overwrite (bool): If True, perform the search even if `output_filename`
+            exists. Defaults to False.
+        config_obj (Optional[object]): Configuration object containing root_path.
+            Defaults to None.
 
     Returns:
         pd.DataFrame: A DataFrame containing the raw smoking status observation data.
@@ -66,6 +76,20 @@ def search_smoking(
         ValueError: If `cohort_searcher_with_terms_and_search` or `client_id_codes`
             is None.
     """
+    if (
+        output_filename
+        and config_obj
+        and hasattr(config_obj, "root_path")
+        and hasattr(config_obj, "proj_name")
+    ):
+        output_filename = os.path.join(
+            config_obj.root_path, config_obj.proj_name, output_filename
+        )
+
+    if output_filename and os.path.exists(output_filename) and not overwrite:
+        print(f"Loading existing smoking data from {output_filename}")
+        return pd.read_csv(output_filename)
+
     if cohort_searcher_with_terms_and_search is None:
         raise ValueError("cohort_searcher_with_terms_and_search cannot be None.")
     if client_id_codes is None:
@@ -91,13 +115,21 @@ def search_smoking(
     if fields_override:
         fields_to_use = fields_override
 
-    return cohort_searcher_with_terms_and_search(
+    results = cohort_searcher_with_terms_and_search(
         index_name=index_name,
         fields_list=fields_to_use,
         term_name=client_idcode_term_name,
         entered_list=client_id_codes,
         search_string=search_string,
     )
+
+    if output_filename:
+        if os.path.dirname(output_filename):
+            os.makedirs(os.path.dirname(output_filename), exist_ok=True)
+        print(f"Saving smoking data to {output_filename}")
+        results.to_csv(output_filename, index=False)
+
+    return results
 
 
 def prepare_smoking_data(raw_data: pd.DataFrame) -> pd.DataFrame:
@@ -217,6 +249,8 @@ def get_smoking(
             end_month=end_month,
             end_day=end_day,
             client_idcode_term_name=config_obj.client_idcode_term_name,
+            output_filename=None,
+            config_obj=config_obj,
         )
 
     if len(raw_data) == 0:

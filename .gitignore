@@ -14,6 +14,7 @@ notebooks/output_directory
 backups/
 logs/
 notebooks/test_project/
+notebooks/example_searches_test/*
 # Development and testing
 dev_test/
 test_dev.ipynb

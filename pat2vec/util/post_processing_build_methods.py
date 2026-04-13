@@ -545,15 +545,19 @@ def get_annots_joined_to_docs(config_obj: Any, pat2vec_obj: Any) -> pd.DataFrame
                       corresponding document information.
     """
 
-    pre_path = config_obj.proj_name
+    pre_path = os.path.join(config_obj.root_path, config_obj.proj_name)
 
     build_merged_epr_mct_doc_df(pat2vec_obj.all_patient_list, config_obj)
 
     build_merged_epr_mct_annot_df(pat2vec_obj.all_patient_list, config_obj)
 
-    annots_df = pd.read_csv(f"{pre_path}/merged_batches/annots_mct_epr.csv")
+    annots_df = pd.read_csv(
+        os.path.join(pre_path, "merged_batches", "annots_mct_epr.csv")
+    )
 
-    docs_temp = pd.read_csv(f"{pre_path}/merged_batches/docs_mct_epr.csv")
+    docs_temp = pd.read_csv(
+        os.path.join(pre_path, "merged_batches", "docs_mct_epr.csv")
+    )
 
     res = join_docs_to_annots(annots_df, docs_temp, drop_duplicates=True)
 

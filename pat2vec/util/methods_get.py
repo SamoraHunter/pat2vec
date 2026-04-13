@@ -426,15 +426,15 @@ def create_local_folders(config_obj: Any = None) -> None:
 
     root_path = config_obj.root_path
 
-    pat_doc_folder_path = root_path + "/" + project_name + "/pat_docs/"
+    pat_doc_folder_path = os.path.join(root_path, project_name, "pat_docs")
     Path(pat_doc_folder_path).mkdir(parents=True, exist_ok=True)
 
-    pat_doc_annot_vec_folder_path = (
-        root_path + "/" + project_name + "/pat_docs_annot_vecs/"
+    pat_doc_annot_vec_folder_path = os.path.join(
+        root_path, project_name, "pat_docs_annot_vecs"
     )
     Path(pat_doc_annot_vec_folder_path).mkdir(parents=True, exist_ok=True)
 
-    merged_batches_folder_path = root_path + "/" + project_name + "/merged_batches/"
+    merged_batches_folder_path = os.path.join(root_path, project_name, "merged_batches")
     Path(merged_batches_folder_path).mkdir(parents=True, exist_ok=True)
 
 
