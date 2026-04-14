@@ -1128,8 +1128,9 @@ def check_patients_existence(
                     if found_id in ids_to_check:
                         ids_to_check.remove(found_id)
             except Exception as e:
-                # Handle fielddata error for text fields where aggregations are disabled
-                if "Fielddata is disabled" in str(e):
+                # Handle fielddata error for text fields where aggregations are disabled.
+                # Use case-insensitive check to catch variations in error messages.
+                if "fielddata" in str(e).lower():
                     logging.warning(
                         f"Field '{idx_field}' in index '{idx_name}' is a text field and does not support aggregations. "
                         "Attempting search-based existence check instead."
