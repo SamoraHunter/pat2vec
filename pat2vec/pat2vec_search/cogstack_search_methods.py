@@ -1103,6 +1103,8 @@ def check_patients_existence(
         )
 
         for i in range(0, len(current_batch_list), chunk_size):
+            if not ids_to_check:
+                break
             chunk = current_batch_list[i : i + chunk_size]
             body = {
                 "query": {"terms": {idx_field: chunk}},
@@ -1114,21 +1116,47 @@ def check_patients_existence(
                 },
             }
             try:
-                res = cs.elastic.search(index=idx_name, body=body)
+                res = cs.elastic.search(index=idx_name, body=body, request_timeout=60)
                 buckets = (
                     res.get("aggregations", {})
                     .get("existing_ids", {})
                     .get("buckets", [])
                 )
                 for bucket in buckets:
-                    found_id = bucket["key"]
+                    found_id = str(bucket["key"])
                     existing_ids.add(found_id)
                     if found_id in ids_to_check:
                         ids_to_check.remove(found_id)
             except Exception as e:
-                logging.error(
-                    f"Error checking patient existence for chunk in {idx_name}: {e}"
-                )
+                # Handle fielddata error for text fields where aggregations are disabled
+                if "Fielddata is disabled" in str(e):
+                    logging.warning(
+                        f"Field '{idx_field}' in index '{idx_name}' is a text field and does not support aggregations. "
+                        "Attempting search-based existence check instead."
+                    )
+                    try:
+                        # Fallback: search and retrieve field from _source instead of aggregation
+                        search_res = cs.elastic.search(
+                            index=idx_name,
+                            body={"query": {"terms": {idx_field: chunk}}, "size": 1000},
+                            _source=[idx_field],
+                            request_timeout=60,
+                        )
+                        for hit in search_res.get("hits", {}).get("hits", []):
+                            val = hit.get("_source", {}).get(idx_field)
+                            if val:
+                                found_id = str(val)
+                                existing_ids.add(found_id)
+                                if found_id in ids_to_check:
+                                    ids_to_check.remove(found_id)
+                    except Exception as e_inner:
+                        logging.error(
+                            f"Fallback existence check failed for {idx_name}: {e_inner}"
+                        )
+                else:
+                    logging.error(
+                        f"Error checking patient existence for chunk in {idx_name}: {e}"
+                    )
 
     return list(existing_ids)
 
