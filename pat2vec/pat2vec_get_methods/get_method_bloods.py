@@ -79,8 +79,15 @@ def search_bloods_data(
         ValueError: If `cohort_searcher_with_terms_and_search` or `client_id_codes`
             is None.
     """
-    if output_filename and config_obj and hasattr(config_obj, "root_path"):
-        output_filename = os.path.join(config_obj.root_path, output_filename)
+    if (
+        output_filename
+        and config_obj
+        and hasattr(config_obj, "root_path")
+        and hasattr(config_obj, "proj_name")
+    ):
+        output_filename = os.path.join(
+            config_obj.root_path, config_obj.proj_name, output_filename
+        )
 
     if output_filename and os.path.exists(output_filename) and not overwrite:
         print(f"Loading existing bloods data from {output_filename}")
