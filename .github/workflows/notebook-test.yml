@@ -51,22 +51,22 @@ jobs:
         run: |
           if ! command -v docker &> /dev/null; then
             echo "Docker not found, installing..."
-            curl -fs
-          if command -v sudo &> /dev/null; then
-            sudo usermod -aG docker $USER || true
-            sudo chmod 666 /var/run/docker.sock || true
-          else
-            # Fallback for environments running as root without sudo
-            usermod -aG docker $USER || true
-            chmod 666 /var/run/docker.sock || true
-          fi
+            curl -fsSL https://get.docker.com | sh || true
+            if command -v sudo &> /dev/null; then
+              sudo usermod -aG docker $USER || true
+              sudo chmod 666 /var/run/docker.sock || true
+            else
+              # Fallback for environments running as root without sudo
+              usermod -aG docker $USER || true
+              chmod 666 /var/run/docker.sock || true
+            fi
           else
             echo "Docker already available: $(docker --version)"
-          if command -v sudo &> /dev/null; then
-            sudo chmod 666 /var/run/docker.sock || true
-          else
-            chmod 666 /var/run/docker.sock || true
-          fi
+            if command -v sudo &> /dev/null; then
+              sudo chmod 666 /var/run/docker.sock || true
+            else
+              chmod 666 /var/run/docker.sock || true
+            fi
           fi
 
       - name: Verify Docker is available
@@ -95,7 +95,7 @@ jobs:
           echo "dir=$(pip cache dir)" >> $GITHUB_OUTPUT
 
       - name: Cache pip dependencies
-        if: steps.detect_env.outputs.is_act_runner != 'true'
+        if: steps.detect_env.outputs.is_act != 'true'
         uses: actions/cache@v4
         with:
           path: ${{ steps.pip-cache.outputs.dir }}
@@ -108,7 +108,7 @@ jobs:
           GITEA_TOKEN: ${{ secrets.GITEA_TOKEN }}
         run: |
           pip_install_args=()
-          if [[ "${{ steps.detect_env.outputs.is_act_runner }}" == "true" ]] && [[ -n "${GITEA_TOKEN}" ]]; then
+          if [[ "${{ steps.detect_env.outputs.is_act }}" == "true" ]] && [[ -n "${GITEA_TOKEN}" ]]; then
               echo "🔧 Running in act - using local mirror and removing hash requirements"
               find . -name "requirements*.txt" -type f -exec sed -i 's/ --hash=sha256:[a-f0-9]*//g' {} \;
               pip_install_args+=("--trusted-host" "dh-cap02" "-i" "http://dh-cap02:8008/mirrors/pat2vec")
@@ -142,7 +142,7 @@ jobs:
           pkill -9 -f jupyter || true
 
       - name: Clean Up Generated Files for Local Act Runner
-        if: steps.detect_env.outputs.is_act_runner == 'true' && always()
+        if: steps.detect_env.outputs.is_act == 'true' && always()
         run: |
           echo "INFO: Cleaning up directories created during the test run..."
           rm -rf notebooks/new_project

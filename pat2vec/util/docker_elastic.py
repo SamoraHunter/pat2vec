@@ -6,6 +6,7 @@ import logging
 import uuid
 import requests
 import atexit
+import struct
 from typing import Optional, Tuple
 
 logger = logging.getLogger(__name__)
@@ -149,6 +150,19 @@ class ElasticContainer:
     def _get_host_gateway_ip(self) -> str:
         """Attempts to find the default gateway IP (usually the host)."""
         try:
+            # Method 1: Check /proc/net/route (standard Linux way, works even if 'ip' command is missing)
+            if os.path.exists("/proc/net/route"):
+                with open("/proc/net/route") as f:
+                    for line in f:
+                        fields = line.strip().split()
+                        if len(fields) > 2 and fields[1] == "00000000":  # Default route
+                            return socket.inet_ntoa(
+                                struct.pack("<L", int(fields[2], 16))
+                            )
+        except Exception:
+            pass
+
+        try:
             result = subprocess.run(
                 ["ip", "route", "show", "default"], capture_output=True, text=True
             )
@@ -195,6 +209,7 @@ class ElasticContainer:
             self.container_name,
             "-p",
             port_mapping,
+            "--add-host=host.docker.internal:host-gateway",
             "-e",
             "discovery.type=single-node",
             "-e",
@@ -281,6 +296,8 @@ class ElasticContainer:
         ]
         if container_ip:
             targets.append((container_ip, 9200))
+
+        logger.info(f"Waiting for Elasticsearch health on targets: {targets}")
 
         while time.time() - start_time < timeout:
             for test_host, test_port in targets:
