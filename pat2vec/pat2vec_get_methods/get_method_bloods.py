@@ -165,7 +165,7 @@ def get_current_pat_bloods(
     bloods_time_field = config_obj.bloods_time_field
 
     if pat_batch.empty:
-        return pd.DataFrame()
+        return pd.DataFrame({"client_idcode": [current_pat_client_id_code]})
 
     if batch_mode:
         current_pat_bloods = filter_dataframe_by_timestamp(
@@ -195,19 +195,21 @@ def get_current_pat_bloods(
         )
 
     # Ensure only target columns are present. Useful if source data isn't directly from ES.
-    current_pat_bloods = current_pat_bloods[
-        [
-            "_index",
-            "_id",
-            "_score",
-            "client_idcode",
-            "basicobs_itemname_analysed",
-            "basicobs_value_numeric",
-            "basicobs_entered",
-            "clientvisit_serviceguid",
-            "updatetime",
-        ]
+    target_cols = [
+        "client_idcode",
+        "basicobs_itemname_analysed",
+        "basicobs_value_numeric",
+        "basicobs_entered",
+        "clientvisit_serviceguid",
+        "updatetime",
     ]
+    # Include metadata columns if they exist (e.g. from ES), but don't fail if missing (e.g. from CSV)
+    available_cols = [
+        c
+        for c in ["_index", "_id", "_score"] + target_cols
+        if c in current_pat_bloods.columns
+    ]
+    current_pat_bloods = current_pat_bloods[available_cols]
 
     if batch_mode:
         current_pat_bloods["datetime"] = current_pat_bloods[bloods_time_field].copy()
@@ -281,6 +283,7 @@ def get_current_pat_bloods(
         ],
         inplace=True,
         axis=1,
+        errors="ignore",
     )
 
     if batch_mode:
@@ -394,11 +397,11 @@ def get_current_pat_bloods(
 
             # days_between earliest and last
 
-            earliest = filtered_df.sort_values(by="datetime").iloc[-1]["datetime"]
+            latest = filtered_df.sort_values(by="datetime").iloc[-1]["datetime"]
 
-            oldest = filtered_df.sort_values(by="datetime").iloc[-1]["datetime"]
+            oldest = filtered_df.sort_values(by="datetime").iloc[0]["datetime"]
 
-            delta = earliest - oldest
+            delta = latest - oldest
 
             agg_val = delta.days
 
