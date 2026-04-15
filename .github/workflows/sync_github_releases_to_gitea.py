@@ -1,3 +1,20 @@
+"""
+Recommended .env file structure:
+
+# .env
+# This file stores environment variables for local development.
+# It should NOT be committed to version control.
+
+GITHUB_TOKEN=""
+GITEA_TOKEN=""
+GITHUB_REPO_OWNER="" # e.g., 'SamoraHunter'
+GITHUB_REPO_NAME="pat2vec" # e.g., 'pat2vec'
+GITEA_URL="" # Your Gitea instance URL, e.g., 'http://localhost:3000'
+GITEA_REPO_OWNER="" # e.g., 'SamoraHunter'
+GITEA_REPO_NAME="pat2vec" # e.g., 'pat2vec'
+REQUESTS_CA_BUNDLE="/etc/ssl/certs/ca-certificates.crt"
+"""
+
 import subprocess
 import sys
 import os
@@ -5,9 +22,23 @@ import requests
 import json
 import tempfile
 import shutil
+from urllib.parse import urlparse
 from dotenv import load_dotenv
 
 load_dotenv()  # Load environment variables from .env file
+
+# Global SSL verification setting.
+# In corporate environments with SSL-intercepting proxies, SSL verification
+# can fail if the corporate CA bundle is not correctly configured.
+# Set VERIFY_SSL=false in your .env file to skip verification (not recommended).
+VERIFY_SSL = os.getenv("VERIFY_SSL", "true").lower() == "true"
+
+
+def _get_gitea_api_base(gitea_url):
+    """Extracts the base API URL from a Gitea URL, stripping any repo paths."""
+    parsed = urlparse(gitea_url)
+    # This ensures we get scheme://host:port/api/v1 even if the user provided a repo URL
+    return f"{parsed.scheme}://{parsed.netloc}/api/v1"
 
 
 def run_command(command, check_output=False, suppress_output=False):
@@ -50,7 +81,9 @@ def _api_request(
 
     try:
         if method == "GET":
-            response = requests.get(url, headers=_headers, timeout=30)
+            response = requests.get(
+                url, headers=_headers, timeout=30, verify=VERIFY_SSL
+            )
         elif method == "POST":
             response = requests.post(
                 url,
@@ -59,6 +92,7 @@ def _api_request(
                 json=json_data,
                 files=files,
                 timeout=60,
+                verify=VERIFY_SSL,
             )
         else:
             raise ValueError(f"Unsupported HTTP method: {method}")
@@ -86,7 +120,7 @@ def get_github_releases_data(owner, repo, token):
 
 def get_gitea_releases_data(gitea_url, owner, repo, token):
     """Fetches all releases from Gitea API."""
-    api_base = f"{gitea_url}/api/v1"
+    api_base = _get_gitea_api_base(gitea_url)
     url = f"{api_base}/repos/{owner}/{repo}/releases"
     print(f"Fetching Gitea releases from {url}...")
     response = _api_request(url, "GET", token)
@@ -97,7 +131,7 @@ def create_gitea_release(
     gitea_url, owner, repo, token, tag_name, name, body, draft, prerelease
 ):
     """Creates a new release on Gitea."""
-    api_base = f"{gitea_url}/api/v1"
+    api_base = _get_gitea_api_base(gitea_url)
     url = f"{api_base}/repos/{owner}/{repo}/releases"
     payload = {
         "tag_name": tag_name,
@@ -108,7 +142,18 @@ def create_gitea_release(
     }
     print(f"Creating Gitea release for tag '{tag_name}'...")
     response = _api_request(url, "POST", token, json_data=payload)
-    return response.json()
+
+    data = response.json()
+    # If the API returns a list (some proxies/versions wrap responses), return the first element
+    if isinstance(data, list):
+        if len(data) > 0:
+            return data[0]
+        print(
+            "Error: Gitea API returned an empty list for release creation.",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+    return data
 
 
 def download_github_asset(asset_url, gh_token, output_path):
@@ -119,7 +164,9 @@ def download_github_asset(asset_url, gh_token, output_path):
     }
     print(f"  - Downloading asset from GitHub: {asset_url}...")
     try:
-        response = requests.get(asset_url, headers=headers, stream=True, timeout=120)
+        response = requests.get(
+            asset_url, headers=headers, stream=True, timeout=120, verify=VERIFY_SSL
+        )
         response.raise_for_status()
         with open(output_path, "wb") as f:
             for chunk in response.iter_content(chunk_size=8192):
@@ -135,7 +182,8 @@ def upload_gitea_release_asset(
     gitea_url, owner, repo, release_id, token, asset_name, file_path, content_type
 ):
     """Uploads an asset to a Gitea release."""
-    api_base = f"{gitea_url}/api/v1"
+    api_base = _get_gitea_api_base(gitea_url)
+
     url = f"{api_base}/repos/{owner}/{repo}/releases/{release_id}/assets?name={asset_name}"
     headers = {"Content-Type": content_type}
     print(f"  - Uploading asset '{asset_name}' to Gitea release {release_id}...")
@@ -166,7 +214,8 @@ def sync_releases_to_gitea(
     print("--- Starting Git Tag Synchronization ---")
     run_command(["git", "fetch", github_remote_name, "--tags"])
     print(f"Tags from {github_remote_name} fetched successfully.")
-    run_command(["git", "push", gitea_remote_name, "--tags"])
+    # Use --force to ensure the Gitea mirror tags are perfectly in sync with the source
+    run_command(["git", "push", gitea_remote_name, "--tags", "--force"])
     print(f"All tags pushed to {gitea_remote_name}.")
     print("--- Git Tag Synchronization Complete ---")
 
@@ -208,9 +257,15 @@ def sync_releases_to_gitea(
                     draft=gh_release["draft"],
                     prerelease=gh_release["prerelease"],
                 )
-                print(
-                    f"  Release '{tag_name}' created on Gitea (ID: {gitea_created_release['id']})."
-                )
+
+                # Safeguard: ensure we have a valid ID before proceeding
+                release_id = gitea_created_release.get("id")
+                if release_id is None:
+                    raise KeyError(
+                        f"Gitea release created but 'id' missing from response: {gitea_created_release}"
+                    )
+
+                print(f"  Release '{tag_name}' created on Gitea (ID: {release_id}).")
 
                 # Upload assets if any
                 if gh_release["assets"]:
@@ -230,7 +285,7 @@ def sync_releases_to_gitea(
                                 gitea_url,
                                 gitea_repo_owner,
                                 gitea_repo_name,
-                                gitea_created_release["id"],
+                                release_id,
                                 gitea_token,
                                 asset_name,
                                 download_path,
