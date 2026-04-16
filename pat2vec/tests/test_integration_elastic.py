@@ -23,12 +23,10 @@ class TestIntegrationElastic(unittest.TestCase):
         cls.creds_file_name = "test_elastic_credentials.py"
         with open(cls.creds_file_name, "w") as f:
             f.write(
-                f"""
-username = "{cls.username}"
-password = "{cls.password}"
-api_key = None
-hosts = ["{cls.host}"]
-"""
+                f'username = "{cls.username}"\n'
+                f'password = "{cls.password}"\n'
+                f"api_key = None\n"
+                f'hosts = ["{cls.host}"]\n'
             )
 
     @classmethod

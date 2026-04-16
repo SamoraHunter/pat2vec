@@ -945,9 +945,14 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy_mct(
             if all_fields:
                 field_list = all_field_list
             else:
-                field_list = """observation_guid client_idcode obscatalogmasteritem_displayname
-                                observation_valuetext_analysed observationdocument_recordeddtm
-                                clientvisit_visitidcode""".split()
+                field_list = [
+                    "observation_guid",
+                    "client_idcode",
+                    "obscatalogmasteritem_displayname",
+                    "observation_valuetext_analysed",
+                    "observationdocument_recordeddtm",
+                    "clientvisit_visitidcode",
+                ]
 
             if testing and not testing_elastic:
                 term_docs = cohort_searcher_with_terms_and_search_dummy(
