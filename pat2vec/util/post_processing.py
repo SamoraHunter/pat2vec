@@ -42,6 +42,10 @@ EMPTY_ANNOT_COLS = [
     "Subject_Confidence",
     "updatetime",
     "annotation_batch_source",
+    # New columns added by annot_processor
+    "document_guid",
+    "annotation_description",
+    "observationannotation_recordeddtm",
 ]
 
 
@@ -91,7 +95,8 @@ def extract_datetime_to_column(df: pd.DataFrame, drop: bool = True) -> pd.DataFr
 
     # Display the count of extracted datetime values
     logger.info("Extracted datetime values:")
-    logger.info(df["extracted_datetime_stamp"].value_counts())
+    if "extracted_datetime_stamp" in df.columns:
+        logger.info(df["extracted_datetime_stamp"].value_counts())
 
     if drop:
         columns_to_drop = [col for col in df.columns if "date_time_stamp" in col]

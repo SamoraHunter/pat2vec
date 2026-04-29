@@ -44,6 +44,7 @@ def multi_annots_to_df(
     text_column: str = "body_analysed",
     time_column: str = "updatetime",
     guid_column: str = "document_guid",
+    include_text_sample: bool = False,
 ) -> pd.DataFrame:
     """Processes MedCAT annotations for a batch of documents, creating and saving a DataFrame (file or DB).
 
@@ -97,6 +98,7 @@ def multi_annots_to_df(
                 text_column=text_column,
                 time_column=time_column,
                 guid_column=guid_column,
+                include_text_sample=include_text_sample,
             )
 
             if not doc_to_annot_df.empty:
@@ -144,6 +146,9 @@ def multi_annots_to_df(
         final_df = pd.DataFrame(columns=col_list)
 
     # Handle ICD10 and OPC4S code joining
+    if include_text_sample and "text_sample" not in final_df.columns:
+        final_df["text_sample"] = pd.NA
+
     try:
         if not final_df.empty:  # Only join if there is data
             if config_obj.add_icd10 and config_obj.add_opc4s:

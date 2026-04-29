@@ -1,69 +1,201 @@
 import os
+import gc
 from pathlib import Path
 import logging
-
-from typing import Any, Dict, List, Optional
+from typing import Any, List, Optional, Callable, Tuple, Union
 import pandas as pd
 from tqdm import tqdm
 
-from pat2vec.util.post_processing import retrieve_pat_annots_mct_epr
-from pat2vec.util.helper_functions import get_df_from_db
+from pat2vec.util.post_processing import retrieve_pat_annots_mct_epr, EMPTY_ANNOT_COLS  # type: ignore
+from pat2vec.util.helper_functions import get_df_from_db, get_ram_usage
 
 logger = logging.getLogger(__name__)
 
 
-def filter_annot_dataframe(
-    df: pd.DataFrame, annot_filter_arguments: Dict[str, Any]
-) -> pd.DataFrame:
-    """Filters a DataFrame based on the given inclusion criteria.
-
-    Args:
-        df: DataFrame to be filtered.
-        annot_filter_arguments: Dictionary containing inclusion criteria.
-
-    Returns:
-        The filtered DataFrame.
-    """
-
-    # Define a function to handle non-numeric values in float columns
-    def filter_float_column(
-        df: pd.DataFrame, column_name: str, threshold: float
-    ) -> pd.DataFrame:
-        if column_name in df.columns and column_name in annot_filter_arguments:
-            # Convert the column to numeric values (assuming it contains only convertible values)
-            df[column_name] = pd.to_numeric(df[column_name], errors="coerce")
-            df = df[df[column_name] > threshold]  # type: ignore
-        return df
-
-    # Apply the function for each float column
-    df = filter_float_column(df, "acc", annot_filter_arguments["acc"])
-    df = filter_float_column(
-        df, "Time_Confidence", annot_filter_arguments["Time_Confidence"]
-    )
-    df = filter_float_column(
-        df, "Presence_Confidence", annot_filter_arguments["Presence_Confidence"]
-    )
-    df = filter_float_column(
-        df, "Subject_Confidence", annot_filter_arguments["Subject_Confidence"]
-    )
-
-    # Check if 'types' column exists in the DataFrame
-    if "types" in df.columns and "types" in annot_filter_arguments:
-        df = df[df["types"].isin(annot_filter_arguments["types"])]
-
-    # Check if 'Time_Value' column exists in the DataFrame
-    if "Time_Value" in df.columns and "Time_Value" in annot_filter_arguments:
-        df = df[df["Time_Value"].isin(annot_filter_arguments["Time_Value"])]
-
-    # Check if 'Presence_Value' column exists in the DataFrame
-    if "Presence_Value" in df.columns and "Presence_Value" in annot_filter_arguments:
-        df = df[df["Presence_Value"].isin(annot_filter_arguments["Presence_Value"])]
-
-    # Check if 'Subject_Value' column exists in the DataFrame
-    if "Subject_Value" in df.columns and "Subject_Value" in annot_filter_arguments:
-        df = df[df["Subject_Value"].isin(annot_filter_arguments["Subject_Value"])]
-
+def optimize_dtypes(df: pd.DataFrame) -> pd.DataFrame:
+    """Downcasts numeric columns to save memory."""
+    for col in df.columns:
+        if pd.api.types.is_float_dtype(df[col]):
+            df[col] = pd.to_numeric(df[col], downcast="float")
+        elif pd.api.types.is_integer_dtype(df[col]):
+            df[col] = pd.to_numeric(df[col], downcast="integer")
     return df
+
+
+def _generic_merged_builder(
+    all_pat_list: List[str],
+    config_obj: Any,
+    output_filename: str,
+    standard_cols: List[str],
+    db_sources: List[Tuple[str, str, str]],  # (schema, table, source_name_or_none)
+    file_retriever: Callable[[str, Any], pd.DataFrame],
+    overwrite: bool = False,
+    patient_id_col: str = "client_idcode",
+    post_chunk_processor: Optional[Callable[[pd.DataFrame], pd.DataFrame]] = None,
+    float_format: Optional[str] = None,
+    chunk_size: int = 500,
+    fetch_cols: Optional[List[str]] = None,
+) -> str:
+    """Internal helper to build merged dataframes in chunks to prevent RAM overloading."""
+    # Aggressively clear memory from previous builds (like docs) before starting
+    gc.collect()
+
+    # Project path consistency: root / [proj_name] / merged_batches
+    # config_obj.root_path is already expected to be the project-specific root (e.g., .../HFE_13_2026/new_project/)
+    directory_path = os.path.join(config_obj.root_path, "merged_batches")
+    output_file_path = os.path.join(directory_path, output_filename)
+    Path(directory_path).mkdir(parents=True, exist_ok=True)
+
+    if not overwrite and os.path.isfile(output_file_path):
+        logger.info(f"File already exists at {output_file_path}. Skipping.")
+        return output_file_path
+
+    if not all_pat_list:
+        logger.warning(
+            f"No patients provided for {output_filename}. Creating empty file."
+        )
+        pd.DataFrame(columns=standard_cols).to_csv(output_file_path, index=False)
+        return output_file_path
+
+    if os.path.exists(output_file_path):
+        os.remove(output_file_path)
+
+    first_write = True
+    any_data_found = False
+
+    logger.info(
+        f"GENERIC BUILDER START: {output_filename}. "
+        f"Processing {len(all_pat_list)} patient(s) with chunk_size={chunk_size}."
+    )
+
+    def get_data_stream():
+        nonlocal any_data_found
+
+        for i in range(0, len(all_pat_list), chunk_size):
+            chunk_pats = all_pat_list[i : i + chunk_size]
+
+            if config_obj.storage_backend == "database" and db_sources:
+                # KEY FIX: one query per (table, chunk) instead of per (table, patient)
+                for schema, table, source_name in db_sources:
+                    df = get_df_from_db(
+                        config_obj,
+                        schema,
+                        table,
+                        patient_ids=chunk_pats,  # <-- whole chunk at once
+                        patient_id_column=patient_id_col,
+                        columns=fetch_cols,
+                    )
+
+                    if df.empty:
+                        continue
+
+                    any_data_found = True
+
+                    source_col = None
+                    if source_name:
+                        source_col = (
+                            "annotation_batch_source"
+                            if "ann_" in table
+                            else "document_batch_source"
+                        )
+                        df[source_col] = source_name
+
+                    if standard_cols:
+                        df = df[
+                            [
+                                c
+                                for c in df.columns
+                                if c in standard_cols or c == source_col
+                            ]
+                        ]
+
+                    if post_chunk_processor:
+                        df = post_chunk_processor(df)
+
+                    df = optimize_dtypes(df)
+
+                    if standard_cols:
+                        # Ensure consistency for append mode
+                        df = df.reindex(columns=standard_cols)
+
+                    yield df
+                    del df
+                    # Aggressive cleanup after each table in the chunk to mitigate RAM doubling
+                    gc.collect()
+
+                if get_ram_usage() > 4.0:  # type: ignore
+                    gc.collect()
+
+            else:
+                # File-based path: aggregate DataFrames per chunk to significantly reduce disk I/O overhead
+                chunk_dfs = []
+                for pat_id in chunk_pats:
+                    df = file_retriever(pat_id, config_obj)
+                    if df.empty:
+                        continue
+
+                    any_data_found = True
+
+                    if "Unnamed: 0" in df.columns:
+                        df = df.drop("Unnamed: 0", axis=1)
+
+                    if post_chunk_processor:
+                        df = post_chunk_processor(df)
+
+                    chunk_dfs.append(df)
+
+                if chunk_dfs:
+                    combined_df = pd.concat(chunk_dfs, ignore_index=True)
+                    combined_df = optimize_dtypes(combined_df)
+                    if standard_cols:
+                        # Ensure consistency for append mode
+                        combined_df = combined_df.reindex(columns=standard_cols)
+
+                    yield combined_df
+                    del combined_df
+                    del chunk_dfs
+                    gc.collect()
+
+    # --- Write loop ---
+    n_chunks = (len(all_pat_list) + chunk_size - 1) // chunk_size
+    pbar = tqdm(total=n_chunks, desc=f"Merging {output_filename}", unit="chunk")
+
+    yields_per_chunk = (
+        len(db_sources)
+        if (config_obj.storage_backend == "database" and db_sources)
+        else 1
+    )
+    yield_count = 0
+
+    for df_chunk in get_data_stream():
+        if not df_chunk.empty:
+            df_chunk.to_csv(
+                output_file_path,
+                index=False,
+                mode="a",
+                header=first_write,
+                float_format=float_format,
+            )
+            first_write = False
+
+        yield_count += 1
+        if yield_count % yields_per_chunk == 0:
+            pbar.update(1)
+
+        del df_chunk
+        gc.collect()
+
+    if pbar.n < n_chunks:
+        pbar.update(n_chunks - pbar.n)
+    pbar.close()
+
+    if not any_data_found:
+        logger.warning(
+            f"No data found for {output_filename}. Creating empty file with headers."
+        )
+        pd.DataFrame(columns=standard_cols).to_csv(output_file_path, index=False)
+
+    return output_file_path
 
 
 # Example usage:
@@ -74,237 +206,260 @@ def filter_annot_dataframe(
 def build_merged_epr_mct_annot_df(
     all_pat_list: List[str], config_obj: Any, overwrite: bool = False
 ) -> Optional[str]:
-    """Builds a merged DataFrame of annotations from EPR and MCT sources (file or DB).
+    """Builds a merged DataFrame of annotations from EPR and MCT sources (file or DB)."""
 
-    This function iterates through a list of patient IDs, retrieves their
-    respective annotation data from both EPR and MCT sources (file or database) using the
-    `retrieve_pat_annots_mct_epr` function, and then
-    concatenates it into a single large DataFrame. The final merged DataFrame
-    is saved to a CSV file.
+    # Sanitise all_pat_list using dict.fromkeys (faster and more memory efficient than set for large lists)
+    all_pat_list = list(dict.fromkeys(str(p) for p in all_pat_list if p is not None))
+    gc.collect()
 
-    Args:
-        all_pat_list: A list of patient client ID codes to process.
-        config_obj: A configuration object containing project settings.
-        overwrite: If True, any existing merged file will be
-                                    overwritten. If False, the function will skip
-                                    the process if the file already exists.
-                                    Defaults to False.
+    def annot_processor(df: pd.DataFrame) -> pd.DataFrame:
+        mappings = {
+            "updatetime": [
+                "observationannotation_recordeddtm",
+                "basicobs_entered",
+                "observationdocument_recordeddtm",
+            ],
+            "document_guid": ["basicobs_guid", "observation_guid"],
+            "annotation_description": ["obscatalogmasteritem_displayname"],
+        }
+        for target, sources in mappings.items():
+            if target not in df.columns:
+                df[target] = pd.NA
+            for src in sources:
+                if src not in df.columns:
+                    continue
+                mask = df[target].isna()
+                if not mask.any():
+                    break
+                df.loc[mask, target] = df.loc[mask, src].values
 
-    Returns:
-        Optional[str]: The file path to the merged annotations CSV file.
-            Returns None if no annotation data is found for any patient.
+        if (
+            "observationannotation_recordeddtm" in df.columns
+            and "updatetime" in df.columns
+        ):
+            mask = df["observationannotation_recordeddtm"].isna()
+            if mask.any():
+                df.loc[mask, "observationannotation_recordeddtm"] = df.loc[
+                    mask, "updatetime"
+                ].values
+
+        # Aggressive RAM safety: Drop huge text blobs if they accidentally leaked in
+        text_cols = [
+            "body_analysed",
+            "textualObs",
+            "observation_valuetext_analysed",
+            "text_sample",
+        ]
+        # Preserve text_sample if explicitly requested by configuration
+        if config_obj.include_text_sample_in_annots:
+            text_cols.remove("text_sample")
+
+        found_text = [c for c in text_cols if c in df.columns]
+        if found_text:
+            df.drop(columns=found_text, inplace=True)
+
+        # Drop source columns not in final output schema to save memory
+        allowed_cols = EMPTY_ANNOT_COLS + (
+            ["text_sample"] if config_obj.include_text_sample_in_annots else []
+        )
+        cols_to_drop = [c for c in df.columns if c not in allowed_cols]
+        if cols_to_drop:
+            df.drop(columns=cols_to_drop, inplace=True)
+        df = optimize_dtypes(df)
+        return df
+
+    # Determine columns to fetch from DB: standard cols + any mapping sources
+    # We explicitly exclude the massive text blobs (body_analysed, textualObs, etc.)
+    source_metadata_cols = [
+        "observationannotation_recordeddtm",
+        "basicobs_entered",
+        "observationdocument_recordeddtm",
+        "basicobs_guid",
+        "observation_guid",
+        "obscatalogmasteritem_displayname",
+    ]
+
+    # Conditionally include 'text_sample' based on config_obj
+    conditional_cols = (
+        ["text_sample"] if config_obj.include_text_sample_in_annots else []
+    )
+    fetch_list = list(set(EMPTY_ANNOT_COLS + source_metadata_cols + conditional_cols))
+    output_schema = EMPTY_ANNOT_COLS + conditional_cols
+
+    merged_path = _generic_merged_builder(
+        all_pat_list=all_pat_list,
+        config_obj=config_obj,
+        output_filename="annots_mct_epr.csv",
+        standard_cols=output_schema,
+        db_sources=[
+            ("annotations", "ann_epr_docs", "epr"),
+            ("annotations", "ann_mct_docs", "mct"),
+            ("annotations", "ann_textual_obs", "textual_obs"),
+            ("annotations", "ann_reports", "report"),
+        ],
+        file_retriever=lambda p, c: retrieve_pat_annots_mct_epr(  # type: ignore
+            p,
+            c,
+            # Ensure we don't accidentally load text blobs even in file mode
+            columns_epr=[
+                c
+                for c in fetch_list
+                if c
+                not in ["body_analysed", "textualObs", "observation_valuetext_analysed"]
+            ],
+            columns_mct=[
+                c
+                for c in fetch_list
+                if c
+                not in ["body_analysed", "textualObs", "observation_valuetext_analysed"]
+            ],
+            columns_to=[
+                c
+                for c in fetch_list
+                if c
+                not in ["body_analysed", "textualObs", "observation_valuetext_analysed"]
+            ],
+            columns_report=fetch_list,
+            merge_columns=False,  # Let annot_processor handle merging for the whole chunk
+        ),
+        overwrite=overwrite,
+        post_chunk_processor=annot_processor,
+        chunk_size=500,
+        fetch_cols=fetch_list,
+    )
+    gc.collect()
+    return merged_path
+
+
+def load_merged_epr_mct_annots(
+    config_obj: Any, all_pat_list: List[str], nrows: Optional[int] = None
+) -> Union[str, pd.DataFrame]:
+    """Loads merged EPR and MCT annotations.
+
+    If nrows is specified, returns a DataFrame containing that many rows for inspection.
+    Otherwise, returns the path to the CSV file.
+
+    DO NOT load the entire resulting file into a single DataFrame if it is large.
     """
     directory_path = os.path.join(config_obj.root_path, "merged_batches")
     output_file_path = os.path.join(directory_path, "annots_mct_epr.csv")
 
-    Path(directory_path).mkdir(parents=True, exist_ok=True)
+    # If the user only wants a preview and the file isn't built yet, don't build it.
+    # Just fetch from storage directly for a few patients.
+    if nrows is not None and not os.path.exists(output_file_path):
+        sample_dfs = []
+        current_count = 0
+        # Safely convert to string list to handle potential numeric ID lists
+        all_pat_list = [str(p) for p in all_pat_list]
 
-    if not overwrite and Path(output_file_path).is_file():
-        logger.info(f"File already exists at {output_file_path}. Skipping.")
-        return output_file_path  # Return existing path
-
-    all_annots_dfs = []
-    if config_obj.storage_backend == "database":
-        logger.info("Loading all annotations from database...")
-        for table_name, source_name in [
-            ("ann_epr_docs", "epr"),
-            ("ann_mct_docs", "mct"),
-            ("ann_textual_obs", "textual_obs"),
-            ("ann_reports", "report"),
-        ]:
-            df = get_df_from_db(
-                config_obj, "annotations", table_name, patient_ids=all_pat_list
-            )
+        for pat_id in all_pat_list:
+            df = retrieve_pat_annots_mct_epr(str(pat_id), config_obj)
             if not df.empty:
-                df["annotation_batch_source"] = source_name
-                all_annots_dfs.append(df)
-    else:
-        logger.info(
-            "Reading and collecting all patient annotation batches from files..."
-        )
-        for current_pat_idcode in tqdm(all_pat_list):
-            pat_annots_df = retrieve_pat_annots_mct_epr(current_pat_idcode, config_obj)
-            if "Unnamed: 0" in pat_annots_df.columns:
-                pat_annots_df = pat_annots_df.drop("Unnamed: 0", axis=1)
-            if not pat_annots_df.empty:
-                all_annots_dfs.append(pat_annots_df)
+                sample_dfs.append(df)
+                current_count += len(df)
+            if current_count >= nrows:
+                break
+        if not sample_dfs:
+            return pd.DataFrame()
+        return pd.concat(sample_dfs, ignore_index=True).head(nrows)
 
-    if not all_annots_dfs:
-        logger.warning(
-            "No annotation data found for any patient. Creating empty file with headers."
-        )
-        standard_cols = [
-            "client_idcode",
-            "pretty_name",
-            "cui",
-            "type_ids",
-            "types",
-            "source_value",
-            "detected_name",
-            "acc",
-            "id",
-            "Time_Value",
-            "Time_Confidence",
-            "Presence_Value",
-            "Presence_Confidence",
-            "Subject_Value",
-            "Subject_Confidence",
-            "updatetime",
-            "annotation_batch_source",
-        ]
-        pd.DataFrame(columns=standard_cols).to_csv(output_file_path, index=False)
-        return output_file_path
-
-    logger.info(f"\nConcatenating data for {len(all_pat_list)} patients...")
-    final_merged_df = pd.concat(all_annots_dfs, ignore_index=True)
-
-    logger.info(f"Saving merged file to {output_file_path}...")
-    final_merged_df.to_csv(output_file_path, index=False)
-
-    logger.info("Done.")
-    return output_file_path
-
-
-def load_merged_epr_mct_annots(
-    config_obj: Any, all_pat_list: List[str]
-) -> pd.DataFrame:
-    """Loads merged EPR and MCT annotations.
-
-    This function ensures the merged annotation file exists by calling
-    build_merged_epr_mct_annot_df (which handles DB or file retrieval),
-    and then loads it into a DataFrame.
-    """
     merged_path = build_merged_epr_mct_annot_df(all_pat_list, config_obj)
-    if merged_path and os.path.exists(merged_path):
-        return pd.read_csv(merged_path)
-    return pd.DataFrame()
+    if merged_path and os.path.isfile(merged_path):
+        if nrows is not None:
+            return pd.read_csv(merged_path, nrows=nrows)
+        return merged_path
+    return pd.DataFrame() if nrows is not None else ""
 
 
 def build_merged_bloods(
     all_pat_list: List[str], config_obj: Any, overwrite: bool = False
 ) -> str:
-    """Builds a merged CSV file of bloods data from patient batch files or database.
-
-    This function iterates through a list of patient IDs, reads the corresponding
-    bloods batch data for each patient (from CSV or DB), and appends the data to a single merged
-    CSV file. It handles file existence and overwriting logic.
-
-    Args:
-        all_pat_list: A list of patient client ID codes to process.
-        config_obj: A configuration object containing project settings.
-        overwrite: If True, any existing merged file will be overwritten.
-            If False, data will be appended to the existing file.
-
-    Returns:
-        str: The file path to the merged bloods CSV file.
-    """
-
-    directory_path = os.path.join(config_obj.root_path, "merged_batches")
-    output_file_path = os.path.join(directory_path, "bloods_batches.csv")
-
-    Path(directory_path).mkdir(parents=True, exist_ok=True)
-
-    if not overwrite and Path(output_file_path).is_file():
-        logger.info(f"File already exists at {output_file_path}. Skipping.")
-        return output_file_path
-
-    if config_obj.storage_backend == "database":
-        logger.info("Loading all bloods from raw_data.raw_bloods...")
-        merged_df = get_df_from_db(
-            config_obj, "raw_data", "raw_bloods", patient_ids=all_pat_list
-        )
-    else:
-        all_dfs = []
-        for pat_id in tqdm(all_pat_list, desc="Merging bloods files"):
-            df = retrieve_pat_bloods(pat_id, config_obj)
-            if not df.empty:
-                all_dfs.append(df)
-        if all_dfs:
-            merged_df = pd.concat(all_dfs, ignore_index=True)
-        else:
-            merged_df = pd.DataFrame()
-
-    if merged_df.empty:
-        logger.warning("No bloods data found to merge.")
-        if len(merged_df.columns) == 0:
-            merged_df = pd.DataFrame(
-                columns=[
-                    "client_idcode",
-                    "basicobs_itemname_analysed",
-                    "basicobs_value_numeric",
-                    "basicobs_entered",
-                    "clientvisit_serviceguid",
-                    "updatetime",
-                ]
-            )
-
-    merged_df.to_csv(output_file_path, index=False, float_format="%.6f")
-    logger.info(f"Merged bloods saved to {output_file_path}")
-    return output_file_path
+    """Builds a merged CSV file of bloods data from patient batch files or database."""
+    return _generic_merged_builder(
+        all_pat_list=all_pat_list,
+        config_obj=config_obj,
+        output_filename="bloods_batches.csv",
+        standard_cols=[
+            "client_idcode",
+            "basicobs_itemname_analysed",
+            "basicobs_value_numeric",
+            "basicobs_entered",
+            "clientvisit_serviceguid",
+            "updatetime",
+        ],
+        db_sources=[("raw_data", "raw_bloods", None)],
+        file_retriever=retrieve_pat_bloods,
+        overwrite=overwrite,
+        float_format="%.6f",
+    )
 
 
 def build_merged_epr_mct_doc_df(
     all_pat_list: List[str], config_obj: Any, overwrite: bool = False
 ) -> str:
-    """Builds a merged CSV of documents from EPR and MCT sources (file or DB).
+    """Builds a merged CSV of documents from EPR and MCT sources (file or DB)."""
 
-    This function iterates through a list of patient IDs, retrieves their
-    respective document data from both EPR and MCT sources (file or DB) using the
-    `retrieve_pat_docs_mct_epr` function, and appends the data to a single
-    merged CSV file.
+    def doc_processor(df: pd.DataFrame) -> pd.DataFrame:
+        for col1, col2 in [
+            ("updatetime", "observationdocument_recordeddtm"),
+            ("updatetime", "basicobs_entered"),
+            ("observationdocument_recordeddtm", "updatetime"),
+            ("document_guid", "observation_guid"),
+            ("document_guid", "basicobs_guid"),
+            ("document_description", "obscatalogmasteritem_displayname"),
+            ("document_description", "basicobs_itemname_analysed"),
+            ("body_analysed", "observation_valuetext_analysed"),
+            ("body_analysed", "textualObs"),
+        ]:
+            if col1 in df.columns and col2 in df.columns:
+                df[col1] = df[col1].fillna(df[col2])
+        df = optimize_dtypes(df)
+        return df
 
-    Args:
-        all_pat_list: A list of patient client ID codes to process.
-        config_obj: A configuration object containing project settings.
-        overwrite: If True, any existing merged file will be
-                                    overwritten. If False, data will be appended
-                                    to the existing file. Defaults to False.
+    DOC_STANDARD_COLS = [
+        "client_idcode",
+        "document_guid",
+        "document_description",
+        "body_analysed",
+        "updatetime",
+        "clientvisit_visitidcode",
+        "document_batch_source",
+        "observationdocument_recordeddtm",
+        "obscatalogmasteritem_displayname",
+        "observation_valuetext_analysed",
+        "basicobs_entered",
+        "basicobs_itemname_analysed",
+        "textualObs",
+        "basicobs_guid",
+    ]
 
-    Returns:
-        str: The file path to the merged documents CSV file.
-    """
-    directory_path = os.path.join(config_obj.root_path, "merged_batches")
-    output_file_path = os.path.join(directory_path, "docs_mct_epr.csv")
-
-    Path(directory_path).mkdir(parents=True, exist_ok=True)
-
-    if not overwrite and Path(output_file_path).is_file():
-        logger.info(f"File already exists at {output_file_path}. Skipping.")
-        return output_file_path
-
-    all_docs_dfs = []
-
-    logger.info("Reading and collecting all patient document batches...")
-    for current_pat_idcode in tqdm(all_pat_list):
-        all_docs = retrieve_pat_docs_mct_epr(current_pat_idcode, config_obj)
-        if not all_docs.empty:
-            all_docs_dfs.append(all_docs)
-
-    if not all_docs_dfs:
-        logger.warning(
-            "No document data found for any patient. Creating empty file with headers."
-        )
-        standard_cols = [
-            "client_idcode",
-            "document_guid",
-            "document_description",
-            "body_analysed",
-            "updatetime",
-            "clientvisit_visitidcode",
-            "document_batch_source",
-            "observationdocument_recordeddtm",
-            "obscatalogmasteritem_displayname",
-            "observation_valuetext_analysed",
-            "basicobs_entered",
-            "textualObs",
-        ]
-        pd.DataFrame(columns=standard_cols).to_csv(output_file_path, index=False)
-        return output_file_path
-
-    final_merged_df = pd.concat(all_docs_dfs, ignore_index=True)
-    final_merged_df.to_csv(output_file_path, index=False)
-    logger.info(f"Merged documents saved to {output_file_path}")
-    return output_file_path
+    merged_path = _generic_merged_builder(
+        all_pat_list=all_pat_list,
+        config_obj=config_obj,
+        output_filename="docs_mct_epr.csv",
+        standard_cols=DOC_STANDARD_COLS,
+        db_sources=[
+            ("raw_data", "raw_epr_docs", "epr"),
+            ("raw_data", "raw_mct_docs", "mct"),
+            ("raw_data", "raw_textual_obs", "textual_obs"),
+            ("raw_data", "raw_reports", "report"),
+        ],
+        file_retriever=lambda p, c: retrieve_pat_docs_mct_epr(
+            p,
+            c,
+            columns_epr=DOC_STANDARD_COLS,
+            columns_mct=DOC_STANDARD_COLS,
+            columns_to=DOC_STANDARD_COLS,
+            columns_report=DOC_STANDARD_COLS,
+            merge_columns=False,  # Let doc_processor handle merging for the whole chunk
+        ),
+        overwrite=overwrite,
+        post_chunk_processor=doc_processor,
+        chunk_size=1,  # Documents contain large text; process one patient at a time
+        fetch_cols=DOC_STANDARD_COLS,
+    )
+    gc.collect()
+    return merged_path
 
 
 def retrieve_pat_bloods(client_idcode: str, config_obj: Any) -> pd.DataFrame:
@@ -526,386 +681,240 @@ def join_docs_to_annots(
     return merged_df
 
 
-def get_annots_joined_to_docs(config_obj: Any, pat2vec_obj: Any) -> pd.DataFrame:
+def get_annots_joined_to_docs(
+    config_obj: Any, pat2vec_obj: Any, nrows: Optional[int] = None
+) -> Union[str, pd.DataFrame]:
     """Builds and merges document and annotation dataframes, then joins them.
 
-    This function orchestrates the process of creating comprehensive, patient-level
-    data by first building merged dataframes for both documents (from EPR and MCT
-    sources) and their corresponding annotations. It then joins these two
-    dataframes based on a common document identifier.
-
-    Args:
-        config_obj: A configuration object containing project settings,
-            including `proj_name` and paths to data batches.
-        pat2vec_obj: The main pat2vec object, which contains the
-                              `all_patient_list` and other necessary components.
-
-    Returns:
-        A DataFrame containing the annotations joined with their
-                      corresponding document information.
+    Returns the path to the joined CSV file, or a sampled DataFrame if nrows is set.
+    This function processes data in small patient-level batches to avoid RAM spikes.
     """
 
     pre_path = os.path.join(config_obj.root_path, config_obj.proj_name)
+    filename = "annots_joined_docs_full.csv"
+    output_path = os.path.join(pre_path, "merged_batches", filename)
 
-    build_merged_epr_mct_doc_df(pat2vec_obj.all_patient_list, config_obj)
+    logger.info("Building joined annotations and documents incrementally...")
 
-    build_merged_epr_mct_annot_df(pat2vec_obj.all_patient_list, config_obj)
+    # Internal retriever that performs the join per patient
+    def joined_retriever(pat_id: str, cfg: Any) -> pd.DataFrame:
+        # Restrict columns during join to avoid loading unused text into RAM
+        annots = retrieve_pat_annots_mct_epr(
+            pat_id,
+            cfg,
+            columns_epr=EMPTY_ANNOT_COLS,
+            columns_mct=EMPTY_ANNOT_COLS,
+            columns_to=EMPTY_ANNOT_COLS,
+            columns_report=EMPTY_ANNOT_COLS,
+        )
+        if annots.empty:
+            return pd.DataFrame()
 
-    annots_df = pd.read_csv(
-        os.path.join(pre_path, "merged_batches", "annots_mct_epr.csv")
+        docs = retrieve_pat_docs_mct_epr(
+            pat_id,
+            cfg,
+            columns_epr=DOC_STANDARD_COLS,
+            columns_mct=DOC_STANDARD_COLS,
+            columns_to=DOC_STANDARD_COLS,
+            columns_report=DOC_STANDARD_COLS,
+        )
+        if docs.empty:
+            return annots
+
+        return join_docs_to_annots(annots, docs, drop_duplicates=True)
+
+    # Union of standard columns for the final joined output
+    DOC_STANDARD_COLS = [
+        "client_idcode",
+        "document_guid",
+        "document_description",
+        "body_analysed",
+        "updatetime",
+        "clientvisit_visitidcode",
+        "document_batch_source",
+        "observationdocument_recordeddtm",
+        "obscatalogmasteritem_displayname",
+        "observation_valuetext_analysed",
+        "basicobs_entered",
+        "basicobs_itemname_analysed",
+        "textualObs",
+        "basicobs_guid",
+    ]
+    JOINED_COLS = list(dict.fromkeys(EMPTY_ANNOT_COLS + DOC_STANDARD_COLS))
+
+    # We use _generic_merged_builder which handles the chunked appending to disk.
+    # No DB sources needed here because retrieve_pat_* methods handle DB logic internally.
+    final_path = _generic_merged_builder(
+        all_pat_list=pat2vec_obj.all_patient_list,
+        config_obj=config_obj,
+        output_filename=filename,
+        standard_cols=JOINED_COLS,
+        db_sources=[],
+        file_retriever=joined_retriever,
+        overwrite=True,
+        chunk_size=1,  # One patient at a time to keep RAM flat
     )
 
-    docs_temp = pd.read_csv(
-        os.path.join(pre_path, "merged_batches", "docs_mct_epr.csv")
-    )
+    logger.info(f"Join complete. Data saved to {final_path}")
+    if nrows is not None:
+        return pd.read_csv(final_path, nrows=nrows)
 
-    res = join_docs_to_annots(annots_df, docs_temp, drop_duplicates=True)
-
-    return res
+    return final_path
 
 
 def merge_demographics_csv(
     all_pat_list: List[str], config_obj: Any, overwrite: bool = False
 ) -> str:
-    """Merge all demographics data (files or DB) that match the patient list.
-
-    Args:
-        all_pat_list: List of patient IDs to include.
-        config_obj: Configuration object containing project settings.
-        overwrite: If True, overwrite the existing output file.
-
-    Returns:
-        str: File path to the merged output CSV.
-    """
-    directory_path = os.path.join(config_obj.root_path, "merged_batches")
-    output_file_path = os.path.join(directory_path, "merged_demographics.csv")
-
-    Path(directory_path).mkdir(parents=True, exist_ok=True)
-
-    if not overwrite and Path(output_file_path).is_file():
-        logger.info(f"Output file already exists at {output_file_path}. Skipping.")
-        return output_file_path
-
-    if config_obj.storage_backend == "database":
-        logger.info("Loading all demographics from raw_data.raw_demographics...")
-        merged_df = get_df_from_db(
-            config_obj, "raw_data", "raw_demographics", patient_ids=all_pat_list
-        )
-    else:
-        demographics_folder = config_obj.pre_demo_batch_path
-        all_dfs = []
-        for pat_id in tqdm(all_pat_list, desc="Merging demographics files"):
-            file_path = os.path.join(demographics_folder, f"{pat_id}.csv")
-            if os.path.isfile(file_path):
-                all_dfs.append(pd.read_csv(file_path))
-            else:
-                logger.warning(f"Warning: File {file_path} not found.")
-        merged_df = pd.concat(all_dfs, ignore_index=True) if all_dfs else pd.DataFrame()
-
-    if merged_df.empty:
-        logger.warning("No demographics data found to merge.")
-        if len(merged_df.columns) == 0:
-            merged_df = pd.DataFrame(
-                columns=[
-                    "client_idcode",
-                    "client_firstname",
-                    "client_lastname",
-                    "client_dob",
-                    "client_gendercode",
-                    "client_racecode",
-                    "client_deceaseddtm",
-                    "updatetime",
-                ]
-            )
-
-    merged_df.to_csv(output_file_path, index=False)
-    logger.info(f"Merged CSV saved to {output_file_path}")
-    return output_file_path
+    """Merge all demographics data (files or DB) that match the patient list."""
+    return _generic_merged_builder(
+        all_pat_list=all_pat_list,
+        config_obj=config_obj,
+        output_filename="merged_demographics.csv",
+        standard_cols=[
+            "client_idcode",
+            "client_firstname",
+            "client_lastname",
+            "client_dob",
+            "client_gendercode",
+            "client_racecode",
+            "client_deceaseddtm",
+            "updatetime",
+        ],
+        db_sources=[("raw_data", "raw_demographics", None)],
+        file_retriever=lambda p, c: (
+            pd.read_csv(os.path.join(c.pre_demo_batch_path, f"{p}.csv"))
+            if os.path.isfile(os.path.join(c.pre_demo_batch_path, f"{p}.csv"))
+            else pd.DataFrame()
+        ),
+        overwrite=overwrite,
+    )
 
 
 def merge_bmi_csv(
     all_pat_list: List[str], config_obj: Any, overwrite: bool = False
 ) -> str:
-    """Merge all BMI data (files or DB) that match the patient list.
-
-    Args:
-        all_pat_list: List of patient IDs to include.
-        config_obj: Configuration object containing project settings.
-        overwrite: If True, overwrite the existing output file.
-
-    Returns:
-        str: File path to the merged output CSV.
-    """
-    directory_path = os.path.join(config_obj.root_path, "merged_batches")
-    output_file_path = os.path.join(directory_path, "merged_bmi.csv")
-
-    Path(directory_path).mkdir(parents=True, exist_ok=True)
-
-    if not overwrite and Path(output_file_path).is_file():
-        logger.info(f"Output file already exists at {output_file_path}. Skipping.")
-        return output_file_path
-
-    if config_obj.storage_backend == "database":
-        logger.info("Loading all BMI data from raw_data.raw_bmi...")
-        merged_df = get_df_from_db(
-            config_obj, "raw_data", "raw_bmi", patient_ids=all_pat_list
-        )
-    else:
-        bmi_folder = config_obj.pre_bmi_batch_path
-        all_dfs = []
-        for pat_id in tqdm(all_pat_list, desc="Merging BMI files"):
-            file_path = os.path.join(bmi_folder, f"{pat_id}.csv")
-            if os.path.isfile(file_path):
-                all_dfs.append(pd.read_csv(file_path))
-            else:
-                logger.warning(f"File {file_path} not found.")
-        merged_df = pd.concat(all_dfs, ignore_index=True) if all_dfs else pd.DataFrame()
-
-    if merged_df.empty:
-        logger.warning("No BMI data found to merge.")
-        if len(merged_df.columns) == 0:
-            merged_df = pd.DataFrame(
-                columns=[
-                    "observation_guid",
-                    "client_idcode",
-                    "obscatalogmasteritem_displayname",
-                    "observation_valuetext_analysed",
-                    "observationdocument_recordeddtm",
-                    "clientvisit_visitidcode",
-                ]
-            )
-
-    merged_df.to_csv(output_file_path, index=False)
-    logger.info(f"Merged CSV saved to {output_file_path}")
-    return output_file_path
+    """Merge all BMI data (files or DB) that match the patient list."""
+    return _generic_merged_builder(
+        all_pat_list=all_pat_list,
+        config_obj=config_obj,
+        output_filename="merged_bmi.csv",
+        standard_cols=[
+            "observation_guid",
+            "client_idcode",
+            "obscatalogmasteritem_displayname",
+            "observation_valuetext_analysed",
+            "observationdocument_recordeddtm",
+            "clientvisit_visitidcode",
+        ],
+        db_sources=[("raw_data", "raw_bmi", None)],
+        file_retriever=lambda p, c: (
+            pd.read_csv(os.path.join(c.pre_bmi_batch_path, f"{p}.csv"))
+            if os.path.isfile(os.path.join(c.pre_bmi_batch_path, f"{p}.csv"))
+            else pd.DataFrame()
+        ),
+        overwrite=overwrite,
+    )
 
 
 def merge_news_csv(
     all_pat_list: List[str], config_obj: Any, overwrite: bool = False
 ) -> str:
-    """Merge all NEWS data (files or DB) that match the patient list.
-
-    Args:
-        all_pat_list: List of patient IDs to include.
-        config_obj: Configuration object containing project settings.
-        overwrite: If True, overwrite the existing output file.
-
-    Returns:
-        str: File path to the merged output CSV.
-    """
-    directory_path = os.path.join(config_obj.root_path, "merged_batches")
-    output_file_path = os.path.join(directory_path, "merged_news.csv")
-
-    Path(directory_path).mkdir(parents=True, exist_ok=True)
-
-    if not overwrite and Path(output_file_path).is_file():
-        logger.info(f"Output file already exists at {output_file_path}. Skipping.")
-        return output_file_path
-
-    if config_obj.storage_backend == "database":
-        logger.info("Loading all NEWS data from raw_data.raw_news...")
-        merged_df = get_df_from_db(
-            config_obj, "raw_data", "raw_news", patient_ids=all_pat_list
-        )
-    else:
-        news_folder = config_obj.pre_news_batch_path
-        all_dfs = []
-        for pat_id in tqdm(all_pat_list, desc="Merging NEWS files"):
-            file_path = os.path.join(news_folder, f"{pat_id}.csv")
-            if os.path.isfile(file_path):
-                all_dfs.append(pd.read_csv(file_path))
-            else:
-                logger.warning(f"File {file_path} not found.")
-        merged_df = pd.concat(all_dfs, ignore_index=True) if all_dfs else pd.DataFrame()
-
-    if merged_df.empty:
-        logger.warning("No NEWS data found to merge.")
-        if len(merged_df.columns) == 0:
-            merged_df = pd.DataFrame(
-                columns=[
-                    "observation_guid",
-                    "client_idcode",
-                    "obscatalogmasteritem_displayname",
-                    "observation_valuetext_analysed",
-                    "observationdocument_recordeddtm",
-                    "clientvisit_visitidcode",
-                ]
-            )
-
-    merged_df.to_csv(output_file_path, index=False)
-    logger.info(f"Merged CSV saved to {output_file_path}")
-    return output_file_path
+    """Merge all NEWS data (files or DB) that match the patient list."""
+    return _generic_merged_builder(
+        all_pat_list=all_pat_list,
+        config_obj=config_obj,
+        output_filename="merged_news.csv",
+        standard_cols=[
+            "observation_guid",
+            "client_idcode",
+            "obscatalogmasteritem_displayname",
+            "observation_valuetext_analysed",
+            "observationdocument_recordeddtm",
+            "clientvisit_visitidcode",
+        ],
+        db_sources=[("raw_data", "raw_news", None)],
+        file_retriever=lambda p, c: (
+            pd.read_csv(os.path.join(c.pre_news_batch_path, f"{p}.csv"))
+            if os.path.isfile(os.path.join(c.pre_news_batch_path, f"{p}.csv"))
+            else pd.DataFrame()
+        ),
+        overwrite=overwrite,
+    )
 
 
 def merge_diagnostics_csv(
     all_pat_list: List[str], config_obj: Any, overwrite: bool = False
 ) -> str:
-    """Merge all diagnostics data (files or DB) that match the patient list.
-
-    Args:
-        all_pat_list: List of patient IDs to include.
-        config_obj: Configuration object containing project settings.
-        overwrite: If True, overwrite the existing output file.
-
-    Returns:
-        str: File path to the merged output CSV.
-    """
-    directory_path = os.path.join(config_obj.root_path, "merged_batches")
-    output_file_path = os.path.join(directory_path, "merged_diagnostics.csv")
-
-    Path(directory_path).mkdir(parents=True, exist_ok=True)
-
-    if not overwrite and Path(output_file_path).is_file():
-        logger.info(f"Output file already exists at {output_file_path}. Skipping.")
-        return output_file_path
-
-    if config_obj.storage_backend == "database":
-        logger.info("Loading all diagnostics from raw_data.raw_diagnostics...")
-        merged_df = get_df_from_db(
-            config_obj, "raw_data", "raw_diagnostics", patient_ids=all_pat_list
-        )
-    else:
-        diagnostics_folder = config_obj.pre_diagnostics_batch_path
-        all_dfs = []
-        for pat_id in tqdm(all_pat_list, desc="Merging diagnostics files"):
-            file_path = os.path.join(diagnostics_folder, f"{pat_id}.csv")
-            if os.path.isfile(file_path):
-                all_dfs.append(pd.read_csv(file_path))
-            else:
-                logger.warning(f"File {file_path} not found.")
-        merged_df = pd.concat(all_dfs, ignore_index=True) if all_dfs else pd.DataFrame()
-
-    if merged_df.empty:
-        logger.warning("No diagnostics data found to merge.")
-        if len(merged_df.columns) == 0:
-            merged_df = pd.DataFrame(
-                columns=[
-                    "client_idcode",
-                    "order_guid",
-                    "order_name",
-                    "order_summaryline",
-                    "order_holdreasontext",
-                    "order_entered",
-                    "clientvisit_visitidcode",
-                    "order_performeddtm",
-                    "order_createdwhen",
-                ]
-            )
-
-    merged_df.to_csv(output_file_path, index=False)
-    logger.info(f"Merged CSV saved to {output_file_path}")
-    return output_file_path
+    """Merge all diagnostics data (files or DB) that match the patient list."""
+    return _generic_merged_builder(
+        all_pat_list=all_pat_list,
+        config_obj=config_obj,
+        output_filename="merged_diagnostics.csv",
+        standard_cols=[
+            "client_idcode",
+            "order_guid",
+            "order_name",
+            "order_summaryline",
+            "order_holdreasontext",
+            "order_entered",
+            "clientvisit_visitidcode",
+            "order_performeddtm",
+            "order_createdwhen",
+        ],
+        db_sources=[("raw_data", "raw_diagnostics", None)],
+        file_retriever=lambda p, c: (
+            pd.read_csv(os.path.join(c.pre_diagnostics_batch_path, f"{p}.csv"))
+            if os.path.isfile(os.path.join(c.pre_diagnostics_batch_path, f"{p}.csv"))
+            else pd.DataFrame()
+        ),
+        overwrite=overwrite,
+    )
 
 
 def merge_drugs_csv(
     all_pat_list: List[str], config_obj: Any, overwrite: bool = False
 ) -> str:
-    """Merge all drugs data (files or DB) that match the patient list.
-
-    Args:
-        all_pat_list: List of patient IDs to include.
-        config_obj: Configuration object containing project settings.
-        overwrite: If True, overwrite the existing output file.
-
-    Returns:
-        str: File path to the merged output CSV.
-    """
-    # Define the directory for saving the merged file
-    directory_path = os.path.join(config_obj.root_path, "merged_batches")
-    output_file_path = os.path.join(directory_path, "merged_drugs.csv")
-
-    Path(directory_path).mkdir(parents=True, exist_ok=True)
-
-    if not overwrite and Path(output_file_path).is_file():
-        logger.info(f"Output file already exists at {output_file_path}. Skipping.")
-        return output_file_path
-
-    if config_obj.storage_backend == "database":
-        logger.info("Loading all drugs from raw_data.raw_drugs...")
-        merged_df = get_df_from_db(
-            config_obj, "raw_data", "raw_drugs", patient_ids=all_pat_list
-        )
-    else:
-        drugs_folder = config_obj.pre_drugs_batch_path
-        all_dfs = []
-        for pat_id in tqdm(all_pat_list, desc="Merging drugs files"):
-            file_path = os.path.join(drugs_folder, f"{pat_id}.csv")
-            if os.path.isfile(file_path):
-                all_dfs.append(pd.read_csv(file_path))
-            else:
-                logger.warning(f"File {file_path} not found.")
-        merged_df = pd.concat(all_dfs, ignore_index=True) if all_dfs else pd.DataFrame()
-
-    if merged_df.empty:
-        logger.warning("No drugs data found to merge.")
-        if len(merged_df.columns) == 0:
-            merged_df = pd.DataFrame(
-                columns=[
-                    "client_idcode",
-                    "order_guid",
-                    "order_name",
-                    "order_summaryline",
-                    "order_holdreasontext",
-                    "order_entered",
-                    "clientvisit_visitidcode",
-                    "order_performeddtm",
-                    "order_createdwhen",
-                ]
-            )
-
-    merged_df.to_csv(output_file_path, index=False)
-    logger.info(f"Merged CSV saved to {output_file_path}")
-
-    return output_file_path
+    """Merge all drugs data (files or DB) that match the patient list."""
+    return _generic_merged_builder(
+        all_pat_list=all_pat_list,
+        config_obj=config_obj,
+        output_filename="merged_drugs.csv",
+        standard_cols=[
+            "client_idcode",
+            "order_guid",
+            "order_name",
+            "order_summaryline",
+            "order_holdreasontext",
+            "order_entered",
+            "clientvisit_visitidcode",
+            "order_performeddtm",
+            "order_createdwhen",
+        ],
+        db_sources=[("raw_data", "raw_drugs", None)],
+        file_retriever=lambda p, c: (
+            pd.read_csv(os.path.join(c.pre_drugs_batch_path, f"{p}.csv"))
+            if os.path.isfile(os.path.join(c.pre_drugs_batch_path, f"{p}.csv"))
+            else pd.DataFrame()
+        ),
+        overwrite=overwrite,
+    )
 
 
 def merge_appointments_csv(
     all_pat_list: List[str], config_obj: Any, overwrite: bool = False
 ) -> str:
-    """Merge all appointments data (files or DB) that match the patient list.
-
-    Args:
-        all_pat_list: List of patient IDs to include.
-        config_obj: Configuration object containing project settings.
-        overwrite: If True, overwrite the existing output file.
-
-    Returns:
-        str: File path to the merged output CSV.
-    """
-    # Define the directory for saving the merged file
-    directory_path = os.path.join(config_obj.root_path, "merged_batches")
-    output_file_path = os.path.join(directory_path, "merged_appointments.csv")
-
-    Path(directory_path).mkdir(parents=True, exist_ok=True)
-
-    if not overwrite and Path(output_file_path).is_file():
-        logger.info(f"Output file already exists at {output_file_path}. Skipping.")
-        return output_file_path
-
-    if config_obj.storage_backend == "database":
-        logger.info("Loading all appointments from raw_data.raw_appointments...")
-        merged_df = get_df_from_db(
-            config_obj,
-            "raw_data",
-            "raw_appointments",
-            patient_ids=all_pat_list,
-            patient_id_column="HospitalID",
-        )
-    else:
-        appointments_folder = config_obj.pre_appointments_batch_path
-        all_dfs = []
-        for pat_id in tqdm(all_pat_list, desc="Merging appointments files"):
-            file_path = os.path.join(appointments_folder, f"{pat_id}.csv")
-            if os.path.isfile(file_path):
-                all_dfs.append(pd.read_csv(file_path))
-            else:
-                logger.warning(f"File {file_path} not found.")
-        merged_df = pd.concat(all_dfs, ignore_index=True) if all_dfs else pd.DataFrame()
-
-    if merged_df.empty:
-        logger.warning("No appointments data found to merge.")
-
-    merged_df.to_csv(output_file_path, index=False)
-    logger.info(f"Merged CSV saved to {output_file_path}")
-
-    return output_file_path
+    """Merge all appointments data (files or DB) that match the patient list."""
+    return _generic_merged_builder(
+        all_pat_list=all_pat_list,
+        config_obj=config_obj,
+        output_filename="merged_appointments.csv",
+        standard_cols=[],  # Appointments doesn't have a hardcoded empty header list in existing code
+        db_sources=[("raw_data", "raw_appointments", None)],
+        file_retriever=lambda p, c: (
+            pd.read_csv(os.path.join(c.pre_appointments_batch_path, f"{p}.csv"))
+            if os.path.isfile(os.path.join(c.pre_appointments_batch_path, f"{p}.csv"))
+            else pd.DataFrame()
+        ),
+        overwrite=overwrite,
+        patient_id_col="HospitalID",
+    )

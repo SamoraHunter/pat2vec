@@ -13,6 +13,7 @@ def json_to_dataframe(
     text_column: str = "body_analysed",
     time_column: str = "updatetime",
     guid_column: str = "document_guid",
+    include_text_sample: bool = False,
 ) -> pd.DataFrame:
     """Converts a MedCAT JSON entity dictionary to a pandas DataFrame.
 
@@ -34,6 +35,7 @@ def json_to_dataframe(
         text_column: The name of the column in `doc` containing the text.
         time_column: The name of the column in `doc` containing the timestamp.
         guid_column: The name of the column in `doc` containing the document GUID.
+        include_text_sample: If True, includes a text sample around the annotation.
 
     Returns:
         A pandas DataFrame where each row is a single annotation, or an empty
@@ -106,7 +108,9 @@ def json_to_dataframe(
 
             virtual_end = min(document_len, end + window)
 
-            text_sample = mapped_annot_doc_entity[virtual_start:virtual_end]
+            text_sample_value = np.nan
+            if include_text_sample:
+                text_sample_value = mapped_annot_doc_entity[virtual_start:virtual_end]
 
             updatetime = doc[time_column]
 
@@ -146,7 +150,7 @@ def json_to_dataframe(
                     parsed_meta_anns["Presence_Confidence"],
                     parsed_meta_anns["Subject_Value"],
                     parsed_meta_anns["Subject_Confidence"],
-                    text_sample,
+                    text_sample_value,
                     full_doc_value,
                     document_guid_value,
                 ]

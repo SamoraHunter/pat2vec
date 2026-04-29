@@ -2,10 +2,25 @@ import re
 import warnings
 from typing import Any, List, Optional
 import os
+import psutil
 import logging
+import gc  # Import gc module explicitly
+
+logger = logging.getLogger(__name__)  # Ensure logger is defined at module level
 import pandas as pd
+
+# REMOVED: from pat2vec.util.post_processing_build_methods import get_ram_usage # Import get_ram_usage
 from sqlalchemy import text, inspect
 from sqlalchemy.schema import CreateSchema
+
+
+# Moved from pat2vec.util.post_processing_build_methods to break circular import
+def get_ram_usage():
+    """Returns current RAM usage in GB."""
+    return psutil.Process(os.getpid()).memory_info().rss / (1024**3)
+
+
+HELPER_FUNCTIONS_VERSION = "2.4-logging-cleanup"  # Logging cleanup
 from tqdm import tqdm
 import json
 
@@ -472,7 +487,7 @@ def get_df_from_db(
     try:
         engine = config_obj.db_engine
         if not engine:
-            logging.error("Database engine not initialized in config_obj.")
+            logger.error("Database engine not initialized in config_obj.")
             return pd.DataFrame()
 
         with engine.connect() as connection:
@@ -506,18 +521,32 @@ def get_df_from_db(
                 else:
                     full_table_name = f'"{schema}"."{table}"'
 
-                # Construct column selection
-                cols_str = ", ".join([f'"{c}"' for c in columns]) if columns else "*"
+                # Defensive check: Ensure table exists before querying
+                table_to_check = (
+                    f"{schema}_{table}" if engine.name == "sqlite" else table
+                )
+                schema_to_check = None if engine.name == "sqlite" else schema
+                inspector = inspect(engine)
+                if not inspector.has_table(table_to_check, schema=schema_to_check):
+                    return pd.DataFrame()
 
-                # Parameterized IN clause (safe against injection)
+                if not columns:  # If no columns are specified, it's a full column fetch
+                    cols_str = "*"
+                else:
+                    # Use provided columns as-is. The builder-level fetch_list already
+                    # excludes text for annotations, but includes it for documents.
+                    cols_str = ", ".join([f'"{c}"' for c in columns])
+
                 # Explicitly cast to str and strip to handle numpy types or whitespace issues
                 params = {f"p{i}": str(pid) for i, pid in enumerate(patient_ids)}
                 placeholders = ", ".join([f":p{i}" for i in range(len(patient_ids))])
 
                 query_str = f'SELECT {cols_str} FROM {full_table_name} WHERE "{patient_id_column}" IN ({placeholders})'
-                logging.debug(f"Executing DB Query: {query_str} | Params: {params}")
                 query = text(query_str)
+                # Fetch data for the whole chunk of patients at once.
+                # Since builders already restrict columns and chunk IDs, this is efficient.
                 df = pd.read_sql(query, connection, params=params)
+                gc.collect()
 
             # Legacy path: Full table read (fallback if no IDs provided)
             else:
@@ -537,7 +566,7 @@ def get_df_from_db(
                 # Only unpack non-null rows
                 json_mask = df["features_json"].notna()
                 if json_mask.any():
-                    logging.debug(
+                    logger.debug(
                         "Unpacking 'features_json' column in get_df_from_db..."
                     )
                     unpacked = pd.json_normalize(
@@ -553,9 +582,9 @@ def get_df_from_db(
     except Exception as e:
         # Log debug if table missing (common in some flows), error otherwise
         if "no such table" in str(e).lower() or "does not exist" in str(e).lower():
-            logging.debug(f"Table {schema}.{table} not found or error: {e}")
+            logger.debug(f"Table {schema}.{table} not found or error: {e}")
         else:
-            logging.error(f"Error reading from DB table {schema}.{table}: {e}")
+            logger.error(f"Error reading from DB table {schema}.{table}: {e}")
         return pd.DataFrame()
 
 

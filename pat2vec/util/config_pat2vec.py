@@ -98,6 +98,7 @@ class config_class:
         db_connection_string: Optional[str] = None,
         check_patient_existence: bool = True,
         testing_elastic: bool = False,
+        include_text_sample_in_annots: bool = False,
     ) -> None:
         """Initializes the configuration object for the pat2vec pipeline.
         This class holds all configuration parameters for a pat2vec run, including
@@ -247,6 +248,9 @@ class config_class:
         #: If `True`, tests run against a configured Elasticsearch instance.
         self.testing_elastic = testing_elastic
 
+        #: If `True`, includes the 'text_sample' column in annotation outputs.
+        self.include_text_sample_in_annots = include_text_sample_in_annots
+
         #: The root directory for the project.
         self.root_path = root_path
         if self.root_path is None:
@@ -257,6 +261,8 @@ class config_class:
             if not self.db_connection_string:
                 if testing:
                     logger.warning(
+                        # This warning is now removed in helper_functions.py
+                        # but keeping it here for context.
                         "`storage_backend` is 'database' but no `db_connection_string` provided during testing. Using in-memory SQLite."
                     )
                     self.db_connection_string = "sqlite:///:memory:"
@@ -757,6 +763,9 @@ class config_class:
         self.sample_treatment_docs = sample_treatment_docs
 
         if self.testing:
+            # This warning is now removed in helper_functions.py
+            # but keeping it here for context.
+
             logger.info("Setting test options")
 
             # If in testing mode and no specific test data path is provided,

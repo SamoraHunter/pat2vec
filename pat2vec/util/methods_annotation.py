@@ -111,6 +111,7 @@ def multi_annots_to_df_textual_obs(
     t: Any,
     text_column: str = "textualObs",
     time_column: str = "basicobs_entered",
+    include_text_sample: bool = False,
     guid_column: str = "basicobs_guid",
 ) -> pd.DataFrame:
     """Converts MedCAT annotations for textual observations to a DataFrame and saves it (file or DB).
@@ -128,6 +129,7 @@ def multi_annots_to_df_textual_obs(
         text_column: The name of the text column in `pat_batch`.
         time_column: The name of the timestamp column in `pat_batch`.
         guid_column: The name of the document identifier column in `pat_batch`.
+        include_text_sample: If True, includes a text sample around the annotation.
 
     Returns:
         pd.DataFrame: The annotated dataframe.
@@ -193,6 +195,7 @@ def multi_annots_to_df_textual_obs(
             text_column=text_column,
             time_column=time_column,
             guid_column=guid_column,
+            include_text_sample=include_text_sample,
         )
 
         # drop nan rows
@@ -243,6 +246,7 @@ def multi_annots_to_df_reports(
     t: Any,
     text_column: str = "body_analysed",
     time_column: str = "updatetime",
+    include_text_sample: bool = False,
     guid_column: str = "basicobs_guid",
 ) -> pd.DataFrame:
     """Converts MedCAT annotations for reports to a DataFrame and saves it (file or DB).
@@ -260,6 +264,7 @@ def multi_annots_to_df_reports(
         text_column: The name of the text column in `pat_batch`.
         time_column: The name of the timestamp column in `pat_batch`.
         guid_column: The name of the document identifier column in `pat_batch`.
+        include_text_sample: If True, includes a text sample around the annotation.
 
     Returns:
         pd.DataFrame: The annotated dataframe.
@@ -325,6 +330,7 @@ def multi_annots_to_df_reports(
             text_column=text_column,
             time_column=time_column,
             guid_column=guid_column,
+            include_text_sample=include_text_sample,
         )
 
         # drop nan rows
@@ -375,6 +381,7 @@ def multi_annots_to_df_mct(
     t: Any,
     text_column: str = "observation_valuetext_analysed",
     time_column: str = "observationdocument_recordeddtm",
+    include_text_sample: bool = False,
     guid_column: str = "observation_guid",
 ) -> pd.DataFrame:
     """Converts MedCAT annotations for MCT documents to a DataFrame and saves it (file or DB).
@@ -392,6 +399,7 @@ def multi_annots_to_df_mct(
         text_column: The name of the text column in `pat_batch`.
         time_column: The name of the timestamp column in `pat_batch`.
         guid_column: The name of the document identifier column in `pat_batch`.
+        include_text_sample: If True, includes a text sample around the annotation.
 
     Returns:
         pd.DataFrame: The annotated dataframe.
@@ -457,6 +465,7 @@ def multi_annots_to_df_mct(
             text_column=text_column,
             time_column=time_column,
             guid_column=guid_column,
+            include_text_sample=include_text_sample,
         )
 
         # drop nan rows
