@@ -772,7 +772,21 @@ class config_class:
             # set it to the default path. This allows overriding it if needed.
             if self.test_data_path is None:
                 if not self.testing_elastic:
-                    self.test_data_path = "test_files/treatment_docs.csv"
+                    # Resolve path relative to the package installation to support installed environments
+                    # Current file is in pat2vec/util/, moving up to pat2vec/
+                    _pkg_dir = os.path.dirname(
+                        os.path.dirname(os.path.abspath(__file__))
+                    )
+                    _internal_test_path = os.path.join(
+                        _pkg_dir, "tests", "test_files", "treatment_docs.csv"
+                    )
+
+                    if os.path.exists(_internal_test_path):
+                        self.test_data_path = _internal_test_path
+                    else:
+                        # Fallback for source checkouts where test_files might be at repository root
+                        self.test_data_path = "test_files/treatment_docs.csv"
+
                     logger.info(f"Defaulting test_data_path to: {self.test_data_path}")
                 else:
                     self.test_data_path = os.path.join(
