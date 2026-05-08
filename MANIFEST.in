@@ -1,3 +1,7 @@
 include README.md
 include LICENSE
+include CHANGELOG.md
 recursive-include pat2vec/py.typed
+recursive-include pat2vec/tests/test_files *
+recursive-include notebooks *.ipynb
+include pat2vec/util/credentials.py

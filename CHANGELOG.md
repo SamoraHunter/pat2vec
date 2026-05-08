@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.3.2] - 2024-05-24
+
+### Packaging & Distribution
+- **Asset Bundling**: Enabled `include-package-data` to ensure Jupyter notebooks and test files are included in the distributed Wheel and Source distributions.
+- **Path Resolution**: Refactored `config_class` to use absolute path resolution for default test files, fixing "File Not Found" errors when running the package from a site-packages installation.
+
+### Improvements
+- **Notebooks**: Included example notebooks in the package for easier user onboarding.
+
 ## [0.3.1] - 2024-05-23
 
 ### CI/CD & Automation
