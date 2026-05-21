@@ -229,7 +229,7 @@ def produce_filtered_annotation_dataframe(
                 )
                 return pd.DataFrame(columns=EMPTY_ANNOT_COLS)
 
-        for i in tqdm(range(len(pat_list))):
+        for i in tqdm(range(len(pat_list)), desc="Loading patient annotation batches"):
             current_pat_client_idcode = str(pat_list[i])
 
             path_attr = (

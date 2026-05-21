@@ -690,9 +690,7 @@ def get_annots_joined_to_docs(
     This function processes data in small patient-level batches to avoid RAM spikes.
     """
 
-    pre_path = os.path.join(config_obj.root_path, config_obj.proj_name)
     filename = "annots_joined_docs_full.csv"
-    output_path = os.path.join(pre_path, "merged_batches", filename)
 
     logger.info("Building joined annotations and documents incrementally...")
 
