@@ -47,10 +47,12 @@ def filter_dataframe_by_timestamp(
     # We use format="ISO8601" where possible as it is significantly more robust
     # for mixed naive/aware strings and avoids the expensive element-wise inference fallback.
     try:
+        # Try strict ISO8601 first. We omit errors="coerce" here so that non-ISO
+        # strings trigger the ValueError fallback instead of being silently turned to NaT.
         df_copy[timestamp_string] = pd.to_datetime(
-            df_copy[timestamp_string], utc=True, errors="coerce", format="ISO8601"
+            df_copy[timestamp_string], utc=True, format="ISO8601"
         )
-    except ValueError:
+    except (ValueError, TypeError):
         df_copy[timestamp_string] = pd.to_datetime(
             df_copy[timestamp_string], utc=True, errors="coerce"
         )
