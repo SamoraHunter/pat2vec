@@ -74,6 +74,8 @@ __pycache__/
 *.o
 *.out
 
+*.kilo
+
 # Distribution / packaging
 .Python
 build/

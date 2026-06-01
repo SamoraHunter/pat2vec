@@ -19,13 +19,13 @@ runs:
       shell: bash
       run: |
         ON_CORP=false
-        if ping -c 1 dh-cap02 &> /dev/null; then
-          echo "✅ Proxy server 'dh-cap02' is available. Configuring environment variables."
-          echo "http_proxy=http://dh-cap02:8008" >> $GITHUB_ENV
-          echo "https_proxy=http://dh-cap02:8008" >> $GITHUB_ENV
+        if ping -c 1 "$INTERNAL_PROXY_HOST" &> /dev/null; then
+          echo "✅ Proxy server '$INTERNAL_PROXY_HOST' is available. Configuring environment variables."
+          echo "http_proxy=http://$INTERNAL_PROXY_HOST:8008" >> $GITHUB_ENV
+          echo "https_proxy=http://$INTERNAL_PROXY_HOST:8008" >> $GITHUB_ENV
           ON_CORP=true
 
-          NO_PROXY_LIST="localhost,127.0.0.1,kch-cap.kingsch.nhs.uk,github.com,*.blob.core.windows.net,${ACTIONS_CACHE_URL#http://}"
+          NO_PROXY_LIST="localhost,127.0.0.1,$INTERNAL_DOMAIN,github.com,*.blob.core.windows.net,${ACTIONS_CACHE_URL#http://}"
           echo "NO_PROXY=$NO_PROXY_LIST" >> $GITHUB_ENV
         fi
         echo "on-corp-network=${ON_CORP}" >> $GITHUB_OUTPUT
@@ -43,7 +43,7 @@ runs:
     - name: Trust Corporate Certificate
       shell: bash
       run: |
-        CERT_PATH="/usr/local/share/ca-certificates/kch_certauth.crt"
+        CERT_PATH="/usr/local/share/ca-certificates/$INTERNAL_CERT_NAME"
         if [ -f "$CERT_PATH" ]; then
           echo "✅ Corporate certificate found. Updating system trust store..."
           update-ca-certificates > /dev/null
@@ -63,7 +63,7 @@ runs:
           exit 0
         fi
 
-        PYTHON_BINARY_URL="https://kch-cap.kingsch.nhs.uk:3000/KCH_Cogstack/python-versions/releases/download/3.10.18-15433209320/python-3.10.18-linux-24.04-x64.tar.gz"
+        PYTHON_BINARY_URL="$PYTHON_MIRROR_URL"
         INSTALL_DIR="/opt/hostedtoolcache/Python/3.10.18/x64"
         mkdir -p "$INSTALL_DIR"
 
@@ -83,7 +83,7 @@ runs:
             echo "📥 Downloading Python from Gitea..."
             curl -L --fail --show-error --retry 3 --retry-delay 5 \
                 -H "Authorization: token ${GITEA_TOKEN}" \
-                --noproxy "kch-cap.kingsch.nhs.uk" \
+                --noproxy "$INTERNAL_DOMAIN" \
                 --write-out "\nHTTP status: %{http_code}\nDownloaded bytes: %{size_download}\nEffective URL: %{url_effective}\n" \
                 -o python.tar.gz "$PYTHON_BINARY_URL"
         fi

@@ -39,11 +39,11 @@ jobs:
       - name: Copy Corporate Certificate to Workspace
         if: steps.detect_env.outputs.is_act == 'true' && steps.local_setup.outputs.on-corp-network == 'true'
         run: |
-          CERT_PATH="/usr/local/share/ca-certificates/kch_certauth.crt"
+          CERT_PATH="/usr/local/share/ca-certificates/$INTERNAL_CERT_NAME"
           if [ -f "$CERT_PATH" ]; then
             mkdir -p .github/certs
-            cp "$CERT_PATH" .github/certs/kch_certauth.crt
-            echo "CORPORATE_CA_CERT_PATH=/github/workspace/.github/certs/kch_certauth.crt" >> $GITHUB_ENV
+            cp "$CERT_PATH" ".github/certs/$INTERNAL_CERT_NAME"
+            echo "CORPORATE_CA_CERT_PATH=/github/workspace/.github/certs/$INTERNAL_CERT_NAME" >> $GITHUB_ENV
           else
             echo "Corporate certificate not found at $CERT_PATH. Cannot copy."
           fi
@@ -103,7 +103,7 @@ jobs:
           if [[ "${{ steps.local_setup.outputs.on-corp-network }}" == "true" ]] && [[ -n "${GITEA_TOKEN}" ]]; then
             echo "🔧 Running in act - using local mirror and removing hash requirements"
             find . -name "requirements*.txt" -type f -exec sed -i 's/ --hash=sha256:[a-f0-9]*//g' {} \;
-            pip_install_args+=("--trusted-host" "dh-cap02" "-i" "http://dh-cap02:8008/mirrors/pat2vec")
+            pip_install_args+=("--trusted-host" "$INTERNAL_PROXY_HOST" "-i" "$INTERNAL_PYPI_MIRROR")
           fi
 
           python3 -m pip install "${pip_install_args[@]}" --upgrade pip --break-system-packages || \
@@ -147,7 +147,7 @@ jobs:
           pip_install_args=()
           if [[ "${{ steps.detect_env.outputs.is_act }}" == "true" ]] && [[ -n "${GITEA_TOKEN}" ]]; then
             echo "🔧 Running in act - using local mirror for twine"
-            pip_install_args+=("--trusted-host" "dh-cap02" "-i" "http://dh-cap02:8008/mirrors/pat2vec")
+            pip_install_args+=("--trusted-host" "$INTERNAL_PROXY_HOST" "-i" "$INTERNAL_PYPI_MIRROR")
           fi
           python3 -m pip install "${pip_install_args[@]}" twine --break-system-packages || \
             python3 -m pip install "${pip_install_args[@]}" twine

@@ -75,7 +75,7 @@ jobs:
           if [[ "${{ steps.local_setup.outputs.on-corp-network }}" == "true" ]]; then
               echo "🔧 On corporate network - using local mirror and removing hash requirements"
               find . -name "requirements*.txt" -type f -exec sed -i 's/ --hash=sha256:[a-f0-9]*//g' {} \;
-              pip_install_args+=("--trusted-host" "dh-cap02" "-i" "http://dh-cap02:8008/mirrors/pat2vec")
+              pip_install_args+=("--trusted-host" "$INTERNAL_PROXY_HOST" "-i" "$INTERNAL_PYPI_MIRROR")
           fi
 
           echo "Installing project dependencies for docs..."
