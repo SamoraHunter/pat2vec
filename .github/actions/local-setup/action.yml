@@ -6,6 +6,18 @@ inputs:
   gitea-token:
     description: 'Token for authenticating with Gitea'
     required: false
+  python-mirror-url:
+    description: 'URL for the Python binary archive'
+    required: false
+  internal-proxy-host:
+    description: 'Internal proxy host'
+    required: false
+  internal-domain:
+    description: 'Internal domain for no-proxy'
+    required: false
+  internal-cert-name:
+    description: 'Name of the internal CA certificate file'
+    required: false
 outputs:
   on-corp-network:
     description: "True if the runner appears to be on the corporate network"
@@ -14,18 +26,23 @@ outputs:
 runs:
   using: "composite"
   steps:
+
     - name: Configure Proxy for Corporate Network
       id: proxy-config
       shell: bash
+      env:
+        INTERNAL_PROXY_HOST_VAR: ${{ inputs.internal-proxy-host }}
+        INTERNAL_DOMAIN_VAR: ${{ inputs.internal-domain }}
       run: |
+        PROXY_HOST="${INTERNAL_PROXY_HOST_VAR:-$INTERNAL_PROXY_HOST}"
+        INTERNAL_DOMAIN="${INTERNAL_DOMAIN_VAR:-$INTERNAL_DOMAIN}"
         ON_CORP=false
-        if ping -c 1 "$INTERNAL_PROXY_HOST" &> /dev/null; then
-          echo "✅ Proxy server '$INTERNAL_PROXY_HOST' is available. Configuring environment variables."
-          echo "http_proxy=http://$INTERNAL_PROXY_HOST:8008" >> $GITHUB_ENV
-          echo "https_proxy=http://$INTERNAL_PROXY_HOST:8008" >> $GITHUB_ENV
+        if [[ -n "$PROXY_HOST" ]] && ping -c 1 "$PROXY_HOST" &> /dev/null; then
+          echo "✅ Proxy server '$PROXY_HOST' is available. Configuring environment variables."
+          echo "http_proxy=http://$PROXY_HOST:8008" >> $GITHUB_ENV
+          echo "https_proxy=http://$PROXY_HOST:8008" >> $GITHUB_ENV
           ON_CORP=true
-
-          NO_PROXY_LIST="localhost,127.0.0.1,$INTERNAL_DOMAIN,github.com,*.blob.core.windows.net,${ACTIONS_CACHE_URL#http://}"
+          NO_PROXY_LIST="localhost,127.0.0.1,${INTERNAL_DOMAIN},github.com,*.blob.core.windows.net,${ACTIONS_CACHE_URL#http://}"
           echo "NO_PROXY=$NO_PROXY_LIST" >> $GITHUB_ENV
         fi
         echo "on-corp-network=${ON_CORP}" >> $GITHUB_OUTPUT
@@ -42,8 +59,11 @@ runs:
 
     - name: Trust Corporate Certificate
       shell: bash
+      env:
+        INTERNAL_CERT_NAME_VAR: ${{ inputs.internal-cert-name }}
       run: |
-        CERT_PATH="/usr/local/share/ca-certificates/$INTERNAL_CERT_NAME"
+        CERT_NAME="${INTERNAL_CERT_NAME_VAR:-$INTERNAL_CERT_NAME}"
+        CERT_PATH="/usr/local/share/ca-certificates/$CERT_NAME"
         if [ -f "$CERT_PATH" ]; then
           echo "✅ Corporate certificate found. Updating system trust store..."
           update-ca-certificates > /dev/null
@@ -56,14 +76,29 @@ runs:
     - name: Pre-install Python from Gitea Mirror
       env:
         GITEA_TOKEN: ${{ inputs.gitea-token }}
+        PYTHON_MIRROR_URL_VAR: ${{ inputs.python-mirror-url }}
+        INTERNAL_DOMAIN_VAR: ${{ inputs.internal-domain }}
       shell: bash
       run: |
-        if [[ -z "${GITEA_TOKEN}" ]]; then
-          echo "⚠️ GITEA_TOKEN is not set. Skipping pre-installation of Python from Gitea mirror."
+        # Use input if provided, otherwise fallback to existing environment variables (common in local act runs)
+        PYTHON_BINARY_URL="${PYTHON_MIRROR_URL_VAR:-$PYTHON_MIRROR_URL}"
+        INTERNAL_DOMAIN="${INTERNAL_DOMAIN_VAR:-$INTERNAL_DOMAIN}"
+
+        # CRITICAL FIX: Remove literal double quotes if they were included in the variable definition
+        PYTHON_BINARY_URL=$(echo "$PYTHON_BINARY_URL" | sed -e 's/^"//' -e 's/"$//')
+
+        if [[ -z "${PYTHON_BINARY_URL}" ]]; then
+          echo "⚠️ PYTHON_MIRROR_URL is not set. Skipping pre-installation of Python."
           exit 0
         fi
 
-        PYTHON_BINARY_URL="$PYTHON_MIRROR_URL"
+        # Validation: Fail early if Gitea URL is used without a token
+        if [[ "$PYTHON_BINARY_URL" == *"kingsch.nhs.uk"* ]] && [[ -z "${GITEA_TOKEN}" ]]; then
+          echo "❌ ERROR: Internal Gitea URL detected but GITEA_TOKEN is not set."
+          echo "If running locally with 'act', you must provide the secret: act -s GITEA_TOKEN=your_token"
+          exit 1
+        fi
+
         INSTALL_DIR="/opt/hostedtoolcache/Python/3.10.18/x64"
         mkdir -p "$INSTALL_DIR"
 
@@ -80,12 +115,18 @@ runs:
             echo "✅ Found valid local 'python.tar.gz'. Using it."
         else
             echo "ℹ️ Local Python archive not found in repository root. Proceeding with download from Gitea..."
-            echo "📥 Downloading Python from Gitea..."
-            curl -L --fail --show-error --retry 3 --retry-delay 5 \
+            echo "📥 Downloading Python from: $PYTHON_BINARY_URL"
+
+            EFF_URL=$(curl -L --fail --show-error --retry 3 --retry-delay 5 \
                 -H "Authorization: token ${GITEA_TOKEN}" \
                 --noproxy "$INTERNAL_DOMAIN" \
-                --write-out "\nHTTP status: %{http_code}\nDownloaded bytes: %{size_download}\nEffective URL: %{url_effective}\n" \
-                -o python.tar.gz "$PYTHON_BINARY_URL"
+                --write-out "%{url_effective}" \
+                -o python.tar.gz "$PYTHON_BINARY_URL")
+
+            if [[ "$EFF_URL" == *"/user/login"* ]]; then
+                echo "❌ ERROR: Download was redirected to Gitea login. Check GITEA_TOKEN permissions."
+                exit 1
+            fi
         fi
 
         echo "📏 File size on disk: $(stat -c%s python.tar.gz) bytes"

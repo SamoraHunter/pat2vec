@@ -55,6 +55,10 @@ jobs:
         uses: ./.github/actions/local-setup
         with:
           gitea-token: ${{ secrets.GITEA_TOKEN }}
+          python-mirror-url: ${{ vars.PYTHON_MIRROR_URL || env.PYTHON_MIRROR_URL }}
+          internal-proxy-host: ${{ vars.INTERNAL_PROXY_HOST || env.INTERNAL_PROXY_HOST }}
+          internal-domain: ${{ vars.INTERNAL_DOMAIN || env.INTERNAL_DOMAIN }}
+          internal-cert-name: ${{ vars.INTERNAL_CERT_NAME || env.INTERNAL_CERT_NAME }}
 
       - name: Set up Docker (act runner only)
         # Docker is needed for Elasticsearch container in tests
