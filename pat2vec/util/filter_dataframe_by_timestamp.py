@@ -43,19 +43,22 @@ def filter_dataframe_by_timestamp(
     # Work on a copy to avoid modifying the original DataFrame
     df_copy = df.copy()
 
-    # Convert timestamp column to datetime format
-    # We use format="ISO8601" where possible as it is significantly more robust
-    # for mixed naive/aware strings and avoids the expensive element-wise inference fallback.
-    try:
-        # Try strict ISO8601 first. We omit errors="coerce" here so that non-ISO
-        # strings trigger the ValueError fallback instead of being silently turned to NaT.
-        df_copy[timestamp_string] = pd.to_datetime(
-            df_copy[timestamp_string], utc=True, format="ISO8601"
-        )
-    except (ValueError, TypeError):
-        df_copy[timestamp_string] = pd.to_datetime(
-            df_copy[timestamp_string], utc=True, errors="coerce"
-        )
+    def _parse_to_utc(value):
+        if pd.isna(value) or value is None:
+            return pd.NaT
+        try:
+            ts = pd.Timestamp(value)
+            if ts.tzinfo is None:
+                return ts.tz_localize("UTC")
+            return ts.tz_convert("UTC")
+        except Exception:
+            return pd.NaT
+
+    # Parse each value individually to handle mixed timezones and formats safely,
+    # then force the Series to a tz-aware datetime64[ns, UTC] dtype for safe comparison.
+    df_copy[timestamp_string] = pd.to_datetime(
+        df_copy[timestamp_string].apply(_parse_to_utc), utc=True, errors="coerce"
+    )
 
     # Drop NaN timestamps only if dropna is True
     if dropna:
