@@ -56,7 +56,7 @@ Tasks are defined in JSON files located in `pat2vec/util/llm/tasks/`. This makes
 You can use the high-level `validate_annotations` helper to process a DataFrame.
 
 ```python
-from pat2vec.util.llm import validate_annotations
+from med_llm_utils import validate_annotations
 
 # Define your LLM caller (e.g., a LangChain model or a simple function)
 def my_llm_caller(prompt):
