@@ -1,0 +1,49 @@
+classDiagram
+    class LLMAnnotationValidator {
+        +llm_caller
+        +tasks: dict
+        +process_dataframe(df)
+        +validate_row(row)
+        -_load_tasks(tasks_dir)
+        -_normalise_schema(df)
+    }
+
+    class TextFetcher {
+        <<abstract>>
+        +fetch(row, source_key)*
+    }
+    class DatabaseTextFetcher {
+        +fetch(row, source_key)
+    }
+    class FileTextFetcher {
+        +fetch(row, source_key)
+    }
+
+    class AnnotationWriter {
+        <<abstract>>
+        +update(df)*
+    }
+    class DatabaseAnnotationWriter {
+        +update(df)
+        +ensure_columns()
+    }
+
+    class PromptRouter {
+        +task_defaults: dict
+        +registry: dict
+        +get_template(row, task_id)
+    }
+
+    class LLMInteractionService {
+        +llm_caller
+        +call_single_task_llm()
+        -_parse_response_for_task()
+        -_call_with_retry()
+    }
+
+    LLMAnnotationValidator --> LLMInteractionService
+    LLMAnnotationValidator --> PromptRouter
+    LLMAnnotationValidator --> AnnotationWriter
+    TextFetcher <|-- DatabaseTextFetcher
+    TextFetcher <|-- FileTextFetcher
+    AnnotationWriter <|-- DatabaseAnnotationWriter

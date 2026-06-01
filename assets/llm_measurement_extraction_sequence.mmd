@@ -1,0 +1,21 @@
+sequenceDiagram
+    participant U as User
+    participant E as extract_measurements_llm
+    participant LLM as LLM API
+
+    U->>E: extract_measurements_llm(data)
+    loop for each text input
+        E->>E: Construct Prompt
+        loop parsing_retries
+            E->>LLM: call(prompt)
+            LLM-->>E: JSON string
+            E->>E: Parse & Validate JSON
+            alt success
+                E->>E: Break retry loop
+            else failure
+                E->>E: Continue retry
+            end
+        end
+        E->>E: Accumulate results
+    end
+    E-->>U: Return DataFrame

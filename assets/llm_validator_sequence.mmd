@@ -1,0 +1,33 @@
+sequenceDiagram
+    participant U as User/DataFrame
+    participant V as LLMAnnotationValidator
+    participant CM as AnnotationContextManager
+    participant TF as TextFetcher
+    participant PR as PromptRouter
+    participant IS as LLMInteractionService
+    participant LLM as LLM API (Ollama/OpenAI)
+
+    U->>V: process_dataframe(df)
+    V->>V: _normalise_schema(df)
+    V->>V: verify_service_availability()
+
+    loop for each row
+        V->>CM: get_prepared_context(row)
+        CM->>TF: fetch(row, source_key)
+        TF-->>CM: raw_text
+        CM-->>V: context_text, span_note
+
+        loop for each enabled task (e.g., negated, temporality)
+            V->>PR: get_template(row, task_id)
+            PR-->>V: prompt_template
+            V->>IS: call_single_task_llm(prompt_template, ...)
+            IS->>IS: _call_with_retry(prompt)
+            IS->>LLM: call(prompt)
+            LLM-->>IS: response_text
+            IS->>IS: _parse_response_for_task(response_text)
+            IS-->>V: task_output (value, reason)
+            V->>V: Adjudicate vs MedCAT prediction
+        end
+        V->>V: Derive final llm_status
+    end
+    V-->>U: Return Validated DataFrame
