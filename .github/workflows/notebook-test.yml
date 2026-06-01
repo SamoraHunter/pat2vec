@@ -16,6 +16,17 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
+      - name: Debug environment
+        run: |
+          uname -a
+          cat /etc/os-release
+          env | sort
+          which node || true
+          node --version || true
+          which python || true
+          python --version || true
+          docker version || true
+
       - name: Detect Runner Environment
         id: detect_env
         run: |
