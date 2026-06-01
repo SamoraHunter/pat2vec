@@ -24,9 +24,7 @@ REM --- Configuration ---
 set "PYTHON_EXE=python"
 set "VENV_DIR=%~dp0pat2vec_env"
 set "SPACY_MODEL_URL=https://github.com/explosion/spacy-models/releases/download/en_core_web_md-3.7.1/en_core_web_md-3.7.1-py3-none-any.whl"
-set "PROXY_HOST=dh-cap02"
-set "PROXY_PORT=8008"
-set "PROXY_PIP_ARGS=--trusted-host %PROXY_HOST% -i http://%PROXY_HOST%:%PROXY_PORT%/mirrors/pat2vec"
+
 set "SNOMED_REPO_URL=https://github.com/SamoraHunter/snomed_methods.git"
 
 pushd "%~dp0.."
@@ -58,6 +56,19 @@ if /I "%1"=="/dev" (set DEV_MODE=true)
 shift
 goto :arg_loop
 :parse_end
+
+REM --- Proxy Configuration Validation ---
+if "%PROXY_MODE%"=="true" (
+    if "%INTERNAL_PROXY_HOST%"=="" (
+        echo %ESC%[91mERROR: Proxy mode requested but INTERNAL_PROXY_HOST is not set.%ESC%[0m
+        goto :fatal_error
+    )
+    if "%INTERNAL_PYPI_MIRROR%"=="" (
+        echo %ESC%[91mERROR: Proxy mode requested but INTERNAL_PYPI_MIRROR is not set.%ESC%[0m
+        goto :fatal_error
+    )
+    set "PROXY_PIP_ARGS=--trusted-host %INTERNAL_PROXY_HOST% -i %INTERNAL_PYPI_MIRROR%"
+)
 
 REM --- Prerequisite Checks ---
 echo Checking prerequisites...

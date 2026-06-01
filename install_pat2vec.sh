@@ -196,6 +196,14 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
+# Validate proxy variables if proxy mode is enabled
+if [ "$PROXY_MODE" = true ]; then
+    if [ -z "$INTERNAL_PROXY_HOST" ] || [ -z "$INTERNAL_PYPI_MIRROR" ]; then
+        echo "ERROR: Proxy mode (-p/--proxy) requires INTERNAL_PROXY_HOST and INTERNAL_PYPI_MIRROR environment variables to be set." >&2
+        exit 1
+    fi
+fi
+
 # Verify we're in the pat2vec directory
 if [[ ! "$(basename "$(pwd)")" == "pat2vec" ]]; then
     echo "Error: This script must be run from the pat2vec directory"
@@ -257,7 +265,7 @@ source "$VENV_DIR/bin/activate" || { echo "ERROR: Failed to activate virtual env
 echo "Upgrading pip..."
 pip_upgrade_args=("--upgrade" "pip")
 if [ "$PROXY_MODE" = true ]; then
-    pip_upgrade_args+=("--trusted-host" "dh-cap02" "-i" "http://dh-cap02:8008/mirrors/pat2vec")
+    pip_upgrade_args+=("--trusted-host" "$INTERNAL_PROXY_HOST" "-i" "$INTERNAL_PYPI_MIRROR")
 fi
 python -m pip install "${pip_upgrade_args[@]}"
 
@@ -278,7 +286,7 @@ INSTALL_TARGET="."
 echo "Running pip install -e \"$INSTALL_TARGET\""
 pip_install_args=("-e" "$INSTALL_TARGET")
 if [ "$PROXY_MODE" = true ]; then
-    pip_install_args+=("--trusted-host" "dh-cap02" "-i" "http://dh-cap02:8008/mirrors/pat2vec" "--retries" "5" "--timeout" "60")
+    pip_install_args+=("--trusted-host" "$INTERNAL_PROXY_HOST" "-i" "$INTERNAL_PYPI_MIRROR" "--retries" "5" "--timeout" "60")
 fi
 
 pip install "${pip_install_args[@]}"
@@ -289,8 +297,8 @@ pip_spacy_args=()
 if [ "$PROXY_MODE" = true ]; then
     # If using proxy, install the package by name from the local mirror index.
     pip_spacy_args+=("en-core-web-md==3.7.1")
-    pip_spacy_args+=("--trusted-host" "dh-cap02")
-    pip_spacy_args+=("-i" "http://dh-cap02:8008/mirrors/pat2vec")
+    pip_spacy_args+=("--trusted-host" "$INTERNAL_PROXY_HOST")
+    pip_spacy_args+=("-i" "$INTERNAL_PYPI_MIRROR")
 else
     # Otherwise, install directly from the public URL.
     pip_spacy_args+=("$SPACY_MODEL_URL")
