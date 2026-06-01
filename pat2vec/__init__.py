@@ -7,7 +7,7 @@ It exposes the main functions and methods of the pat2vec library for easy access
 
 """
 
-__version__ = "0.3.1"
+__version__ = "0.3.2"
 
 from .main_pat2vec import main
 from .pat2vec_get_methods.get_method_appointments import (
@@ -337,16 +337,19 @@ from .util.get_method_index_map import (
 )
 from .util.get_start_end_year_month import get_start_end_year_month
 from .util.helper_functions import (
+    HELPER_FUNCTIONS_VERSION,
     clear_patient_features,
     ensure_index,
     extract_nhs_numbers,
     get_all_features,
     get_df_from_db,
+    get_ram_usage,
     get_search_client_idcode_list_from_nhs_number_list,
     sanitize_for_path,
     save_annotations_to_db,
     save_patient_features,
     save_raw_patient_batch,
+    try_parse_list_string,
 )
 from .util.impute_data_for_pipe import mean_impute_dataframe, save_missing_percentage
 from .util.logger_setup import setup_logger
@@ -463,6 +466,7 @@ from .util.post_processing_build_methods import (
     merge_diagnostics_csv,
     merge_drugs_csv,
     merge_news_csv,
+    optimize_dtypes,
     retrieve_pat_bloods,
     retrieve_pat_docs_mct_epr,
     retrieve_pat_epr_docs,
@@ -520,6 +524,7 @@ __all__ = [
     "EthnicityAbstractor",
     "GET_METHOD_DEFAULT_FIELDS_MAP",
     "GET_METHOD_INDEX_MAP",
+    "HELPER_FUNCTIONS_VERSION",
     "HOSP_SITE_FIELDS",
     "MockConfig",
     "PathsClass",
@@ -752,6 +757,7 @@ __all__ = [
     "get_pat_document_annotation_batch_reports",
     "get_pat_ipw_record",
     "get_patient_timeline_dummy",
+    "get_ram_usage",
     "get_search_client_idcode_list_from_nhs_number_list",
     "get_smoking",
     "get_start_end_year_month",
@@ -796,6 +802,7 @@ __all__ = [
     "multi_annots_to_df_reports",
     "multi_annots_to_df_textual_obs",
     "nearest",
+    "optimize_dtypes",
     "parse_medcat_trainer_project_json",
     "parse_meta_anns",
     "plot_missing_pattern_bloods",
@@ -865,6 +872,7 @@ __all__ = [
     "stringlist2searchlist",
     "temporary_file",
     "test_datetime_formats",
+    "try_parse_list_string",
     "update_global_start_date",
     "update_pbar",
     "validate_and_fix_global_dates",

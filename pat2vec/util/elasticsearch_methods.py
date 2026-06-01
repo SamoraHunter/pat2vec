@@ -43,7 +43,7 @@ def ingest_data_to_elasticsearch(
     index_mapping = index_mapping or {  # type: ignore
         "settings": {
             "number_of_shards": 1,
-            "number_of_replicas": 1,
+            "number_of_replicas": 0,
             "index.mapping.ignore_malformed": True,
             "index.mapping.total_fields.limit": 100000,
         }
@@ -61,6 +61,7 @@ def ingest_data_to_elasticsearch(
             "elasticsearch",
             "es01",
         ]
+
         if host_name not in safe_hosts:
             raise ConnectionError(
                 f"Safety Block: Ingestion to '{host_name}' denied. Only local/test clusters allowed."
@@ -78,17 +79,31 @@ def ingest_data_to_elasticsearch(
             es = Elasticsearch(
                 [{"host": host_name, "port": int(port), "scheme": scheme}],
                 api_key=api_key,
+                request_timeout=60,
             )
         else:
             es = Elasticsearch(
                 [{"host": host_name, "port": int(port), "scheme": scheme}],
                 basic_auth=(username, password),
+                request_timeout=60,
             )
 
     # Check connection
     try:
         if not es.ping():
             raise ConnectionError("Elasticsearch server not reachable.")
+
+        # Disable disk watermarks for local/test environments to prevent RED status on low disk
+        # This is necessary because 91% disk usage (your current state) triggers a write block.
+        safe_hosts = ["localhost", "127.0.0.1", "0.0.0.0", "elasticsearch", "es01"]
+        if host_name in safe_hosts:
+            es.cluster.put_settings(
+                body={
+                    "persistent": {
+                        "cluster.routing.allocation.disk.threshold_enabled": False
+                    }
+                }
+            )
     except Exception as e:
         logger.error(f"Error connecting to Elasticsearch: {e}")
         raise

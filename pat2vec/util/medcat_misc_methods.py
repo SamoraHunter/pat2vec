@@ -61,43 +61,38 @@ def medcat_trainer_export_to_df(file_path: str) -> pd.DataFrame:
                 comment = annotation["comment"]
                 manually_created = annotation["manually_created"]
 
-                # Extract meta annotations
-                meta_anns = annotation.get("meta_anns", {})
-                subject_experiencer = meta_anns.get("Subject/Experiencer", {}).get(
-                    "value"
-                )
-                presence = meta_anns.get("Presence", {}).get("value")
-                time = meta_anns.get("Time", {}).get("value")
+                # Core annotation details
+                row_dict = {
+                    "project_name": project_name,
+                    "project_id": project_id,
+                    "document_id": document_id,
+                    "document_name": document_name,
+                    "text": text,
+                    "annotation_id": annotation_id,
+                    "user": user,
+                    "cui": cui,
+                    "value": value,
+                    "start": start,
+                    "end": end,
+                    "validated": validated,
+                    "correct": correct,
+                    "deleted": deleted,
+                    "alternative": alternative,
+                    "killed": killed,
+                    "irrelevant": irrelevant,
+                    "create_time": create_time,
+                    "last_modified": last_modified,
+                    "comment": comment,
+                    "manually_created": manually_created,
+                }
 
-                # Append extracted data to the list
-                annotations_data.append(
-                    {
-                        "project_name": project_name,
-                        "project_id": project_id,
-                        "document_id": document_id,
-                        "document_name": document_name,
-                        "text": text,
-                        "annotation_id": annotation_id,
-                        "user": user,
-                        "cui": cui,
-                        "value": value,
-                        "start": start,
-                        "end": end,
-                        "validated": validated,
-                        "correct": correct,
-                        "deleted": deleted,
-                        "alternative": alternative,
-                        "killed": killed,
-                        "irrelevant": irrelevant,
-                        "create_time": create_time,
-                        "last_modified": last_modified,
-                        "comment": comment,
-                        "manually_created": manually_created,
-                        "subject_experiencer": subject_experiencer,
-                        "presence": presence,
-                        "time": time,
-                    }
-                )
+                # Dynamically extract all meta annotations found in the project and standardize key names
+                meta_anns = annotation.get("meta_anns", {})
+                for meta_name, meta_val in meta_anns.items():
+                    clean_name = meta_name.lower().replace("/", "_").replace(" ", "_")
+                    row_dict[clean_name] = meta_val.get("value")
+
+                annotations_data.append(row_dict)
 
     # Create a DataFrame from the extracted data
     df = pd.DataFrame(annotations_data)

@@ -1,28 +1,27 @@
+import ast
 import re
 import warnings
-from typing import Any, List, Optional
+from typing import Any, List, Optional  # Keep typing imports together
 import os
 import psutil
 import logging
 import gc  # Import gc module explicitly
-
-logger = logging.getLogger(__name__)  # Ensure logger is defined at module level
 import pandas as pd
-
-# REMOVED: from pat2vec.util.post_processing_build_methods import get_ram_usage # Import get_ram_usage
 from sqlalchemy import text, inspect
 from sqlalchemy.schema import CreateSchema
-
+from tqdm import tqdm
+import json
 
 # Moved from pat2vec.util.post_processing_build_methods to break circular import
+logger = logging.getLogger(__name__)  # Ensure logger is defined at module level
+
+
 def get_ram_usage():
     """Returns current RAM usage in GB."""
     return psutil.Process(os.getpid()).memory_info().rss / (1024**3)
 
 
-HELPER_FUNCTIONS_VERSION = "2.4-logging-cleanup"  # Logging cleanup
-from tqdm import tqdm
-import json
+HELPER_FUNCTIONS_VERSION = "2.5-validation-refactor"  # Logging cleanup
 
 
 def sanitize_for_path(text: str) -> str:
@@ -157,6 +156,22 @@ def clear_patient_features(patient_id: str, config_obj: Any) -> None:
                     connection.execute(del_query, {"pat_id": patient_id})
     except Exception as e:
         logging.error(f"Failed to clear features for patient {patient_id}: {e}")
+
+
+def try_parse_list_string(val: Any) -> Any:
+    """Handles stringified list types like \"['procedure']\" or actual Python lists."""
+    if isinstance(val, list):
+        return str(val[0]) if len(val) > 0 else "Unknown"
+
+    if isinstance(val, str) and val.startswith("[") and val.endswith("]"):
+        try:
+            parsed = ast.literal_eval(val)
+            if isinstance(parsed, list) and len(parsed) > 0:
+                return str(parsed[0])
+            return str(parsed)
+        except (ValueError, SyntaxError):
+            return val.strip("[]'\" ")
+    return val
 
 
 def save_patient_features(

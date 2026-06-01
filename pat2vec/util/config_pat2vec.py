@@ -256,6 +256,9 @@ class config_class:
         if self.root_path is None:
             self.root_path = f"{os.getcwd()}/{self.proj_name}/"
 
+        # Ensure root_path exists early
+        os.makedirs(self.root_path, exist_ok=True)
+
         self.db_engine = None
         if self.storage_backend == "database":
             if not self.db_connection_string:
@@ -268,12 +271,22 @@ class config_class:
                     self.db_connection_string = "sqlite:///:memory:"
                 else:
                     # Default to SQLite in project folder if no connection string provided
-                    os.makedirs(self.root_path, exist_ok=True)
                     db_path = os.path.join(self.root_path, f"{self.proj_name}.db")
                     self.db_connection_string = f"sqlite:///{db_path}"
                     logger.info(
                         f"No `db_connection_string` provided. Using default SQLite database at: {self.db_connection_string}"
                     )
+
+            # Ensure SQLite connection strings for absolute paths are correctly formatted.
+            # SQLAlchemy requires 4 slashes for absolute Unix paths (sqlite:////path/to/db).
+            if self.db_connection_string and self.db_connection_string.startswith(
+                "sqlite:///"
+            ):
+                path_part = self.db_connection_string[10:]
+                if path_part.startswith(
+                    "/"
+                ) and not self.db_connection_string.startswith("sqlite:////"):
+                    self.db_connection_string = "sqlite:////" + path_part.lstrip("/")
 
             if self.db_connection_string == "sqlite:///:memory:":
                 from sqlalchemy.pool import StaticPool
@@ -285,6 +298,12 @@ class config_class:
                 )
             else:
                 self.db_engine = create_engine(self.db_connection_string)
+                # For file-based SQLite, check_same_thread=False is often crucial in notebooks
+                if self.db_engine.name == "sqlite":
+                    self.db_engine = create_engine(
+                        self.db_connection_string,
+                        connect_args={"check_same_thread": False},
+                    )
 
         self.sanitize_pat_list = sanitize_pat_list
         #: If `True`, skips some `listdir` calls for performance.
@@ -715,7 +734,7 @@ class config_class:
                 self.root_path,
                 self.suffix,
                 self.output_folder,
-                create_dirs=(self.storage_backend == "file"),
+                create_dirs=True,
             )
 
         logger.info(f"Setting start_date to: {start_date}")
