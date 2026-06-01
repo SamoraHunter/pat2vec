@@ -44,9 +44,16 @@ def filter_dataframe_by_timestamp(
     df_copy = df.copy()
 
     # Convert timestamp column to datetime format
-    df_copy[timestamp_string] = pd.to_datetime(
-        df_copy[timestamp_string], utc=True, errors="coerce"
-    )
+    # We use format="ISO8601" where possible as it is significantly more robust
+    # for mixed naive/aware strings and avoids the expensive element-wise inference fallback.
+    try:
+        df_copy[timestamp_string] = pd.to_datetime(
+            df_copy[timestamp_string], utc=True, errors="coerce", format="ISO8601"
+        )
+    except ValueError:
+        df_copy[timestamp_string] = pd.to_datetime(
+            df_copy[timestamp_string], utc=True, errors="coerce"
+        )
 
     # Drop NaN timestamps only if dropna is True
     if dropna:
