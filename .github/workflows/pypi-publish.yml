@@ -119,6 +119,7 @@ jobs:
           python3 -m build
 
       - name: Store Build Artifacts for GitHub Release
+        if: steps.detect_env.outputs.is_act != 'true'
         uses: actions/upload-artifact@v3
         with:
           name: pat2vec-distribution-packages
