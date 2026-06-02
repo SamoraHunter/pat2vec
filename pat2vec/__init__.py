@@ -7,7 +7,7 @@ It exposes the main functions and methods of the pat2vec library for easy access
 
 """
 
-__version__ = "0.3.2"
+__version__ = "0.3.4"
 
 from .main_pat2vec import main
 from .pat2vec_get_methods.get_method_appointments import (

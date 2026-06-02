@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.3.4] - 2026-06-02
+
+### Added
+- **Full Flow Integration Testing**: Added `test_pat_maker_full_flow.py` to validate the end-to-end pipeline from data extraction to feature engineering using the SQLite in-memory backend.
+
+### Changed
+- **Robust Data Handling**: Standardized on ISO8601 for robust timestamp parsing; implemented fixes to handle mixed timezone-aware and naive timestamps during data filtering.
+- **Infrastructure Abstraction**: Removed hardcoded internal addresses and refactored setup logic to improve robustness across varying environments.
+- **Elasticsearch Security**: Expanded safe-host validation protocols for dummy data population to prevent accidental ingestion into production clusters.
+
+### Fixed
+- **CI/CD Connectivity**: Robustified local-setup actions to better support corporate networks and Gitea mirrors.
+- **Documentation & Maintenance**: Updated validator documentation, added environment logging to notebook tests, and removed deprecated notebook initialization content.
+
 ## [0.3.2] - 2024-05-24
 
 ### Packaging & Distribution
