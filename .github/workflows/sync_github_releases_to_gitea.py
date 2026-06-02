@@ -144,8 +144,11 @@ def create_gitea_release(
     response = _api_request(url, "POST", token, json_data=payload)
 
     data = response.json()
-    # If the API returns a list (some proxies/versions wrap responses), return the first element
+    # If the API returns a list, find the one matching our tag_name
     if isinstance(data, list):
+        for release in data:
+            if release.get("tag_name") == tag_name:
+                return release
         if len(data) > 0:
             return data[0]
         print(
@@ -243,10 +246,13 @@ def sync_releases_to_gitea(
         # 3. Iterate and sync
         for tag_name, gh_release in github_releases_by_tag.items():
             print(f"\nProcessing release for tag: {tag_name}")
-            if tag_name not in gitea_releases_by_tag:
+
+            release_id = None
+            gitea_release = gitea_releases_by_tag.get(tag_name)
+
+            if not gitea_release:
                 print(f"  Release '{tag_name}' not found on Gitea. Creating it...")
-                # Create release on Gitea
-                gitea_created_release = create_gitea_release(
+                gitea_release = create_gitea_release(
                     gitea_url,
                     gitea_repo_owner,
                     gitea_repo_name,
@@ -257,46 +263,49 @@ def sync_releases_to_gitea(
                     draft=gh_release["draft"],
                     prerelease=gh_release["prerelease"],
                 )
-
-                # Safeguard: ensure we have a valid ID before proceeding
-                release_id = gitea_created_release.get("id")
-                if release_id is None:
-                    raise KeyError(
-                        f"Gitea release created but 'id' missing from response: {gitea_created_release}"
-                    )
-
                 print(f"  Release '{tag_name}' created on Gitea (ID: {release_id}).")
-
-                # Upload assets if any
-                if gh_release["assets"]:
-                    print(
-                        f"  Found {len(gh_release['assets'])} assets on GitHub for '{tag_name}'."
-                    )
-                    for gh_asset in gh_release["assets"]:
-                        asset_name = gh_asset["name"]
-                        asset_url = gh_asset["url"]
-                        content_type = gh_asset["content_type"]
-                        download_path = os.path.join(temp_dir, asset_name)
-
-                        if download_github_asset(
-                            asset_url, github_token, download_path
-                        ):
-                            upload_gitea_release_asset(
-                                gitea_url,
-                                gitea_repo_owner,
-                                gitea_repo_name,
-                                release_id,
-                                gitea_token,
-                                asset_name,
-                                download_path,
-                                content_type,
-                            )
-                            os.remove(download_path)  # Clean up downloaded asset
-                else:
-                    print(f"  No assets found for GitHub release '{tag_name}'.")
             else:
-                print(f"  Release '{tag_name}' already exists on Gitea. Skipping.")
-                # TODO: Implement update logic if necessary (e.g., update description, add missing assets)
+                print(
+                    f"  Release '{tag_name}' already exists on Gitea. Checking for missing assets..."
+                )
+
+            release_id = gitea_release.get("id")
+            if release_id is None:
+                print(
+                    f"  Warning: Could not determine Gitea ID for {tag_name}. Skipping asset sync."
+                )
+                continue
+
+            # Sync assets
+            gitea_assets = {a["name"] for a in gitea_release.get("assets", [])}
+            gh_assets_to_sync = [
+                a for a in gh_release.get("assets", []) if a["name"] not in gitea_assets
+            ]
+
+            if gh_assets_to_sync:
+                print(
+                    f"  Syncing {len(gh_assets_to_sync)} missing assets for '{tag_name}'..."
+                )
+                for gh_asset in gh_assets_to_sync:
+                    asset_name = gh_asset["name"]
+                    asset_url = gh_asset["url"]
+                    content_type = gh_asset["content_type"]
+                    download_path = os.path.join(temp_dir, asset_name)
+
+                    if download_github_asset(asset_url, github_token, download_path):
+                        upload_gitea_release_asset(
+                            gitea_url,
+                            gitea_repo_owner,
+                            gitea_repo_name,
+                            release_id,
+                            gitea_token,
+                            asset_name,
+                            download_path,
+                            content_type,
+                        )
+                        os.remove(download_path)
+            else:
+                print(f"  All assets for '{tag_name}' are already in sync.")
 
     finally:
         # Clean up the temporary directory
