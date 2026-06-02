@@ -38,6 +38,27 @@ random.seed(random_state)
 faker = Faker()
 
 
+def is_safe_host(h: str) -> bool:
+    """Checks if a host is local or part of a private network to permit dummy data population."""
+    if h in [
+        "localhost",
+        "127.0.0.1",
+        "0.0.0.0",
+        "::1",
+        "elasticsearch",
+        "es01",
+        "host.docker.internal",
+    ]:
+        return True
+    # Allow private IP ranges (common for Docker bridge/internal networks)
+    # 127.x.x.x, 10.x.x.x, 172.16-31.x.x, 192.168.x.x
+    return bool(
+        re.match(
+            r"^(127\.|10\.|172\.(1[6-9]|2[0-9]|3[0-1])\.|172\.17\.0\.1|192\.168\.)", h
+        )
+    )
+
+
 def maybe_nan(value: Any, probability: float = 0.2) -> Union[Any, float]:
     """Returns a value or NaN based on a probability.
 
@@ -2203,15 +2224,7 @@ def populate_elastic_with_dummy_data(
         # This prevents wiping production indices
         nodes = cs.elastic.transport.node_pool.all()
         hosts = [node.host for node in nodes]
-        safe_hosts = [
-            "localhost",
-            "127.0.0.1",
-            "0.0.0.0",
-            "::1",
-            "elasticsearch",
-            "es01",
-        ]
-        if any(h not in safe_hosts for h in hosts):
+        if not all(is_safe_host(h) for h in hosts):
             logger.error(
                 f"Unsafe operation: Attempting to populate dummy data on non-local host(s): {hosts}. Aborting."
             )
@@ -2235,8 +2248,16 @@ def populate_elastic_with_dummy_data(
             )
 
             # Safeguard: Cluster Name
-            safe_cluster_names = ["docker-cluster", "elasticsearch"]
-            if cluster_name not in safe_cluster_names:
+            safe_cluster_names = [
+                "docker-cluster",
+                "elasticsearch",
+                "nodes",
+                "docker-cluster-es",
+            ]
+            is_definitely_local = any(
+                h in ["localhost", "127.0.0.1", "::1"] for h in hosts
+            )
+            if cluster_name not in safe_cluster_names and not is_definitely_local:
                 logger.error(
                     f"Unsafe operation: Cluster name '{cluster_name}' is not in safe list {safe_cluster_names}. Aborting."
                 )
@@ -2269,15 +2290,7 @@ def populate_elastic_with_dummy_data(
                 # This prevents wiping production indices
                 nodes = cs.elastic.transport.node_pool.all()
                 hosts = [node.host for node in nodes]
-                safe_hosts = [
-                    "localhost",
-                    "127.0.0.1",
-                    "0.0.0.0",
-                    "::1",
-                    "elasticsearch",
-                    "es01",
-                ]
-                if any(h not in safe_hosts for h in hosts):
+                if not all(is_safe_host(h) for h in hosts):
                     logger.error(
                         f"Unsafe operation: Attempting to populate dummy data on non-local host(s): {hosts}. Aborting."
                     )
