@@ -81,7 +81,9 @@ dev = [
     "myst-parser==4.0.1",
     "sphinx-autodoc-typehints==3.0.1",
     "sphinxcontrib-mermaid",
-    "python-dotenv"
+    "python-dotenv",
+    "black",
+    "black[jupyter]"
 ]
 
 [tool.setuptools]
