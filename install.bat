@@ -67,7 +67,7 @@ if "%PROXY_MODE%"=="true" (
         echo %ESC%[91mERROR: Proxy mode requested but INTERNAL_PYPI_MIRROR is not set.%ESC%[0m
         goto :fatal_error
     )
-    set "PROXY_PIP_ARGS=--trusted-host %INTERNAL_PROXY_HOST% -i %INTERNAL_PYPI_MIRROR%"
+    set "PROXY_PIP_ARGS=--trusted-host %INTERNAL_PROXY_HOST% --extra-index-url %INTERNAL_PYPI_MIRROR%"
 )
 
 REM --- Prerequisite Checks ---

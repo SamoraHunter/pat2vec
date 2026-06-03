@@ -1,7 +1,6 @@
 import unittest
 import pandas as pd
 import os
-import shutil
 from unittest.mock import patch, MagicMock
 from datetime import datetime
 import numpy as np
@@ -100,7 +99,7 @@ class TestMultiAnnotsToDf(unittest.TestCase):
         )
 
     def tearDown(self):
-        shutil.rmtree(self.test_dir, ignore_errors=True)
+        self.temp_dir_obj.cleanup()
 
     @patch("pat2vec.util.methods_annotation_multi_annots_to_df.json_to_dataframe")
     def test_basic_dataframe_creation(self, mock_json_to_df):

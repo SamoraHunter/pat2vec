@@ -128,7 +128,7 @@ jobs:
           if [[ "${{ steps.detect_env.outputs.is_act }}" == "true" ]] && [[ -n "${GITEA_TOKEN}" ]]; then
               echo "🔧 Running in act - using local mirror ($INTERNAL_PYPI_MIRROR) and removing hash requirements"
               find . -name "requirements*.txt" -type f -exec sed -i 's/ --hash=sha256:[a-f0-9]*//g' {} \;
-              pip_install_args+=("--trusted-host" "$INTERNAL_PROXY_HOST" "-i" "$INTERNAL_PYPI_MIRROR")
+              pip_install_args+=("--trusted-host" "$INTERNAL_PROXY_HOST" "--extra-index-url" "$INTERNAL_PYPI_MIRROR")
           fi
 
           echo "Installing project dependencies..."

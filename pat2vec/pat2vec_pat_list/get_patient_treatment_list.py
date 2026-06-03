@@ -90,7 +90,7 @@ def extract_treatment_id_list_from_docs(config_obj: Any) -> List[str]:
                 print("Auto-detected patient ID column: client_idcode (exact match)")
         else:
             # Define regex patterns for sample IDs
-            sample_id_patterns = ["P\d{6}", "V\d{6}"]
+            sample_id_patterns = [r"P\d{6}", r"V\d{6}"]
 
             # Iterate through columns and find the one with the most matches to sample ID patterns
             best_match_column = None

@@ -137,7 +137,7 @@ class DeIdAnonymizer:
     def anonymize_text(
         self, text: str, redact: bool = True, verify: bool = False
     ) -> Union[str, Tuple[str, Dict[str, Any]]]:
-        """Anonymizes a single text string.
+        r"""Anonymizes a single text string.
 
         Args:
             text: The input text to anonymize.

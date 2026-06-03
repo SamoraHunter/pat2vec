@@ -71,6 +71,7 @@ all = [
 # Development and testing tools
 dev = [
     "pytest",
+    "pytest-cov",
     "nbformat",
     "nbconvert",
     "nbstripout",
@@ -96,3 +97,16 @@ include = ["pat2vec*"]
 [tool.ruff]
 extend-exclude = ["legacy",
 "legacy/Main-Pat2Vec v4.4.6-Time-Batch-Dev-lookback-Publish (1).ipynb"]
+
+[tool.coverage.run]
+source = ["pat2vec"]
+omit = ["pat2vec/util/credentials.py", "*/tests/*"]
+relative_files = true
+branch = true
+concurrency = ["multiprocessing"]
+parallel = true
+sigterm = true
+
+[tool.coverage.report]
+show_missing = true
+fail_under = 0
