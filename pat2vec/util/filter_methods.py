@@ -44,7 +44,7 @@ def filter_dataframe_by_fuzzy_terms(
     if verbose >= 1:
         logger.info("Filtering complete.")
 
-    filtered_df = df[df.index.isin(matched_indices)]
+    filtered_df = df[df.index.isin(matched_indices)].copy()
     return filtered_df
 
 

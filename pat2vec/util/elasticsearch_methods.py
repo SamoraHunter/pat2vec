@@ -1,4 +1,6 @@
 import pandas as pd
+import numpy as np
+from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 try:
@@ -226,22 +228,42 @@ def handle_inconsistent_dtypes(df: pd.DataFrame) -> pd.DataFrame:
     """
     for column in tqdm(df.columns, desc="Processing columns"):
         non_null_values = df[column].dropna()
-        dt_count = (
-            non_null_values.apply(pd.to_datetime, errors="coerce").notnull().sum()
-        )
-        str_count = non_null_values.apply(type).eq(str).sum()
-        int_count = non_null_values.apply(type).eq(int).sum()
-        float_count = non_null_values.apply(type).eq(float).sum()
+        if non_null_values.empty:
+            continue
 
-        total_valid = dt_count + str_count + int_count + float_count
+        # Count types mutually exclusively to prevent integers being misidentified as datetimes
+        is_dt = 0
+        is_str = 0
+        is_int = 0
+        is_float = 0
+
+        for val in non_null_values:
+            if isinstance(val, (pd.Timestamp, datetime)):
+                is_dt += 1
+            elif isinstance(val, (int, np.integer)):
+                is_int += 1
+            elif isinstance(val, (float, np.floating)):
+                is_float += 1
+            elif isinstance(val, str):
+                # Heuristic: only strings with date separators are likely intended as dates
+                if any(sep in val for sep in ["-", "/", "."]):
+                    try:
+                        pd.to_datetime(val, errors="raise")
+                        is_dt += 1
+                        continue
+                    except Exception:
+                        pass
+                is_str += 1
+
+        total_valid = is_dt + is_str + is_int + is_float
         if total_valid == 0:
             logger.warning(f"No valid data types found in column '{column}'")
             continue
 
-        dt_percent = dt_count / total_valid
-        str_percent = str_count / total_valid
-        int_percent = int_count / total_valid
-        float_percent = float_count / total_valid
+        dt_percent = is_dt / total_valid
+        str_percent = is_str / total_valid
+        int_percent = is_int / total_valid
+        float_percent = is_float / total_valid
 
         majority_dtype = max(dt_percent, str_percent, int_percent, float_percent)
         if dt_percent > 0.5:

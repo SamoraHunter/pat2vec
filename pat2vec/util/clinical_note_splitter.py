@@ -284,12 +284,14 @@ def split_and_append_chunks(
     column_name_mct = "obscatalogmasteritem_displayname"
 
     if column_name in docs.columns:
-        clinical_notes = docs[docs[column_name] == "Clinical Note"]
+        clinical_notes = docs[docs[column_name] == "Clinical Note"].copy()
         non_clinical_notes = docs[docs[column_name] != "Clinical Note"]
         if verbosity > 1:
             logger.debug(f"Found column '{column_name}' in DataFrame.")
     elif column_name_mct in docs.columns:
-        clinical_notes = docs[docs[column_name_mct] == "AoMRC_ClinicalSummary_FT"]
+        clinical_notes = docs[
+            docs[column_name_mct] == "AoMRC_ClinicalSummary_FT"
+        ].copy()
         non_clinical_notes = docs[docs[column_name_mct] != "AoMRC_ClinicalSummary_FT"]
         if verbosity > 1:
             logger.debug(f"Found column '{column_name_mct}' in DataFrame.")

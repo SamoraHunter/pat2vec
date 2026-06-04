@@ -4,10 +4,15 @@ import logging
 from typing import Any, Optional, Union
 from typing import TYPE_CHECKING
 
+try:
+    from medcat.cat import CAT
+except ImportError:
+    CAT = None
+
 from pat2vec.util.get_dummy_data_medcat_annotation import dummy_CAT
 
 if TYPE_CHECKING:
-    from medcat.cat import CAT
+    pass
 
 logger = logging.getLogger(__name__)
 
@@ -79,8 +84,6 @@ def get_cat(config_obj: Any) -> Optional[Union["CAT", dummy_CAT]]:  # type: igno
                 )
         else:
             logger.info("The 'paths.py' file does not exist or is being overridden.")
-
-        from medcat.cat import CAT
 
         path_found = False
 
