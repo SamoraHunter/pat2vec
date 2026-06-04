@@ -149,6 +149,9 @@ jobs:
             echo "⚠️  Docker not available — skipping notebook test"
             exit 0
           fi
+          # Run unit tests first
+          pytest pat2vec/tests
+          # Then run notebook tests
           pytest --nbmake --nbmake-timeout=1200 --exitfirst notebooks/test_notebook.py
 
       - name: Clean up Jupyter kernels
