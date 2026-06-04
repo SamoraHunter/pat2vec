@@ -22,6 +22,8 @@ from pat2vec.util.get_dummy_data_cohort_searcher import (
 )
 
 logger = logging.getLogger(__name__)
+if not logger.handlers:
+    logger.addHandler(logging.NullHandler())
 
 random_state = 42
 
@@ -83,6 +85,13 @@ def get_treatment_docs_by_iterative_multi_term_cohort_searcher_no_terms_fuzzy(
     else:
         output_path = pat2vec_obj.treatment_doc_filename
 
+    # Check if file exists and we should skip the search entirely
+    if os.path.exists(output_path) and not overwrite and not append:
+        if verbose >= 1:
+            logger.info("treatment docs already exist, reading and returning")
+        search_results = pd.read_csv(output_path)
+        return search_results
+
     # create function that takes a list of terms, runs iterative_multi_term_cohort_searcher_no_terms_fuzzy and returns terms
 
     if not pat2vec_obj.config_obj.lookback:
@@ -99,7 +108,7 @@ def get_treatment_docs_by_iterative_multi_term_cohort_searcher_no_terms_fuzzy(
             logger.info("Using global end date as start.")
         global_start_day = pat2vec_obj.config_obj.global_end_day
         global_start_month = pat2vec_obj.config_obj.global_end_month
-        global_start_year = pat2vec_obj.config_obj.global_start_year
+        global_start_year = pat2vec_obj.config_obj.global_end_year
         global_end_day = pat2vec_obj.config_obj.global_start_day
         global_end_month = pat2vec_obj.config_obj.global_start_month
         global_end_year = pat2vec_obj.config_obj.global_start_year
@@ -202,26 +211,15 @@ def get_treatment_docs_by_iterative_multi_term_cohort_searcher_no_terms_fuzzy(
             if output_directory and not os.path.exists(output_directory):
                 os.makedirs(output_directory)
         except Exception as e:
-            logger.error(e)
+            logger.error(f"Error creating directory {output_directory}: {e}")
 
         # Save the DataFrame to CSV
         search_results.to_csv(output_path, index=False, escapechar="\\")
-    elif os.path.exists(output_path) and append:
-        if verbose >= 1:
-            logger.info("treatment docs already exist, appending...")
-            search_results.to_csv(
-                output_path, index=False, mode="a", header=False, escapechar="\\"
-            )
-
-    elif os.path.exists(output_path) and not overwrite:
-        if verbose >= 1:
-            logger.info("treatment docs already exist")
-
-    elif os.path.exists(output_path) and not overwrite:
-        if verbose >= 1:
-            logger.info("treatment docs already exist, reading and returning")
-
-        search_results = pd.read_csv(output_path)
+    elif append:
+        logger.info("Appending results to existing treatment docs...")
+        search_results.to_csv(
+            output_path, index=False, mode="a", header=False, escapechar="\\"
+        )
 
     if mct:
         logger.info(
@@ -250,16 +248,21 @@ def get_treatment_docs_by_iterative_multi_term_cohort_searcher_no_terms_fuzzy(
             testing_elastic=getattr(pat2vec_obj.config_obj, "testing_elastic", False),
         )
 
-        search_results = pd.concat([search_results, docs], axis=0)
+        if not docs.empty:
+            search_results = pd.concat([search_results, docs], axis=0)
 
         # merge document column to fill body_analysed nan with observation_valuetext_analysed
         if "observation_valuetext_analysed" in search_results.columns:
+            if "body_analysed" not in search_results.columns:
+                search_results["body_analysed"] = pd.NA
             search_results["body_analysed"] = search_results["body_analysed"].fillna(
                 search_results["observation_valuetext_analysed"]
             )
 
         # merge time column to fill updatetime nan with observation_datetime
         if "basicobs_entered" in search_results.columns:
+            if "updatetime" not in search_results.columns:
+                search_results["updatetime"] = pd.NA
             search_results["updatetime"] = search_results["updatetime"].fillna(
                 search_results["basicobs_entered"]  # bloods time field
             )
@@ -291,16 +294,21 @@ def get_treatment_docs_by_iterative_multi_term_cohort_searcher_no_terms_fuzzy(
             testing_elastic=getattr(pat2vec_obj.config_obj, "testing_elastic", False),
         )
 
-        search_results = pd.concat([search_results, docs], axis=0)
+        if not docs.empty:
+            search_results = pd.concat([search_results, docs], axis=0)
 
         # merge document column to fill body_analysed nan with textualObs
         if "textualObs" in search_results.columns:
+            if "body_analysed" not in search_results.columns:
+                search_results["body_analysed"] = pd.NA
             search_results["body_analysed"] = search_results["body_analysed"].fillna(
                 search_results["textualObs"]
             )
 
         # merge time column to fill updatetime nan with observation_datetime
         if "basicobs_entered" in search_results.columns:
+            if "updatetime" not in search_results.columns:
+                search_results["updatetime"] = pd.NA
             search_results["updatetime"] = search_results["updatetime"].fillna(
                 # bloods time field
                 search_results["observationdocument_recordeddtm"]

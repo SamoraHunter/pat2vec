@@ -1,7 +1,93 @@
 import os
 import matplotlib.pyplot as plt
+import seaborn as sns
 import pandas as pd
 from typing import List, Optional
+from sklearn.metrics import (
+    roc_curve,
+    auc,
+    precision_recall_curve,
+    average_precision_score,
+    confusion_matrix,
+)
+from sklearn.calibration import calibration_curve
+
+
+def plot_roc_curve(y_true, y_score, model_name, config) -> None:
+    """Plots the Receiver Operating Characteristic (ROC) curve."""
+    if len(y_true) == 0:
+        return
+    fpr, tpr, _ = roc_curve(y_true, y_score)
+    roc_auc = auc(fpr, tpr)
+    plt.figure()
+    plt.plot(fpr, tpr, label=f"ROC curve (area = {roc_auc:0.2f})")
+    plt.plot([0, 1], [0, 1], "k--")
+    plt.title(f"ROC - {model_name}")
+    plt.legend(loc="lower right")
+    plt.savefig(os.path.join(config.root_path, "test_plot.png"))
+    plt.show()
+
+
+def plot_precision_recall_curve(y_true, y_score, model_name, config) -> None:
+    """Plots the Precision-Recall curve."""
+    if len(y_true) == 0:
+        return
+    precision, recall, _ = precision_recall_curve(y_true, y_score)
+    avg_precision = average_precision_score(y_true, y_score)
+    plt.figure()
+    plt.plot(recall, precision, label=f"AP = {avg_precision:0.2f}")
+    plt.title(f"PR Curve - {model_name}")
+    plt.legend(loc="lower left")
+    plt.savefig(os.path.join(config.root_path, "test_plot.png"))
+    plt.show()
+
+
+def plot_calibration_curve(y_true, y_prob, model_name, config) -> None:
+    """Plots the calibration curve (reliability diagram)."""
+    if len(y_true) == 0:
+        return
+    prob_true, prob_pred = calibration_curve(y_true, y_prob, n_bins=10)
+    plt.figure()
+    plt.plot(prob_pred, prob_true, "s-", label=model_name)
+    plt.plot([0, 1], [0, 1], "k:", label="Perfectly calibrated")
+    plt.title(f"Calibration - {model_name}")
+    plt.legend()
+    plt.savefig(os.path.join(config.root_path, "test_plot.png"))
+    plt.show()
+
+
+def plot_feature_importance(importances, model_name, config) -> None:
+    """Plots feature importances as a horizontal bar chart."""
+    if importances.empty:
+        return
+    plt.figure(figsize=(10, 6))
+    importances.sort_values().plot(kind="barh")
+    plt.title(f"Feature Importance - {model_name}")
+    plt.savefig(os.path.join(config.root_path, "test_plot.png"))
+    plt.show()
+
+
+def plot_confusion_matrix(y_true, y_pred, model_name, config) -> None:
+    """Plots a confusion matrix heatmap."""
+    if len(y_true) == 0:
+        return
+    cm = confusion_matrix(y_true, y_pred)
+    plt.figure()
+    sns.heatmap(cm, annot=True, fmt="d")
+    plt.title(f"Confusion Matrix - {model_name}")
+    plt.savefig(os.path.join(config.root_path, "test_plot.png"))
+    plt.show()
+
+
+def plot_missing_data_patterns(df, model_name, config) -> None:
+    """Plots a heatmap of missing data patterns."""
+    if df.empty:
+        return
+    plt.figure(figsize=(12, 6))
+    sns.heatmap(df.isnull(), cbar=False)
+    plt.title(f"Missing Data Patterns - {model_name}")
+    plt.savefig(os.path.join(config.root_path, "test_plot.png"))
+    plt.show()
 
 
 def generate_pie_charts(

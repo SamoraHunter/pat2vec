@@ -1,5 +1,7 @@
 import json
 import logging
+import pandas as pd
+import os
 from typing import Any, Dict, List, Optional
 
 # Attempt to import cs, but don't fail if it's not initialized yet
@@ -14,6 +16,98 @@ except ImportError:
     initialize_cogstack_client = None
 
 logger = logging.getLogger(__name__)
+
+
+def generate_mapping_for_dataframe(df: pd.DataFrame) -> Dict[str, Any]:
+    """Infers Elasticsearch field mappings from a pandas DataFrame."""
+    mapping = {}
+    for col, dtype in df.dtypes.items():
+        if pd.api.types.is_datetime64_any_dtype(dtype):
+            mapping[col] = {"type": "date"}
+        elif pd.api.types.is_bool_dtype(dtype):
+            mapping[col] = {"type": "boolean"}
+        elif pd.api.types.is_integer_dtype(dtype):
+            mapping[col] = {"type": "long"}
+        elif pd.api.types.is_float_dtype(dtype):
+            mapping[col] = {"type": "double"}
+        elif pd.api.types.is_string_dtype(dtype):
+            # Check if it looks like a JSON string to infer nested
+            sample = df[col].dropna().iloc[0] if not df[col].dropna().empty else ""
+            if (
+                isinstance(sample, str)
+                and sample.startswith("{")
+                and sample.endswith("}")
+            ):
+                try:
+                    # Attempt to infer sub-properties from all rows to handle mixed keys
+                    props = {}
+                    for val in df[col].dropna():
+                        obj = json.loads(val)
+                        for k, v in obj.items():
+                            if k not in props:
+                                # Simple inference for nested keys
+                                if isinstance(v, bool):
+                                    t = "boolean"
+                                elif isinstance(v, int):
+                                    t = "long"
+                                elif isinstance(v, float):
+                                    t = "double"
+                                else:
+                                    t = "keyword"
+                                props[k] = {"type": t}
+                            elif props[k]["type"] != "keyword":
+                                # If we see mixed types for the same key across rows, default to keyword
+                                if (
+                                    isinstance(v, int) and props[k]["type"] == "double"
+                                ) or (
+                                    isinstance(v, float) and props[k]["type"] == "long"
+                                ):
+                                    props[k]["type"] = "double"
+                                elif not isinstance(v, (int, float, bool)):
+                                    props[k]["type"] = "keyword"
+                    mapping[col] = {"type": "nested", "properties": props}
+                except Exception:
+                    mapping[col] = {"type": "keyword"}
+            else:
+                mapping[col] = {"type": "keyword"}
+        else:
+            mapping[col] = {"type": "keyword"}
+    return mapping
+
+
+def generate_elastic_schema(df: pd.DataFrame, index_name: str) -> Dict[str, Any]:
+    """Generates a complete Elasticsearch schema dictionary for an index."""
+    return {
+        index_name: {"mappings": {"properties": generate_mapping_for_dataframe(df)}}
+    }
+
+
+def create_schema_from_dataframe(
+    df: pd.DataFrame, index_name: str, config: Any
+) -> None:
+    """Creates or updates an Elasticsearch schema file based on a DataFrame."""
+    new_schema = generate_elastic_schema(df, index_name)
+    schema_path = config.test_schema_path
+
+    existing_schemas = {}
+    if os.path.exists(schema_path):
+        try:
+            with open(schema_path, "r") as f:
+                existing_schemas = json.load(f)
+        except Exception as e:
+            logger.error(f"Failed to load existing schema at {schema_path}: {e}")
+
+    # Merge new index schema into existing ones
+    existing_schemas.update(new_schema)
+
+    try:
+        os.makedirs(os.path.dirname(schema_path), exist_ok=True)
+        with open(schema_path, "w") as f:
+            json.dump(existing_schemas, f, indent=2)
+        if config.verbosity > 0:
+            logger.info(f"Schema for index '{index_name}' saved to {schema_path}")
+    except Exception as e:
+        logger.error(f"Failed to write schema file {schema_path}: {e}")
 
 
 def generate_schema_from_cluster(
