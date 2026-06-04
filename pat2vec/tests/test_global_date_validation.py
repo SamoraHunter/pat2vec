@@ -122,6 +122,30 @@ class TestGlobalDateValidation(unittest.TestCase):
 
         self.assertEqual(result, mock_config)
 
+    def test_validate_and_fix_global_dates_mixed_types(self):
+        """Test that validation handles mixture of strings and integers."""
+        mock_config = MagicMock()
+        # Start as ints, End as strings
+        mock_config.global_start_year = 2020
+        mock_config.global_start_month = 1
+        mock_config.global_start_day = 1
+        mock_config.global_end_year = "2021"
+        mock_config.global_end_month = "02"
+        mock_config.global_end_day = "03"
+
+        # Initially correct order
+        mock_config.global_start_date = datetime(2020, 1, 1)
+        mock_config.global_end_date = datetime(2021, 2, 3)
+
+        result = validate_and_fix_global_dates(mock_config)
+
+        # Should preserve values as they were (this function mostly swaps if out of order)
+        self.assertEqual(result.global_start_year, 2020)
+        self.assertEqual(result.global_end_year, "2021")
+
+        # Re-verify that it doesn't crash on type conversion during internal comparison
+        self.assertEqual(result.global_start_date, datetime(2020, 1, 1))
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

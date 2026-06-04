@@ -457,3 +457,63 @@ def search_cohort(
 # additional_filters = ["AND client_dob: {now-18y TO *}"]
 
 # demo_df = search_cohort(patlist, start_year, start_month, start_day, end_year, end_month, end_day, additional_filters)
+
+
+def get_all_patient_list(config_obj: Any) -> List[str]:
+    """
+    Retrieves a list of all patient IDs based on the provided configuration.
+
+    This function attempts to get the patient list in the following order:
+    1. Directly from `config_obj.all_patient_list` if it's set.
+    2. From a CSV file specified by `config_obj.all_patient_list_path`,
+       using the column specified by `config_obj.all_patient_list_column`.
+    3. By listing CSV files in the directory specified by
+       `config_obj.pre_document_batch_path` and extracting IDs from filenames.
+
+    Args:
+        config_obj: A configuration object containing patient list settings.
+
+    Returns:
+        A list of patient IDs (strings).
+    """
+    if config_obj.all_patient_list:
+        logger.info("Using patient list from config_obj.all_patient_list.")
+        return config_obj.all_patient_list
+
+    if config_obj.all_patient_list_path:
+        logger.info(
+            f"Loading patient list from CSV: {config_obj.all_patient_list_path}"
+        )
+        try:
+            df = pd.read_csv(config_obj.all_patient_list_path)
+            if config_obj.all_patient_list_column in df.columns:
+                return df[config_obj.all_patient_list_column].astype(str).tolist()
+            else:
+                logger.warning(
+                    f"Column '{config_obj.all_patient_list_column}' not found in {config_obj.all_patient_list_path}. Falling back to directory scan."
+                )
+        except FileNotFoundError:
+            logger.warning(
+                f"Patient list CSV not found at {config_obj.all_patient_list_path}. Falling back to directory scan."
+            )
+        except Exception as e:
+            logger.error(
+                f"Error reading patient list CSV at {config_obj.all_patient_list_path}: {e}. Falling back to directory scan."
+            )
+
+    if config_obj.pre_document_batch_path and os.path.isdir(
+        config_obj.pre_document_batch_path
+    ):
+        logger.info(
+            f"Scanning directory for patient files: {config_obj.pre_document_batch_path}"
+        )
+        patient_ids = []
+        for filename in os.listdir(config_obj.pre_document_batch_path):
+            if filename.endswith(".csv"):
+                patient_ids.append(os.path.splitext(filename)[0])
+        return patient_ids
+
+    logger.warning(
+        "No patient list found in config, CSV path, or batch directory. Returning empty list."
+    )
+    return []

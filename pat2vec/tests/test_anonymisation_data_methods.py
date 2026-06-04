@@ -47,6 +47,21 @@ class TestAnonymisationDataMethods(unittest.TestCase):
         # Both should share 'weight' as the core concept
         self.assertTrue(concepts[0].split("_")[1] == concepts[1].split("_")[1])
 
+    def test_anonymize_empty_dataframe(self):
+        """Test anonymization on an empty DataFrame."""
+        df = pd.DataFrame()
+        anon_df, key = anonymize_feature_names(df)
+        self.assertTrue(anon_df.empty)
+        self.assertEqual(len(key), 0)
+
+    def test_deanonymize_with_missing_key(self):
+        """Test deanonymization when some columns are not in the key."""
+        key = {"concept_0": "known"}
+        cols = ["concept_0", "unknown_col"]
+        # The implementation returns None for unknown keys and logs a warning
+        recovered = deanonymize_feature_names(cols, key)
+        self.assertListEqual(recovered, ["known", None])
+
 
 if __name__ == "__main__":
     unittest.main()

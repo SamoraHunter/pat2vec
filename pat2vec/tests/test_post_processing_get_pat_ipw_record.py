@@ -481,6 +481,35 @@ class TestGetPatIpwRecord(unittest.TestCase):
                 result_df.iloc[0]["updatetime"], pd.Timestamp("2020-01-01", tz="UTC")
             )
 
+    @patch("pat2vec.util.post_processing_get_pat_ipw_record.filter_and_select_rows")
+    @patch("pat2vec.util.post_processing_get_pat_ipw_record.filter_annot_dataframe2")
+    @patch("os.path.exists")
+    @patch("pandas.read_csv")
+    def test_only_mct_file_exists(
+        self, mock_read_csv, mock_exists, mock_filter_annot, mock_filter_select
+    ):
+        """Test when only the MCT file exists in the filesystem."""
+
+        def side_effect_exists(path):
+            return "mct" in path
+
+        mock_exists.side_effect = side_effect_exists
+        mock_read_csv.return_value = self.mct_df
+        mock_filter_annot.side_effect = lambda df, _: df
+        mock_filter_select.side_effect = lambda df, *args, **kwargs: df
+
+        result_df = get_pat_ipw_record(
+            current_pat_idcode=self.patient_id,
+            config_obj=self.mock_config,
+            filter_codes=[102],
+        )
+
+        self.assertEqual(len(result_df), 1)
+        self.assertEqual(result_df.iloc[0]["source"], "MCT")
+        # Verify that other files were checked but read_csv was only called for existing one
+        self.assertEqual(mock_exists.call_count, 3)
+        self.assertEqual(mock_read_csv.call_count, 1)
+
 
 if __name__ == "__main__":
     unittest.main()
