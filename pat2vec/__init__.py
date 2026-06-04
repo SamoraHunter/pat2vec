@@ -209,15 +209,21 @@ from .patvec_get_batch_methods.main_get_pat_batch_textual_obs_docs import (
     get_pat_batch_textual_obs_docs,
 )
 from .tests.test_anonymisation_data_methods import TestAnonymisationDataMethods
+from .tests.test_anonymisation_deid_documents import TestDeIdAnonymizer
 from .tests.test_calculate_interval import TestCalculateInterval
 from .tests.test_config_class import TestConfigClass
 from .tests.test_database_backend import TestDatabaseBackend
+from .tests.test_docker_elastic import TestElasticContainer
 from .tests.test_elastic_population import TestElasticPopulation
+from .tests.test_elasticsearch_methods import TestElasticsearchMethods
 from .tests.test_ethnicity_abstractor import TestEthnicityAbstractor
+from .tests.test_evaluation_methods_ploting import TestEvaluationMethodsPloting
 from .tests.test_filter_dataframe_by_timestamp_extended import (
     TestFilterDataFrameByTimestampExtended,
 )
+from .tests.test_filter_methods import TestFilterMethods
 from .tests.test_generate_date_list import TestGenerateDateList
+from .tests.test_generate_elastic_schema import TestGenerateElasticSchema
 from .tests.test_get_dummy_data_cohort_searcher_get_date import (
     TestCreateRandomDateFromGlobals,
 )
@@ -232,6 +238,7 @@ from .tests.test_methods_annotation_filter_annot_dataframe import (
 )
 from .tests.test_methods_annotation_multi_annots_to_df import TestMultiAnnotsToDf
 from .tests.test_methods_get import TestFilterDataFrameByTimestamp
+from .tests.test_methods_get_medcat import TestMethodsGetMedcat
 from .tests.test_parse_date import TestDateValidationForElasticsearch
 from .tests.test_pat_maker_full_flow import (
     TestBatchRetrievalDB,
@@ -244,6 +251,9 @@ from .tests.test_post_processing_get_pat_ipw_record import TestGetPatIpwRecord
 from .tests.test_post_processing_medcat import TestPostProcessingMedcat
 from .tests.test_post_processing_process_csv_files import TestProcessCsvFiles
 from .tests.test_pre_get_drug_treatment_docs import TestPreGetDrugTreatmentDocs
+from .tests.test_pre_processing import TestPreProcessing
+from .tests.test_presentation_methods import TestPresentationMethods
+from .tests.test_retrieve_data import TestRetrieveData
 from .tests.test_schema_consistency import TestSchemaConsistency
 from .tests.test_util_utilities import TestDummyDataLogic, TestMethodsGet
 from .util.anonymisation_data_methods import (
@@ -282,7 +292,15 @@ from .util.elasticsearch_methods import (
 )
 from .util.ethnicity_abstractor import EthnicityAbstractor
 from .util.evaluation_methods import CsvProfiler, compare_ipw_annotation_rows
-from .util.evaluation_methods_ploting import generate_pie_charts
+from .util.evaluation_methods_ploting import (
+    generate_pie_charts,
+    plot_calibration_curve,
+    plot_confusion_matrix,
+    plot_feature_importance,
+    plot_missing_data_patterns,
+    plot_precision_recall_curve,
+    plot_roc_curve,
+)
 from .util.filter_dataframe_by_timestamp import filter_dataframe_by_timestamp
 from .util.filter_methods import (
     apply_bloods_data_type_filter,
@@ -291,7 +309,12 @@ from .util.filter_methods import (
     filter_dataframe_by_fuzzy_terms,
 )
 from .util.generate_date_list import generate_date_list
-from .util.generate_elastic_schema import generate_schema_from_cluster
+from .util.generate_elastic_schema import (
+    create_schema_from_dataframe,
+    generate_elastic_schema,
+    generate_mapping_for_dataframe,
+    generate_schema_from_cluster,
+)
 from .util.get_best_gpu import set_best_gpu
 from .util.get_dummy_data_cohort_searcher import (
     cohort_searcher_with_terms_and_search_dummy,
@@ -500,6 +523,7 @@ from .util.pre_processing import (
     calculate_age_append,
     demo_to_latest,
     draw_document_samples,
+    get_all_patient_list,
     get_treatment_docs_by_iterative_multi_term_cohort_searcher_no_terms_fuzzy,
     search_cohort,
 )
@@ -511,6 +535,7 @@ from .util.presentation_methods import (
     group_images_by_suffix,
 )
 from .util.retrieve_data import DATA_TYPE_CONFIG, retrieve_patient_data
+from .util.test_util_methods_get import TestUtilMethodsGet
 from .util.testing_helpers import read_test_data
 
 # Define the public API of the package
@@ -552,13 +577,19 @@ __all__ = [
     "TestCreateRandomDateFromGlobals",
     "TestDatabaseBackend",
     "TestDateValidationForElasticsearch",
+    "TestDeIdAnonymizer",
     "TestDummyDataLogic",
+    "TestElasticContainer",
     "TestElasticPopulation",
+    "TestElasticsearchMethods",
     "TestEthnicityAbstractor",
+    "TestEvaluationMethodsPloting",
     "TestFilterAnnotDataframe",
     "TestFilterDataFrameByTimestamp",
     "TestFilterDataFrameByTimestampExtended",
+    "TestFilterMethods",
     "TestGenerateDateList",
+    "TestGenerateElasticSchema",
     "TestGetPatIpwRecord",
     "TestGetStartEndYearMonth",
     "TestGlobalDateValidation",
@@ -567,14 +598,19 @@ __all__ = [
     "TestIntegrationElastic",
     "TestMedcatMiscMethods",
     "TestMethodsGet",
+    "TestMethodsGetMedcat",
     "TestMultiAnnotsToDf",
     "TestPatMakerFullFlow",
     "TestPatMakerLogic",
     "TestPostProcessing",
     "TestPostProcessingMedcat",
     "TestPreGetDrugTreatmentDocs",
+    "TestPreProcessing",
+    "TestPresentationMethods",
     "TestProcessCsvFiles",
+    "TestRetrieveData",
     "TestSchemaConsistency",
+    "TestUtilMethodsGet",
     "VTE_FIELDS",
     "add_offset_column",
     "aggregate_dataframe_mean",
@@ -651,6 +687,7 @@ __all__ = [
     "create_powerpoint_slides_client_idcode_groups",
     "create_random_date_from_globals",
     "create_remote_folders",
+    "create_schema_from_dataframe",
     "dataframe_generator",
     "date_cleaner",
     "deanonymize_feature_names",
@@ -696,9 +733,11 @@ __all__ = [
     "generate_date_list",
     "generate_diagnostic_orders_data",
     "generate_drug_orders_data",
+    "generate_elastic_schema",
     "generate_epr_documents_data",
     "generate_epr_documents_personal_data",
     "generate_hospital_site_data",
+    "generate_mapping_for_dataframe",
     "generate_news_data",
     "generate_observations_MRC_text_data",
     "generate_observations_Reports_text_data",
@@ -715,6 +754,7 @@ __all__ = [
     "get_all_fields_for_method",
     "get_all_method_default_fields",
     "get_all_method_indices",
+    "get_all_patient_list",
     "get_all_patients_list",
     "get_all_target_annots",
     "get_annots_joined_to_docs",
@@ -826,8 +866,14 @@ __all__ = [
     "optimize_dtypes",
     "parse_medcat_trainer_project_json",
     "parse_meta_anns",
+    "plot_calibration_curve",
+    "plot_confusion_matrix",
+    "plot_feature_importance",
+    "plot_missing_data_patterns",
     "plot_missing_pattern_bloods",
     "plot_ner_results",
+    "plot_precision_recall_curve",
+    "plot_roc_curve",
     "populate_elastic_with_dummy_data",
     "prefetch_batches",
     "prepare_diagnostic_datetime",
