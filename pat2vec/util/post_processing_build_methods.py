@@ -5,8 +5,10 @@ import logging
 from typing import Any, List, Optional, Callable, Tuple, Union
 import pandas as pd
 from tqdm import tqdm
-
-from pat2vec.util.post_processing import retrieve_pat_annots_mct_epr, EMPTY_ANNOT_COLS  # type: ignore
+from pat2vec.util.post_processing_annotations import (
+    retrieve_pat_annots_mct_epr,
+    EMPTY_ANNOT_COLS,
+)
 from pat2vec.util.helper_functions import get_df_from_db, get_ram_usage
 
 logger = logging.getLogger(__name__)

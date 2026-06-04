@@ -4,8 +4,13 @@ from typing import Any, Dict, List, Optional
 import logging
 import pandas as pd
 
-from pat2vec.util.helper_functions import get_df_from_db
-from pat2vec.util.post_processing import filter_and_select_rows, filter_annot_dataframe2
+from pat2vec.util.helper_functions import (
+    get_df_from_db,
+)  # Keep for now, might move later
+from pat2vec.util.post_processing_annotations import (
+    filter_and_select_rows,
+    filter_annot_dataframe2,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -156,7 +161,7 @@ def _get_source_record(
             )
 
             if "cui" in filtered_df.columns:
-                filtered_df["cui"] = pd.to_numeric(filtered_df["cui"], errors="ignore")
+                filtered_df["cui"] = pd.to_numeric(filtered_df["cui"], errors="coerce")
 
             return filtered_df
         except Exception as e:

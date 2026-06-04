@@ -44,25 +44,34 @@ def list_dir_wrapper(path: str, config_obj: Any = None) -> List[str]:
     username = config_obj.username
     password = config_obj.password
     remote_dump = config_obj.remote_dump
-    share_sftp = config_obj.share_sftp
-    sftp_obj = config_obj.sftp_obj
-    sftp_client = None  # Initialize to avoid UnboundLocalError
+    share_sftp = getattr(config_obj, "share_sftp", False)
+    sftp_obj = getattr(config_obj, "sftp_obj", None)
+    sftp_client = None
+    ssh_client = None
     if remote_dump:
         if not share_sftp:
             ssh_client = paramiko.SSHClient()
             ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-            ssh_client.connect(hostname=hostname, username=username, password=password)
-
-            sftp_client = ssh_client.open_sftp()
-            sftp_obj = sftp_client
+            try:
+                ssh_client.connect(
+                    hostname=hostname, username=username, password=password
+                )
+                sftp_client = ssh_client.open_sftp()
+                sftp_obj = sftp_client
+            except Exception:
+                ssh_client.close()
+                raise
 
         try:
             res = sftp_obj.listdir(path)
         except (FileNotFoundError, IOError):
             res = []
 
-        if not share_sftp and sftp_client:
-            sftp_client.close()
+        if not share_sftp:
+            if sftp_client:
+                sftp_client.close()
+            if ssh_client:
+                ssh_client.close()
 
         return res
     else:
@@ -81,16 +90,9 @@ def convert_timestamp_to_tuple(timestamp: str) -> Tuple[int, int]:
     Returns:
         A tuple containing the year and month as integers.
     """
-
-    # parse the timestamp string into a datetime object
-    dt = datetime.strptime(timestamp, "%Y-%m-%dT%H:%M:%S.%f%z")
-
-    # extract the year and month from the datetime object
-    year = dt.year
-    month = dt.month
-
-    # return the tuple of year and month
-    return (year, month)
+    # use the imported parse function for more robust timestamp conversion
+    dt = parse(timestamp)
+    return (dt.year, dt.month)
 
 
 def enum_target_date_vector(
@@ -170,6 +172,7 @@ def dump_results(file_data: Any, path: str, config_obj: Any = None) -> None:
 
     remote_dump = config_obj.remote_dump
     sftp_client = None
+    ssh_client = None
     if remote_dump:
         if not share_sftp:
             ssh_client = paramiko.SSHClient()
@@ -179,12 +182,15 @@ def dump_results(file_data: Any, path: str, config_obj: Any = None) -> None:
             sftp_client = ssh_client.open_sftp()
             sftp_obj = sftp_client
 
-        with sftp_obj.open(path, "w") as file:
-            pickle.dump(file_data, file)
-        if not share_sftp:
-            if sftp_client:
-                sftp_client.close()
-            sftp_obj.close()
+        try:
+            with sftp_obj.open(path, "w") as file:
+                pickle.dump(file_data, file)
+        finally:
+            if not share_sftp:
+                if sftp_client:
+                    sftp_client.close()
+                if ssh_client:
+                    ssh_client.close()
 
     else:
         with open(path, "wb") as f:

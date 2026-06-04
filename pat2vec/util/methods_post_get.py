@@ -5,7 +5,7 @@ import logging
 import pandas as pd
 from tqdm import tqdm
 import shutil
-from pat2vec.util.post_processing import (
+from pat2vec.util.post_processing_annotations import (
     remove_file_from_paths,
     retrieve_pat_annots_mct_epr,
 )

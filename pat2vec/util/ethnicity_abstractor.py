@@ -69,10 +69,7 @@ class EthnicityAbstractor:
             targetColumnString
         ].fillna("other_ethnic_group")
 
-        df_testMap = dataFrame[["client_idcode", ethnicityColumnString]].copy()
-
-        for col in dataFrame.columns:
-            df_testMap[col] = dataFrame[col]
+        df_testMap = dataFrame.copy()
 
         df_testMap.insert(1, "census", "other_ethnic_group")
 
@@ -548,81 +545,58 @@ class EthnicityAbstractor:
 
         allEthList = blackList + whiteList + asianList + otherList + mixedList
 
-        # print(len(racecodeEntries))
+        # Pre-calculate exclusion sets to improve performance
+        all_eth_set = set(allEthList)
+        white_diff = all_eth_set.difference(set(whiteList))
+        asian_diff = all_eth_set.difference(set(asianList))
+        black_diff = all_eth_set.difference(set(blackList))
+        other_diff = all_eth_set.difference(set(otherList))
+        mixed_diff = all_eth_set.difference(set(mixedList))
 
-        # for i in tqdm(range(0, len(racecodeEntries))):
         for i in range(0, len(racecodeEntries)):
-
             entry = racecodeEntries[targetColumnString][i].lower()
-
-            # print(entry)
-
             res = "other_ethnic_group"
-
             count = 0
 
             for synonym in whiteList:
-                if synonym in entry and entry not in set(allEthList).difference(
-                    set(whiteList)
-                ):
+                if synonym in entry and entry not in white_diff:
                     count = count + 1
                     res = "white"
-                    # print(entry, 'white')
 
             for synonym in asianList:
-                if synonym in entry and entry not in set(allEthList).difference(
-                    set(asianList)
-                ):
+                if synonym in entry and entry not in asian_diff:
                     count = count + 1
                     res = "asian_or_asian_british"
 
             for synonym in blackList:
-                if synonym in entry and entry not in set(allEthList).difference(
-                    set(blackList)
-                ):
+                if synonym in entry and entry not in black_diff:
                     count = count + 1
                     res = "black_african_caribbean_or_black_british"
 
             for synonym in otherList:
-                if synonym in entry and entry not in set(allEthList).difference(
-                    set(otherList)
-                ):
+                if synonym in entry and entry not in other_diff:
                     count = count + 1
                     res = "other_ethnic_group"
-                    # print(entry, 'other_ethnic_group2')
 
             for synonym in mixedList:
-                if synonym in entry and entry not in set(allEthList).difference(
-                    set(mixedList)
-                ):
+                if synonym in entry and entry not in mixed_diff:
                     count = count + 1
                     res = "mixed_or_multiple_ethnic_groups"
 
             # Explicit/specification:
-            if "other" in entry and entry not in set(allEthList).difference(
-                set(otherList)
-            ):
+            if "other" in entry and entry not in other_diff:
                 res = "other_ethnic_group"
-                # print(entry, 'other_ethnic_group')
 
-            if "black" in entry and entry not in set(allEthList).difference(
-                set(blackList)
-            ):
+            if "black" in entry and entry not in black_diff:
                 res = "black_african_caribbean_or_black_british"
 
-            if "white" in entry and entry not in set(allEthList).difference(
-                set(whiteList)
-            ):
+            if "white" in entry and entry not in white_diff:
                 res = "white"
 
-            if "asian" in entry and entry not in set(allEthList).difference(
-                set(asianList)
-            ):
+            if "asian" in entry and entry not in asian_diff:
                 res = "asian_or_asian_british"
 
-            if "mix" in entry and entry not in set(allEthList).difference(
-                set(mixedList)
-            ):
+            if "mix" in entry and entry not in mixed_diff:
                 res = "mixed_or_multiple_ethnic_groups"
 
             if count > 15:

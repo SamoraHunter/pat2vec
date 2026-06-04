@@ -2,6 +2,7 @@ import unittest
 import pandas as pd
 import os
 from unittest.mock import patch, MagicMock
+import tempfile
 from datetime import datetime
 import numpy as np
 import ast
@@ -13,7 +14,8 @@ class TestMultiAnnotsToDf(unittest.TestCase):
     # ... setUp, tearDown, and test_basic_dataframe_creation remain the same ...
     def setUp(self):
         """Set up a temporary directory and mock objects for testing."""
-        self.test_dir = "temp_test_dir_multi_annots"
+        self.temp_dir_obj = tempfile.TemporaryDirectory()
+        self.test_dir = self.temp_dir_obj.name
         os.makedirs(self.test_dir, exist_ok=True)
 
         # Mock config object

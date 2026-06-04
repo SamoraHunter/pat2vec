@@ -208,10 +208,12 @@ from .patvec_get_batch_methods.main_get_pat_batch_textual_obs_annotations import
 from .patvec_get_batch_methods.main_get_pat_batch_textual_obs_docs import (
     get_pat_batch_textual_obs_docs,
 )
+from .tests.test_anonymisation_data_methods import TestAnonymisationDataMethods
 from .tests.test_calculate_interval import TestCalculateInterval
 from .tests.test_config_class import TestConfigClass
 from .tests.test_database_backend import TestDatabaseBackend
 from .tests.test_elastic_population import TestElasticPopulation
+from .tests.test_ethnicity_abstractor import TestEthnicityAbstractor
 from .tests.test_filter_dataframe_by_timestamp_extended import (
     TestFilterDataFrameByTimestampExtended,
 )
@@ -224,6 +226,7 @@ from .tests.test_global_date_validation import TestGlobalDateValidation
 from .tests.test_individual_patient_window import TestIndividualPatientWindow
 from .tests.test_integration_data_integrity import TestIntegrationDataIntegrity
 from .tests.test_integration_elastic import TestIntegrationElastic
+from .tests.test_medcat_misc_methods import TestMedcatMiscMethods
 from .tests.test_methods_annotation_filter_annot_dataframe import (
     TestFilterAnnotDataframe,
 )
@@ -235,10 +238,14 @@ from .tests.test_pat_maker_full_flow import (
     TestPatMakerFullFlow,
     TestPatMakerLogic,
 )
+from .tests.test_post_processing import TestPostProcessing
 from .tests.test_post_processing_build_ipw_dataframe import TestBuildIpwDataframe
 from .tests.test_post_processing_get_pat_ipw_record import TestGetPatIpwRecord
+from .tests.test_post_processing_medcat import TestPostProcessingMedcat
 from .tests.test_post_processing_process_csv_files import TestProcessCsvFiles
+from .tests.test_pre_get_drug_treatment_docs import TestPreGetDrugTreatmentDocs
 from .tests.test_schema_consistency import TestSchemaConsistency
+from .tests.test_util_utilities import TestDummyDataLogic, TestMethodsGet
 from .util.anonymisation_data_methods import (
     anonymize_feature_names,
     deanonymize_feature_names,
@@ -422,36 +429,20 @@ from .util.methods_post_get import (
 )
 from .util.migrate_to_db import create_indexes, migrate_csv_to_db
 from .util.parse_date import validate_input_dates
-from .util.post_processing import (
+from .util.post_processing_annotations import (
     EMPTY_ANNOT_COLS,
-    aggregate_dataframe_mean,
     check_list_presence,
-    collapse_df_to_mean,
-    convert_true_to_float,
-    copy_files_and_dirs,
-    count_files,
-    drop_columns_with_all_nan,
-    extract_datetime_from_binary_columns,
-    extract_datetime_from_binary_columns_chunk_reader,
-    extract_datetime_to_column,
     extract_types_from_csv,
     filter_and_select_rows,
-    filter_and_update_csv,
     filter_annot_dataframe2,
     filter_dataframe_by_cui,
     filter_dataframe_n_lists,
     get_all_target_annots,
-    impute_dataframe,
-    impute_datetime,
     join_icd10_OPC4S_codes_to_annot,
     join_icd10_codes_to_annot,
-    missing_percentage_df,
-    plot_missing_pattern_bloods,
-    process_chunk,
     produce_filtered_annotation_dataframe,
     remove_file_from_paths,
     retrieve_pat_annots_mct_epr,
-    save_missing_values_pickle,
 )
 from .util.post_processing_build_ipw_dataframe import build_ipw_dataframe
 from .util.post_processing_build_methods import (
@@ -472,14 +463,34 @@ from .util.post_processing_build_methods import (
     retrieve_pat_docs_mct_epr,
     retrieve_pat_epr_docs,
 )
+from .util.post_processing_dataframe import (
+    aggregate_dataframe_mean,
+    collapse_df_to_mean,
+    convert_true_to_float,
+    drop_columns_with_all_nan,
+    extract_datetime_from_binary_columns,
+    extract_datetime_from_binary_columns_chunk_reader,
+    extract_datetime_to_column,
+    impute_dataframe,
+    impute_datetime,
+    missing_percentage_df,
+    save_missing_values_pickle,
+)
 from .util.post_processing_get_pat_ipw_record import get_pat_ipw_record
 from .util.post_processing_medcat import (
     coerce_document_df_to_medcat_trainer_input,
     sample_by_terms,
 )
+from .util.post_processing_plotting import plot_missing_pattern_bloods
 from .util.post_processing_process_csv_files import (
     process_csv_files,
     process_csv_files_multi,
+)
+from .util.post_processing_utils import (
+    copy_files_and_dirs,
+    count_files,
+    filter_and_update_csv,
+    process_chunk,
 )
 from .util.pre_get_drug_treatment_docs import (
     get_treatment_records_by_drug_order_name,
@@ -533,6 +544,7 @@ __all__ = [
     "SEARCH_TERM_ES",
     "SEARCH_TERM_PLAIN",
     "SMOKING_FIELDS",
+    "TestAnonymisationDataMethods",
     "TestBatchRetrievalDB",
     "TestBuildIpwDataframe",
     "TestCalculateInterval",
@@ -540,7 +552,9 @@ __all__ = [
     "TestCreateRandomDateFromGlobals",
     "TestDatabaseBackend",
     "TestDateValidationForElasticsearch",
+    "TestDummyDataLogic",
     "TestElasticPopulation",
+    "TestEthnicityAbstractor",
     "TestFilterAnnotDataframe",
     "TestFilterDataFrameByTimestamp",
     "TestFilterDataFrameByTimestampExtended",
@@ -551,9 +565,14 @@ __all__ = [
     "TestIndividualPatientWindow",
     "TestIntegrationDataIntegrity",
     "TestIntegrationElastic",
+    "TestMedcatMiscMethods",
+    "TestMethodsGet",
     "TestMultiAnnotsToDf",
     "TestPatMakerFullFlow",
     "TestPatMakerLogic",
+    "TestPostProcessing",
+    "TestPostProcessingMedcat",
+    "TestPreGetDrugTreatmentDocs",
     "TestProcessCsvFiles",
     "TestSchemaConsistency",
     "VTE_FIELDS",

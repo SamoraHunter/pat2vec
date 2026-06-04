@@ -1,6 +1,6 @@
 from pat2vec.util.methods_annotation_json_to_dataframe import json_to_dataframe
 import logging
-from pat2vec.util.post_processing import (
+from pat2vec.util.post_processing_annotations import (
     join_icd10_OPC4S_codes_to_annot,
     join_icd10_codes_to_annot,
 )

@@ -1,5 +1,6 @@
 from multiprocessing import Pool, cpu_count
-from pat2vec.util.post_processing import extract_datetime_to_column, process_chunk
+from pat2vec.util.post_processing_dataframe import extract_datetime_to_column
+from pat2vec.util.post_processing_utils import process_chunk
 import logging
 import pandas as pd
 from tqdm import tqdm
@@ -259,10 +260,11 @@ def process_csv_files_multi(
     # Set the desired number of processes (e.g., half of the available cores)
     desired_half_processes = available_cores // 2
 
+    n_proc_val = available_cores
     if n_proc is not None:
         if n_proc == "all":
             n_proc_val = available_cores
-        if n_proc == "half":
+        elif n_proc == "half":
             n_proc_val = desired_half_processes
         elif isinstance(n_proc, int):
             n_proc_val = n_proc

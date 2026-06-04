@@ -4,9 +4,11 @@ import pandas as pd
 from typing import Any, Dict, List, Optional
 from sqlalchemy import text
 from pat2vec.util.helper_functions import save_annotations_to_db
-from pat2vec.util.methods_annotation_json_to_dataframe import json_to_dataframe
+from pat2vec.util.methods_annotation_json_to_dataframe import (
+    json_to_dataframe,
+)  # Keep for now, might move later
 from pat2vec.util.methods_get import exist_check, update_pbar
-from pat2vec.util.post_processing import (
+from pat2vec.util.post_processing_annotations import (
     join_icd10_codes_to_annot,
     join_icd10_OPC4S_codes_to_annot,
 )

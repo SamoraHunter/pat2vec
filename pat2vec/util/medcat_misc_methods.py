@@ -150,13 +150,15 @@ def extract_labels_from_medcat_annotation_export(
             if label_text in main_text:
                 if main_text_sample == label_text:
                     if main_value == label_value:
+                        # Safely check for meta-annotation columns
+                        subj = df.iloc[j].get("subject_experiencer", "Patient")
+                        pres = df.iloc[j].get("presence", "True")
+                        time_val = df.iloc[j].get("time", "Recent")
+
                         extracted_bool = (
-                            (df.iloc[j]["subject_experiencer"] == "Patient")
-                            & (df.iloc[j]["presence"] == "True")
-                            & (
-                                (df.iloc[j]["time"] == "Recent")
-                                | (df.iloc[j]["time"] == "Past")
-                            )
+                            (subj == "Patient")
+                            & (pres == "True")
+                            & ((time_val == "Recent") | (time_val == "Past"))
                         )
                         human_labels.at[i, "extracted_label"] = int(extracted_bool)
 
@@ -517,6 +519,7 @@ def parse_medcat_trainer_project_json(json_path: str) -> pd.DataFrame:
     logger.info(f"Final DataFrame shape: {df_final.shape}")
     logger.info("Columns available:")
     logger.info(df_final.columns.tolist())
+    return df_final
 
 
 def create_ner_results_dataframe(
