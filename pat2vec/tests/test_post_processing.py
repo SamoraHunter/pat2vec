@@ -414,6 +414,38 @@ class TestPostProcessing(unittest.TestCase):
         self.assertEqual(result["datetime"].iloc[0], datetime(2023, 1, 1))
         self.assertEqual(result["datetime"].iloc[1], datetime(2023, 1, 2))
 
+    def test_extract_datetime_from_binary_columns_no_match(self):
+        df = pd.DataFrame({"col1": [1, 2]})
+        result = extract_datetime_from_binary_columns(df.copy())
+        # The implementation adds a 'datetime' column even if no binary date columns are found.
+        self.assertIn("datetime", result.columns)
+        self.assertTrue(result["datetime"].isnull().all())
+
+    def test_extract_datetime_from_binary_columns_multiple_ones(self):
+        # If multiple date columns have 1, ensure it picks one validly
+        df = pd.DataFrame(
+            {
+                "col1": [1],
+                "(2023, 01, 01)_date_time_stamp": [1],
+                "(2023, 01, 02)_date_time_stamp": [1],
+            }
+        )
+        result = extract_datetime_from_binary_columns(df.copy())
+        self.assertTrue(
+            result["datetime"].iloc[0] in [datetime(2023, 1, 1), datetime(2023, 1, 2)]
+        )
+
+    def test_extract_datetime_from_binary_columns_malformed(self):
+        df = pd.DataFrame(
+            {
+                "invalid_date_time_stamp": [1],
+            }
+        )
+        # The current implementation in post_processing_dataframe.py raises ValueError
+        # when parsing malformed strings containing the '_date_time_stamp' suffix.
+        with self.assertRaises(ValueError):
+            extract_datetime_from_binary_columns(df.copy())
+
     def test_extract_datetime_from_binary_columns_chunk_reader(self):
         # Create a dummy CSV file
         filepath = os.path.join(self.test_dir, "binary_dates.csv")
@@ -512,6 +544,17 @@ class TestPostProcessing(unittest.TestCase):
         self.assertFalse(result["num_col2"].isnull().any())
         self.assertEqual(result["num_col1"].iloc[1], 10)  # Forward fill
         self.assertEqual(result["num_col2"].iloc[2], 50)  # Backward fill
+
+    def test_impute_dataframe_no_missing(self):
+        df = pd.DataFrame(
+            {
+                "col1": [1, 2],
+                "client_idcode": ["P1", "P1"],
+                "datetime": [datetime(2023, 1, 1), datetime(2023, 1, 2)],
+            }
+        )
+        result = impute_dataframe(df.copy(), verbose=False)
+        pd.testing.assert_frame_equal(result, df)
 
     def test_missing_percentage_df(self):
         df = pd.DataFrame({"col1": [1, np.nan], "col2": [2, 3]})
