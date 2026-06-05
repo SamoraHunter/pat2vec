@@ -21,7 +21,6 @@ REM   /dev           - Install development dependencies.
 REM ============================================================================
 
 REM --- Configuration ---
-set "PYTHON_EXE=python"
 set "VENV_DIR=%~dp0pat2vec_env"
 set "SPACY_MODEL_URL=https://github.com/explosion/spacy-models/releases/download/en_core_web_md-3.7.1/en_core_web_md-3.7.1-py3-none-any.whl"
 
@@ -72,16 +71,22 @@ if "%PROXY_MODE%"=="true" (
 
 REM --- Prerequisite Checks ---
 echo Checking prerequisites...
-python --version >nul 2>&1
-if errorlevel 1 (
-    echo %ESC%[91mERROR: Python is not found. Please install Python and add it to your PATH.%ESC%[0m
+
+echo Detecting Python interpreter...
+set "PYTHON_EXE="
+for %%P in (python3.11 python3.10 python3 python) do (
+    if not defined PYTHON_EXE (
+        %%P --version >nul 2>&1 && set "PYTHON_EXE=%%P"
+    )
+)
+
+if not defined PYTHON_EXE (
+    echo %ESC%[91mERROR: Python is not installed or not found in PATH.%ESC%[0m
     goto :fatal_error
 )
-git --version >nul 2>&1
-if errorlevel 1 (
-    echo %ESC%[91mERROR: Git is not found. Please install Git and add it to your PATH.%ESC%[0m
-    goto :fatal_error
-)
+echo Using Python interpreter: %PYTHON_EXE%
+
+git --version >nul 2>&1 || (echo %ESC%[91mERROR: Git is not found.%ESC%[0m & goto :fatal_error)
 echo %ESC%[92mPrerequisites found.%ESC%[0m
 
 REM --- Pre-flight check for write permissions ---
@@ -95,6 +100,14 @@ if errorlevel 1 (
 )
 del "%GLOBAL_FILES_DIR%\perm.tmp"
 echo Write permissions OK.
+
+REM Verify we're in the pat2vec directory
+for %%I in ("%CD%") do set "CURRENT_DIR_NAME=%%~nxI"
+if /I NOT "%CURRENT_DIR_NAME%"=="pat2vec" (
+    echo %ESC%[91mERROR: This script must be run from the pat2vec directory.%ESC%[0m
+    echo Current directory is: %CD%
+    goto :fatal_error
+)
 
 REM --- Main Installation Logic ---
 if "%CLONE_REPOS%"=="true" (call :clone_repositories)
@@ -114,7 +127,7 @@ echo Creating virtual environment...
 if exist "%VENV_DIR%" (
     echo Virtual environment already exists in "%VENV_DIR%". Skipping creation.
 ) else (
-    python -m venv "%VENV_DIR%"
+    %PYTHON_EXE% -m venv "%VENV_DIR%"
     if errorlevel 1 (
         echo %ESC%[91mERROR: Failed to create virtual environment.%ESC%[0m
         goto :fatal_error
@@ -151,11 +164,14 @@ if errorlevel 1 (
 
 echo.
 echo Installing main project dependencies...
-set MAIN_EXTRAS=
-if "%INSTALL_MODE%"=="all" (set MAIN_EXTRAS=all)
+set "EXTRAS="
+if "%INSTALL_MODE%"=="all" (set "EXTRAS=all")
+if "%DEV_MODE%"=="true" (
+    if defined EXTRAS (set "EXTRAS=%EXTRAS%,dev") else (set "EXTRAS=dev")
+)
 
-set INSTALL_TARGET=.
-if defined MAIN_EXTRAS (set INSTALL_TARGET=.[%MAIN_EXTRAS%])
+set "INSTALL_TARGET=."
+if defined EXTRAS (set "INSTALL_TARGET=.[%EXTRAS%]")
 
 echo Running: pip install --no-build-isolation -e "%INSTALL_TARGET%"
 set PIP_INSTALL_ARGS=--no-build-isolation -e "%INSTALL_TARGET%"
@@ -165,18 +181,6 @@ pip install %PIP_INSTALL_ARGS%
 if errorlevel 1 (
     echo %ESC%[91mERROR: Failed to install project dependencies.%ESC%[0m
     goto :deactivate_and_exit
-)
-
-REM Install development dependencies separately from public PyPI
-if "%DEV_MODE%"=="true" (
-    echo.
-    echo Installing development dependencies from public PyPI...
-    set "DEV_DEPS="pytest" "nbformat" "nbconvert" "nbstripout" "nbmake" "pre-commit" "sphinx~=7.3.0" "myst-parser>=2.0.0" "sphinx-rtd-theme>=2.0.0" "sphinx-autodoc-typehints>=2.0.0""
-    REM We do not use the proxy for these, as they are often missing from internal mirrors.
-    pip install %DEV_DEPS%
-    if errorlevel 1 (
-        echo %ESC%[93mWARNING: Failed to install one or more dev dependencies. Docs build may fail.%ESC%[0m
-    )
 )
 
 echo.
@@ -204,11 +208,12 @@ echo ----------------------------------------------------
 :deactivate_and_exit
 echo.
 echo Deactivating virtual environment...
-call deactivate
+if defined VIRTUAL_ENV call deactivate
 
 echo.
 echo To activate the environment, run:
-echo   call "%VENV_DIR%\Scripts\activate.bat"
+echo   Command Prompt: call "%VENV_DIR%\Scripts\activate.bat"
+echo   PowerShell:     %VENV_DIR%\Scripts\Activate.ps1
 goto :eof
 
 REM ============================================================================
@@ -231,6 +236,22 @@ goto :eof
 echo.
 echo Cloning additional repositories...
 
+REM Save current environment proxy settings and global git config
+set "SAVE_HTTP_PROXY=%http_proxy%"
+set "SAVE_HTTPS_PROXY=%https_proxy%"
+for /f "tokens=*" %%i in ('git config --global --get http.proxy 2^>nul') do set "SAVE_GIT_HTTP_PROXY=%%i"
+for /f "tokens=*" %%i in ('git config --global --get https.proxy 2^>nul') do set "SAVE_GIT_HTTPS_PROXY=%%i"
+
+if "%PROXY_MODE%"=="false" (
+    echo Temporarily disabling proxy for Git operations...
+    set http_proxy=
+    set https_proxy=
+    set HTTP_PROXY=
+    set HTTPS_PROXY=
+    git config --global --unset http.proxy >nul 2>&1
+    git config --global --unset https.proxy >nul 2>&1
+)
+
 pushd "%GLOBAL_FILES_DIR%"
 
 set REPO_NAME=snomed_methods
@@ -245,6 +266,14 @@ if not exist "%REPO_NAME%" (
 )
 
 popd
+
+REM Restore proxy settings
+if "%PROXY_MODE%"=="false" (
+    if defined SAVE_HTTP_PROXY set "http_proxy=%SAVE_HTTP_PROXY%"
+    if defined SAVE_HTTPS_PROXY set "https_proxy=%SAVE_HTTPS_PROXY%"
+    if defined SAVE_GIT_HTTP_PROXY git config --global http.proxy "%SAVE_GIT_HTTP_PROXY%"
+    if defined SAVE_GIT_HTTPS_PROXY git config --global https.proxy "%SAVE_GIT_HTTPS_PROXY%"
+)
 goto :eof
 
 :setup_medcat_models
