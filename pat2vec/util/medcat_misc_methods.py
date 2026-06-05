@@ -475,7 +475,7 @@ def parse_medcat_trainer_project_json(json_path: str) -> pd.DataFrame:
     ).dropna()
 
     # Step 6: Explode annotations
-    final_data = []
+    final_data = []  # This will be empty if doc_data is empty
     for _, row in doc_data.iterrows():
         base_data = (
             row.drop("annotations").to_dict() if "annotations" in row else row.to_dict()
@@ -512,6 +512,15 @@ def parse_medcat_trainer_project_json(json_path: str) -> pd.DataFrame:
                     final_data.append(ann_record)
         else:
             final_data.append(base_data)
+
+    # If no documents or annotations were found, ensure project-level data is still returned
+    if not final_data and not df_projects.empty:
+        final_data.append(
+            {
+                "project_id": df_projects.iloc[0]["id"],
+                "project_name": df_projects.iloc[0]["name"],
+            }
+        )
 
     # Final DataFrame
     df_final = pd.DataFrame(final_data)

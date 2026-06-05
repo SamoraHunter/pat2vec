@@ -20,11 +20,15 @@ def setup_logger(log_level: str = "INFO", logs_dir: str = "logs") -> logging.Log
 
     # Create a logger
     logger = logging.getLogger("pat2vec")
-    logger.setLevel(logging.DEBUG)  # Set the lowest level for the logger
+    logger.setLevel(
+        getattr(logging, log_level.upper())
+    )  # Set the logger's level to the requested level
+    logger.propagate = False  # Prevent messages from being passed to the root logger
 
-    # Avoid adding handlers if they already exist
-    if logger.hasHandlers():
-        logger.handlers.clear()
+    # Always clear existing handlers to ensure a clean state for each setup
+    for handler in logger.handlers[:]:
+        handler.close()
+        logger.removeHandler(handler)
 
     # --- File Handler ---
     current_date_time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")

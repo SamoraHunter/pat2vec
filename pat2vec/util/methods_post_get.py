@@ -104,16 +104,17 @@ def check_csv_integrity(
             are issued to inform the user of potential data integrity issues.
 
     """
+
+    def _delete_and_log(reason: str):
+        """Helper to remove a file and log the action."""
+        warnings.warn(f"{reason}: {file_path}", UserWarning)
+        _, filename_ext = os.path.split(file_path)
+        filename, _ = os.path.splitext(filename_ext)
+        remove_file_from_paths(filename, config_obj=config_obj)
+        logger.info(f"Deleted broken file: {filename} : {file_path}")
+
     try:
         df = pd.read_csv(file_path)
-
-        def _delete_and_log(reason: str):
-            """Helper to remove a file and log the action."""
-            warnings.warn(f"{reason}: {file_path}", UserWarning)
-            _, filename_ext = os.path.split(file_path)
-            filename, _ = os.path.splitext(filename_ext)
-            remove_file_from_paths(filename, config_obj=config_obj)
-            logger.info(f"Deleted broken file: {filename} : {file_path}")
 
         # Perform integrity checks on the DataFrame
         non_nullable_columns = ["client_idcode"]  # Add more columns as needed

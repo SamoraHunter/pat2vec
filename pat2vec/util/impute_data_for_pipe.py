@@ -41,8 +41,6 @@ def mean_impute_dataframe(
     random.seed(seed)
 
     # Drop columns that are completely empty (no values at all)
-    data = data.dropna(axis=1, how="all")
-    logger.info(f"After dropping completely empty columns, data shape: {data.shape}")
 
     # Ensure y_vars is a list
     y_vars = [y_vars] if isinstance(y_vars, str) else y_vars
@@ -81,23 +79,30 @@ def mean_impute_dataframe(
         imputer = SimpleImputer(strategy="mean")
 
         # Process each numeric column separately
+        # Handle columns that are entirely NaN by imputing with 0
         for col in numeric_cols:
-            # Check if column is completely empty
-            if X_train[col].isnull().all():
-                X_train_imputed[col] = 0
-                X_val_imputed[col] = 0
-                X_test_imputed[col] = 0
-            else:
-                # Reshape for single column imputation
-                col_train = X_train[col].values.reshape(-1, 1)
-                col_val = X_val[col].values.reshape(-1, 1)
-                col_test = X_test_orig[col].values.reshape(-1, 1)
+            # If a column is entirely NaN in the training set, impute with 0 across all sets
+            if (
+                X_train[col].isnull().all() and X_train[col].dtype != object
+            ):  # Ensure it's a numeric column
+                X_train_imputed[col] = 0.0
+                X_val_imputed[col] = 0.0
+                X_test_imputed[col] = 0.0
+                logger.info(
+                    f"Column '{col}' was entirely NaN in training set, imputed with 0."
+                )
+                continue
 
-                # Fit and transform
-                imputer.fit(col_train)
-                X_train_imputed[col] = imputer.transform(col_train).ravel()
-                X_val_imputed[col] = imputer.transform(col_val).ravel()
-                X_test_imputed[col] = imputer.transform(col_test).ravel()
+            # Reshape for single column imputation
+            col_train = X_train[col].values.reshape(-1, 1)
+            col_val = X_val[col].values.reshape(-1, 1)
+            col_test = X_test_orig[col].values.reshape(-1, 1)
+
+            # Fit and transform
+            imputer.fit(col_train)
+            X_train_imputed[col] = imputer.transform(col_train).ravel()
+            X_val_imputed[col] = imputer.transform(col_val).ravel()
+            X_test_imputed[col] = imputer.transform(col_test).ravel()
 
     # Combine all splits back together
     X_train_val = pd.concat([X_train_imputed, X_val_imputed])
@@ -143,8 +148,12 @@ def save_missing_percentage(
         A dictionary where keys are column names and values are the
         percentage of missing values.
     """
-    percent_missing = df.isnull().mean() * 100
-    percent_missing = percent_missing.to_dict()
+    if df.empty:
+        # If the DataFrame is empty, all columns are 100% missing
+        percent_missing = {col: 100.0 for col in df.columns}
+    else:
+        percent_missing = df.isnull().mean() * 100
+        percent_missing = percent_missing.to_dict()
 
     with open(output_file, "wb") as file:
         pickle.dump(percent_missing, file)

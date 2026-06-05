@@ -56,7 +56,7 @@ class TestLoggerSetup(unittest.TestCase):
         """Verify that the console handler respects the provided log level."""
         logger = setup_logger(log_level="ERROR", logs_dir=self.test_dir)
         console_handler = next(
-            h for h in logger.handlers if isinstance(h, logging.StreamHandler)
+            h for h in logger.handlers if type(h) is logging.StreamHandler
         )
         self.assertEqual(console_handler.level, logging.ERROR)
 

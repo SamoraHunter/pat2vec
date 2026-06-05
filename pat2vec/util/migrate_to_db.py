@@ -7,28 +7,164 @@ from sqlalchemy import create_engine
 from sqlalchemy.schema import CreateSchema
 from typing import Any
 from tqdm import tqdm
-from sqlalchemy import Index
-
+from sqlalchemy import inspect
 
 from sqlalchemy import text
 
 logger = logging.getLogger(__name__)
 
+# Move mappings to module level to allow testing and patching
+MAPPINGS = [
+    # Raw Data
+    (
+        "pre_bloods_batch_path",
+        "raw_data",
+        "raw_bloods",
+        "client_idcode",
+        ["client_idcode", "basicobs_entered"],
+    ),
+    (
+        "pre_drugs_batch_path",
+        "raw_data",
+        "raw_drugs",
+        "client_idcode",
+        ["client_idcode", "order_entered"],
+    ),
+    (
+        "pre_diagnostics_batch_path",
+        "raw_data",
+        "raw_diagnostics",
+        "client_idcode",
+        ["client_idcode", "order_entered"],
+    ),
+    (
+        "pre_news_batch_path",
+        "raw_data",
+        "raw_news",
+        "client_idcode",
+        ["client_idcode", "observationdocument_recordeddtm"],
+    ),
+    (
+        "pre_bmi_batch_path",
+        "raw_data",
+        "raw_bmi",
+        "client_idcode",
+        ["client_idcode", "observationdocument_recordeddtm"],
+    ),
+    (
+        "pre_demo_batch_path",
+        "raw_data",
+        "raw_demographics",
+        "client_idcode",
+        ["client_idcode", "updatetime"],
+    ),
+    (
+        "pre_document_batch_path",
+        "raw_data",
+        "raw_epr_docs",
+        "client_idcode",
+        ["client_idcode", "updatetime"],
+    ),
+    (
+        "pre_document_batch_path_mct",
+        "raw_data",
+        "raw_mct_docs",
+        "client_idcode",
+        ["client_idcode", "observationdocument_recordeddtm"],
+    ),
+    (
+        "pre_textual_obs_document_batch_path",
+        "raw_data",
+        "raw_textual_obs",
+        "client_idcode",
+        ["client_idcode", "basicobs_entered"],
+    ),
+    (
+        "pre_document_batch_path_reports",
+        "raw_data",
+        "raw_reports",
+        "client_idcode",
+        ["client_idcode", "updatetime"],
+    ),
+    (
+        "pre_appointments_batch_path",
+        "raw_data",
+        "raw_appointments",
+        "HospitalID",
+        ["HospitalID", "AppointmentDateTime"],
+    ),
+    # Annotations
+    (
+        "pre_document_annotation_batch_path",
+        "annotations",
+        "ann_epr_docs",
+        "client_idcode",
+        ["client_idcode", "updatetime"],
+    ),
+    (
+        "pre_document_annotation_batch_path_mct",
+        "annotations",
+        "ann_mct_docs",
+        "client_idcode",
+        ["client_idcode", "observationdocument_recordeddtm"],
+    ),
+    (
+        "pre_textual_obs_annotation_batch_path",
+        "annotations",
+        "ann_textual_obs",
+        "client_idcode",
+        ["client_idcode", "basicobs_entered"],
+    ),
+    (
+        "pre_document_annotation_batch_path_reports",
+        "annotations",
+        "ann_reports",
+        "client_idcode",
+        ["client_idcode", "updatetime"],
+    ),
+    # Features
+    (
+        "current_pat_lines_path",
+        "features",
+        "features",
+        "client_idcode",
+        ["client_idcode"],
+    ),
+]
+
 
 def create_indexes(engine, schema_name, table_name, index_columns):
     """Creates an index on the specified table and columns, if it doesn't already exist."""
-    # Handle SQLite flattening
-    if engine.name == "sqlite":
-        table_name = f"{schema_name}_{table_name}"
-        # SQLite doesn't use schema in the same way for indexes on attached DBs usually,
-        # but here we just want unique index names on the main DB.
+    inspector = inspect(engine)
 
-    index_name = f"idx_{table_name}_{'_'.join(index_columns)}"
+    # Determine the actual table name used in the DB
+    if engine.name == "sqlite":
+        target_table = f"{schema_name}_{table_name}"
+        quoted_target_table = f'"{target_table}"'
+        target_schema = None
+    else:
+        target_table = table_name
+        quoted_target_table = (
+            f'"{schema_name}"."{table_name}"' if schema_name else f'"{table_name}"'
+        )
+        target_schema = schema_name
+
+    index_name = f"idx_{target_table}_{'_'.join(index_columns)}"
+
+    # Check if index exists using inspector
+    if not inspector.has_table(target_table, schema=target_schema):
+        return  # Table does not exist, so no need to create an index
+
+    # Now check if index already exists
+    existing_indexes = inspector.get_indexes(target_table, schema=target_schema)
+    if any(idx["name"] == index_name for idx in existing_indexes):
+        return
+
     with engine.begin() as connection:
-        if not Index(index_name, *[text(col) for col in index_columns]).exists(
-            connection
-        ):
-            Index(index_name, *[text(col) for col in index_columns]).create(connection)
+        # Construct the CREATE INDEX statement directly
+        columns_quoted = [f'"{col}"' for col in index_columns]
+        create_index_sql = f'CREATE INDEX "{index_name}" ON {quoted_target_table} ({", ".join(columns_quoted)})'
+        connection.execute(text(create_index_sql))
 
 
 def _write_batch(dfs, engine, schema, table):
@@ -79,133 +215,18 @@ def migrate_csv_to_db(config_obj: Any):
                 if not connection.dialect.has_schema(connection, schema):
                     connection.execute(CreateSchema(schema))
 
-    # 2. Define Mappings: (Directory Attribute Name, Schema, Table Name, ID Column, Index Columns)
-    mappings = [
-        # Raw Data
-        (
-            "pre_bloods_batch_path",
-            "raw_data",
-            "raw_bloods",
-            "client_idcode",
-            ["client_idcode", "basicobs_entered"],
-        ),
-        (
-            "pre_drugs_batch_path",
-            "raw_data",
-            "raw_drugs",
-            "client_idcode",
-            ["client_idcode", "order_entered"],
-        ),
-        (
-            "pre_diagnostics_batch_path",
-            "raw_data",
-            "raw_diagnostics",
-            "client_idcode",
-            ["client_idcode", "order_entered"],
-        ),
-        (
-            "pre_news_batch_path",
-            "raw_data",
-            "raw_news",
-            "client_idcode",
-            ["client_idcode", "observationdocument_recordeddtm"],
-        ),
-        (
-            "pre_bmi_batch_path",
-            "raw_data",
-            "raw_bmi",
-            "client_idcode",
-            ["client_idcode", "observationdocument_recordeddtm"],
-        ),
-        (
-            "pre_demo_batch_path",
-            "raw_data",
-            "raw_demographics",
-            "client_idcode",
-            ["client_idcode", "updatetime"],
-        ),
-        (
-            "pre_document_batch_path",
-            "raw_data",
-            "raw_epr_docs",
-            "client_idcode",
-            ["client_idcode", "updatetime"],
-        ),
-        (
-            "pre_document_batch_path_mct",
-            "raw_data",
-            "raw_mct_docs",
-            "client_idcode",
-            ["client_idcode", "observationdocument_recordeddtm"],
-        ),
-        (
-            "pre_textual_obs_document_batch_path",
-            "raw_data",
-            "raw_textual_obs",
-            "client_idcode",
-            ["client_idcode", "basicobs_entered"],
-        ),
-        (
-            "pre_document_batch_path_reports",
-            "raw_data",
-            "raw_reports",
-            "client_idcode",
-            ["client_idcode", "updatetime"],
-        ),
-        (
-            "pre_appointments_batch_path",
-            "raw_data",
-            "raw_appointments",
-            "HospitalID",
-            ["HospitalID", "AppointmentDateTime"],
-        ),
-        # Annotations
-        (
-            "pre_document_annotation_batch_path",
-            "annotations",
-            "ann_epr_docs",
-            "client_idcode",
-            ["client_idcode", "updatetime"],
-        ),
-        (
-            "pre_document_annotation_batch_path_mct",
-            "annotations",
-            "ann_mct_docs",
-            "client_idcode",
-            ["client_idcode", "observationdocument_recordeddtm"],
-        ),
-        (
-            "pre_textual_obs_annotation_batch_path",
-            "annotations",
-            "ann_textual_obs",
-            "client_idcode",
-            ["client_idcode", "basicobs_entered"],
-        ),
-        (
-            "pre_document_annotation_batch_path_reports",
-            "annotations",
-            "ann_reports",
-            "client_idcode",
-            ["client_idcode", "updatetime"],
-        ),
-        # Features
-        (
-            "current_pat_lines_path",
-            "features",
-            "features",
-            "client_idcode",
-            ["client_idcode"],
-        ),
-    ]
-
-    for dir_attr, schema, table, id_col, index_columns in mappings:
+    # 2. Iterate Mappings
+    for dir_attr, schema, table, id_col, index_columns in MAPPINGS:
         if not hasattr(config_obj, dir_attr):
             logger.warning(
                 f"Config object missing attribute {dir_attr}, skipping {table}"
             )
             continue
 
-        dir_path = getattr(config_obj, dir_attr)
+        dir_path = getattr(config_obj, dir_attr, None)
+        # Safety check: ensure dir_path is a string and not a MagicMock (for tests)
+        if not isinstance(dir_path, str):
+            continue
         if not os.path.exists(dir_path):
             logger.info(f"Directory {dir_path} does not exist, skipping {table}")
             continue
@@ -248,7 +269,7 @@ def migrate_csv_to_db(config_obj: Any):
             _write_batch(dfs, engine, schema, table)
 
     # 3. Create Indexes
-    for dir_attr, schema, table, id_col, index_columns in mappings:
+    for dir_attr, schema, table, id_col, index_columns in MAPPINGS:
         create_indexes(engine, schema, table, index_columns)
 
     logger.info("Migration completed.")

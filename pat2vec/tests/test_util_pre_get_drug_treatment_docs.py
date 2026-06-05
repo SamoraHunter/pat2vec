@@ -88,6 +88,8 @@ class TestPreGetDrugTreatmentDocs(unittest.TestCase):
                 "order_guid": ["G1", "G2"],
                 "order_name": ["Aspirin", "Aspirin 75mg"],
                 "client_idcode": ["P1", "P2"],
+                "order_summaryline": ["s1", "s2"],
+                "order_holdreasontext": [None, None],
             }
         )
         df_statin = pd.DataFrame(
@@ -95,6 +97,8 @@ class TestPreGetDrugTreatmentDocs(unittest.TestCase):
                 "order_guid": ["G1", "G3"],  # G1 is a duplicate across terms
                 "order_name": ["Atorvastatin", "Statin"],
                 "client_idcode": ["P1", "P3"],
+                "order_summaryline": ["s1", "s3"],
+                "order_holdreasontext": [None, None],
             }
         )
 

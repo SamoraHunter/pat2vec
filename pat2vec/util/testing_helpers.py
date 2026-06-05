@@ -27,6 +27,9 @@ def read_test_data(file_path: str) -> Optional[pd.DataFrame]:
     except FileNotFoundError:
         logger.error(f"Test data file not found at: {file_path}")
         return None
+    except pd.errors.EmptyDataError:
+        logger.warning(f"Test data file is empty: {file_path}")
+        return pd.DataFrame()  # Return empty DataFrame for empty file
     except Exception as e:
         logger.error(f"An error occurred while reading {file_path}: {e}")
         return None

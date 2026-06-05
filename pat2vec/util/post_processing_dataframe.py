@@ -101,17 +101,33 @@ def impute_datetime(
     mean_impute: bool = True,
     verbose: bool = False,
 ) -> pd.DataFrame:
-    """Imputes missing datetime values based on temporal order."""
+    """Imputes missing datetime values based on temporal order within patient groups."""
     df[datetime_column] = pd.to_datetime(df[datetime_column])
-    df = df.sort_values(by=[patient_column, datetime_column])
+
+    # Store original index to restore order after imputation
+    original_index = df.index
+
+    # Sort by patient and then by datetime, NaT values will be at the end of each group
+    df_sorted = df.sort_values(
+        by=[patient_column, datetime_column], na_position="first"
+    )
+
     cols_to_fill = df.columns.difference([patient_column])
     if forward:
-        df[cols_to_fill] = df.groupby(patient_column)[cols_to_fill].ffill()
+        df_sorted[cols_to_fill] = df_sorted.groupby(patient_column)[
+            cols_to_fill
+        ].ffill()
     if backward:
-        df[cols_to_fill] = df.groupby(patient_column)[cols_to_fill].bfill()
+        df_sorted[cols_to_fill] = df_sorted.groupby(patient_column)[
+            cols_to_fill
+        ].bfill()
     if mean_impute:
-        df[datetime_column] = df[datetime_column].fillna(df[datetime_column].mean())
-    return df
+        df_sorted[datetime_column] = df_sorted[datetime_column].fillna(
+            df_sorted[datetime_column].mean()
+        )
+
+    # Restore original order
+    return df_sorted.reindex(original_index)
 
 
 def impute_dataframe(

@@ -5,7 +5,7 @@ import tempfile
 import pandas as pd
 from unittest.mock import MagicMock, patch
 from pat2vec.util.migrate_to_db import migrate_csv_to_db, create_indexes
-from sqlalchemy import create_engine, inspect
+from sqlalchemy import create_engine, inspect, text
 
 
 class TestMigrateToDb(unittest.TestCase):
@@ -40,7 +40,7 @@ class TestMigrateToDb(unittest.TestCase):
         """Test the end-to-end migration of CSV files to database tables."""
         mock_create_engine.return_value = self.engine
         with patch(
-            "pat2vec.util.migrate_to_db.mappings",
+            "pat2vec.util.migrate_to_db.MAPPINGS",  # Changed from mappings to MAPPINGS
             [
                 (
                     "pre_bloods_batch_path",
@@ -55,7 +55,8 @@ class TestMigrateToDb(unittest.TestCase):
         inspector = inspect(self.engine)
         table_name = "raw_data_raw_bloods"
         self.assertTrue(inspector.has_table(table_name))
-        result_df = pd.read_sql(f"SELECT * FROM {table_name}", self.engine)
+        with self.engine.connect() as conn:
+            result_df = pd.read_sql(text(f"SELECT * FROM {table_name}"), conn)
         self.assertEqual(len(result_df), 2)
         self.assertEqual(result_df.iloc[0]["client_idcode"], "P1")
 
@@ -74,7 +75,7 @@ class TestMigrateToDb(unittest.TestCase):
         empty_config = MagicMock()
         empty_config.db_connection_string = self.db_url
         with patch(
-            "pat2vec.util.migrate_to_db.mappings",
+            "pat2vec.util.migrate_to_db.MAPPINGS",  # Changed from mappings to MAPPINGS
             [
                 (
                     "pre_bloods_batch_path",

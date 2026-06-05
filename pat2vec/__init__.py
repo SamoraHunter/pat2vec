@@ -112,7 +112,6 @@ from .pat2vec_get_methods.get_method_vte_status import (
     prepare_vte_data,
     search_vte,
 )
-from .pat2vec_get_methods.test_get_method_demo import TestGetMethodDemo
 from .pat2vec_main_methods.main_batch import main_batch
 from .pat2vec_pat_list.get_patient_treatment_list import (
     analyze_client_codes,
@@ -160,9 +159,6 @@ from .pat2vec_search.search_multiprocess import (
     cohort_searcher_with_terms_and_search_multi,
     pull_and_write,
 )
-from .pat2vec_search.test_cogstack_search_methods import TestCogstackSearchMethods
-from .pat2vec_search.test_data_helper_functions import TestDataHelperFunctions
-from .pat2vec_search.test_matcher import TestMatcher
 from .patvec_get_batch_methods.get_merged_batches import (
     get_merged_pat_batch_appointments,
     get_merged_pat_batch_bloods,
@@ -212,54 +208,6 @@ from .patvec_get_batch_methods.main_get_pat_batch_textual_obs_annotations import
 from .patvec_get_batch_methods.main_get_pat_batch_textual_obs_docs import (
     get_pat_batch_textual_obs_docs,
 )
-from .tests.test_anonymisation_data_methods import TestAnonymisationDataMethods
-from .tests.test_anonymisation_deid_documents import TestDeIdAnonymizer
-from .tests.test_calculate_interval import TestCalculateInterval
-from .tests.test_config_class import TestConfigClass
-from .tests.test_database_backend import TestDatabaseBackend
-from .tests.test_docker_elastic import TestElasticContainer
-from .tests.test_elastic_population import TestElasticPopulation
-from .tests.test_elasticsearch_methods import TestElasticsearchMethods
-from .tests.test_ethnicity_abstractor import TestEthnicityAbstractor
-from .tests.test_evaluation_methods_ploting import TestEvaluationMethodsPloting
-from .tests.test_filter_dataframe_by_timestamp_extended import (
-    TestFilterDataFrameByTimestampExtended,
-)
-from .tests.test_filter_methods import TestFilterMethods
-from .tests.test_generate_date_list import TestGenerateDateList
-from .tests.test_generate_elastic_schema import TestGenerateElasticSchema
-from .tests.test_get_dummy_data_cohort_searcher_get_date import (
-    TestCreateRandomDateFromGlobals,
-)
-from .tests.test_get_start_end_year_month import MockConfig, TestGetStartEndYearMonth
-from .tests.test_global_date_validation import TestGlobalDateValidation
-from .tests.test_individual_patient_window import TestIndividualPatientWindow
-from .tests.test_integration_data_integrity import TestIntegrationDataIntegrity
-from .tests.test_integration_elastic import TestIntegrationElastic
-from .tests.test_medcat_misc_methods import TestMedcatMiscMethods
-from .tests.test_methods_annotation_filter_annot_dataframe import (
-    TestFilterAnnotDataframe,
-)
-from .tests.test_methods_annotation_multi_annots_to_df import TestMultiAnnotsToDf
-from .tests.test_methods_get import TestFilterDataFrameByTimestamp
-from .tests.test_methods_get_medcat import TestMethodsGetMedcat
-from .tests.test_parse_date import TestDateValidationForElasticsearch
-from .tests.test_pat_maker_full_flow import (
-    TestBatchRetrievalDB,
-    TestPatMakerFullFlow,
-    TestPatMakerLogic,
-)
-from .tests.test_post_processing import TestPostProcessing
-from .tests.test_post_processing_build_ipw_dataframe import TestBuildIpwDataframe
-from .tests.test_post_processing_get_pat_ipw_record import TestGetPatIpwRecord
-from .tests.test_post_processing_medcat import TestPostProcessingMedcat
-from .tests.test_post_processing_process_csv_files import TestProcessCsvFiles
-from .tests.test_pre_get_drug_treatment_docs import TestPreGetDrugTreatmentDocs
-from .tests.test_pre_processing import TestPreProcessing
-from .tests.test_presentation_methods import TestPresentationMethods
-from .tests.test_retrieve_data import TestRetrieveData
-from .tests.test_schema_consistency import TestSchemaConsistency
-from .tests.test_util_utilities import TestDummyDataLogic, TestMethodsGet
 from .util.anonymisation_data_methods import (
     anonymize_feature_names,
     deanonymize_feature_names,
@@ -539,21 +487,6 @@ from .util.presentation_methods import (
     group_images_by_suffix,
 )
 from .util.retrieve_data import DATA_TYPE_CONFIG, retrieve_patient_data
-from .util.test_util_impute_data_for_pipe import TestImputeDataForPipe
-from .util.test_util_logger_setup import TestLoggerSetup
-from .util.test_util_methods_annotation_regex import TestMethodsAnnotationRegex
-from .util.test_util_methods_get import TestUtilMethodsGet
-from .util.test_util_methods_post_get import TestMethodsPostGet
-from .util.test_util_migrate_to_db import TestMigrateToDb
-from .util.test_util_post_processing_annotations import TestPostProcessingAnnotations
-from .util.test_util_post_processing_build_methods import TestPostProcessingBuildMethods
-from .util.test_util_post_processing_dataframe import TestPostProcessingDataframe
-from .util.test_util_post_processing_plotting import TestPostProcessingPlotting
-from .util.test_util_post_processing_process_csv_files import (
-    TestPostProcessingProcessCsvFiles,
-)
-from .util.test_util_post_processing_utils import TestPostProcessingUtils
-from .util.test_util_testing_helpers import TestTestingHelpers
 from .util.testing_helpers import read_test_data
 
 # Define the public API of the package
@@ -587,64 +520,6 @@ __all__ = [
     "SEARCH_TERM_ES",
     "SEARCH_TERM_PLAIN",
     "SMOKING_FIELDS",
-    "TestAnonymisationDataMethods",
-    "TestBatchRetrievalDB",
-    "TestBuildIpwDataframe",
-    "TestCalculateInterval",
-    "TestCogstackSearchMethods",
-    "TestConfigClass",
-    "TestCreateRandomDateFromGlobals",
-    "TestDataHelperFunctions",
-    "TestDatabaseBackend",
-    "TestDateValidationForElasticsearch",
-    "TestDeIdAnonymizer",
-    "TestDummyDataLogic",
-    "TestElasticContainer",
-    "TestElasticPopulation",
-    "TestElasticsearchMethods",
-    "TestEthnicityAbstractor",
-    "TestEvaluationMethodsPloting",
-    "TestFilterAnnotDataframe",
-    "TestFilterDataFrameByTimestamp",
-    "TestFilterDataFrameByTimestampExtended",
-    "TestFilterMethods",
-    "TestGenerateDateList",
-    "TestGenerateElasticSchema",
-    "TestGetMethodDemo",
-    "TestGetPatIpwRecord",
-    "TestGetStartEndYearMonth",
-    "TestGlobalDateValidation",
-    "TestImputeDataForPipe",
-    "TestIndividualPatientWindow",
-    "TestIntegrationDataIntegrity",
-    "TestIntegrationElastic",
-    "TestLoggerSetup",
-    "TestMatcher",
-    "TestMedcatMiscMethods",
-    "TestMethodsAnnotationRegex",
-    "TestMethodsGet",
-    "TestMethodsGetMedcat",
-    "TestMethodsPostGet",
-    "TestMigrateToDb",
-    "TestMultiAnnotsToDf",
-    "TestPatMakerFullFlow",
-    "TestPatMakerLogic",
-    "TestPostProcessing",
-    "TestPostProcessingAnnotations",
-    "TestPostProcessingBuildMethods",
-    "TestPostProcessingDataframe",
-    "TestPostProcessingMedcat",
-    "TestPostProcessingPlotting",
-    "TestPostProcessingProcessCsvFiles",
-    "TestPostProcessingUtils",
-    "TestPreGetDrugTreatmentDocs",
-    "TestPreProcessing",
-    "TestPresentationMethods",
-    "TestProcessCsvFiles",
-    "TestRetrieveData",
-    "TestSchemaConsistency",
-    "TestTestingHelpers",
-    "TestUtilMethodsGet",
     "VTE_FIELDS",
     "add_offset_column",
     "aggregate_dataframe_mean",

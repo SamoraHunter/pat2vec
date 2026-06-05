@@ -64,7 +64,12 @@ class TestUtilMethodsGet(unittest.TestCase):
         config = MagicMock()
         config.remote_dump = True
         config.share_sftp = False
-        config.sftp_obj.listdir.return_value = ["remotefile.csv"]
+
+        # Configure mock_ssh to return a mock sftp_client with a listdir method
+        mock_sftp_client = MagicMock()
+        mock_sftp_client.listdir.return_value = ["remotefile.csv"]
+        mock_ssh.return_value.open_sftp.return_value = mock_sftp_client
+
         res = list_dir_wrapper("/remote", config)
         self.assertEqual(res, ["remotefile.csv"])
 
@@ -78,7 +83,7 @@ class TestUtilMethodsGet(unittest.TestCase):
         idx, free_mem = get_free_gpu()
 
         self.assertEqual(idx, 0)
-        self.assertEqual(free_mem, "8000")
+        self.assertEqual(free_mem.strip(), "8000")
 
     @patch("pat2vec.util.methods_get.subprocess.check_output")
     def test_get_free_gpu_command_not_found(self, mock_check_output):

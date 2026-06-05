@@ -1,6 +1,5 @@
 import pandas as pd
 import os
-from itertools import chain
 from typing import Any, Dict, List, Optional
 from tqdm import tqdm
 from sqlalchemy import text
@@ -560,9 +559,8 @@ def get_all_target_annots(
 
         annots_to_return = filter_dataframe_n_lists(all_annots, "cui", n_lists)
 
-        if annots_to_return:
-            filtered_df = all_annots[all_annots["cui"].isin(list(chain(*n_lists)))]
-            results_df = pd.concat([results_df, filtered_df])
+        if not annots_to_return.empty:
+            results_df = pd.concat([results_df, annots_to_return])
 
     if config_obj and hasattr(config_obj, "root_path"):
         out_path = os.path.join(config_obj.root_path, "all_target_annots.csv")

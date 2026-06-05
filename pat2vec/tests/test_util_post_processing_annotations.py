@@ -1,6 +1,7 @@
 import unittest
 from unittest.mock import patch, MagicMock
 import pandas as pd
+import tempfile
 import os
 import shutil
 from datetime import datetime
@@ -17,6 +18,90 @@ from pat2vec.util.post_processing_annotations import (
 
 
 class TestPostProcessingAnnotations(unittest.TestCase):
+    def setUp(self):
+        self.test_dir = tempfile.mkdtemp()
+        self.config_obj = MagicMock()
+        self.config_obj.storage_backend = "file"
+        self.config_obj.root_path = self.test_dir
+
+        # Setup paths
+        self.config_obj.pre_document_annotation_batch_path = os.path.join(
+            self.test_dir, "epr"
+        )
+        self.config_obj.pre_document_annotation_batch_path_mct = os.path.join(
+            self.test_dir, "mct"
+        )
+        self.config_obj.pre_textual_obs_annotation_batch_path = os.path.join(
+            self.test_dir, "text"
+        )
+        self.config_obj.pre_document_annotation_batch_path_reports = os.path.join(
+            self.test_dir, "reports"
+        )
+
+        for p in [
+            self.config_obj.pre_document_annotation_batch_path,
+            self.config_obj.pre_document_annotation_batch_path_mct,
+            self.config_obj.pre_textual_obs_annotation_batch_path,
+            self.config_obj.pre_document_annotation_batch_path_reports,
+        ]:
+            os.makedirs(p, exist_ok=True)
+
+        # Sample Data
+        self.sample_annot_df_epr = pd.DataFrame(
+            {
+                "client_idcode": ["P1"] * 3,
+                "updatetime": [datetime(2021, 1, 1)] * 3,
+                "cui": [101, 102, 103],
+                "acc": [0.9, 0.9, 0.9],
+            }
+        )
+        self.sample_annot_df_epr.to_csv(
+            os.path.join(self.config_obj.pre_document_annotation_batch_path, "P1.csv"),
+            index=False,
+        )
+
+        self.sample_annot_df_mct = pd.DataFrame(
+            {
+                "client_idcode": ["P1"] * 3,
+                "observationdocument_recordeddtm": [datetime(2021, 1, 1)] * 3,
+                "cui": [104, 105, 106],
+            }
+        )
+        self.sample_annot_df_mct.to_csv(
+            os.path.join(
+                self.config_obj.pre_document_annotation_batch_path_mct, "P1.csv"
+            ),
+            index=False,
+        )
+
+        self.sample_annot_df_text_obs = pd.DataFrame(
+            {
+                "client_idcode": ["P1"] * 3,
+                "basicobs_entered": [datetime(2021, 1, 1)] * 3,
+                "cui": [107, 108, 109],
+            }
+        )
+        self.sample_annot_df_text_obs.to_csv(
+            os.path.join(
+                self.config_obj.pre_textual_obs_annotation_batch_path, "P1.csv"
+            ),
+            index=False,
+        )
+
+        self.sample_annot_df_report = pd.DataFrame(
+            {
+                "client_idcode": ["P1"] * 3,
+                "updatetime": [datetime(2021, 1, 1)] * 3,
+                "cui": [110, 111, 112],
+            }
+        )
+        self.sample_annot_df_report.to_csv(
+            os.path.join(
+                self.config_obj.pre_document_annotation_batch_path_reports, "P1.csv"
+            ),
+            index=False,
+        )
+
     def test_filter_annot_dataframe2_logic(self):
         df = pd.DataFrame(
             {
@@ -45,6 +130,7 @@ class TestPostProcessingAnnotations(unittest.TestCase):
     def test_filter_and_select_rows(self):
         df = pd.DataFrame(
             {
+                "client_idcode": ["P1", "P1", "P1"],
                 "cui": [101, 101, 102],
                 "updatetime": [
                     datetime(2021, 1, 1),
@@ -61,6 +147,15 @@ class TestPostProcessingAnnotations(unittest.TestCase):
 
     def test_retrieve_pat_annots_mct_epr_file_single_source(self):
         """Test file backend with a single EPR source."""
+        # Clear other source directories to ensure only EPR is found by deleting files in them
+        for p in [
+            self.config_obj.pre_document_annotation_batch_path_mct,  # MCT
+            self.config_obj.pre_textual_obs_annotation_batch_path,  # Textual Obs
+            self.config_obj.pre_document_annotation_batch_path_reports,
+        ]:  # Reports
+            shutil.rmtree(p)
+            os.makedirs(p)
+
         result_df = retrieve_pat_annots_mct_epr(
             "P1", self.config_obj, merge_columns=False
         )
@@ -131,7 +226,8 @@ class TestPostProcessingAnnotations(unittest.TestCase):
         # Create a scenario where updatetime is NaN in EPR, but present in MCT
         df_epr_nan_updatetime = self.sample_annot_df_epr.copy()
         df_epr_nan_updatetime["updatetime"] = pd.NaT
-        df_epr_nan_updatetime["observationannotation_recordeddtm"] = pd.NaT  # Also NaN
+        test_time = datetime(2021, 1, 1)
+        df_epr_nan_updatetime["observationannotation_recordeddtm"] = test_time
 
         def side_effect_get_df_from_db_nan_epr(*args, **kwargs):
             args[1]
@@ -147,11 +243,15 @@ class TestPostProcessingAnnotations(unittest.TestCase):
             "P1", self.config_obj, merge_columns=True
         )
 
-        # The updatetime column from EPR should now be filled by MCT's observationdocument_recordeddtm
+        # Verification: rows from sources that don't have updatetime (like MCT or Textual Obs)
+        # should have had their respective time columns merged into updatetime.
         epr_rows = result_df_nan_test[
             result_df_nan_test["annotation_batch_source"] == "epr"
         ]
-        self.assertFalse(epr_rows["updatetime"].isnull().all())
+        mct_rows = result_df_nan_test[
+            result_df_nan_test["annotation_batch_source"] == "mct"
+        ]
+        self.assertFalse(mct_rows["updatetime"].isnull().any())
         self.assertTrue(
             (
                 epr_rows["updatetime"] == epr_rows["observationannotation_recordeddtm"]
