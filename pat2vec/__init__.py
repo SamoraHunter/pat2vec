@@ -112,6 +112,7 @@ from .pat2vec_get_methods.get_method_vte_status import (
     prepare_vte_data,
     search_vte,
 )
+from .pat2vec_get_methods.test_get_method_demo import TestGetMethodDemo
 from .pat2vec_main_methods.main_batch import main_batch
 from .pat2vec_pat_list.get_patient_treatment_list import (
     analyze_client_codes,
@@ -159,6 +160,9 @@ from .pat2vec_search.search_multiprocess import (
     cohort_searcher_with_terms_and_search_multi,
     pull_and_write,
 )
+from .pat2vec_search.test_cogstack_search_methods import TestCogstackSearchMethods
+from .pat2vec_search.test_data_helper_functions import TestDataHelperFunctions
+from .pat2vec_search.test_matcher import TestMatcher
 from .patvec_get_batch_methods.get_merged_batches import (
     get_merged_pat_batch_appointments,
     get_merged_pat_batch_bloods,
@@ -536,15 +540,20 @@ from .util.presentation_methods import (
 )
 from .util.retrieve_data import DATA_TYPE_CONFIG, retrieve_patient_data
 from .util.test_util_impute_data_for_pipe import TestImputeDataForPipe
+from .util.test_util_logger_setup import TestLoggerSetup
 from .util.test_util_methods_annotation_regex import TestMethodsAnnotationRegex
 from .util.test_util_methods_get import TestUtilMethodsGet
 from .util.test_util_methods_post_get import TestMethodsPostGet
 from .util.test_util_migrate_to_db import TestMigrateToDb
 from .util.test_util_post_processing_annotations import TestPostProcessingAnnotations
 from .util.test_util_post_processing_build_methods import TestPostProcessingBuildMethods
+from .util.test_util_post_processing_dataframe import TestPostProcessingDataframe
+from .util.test_util_post_processing_plotting import TestPostProcessingPlotting
 from .util.test_util_post_processing_process_csv_files import (
     TestPostProcessingProcessCsvFiles,
 )
+from .util.test_util_post_processing_utils import TestPostProcessingUtils
+from .util.test_util_testing_helpers import TestTestingHelpers
 from .util.testing_helpers import read_test_data
 
 # Define the public API of the package
@@ -582,8 +591,10 @@ __all__ = [
     "TestBatchRetrievalDB",
     "TestBuildIpwDataframe",
     "TestCalculateInterval",
+    "TestCogstackSearchMethods",
     "TestConfigClass",
     "TestCreateRandomDateFromGlobals",
+    "TestDataHelperFunctions",
     "TestDatabaseBackend",
     "TestDateValidationForElasticsearch",
     "TestDeIdAnonymizer",
@@ -599,6 +610,7 @@ __all__ = [
     "TestFilterMethods",
     "TestGenerateDateList",
     "TestGenerateElasticSchema",
+    "TestGetMethodDemo",
     "TestGetPatIpwRecord",
     "TestGetStartEndYearMonth",
     "TestGlobalDateValidation",
@@ -606,6 +618,8 @@ __all__ = [
     "TestIndividualPatientWindow",
     "TestIntegrationDataIntegrity",
     "TestIntegrationElastic",
+    "TestLoggerSetup",
+    "TestMatcher",
     "TestMedcatMiscMethods",
     "TestMethodsAnnotationRegex",
     "TestMethodsGet",
@@ -618,14 +632,18 @@ __all__ = [
     "TestPostProcessing",
     "TestPostProcessingAnnotations",
     "TestPostProcessingBuildMethods",
+    "TestPostProcessingDataframe",
     "TestPostProcessingMedcat",
+    "TestPostProcessingPlotting",
     "TestPostProcessingProcessCsvFiles",
+    "TestPostProcessingUtils",
     "TestPreGetDrugTreatmentDocs",
     "TestPreProcessing",
     "TestPresentationMethods",
     "TestProcessCsvFiles",
     "TestRetrieveData",
     "TestSchemaConsistency",
+    "TestTestingHelpers",
     "TestUtilMethodsGet",
     "VTE_FIELDS",
     "add_offset_column",

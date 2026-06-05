@@ -4,8 +4,13 @@ from typing import Callable, List, Optional, Tuple, Union
 import pandas as pd
 from IPython.display import display
 
+from pat2vec.pat2vec_search.cogstack_search_methods import (
+    cohort_searcher_with_terms_and_search,
+)
+from pat2vec.util.ethnicity_abstractor import EthnicityAbstractor
 from pat2vec.util.get_start_end_year_month import get_start_end_year_month
 from pat2vec.util.parse_date import validate_input_dates
+from pat2vec.util.pre_processing import calculate_age_append, demo_to_latest
 
 DEMOGRAPHICS_FIELDS = [
     "client_idcode",
@@ -130,6 +135,49 @@ def search_demographics(
             os.makedirs(os.path.dirname(output_filename), exist_ok=True)
         print(f"Saving demographics data to {output_filename}")
         results.to_csv(output_filename, index=False)
+
+    return results
+
+
+def get_demographics_data(pat2vec_obj: object, pat_list: List[str]) -> pd.DataFrame:
+    """Retrieves and processes demographics data for a list of patients.
+
+    Args:
+        pat2vec_obj (object): The pat2vec object containing configuration.
+        pat_list (List[str]): List of patient IDs.
+
+    Returns:
+        pd.DataFrame: Processed demographics data.
+    """
+    config = pat2vec_obj.config_obj
+
+    # Call the searcher
+    results = cohort_searcher_with_terms_and_search(
+        index_name="epr_documents",
+        fields_list=DEMOGRAPHICS_FIELDS,
+        term_name=f"{config.client_idcode_term_name}.keyword",
+        entered_list=pat_list,
+        search_string=(
+            f"updatetime:[{config.global_start_year}-{config.global_start_month}-{config.global_start_day} "
+            f"TO {config.global_end_year}-{config.global_end_month}-{config.global_end_day}]"
+        ),
+    )
+
+    if results.empty:
+        return results
+
+    # Apply processing steps
+    results = demo_to_latest(results)
+    results = calculate_age_append(results)
+
+    # Optional ethnicity abstraction
+    if (
+        hasattr(config, "ethnicity_abstractor_enabled")
+        and config.ethnicity_abstractor_enabled
+    ):
+        results = EthnicityAbstractor.abstractEthnicity(
+            results, config.ethnicity_column
+        )
 
     return results
 
