@@ -535,7 +535,16 @@ from .util.presentation_methods import (
     group_images_by_suffix,
 )
 from .util.retrieve_data import DATA_TYPE_CONFIG, retrieve_patient_data
+from .util.test_util_impute_data_for_pipe import TestImputeDataForPipe
+from .util.test_util_methods_annotation_regex import TestMethodsAnnotationRegex
 from .util.test_util_methods_get import TestUtilMethodsGet
+from .util.test_util_methods_post_get import TestMethodsPostGet
+from .util.test_util_migrate_to_db import TestMigrateToDb
+from .util.test_util_post_processing_annotations import TestPostProcessingAnnotations
+from .util.test_util_post_processing_build_methods import TestPostProcessingBuildMethods
+from .util.test_util_post_processing_process_csv_files import (
+    TestPostProcessingProcessCsvFiles,
+)
 from .util.testing_helpers import read_test_data
 
 # Define the public API of the package
@@ -593,17 +602,24 @@ __all__ = [
     "TestGetPatIpwRecord",
     "TestGetStartEndYearMonth",
     "TestGlobalDateValidation",
+    "TestImputeDataForPipe",
     "TestIndividualPatientWindow",
     "TestIntegrationDataIntegrity",
     "TestIntegrationElastic",
     "TestMedcatMiscMethods",
+    "TestMethodsAnnotationRegex",
     "TestMethodsGet",
     "TestMethodsGetMedcat",
+    "TestMethodsPostGet",
+    "TestMigrateToDb",
     "TestMultiAnnotsToDf",
     "TestPatMakerFullFlow",
     "TestPatMakerLogic",
     "TestPostProcessing",
+    "TestPostProcessingAnnotations",
+    "TestPostProcessingBuildMethods",
     "TestPostProcessingMedcat",
+    "TestPostProcessingProcessCsvFiles",
     "TestPreGetDrugTreatmentDocs",
     "TestPreProcessing",
     "TestPresentationMethods",

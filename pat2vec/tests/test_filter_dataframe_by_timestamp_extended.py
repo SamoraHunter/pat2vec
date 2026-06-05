@@ -165,6 +165,48 @@ class TestFilterDataFrameByTimestampExtended(unittest.TestCase):
         )
         self.assertTrue(filtered.empty)
 
+    def test_filter_single_day_with_multiple_entries(self):
+        """Test filtering for a single day with multiple entries on that day."""
+        df = pd.DataFrame(
+            {
+                "timestamp": [
+                    "2023-07-20 08:00:00",
+                    "2023-07-20 12:00:00",
+                    "2023-07-20 18:00:00",
+                    "2023-07-19 23:59:59",  # Day before
+                    "2023-07-21 00:00:01",  # Day after
+                ],
+                "value": [10, 20, 30, 40, 50],
+            }
+        )
+        filtered = filter_dataframe_by_timestamp(
+            df,
+            start_year=2023,
+            start_month=7,
+            start_day=20,
+            end_year=2023,
+            end_month=7,
+            end_day=20,
+            timestamp_string="timestamp",
+        )
+        self.assertEqual(len(filtered), 3)
+        self.assertCountEqual(filtered["value"].tolist(), [10, 20, 30])
+
+    def test_invalid_timestamp_column_name(self):
+        """Test filtering with a timestamp_string that does not exist in the DataFrame."""
+        df = pd.DataFrame({"correct_timestamp": ["2023-01-01 00:00:00"], "value": [1]})
+        with self.assertRaises(KeyError):
+            filter_dataframe_by_timestamp(
+                df,
+                start_year=2023,
+                start_month=1,
+                start_day=1,
+                end_year=2023,
+                end_month=1,
+                end_day=1,
+                timestamp_string="non_existent_column",
+            )
+
 
 if __name__ == "__main__":
     unittest.main()

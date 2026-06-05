@@ -4,6 +4,7 @@ import pandas as pd
 import json
 from pat2vec.util.medcat_misc_methods import (
     medcat_trainer_export_to_df,
+    extract_labels_from_medcat_annotation_export,
     recreate_json,
     create_ner_results_dataframe,
     parse_medcat_trainer_project_json,
@@ -106,3 +107,25 @@ class TestMedcatMiscMethods(unittest.TestCase):
             # This tests the branch that handles dict with 'projects' key
             df = parse_medcat_trainer_project_json("fake.json")
             self.assertEqual(df.iloc[0]["project_name"], "Project")
+
+    def test_extract_labels_from_medcat_annotation_export(self):
+        """Test extraction and validation of labels from annotation export."""
+        df = pd.DataFrame(
+            [
+                {
+                    "text": "Patient has asthma",
+                    "value": "asthma",
+                    "start": 12,
+                    "end": 18,
+                    "subject_experiencer": "Patient",
+                    "presence": "True",
+                    "time": "Recent",
+                }
+            ]
+        )
+        human_labels = pd.DataFrame(
+            [{"text_sample": "Patient has asthma", "source_value": "asthma"}]
+        )
+
+        result = extract_labels_from_medcat_annotation_export(df, human_labels)
+        self.assertEqual(result.iloc[0]["extracted_label"], 1)
