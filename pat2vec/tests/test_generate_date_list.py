@@ -176,6 +176,26 @@ class TestGenerateDateList(unittest.TestCase):
         self.assertIn((2020, 2, 29), result)
         self.assertEqual(result[-1], (2020, 3, 1))
 
+    def test_max_iterations_safety(self):
+        """Ensure the generator stops if it hits the internal iteration limit."""
+        # Using a very small delta relative to a large range to trigger limit
+        start_date = datetime(2020, 1, 1)
+        self.mock_config.global_end_date = datetime(2050, 1, 1)
+        small_delta = relativedelta(seconds=1)
+
+        # Function has max_iterations=10000
+        with self.assertLogs(level="WARNING") as cm:
+            result = generate_date_list(
+                start_date,
+                years=30,
+                months=0,
+                days=0,
+                time_window_interval_delta=small_delta,
+                config_obj=self.mock_config,
+            )
+            self.assertTrue(any("Maximum iterations" in line for line in cm.output))
+        self.assertEqual(len(result), 10000)
+
     def test_timezone_aware_inputs(self):
         """Test that timezone-aware inputs are handled correctly."""
         ZoneInfo("UTC")

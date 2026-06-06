@@ -3,6 +3,7 @@ import os
 import shutil
 import tempfile
 import pandas as pd
+from unittest.mock import patch
 from pat2vec.util.post_processing_utils import (
     count_files,
     copy_files_and_dirs,
@@ -31,6 +32,20 @@ class TestPostProcessingUtils(unittest.TestCase):
             f.write("test")
 
         self.assertEqual(count_files(self.test_dir), 2)
+
+    def test_count_files_empty_dir(self):
+        """Test recursive file counting in an empty directory."""
+        self.assertEqual(count_files(self.test_dir), 0)
+
+    def test_count_files_only_dirs(self):
+        """Test recursive file counting in a directory with only subdirectories."""
+        os.makedirs(os.path.join(self.test_dir, "subdir1", "subsubdir1"))
+        os.makedirs(os.path.join(self.test_dir, "subdir2"))
+        self.assertEqual(count_files(self.test_dir), 0)
+
+    def test_count_files_non_existent_dir(self):
+        """Test recursive file counting for a non-existent directory."""
+        self.assertEqual(count_files("/non/existent/path"), 0)
 
     def test_copy_files_and_dirs(self):
         """Test copying specific project subdirectories and loose files with structure preservation."""
@@ -62,6 +77,48 @@ class TestPostProcessingUtils(unittest.TestCase):
             )
         )
         self.assertTrue(os.path.exists(os.path.join(dest_root, loose_file)))
+
+    def test_copy_files_and_dirs_empty_items_to_copy(self):
+        """Test copying with empty items_to_copy list."""
+        src_root = os.path.join(self.test_dir, "src")
+        dest_root = os.path.join(self.test_dir, "dest")
+        source_name = "exp1"
+        os.makedirs(os.path.join(src_root, source_name, "outputs"))
+        loose_file = "control_path.pkl"
+        with open(os.path.join(src_root, loose_file), "w") as f:
+            f.write("binary_data")
+
+        copy_files_and_dirs(
+            src_root,
+            source_name,
+            dest_root,
+            items_to_copy=[],
+            loose_files=[loose_file],
+        )
+        self.assertFalse(
+            os.path.exists(os.path.join(dest_root, source_name, "outputs"))
+        )
+        self.assertTrue(os.path.exists(os.path.join(dest_root, loose_file)))
+
+    def test_copy_files_and_dirs_non_existent_source(self):
+        """Test copying when the source directory does not exist."""
+        src_root = "/non/existent/path/at/all"
+        dest_root = os.path.join(self.test_dir, "dest")
+        source_name = "exp1"
+
+        # Patch both exists and listdir to ensure the error is raised by the filesystem utility
+        with (
+            patch("os.path.exists", return_value=False),
+            patch("os.listdir", side_effect=FileNotFoundError),
+        ):
+            # Function should handle missing source gracefully and not raise
+            copy_files_and_dirs(
+                src_root,
+                source_name,
+                dest_root,
+                items_to_copy=["outputs"],
+                loose_files=[],
+            )
 
     def test_filter_and_update_csv_after(self):
         """Test filtering rows 'after' a specified date across patient files."""

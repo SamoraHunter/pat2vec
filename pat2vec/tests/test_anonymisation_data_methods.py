@@ -62,6 +62,25 @@ class TestAnonymisationDataMethods(unittest.TestCase):
         recovered = deanonymize_feature_names(cols, key)
         self.assertListEqual(recovered, ["known", None])
 
+    def test_overlapping_prefixes(self):
+        """Test that the longest prefix is matched."""
+        # news_resus_ is a predefined prefix
+        data = {"news_resus_temp": [1]}
+        df = pd.DataFrame(data)
+        anon_df, key = anonymize_feature_names(df)
+        self.assertIn("news_resus_concept_0", anon_df.columns)
+
+    def test_simple_name_consistency_fallback(self):
+        """Check how fallback feature_X names are generated."""
+        data = {
+            "age": [30],
+            "gender": [1],
+        }
+        df = pd.DataFrame(data)
+        anon_df, key = anonymize_feature_names(df)
+        self.assertIn("feature_0", anon_df.columns)
+        self.assertIn("feature_1", anon_df.columns)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -376,11 +376,13 @@ def save_raw_patient_batch(
             if inspector.has_table(target_table, schema=target_schema):
                 connection.execute(del_query, {"pat_id": patient_id})
 
-            # Convert list/dict columns to JSON strings for compatibility
+            # Convert any list/dict/tuple columns to JSON strings for database compatibility
             for col in df.columns:
-                if df[col].apply(lambda x: isinstance(x, (list, dict))).any():
+                if df[col].apply(lambda x: isinstance(x, (list, dict, tuple))).any():
                     df[col] = df[col].apply(
-                        lambda x: json.dumps(x) if isinstance(x, (list, dict)) else x
+                        lambda x: (
+                            json.dumps(x) if isinstance(x, (list, dict, tuple)) else x
+                        )
                     )
 
             if not df.empty:
@@ -641,17 +643,18 @@ def save_annotations_to_db(
             if inspector.has_table(target_table, schema=target_schema):
                 connection.execute(del_query, {"pat_id": patient_id})
 
-            # Convert list-like columns to JSON strings for database compatibility
-            list_cols = ["type_ids", "types", "icd10", "ontologies", "snomed"]
-            df_to_save = df.copy()
-            for col in list_cols:
-                if col in df_to_save.columns:
-                    df_to_save[col] = df_to_save[col].apply(
-                        lambda x: json.dumps(x) if isinstance(x, (list, dict)) else x
+            # Convert any list/dict/tuple columns to JSON strings for database compatibility
+            for col in df.columns:
+                # Check for list or dict types and serialize them to JSON strings
+                if df[col].apply(lambda x: isinstance(x, (list, dict, tuple))).any():
+                    df[col] = df[col].apply(
+                        lambda x: (
+                            json.dumps(x) if isinstance(x, (list, dict, tuple)) else x
+                        )
                     )
 
-            if not df_to_save.empty:
-                df_to_save.to_sql(
+            if not df.empty:
+                df.to_sql(
                     name=target_table,
                     con=connection,
                     schema=target_schema,

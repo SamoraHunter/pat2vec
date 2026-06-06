@@ -90,6 +90,24 @@ class TestEthnicityAbstractor(unittest.TestCase):
         self.assertEqual(result.at[0, "census"], "white")
         self.assertEqual(result.at[1, "census"], "white")
 
+    def test_abstract_ethnicity_mixed_complex(self):
+        """Test strings that should map to mixed group."""
+        data = {
+            "client_idcode": ["P_MIX1", "P_MIX2"],
+            "eth": ["White and Asian", "Biracial"],
+        }
+        df = pd.DataFrame(data)
+        result = EthnicityAbstractor.abstractEthnicity(df, "", "eth")
+        self.assertEqual(result.at[0, "census"], "mixed_or_multiple_ethnic_groups")
+        self.assertEqual(result.at[1, "census"], "mixed_or_multiple_ethnic_groups")
+
+    def test_abstract_ethnicity_unknown_term(self):
+        """Test strings with unknown terms."""
+        data = {"client_idcode": ["P1"], "eth": ["Martian"]}
+        df = pd.DataFrame(data)
+        result = EthnicityAbstractor.abstractEthnicity(df, "", "eth")
+        self.assertEqual(result.at[0, "census"], "other_ethnic_group")
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -17,6 +17,7 @@ from pat2vec.util.post_processing_dataframe import (
     impute_dataframe,
     missing_percentage_df,
     aggregate_dataframe_mean,
+    collapse_df_to_mean,
 )
 
 
@@ -63,6 +64,12 @@ class TestPostProcessingDataframe(unittest.TestCase):
         self.assertIn("datetime", result.columns)
         self.assertEqual(result["datetime"].iloc[0], datetime(2023, 5, 10))
         self.assertTrue(pd.isna(result["datetime"].iloc[2]))  # Third row is all 0s
+
+    def test_extract_datetime_from_binary_columns_malformed(self):
+        """Verify ValueError is raised for binary columns that cannot be parsed as tuples."""
+        df = pd.DataFrame({"(invalid_tuple)_date_time_stamp": [1]})
+        with self.assertRaises(ValueError):
+            extract_datetime_from_binary_columns(df)
 
     def test_extract_datetime_chunk_reader(self):
         """Test chunked CSV reading and processing."""
@@ -135,6 +142,21 @@ class TestPostProcessingDataframe(unittest.TestCase):
         self.assertEqual(len(result), 1)
         self.assertEqual(result.iloc[0]["score"], 15.0)
         self.assertEqual(result.iloc[0]["category"], "A")
+
+    def test_collapse_df_to_mean_append_logic(self):
+        """Test that collapse_df_to_mean correctly appends to existing files."""
+        output_file = os.path.join(self.test_dir, "collapsed.csv")
+        df1 = pd.DataFrame({"client_idcode": ["P1"], "val": [10]})
+        df2 = pd.DataFrame({"client_idcode": ["P2"], "val": [20]})
+
+        # Create file with first DF
+        collapse_df_to_mean(df1, output_file)
+        # Append second DF
+        collapse_df_to_mean(df2, output_file)
+
+        result = pd.read_csv(output_file)
+        self.assertEqual(len(result), 2)
+        self.assertCountEqual(result["client_idcode"].tolist(), ["P1", "P2"])
 
     def test_save_missing_values_pickle(self):
         """Test calculation and export of missing value percentages."""

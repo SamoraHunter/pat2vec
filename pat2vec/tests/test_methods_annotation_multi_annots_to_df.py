@@ -7,7 +7,10 @@ from datetime import datetime
 import numpy as np
 import ast
 
-from pat2vec.util.methods_annotation_multi_annots_to_df import multi_annots_to_df
+from pat2vec.util.methods_annotation_multi_annots_to_df import (
+    multi_annots_to_df,
+    temporary_file,
+)
 
 
 class TestMultiAnnotsToDf(unittest.TestCase):
@@ -270,3 +273,15 @@ class TestMultiAnnotsToDf(unittest.TestCase):
         self.assertIn(
             "Error processing document 0: Simulated processing error", cm.output[0]
         )
+
+    def test_temporary_file_context_manager(self):
+        """Test creation and cleanup of temporary files."""
+        filepath = None
+        with temporary_file(suffix=".test", delete=True) as temp_path:
+            filepath = temp_path
+            self.assertTrue(os.path.exists(filepath))
+            self.assertTrue(filepath.endswith(".test"))
+            with open(filepath, "w") as f:
+                f.write("test content")
+
+        self.assertFalse(os.path.exists(filepath))

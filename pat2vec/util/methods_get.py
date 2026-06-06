@@ -40,10 +40,10 @@ def list_dir_wrapper(path: str, config_obj: Any = None) -> List[str]:
     Returns:
         A list of filenames in the specified directory.
     """
-    hostname = config_obj.hostname
-    username = config_obj.username
-    password = config_obj.password
-    remote_dump = config_obj.remote_dump
+    hostname = getattr(config_obj, "hostname", None)
+    username = getattr(config_obj, "username", None)
+    password = getattr(config_obj, "password", None)
+    remote_dump = getattr(config_obj, "remote_dump", False) is True
     share_sftp = getattr(config_obj, "share_sftp", False)
     sftp_obj = getattr(config_obj, "sftp_obj", None)
     sftp_client = None
@@ -630,63 +630,34 @@ def filter_stripped_list(
         A tuple containing two lists: the filtered list of patients to be
         processed, and the original filtered list (for reference).
     """
-    strip_list = config_obj.strip_list
-    remote_dump = config_obj.remote_dump
+    strip_list = getattr(config_obj, "strip_list", False)
     current_pat_lines_path = config_obj.current_pat_lines_path
     n_pat_lines = config_obj.n_pat_lines
-    sftp_client = None
-    ssh_client = None
 
     if strip_list:
-        # stripped_list_start_copy = stripped_list.copy()
-        container_list = []
+        completed_list = []
+        unfinished_list = []
 
-        if remote_dump:
-            ssh_client = paramiko.SSHClient()
-            ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-            ssh_client.connect(
-                hostname=config_obj.hostname,
-                username=config_obj.username,
-                password=config_obj.password,
-            )
-            sftp_client = ssh_client.open_sftp()
+        if config_obj.verbosity > 0:
+            logger.info("Stripping list...")
 
-            for i in range(len(stripped_list)):
-                try:
-                    if (
-                        len(
-                            sftp_client.listdir(
-                                current_pat_lines_path + stripped_list[i]
-                            )
-                        )
-                        >= n_pat_lines
-                    ):
-                        container_list.append(stripped_list[i])
-                except Exception:
-                    pass
-        else:
-            if config_obj.verbosity > 0:
-                logger.info("Stripping list...")
-            for i in tqdm(range(len(stripped_list))):
-                if (
-                    len(
-                        list_dir_wrapper(
-                            current_pat_lines_path + stripped_list[i],
-                            config_obj=config_obj,
-                        )
-                    )
-                    >= n_pat_lines
-                ):
-                    container_list.append(stripped_list[i])
+        # Using list_dir_wrapper handles both local and remote paths correctly
+        # and respects share_sftp/sftp_obj settings for performance and testing.
+        for patient_id in tqdm(stripped_list, disable=config_obj.verbosity == 0):
+            try:
+                files = list_dir_wrapper(
+                    current_pat_lines_path + str(patient_id),
+                    config_obj=config_obj,
+                )
+                if len(files) >= n_pat_lines:
+                    completed_list.append(patient_id)
+                else:
+                    unfinished_list.append(patient_id)
+            except Exception:
+                unfinished_list.append(patient_id)
 
-        stripped_list_start = container_list.copy()
-        stripped_list = container_list.copy()
-
-        if remote_dump:
-            if sftp_client:
-                sftp_client.close()
-            if ssh_client:
-                ssh_client.close()
+        stripped_list = completed_list
+        stripped_list_start = unfinished_list
     else:
         stripped_list = []
         stripped_list_start = []
@@ -709,17 +680,52 @@ def create_folders(all_patient_list: List[str], config_obj: Any = None) -> None:
     pre_annotation_path = config_obj.pre_annotation_path
     pre_annotation_path_mrc = config_obj.pre_annotation_path_mrc
     current_pat_lines_path = config_obj.current_pat_lines_path
+    remote_dump = getattr(config_obj, "remote_dump", False) is True
 
-    for patient_id in all_patient_list:
-        for path in [
-            pre_annotation_path,
-            pre_annotation_path_mrc,
-            current_pat_lines_path,
-        ]:
-            folder_path = os.path.join(path, str(patient_id))
+    if not remote_dump:
+        for patient_id in all_patient_list:
+            for path in [
+                pre_annotation_path,
+                pre_annotation_path_mrc,
+                current_pat_lines_path,
+            ]:
+                folder_path = os.path.join(path, str(patient_id))
+                if not os.path.exists(folder_path):
+                    os.makedirs(folder_path)
+    else:
+        share_sftp = getattr(config_obj, "share_sftp", False)
+        sftp_obj = getattr(config_obj, "sftp_obj", None)
+        sftp_client = None
+        ssh_client = None
+        if not share_sftp or not sftp_obj:
+            ssh_client = paramiko.SSHClient()
+            ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+            ssh_client.connect(
+                hostname=config_obj.hostname,
+                username=config_obj.username,
+                password=config_obj.password,
+            )
+            sftp_client = ssh_client.open_sftp()
+            sftp_obj = sftp_client
 
-            if not os.path.exists(folder_path):
-                os.makedirs(folder_path)
+        for patient_id in all_patient_list:
+            for path in [
+                pre_annotation_path,
+                pre_annotation_path_mrc,
+                current_pat_lines_path,
+            ]:
+                folder_path = (path + "/" + str(patient_id)).replace("//", "/")
+                try:
+                    sftp_obj.stat(folder_path)
+                except (FileNotFoundError, IOError):
+                    sftp_obj.mkdir(folder_path)
+
+        if not share_sftp:
+            if sftp_client:
+                sftp_client.close()
+            if ssh_client:
+                ssh_client.close()
+
     if config_obj.verbosity > 0:
         logger.info(f"Folders created: {current_pat_lines_path}...")
 
@@ -739,16 +745,49 @@ def create_folders_for_pat(patient_id: str, config_obj: Any = None) -> None:
     pre_annotation_path = config_obj.pre_annotation_path
     pre_annotation_path_mrc = config_obj.pre_annotation_path_mrc
     current_pat_lines_path = config_obj.current_pat_lines_path
+    remote_dump = getattr(config_obj, "remote_dump", False) is True
 
-    for path in [
-        pre_annotation_path,
-        pre_annotation_path_mrc,
-        current_pat_lines_path,
-    ]:  # pre_annotation_path_reports]:
-        folder_path = os.path.join(path, str(patient_id))
+    if not remote_dump:
+        for path in [
+            pre_annotation_path,
+            pre_annotation_path_mrc,
+            current_pat_lines_path,
+        ]:
+            folder_path = os.path.join(path, str(patient_id))
+            if not os.path.exists(folder_path):
+                os.makedirs(folder_path)
+    else:
+        share_sftp = getattr(config_obj, "share_sftp", False)
+        sftp_obj = getattr(config_obj, "sftp_obj", None)
+        sftp_client = None
+        ssh_client = None
+        if not share_sftp or not sftp_obj:
+            ssh_client = paramiko.SSHClient()
+            ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+            ssh_client.connect(
+                hostname=config_obj.hostname,
+                username=config_obj.username,
+                password=config_obj.password,
+            )
+            sftp_client = ssh_client.open_sftp()
+            sftp_obj = sftp_client
 
-        if not os.path.exists(folder_path):
-            os.makedirs(folder_path)
+        for path in [
+            pre_annotation_path,
+            pre_annotation_path_mrc,
+            current_pat_lines_path,
+        ]:
+            folder_path = (path + "/" + str(patient_id)).replace("//", "/")
+            try:
+                sftp_obj.stat(folder_path)
+            except (FileNotFoundError, IOError):
+                sftp_obj.mkdir(folder_path)
+
+        if not share_sftp:
+            if sftp_client:
+                sftp_client.close()
+            if ssh_client:
+                ssh_client.close()
 
     if config_obj.verbosity > 0:
         logger.info(

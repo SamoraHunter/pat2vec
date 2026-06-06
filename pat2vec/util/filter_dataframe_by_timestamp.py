@@ -2,17 +2,17 @@ import pandas as pd
 
 
 from datetime import datetime
-from typing import Union
+from typing import Union, Optional
 
 
 def filter_dataframe_by_timestamp(
     df: pd.DataFrame,
-    start_year: Union[int, str],
-    start_month: Union[int, str],
-    end_year: Union[int, str],
-    end_month: Union[int, str],
-    start_day: Union[int, str],
-    end_day: Union[int, str],
+    start_year: Optional[Union[int, str]],
+    start_month: Optional[Union[int, str]],
+    end_year: Optional[Union[int, str]],
+    end_month: Optional[Union[int, str]],
+    start_day: Optional[Union[int, str]],
+    end_day: Optional[Union[int, str]],
     timestamp_string: str,
     dropna: bool = False,
 ) -> pd.DataFrame:
@@ -65,27 +65,30 @@ def filter_dataframe_by_timestamp(
         df_copy = df_copy.dropna(subset=[timestamp_string])
 
     # Create start and end datetime objects
-    start_datetime = pd.Timestamp(
-        datetime(int(start_year), int(start_month), int(start_day), 0, 0, 0), tz="UTC"
-    )
-    end_datetime = pd.Timestamp(
-        datetime(int(end_year), int(end_month), int(end_day), 23, 59, 59, 999999),
-        tz="UTC",
-    )
+    if all(v is not None for v in [start_year, start_month, start_day]):
+        start_datetime = pd.Timestamp(
+            datetime(int(start_year), int(start_month), int(start_day), 0, 0, 0),
+            tz="UTC",
+        )
+    else:
+        # Use a safe minimum date that allows for time component replacement
+        start_datetime = pd.Timestamp("1678-01-01", tz="UTC")
+
+    if all(v is not None for v in [end_year, end_month, end_day]):
+        end_datetime = pd.Timestamp(
+            datetime(int(end_year), int(end_month), int(end_day), 23, 59, 59, 999999),
+            tz="UTC",
+        )
+    else:
+        # Use a safe maximum date that allows for time component replacement
+        end_datetime = pd.Timestamp("2261-12-31", tz="UTC")
 
     # Ensure start date is earlier than end date
-    if start_datetime.replace(
-        hour=0, minute=0, second=0, microsecond=0
-    ) > end_datetime.replace(hour=0, minute=0, second=0, microsecond=0):
-        # Swap the entire dates, keeping the time components
-        start_temp = pd.Timestamp(
-            datetime(int(end_year), int(end_month), int(end_day), 0, 0, 0), tz="UTC"
-        )
-        end_temp = pd.Timestamp(
-            datetime(
-                int(start_year), int(start_month), int(start_day), 23, 59, 59, 999999
-            ),
-            tz="UTC",
+    if start_datetime.date() > end_datetime.date():
+        # Swap the entire dates, ensuring correct time components
+        start_temp = end_datetime.replace(hour=0, minute=0, second=0, microsecond=0)
+        end_temp = start_datetime.replace(
+            hour=23, minute=59, second=59, microsecond=999999
         )
         start_datetime, end_datetime = start_temp, end_temp
 

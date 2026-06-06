@@ -207,6 +207,171 @@ class TestFilterDataFrameByTimestampExtended(unittest.TestCase):
                 timestamp_string="non_existent_column",
             )
 
+    def test_no_date_range_specified(self):
+        """Test that the function returns the DataFrame with invalid dates removed if no date range is specified."""
+        df = pd.DataFrame(
+            {
+                "timestamp": [
+                    "2023-01-01 10:00:00",
+                    "invalid-date",
+                    "2023-03-15 12:00:00",
+                ],
+                "value": [1, 2, 3],
+            }
+        )
+        filtered = filter_dataframe_by_timestamp(
+            df,
+            timestamp_string="timestamp",
+            start_year=None,
+            start_month=None,
+            start_day=None,
+            end_year=None,
+            end_month=None,
+            end_day=None,
+        )
+        self.assertEqual(len(filtered), 2)
+        self.assertCountEqual(filtered["value"].tolist(), [1, 3])
+        self.assertNotIn("invalid-date", filtered["timestamp"].tolist())
+
+    def test_only_start_date_specified(self):
+        """Test filtering with only a start date."""
+        df = pd.DataFrame(
+            {
+                "timestamp": [
+                    "2023-01-01 10:00:00",
+                    "2023-02-01 12:00:00",
+                    "2023-03-01 14:00:00",
+                ],
+                "value": [1, 2, 3],
+            }
+        )
+        filtered = filter_dataframe_by_timestamp(
+            df,
+            start_year=2023,
+            start_month=2,
+            start_day=1,
+            end_year=None,
+            end_month=None,
+            end_day=None,
+            timestamp_string="timestamp",
+        )
+        self.assertEqual(len(filtered), 2)
+        self.assertCountEqual(filtered["value"].tolist(), [2, 3])
+
+    def test_only_end_date_specified(self):
+        """Test filtering with only an end date."""
+        df = pd.DataFrame(
+            {
+                "timestamp": [
+                    "2023-01-01 10:00:00",
+                    "2023-02-01 12:00:00",
+                    "2023-03-01 14:00:00",
+                ],
+                "value": [1, 2, 3],
+            }
+        )
+        filtered = filter_dataframe_by_timestamp(
+            df,
+            start_year=None,
+            start_month=None,
+            start_day=None,
+            end_year=2023,
+            end_month=2,
+            end_day=1,
+            timestamp_string="timestamp",
+        )
+        self.assertEqual(len(filtered), 2)
+        self.assertCountEqual(filtered["value"].tolist(), [1, 2])
+
+    def test_dataframe_with_some_invalid_dates(self):
+        """Test filtering a DataFrame where some dates are invalid and should be coerced."""
+        df = pd.DataFrame(
+            {
+                "timestamp": [
+                    "2023-01-01",
+                    "not-a-date",
+                    "2023-02-15",
+                    "another-bad-date",
+                    "2023-03-30",
+                ],
+                "value": [1, 2, 3, 4, 5],
+            }
+        )
+        filtered = filter_dataframe_by_timestamp(
+            df,
+            start_year=2023,
+            start_month=2,
+            start_day=1,
+            end_year=2023,
+            end_month=3,
+            end_day=31,
+            timestamp_string="timestamp",
+        )
+        self.assertEqual(len(filtered), 2)
+        self.assertCountEqual(filtered["value"].tolist(), [3, 5])
+
+    def test_empty_dataframe_after_invalid_date_coercion(self):
+        """Test that an empty DataFrame with original columns is returned if all dates are invalid."""
+        df = pd.DataFrame({"timestamp": ["invalid", "bad-date"], "value": [1, 2]})
+        filtered = filter_dataframe_by_timestamp(
+            df,
+            start_year=2023,
+            start_month=1,
+            start_day=1,
+            end_year=2023,
+            end_month=12,
+            end_day=31,
+            timestamp_string="timestamp",
+        )
+        self.assertTrue(filtered.empty)
+        self.assertListEqual(list(filtered.columns), list(df.columns))
+
+    def test_dropna_true_behavior(self):
+        """Test that dropna=True explicitly removes NaT/None from results."""
+        df = pd.DataFrame(
+            {
+                "timestamp": [
+                    "2023-01-01",
+                    None,
+                    "2023-01-02",
+                    pd.NaT,
+                ],
+                "value": [1, 2, 3, 4],
+            }
+        )
+        filtered = filter_dataframe_by_timestamp(
+            df,
+            start_year=2023,
+            start_month=1,
+            start_day=1,
+            end_year=2023,
+            end_month=1,
+            end_day=31,
+            timestamp_string="timestamp",
+            dropna=True,
+        )
+        self.assertEqual(len(filtered), 2)
+        self.assertCountEqual(filtered["value"].tolist(), [1, 3])
+
+    def test_invalid_types_in_column(self):
+        """Test filtering when column contains non-string, non-datetime types."""
+        df = pd.DataFrame(
+            {"timestamp": [123, True, datetime(2023, 1, 1)], "value": [1, 2, 3]}
+        )
+        # Function uses pd.to_datetime(..., errors='coerce')
+        filtered = filter_dataframe_by_timestamp(
+            df,
+            start_year=2023,
+            start_month=1,
+            start_day=1,
+            end_year=2023,
+            end_month=1,
+            end_day=1,
+            timestamp_string="timestamp",
+        )
+        self.assertEqual(len(filtered), 1)
+        self.assertEqual(filtered["value"].iloc[0], 3)
+
 
 if __name__ == "__main__":
     unittest.main()

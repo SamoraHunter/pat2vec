@@ -188,6 +188,16 @@ class TestDateValidationForElasticsearch(unittest.TestCase):
                 end_day=1,
             )
 
+    def test_none_inputs_raises_error(self):
+        """Tests that None inputs raise TypeError during validation."""
+        with self.assertRaises(ValueError):
+            validate_input_dates(None, 1, 1, 2025, 1, 1)
+
+    def test_empty_string_inputs_raises_error(self):
+        """Tests that empty string inputs raise ValueError."""
+        with self.assertRaises(ValueError):
+            validate_input_dates("", "1", "1", "2025", "1", "1")
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

@@ -144,6 +144,20 @@ class TestCalculateInterval(unittest.TestCase):
         )
         self.assertEqual(result_jan, 4)
 
+    def test_interval_larger_than_total(self):
+        """Test where interval is larger than total delta."""
+        start = datetime(2023, 1, 1)
+        total = relativedelta(days=5)
+        interval = relativedelta(days=6)
+        self.assertEqual(calculate_interval(start, total, interval), 0)
+
+    def test_zero_total_non_zero_interval(self):
+        """Test zero total delta with a valid interval."""
+        start = datetime(2023, 1, 1)
+        total = relativedelta(seconds=0)
+        interval = relativedelta(hours=1)
+        self.assertEqual(calculate_interval(start, total, interval), 0)
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
