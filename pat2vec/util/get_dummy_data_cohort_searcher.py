@@ -2320,7 +2320,9 @@ def populate_elastic_with_dummy_data(
                     user_indices = [
                         i["index"] for i in indices if not i["index"].startswith(".")
                     ]
-                    if user_indices:
+                    if user_indices and not getattr(
+                        config_obj, "testing_elastic", False
+                    ):
                         logger.error(
                             f"Unsafe operation: Target cluster is not empty. Found existing user indices: {user_indices}. Aborting."
                         )

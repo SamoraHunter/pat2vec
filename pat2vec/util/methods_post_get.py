@@ -172,25 +172,27 @@ def check_csv_files_in_directory(
         delete_broken: If True, deletes files that fail integrity checks.
         config_obj: The configuration object.
     """
-    total_files = sum(1 for _ in os.walk(directory) for _ in os.listdir(directory))
-
-    # Initialize tqdm progress bar
-    progress_bar = tqdm(
-        total=total_files, unit="file", desc=f"Checking CSV files in {directory}"
-    )
-
+    # Collect all CSV files first to get an accurate count and avoid double traversal
+    csv_files = []
     for root, dirs, files in os.walk(directory):
         for file in files:
             file_path = os.path.join(root, file)
             if ignore_outputs and "output" in file_path.lower():
-                continue  # Skip files with 'output' in the path
+                continue
             if ignore_output_vectors and "current_pat_lines_parts" in file_path.lower():
-                continue  # Skip files with 'current_pat_lines_parts' in the path
+                continue
             if file_path.lower().endswith(".csv"):
-                progress_bar.set_description(f"Checking CSV integrity for: {file_path}")
-                check_csv_integrity(
-                    file_path, verbosity, delete_broken, config_obj=config_obj
-                )
-                progress_bar.update(1)
+                csv_files.append(file_path)
+
+    progress_bar = tqdm(
+        total=len(csv_files), unit="file", desc=f"Checking CSV files in {directory}"
+    )
+
+    for file_path in csv_files:
+        progress_bar.set_description(
+            f"Checking CSV integrity for: {os.path.basename(file_path)}"
+        )
+        check_csv_integrity(file_path, verbosity, delete_broken, config_obj=config_obj)
+        progress_bar.update(1)
 
     progress_bar.close()
