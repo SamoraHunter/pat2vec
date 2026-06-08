@@ -2220,51 +2220,45 @@ def populate_elastic_with_dummy_data(
         return []
 
     if cs:
-        # Safeguard: Check if connecting to a safe/test environment
-        # This prevents wiping production indices
-        nodes = cs.elastic.transport.node_pool.all()
-        hosts = [node.host for node in nodes]
-        if not all(is_safe_host(h) for h in hosts):
-            logger.error(
-                f"Unsafe operation: Attempting to populate dummy data on non-local host(s): {hosts}. Aborting."
-            )
-            return []
-
-        # Safeguard: Check username
-        safe_users = ["elastic", "test_user", "dummy_user"]
-        current_user = getattr(config_obj, "username", None)
-        if current_user and current_user not in safe_users:
-            logger.error(
-                f"Unsafe operation: Attempting to populate dummy data with non-test user '{current_user}'. Aborting."
-            )
-            return []
-
-        # Log cluster info for verification
         try:
+            # Safeguard: Check if connecting to a safe/test environment
+            nodes = cs.elastic.transport.node_pool.all()
+            hosts = [node.host for node in nodes]
+            if not all(is_safe_host(h) for h in hosts):
+                logger.error(
+                    f"Unsafe operation: Attempting to populate dummy data on non-local host(s): {hosts}. Aborting."
+                )
+                return []
+
+            # Safeguard: Check username
+            safe_users = ["elastic", "test_user", "dummy_user"]
+            current_user = getattr(config_obj, "username", None)
+            if current_user and current_user not in safe_users:
+                logger.error(
+                    f"Unsafe operation: Attempting to populate dummy data with non-test user '{current_user}'. Aborting."
+                )
+                return []
+
+            # Log cluster info
             cluster_info = cs.elastic.info()
             cluster_name = cluster_info.get("cluster_name")
             logger.info(
                 f"Populating dummy data on cluster: {cluster_name} (version {cluster_info.get('version', {}).get('number')})"
             )
 
-            # Safeguard: Cluster Name
-            safe_cluster_names = [
-                "docker-cluster",
-                "elasticsearch",
-                "nodes",
-                "docker-cluster-es",
+            # Safeguard: Verify cluster is empty or allowed to proceed
+            indices = cs.elastic.cat.indices(format="json")
+            user_indices = [
+                i["index"] for i in indices if not i["index"].startswith(".")
             ]
-            is_definitely_local = any(
-                h in ["localhost", "127.0.0.1", "::1"] for h in hosts
-            )
-            if cluster_name not in safe_cluster_names and not is_definitely_local:
+            if user_indices and not getattr(config_obj, "testing_elastic", False):
                 logger.error(
-                    f"Unsafe operation: Cluster name '{cluster_name}' is not in safe list {safe_cluster_names}. Aborting."
+                    f"Unsafe operation: Target cluster is not empty. Found indices: {user_indices}. Aborting."
                 )
                 return []
-        except Exception:
-            pass
-
+        except Exception as e:
+            logger.error(f"Failed to verify cluster safety: {e}. Aborting.")
+            return []
     else:
         logger.error("Failed to initialize CogStack client. Aborting population.")
         return []
@@ -2275,7 +2269,6 @@ def populate_elastic_with_dummy_data(
     global_end_month = int(config_obj.global_end_month)
 
     # Load schema and create indices if schema file exists
-    # Prefer the path from config, fall back to default relative path
     schema_path = getattr(config_obj, "test_schema_path", None) or os.path.join(
         "test_files", "elastic_schemas.json"
     )
@@ -2285,70 +2278,24 @@ def populate_elastic_with_dummy_data(
             with open(schema_path, "r") as f:
                 schemas = json.load(f)
 
-            if cs:
-                # Safeguard: Check if connecting to a safe/test environment
-                # This prevents wiping production indices
-                nodes = cs.elastic.transport.node_pool.all()
-                hosts = [node.host for node in nodes]
-                if not all(is_safe_host(h) for h in hosts):
-                    logger.error(
-                        f"Unsafe operation: Attempting to populate dummy data on non-local host(s): {hosts}. Aborting."
-                    )
-                    return []
+            logger.info(f"Applying schemas from {schema_path}...")
+            for index_name, schema_data in schemas.items():
+                # Delete index if it exists to ensure clean state with correct mapping
+                if cs.elastic.indices.exists(index=index_name):
+                    cs.elastic.indices.delete(index=index_name)
+                    logger.info(f"Deleted existing index: {index_name}")
 
-                # Safeguard: Check username
-                safe_users = ["elastic", "test_user", "dummy_user"]
-                current_user = getattr(config_obj, "username", None)
-                if current_user and current_user not in safe_users:
-                    logger.error(
-                        f"Unsafe operation: Attempting to populate dummy data with non-test user '{current_user}'. Aborting."
-                    )
-                    return []
+                mappings = schema_data.get("mappings", {})
+                settings = schema_data.get("settings", {})
 
-                # Log cluster info for verification
-                try:
-                    cluster_info = cs.elastic.info()
-                    logger.info(
-                        f"Populating dummy data on cluster: {cluster_info.get('cluster_name')} (version {cluster_info.get('version', {}).get('number')})"
-                    )
-                except Exception:
-                    pass
+                # Force dynamic mapping to True to ensure dummy fields are indexed
+                mappings["dynamic"] = True
 
-                # Safeguard: Verify cluster is empty of user indices
-                try:
-                    indices = cs.elastic.cat.indices(format="json")
-                    user_indices = [
-                        i["index"] for i in indices if not i["index"].startswith(".")
-                    ]
-                    if user_indices and not getattr(
-                        config_obj, "testing_elastic", False
-                    ):
-                        logger.error(
-                            f"Unsafe operation: Target cluster is not empty. Found existing user indices: {user_indices}. Aborting."
-                        )
-                        return []
-                except Exception as e:
-                    logger.error(f"Failed to verify cluster emptiness: {e}. Aborting.")
-                    return []
-
-                logger.info(f"Applying schemas from {schema_path}...")
-                for index_name, schema_data in schemas.items():
-                    # Delete index if it exists to ensure clean state with correct mapping
-                    if cs.elastic.indices.exists(index=index_name):
-                        cs.elastic.indices.delete(index=index_name)
-                        logger.info(f"Deleted existing index: {index_name}")
-
-                    mappings = schema_data.get("mappings", {})
-                    settings = schema_data.get("settings", {})
-
-                    # Force dynamic mapping to True to ensure dummy fields are indexed
-                    mappings["dynamic"] = True
-
-                    # Create index
-                    cs.elastic.indices.create(
-                        index=index_name, mappings=mappings, settings=settings
-                    )
-                    logger.info(f"Created index: {index_name} with custom schema")
+                # Create index
+                cs.elastic.indices.create(
+                    index=index_name, mappings=mappings, settings=settings
+                )
+                logger.info(f"Created index: {index_name} with custom schema")
             else:
                 logger.warning(
                     "Could not initialize CogStack client for schema creation."

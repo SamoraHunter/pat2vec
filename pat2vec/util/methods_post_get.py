@@ -138,10 +138,14 @@ def check_csv_integrity(
             logger.info("CSV file integrity is good.")
 
     except pd.errors.EmptyDataError:
+        warning_message = f"CSV file is empty: {file_path}"
+        warnings.warn(warning_message, UserWarning)
         if delete_broken:
             _delete_and_log("CSV file is empty")
 
     except pd.errors.ParserError:
+        warning_message = f"Error parsing CSV file: {file_path}"
+        warnings.warn(warning_message, UserWarning)
         if delete_broken:
             _delete_and_log("Error parsing CSV file")
 
