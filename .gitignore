@@ -239,3 +239,4 @@ notebooks/requirements.in
 notebooks/treatment_docs_dummy.csv
 run_ci.sh
 .skills/*
+.INSTRUCTIONS.md
