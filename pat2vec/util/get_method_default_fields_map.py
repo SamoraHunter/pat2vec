@@ -17,6 +17,24 @@ from pat2vec.pat2vec_get_methods.get_method_diagnostics import DIAGNOSTICS_FIELD
 from pat2vec.pat2vec_get_methods.get_method_drugs import DRUG_FIELDS
 from pat2vec.pat2vec_get_methods.get_method_hosp_site import HOSP_SITE_FIELDS
 from pat2vec.pat2vec_get_methods.get_method_smoking import SMOKING_FIELDS
+from pat2vec.pat2vec_get_methods.get_method_epic_encounters import EPIC_ENCOUNTER_FIELDS
+from pat2vec.pat2vec_get_methods.get_method_epic_imaging_reports import (
+    EPIC_IMAGING_REPORTS_FIELDS,
+)
+from pat2vec.pat2vec_get_methods.get_method_epic_patients import EPIC_PATIENTS_FIELDS
+from pat2vec.pat2vec_get_methods.get_method_epic_lab_results import (
+    EPIC_LAB_RESULTS_FIELDS,
+)
+from pat2vec.pat2vec_get_methods.get_method_epic_orders import EPIC_ORDERS_FIELDS
+from pat2vec.pat2vec_get_methods.get_method_epic_medical_history import (
+    EPIC_MEDICAL_HISTORY_FIELDS,
+)
+from pat2vec.pat2vec_get_methods.get_method_epic_clinical_notes import (
+    EPIC_CLINICAL_NOTES_FIELDS,
+)
+from pat2vec.pat2vec_get_methods.get_method_epic_clinical_notes_appointments import (
+    EPIC_CLINICAL_NOTES_APPOINTMENTS_FIELDS,
+)
 from pat2vec.pat2vec_get_methods.get_method_vte_status import VTE_FIELDS
 
 # This dictionary maps the name of the 'get' function to the default
@@ -34,6 +52,14 @@ GET_METHOD_DEFAULT_FIELDS_MAP: Dict[str, List[str]] = {
     "get_current_pat_drugs": DRUG_FIELDS,
     "get_hosp_site": HOSP_SITE_FIELDS,
     "get_smoking": SMOKING_FIELDS,
+    "get_epic_encounters": EPIC_ENCOUNTER_FIELDS,
+    "get_epic_imaging_reports": EPIC_IMAGING_REPORTS_FIELDS,
+    "get_epic_patients": EPIC_PATIENTS_FIELDS,
+    "get_epic_lab_results": EPIC_LAB_RESULTS_FIELDS,
+    "get_epic_orders": EPIC_ORDERS_FIELDS,
+    "get_epic_medical_history": EPIC_MEDICAL_HISTORY_FIELDS,
+    "get_epic_clinical_notes": EPIC_CLINICAL_NOTES_FIELDS,
+    "get_epic_clinical_notes_appointments": EPIC_CLINICAL_NOTES_APPOINTMENTS_FIELDS,
     "get_vte_status": VTE_FIELDS,
 }
 

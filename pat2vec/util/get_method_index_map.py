@@ -29,6 +29,14 @@ GET_METHOD_INDEX_MAP: Dict[str, str] = {
     "get_current_pat_annotations_mrc_cs": "observations",
     "get_current_pat_textual_obs_annotations": "basic_observations",
     "get_current_pat_report_annotations": "observations",
+    "get_epic_encounters": "epic_encounters",
+    "get_epic_imaging_reports": "epic_imaging_reports",
+    "get_epic_patients": "epic_patients",
+    "get_epic_lab_results": "epic_lab_results",
+    "get_epic_orders": "epic_orders",
+    "get_epic_medical_history": "epic_medical_history",
+    "get_epic_clinical_notes": "epic_clinical_notes",
+    "get_epic_clinical_notes_appointments": "epic_clinical_notes_appointments",
 }
 
 

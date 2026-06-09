@@ -1169,6 +1169,362 @@ def extract_date_range(
         return None
 
 
+def generate_epic_encounters_data(
+    num_rows: int,
+    entered_list: List[str],
+    global_start_year: int,
+    global_start_month: int,
+    global_end_year: int,
+    global_end_month: int,
+    fields_list: List[str] = [
+        "activity_PatientDurableKey",
+        "activity_AdmissionDate",
+        "activity_DischargeDate",
+        "activity_Department",
+        "activity_Type",
+        "activity_VisitClass",
+        "activity_HospitalService",
+        "id",
+    ],
+) -> pd.DataFrame:
+    """Generates dummy data for the 'epic_encounters' index.
+
+    Args:
+        num_rows: Number of rows to generate for each client.
+        entered_list: List of client IDs to generate data for.
+        global_start_year: Start year for the random date range.
+        global_start_month: Start month for the random date range.
+        global_end_year: End year for the random date range.
+        global_end_month: End month for the random date range.
+        fields_list: List of columns to include in the DataFrame.
+
+    Returns:
+        A pandas DataFrame with generated dummy encounter data.
+    """
+    df_holder_list = []
+
+    for client_id_code in entered_list:
+        admission_date = create_random_date_from_globals(
+            global_start_year,
+            global_start_month,
+            global_end_year,
+            global_end_month,
+        )
+        discharge_date = admission_date + timedelta(days=random.randint(1, 30))
+
+        data = {
+            "activity_PatientDurableKey": [client_id_code] * num_rows,
+            "activity_AdmissionDate": [
+                admission_date.strftime("%Y-%m-%dT%H:%M:%S") for _ in range(num_rows)
+            ],
+            "activity_DischargeDate": [
+                discharge_date.strftime("%Y-%m-%dT%H:%M:%S") for _ in range(num_rows)
+            ],
+            "activity_Department": [faker.word() for _ in range(num_rows)],
+            "activity_Type": [
+                random.choice(["Inpatient", "Outpatient", "Emergency"])
+                for _ in range(num_rows)
+            ],
+            "activity_VisitClass": [
+                random.choice(["Hospital Encounter", "Office Visit"])
+                for _ in range(num_rows)
+            ],
+            "activity_HospitalService": [faker.word() for _ in range(num_rows)],
+            "id": [faker.uuid4() for _ in range(num_rows)],
+        }
+        df_holder_list.append(pd.DataFrame(data))
+
+    final_df = pd.concat(df_holder_list, ignore_index=True)
+    for field in fields_list:
+        if field not in final_df.columns:
+            final_df[field] = np.nan
+    return final_df[fields_list]
+
+
+def generate_epic_clinical_notes_data(
+    num_rows: int,
+    entered_list: List[str],
+    global_start_year: int,
+    global_start_month: int,
+    global_end_year: int,
+    global_end_month: int,
+    use_GPT: bool = False,
+    fields_list: List[str] = [
+        "document_PatientDurableKey",
+        "document_CreatedWhen",
+        "document_Content",
+        "document_Name",
+        "document_EncounterEpicCsn",
+        "id",
+    ],
+) -> pd.DataFrame:
+    """Generates dummy data for the 'epic_clinical_notes' index."""
+    df_holder_list = []
+
+    for client_id_code in entered_list:
+        data = {
+            "document_PatientDurableKey": [client_id_code] * num_rows,
+            "document_CreatedWhen": [
+                create_random_date_from_globals(
+                    global_start_year,
+                    global_start_month,
+                    global_end_year,
+                    global_end_month,
+                ).strftime("%Y-%m-%dT%H:%M:%S")
+                for _ in range(num_rows)
+            ],
+            "document_Content": [
+                (
+                    generate_patient_timeline(client_id_code)
+                    if use_GPT
+                    else get_patient_timeline_dummy(client_id_code)
+                )
+                for _ in range(num_rows)
+            ],
+            "document_Name": [faker.sentence(nb_words=3) for _ in range(num_rows)],
+            "document_EncounterEpicCsn": [
+                faker.random_number(digits=10) for _ in range(num_rows)
+            ],
+            "id": [faker.uuid4() for _ in range(num_rows)],
+        }
+        df_holder_list.append(pd.DataFrame(data))
+
+    final_df = pd.concat(df_holder_list, ignore_index=True)
+    for field in fields_list:
+        if field not in final_df.columns:
+            final_df[field] = np.nan
+    return final_df[fields_list]
+
+
+def generate_epic_medical_history_data(
+    num_rows: int,
+    entered_list: List[str],
+    global_start_year: int,
+    global_start_month: int,
+    global_end_year: int,
+    global_end_month: int,
+    fields_list: List[str] = [
+        "document_PatientDurableKey",
+        "document_CreatedWhen",
+        "document_Diagnosis",
+        "document_DiagnosisConcepts",
+        "document_Name",
+        "document_Comment",
+        "id",
+    ],
+) -> pd.DataFrame:
+    """Generates dummy data for the 'epic_medical_history' index."""
+    df_holder_list = []
+
+    for client_id_code in entered_list:
+        data = {
+            "document_PatientDurableKey": [client_id_code] * num_rows,
+            "document_CreatedWhen": [
+                create_random_date_from_globals(
+                    global_start_year,
+                    global_start_month,
+                    global_end_year,
+                    global_end_month,
+                ).strftime("%Y-%m-%dT%H:%M:%S")
+                for _ in range(num_rows)
+            ],
+            "document_Diagnosis": [faker.word() for _ in range(num_rows)],
+            "document_DiagnosisConcepts": [faker.word() for _ in range(num_rows)],
+            "document_Name": [faker.sentence(nb_words=2) for _ in range(num_rows)],
+            "document_Comment": [faker.sentence() for _ in range(num_rows)],
+            "id": [faker.uuid4() for _ in range(num_rows)],
+        }
+        df_holder_list.append(pd.DataFrame(data))
+
+    final_df = pd.concat(df_holder_list, ignore_index=True)
+    for field in fields_list:
+        if field not in final_df.columns:
+            final_df[field] = np.nan
+    return final_df[fields_list]
+
+
+def generate_epic_orders_data(
+    num_rows: int,
+    entered_list: List[str],
+    global_start_year: int,
+    global_start_month: int,
+    global_end_year: int,
+    global_end_month: int,
+    fields_list: List[str] = [
+        "document_PatientDurableKey",
+        "document_CreatedWhen",
+        "document_UpdatedWhen",
+        "document_Name",
+        "document_Content",
+        "document_OrderClass",
+        "document_OrderDate",
+        "document_OrderStatus",
+        "id",
+    ],
+) -> pd.DataFrame:
+    """Generates dummy data for the 'epic_orders' index."""
+    df_holder_list = []
+
+    for client_id_code in entered_list:
+        order_date = create_random_date_from_globals(
+            global_start_year,
+            global_start_month,
+            global_end_year,
+            global_end_month,
+        )
+        data = {
+            "document_PatientDurableKey": [client_id_code] * num_rows,
+            "document_CreatedWhen": [
+                create_random_date_from_globals(
+                    global_start_year,
+                    global_start_month,
+                    global_end_year,
+                    global_end_month,
+                ).strftime("%Y-%m-%dT%H:%M:%S")
+                for _ in range(num_rows)
+            ],
+            "document_UpdatedWhen": [
+                create_random_date_from_globals(
+                    global_start_year,
+                    global_start_month,
+                    global_end_year,
+                    global_end_month,
+                ).strftime("%Y-%m-%dT%H:%M:%S")
+                for _ in range(num_rows)
+            ],
+            "document_Name": [faker.word() for _ in range(num_rows)],
+            "document_Content": [faker.sentence() for _ in range(num_rows)],
+            "document_OrderClass": [
+                random.choice(["Medication", "Lab", "Imaging"]) for _ in range(num_rows)
+            ],
+            "document_OrderDate": [
+                int(order_date.timestamp() * 1000)
+                for _ in range(num_rows)  # Changed to epoch milliseconds
+            ],
+            "document_OrderStatus": [
+                random.choice(["Completed", "Pending", "Cancelled"])
+                for _ in range(num_rows)
+            ],
+            "id": [faker.uuid4() for _ in range(num_rows)],
+        }
+        df_holder_list.append(pd.DataFrame(data))
+
+    final_df = pd.concat(df_holder_list, ignore_index=True)
+    for field in fields_list:
+        if field not in final_df.columns:
+            final_df[field] = np.nan
+    return final_df[fields_list]
+
+
+def generate_epic_lab_results_data(
+    num_rows: int,
+    entered_list: List[str],
+    global_start_year: int,
+    global_start_month: int,
+    global_end_year: int,
+    global_end_month: int,
+    fields_list: List[str] = [
+        "document_PatientDurableKey",
+        "document_CreatedWhen",
+        "document_Name",
+        "document_Content",
+        "document_CollectedDate",
+        "document_LabResultEpicId",
+        "document_Fields.valueText",
+        "id",
+    ],
+) -> pd.DataFrame:
+    """Generates dummy data for the 'epic_lab_results' index."""
+    df_holder_list = []
+
+    for client_id_code in entered_list:
+        collected_date = create_random_date_from_globals(
+            global_start_year,
+            global_start_month,
+            global_end_year,
+            global_end_month,
+        )
+        data = {
+            "document_PatientDurableKey": [client_id_code] * num_rows,
+            "document_CreatedWhen": [
+                create_random_date_from_globals(
+                    global_start_year,
+                    global_start_month,
+                    global_end_year,
+                    global_end_month,
+                ).strftime("%Y-%m-%dT%H:%M:%S")
+                for _ in range(num_rows)
+            ],
+            "document_Name": [faker.word() for _ in range(num_rows)],
+            "document_Content": [faker.sentence() for _ in range(num_rows)],
+            "document_CollectedDate": [
+                collected_date.strftime("%Y-%m-%dT%H:%M:%S") for _ in range(num_rows)
+            ],
+            "document_LabResultEpicId": [
+                faker.random_number(digits=8) for _ in range(num_rows)
+            ],
+            "document_Fields.valueText": [faker.word() for _ in range(num_rows)],
+            "id": [faker.uuid4() for _ in range(num_rows)],
+        }
+        df_holder_list.append(pd.DataFrame(data))
+
+    final_df = pd.concat(df_holder_list, ignore_index=True)
+    for field in fields_list:
+        if field not in final_df.columns:
+            final_df[field] = np.nan
+    return final_df[fields_list]
+
+
+def generate_epic_clinical_notes_appointments_data(
+    num_rows: int,
+    entered_list: List[str],
+    global_start_year: int,
+    global_start_month: int,
+    global_end_year: int,
+    global_end_month: int,
+    fields_list: List[str] = [
+        "document_PatientDurableKey",
+        "document_CreatedWhen",
+        "document_UpdatedWhen",
+        "document_Name",
+        "document_Content",
+        "document_EncounterEpicCsn",
+        "document_EncounterKey",
+        "id",
+    ],
+) -> pd.DataFrame:
+    """Generates dummy data for the 'epic_clinical_notes_appointments' index."""
+    df_holder_list = []
+    for client_id_code in entered_list:
+        created_when = create_random_date_from_globals(
+            global_start_year, global_start_month, global_end_year, global_end_month
+        )
+        data = {
+            "document_PatientDurableKey": [client_id_code] * num_rows,
+            "document_CreatedWhen": [
+                created_when.strftime("%Y-%m-%dT%H:%M:%S") for _ in range(num_rows)
+            ],
+            "document_UpdatedWhen": [
+                created_when.strftime("%Y-%m-%dT%H:%M:%S") for _ in range(num_rows)
+            ],
+            "document_Name": [f"Appt Note {faker.word()}" for _ in range(num_rows)],
+            "document_Content": [faker.sentence() for _ in range(num_rows)],
+            "document_EncounterEpicCsn": [
+                faker.random_number(digits=10) for _ in range(num_rows)
+            ],
+            "document_EncounterKey": [
+                faker.random_number(digits=8) for _ in range(num_rows)
+            ],
+            "id": [faker.uuid4() for _ in range(num_rows)],
+        }
+        df_holder_list.append(pd.DataFrame(data))
+    final_df = pd.concat(df_holder_list, ignore_index=True)
+    for field in fields_list:
+        if field not in final_df.columns:
+            final_df[field] = np.nan
+    return final_df[fields_list]
+
+
 def cohort_searcher_with_terms_and_search_dummy(
     index_name: str,
     fields_list: List[str],
@@ -1525,8 +1881,148 @@ def cohort_searcher_with_terms_and_search_dummy(
         )
         return df
 
+    elif index_name == "epic_encounters":
+        if verbose:
+            logger.debug("Generating data for 'epic_encounters'")
+        num_rows = random.randint(1, 5)
+        df = generate_epic_encounters_data(
+            num_rows,
+            entered_list,
+            global_start_year,
+            global_start_month,
+            global_end_year,
+            global_end_month,
+            fields_list=fields_list,
+        )
+        return df
+
+    elif index_name == "epic_clinical_notes":
+        if verbose:
+            logger.debug("Generating data for 'epic_clinical_notes'")
+        num_rows = random.randint(1, 5)
+        df = generate_epic_clinical_notes_data(
+            num_rows,
+            entered_list,
+            global_start_year,
+            global_start_month,
+            global_end_year,
+            global_end_month,
+            use_GPT=use_GPT,
+            fields_list=fields_list,
+        )
+        return df
+
+    elif index_name == "epic_medical_history":
+        # For epic_medical_history, document_PatientDurableKey is the primary patient identifier
+        if term_name != "document_PatientDurableKey":
+            logger.warning(
+                f"Searching epic_medical_history with term_name '{term_name}'. Expected 'document_PatientDurableKey'."
+            )
+
+        if verbose:
+            logger.debug("Generating data for 'epic_medical_history'")
+        num_rows = random.randint(1, 5)
+        df = generate_epic_medical_history_data(
+            num_rows,
+            entered_list,
+            global_start_year,
+            global_start_month,
+            global_end_year,
+            global_end_month,
+            fields_list=fields_list,
+        )
+        return df
+
+    elif index_name == "epic_orders":
+        # For epic_orders, document_PatientDurableKey is the primary patient identifier
+        if term_name != "document_PatientDurableKey":
+            logger.warning(
+                f"Searching epic_orders with term_name '{term_name}'. Expected 'document_PatientDurableKey'."
+            )
+
+        if verbose:
+            logger.debug("Generating data for 'epic_orders'")
+        num_rows = random.randint(1, 5)
+        df = generate_epic_orders_data(
+            num_rows,
+            entered_list,
+            global_start_year,
+            global_start_month,
+            global_end_year,
+            global_end_month,
+            fields_list=fields_list,
+        )
+        return df
+
+    elif index_name == "epic_lab_results":
+        if verbose:
+            logger.debug("Generating data for 'epic_lab_results'")
+        num_rows = random.randint(1, 5)
+        df = generate_epic_lab_results_data(
+            num_rows,
+            entered_list,
+            global_start_year,
+            global_start_month,
+            global_end_year,
+            global_end_month,
+            fields_list=fields_list,
+        )
+        return df
+
+    elif index_name == "epic_patients":
+        if term_name != "patient_DurableKey":
+            logger.warning(
+                f"Searching epic_patients with term_name '{term_name}'. Expected 'patient_DurableKey'."
+            )
+        if verbose:
+            logger.debug("Generating data for 'epic_patients'")
+        return generate_epic_patients_data(
+            random.randint(1, 5),
+            entered_list,
+            global_start_year,
+            global_start_month,
+            global_end_year,
+            global_end_month,
+            fields_list=fields_list,
+        )
+
+    elif index_name == "epic_imaging_reports":
+        if term_name != "document_PatientDurableKey":
+            logger.warning(
+                f"Searching epic_imaging_reports with term_name '{term_name}'. Expected 'document_PatientDurableKey'."
+            )
+        if verbose:
+            logger.debug("Generating data for 'epic_imaging_reports'")
+        return generate_epic_imaging_reports_data(
+            random.randint(1, 5),
+            entered_list,
+            global_start_year,
+            global_start_month,
+            global_end_year,
+            global_end_month,
+            fields_list=fields_list,
+        )
+
+    elif index_name == "epic_clinical_notes_appointments":
+        if term_name != "document_PatientDurableKey":
+            logger.warning(
+                f"Searching epic_clinical_notes_appointments with term_name '{term_name}'. Expected 'document_PatientDurableKey'."
+            )
+        if verbose:
+            logger.debug("Generating data for 'epic_clinical_notes_appointments'")
+        return generate_epic_clinical_notes_appointments_data(
+            random.randint(1, 5),
+            entered_list,
+            global_start_year,
+            global_start_month,
+            global_end_year,
+            global_end_month,
+            fields_list=fields_list,
+        )
+
     else:
         logger.warning(
+            f"No specific dummy data generator for index '{index_name}' with search string '{search_string}'. "
             f"No matching triage rule found for '{search_string}'. Returning an empty DataFrame."
         )
         return pd.DataFrame(
@@ -2504,6 +3000,129 @@ def populate_elastic_with_dummy_data(
     df_apps = df_apps.where(pd.notnull(df_apps), None)
     ingest_data_to_elasticsearch(df_apps, "pims_apps", es_client=cs.elastic)
     cs.elastic.indices.refresh(index="pims_apps")
+
+    # Epic Imaging Reports
+    df_epic_imaging_reports = generate_epic_imaging_reports_data(
+        num_rows=random.randint(1, 5),
+        entered_list=patient_ids,
+        global_start_year=global_start_year,
+        global_start_month=global_start_month,
+        global_end_year=global_end_year,
+        global_end_month=global_end_month,
+    )
+    df_epic_imaging_reports = df_epic_imaging_reports.where(
+        pd.notnull(df_epic_imaging_reports), None
+    )
+    ingest_data_to_elasticsearch(
+        df_epic_imaging_reports, "epic_imaging_reports", es_client=cs.elastic
+    )
+    cs.elastic.indices.refresh(index="epic_imaging_reports")
+    # Epic Orders
+    df_epic_orders = generate_epic_orders_data(
+        num_rows=random.randint(1, 5),
+        entered_list=patient_ids,
+        global_start_year=global_start_year,
+        global_start_month=global_start_month,
+        global_end_year=global_end_year,
+        global_end_month=global_end_month,
+    )
+    df_epic_orders = df_epic_orders.where(pd.notnull(df_epic_orders), None)
+    ingest_data_to_elasticsearch(df_epic_orders, "epic_orders", es_client=cs.elastic)
+    cs.elastic.indices.refresh(index="epic_orders")
+
+    # Epic Patients
+    df_epic_patients = generate_epic_patients_data(
+        num_rows=random.randint(1, 5),
+        entered_list=patient_ids,
+        global_start_year=global_start_year,
+        global_start_month=global_start_month,
+        global_end_year=global_end_year,
+        global_end_month=global_end_month,
+    )
+    df_epic_patients = df_epic_patients.where(pd.notnull(df_epic_patients), None)
+    ingest_data_to_elasticsearch(
+        df_epic_patients, "epic_patients", es_client=cs.elastic
+    )
+    cs.elastic.indices.refresh(index="epic_patients")
+    # Epic Encounters
+    df_epic_encounters = generate_epic_encounters_data(
+        num_rows=random.randint(1, 5),
+        entered_list=patient_ids,
+        global_start_year=global_start_year,
+        global_start_month=global_start_month,
+        global_end_year=global_end_year,
+        global_end_month=global_end_month,
+    )
+    df_epic_encounters = df_epic_encounters.where(pd.notnull(df_epic_encounters), None)
+    ingest_data_to_elasticsearch(
+        df_epic_encounters, "epic_encounters", es_client=cs.elastic
+    )
+    cs.elastic.indices.refresh(index="epic_encounters")
+
+    # Epic Clinical Notes
+    df_epic_clinical_notes = generate_epic_clinical_notes_data(
+        num_rows=random.randint(1, 5),
+        entered_list=patient_ids,
+        global_start_year=global_start_year,
+        global_start_month=global_start_month,
+        global_end_year=global_end_year,
+        global_end_month=global_end_month,
+        use_GPT=False,
+    )
+    df_epic_clinical_notes = df_epic_clinical_notes.where(
+        pd.notnull(df_epic_clinical_notes), None
+    )
+    ingest_data_to_elasticsearch(
+        df_epic_clinical_notes, "epic_clinical_notes", es_client=cs.elastic
+    )
+    cs.elastic.indices.refresh(index="epic_clinical_notes")
+
+    # Epic Medical History
+    df_epic_medical_history = generate_epic_medical_history_data(
+        num_rows=random.randint(1, 5),
+        entered_list=patient_ids,
+        global_start_year=global_start_year,
+        global_start_month=global_start_month,
+        global_end_year=global_end_year,
+        global_end_month=global_end_month,
+    )
+    df_epic_medical_history = df_epic_medical_history.where(
+        pd.notnull(df_epic_medical_history), None
+    )
+    ingest_data_to_elasticsearch(
+        df_epic_medical_history, "epic_medical_history", es_client=cs.elastic
+    )
+    cs.elastic.indices.refresh(index="epic_medical_history")
+
+    # Epic Orders
+    df_epic_orders = generate_epic_orders_data(
+        num_rows=random.randint(1, 5),
+        entered_list=patient_ids,
+        global_start_year=global_start_year,
+        global_start_month=global_start_month,
+        global_end_year=global_end_year,
+        global_end_month=global_end_month,
+    )
+    df_epic_orders = df_epic_orders.where(pd.notnull(df_epic_orders), None)
+    ingest_data_to_elasticsearch(df_epic_orders, "epic_orders", es_client=cs.elastic)
+    cs.elastic.indices.refresh(index="epic_orders")
+
+    # Epic Lab Results
+    df_epic_lab_results = generate_epic_lab_results_data(
+        num_rows=random.randint(1, 5),
+        entered_list=patient_ids,
+        global_start_year=global_start_year,
+        global_start_month=global_start_month,
+        global_end_year=global_end_year,
+        global_end_month=global_end_month,
+    )
+    df_epic_lab_results = df_epic_lab_results.where(
+        pd.notnull(df_epic_lab_results), None
+    )
+    ingest_data_to_elasticsearch(
+        df_epic_lab_results, "epic_lab_results", es_client=cs.elastic
+    )
+    cs.elastic.indices.refresh(index="epic_lab_results")
 
     logger.info("Successfully populated Elasticsearch with dummy data.")
     return patient_ids
