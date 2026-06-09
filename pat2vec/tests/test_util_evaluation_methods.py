@@ -67,7 +67,7 @@ class TestEvaluationMethods(unittest.TestCase):
 
         # Should trigger prints and input prompt due to text_sample difference
         with patch("pat2vec.util.evaluation_methods.logger") as mock_logger:
-            compare_ipw_annotation_rows([df1, df2])
+            compare_ipw_annotation_rows([df1, df2], columns_to_print=None)
             self.assertTrue(mock_input.called)
             self.assertTrue(mock_logger.info.called)
 
@@ -110,3 +110,111 @@ class TestEvaluationMethods(unittest.TestCase):
         args, _ = mock_profile_report.call_args
         passed_df = args[0]
         self.assertEqual(len(passed_df), 1)
+
+    @unittest.skipUnless(HAS_YDATA, "ydata_profiling not installed")
+    @patch("pat2vec.util.evaluation_methods.tqdm", lambda x, **kwargs: x)
+    @patch("pat2vec.util.evaluation_methods.pd.read_csv")
+    def test_csv_profiler_missing_columns(self, mock_read_csv, mock_profile_report):
+        """Test CsvProfiler handles missing columns gracefully."""
+        # Simulate CSV that doesn't have expected columns
+        df_no_cols = pd.DataFrame({"client_idcode": ["P1"], "other_col": [123]})
+        mock_read_csv.return_value = df_no_cols
+
+        output_dir = os.path.join(self.test_dir, "reports_missing_cols")
+
+        CsvProfiler.create_profile_reports(
+            self.test_dir, cols=["updatetime", "targetId"], output_dir=output_dir
+        )
+
+        # Should handle missing columns and use intersection
+        args, _ = mock_profile_report.call_args
+        passed_df = args[0]
+        # Should have the intersection of requested cols and available cols
+        self.assertIn("client_idcode", passed_df.columns)
+
+    def test_compare_ipw_annotation_rows_same_text(self):
+        """Test compare function when text_sample is the same across dataframes."""
+        df1 = pd.DataFrame(
+            {
+                "client_idcode": ["P1"],
+                "text_sample": ["same text"],  # Same as df2
+                "pretty_name": ["Asthma"],
+                "cui": [100],
+                "types": ["['disorder']"],
+                "acc": [0.95],
+                "context_similarity": [0.9],
+                "detected_name": ["asthma"],
+                "source_value": ["asthma"],
+                "Time_Value": ["Recent"],
+                "Time_Confidence": [0.9],
+                "Presence_Value": ["True"],
+                "Presence_Confidence": [0.9],
+                "Subject_Value": ["Patient"],
+                "Subject_Confidence": [0.9],
+                "updatetime": ["2023-01-01"],
+            }
+        )
+        df1.name = "DF1"
+
+        df2 = pd.DataFrame(
+            {
+                "client_idcode": ["P1"],
+                "text_sample": ["same text"],  # Same as df1
+                "pretty_name": ["Asthma"],
+                "cui": [100],
+                "types": ["['disorder']"],
+                "acc": [0.95],
+                "context_similarity": [0.9],
+                "detected_name": ["asthma"],
+                "source_value": ["asthma"],
+                "Time_Value": ["Recent"],
+                "Time_Confidence": [0.9],
+                "Presence_Value": ["True"],
+                "Presence_Confidence": [0.9],
+                "Subject_Value": ["Patient"],
+                "Subject_Confidence": [0.9],
+                "updatetime": ["2023-01-01"],
+            }
+        )
+        df2.name = "DF2"
+
+        # Should NOT trigger prints when text_sample is the same
+        with patch("pat2vec.util.evaluation_methods.logger") as mock_logger:
+            compare_ipw_annotation_rows([df1, df2], columns_to_print=None)
+            # When texts are the same, no logging should occur
+            self.assertFalse(mock_logger.info.called)
+
+    def test_compare_ipw_annotation_rows_empty_dfs(self):
+        """Test compare function with empty DataFrames."""
+        df1 = pd.DataFrame(columns=["client_idcode", "text_sample"])
+        df1.name = "DF1"
+
+        df2 = pd.DataFrame(columns=["client_idcode", "text_sample"])
+        df2.name = "DF2"
+
+        # Should handle empty DataFrames without error
+        compare_ipw_annotation_rows([df1, df2], columns_to_print=None)
+
+    def test_compare_ipw_annotation_rows_custom_columns(self):
+        """Test compare function with custom column list."""
+        df1 = pd.DataFrame(
+            {
+                "client_idcode": ["P1"],
+                "text_sample": ["same text"],  # Same to avoid input prompt
+                "custom_col": ["value1"],
+            }
+        )
+        df1.name = "DF1"
+
+        df2 = pd.DataFrame(
+            {
+                "client_idcode": ["P1"],
+                "text_sample": ["same text"],  # Same to avoid input prompt
+                "custom_col": ["value2"],
+            }
+        )
+        df2.name = "DF2"
+
+        # Should handle different custom columns but same text_sample
+        with patch("pat2vec.util.evaluation_methods.logger"):
+            compare_ipw_annotation_rows([df1, df2], columns_to_print=["custom_col"])
