@@ -218,6 +218,7 @@ from .tests.test_anonymisation_deid_documents import TestDeIdAnonymizer
 from .tests.test_calculate_interval import TestCalculateInterval
 from .tests.test_config_class import TestConfigClass
 from .tests.test_database_backend import TestDatabaseBackend
+from .tests.test_database_backend_extended import TestDatabaseBackendExtended
 from .tests.test_docker_elastic import TestElasticContainer
 from .tests.test_elastic_population import TestElasticPopulation
 from .tests.test_elasticsearch_methods import TestElasticsearchMethods
@@ -237,6 +238,7 @@ from .tests.test_global_date_validation import TestGlobalDateValidation
 from .tests.test_individual_patient_window import TestIndividualPatientWindow
 from .tests.test_integration_data_integrity import TestIntegrationDataIntegrity
 from .tests.test_integration_elastic import TestIntegrationElastic
+from .tests.test_logger_setup import TestLoggerSetup
 from .tests.test_medcat_misc_methods import TestMedcatMiscMethods
 from .tests.test_methods_annotation_filter_annot_dataframe import (
     TestFilterAnnotDataframe,
@@ -260,8 +262,27 @@ from .tests.test_pre_processing import TestPreProcessing
 from .tests.test_presentation_methods import TestPresentationMethods
 from .tests.test_retrieve_data import TestRetrieveData
 from .tests.test_schema_consistency import TestSchemaConsistency
+from .tests.test_util_clinical_note_splitter import TestClinicalNoteSplitter
+from .tests.test_util_compile_requirements import TestCompileRequirements
+from .tests.test_util_current_pat_batch_path_methods import (
+    TestCurrentPatBatchPathMethods,
+)
+from .tests.test_util_dummy_data_helpers import TestDummyDataHelpers
+from .tests.test_util_evaluation_methods import HAS_YDATA, TestEvaluationMethods
+from .tests.test_util_get_best_gpu import TestGetBestGpu
+from .tests.test_util_get_dummy_data_medcat_annotation import (
+    TestGetDummyDataMedcatAnnotation,
+)
+from .tests.test_util_get_method_maps import TestMethodMaps
+from .tests.test_util_helper_functions import TestHelperFunctions
 from .tests.test_util_impute_data_for_pipe import TestImputeDataForPipe
-from .tests.test_util_logger_setup import TestLoggerSetup
+from .tests.test_util_methods_annotation import TestMethodsAnnotation
+from .tests.test_util_methods_annotation_get_pat_document_annotation_batch import (
+    TestAnnotationBatchOrchestration,
+)
+from .tests.test_util_methods_annotation_json_to_dataframe import (
+    TestMethodsAnnotationJsonToDataframe,
+)
 from .tests.test_util_methods_annotation_regex import TestMethodsAnnotationRegex
 from .tests.test_util_methods_get import TestUtilMethodsGet
 from .tests.test_util_methods_post_get import TestMethodsPostGet
@@ -582,6 +603,7 @@ __all__ = [
     "EthnicityAbstractor",
     "GET_METHOD_DEFAULT_FIELDS_MAP",
     "GET_METHOD_INDEX_MAP",
+    "HAS_YDATA",
     "HELPER_FUNCTIONS_VERSION",
     "HOSP_SITE_FIELDS",
     "MAPPINGS",
@@ -591,22 +613,29 @@ __all__ = [
     "SEARCH_TERM_ES",
     "SEARCH_TERM_PLAIN",
     "SMOKING_FIELDS",
+    "TestAnnotationBatchOrchestration",
     "TestAnonymisationDataMethods",
     "TestBatchRetrievalDB",
     "TestBuildIpwDataframe",
     "TestCalculateInterval",
+    "TestClinicalNoteSplitter",
     "TestCogstackSearchMethods",
+    "TestCompileRequirements",
     "TestConfigClass",
     "TestCreateRandomDateFromGlobals",
+    "TestCurrentPatBatchPathMethods",
     "TestDataHelperFunctions",
     "TestDatabaseBackend",
+    "TestDatabaseBackendExtended",
     "TestDateValidationForElasticsearch",
     "TestDeIdAnonymizer",
+    "TestDummyDataHelpers",
     "TestDummyDataLogic",
     "TestElasticContainer",
     "TestElasticPopulation",
     "TestElasticsearchMethods",
     "TestEthnicityAbstractor",
+    "TestEvaluationMethods",
     "TestEvaluationMethodsPloting",
     "TestFilterAnnotDataframe",
     "TestFilterDataFrameByTimestamp",
@@ -614,10 +643,13 @@ __all__ = [
     "TestFilterMethods",
     "TestGenerateDateList",
     "TestGenerateElasticSchema",
+    "TestGetBestGpu",
+    "TestGetDummyDataMedcatAnnotation",
     "TestGetMethodDemo",
     "TestGetPatIpwRecord",
     "TestGetStartEndYearMonth",
     "TestGlobalDateValidation",
+    "TestHelperFunctions",
     "TestImputeDataForPipe",
     "TestIndividualPatientWindow",
     "TestIntegrationDataIntegrity",
@@ -625,6 +657,9 @@ __all__ = [
     "TestLoggerSetup",
     "TestMatcher",
     "TestMedcatMiscMethods",
+    "TestMethodMaps",
+    "TestMethodsAnnotation",
+    "TestMethodsAnnotationJsonToDataframe",
     "TestMethodsAnnotationRegex",
     "TestMethodsGet",
     "TestMethodsGetMedcat",
