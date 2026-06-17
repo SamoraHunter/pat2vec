@@ -1,7 +1,6 @@
 import ast
 import os
 import sys
-import textwrap
 from collections import defaultdict
 
 # To update init with methods in pat2vec root dir,
@@ -20,6 +19,11 @@ def generate_init_file_content(package_path="pat2vec"):
     all_import_names = set()
 
     for root, _, files in os.walk(package_path):
+        # Skip tests, build and cache directories to avoid circular imports and pollution
+        path_parts = root.split(os.path.sep)
+        if any(d in path_parts for d in ["tests", "build", "__pycache__"]):
+            continue
+
         for file_name in files:
             if file_name.endswith(".py") and file_name != "__init__.py":
                 file_path = os.path.join(root, file_name)
@@ -90,26 +94,16 @@ def generate_init_file_content(package_path="pat2vec"):
             import_line = f"from {module} import ("
             output_lines.append(import_line)
 
-            wrapper = textwrap.TextWrapper(
-                width=88, initial_indent="    ", subsequent_indent="    "
-            )
-            wrapped_imports = wrapper.fill(", ".join(unique_imports_for_module))
-
-            output_lines.append(wrapped_imports)
+            for name in unique_imports_for_module:
+                output_lines.append(f"    {name},")
             output_lines.append(")")
 
     output_lines.append("\n")
     output_lines.append("# Define the public API of the package")
 
-    all_list_str = '", "'.join(sorted(list(all_import_names)))
-
-    wrapper = textwrap.TextWrapper(
-        width=88, initial_indent="    ", subsequent_indent="    "
-    )
-    wrapped_all = wrapper.fill(f'"{all_list_str}"')
-
     output_lines.append("__all__ = [")
-    output_lines.append(wrapped_all)
+    for name in sorted(list(all_import_names)):
+        output_lines.append(f'    "{name}",')
     output_lines.append("]")
 
     return "\n".join(output_lines)
@@ -120,7 +114,7 @@ def format_with_black(content: str) -> str:
     import subprocess
 
     result = subprocess.run(
-        [sys.executable, "-m", "black", "-"],
+        [sys.executable, "-m", "black", "--target-version", "py310", "-"],
         input=content,
         capture_output=True,
         text=True,
