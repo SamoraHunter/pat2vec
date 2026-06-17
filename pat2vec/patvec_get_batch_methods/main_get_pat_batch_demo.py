@@ -46,11 +46,6 @@ def get_pat_batch_demo(
     global_start_day = config_obj.global_start_day
     global_end_day = config_obj.global_end_day
 
-    batch_obs_target_path = os.path.join(
-        config_obj.pre_document_batch_path_reports,
-        str(current_pat_client_id_code) + ".csv",
-    )
-
     batch_target = pd.DataFrame()
 
     if config_obj.storage_backend == "database":
@@ -107,10 +102,10 @@ def get_pat_batch_demo(
                 search_string=f"updatetime:[{global_start_year}-{global_start_month}-{global_start_day} TO {global_end_year}-{global_end_month}-{global_end_day}]",
             )
             if (
-                config_obj.store_pat_batch_docs
+                config_obj.store_pat_batch_observations
                 or config_obj.overwrite_stored_pat_observations
             ):
-                if config_obj.storage_backend == "database":
+                if config_obj.storage_backend == "database" and not batch_target.empty:
                     try:
                         engine = config_obj.db_engine
                         if engine:
@@ -143,6 +138,7 @@ def get_pat_batch_demo(
                     except Exception as e:
                         logging.error(f"Failed to save demographics batch to DB: {e}")
                 else:
+                    os.makedirs(os.path.dirname(batch_obs_target_path), exist_ok=True)
                     batch_target.to_csv(batch_obs_target_path)
         else:
             batch_target = pd.read_csv(batch_obs_target_path)

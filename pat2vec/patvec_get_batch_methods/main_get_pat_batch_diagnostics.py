@@ -98,10 +98,10 @@ def get_pat_batch_diagnostics(
                 f"{diagnosic_time_field}:[{global_start_year}-{global_start_month}-{global_start_day} TO {global_end_year}-{global_end_month}-{global_end_day}]",
             )
             if (
-                config_obj.store_pat_batch_docs
+                config_obj.store_pat_batch_observations
                 or config_obj.overwrite_stored_pat_observations
             ):
-                if config_obj.storage_backend == "database":
+                if config_obj.storage_backend == "database" and not batch_target.empty:
                     try:
                         engine = config_obj.db_engine
                         if engine:
@@ -133,7 +133,8 @@ def get_pat_batch_diagnostics(
                                 )
                     except Exception as e:
                         logging.error(f"Failed to save diagnostics batch to DB: {e}")
-                else:
+                elif not batch_target.empty:
+                    os.makedirs(os.path.dirname(batch_obs_target_path), exist_ok=True)
                     batch_target.to_csv(batch_obs_target_path)
         else:
             batch_target = pd.read_csv(batch_obs_target_path)

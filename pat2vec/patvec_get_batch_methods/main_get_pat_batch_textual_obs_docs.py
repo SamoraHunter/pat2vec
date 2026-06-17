@@ -111,15 +111,19 @@ def get_pat_batch_textual_obs_docs(
                 + f"{bloods_time_field}:[{global_start_year}-{global_start_month}-{global_start_day} TO {global_end_year}-{global_end_month}-{global_end_day}]",
             )
 
-            # Drop rows with no textualObs
-            batch_target = batch_target.dropna(subset=["textualObs"])
-            # Drop rows with empty string in textualObs
-            batch_target = batch_target[batch_target["textualObs"] != ""]
+            if not batch_target.empty and "textualObs" in batch_target.columns:
+                # Drop rows with no textualObs
+                batch_target = batch_target.dropna(subset=["textualObs"])
+                # Drop rows with empty string in textualObs
+                batch_target = batch_target[batch_target["textualObs"] != ""]
 
-            batch_target["body_analysed"] = batch_target["textualObs"].astype(str)
+                batch_target["body_analysed"] = batch_target["textualObs"].astype(str)
 
-            if config_obj.store_pat_batch_docs or overwrite_stored_pat_observations:
-                if config_obj.storage_backend == "database":
+            if (
+                config_obj.store_pat_batch_observations
+                or overwrite_stored_pat_observations
+            ):
+                if config_obj.storage_backend == "database" and not batch_target.empty:
                     try:
                         engine = config_obj.db_engine
                         if engine:
@@ -151,7 +155,8 @@ def get_pat_batch_textual_obs_docs(
                                 )
                     except Exception as e:
                         logging.error(f"Failed to save textual obs batch to DB: {e}")
-                else:
+                elif not batch_target.empty:
+                    os.makedirs(os.path.dirname(batch_obs_target_path), exist_ok=True)
                     batch_target.to_csv(batch_obs_target_path)
 
         else:

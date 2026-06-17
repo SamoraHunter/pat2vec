@@ -102,7 +102,10 @@ def get_pat_batch_mct_docs(
                     "observationdocument_recordeddtm",
                     "client_idcode",
                 ]
-                batch_target = batch_target.dropna(subset=col_list_drop_nan).copy()
+                # Ensure columns exist before dropna to avoid KeyError
+                valid_cols = [c for c in col_list_drop_nan if c in batch_target.columns]
+                if not batch_target.empty and valid_cols:
+                    batch_target = batch_target.dropna(subset=valid_cols).copy()
 
                 if config_obj.verbosity >= 3:
                     logging.debug("get_epr_mct_docs_postdropna: %d", len(batch_target))
@@ -112,7 +115,7 @@ def get_pat_batch_mct_docs(
                         batch_target, epr=False, mct=True
                     )
 
-                if config_obj.storage_backend == "database":
+                if config_obj.storage_backend == "database" and not batch_target.empty:
                     try:
                         engine = config_obj.db_engine
                         if engine:
@@ -144,7 +147,10 @@ def get_pat_batch_mct_docs(
                                 )
                     except Exception as e:
                         logging.error(f"Failed to save MCT docs batch to DB: {e}")
-                else:
+                elif not batch_target.empty:
+                    os.makedirs(
+                        os.path.dirname(batch_epr_target_path_mct), exist_ok=True
+                    )
                     batch_target.to_csv(batch_epr_target_path_mct, index=False)
         else:
             batch_target = pd.read_csv(batch_epr_target_path_mct)

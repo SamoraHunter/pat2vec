@@ -109,14 +109,19 @@ def get_pat_batch_reports(
                 f"updatetime:[{global_start_year}-{global_start_month}-{global_start_day} TO {global_end_year}-{global_end_month}-{global_end_day}]",
             )
 
-            batch_target["body_analysed"] = (
-                batch_target["textualObs"].astype(str)
-                + "\n"
-                + batch_target["basicobs_value_analysed"].astype(str)
-            )
+            if (
+                not batch_target.empty
+                and "textualObs" in batch_target.columns
+                and "basicobs_value_analysed" in batch_target.columns
+            ):
+                batch_target["body_analysed"] = (
+                    batch_target["textualObs"].astype(str)
+                    + "\n"
+                    + batch_target["basicobs_value_analysed"].astype(str)
+                )
 
             if config_obj.store_pat_batch_docs or overwrite_stored_pat_observations:
-                if config_obj.storage_backend == "database":
+                if config_obj.storage_backend == "database" and not batch_target.empty:
                     try:
                         engine = config_obj.db_engine
                         if engine:
@@ -148,7 +153,8 @@ def get_pat_batch_reports(
                                 )
                     except Exception as e:
                         logging.error(f"Failed to save textual obs batch to DB: {e}")
-                else:
+                elif not batch_target.empty:
+                    os.makedirs(os.path.dirname(batch_obs_target_path), exist_ok=True)
                     batch_target.to_csv(batch_obs_target_path)
 
         else:

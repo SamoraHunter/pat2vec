@@ -129,10 +129,10 @@ def get_pat_batch_appointments(
             )
 
             if (
-                config_obj.store_pat_batch_docs
+                config_obj.store_pat_batch_observations
                 or config_obj.overwrite_stored_pat_observations
             ):
-                if config_obj.storage_backend == "database":
+                if config_obj.storage_backend == "database" and not batch_target.empty:
                     try:
                         engine = config_obj.db_engine
                         if engine:
@@ -164,7 +164,10 @@ def get_pat_batch_appointments(
                                 )
                     except Exception as e:
                         logging.error(f"Failed to save appointments batch to DB: {e}")
-                else:
+                elif not batch_target.empty:
+                    os.makedirs(
+                        os.path.dirname(appointments_target_path), exist_ok=True
+                    )
                     batch_target.to_csv(appointments_target_path)
         else:
             batch_target = pd.read_csv(appointments_target_path)
