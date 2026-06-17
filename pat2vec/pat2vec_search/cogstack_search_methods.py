@@ -35,7 +35,12 @@ logging.getLogger("urllib3").setLevel(logging.WARNING)
 random_state = 42
 random.seed(random_state)
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# Global CogStack client instance
+cs = None
+
+sys.path.append(
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+)
 
 
 def create_credentials_file() -> None:
@@ -343,6 +348,7 @@ def cohort_searcher_with_terms_and_search(
     Returns:
         A pandas DataFrame containing the search results.
     """
+    global cs
     if cs is None:
         initialize_cogstack_client()
     if len(entered_list) >= 10000:
@@ -423,6 +429,7 @@ def cohort_searcher_with_terms_no_search(
     Returns:
         A pandas DataFrame containing the search results.
     """
+    global cs
     if cs is None:
         initialize_cogstack_client()
     if len(entered_list) >= 10000:
@@ -465,6 +472,7 @@ def cohort_searcher_no_terms(
     Returns:
         A pandas DataFrame containing the search results.
     """
+    global cs
     if cs is None:
         initialize_cogstack_client()
     query = {
@@ -498,6 +506,7 @@ def cohort_searcher_no_terms_fuzzy(
     Returns:
         A DataFrame containing the search results.
     """
+    global cs
     if cs is None:
         initialize_cogstack_client()
     if method == "fuzzy":
@@ -578,7 +587,7 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy(
     end_year: str,
     end_month: str,
     end_day: str,
-    overwrite: bool = True,
+    append: bool = True,
     debug: bool = False,
     uuid_column_name: str = "client_idcode",
     additional_filters: Optional[List[str]] = None,
@@ -586,6 +595,8 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy(
     method: str = "fuzzy",
     fuzzy: int = 2,
     slop: int = 1,
+    testing: bool = False,
+    testing_elastic: bool = False,
 ) -> pd.DataFrame:
     """Iteratively searches for EPR documents matching multiple search terms.
 
@@ -598,31 +609,27 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy(
         end_year: The end year of the date range.
         end_month: The end month of the date range.
         end_day: The end day of the date range.
-        overwrite: Whether to overwrite the existing file.
+        append: Whether to append results to the existing file.
         debug: Whether to print debug information.
         uuid_column_name: The name of the column containing the UUIDs.
         additional_filters: A list of additional filters to apply.
         all_fields: Whether to retrieve all fields.
-        method: The search method to use ('fuzzy', 'exact', or 'phrase').
-        fuzzy: The fuzziness level for fuzzy matching.
-        slop: The slop value for phrase searches.
-
-    Returns:
-        A DataFrame containing the search results.
     """
+
+    global cs
     if not terms_list:
         logging.warning("Terms list is empty. Exiting.")
-        return
+        return pd.DataFrame()
 
     if cs is None:
         initialize_cogstack_client()
-    file_exists = exists(treatment_doc_filename)
+    file_exists = exists(treatment_doc_filename) if treatment_doc_filename else False
 
-    if file_exists and not overwrite:
-        logging.info(
-            f"file_exists and not overwrite, reading docs from {treatment_doc_filename}"
-        )
+    if file_exists and not append:
         docs = pd.read_csv(treatment_doc_filename)
+        logging.info(f"Loaded existing file: {treatment_doc_filename}")
+        return docs
+
     else:
         all_docs = []
 
@@ -733,18 +740,42 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy(
             all_docs.append(term_docs)
 
         # Concatenate the results for all terms
+        if not all_docs:
+            logging.warning("No documents were found for any of the terms.")
+            return pd.DataFrame()
+
         docs = pd.concat(all_docs, ignore_index=True)
 
-        docs = docs.drop_duplicates()
+        if treatment_doc_filename and os.path.exists(treatment_doc_filename) and append:
+            existing_data = pd.read_csv(treatment_doc_filename)
+            logging.info(f"Loaded existing data from: {treatment_doc_filename}")
 
-        # Save the results to a temporary CSV
-        docs.to_csv(
-            treatment_doc_filename,
-            index=False,
-            escapechar="\\",  # Set backslash as escape character
-            doublequote=True,  # Use double quotes to escape quotes
-            encoding="utf-8",
-        )  # Explicitly set encoding)
+            # Drop any duplicate columns before reindexing to avoid ValueError
+            existing_data = existing_data.loc[:, ~existing_data.columns.duplicated()]
+            docs = docs.loc[:, ~docs.columns.duplicated()]
+
+            # Align the columns by using the union of both the existing and new columns
+            combined_columns = existing_data.columns.union(docs.columns)
+
+            # Reindex both the existing data and new data to have the same columns
+            existing_data = existing_data.reindex(columns=combined_columns)
+            docs = docs.reindex(columns=combined_columns)
+
+            # Append the new data to the existing data
+            docs = pd.concat([existing_data, docs], ignore_index=True)
+
+        docs = docs.drop_duplicates().reset_index(drop=True)
+
+        if treatment_doc_filename:
+            docs.to_csv(
+                treatment_doc_filename,
+                index=False,
+                escapechar="\\",
+                doublequote=True,
+                encoding="utf-8",
+            )
+            logging.info(f"Data saved to: {treatment_doc_filename}")
+
         if debug:
             logging.debug(
                 "n_unique %s: %d/%d",
@@ -816,9 +847,10 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy_mct(
             pd.DataFrame()
         )  # Ensure it returns an empty DataFrame if terms_list is empty
 
+    global cs
     if cs is None:
         initialize_cogstack_client()
-    file_exists = exists(treatment_doc_filename)
+    file_exists = exists(treatment_doc_filename) if treatment_doc_filename else False
 
     if file_exists and not append:
         docs = pd.read_csv(treatment_doc_filename)
@@ -826,7 +858,7 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy_mct(
         return docs  # Ensure the function returns the loaded data
 
     else:
-        if file_exists and not append:
+        if file_exists and append:
             docs_prev = pd.read_csv(treatment_doc_filename)
             logging.info(f"Loaded existing file and append: {treatment_doc_filename}")
 
@@ -988,13 +1020,16 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy_mct(
         # If no documents were found for any term, return an empty DataFrame
         if not all_docs:
             logging.warning("No documents were found for any of the terms.")
-            docs_prev = pd.read_csv(treatment_doc_filename)
-            logging.info(
-                f"Loaded existing file and no docs found: {treatment_doc_filename}"
-            )
-
-            return docs_prev  # Return docs from previous step
-            # return pd.DataFrame()  # Return an empty DataFrame explicitly if nothing was found
+            if treatment_doc_filename and file_exists:
+                docs_prev = pd.read_csv(treatment_doc_filename)
+                logging.info(
+                    f"Loaded existing file and no docs found: {treatment_doc_filename}"
+                )
+                return docs_prev  # Return docs from previous step
+            else:
+                return (
+                    pd.DataFrame()
+                )  # Return an empty DataFrame explicitly if nothing was found
 
         # Concatenate the results for all terms
         docs = pd.concat(all_docs, ignore_index=True)
@@ -1003,10 +1038,14 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy_mct(
         # Drop duplicate rows
         docs = docs.drop_duplicates()
 
-        if os.path.exists(treatment_doc_filename):
+        if treatment_doc_filename and os.path.exists(treatment_doc_filename):
             # Load the existing CSV
             existing_data = pd.read_csv(treatment_doc_filename)
             logging.info(f"Loaded existing data from: {treatment_doc_filename}")
+
+            # Drop any duplicate columns before reindexing to avoid ValueError
+            existing_data = existing_data.loc[:, ~existing_data.columns.duplicated()]
+            docs = docs.loc[:, ~docs.columns.duplicated()]
 
             # Align the columns by using the union of both the existing and new columns
             combined_columns = existing_data.columns.union(docs.columns)
@@ -1015,17 +1054,14 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy_mct(
             existing_data = existing_data.reindex(columns=combined_columns)
             docs = docs.reindex(columns=combined_columns)
 
-            # Drop any duplicate columns (if any)
-            existing_data = existing_data.loc[:, ~existing_data.columns.duplicated()]
-            docs = docs.loc[:, ~docs.columns.duplicated()]
-
             # Append the new data to the existing data
-            updated_data = pd.concat([existing_data, docs], ignore_index=True)
+            docs = pd.concat([existing_data, docs], ignore_index=True)
+            docs = docs.drop_duplicates().reset_index(drop=True)
 
             # Save the updated data back to the CSV
-            updated_data.to_csv(treatment_doc_filename, index=False)
+            docs.to_csv(treatment_doc_filename, index=False)
             logging.info(f"Updated data saved to: {treatment_doc_filename}")
-        else:
+        elif treatment_doc_filename:
             # If the file does not exist, save the new data as a new CSV
             docs.to_csv(
                 treatment_doc_filename,
@@ -1048,137 +1084,1691 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy_mct(
     return docs  # Return the final docs DataFrame
 
 
-def check_patients_existence(
-    patient_ids: List[str],
-    index_name: Union[str, List[Tuple[str, str]]] = "epr_documents",
-    id_field: str = "client_idcode.keyword",
-    config_obj: Optional[Any] = None,
-) -> List[str]:
-    """Checks which patient IDs exist in Elasticsearch using terms aggregation.
-    Supports checking multiple indices in a fallback manner.
+def iterative_multi_term_cohort_searcher_no_terms_fuzzy_epic_imaging_reports(
+    terms_list: List[str],
+    treatment_doc_filename: str,
+    start_year: str,
+    start_month: str,
+    start_day: str,
+    end_year: str,
+    end_month: str,
+    end_day: str,
+    append: bool = True,
+    debug: bool = True,
+    uuid_column_name: str = "document_PatientDurableKey",
+    additional_filters: Optional[List[str]] = None,
+    all_fields: bool = False,
+    method: str = "fuzzy",
+    fuzzy: int = 2,
+    slop: int = 1,
+    testing: bool = False,
+    testing_elastic: bool = False,
+) -> pd.DataFrame:
+    """Iteratively searches for Epic imaging reports documents matching multiple search terms.
+
+    This function searches the 'epic_imaging_reports' index for documents where
+    the `document_Content` field contains the specified terms.
 
     Args:
-        patient_ids: List of patient IDs to check.
-        index_name: The Elasticsearch index to search against. Can be a string
-            (single index) or a list of tuples [(index_name, id_field), ...].
-        id_field: The field in the index containing the patient ID.
-        config_obj: Configuration object containing credentials path.
+        terms_list: A list of terms to search for.
+        treatment_doc_filename: The filename to load or save the results.
+        start_year, start_month, start_day: The start of the date range.
+        end_year, end_month, end_day: The end of the date range.
+        append: Whether to append results to an existing file.
+        debug: Whether to print debug information.
+        uuid_column_name: The name of the UUID column.
+        additional_filters: Additional filters to apply to the search.
+        all_fields: Whether to retrieve all fields.
+        method: The search method ('fuzzy', 'exact', 'phrase').
+        fuzzy: The fuzziness level for fuzzy search.
+        slop: The slop value for phrase search.
+        testing: Whether to use a dummy searcher for testing.
+        testing_elastic: If True, uses the real searcher against the configured ES
+                         instance even if `testing` is True.
 
     Returns:
-        A list of patient IDs that were found in the index.
+        A DataFrame containing the search results.
     """
-    if not patient_ids:
-        return []
+    logging.info(
+        "Running iterative_multi_term_cohort_searcher_no_terms_fuzzy_epic_imaging_reports from %s-%s-%s to %s-%s-%s",
+        start_day,
+        start_month,
+        start_year,
+        end_day,
+        end_month,
+        end_year,
+    )
+    if not terms_list:
+        logging.warning("Terms list is empty. Exiting.")
+        return pd.DataFrame()
 
-    # Ensure global cs is initialized
     global cs
-    # Always attempt to initialize/update cs if config is provided.
-    # The initialize_cogstack_client function has internal checks to avoid
-    # redundant re-initialization if the credentials haven't changed,
-    # but this ensures we don't get stuck with a dummy/default client.
-    cs = initialize_cogstack_client(config_obj)
-
     if cs is None:
-        logging.error(
-            "Failed to initialize CogStack client for patient existence check."
-        )
-        return []
+        initialize_cogstack_client()
+    file_exists = exists(treatment_doc_filename) if treatment_doc_filename else False
 
-    # Normalize input to list of configs
-    if isinstance(index_name, str):
-        indices_to_check = [(index_name, id_field)]
+    if file_exists and not append:
+        docs = pd.read_csv(treatment_doc_filename)
+        logging.info(f"Loaded existing file: {treatment_doc_filename}")
+        return docs
+
     else:
-        # index_name is already a list of tuples
-        indices_to_check = index_name
+        all_docs = []
 
-    existing_ids = set()
-    chunk_size = 1000  # Safe chunk size for terms query
+        for term in tqdm(terms_list):
+            search_string = (
+                f"document_Content:({term}) AND "
+                + f"document_CreatedWhen:[{start_year}-{start_month}-{start_day} TO {end_year}-{end_month}-{end_day}]"
+            )
+            search_string = str(search_string)
 
-    # Remove duplicates from input to avoid redundant checks
-    unique_ids = list(set(patient_ids))
-    ids_to_check = set(unique_ids)
+            if additional_filters:  # This was incorrect, should be join
+                search_string += " " + " ".join(additional_filters)
 
-    for idx_name, idx_field in indices_to_check:
-        if not ids_to_check:
-            break
+            logging.info("Search String: %s", search_string)
 
-        current_batch_list = list(ids_to_check)
-        logging.info(
-            f"Checking existence for {len(current_batch_list)} patients in index '{idx_name}' using field '{idx_field}'..."
+            field_list = [
+                "document_PatientDurableKey",
+                "document_CreatedWhen",
+                "document_Content",
+                "document_Name",
+                "document_AccessionNumber",
+                "id",
+                "_index",
+                "_score",
+            ]
+            if all_fields:
+                pass
+
+            if not testing or (testing and testing_elastic):
+                term_docs = cohort_searcher_no_terms_fuzzy(
+                    index_name="epic_imaging_reports",
+                    fields_list=field_list,
+                    search_string=search_string,
+                    method=method,
+                    fuzzy=fuzzy,
+                    slop=slop,
+                )
+            else:
+                term_docs = cohort_searcher_with_terms_and_search_dummy(
+                    index_name="epic_imaging_reports",
+                    fields_list=field_list,
+                    term_name="document_PatientDurableKey",
+                    entered_list=generate_uuid_list(
+                        random.randint(2, 10), random.choice(["P", "V"])
+                    ),
+                    search_string=search_string,
+                )
+
+            if term_docs is None or term_docs.empty:
+                logging.info(f"No results found for term: {term}")
+            else:
+                logging.info(f"Found {len(term_docs)} documents for term: {term}")
+                term_docs["search_term"] = term
+                all_docs.append(term_docs)
+
+        if not all_docs:
+            logging.warning("No documents were found for any of the terms.")
+            if file_exists and append:
+                return pd.read_csv(treatment_doc_filename)
+            return pd.DataFrame()
+
+        docs = pd.concat(all_docs, ignore_index=True)
+        docs = docs.drop_duplicates()
+
+        if "document_PatientDurableKey" in docs.columns:
+            docs.rename(
+                columns={"document_PatientDurableKey": "client_idcode"}, inplace=True
+            )
+            if uuid_column_name == "document_PatientDurableKey":
+                uuid_column_name = "client_idcode"
+        if "document_CreatedWhen" in docs.columns:
+            docs.rename(columns={"document_CreatedWhen": "updatetime"}, inplace=True)
+        if "document_Content" in docs.columns:
+            docs.rename(columns={"document_Content": "body_analysed"}, inplace=True)
+        if "id" in docs.columns:
+            docs.rename(columns={"id": "document_guid"}, inplace=True)
+        if "document_Name" in docs.columns:
+            docs.rename(columns={"document_Name": "document_description"}, inplace=True)
+
+        if treatment_doc_filename and os.path.exists(treatment_doc_filename) and append:
+            existing_data = pd.read_csv(treatment_doc_filename)
+
+            # Drop any duplicate columns before reindexing to avoid ValueError
+            existing_data = existing_data.loc[:, ~existing_data.columns.duplicated()]
+            docs = docs.loc[:, ~docs.columns.duplicated()]
+
+            combined_columns = existing_data.columns.union(docs.columns)
+            existing_data = existing_data.reindex(columns=combined_columns)
+            docs = docs.reindex(columns=combined_columns)
+            docs = pd.concat([existing_data, docs], ignore_index=True)
+            docs = docs.drop_duplicates().reset_index(drop=True)
+            docs.to_csv(treatment_doc_filename, index=False)
+            logging.info(f"Updated data saved to: {treatment_doc_filename}")
+        elif treatment_doc_filename:
+            docs.to_csv(
+                treatment_doc_filename,
+                mode="w",
+                index=False,
+                escapechar="\\",
+                doublequote=True,
+                encoding="utf-8",
+            )
+            logging.info(f"New data saved to: {treatment_doc_filename}")
+
+        if debug:
+            logging.debug(
+                "n_unique %s: %d/%d",
+                uuid_column_name,
+                len(docs[uuid_column_name].unique()),
+                len(docs),
+            )
+    return docs
+
+
+def iterative_multi_term_cohort_searcher_no_terms_fuzzy_epic_medical_history(
+    terms_list: List[str],
+    treatment_doc_filename: str,
+    start_year: str,
+    start_month: str,
+    start_day: str,
+    end_year: str,
+    end_month: str,
+    end_day: str,
+    append: bool = True,
+    debug: bool = True,
+    uuid_column_name: str = "document_PatientDurableKey",
+    additional_filters: Optional[List[str]] = None,
+    all_fields: bool = False,
+    method: str = "fuzzy",
+    fuzzy: int = 2,
+    slop: int = 1,
+    testing: bool = False,
+    testing_elastic: bool = False,
+) -> pd.DataFrame:
+    """Iteratively searches for Epic medical history documents matching multiple search terms.
+
+    This function searches the 'epic_medical_history' index for documents where
+    the `document_Diagnosis` or `document_Name` fields contain the specified terms.
+
+    Args:
+        terms_list: A list of terms to search for.
+        treatment_doc_filename: The filename to load or save the results.
+        start_year, start_month, start_day: The start of the date range.
+        end_year, end_month, end_day: The end of the date range.
+        append: Whether to append results to an existing file.
+        debug: Whether to print debug information.
+        uuid_column_name: The name of the UUID column.
+        additional_filters: Additional filters to apply to the search.
+        all_fields: Whether to retrieve all fields.
+        method: The search method ('fuzzy', 'exact', 'phrase').
+        fuzzy: The fuzziness level for fuzzy search.
+        slop: The slop value for phrase search.
+        testing: Whether to use a dummy searcher for testing.
+        testing_elastic: If True, uses the real searcher against the configured ES
+                         instance even if `testing` is True.
+
+    Returns:
+        A DataFrame containing the search results.
+    """
+    logging.info(
+        "Running iterative_multi_term_cohort_searcher_no_terms_fuzzy_epic_medical_history from %s-%s-%s to %s-%s-%s",
+        start_day,
+        start_month,
+        start_year,
+        end_day,
+        end_month,
+        end_year,
+    )
+    if not terms_list:
+        logging.warning("Terms list is empty. Exiting.")
+        return pd.DataFrame()
+
+    global cs
+    if cs is None:
+        initialize_cogstack_client()
+    file_exists = exists(treatment_doc_filename) if treatment_doc_filename else False
+
+    if file_exists and not append:
+        docs = pd.read_csv(treatment_doc_filename)
+        logging.info(f"Loaded existing file: {treatment_doc_filename}")
+        return docs
+
+    else:
+        all_docs = []
+
+        for term in tqdm(terms_list):
+            search_string = (
+                f"(document_Comment:({term}) OR document_Name:({term})) AND "
+                + f"document_CreatedWhen:[{start_year}-{start_month}-{start_day} TO {end_year}-{end_month}-{end_day}]"
+            )
+            search_string = str(search_string)
+
+            if additional_filters:  # This was incorrect, should be join
+                search_string += " " + " ".join(additional_filters)
+
+            logging.info("Search String: %s", search_string)
+
+            field_list = [
+                "document_PatientDurableKey",
+                "document_CreatedWhen",
+                "document_Diagnosis",
+                "document_Name",
+                "document_Comment",
+                "id",
+                "_index",
+                "_score",
+            ]
+            if all_fields:
+                pass
+
+            if not testing or (testing and testing_elastic):
+                term_docs = cohort_searcher_no_terms_fuzzy(
+                    index_name="epic_medical_history",
+                    fields_list=field_list,
+                    search_string=search_string,
+                    method=method,
+                    fuzzy=fuzzy,
+                    slop=slop,
+                )
+            else:
+                term_docs = cohort_searcher_with_terms_and_search_dummy(
+                    index_name="epic_medical_history",
+                    fields_list=field_list,
+                    term_name="document_PatientDurableKey",
+                    entered_list=generate_uuid_list(
+                        random.randint(2, 10), random.choice(["P", "V"])
+                    ),
+                    search_string=search_string,
+                )
+
+            if term_docs is None or term_docs.empty:
+                logging.info(f"No results found for term: {term}")
+            else:
+                logging.info(f"Found {len(term_docs)} documents for term: {term}")
+                term_docs["search_term"] = term
+                all_docs.append(term_docs)
+
+        if not all_docs:
+            logging.warning("No documents were found for any of the terms.")
+            if file_exists and append:
+                return pd.read_csv(treatment_doc_filename)
+            return pd.DataFrame()
+
+        docs = pd.concat(all_docs, ignore_index=True)
+        docs = docs.drop_duplicates()
+
+        if "document_PatientDurableKey" in docs.columns:
+            docs.rename(
+                columns={"document_PatientDurableKey": "client_idcode"}, inplace=True
+            )
+            if uuid_column_name == "document_PatientDurableKey":
+                uuid_column_name = "client_idcode"
+        if "document_CreatedWhen" in docs.columns:
+            docs.rename(columns={"document_CreatedWhen": "updatetime"}, inplace=True)
+        if "document_Comment" in docs.columns:
+            docs.rename(
+                columns={"document_Comment": "body_analysed"}, inplace=True
+            )  # Use comment as primary text
+        if "id" in docs.columns:
+            docs.rename(columns={"id": "document_guid"}, inplace=True)
+        if "document_Name" in docs.columns:
+            docs.rename(columns={"document_Name": "document_description"}, inplace=True)
+
+        if treatment_doc_filename and os.path.exists(treatment_doc_filename) and append:
+            existing_data = pd.read_csv(treatment_doc_filename)
+
+            # Drop any duplicate columns before reindexing to avoid ValueError
+            existing_data = existing_data.loc[:, ~existing_data.columns.duplicated()]
+            docs = docs.loc[:, ~docs.columns.duplicated()]
+
+            combined_columns = existing_data.columns.union(docs.columns)
+            existing_data = existing_data.reindex(columns=combined_columns)
+            docs = docs.reindex(columns=combined_columns)
+            docs = pd.concat([existing_data, docs], ignore_index=True)
+            docs = docs.drop_duplicates().reset_index(drop=True)
+            docs.to_csv(treatment_doc_filename, index=False)
+            logging.info(f"Updated data saved to: {treatment_doc_filename}")
+        elif treatment_doc_filename:
+            docs.to_csv(
+                treatment_doc_filename,
+                mode="w",
+                index=False,
+                escapechar="\\",
+                doublequote=True,
+                encoding="utf-8",
+            )
+            logging.info(f"New data saved to: {treatment_doc_filename}")
+
+        if debug:
+            logging.debug(
+                "n_unique %s: %d/%d",
+                uuid_column_name,
+                len(docs[uuid_column_name].unique()),
+                len(docs),
+            )
+    return docs
+
+
+def iterative_multi_term_cohort_searcher_no_terms_fuzzy_epic_clinical_notes(
+    terms_list: List[str],
+    treatment_doc_filename: str,
+    start_year: str,
+    start_month: str,
+    start_day: str,
+    end_year: str,
+    end_month: str,
+    end_day: str,
+    append: bool = True,
+    debug: bool = True,
+    uuid_column_name: str = "document_PatientDurableKey",
+    additional_filters: Optional[List[str]] = None,
+    all_fields: bool = False,
+    method: str = "fuzzy",
+    fuzzy: int = 2,
+    slop: int = 1,
+    testing: bool = False,
+    testing_elastic: bool = False,
+) -> pd.DataFrame:
+    """Iteratively searches for Epic clinical notes documents matching multiple search terms.
+
+    This function searches the 'epic_clinical_notes' index for documents where
+    the `document_Content` field contains the specified terms.
+
+    Args:
+        terms_list: A list of terms to search for.
+        treatment_doc_filename: The filename to load or save the results.
+        start_year, start_month, start_day: The start of the date range.
+        end_year, end_month, end_day: The end of the date range.
+        append: Whether to append results to an existing file.
+        debug: Whether to print debug information.
+        uuid_column_name: The name of the UUID column.
+        additional_filters: Additional filters to apply to the search.
+        all_fields: Whether to retrieve all fields.
+        method: The search method ('fuzzy', 'exact', 'phrase').
+        fuzzy: The fuzziness level for fuzzy search.
+        slop: The slop value for phrase search.
+        testing: Whether to use a dummy searcher for testing.
+        testing_elastic: If True, uses the real searcher against the configured ES
+                         instance even if `testing` is True.
+
+    Returns:
+        A DataFrame containing the search results.
+    """
+    logging.info(
+        "Running iterative_multi_term_cohort_searcher_no_terms_fuzzy_epic_clinical_notes from %s-%s-%s to %s-%s-%s",
+        start_day,
+        start_month,
+        start_year,
+        end_day,
+        end_month,
+        end_year,
+    )
+    if not terms_list:
+        logging.warning("Terms list is empty. Exiting.")
+        return pd.DataFrame()
+
+    global cs
+    if cs is None:
+        initialize_cogstack_client()
+    file_exists = exists(treatment_doc_filename) if treatment_doc_filename else False
+
+    if file_exists and not append:
+        docs = pd.read_csv(treatment_doc_filename)
+        logging.info(f"Loaded existing file: {treatment_doc_filename}")
+        return docs
+
+    else:
+        all_docs = []
+
+        for term in tqdm(terms_list):
+            search_string = (
+                f"document_Content:({term}) AND "
+                + f"document_CreatedWhen:[{start_year}-{start_month}-{start_day} TO {end_year}-{end_month}-{end_day}]"
+            )
+            search_string = str(search_string)
+
+            if additional_filters:
+                search_string += " " + " ".join(additional_filters)
+
+            logging.info("Search String: %s", search_string)
+
+            field_list = [
+                "document_PatientDurableKey",
+                "document_CreatedWhen",
+                "document_Content",
+                "document_Name",
+                "document_EncounterEpicCsn",
+                "id",
+                "_index",
+                "_score",
+            ]
+            if all_fields:
+                pass
+
+            if not testing or (testing and testing_elastic):
+                term_docs = cohort_searcher_no_terms_fuzzy(
+                    index_name="epic_clinical_notes",
+                    fields_list=field_list,
+                    search_string=search_string,
+                    method=method,
+                    fuzzy=fuzzy,
+                    slop=slop,
+                )
+            else:
+                term_docs = cohort_searcher_with_terms_and_search_dummy(
+                    index_name="epic_clinical_notes",
+                    fields_list=field_list,
+                    term_name="document_PatientDurableKey",
+                    entered_list=generate_uuid_list(
+                        random.randint(2, 10), random.choice(["P", "V"])
+                    ),
+                    search_string=search_string,
+                )
+
+            if term_docs is None or term_docs.empty:
+                logging.info(f"No results found for term: {term}")
+            else:
+                logging.info(f"Found {len(term_docs)} documents for term: {term}")
+                term_docs["search_term"] = term
+                all_docs.append(term_docs)
+
+        if not all_docs:
+            logging.warning("No documents were found for any of the terms.")
+            if file_exists and append:
+                return pd.read_csv(treatment_doc_filename)
+            return pd.DataFrame()
+
+        docs = pd.concat(all_docs, ignore_index=True)
+        docs = docs.drop_duplicates()
+
+        if "document_PatientDurableKey" in docs.columns:
+            docs.rename(
+                columns={"document_PatientDurableKey": "client_idcode"}, inplace=True
+            )
+            if uuid_column_name == "document_PatientDurableKey":
+                uuid_column_name = "client_idcode"
+        if "document_CreatedWhen" in docs.columns:
+            docs.rename(columns={"document_CreatedWhen": "updatetime"}, inplace=True)
+        if "document_Content" in docs.columns:
+            docs.rename(columns={"document_Content": "body_analysed"}, inplace=True)
+        if "id" in docs.columns:
+            docs.rename(columns={"id": "document_guid"}, inplace=True)
+        if "document_Name" in docs.columns:
+            docs.rename(columns={"document_Name": "document_description"}, inplace=True)
+
+        if treatment_doc_filename and os.path.exists(treatment_doc_filename) and append:
+            existing_data = pd.read_csv(treatment_doc_filename)
+
+            # Drop any duplicate columns before reindexing to avoid ValueError
+            existing_data = existing_data.loc[:, ~existing_data.columns.duplicated()]
+            docs = docs.loc[:, ~docs.columns.duplicated()]
+
+            combined_columns = existing_data.columns.union(docs.columns)
+            existing_data = existing_data.reindex(columns=combined_columns)
+            docs = docs.reindex(columns=combined_columns)
+            docs = pd.concat([existing_data, docs], ignore_index=True)
+            docs = docs.drop_duplicates().reset_index(drop=True)
+            docs.to_csv(treatment_doc_filename, index=False)
+            logging.info(f"Updated data saved to: {treatment_doc_filename}")
+        elif treatment_doc_filename:
+            docs.to_csv(
+                treatment_doc_filename,
+                mode="w",
+                index=False,
+                escapechar="\\",
+                doublequote=True,
+                encoding="utf-8",
+            )
+            logging.info(f"New data saved to: {treatment_doc_filename}")
+
+        if debug:
+            logging.debug(
+                "n_unique %s: %d/%d",
+                uuid_column_name,
+                len(docs[uuid_column_name].unique()),
+                len(docs),
+            )
+    return docs
+
+
+def iterative_multi_term_cohort_searcher_no_terms_fuzzy_epic_clinical_notes_appointments(
+    terms_list: List[str],
+    treatment_doc_filename: str,
+    start_year: str,
+    start_month: str,
+    start_day: str,
+    end_year: str,
+    end_month: str,
+    end_day: str,
+    append: bool = True,
+    debug: bool = True,
+    uuid_column_name: str = "document_PatientDurableKey",
+    additional_filters: Optional[List[str]] = None,
+    all_fields: bool = False,
+    method: str = "fuzzy",
+    fuzzy: int = 2,
+    slop: int = 1,
+    testing: bool = False,
+    testing_elastic: bool = False,
+) -> pd.DataFrame:
+    """Iteratively searches for Epic clinical notes appointments documents matching multiple search terms.
+
+    This function searches the 'epic_clinical_notes_appointments' index for documents where
+    the `document_Content` field contains the specified terms.
+
+    Args:
+        terms_list: A list of terms to search for.
+        treatment_doc_filename: The filename to load or save the results.
+        start_year, start_month, start_day: The start of the date range.
+        end_year, end_month, end_day: The end of the date range.
+        append: Whether to append results to an existing file.
+        debug: Whether to print debug information.
+        uuid_column_name: The name of the UUID column.
+        additional_filters: Additional filters to apply to the search.
+        all_fields: Whether to retrieve all fields.
+        method: The search method ('fuzzy', 'exact', 'phrase').
+        fuzzy: The fuzziness level for fuzzy search.
+        slop: The slop value for phrase search.
+        testing: Whether to use a dummy searcher for testing.
+        testing_elastic: If True, uses the real searcher against the configured ES
+                         instance even if `testing` is True.
+
+    Returns:
+        A DataFrame containing the search results.
+    """
+    logging.info(
+        "Running iterative_multi_term_cohort_searcher_no_terms_fuzzy_epic_clinical_notes_appointments from %s-%s-%s to %s-%s-%s",
+        start_day,
+        start_month,
+        start_year,
+        end_day,
+        end_month,
+        end_year,
+    )
+    if not terms_list:
+        logging.warning("Terms list is empty. Exiting.")
+        return pd.DataFrame()
+
+    global cs
+    if cs is None:
+        initialize_cogstack_client()
+    file_exists = exists(treatment_doc_filename) if treatment_doc_filename else False
+
+    if file_exists and not append:
+        docs = pd.read_csv(treatment_doc_filename)
+        logging.info(f"Loaded existing file: {treatment_doc_filename}")
+        return docs
+
+    else:
+        all_docs = []
+
+        for term in tqdm(terms_list):
+            search_string = (
+                f"document_Content:({term}) AND "
+                + f"document_CreatedWhen:[{start_year}-{start_month}-{start_day} TO {end_year}-{end_month}-{end_day}]"
+            )
+            search_string = str(search_string)
+
+            if additional_filters:
+                search_string += " " + " ".join(additional_filters)
+
+            logging.info("Search String: %s", search_string)
+
+            field_list = [
+                "document_PatientDurableKey",
+                "document_CreatedWhen",
+                "document_Content",
+                "document_Name",
+                "document_EncounterEpicCsn",
+                "id",
+                "_index",
+                "_score",
+            ]
+            if all_fields:
+                pass
+
+            if not testing or (testing and testing_elastic):
+                term_docs = cohort_searcher_no_terms_fuzzy(
+                    index_name="epic_clinical_notes_appointments",
+                    fields_list=field_list,
+                    search_string=search_string,
+                    method=method,
+                    fuzzy=fuzzy,
+                    slop=slop,
+                )
+            else:
+                term_docs = cohort_searcher_with_terms_and_search_dummy(
+                    index_name="epic_clinical_notes_appointments",
+                    fields_list=field_list,
+                    term_name="document_PatientDurableKey",
+                    entered_list=generate_uuid_list(
+                        random.randint(2, 10), random.choice(["P", "V"])
+                    ),
+                    search_string=search_string,
+                )
+
+            if term_docs is None or term_docs.empty:
+                logging.info(f"No results found for term: {term}")
+            else:
+                logging.info(f"Found {len(term_docs)} documents for term: {term}")
+                term_docs["search_term"] = term
+                all_docs.append(term_docs)
+
+        if not all_docs:
+            logging.warning("No documents were found for any of the terms.")
+            if file_exists and append:
+                return pd.read_csv(treatment_doc_filename)
+            return pd.DataFrame()
+
+        docs = pd.concat(all_docs, ignore_index=True)
+        docs = docs.drop_duplicates()
+
+        if "document_PatientDurableKey" in docs.columns:
+            docs.rename(
+                columns={"document_PatientDurableKey": "client_idcode"}, inplace=True
+            )
+            if uuid_column_name == "document_PatientDurableKey":
+                uuid_column_name = "client_idcode"
+        if "document_CreatedWhen" in docs.columns:
+            docs.rename(columns={"document_CreatedWhen": "updatetime"}, inplace=True)
+        if "document_Content" in docs.columns:
+            docs.rename(columns={"document_Content": "body_analysed"}, inplace=True)
+        if "id" in docs.columns:
+            docs.rename(columns={"id": "document_guid"}, inplace=True)
+        if "document_Name" in docs.columns:
+            docs.rename(columns={"document_Name": "document_description"}, inplace=True)
+
+        if treatment_doc_filename and os.path.exists(treatment_doc_filename) and append:
+            existing_data = pd.read_csv(treatment_doc_filename)
+
+            # Drop any duplicate columns before reindexing to avoid ValueError
+            existing_data = existing_data.loc[:, ~existing_data.columns.duplicated()]
+            docs = docs.loc[:, ~docs.columns.duplicated()]
+
+            combined_columns = existing_data.columns.union(docs.columns)
+            existing_data = existing_data.reindex(columns=combined_columns)
+            docs = docs.reindex(columns=combined_columns)
+            docs = pd.concat([existing_data, docs], ignore_index=True)
+            docs = docs.drop_duplicates().reset_index(drop=True)
+            docs.to_csv(treatment_doc_filename, index=False)
+            logging.info(f"Updated data saved to: {treatment_doc_filename}")
+        elif treatment_doc_filename:
+            docs.to_csv(
+                treatment_doc_filename,
+                mode="w",
+                index=False,
+                escapechar="\\",
+                doublequote=True,
+                encoding="utf-8",
+            )
+            logging.info(f"New data saved to: {treatment_doc_filename}")
+
+        if debug:
+            logging.debug(
+                "n_unique %s: %d/%d",
+                uuid_column_name,
+                len(docs[uuid_column_name].unique()),
+                len(docs),
+            )
+    return docs
+
+
+def iterative_multi_term_cohort_searcher_no_terms_fuzzy_drugs(
+    terms_list: List[str],
+    treatment_doc_filename: str,
+    start_year: str,
+    start_month: str,
+    start_day: str,
+    end_year: str,
+    end_month: str,
+    end_day: str,
+    append: bool = True,
+    debug: bool = True,
+    uuid_column_name: str = "client_idcode",
+    additional_filters: Optional[List[str]] = None,
+    all_fields: bool = False,
+    method: str = "fuzzy",
+    fuzzy: int = 2,
+    slop: int = 1,
+    testing: bool = False,
+    testing_elastic: bool = False,
+) -> pd.DataFrame:
+    """Iteratively searches for drug order documents matching multiple search terms."""
+    logging.info(
+        "Running iterative_multi_term_cohort_searcher_no_terms_fuzzy_drugs from %s-%s-%s to %s-%s-%s",
+        start_day,
+        start_month,
+        start_year,
+        end_day,
+        end_month,
+        end_year,
+    )
+    if not terms_list:
+        logging.warning("Terms list is empty. Exiting.")
+        return pd.DataFrame()
+
+    global cs
+    if cs is None:
+        initialize_cogstack_client()
+    file_exists = exists(treatment_doc_filename) if treatment_doc_filename else False
+
+    if file_exists and not append:
+        docs = pd.read_csv(treatment_doc_filename)
+        logging.info(f"Loaded existing file: {treatment_doc_filename}")
+        return docs
+
+    else:
+        all_docs = []
+
+        for term in tqdm(terms_list):
+            search_string = (
+                f'order_typecode:"medication" AND "{term}" AND '
+                f"order_createdwhen:[{start_year}-{start_month}-{start_day} TO {end_year}-{end_month}-{end_day}]"
+            )
+            if additional_filters:
+                search_string += " " + " ".join(additional_filters)
+
+            logging.info("Search String: %s", search_string)
+
+            field_list = [
+                "client_idcode",
+                "order_guid",
+                "order_name",
+                "order_summaryline",
+                "order_holdreasontext",
+                "order_entered",
+                "order_createdwhen",
+                "clientvisit_visitidcode",
+            ]
+            if all_fields:
+                pass  # Use all fields if requested
+
+            if not testing or (testing and testing_elastic):
+                term_docs = cohort_searcher_no_terms_fuzzy(
+                    index_name="order",
+                    fields_list=field_list,
+                    search_string=search_string,
+                    method=method,
+                    fuzzy=fuzzy,
+                    slop=slop,
+                )
+            else:
+                term_docs = cohort_searcher_with_terms_and_search_dummy(
+                    index_name="order",
+                    fields_list=field_list,
+                    term_name="client_idcode",
+                    entered_list=generate_uuid_list(
+                        random.randint(2, 10), random.choice(["P", "V"])
+                    ),
+                    search_string=search_string,
+                )
+
+            if term_docs is None or term_docs.empty:
+                logging.info(f"No results found for term: {term}")
+            else:
+                logging.info(f"Found {len(term_docs)} documents for term: {term}")
+                term_docs["search_term"] = term
+                all_docs.append(term_docs)
+
+        if not all_docs:
+            logging.warning("No documents were found for any of the terms.")
+            if file_exists and append:
+                return pd.read_csv(treatment_doc_filename)
+            return pd.DataFrame()
+
+        docs = pd.concat(all_docs, ignore_index=True)
+        docs = docs.drop_duplicates()
+
+        if treatment_doc_filename and os.path.exists(treatment_doc_filename) and append:
+            existing_data = pd.read_csv(treatment_doc_filename)
+            existing_data = existing_data.loc[:, ~existing_data.columns.duplicated()]
+            docs = docs.loc[:, ~docs.columns.duplicated()]
+            combined_columns = existing_data.columns.union(docs.columns)
+            existing_data = existing_data.reindex(columns=combined_columns)
+            docs = docs.reindex(columns=combined_columns)
+            docs = pd.concat([existing_data, docs], ignore_index=True)
+            docs = docs.drop_duplicates().reset_index(drop=True)
+            docs.to_csv(treatment_doc_filename, index=False)
+            logging.info(f"Updated data saved to: {treatment_doc_filename}")
+        elif treatment_doc_filename:
+            docs.to_csv(
+                treatment_doc_filename,
+                mode="w",
+                index=False,
+                escapechar="\\",
+                doublequote=True,
+                encoding="utf-8",
+            )
+            logging.info(f"New data saved to: {treatment_doc_filename}")
+
+        if debug:
+            logging.debug(
+                "n_unique %s: %d/%d",
+                uuid_column_name,
+                len(docs[uuid_column_name].unique()),
+                len(docs),
+            )
+    return docs
+
+
+def iterative_multi_term_cohort_searcher_no_terms_fuzzy_diagnostics(
+    terms_list: List[str],
+    treatment_doc_filename: str,
+    start_year: str,
+    start_month: str,
+    start_day: str,
+    end_year: str,
+    end_month: str,
+    end_day: str,
+    append: bool = True,
+    debug: bool = True,
+    uuid_column_name: str = "client_idcode",
+    additional_filters: Optional[List[str]] = None,
+    all_fields: bool = False,
+    method: str = "fuzzy",
+    fuzzy: int = 2,
+    slop: int = 1,
+    testing: bool = False,
+    testing_elastic: bool = False,
+) -> pd.DataFrame:
+    """Iteratively searches for diagnostic order documents matching multiple search terms."""
+    logging.info(
+        "Running iterative_multi_term_cohort_searcher_no_terms_fuzzy_diagnostics from %s-%s-%s to %s-%s-%s",
+        start_day,
+        start_month,
+        start_year,
+        end_day,
+        end_month,
+        end_year,
+    )
+    if not terms_list:
+        logging.warning("Terms list is empty. Exiting.")
+        return pd.DataFrame()
+
+    global cs
+    if cs is None:
+        initialize_cogstack_client()
+    file_exists = exists(treatment_doc_filename) if treatment_doc_filename else False
+
+    if file_exists and not append:
+        docs = pd.read_csv(treatment_doc_filename)
+        logging.info(f"Loaded existing file: {treatment_doc_filename}")
+        return docs
+
+    else:
+        all_docs = []
+
+        for term in tqdm(terms_list):
+            search_string = (
+                f'order_typecode:"diagnostic" AND "{term}" AND '
+                f"order_createdwhen:[{start_year}-{start_month}-{start_day} TO {end_year}-{end_month}-{end_day}]"
+            )
+            if additional_filters:
+                search_string += " " + " ".join(additional_filters)
+
+            logging.info("Search String: %s", search_string)
+
+            field_list = [
+                "client_idcode",
+                "order_guid",
+                "order_name",
+                "order_summaryline",
+                "order_holdreasontext",
+                "order_entered",
+                "order_createdwhen",
+                "clientvisit_visitidcode",
+            ]
+            if all_fields:
+                pass  # Use all fields if requested
+
+            if not testing or (testing and testing_elastic):
+                term_docs = cohort_searcher_no_terms_fuzzy(
+                    index_name="order",
+                    fields_list=field_list,
+                    search_string=search_string,
+                    method=method,
+                    fuzzy=fuzzy,
+                    slop=slop,
+                )
+            else:
+                term_docs = cohort_searcher_with_terms_and_search_dummy(
+                    index_name="order",
+                    fields_list=field_list,
+                    term_name="client_idcode",
+                    entered_list=generate_uuid_list(
+                        random.randint(2, 10), random.choice(["P", "V"])
+                    ),
+                    search_string=search_string,
+                )
+
+            if term_docs is None or term_docs.empty:
+                logging.info(f"No results found for term: {term}")
+            else:
+                logging.info(f"Found {len(term_docs)} documents for term: {term}")
+                term_docs["search_term"] = term
+                all_docs.append(term_docs)
+
+        if not all_docs:
+            logging.warning("No documents were found for any of the terms.")
+            if file_exists and append:
+                return pd.read_csv(treatment_doc_filename)
+            return pd.DataFrame()
+
+        docs = pd.concat(all_docs, ignore_index=True)
+        docs = docs.drop_duplicates()
+
+        if treatment_doc_filename and os.path.exists(treatment_doc_filename) and append:
+            existing_data = pd.read_csv(treatment_doc_filename)
+            existing_data = existing_data.loc[:, ~existing_data.columns.duplicated()]
+            docs = docs.loc[:, ~docs.columns.duplicated()]
+            combined_columns = existing_data.columns.union(docs.columns)
+            existing_data = existing_data.reindex(columns=combined_columns)
+            docs = docs.reindex(columns=combined_columns)
+            docs = pd.concat([existing_data, docs], ignore_index=True)
+            docs = docs.drop_duplicates().reset_index(drop=True)
+            docs.to_csv(treatment_doc_filename, index=False)
+            logging.info(f"Updated data saved to: {treatment_doc_filename}")
+        elif treatment_doc_filename:
+            docs.to_csv(
+                treatment_doc_filename,
+                mode="w",
+                index=False,
+                escapechar="\\",
+                doublequote=True,
+                encoding="utf-8",
+            )
+            logging.info(f"New data saved to: {treatment_doc_filename}")
+
+        if debug:
+            logging.debug(
+                "n_unique %s: %d/%d",
+                uuid_column_name,
+                len(docs[uuid_column_name].unique()),
+                len(docs),
+            )
+    return docs
+
+
+def iterative_multi_term_cohort_searcher_no_terms_fuzzy_reports(
+    terms_list: List[str],
+    treatment_doc_filename: str,
+    start_year: str,
+    start_month: str,
+    start_day: str,
+    end_year: str,
+    end_month: str,
+    end_day: str,
+    append: bool = True,
+    debug: bool = True,
+    uuid_column_name: str = "client_idcode",
+    additional_filters: Optional[List[str]] = None,
+    all_fields: bool = False,
+    method: str = "fuzzy",
+    fuzzy: int = 2,
+    slop: int = 1,
+    testing: bool = False,
+    testing_elastic: bool = False,
+) -> pd.DataFrame:
+    """Iteratively searches for reports documents matching multiple search terms."""
+    logging.info(
+        "Running iterative_multi_term_cohort_searcher_no_terms_fuzzy_reports from %s-%s-%s to %s-%s-%s",
+        start_day,
+        start_month,
+        start_year,
+        end_day,
+        end_month,
+        end_year,
+    )
+    if not terms_list:
+        logging.warning("Terms list is empty. Exiting.")
+        return pd.DataFrame()
+
+    global cs
+    if cs is None:
+        initialize_cogstack_client()
+    file_exists = exists(treatment_doc_filename) if treatment_doc_filename else False
+
+    if file_exists and not append:
+        docs = pd.read_csv(treatment_doc_filename)
+        logging.info(f"Loaded existing file: {treatment_doc_filename}")
+        return docs
+
+    else:
+        all_docs = []
+
+        for term in tqdm(terms_list):
+            search_string = (
+                f'body_analysed:("{term}") AND '
+                f"updatetime:[{start_year}-{start_month}-{start_day} TO {end_year}-{end_month}-{end_day}]"
+            )
+            if additional_filters:
+                search_string += " " + " ".join(additional_filters)
+
+            logging.info("Search String: %s", search_string)
+
+            field_list = [
+                "client_idcode",
+                "document_guid",
+                "document_description",
+                "body_analysed",
+                "updatetime",
+                "clientvisit_visitidcode",
+            ]
+            if all_fields:
+                pass  # Use all fields if requested
+
+            if not testing or (testing and testing_elastic):
+                term_docs = cohort_searcher_no_terms_fuzzy(
+                    index_name="reports",  # Assuming 'reports' is the index name
+                    fields_list=field_list,
+                    search_string=search_string,
+                    method=method,
+                    fuzzy=fuzzy,
+                    slop=slop,
+                )
+            else:
+                term_docs = cohort_searcher_with_terms_and_search_dummy(
+                    index_name="reports",
+                    fields_list=field_list,
+                    term_name="client_idcode",
+                    entered_list=generate_uuid_list(
+                        random.randint(2, 10), random.choice(["P", "V"])
+                    ),
+                    search_string=search_string,
+                )
+
+            if term_docs is None or term_docs.empty:
+                logging.info(f"No results found for term: {term}")
+            else:
+                logging.info(f"Found {len(term_docs)} documents for term: {term}")
+                term_docs["search_term"] = term
+                all_docs.append(term_docs)
+
+        if not all_docs:
+            logging.warning("No documents were found for any of the terms.")
+            if file_exists and append:
+                return pd.read_csv(treatment_doc_filename)
+            return pd.DataFrame()
+
+        docs = pd.concat(all_docs, ignore_index=True)
+        docs = docs.drop_duplicates()
+
+        if treatment_doc_filename and os.path.exists(treatment_doc_filename) and append:
+            existing_data = pd.read_csv(treatment_doc_filename)
+            existing_data = existing_data.loc[:, ~existing_data.columns.duplicated()]
+            docs = docs.loc[:, ~docs.columns.duplicated()]
+            combined_columns = existing_data.columns.union(docs.columns)
+            existing_data = existing_data.reindex(columns=combined_columns)
+            docs = docs.reindex(columns=combined_columns)
+            docs = pd.concat([existing_data, docs], ignore_index=True)
+            docs = docs.drop_duplicates().reset_index(drop=True)
+            docs.to_csv(treatment_doc_filename, index=False)
+            logging.info(f"Updated data saved to: {treatment_doc_filename}")
+        elif treatment_doc_filename:
+            docs.to_csv(
+                treatment_doc_filename,
+                mode="w",
+                index=False,
+                escapechar="\\",
+                doublequote=True,
+                encoding="utf-8",
+            )
+            logging.info(f"New data saved to: {treatment_doc_filename}")
+
+        if debug:
+            logging.debug(
+                "n_unique %s: %d/%d",
+                uuid_column_name,
+                len(docs[uuid_column_name].unique()),
+                len(docs),
+            )
+    return docs
+
+
+def iterative_multi_term_cohort_searcher_no_terms_fuzzy_epic_encounters(
+    terms_list: List[str],
+    treatment_doc_filename: str,
+    start_year: str,
+    start_month: str,
+    start_day: str,
+    end_year: str,
+    end_month: str,
+    end_day: str,
+    append: bool = True,
+    debug: bool = True,
+    uuid_column_name: str = "activity_PatientDurableKey",
+    additional_filters: Optional[List[str]] = None,
+    all_fields: bool = False,
+    method: str = "fuzzy",
+    fuzzy: int = 2,
+    slop: int = 1,
+    testing: bool = False,
+    testing_elastic: bool = False,
+) -> pd.DataFrame:
+    """Iteratively searches for Epic encounters documents matching multiple search terms."""
+    logging.info(
+        "Running iterative_multi_term_cohort_searcher_no_terms_fuzzy_epic_encounters from %s-%s-%s to %s-%s-%s",
+        start_day,
+        start_month,
+        start_year,
+        end_day,
+        end_month,
+        end_year,
+    )
+    if not terms_list:
+        logging.warning("Terms list is empty. Exiting.")
+        return pd.DataFrame()
+
+    global cs
+    if cs is None:
+        initialize_cogstack_client()
+    file_exists = exists(treatment_doc_filename) if treatment_doc_filename else False
+
+    if file_exists and not append:
+        docs = pd.read_csv(treatment_doc_filename)
+        logging.info(f"Loaded existing file: {treatment_doc_filename}")
+        return docs
+
+    else:
+        all_docs = []
+
+        for term in tqdm(terms_list):
+            search_string = (
+                f'(activity_Department:("{term}") OR activity_Type:("{term}") OR activity_VisitClass:("{term}")) AND '
+                f"activity_AdmissionDate:[{start_year}-{start_month}-{start_day} TO {end_year}-{end_month}-{end_day}]"
+            )
+            if additional_filters:
+                search_string += " " + " ".join(additional_filters)
+
+            logging.info("Search String: %s", search_string)
+
+            field_list = [
+                "activity_PatientDurableKey",
+                "activity_AdmissionDate",
+                "activity_DischargeDate",
+                "activity_Department",
+                "activity_Type",
+                "activity_VisitClass",
+                "activity_HospitalService",
+                "id",
+            ]
+            if all_fields:
+                pass  # Use all fields if requested
+
+            if not testing or (testing and testing_elastic):
+                term_docs = cohort_searcher_no_terms_fuzzy(
+                    index_name="epic_encounters",
+                    fields_list=field_list,
+                    search_string=search_string,
+                    method=method,
+                    fuzzy=fuzzy,
+                    slop=slop,
+                )
+            else:
+                term_docs = cohort_searcher_with_terms_and_search_dummy(
+                    index_name="epic_encounters",
+                    fields_list=field_list,
+                    term_name="activity_PatientDurableKey",
+                    entered_list=generate_uuid_list(
+                        random.randint(2, 10), random.choice(["P", "V"])
+                    ),
+                    search_string=search_string,
+                )
+
+            if term_docs is None or term_docs.empty:
+                logging.info(f"No results found for term: {term}")
+            else:
+                logging.info(f"Found {len(term_docs)} documents for term: {term}")
+                term_docs["search_term"] = term
+                all_docs.append(term_docs)
+
+        if not all_docs:
+            logging.warning("No documents were found for any of the terms.")
+            if file_exists and append:
+                return pd.read_csv(treatment_doc_filename)
+            return pd.DataFrame()
+
+        docs = pd.concat(all_docs, ignore_index=True)
+        docs = docs.drop_duplicates()
+
+        if "activity_PatientDurableKey" in docs.columns:
+            docs.rename(
+                columns={"activity_PatientDurableKey": "client_idcode"}, inplace=True
+            )
+            if uuid_column_name == "activity_PatientDurableKey":
+                uuid_column_name = "client_idcode"
+        if "activity_AdmissionDate" in docs.columns:
+            docs.rename(columns={"activity_AdmissionDate": "updatetime"}, inplace=True)
+
+        if treatment_doc_filename and os.path.exists(treatment_doc_filename) and append:
+            existing_data = pd.read_csv(treatment_doc_filename)
+            existing_data = existing_data.loc[:, ~existing_data.columns.duplicated()]
+            docs = docs.loc[:, ~docs.columns.duplicated()]
+            combined_columns = existing_data.columns.union(docs.columns)
+            existing_data = existing_data.reindex(columns=combined_columns)
+            docs = docs.reindex(columns=combined_columns)
+            docs = pd.concat([existing_data, docs], ignore_index=True)
+            docs = docs.drop_duplicates().reset_index(drop=True)
+            docs.to_csv(treatment_doc_filename, index=False)
+            logging.info(f"Updated data saved to: {treatment_doc_filename}")
+        elif treatment_doc_filename:
+            docs.to_csv(
+                treatment_doc_filename,
+                mode="w",
+                index=False,
+                escapechar="\\",
+                doublequote=True,
+                encoding="utf-8",
+            )
+            logging.info(f"New data saved to: {treatment_doc_filename}")
+
+        if debug:
+            logging.debug(
+                "n_unique %s: %d/%d",
+                uuid_column_name,
+                len(docs[uuid_column_name].unique()),
+                len(docs),
+            )
+    return docs
+
+
+def iterative_multi_term_cohort_searcher_no_terms_fuzzy_epic_orders(
+    terms_list: List[str],
+    treatment_doc_filename: str,
+    start_year: str,
+    start_month: str,
+    start_day: str,
+    end_year: str,
+    end_month: str,
+    end_day: str,
+    append: bool = True,
+    debug: bool = True,
+    uuid_column_name: str = "document_PatientDurableKey",
+    additional_filters: Optional[List[str]] = None,
+    all_fields: bool = False,
+    method: str = "fuzzy",
+    fuzzy: int = 2,
+    slop: int = 1,
+    testing: bool = False,
+    testing_elastic: bool = False,
+) -> pd.DataFrame:
+    """Iteratively searches for Epic orders documents matching multiple search terms."""
+    logging.info(
+        "Running iterative_multi_term_cohort_searcher_no_terms_fuzzy_epic_orders from %s-%s-%s to %s-%s-%s",
+        start_day,
+        start_month,
+        start_year,
+        end_day,
+        end_month,
+        end_year,
+    )
+    if not terms_list:
+        logging.warning("Terms list is empty. Exiting.")
+        return pd.DataFrame()
+
+    global cs
+    if cs is None:
+        initialize_cogstack_client()
+    file_exists = exists(treatment_doc_filename) if treatment_doc_filename else False
+
+    if file_exists and not append:
+        docs = pd.read_csv(treatment_doc_filename)
+        logging.info(f"Loaded existing file: {treatment_doc_filename}")
+        return docs
+
+    else:
+        all_docs = []
+
+        for term in tqdm(terms_list):
+            search_string = (
+                f'(document_Name:("{term}") OR document_Content:("{term}")) AND '
+                f"document_OrderDate:[{start_year}-{start_month}-{start_day} TO {end_year}-{end_month}-{end_day}]"
+            )
+            if additional_filters:
+                search_string += " " + " ".join(additional_filters)
+
+            logging.info("Search String: %s", search_string)
+
+            field_list = [
+                "document_PatientDurableKey",
+                "document_CreatedWhen",
+                "document_UpdatedWhen",
+                "document_Name",
+                "document_Content",
+                "document_OrderClass",
+                "document_OrderDate",
+                "document_OrderStatus",
+                "id",
+            ]
+            if all_fields:
+                pass  # Use all fields if requested
+
+            if not testing or (testing and testing_elastic):
+                term_docs = cohort_searcher_no_terms_fuzzy(
+                    index_name="epic_orders",
+                    fields_list=field_list,
+                    search_string=search_string,
+                    method=method,
+                    fuzzy=fuzzy,
+                    slop=slop,
+                )
+            else:
+                term_docs = cohort_searcher_with_terms_and_search_dummy(
+                    index_name="epic_orders",
+                    fields_list=field_list,
+                    term_name="document_PatientDurableKey",
+                    entered_list=generate_uuid_list(
+                        random.randint(2, 10), random.choice(["P", "V"])
+                    ),
+                    search_string=search_string,
+                )
+
+            if term_docs is None or term_docs.empty:
+                logging.info(f"No results found for term: {term}")
+            else:
+                logging.info(f"Found {len(term_docs)} documents for term: {term}")
+                term_docs["search_term"] = term
+                all_docs.append(term_docs)
+
+        if not all_docs:
+            logging.warning("No documents were found for any of the terms.")
+            if file_exists and append:
+                return pd.read_csv(treatment_doc_filename)
+            return pd.DataFrame()
+
+        docs = pd.concat(all_docs, ignore_index=True)
+        docs = docs.drop_duplicates()
+
+        if "document_PatientDurableKey" in docs.columns:
+            docs.rename(
+                columns={"document_PatientDurableKey": "client_idcode"}, inplace=True
+            )
+            if uuid_column_name == "document_PatientDurableKey":
+                uuid_column_name = "client_idcode"
+        if "document_CreatedWhen" in docs.columns:
+            docs.rename(columns={"document_CreatedWhen": "updatetime"}, inplace=True)
+        if "document_Content" in docs.columns:
+            docs.rename(columns={"document_Content": "body_analysed"}, inplace=True)
+        if "id" in docs.columns:
+            docs.rename(columns={"id": "document_guid"}, inplace=True)
+        if "document_Name" in docs.columns:
+            docs.rename(columns={"document_Name": "document_description"}, inplace=True)
+
+        if treatment_doc_filename and os.path.exists(treatment_doc_filename) and append:
+            existing_data = pd.read_csv(treatment_doc_filename)
+            existing_data = existing_data.loc[:, ~existing_data.columns.duplicated()]
+            docs = docs.loc[:, ~docs.columns.duplicated()]
+            combined_columns = existing_data.columns.union(docs.columns)
+            existing_data = existing_data.reindex(columns=combined_columns)
+            docs = docs.reindex(columns=combined_columns)
+            docs = pd.concat([existing_data, docs], ignore_index=True)
+            docs = docs.drop_duplicates().reset_index(drop=True)
+            docs.to_csv(treatment_doc_filename, index=False)
+            logging.info(f"Updated data saved to: {treatment_doc_filename}")
+        elif treatment_doc_filename:
+            docs.to_csv(
+                treatment_doc_filename,
+                mode="w",
+                index=False,
+                escapechar="\\",
+                doublequote=True,
+                encoding="utf-8",
+            )
+            logging.info(f"New data saved to: {treatment_doc_filename}")
+
+        if debug:
+            logging.debug(
+                "n_unique %s: %d/%d",
+                uuid_column_name,
+                len(docs[uuid_column_name].unique()),
+                len(docs),
+            )
+    return docs
+
+
+def iterative_multi_term_cohort_searcher_no_terms_fuzzy_epic_lab_results(
+    terms_list: List[str],
+    treatment_doc_filename: str,
+    start_year: str,
+    start_month: str,
+    start_day: str,
+    end_year: str,
+    end_month: str,
+    end_day: str,
+    append: bool = True,
+    debug: bool = True,
+    uuid_column_name: str = "document_PatientDurableKey",
+    additional_filters: Optional[List[str]] = None,
+    all_fields: bool = False,
+    method: str = "fuzzy",
+    fuzzy: int = 2,
+    slop: int = 1,
+    testing: bool = False,
+    testing_elastic: bool = False,
+) -> pd.DataFrame:
+    """Iteratively searches for Epic lab results documents matching multiple search terms."""
+    logging.info(
+        "Running iterative_multi_term_cohort_searcher_no_terms_fuzzy_epic_lab_results from %s-%s-%s to %s-%s-%s",
+        start_day,
+        start_month,
+        start_year,
+        end_day,
+        end_month,
+        end_year,
+    )
+    if not terms_list:
+        logging.warning("Terms list is empty. Exiting.")
+        return pd.DataFrame()
+
+    global cs
+    if cs is None:
+        initialize_cogstack_client()
+    file_exists = exists(treatment_doc_filename) if treatment_doc_filename else False
+
+    if file_exists and not append:
+        docs = pd.read_csv(treatment_doc_filename)
+        logging.info(f"Loaded existing file: {treatment_doc_filename}")
+        return docs
+
+    else:
+        all_docs = []
+
+        for term in tqdm(terms_list):
+            search_string = (
+                f'(document_Name:("{term}") OR document_Fields.valueText:("{term}")) AND '
+                f"document_CollectedDate:[{start_year}-{start_month}-{start_day} TO {end_year}-{end_month}-{end_day}]"
+            )
+            if additional_filters:
+                search_string += " " + " ".join(additional_filters)
+
+            logging.info("Search String: %s", search_string)
+
+            field_list = [
+                "document_PatientDurableKey",
+                "document_CreatedWhen",
+                "document_CollectedDate",
+                "document_UpdatedWhen",
+                "document_Name",
+                "document_Content",
+                "document_AbnormalLevel",
+                "document_LabResultEpicId",
+                "document_Fields.valueText",
+                "document_Fields.valueNum",
+                "id",
+            ]
+            if all_fields:
+                pass  # Use all fields if requested
+
+            if not testing or (testing and testing_elastic):
+                term_docs = cohort_searcher_no_terms_fuzzy(
+                    index_name="epic_lab_results",
+                    fields_list=field_list,
+                    search_string=search_string,
+                    method=method,
+                    fuzzy=fuzzy,
+                    slop=slop,
+                )
+            else:
+                term_docs = cohort_searcher_with_terms_and_search_dummy(
+                    index_name="epic_lab_results",
+                    fields_list=field_list,
+                    term_name="document_PatientDurableKey",
+                    entered_list=generate_uuid_list(
+                        random.randint(2, 10), random.choice(["P", "V"])
+                    ),
+                    search_string=search_string,
+                )
+
+            if term_docs is None or term_docs.empty:
+                logging.info(f"No results found for term: {term}")
+            else:
+                logging.info(f"Found {len(term_docs)} documents for term: {term}")
+                term_docs["search_term"] = term
+                all_docs.append(term_docs)
+
+        if not all_docs:
+            logging.warning("No documents were found for any of the terms.")
+            if file_exists and append:
+                return pd.read_csv(treatment_doc_filename)
+            return pd.DataFrame()
+
+        docs = pd.concat(all_docs, ignore_index=True)
+        docs = docs.drop_duplicates()
+
+        if "document_PatientDurableKey" in docs.columns:
+            docs.rename(
+                columns={"document_PatientDurableKey": "client_idcode"}, inplace=True
+            )
+            if uuid_column_name == "document_PatientDurableKey":
+                uuid_column_name = "client_idcode"
+        if "document_CollectedDate" in docs.columns:
+            docs.rename(columns={"document_CollectedDate": "updatetime"}, inplace=True)
+        if "document_Content" in docs.columns:
+            docs.rename(columns={"document_Content": "body_analysed"}, inplace=True)
+        if "id" in docs.columns:
+            docs.rename(columns={"id": "document_guid"}, inplace=True)
+        if "document_Name" in docs.columns:
+            docs.rename(columns={"document_Name": "document_description"}, inplace=True)
+
+        if treatment_doc_filename and os.path.exists(treatment_doc_filename) and append:
+            existing_data = pd.read_csv(treatment_doc_filename)
+            existing_data = existing_data.loc[:, ~existing_data.columns.duplicated()]
+            docs = docs.loc[:, ~docs.columns.duplicated()]
+            combined_columns = existing_data.columns.union(docs.columns)
+            existing_data = existing_data.reindex(columns=combined_columns)
+            docs = docs.reindex(columns=combined_columns)
+            docs = pd.concat([existing_data, docs], ignore_index=True)
+            docs = docs.drop_duplicates().reset_index(drop=True)
+            docs.to_csv(treatment_doc_filename, index=False)
+            logging.info(f"Updated data saved to: {treatment_doc_filename}")
+        elif treatment_doc_filename:
+            docs.to_csv(
+                treatment_doc_filename,
+                mode="w",
+                index=False,
+                escapechar="\\",
+                doublequote=True,
+                encoding="utf-8",
+            )
+            logging.info(f"New data saved to: {treatment_doc_filename}")
+
+        if debug:
+            logging.debug(
+                "n_unique %s: %d/%d",
+                uuid_column_name,
+                len(docs[uuid_column_name].unique()),
+                len(docs),
+            )
+    return docs
+
+
+def iterative_multi_term_cohort_searcher_no_terms_fuzzy_obs(
+    terms_list: List[str],
+    treatment_doc_filename: str,
+    start_year: str,
+    start_month: str,
+    start_day: str,
+    end_year: str,
+    end_month: str,
+    end_day: str,
+    append: bool = True,
+    debug: bool = True,
+    uuid_column_name: str = "client_idcode",
+    additional_filters: Optional[List[str]] = None,
+    all_fields: bool = False,
+    method: str = "fuzzy",
+    fuzzy: int = 2,
+    slop: int = 1,
+    testing: bool = False,
+    testing_elastic: bool = False,
+) -> pd.DataFrame:
+    """Iteratively searches the general 'observations' index for multiple terms."""
+    logging.info("Running iterative_multi_term_cohort_searcher_no_terms_fuzzy_obs")
+    if not terms_list:
+        return pd.DataFrame()
+
+    global cs
+    if cs is None:
+        initialize_cogstack_client()
+
+    all_docs = []
+    for term in tqdm(terms_list):
+        search_string = (
+            f'obscatalogmasteritem_displayname:("{term}") AND '
+            f"observationdocument_recordeddtm:[{start_year}-{start_month}-{start_day} TO {end_year}-{end_month}-{end_day}]"
+        )
+        if additional_filters:
+            search_string += " " + " ".join(additional_filters)
+
+        field_list = [
+            "observation_guid",
+            "client_idcode",
+            "obscatalogmasteritem_displayname",
+            "observation_valuetext_analysed",
+            "observationdocument_recordeddtm",
+            "clientvisit_visitidcode",
+        ]
+
+        if not testing or (testing and testing_elastic):
+            term_docs = cohort_searcher_no_terms_fuzzy(
+                index_name="observations",
+                fields_list=field_list,
+                search_string=search_string,
+                method=method,
+                fuzzy=fuzzy,
+                slop=slop,
+            )
+        else:
+            term_docs = cohort_searcher_with_terms_and_search_dummy(
+                index_name="observations",
+                fields_list=field_list,
+                term_name="client_idcode",
+                entered_list=generate_uuid_list(5, "P"),
+                search_string=search_string,
+            )
+
+        if not term_docs.empty:
+            term_docs["search_term"] = term
+            all_docs.append(term_docs)
+
+    if not all_docs:
+        return pd.DataFrame()
+
+    docs = pd.concat(all_docs, ignore_index=True).drop_duplicates()
+    if treatment_doc_filename:
+        docs.to_csv(
+            treatment_doc_filename,
+            mode="a",
+            index=False,
+            header=not os.path.exists(treatment_doc_filename),
         )
 
-        for i in range(0, len(current_batch_list), chunk_size):
-            if not ids_to_check:
-                break
-            chunk = current_batch_list[i : i + chunk_size]
-            body = {
-                "query": {"terms": {idx_field: chunk}},
-                "size": 0,
-                "aggs": {
-                    "existing_ids": {
-                        "terms": {"field": idx_field, "size": len(chunk) + 50}
-                    }
-                },
-            }
-            try:
-                res = cs.elastic.search(index=idx_name, body=body, request_timeout=60)
-                buckets = (
-                    res.get("aggregations", {})
-                    .get("existing_ids", {})
-                    .get("buckets", [])
-                )
-                for bucket in buckets:
-                    found_id = str(bucket["key"])
-                    existing_ids.add(found_id)
-                    if found_id in ids_to_check:
-                        ids_to_check.remove(found_id)
-            except Exception as e:
-                # Handle fielddata error for text fields where aggregations are disabled.
-                # Use case-insensitive check to catch variations in error messages.
-                if "fielddata" in str(e).lower():
-                    logging.warning(
-                        f"Field '{idx_field}' in index '{idx_name}' is a text field and does not support aggregations. "
-                        "Attempting search-based existence check instead."
-                    )
-                    try:
-                        # Fallback: search and retrieve field from _source instead of aggregation
-                        search_res = cs.elastic.search(
-                            index=idx_name,
-                            body={"query": {"terms": {idx_field: chunk}}, "size": 1000},
-                            _source=[idx_field],
-                            request_timeout=60,
-                        )
-                        for hit in search_res.get("hits", {}).get("hits", []):
-                            val = hit.get("_source", {}).get(idx_field)
-                            if val:
-                                found_id = str(val)
-                                existing_ids.add(found_id)
-                                if found_id in ids_to_check:
-                                    ids_to_check.remove(found_id)
-                    except Exception as e_inner:
-                        logging.error(
-                            f"Fallback existence check failed for {idx_name}: {e_inner}"
-                        )
-                else:
-                    logging.error(
-                        f"Error checking patient existence for chunk in {idx_name}: {e}"
-                    )
-
-    return list(existing_ids)
-
-
-cs = None
+    return docs
 
 
 def initialize_cogstack_client(config_obj=None):
-    """Initializes the global CogStack client `cs`.
-
-    This function sets up the connection to Elasticsearch. It can be
-    configured to load credentials from a specific file path by passing a
-    config object. If a client instance already exists, it will not
-    re-initialize unless a config object with a new credentials path is
-    provided.
-
+    """
     The credential loading priority is:
     1. `credentials_path` from the `config_obj`.
     2. Default `credentials.py` in the project's root.
@@ -1276,6 +2866,112 @@ def initialize_cogstack_client(config_obj=None):
     return cs
 
 
+def check_patients_existence(
+    patient_ids: List[str],
+    index_name: Union[str, List[Tuple[str, str]]] = "epr_documents",
+    id_field: str = "client_idcode.keyword",
+    config_obj: Optional[Any] = None,
+) -> List[str]:
+    """Checks which patient IDs exist in Elasticsearch using terms aggregation.
+    Supports checking multiple indices in a fallback manner.
+    """
+    # Bypassing ES check during non-elastic testing to allow dummy data generators to work.
+    # This fixes the "invalid codes" warning and prevents patient filtering in tests.
+    if (
+        config_obj
+        and getattr(config_obj, "testing", False)
+        and not getattr(config_obj, "testing_elastic", False)
+    ):
+        return patient_ids
+
+    global cs
+    # Always attempt to initialize/update cs if config is provided.
+    cs = initialize_cogstack_client(config_obj)
+
+    if cs is None:
+        logging.error(
+            "Failed to initialize CogStack client for patient existence check."
+        )
+        return []
+
+    # Normalize input to list of configs
+    if isinstance(index_name, str):
+        indices_to_check = [(index_name, id_field)]
+    else:
+        # index_name is already a list of tuples
+        indices_to_check = index_name
+
+    existing_ids = set()
+    chunk_size = 1000  # Safe chunk size for terms query
+
+    # Remove duplicates from input to avoid redundant checks
+    unique_ids = list(set(patient_ids))
+    ids_to_check = set(unique_ids)
+
+    for idx_name, idx_field in indices_to_check:
+        if not ids_to_check:
+            break
+
+        current_batch_list = list(ids_to_check)
+        logging.info(
+            f"Checking existence for {len(current_batch_list)} patients in index '{idx_name}' using field '{idx_field}'..."
+        )
+
+        for i in range(0, len(current_batch_list), chunk_size):
+            if not ids_to_check:
+                break
+            chunk = current_batch_list[i : i + chunk_size]
+            body = {
+                "query": {"terms": {idx_field: chunk}},
+                "size": 0,
+                "aggs": {
+                    "existing_ids": {
+                        "terms": {"field": idx_field, "size": len(chunk) + 50}
+                    }
+                },
+            }
+            try:
+                res = cs.elastic.search(index=idx_name, body=body, request_timeout=60)
+                buckets = (
+                    res.get("aggregations", {})
+                    .get("existing_ids", {})
+                    .get("buckets", [])
+                )
+                for bucket in buckets:
+                    found_id = str(bucket["key"])
+                    existing_ids.add(found_id)
+                    if found_id in ids_to_check:
+                        ids_to_check.remove(found_id)
+            except Exception as e:
+                # Handle fielddata error for text fields where aggregations are disabled.
+                if "fielddata" in str(e).lower():
+                    try:
+                        # Fallback: search and retrieve field from _source instead of aggregation
+                        search_res = cs.elastic.search(
+                            index=idx_name,
+                            body={"query": {"terms": {idx_field: chunk}}, "size": 1000},
+                            _source=[idx_field],
+                            request_timeout=60,
+                        )
+                        for hit in search_res.get("hits", {}).get("hits", []):
+                            val = hit.get("_source", {}).get(idx_field)
+                            if val:
+                                found_id = str(val)
+                                existing_ids.add(found_id)
+                                if found_id in ids_to_check:
+                                    ids_to_check.remove(found_id)
+                    except Exception as e_inner:
+                        logging.error(
+                            f"Fallback existence check failed for {idx_name}: {e_inner}"
+                        )
+                else:
+                    logging.error(
+                        f"Error checking patient existence for chunk in {idx_name}: {e}"
+                    )
+
+    return list(existing_ids)
+
+
 def iterative_multi_term_cohort_searcher_no_terms_fuzzy_textual_obs(
     terms_list: List[str],
     treatment_doc_filename: str,
@@ -1338,9 +3034,10 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy_textual_obs(
             pd.DataFrame()
         )  # Ensure it returns an empty DataFrame if terms_list is empty
 
+    global cs
     if cs is None:
         initialize_cogstack_client()
-    file_exists = exists(treatment_doc_filename)
+    file_exists = exists(treatment_doc_filename) if treatment_doc_filename else False
 
     if file_exists and not append:
         docs = pd.read_csv(treatment_doc_filename)
@@ -1348,7 +3045,7 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy_textual_obs(
         return docs  # Ensure the function returns the loaded data
 
     else:
-        if file_exists and not append:
+        if file_exists and append:
             docs_prev = pd.read_csv(treatment_doc_filename)
             logging.info(f"Loaded existing file and append: {treatment_doc_filename}")
 
@@ -1504,13 +3201,16 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy_textual_obs(
         # If no documents were found for any term, return an empty DataFrame
         if not all_docs:
             logging.warning("No documents were found for any of the terms.")
-            docs_prev = pd.read_csv(treatment_doc_filename)
-            logging.info(
-                f"Loaded existing file and no docs found: {treatment_doc_filename}"
-            )
-
-            return docs_prev  # Return docs from previous step
-            # return pd.DataFrame()  # Return an empty DataFrame explicitly if nothing was found
+            if treatment_doc_filename and file_exists:
+                docs_prev = pd.read_csv(treatment_doc_filename)
+                logging.info(
+                    f"Loaded existing file and no docs found: {treatment_doc_filename}"
+                )
+                return docs_prev  # Return docs from previous step
+            else:
+                return (
+                    pd.DataFrame()
+                )  # Return an empty DataFrame explicitly if nothing was found
 
         # Concatenate the results for all terms
         docs = pd.concat(all_docs, ignore_index=True)
@@ -1529,10 +3229,14 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy_textual_obs(
 
         docs["body_analysed"] = docs["textualObs"].astype(str)
 
-        if os.path.exists(treatment_doc_filename):
+        if treatment_doc_filename and os.path.exists(treatment_doc_filename):
             # Load the existing CSV
             existing_data = pd.read_csv(treatment_doc_filename)
             logging.info(f"Loaded existing data from: {treatment_doc_filename}")
+
+            # Drop any duplicate columns before reindexing to avoid ValueError
+            existing_data = existing_data.loc[:, ~existing_data.columns.duplicated()]
+            docs = docs.loc[:, ~docs.columns.duplicated()]
 
             # Align the columns by using the union of both the existing and new columns
             combined_columns = existing_data.columns.union(docs.columns)
@@ -1541,17 +3245,14 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy_textual_obs(
             existing_data = existing_data.reindex(columns=combined_columns)
             docs = docs.reindex(columns=combined_columns)
 
-            # Drop any duplicate columns (if any)
-            existing_data = existing_data.loc[:, ~existing_data.columns.duplicated()]
-            docs = docs.loc[:, ~docs.columns.duplicated()]
-
             # Append the new data to the existing data
-            updated_data = pd.concat([existing_data, docs], ignore_index=True)
+            docs = pd.concat([existing_data, docs], ignore_index=True)
+            docs = docs.drop_duplicates().reset_index(drop=True)
 
             # Save the updated data back to the CSV
-            updated_data.to_csv(treatment_doc_filename, index=False)
+            docs.to_csv(treatment_doc_filename, index=False)
             logging.info(f"Updated data saved to: {treatment_doc_filename}")
-        else:
+        elif treatment_doc_filename:
             # If the file does not exist, save the new data as a new CSV
             docs.to_csv(
                 treatment_doc_filename,
