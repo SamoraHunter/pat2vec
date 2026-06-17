@@ -11,7 +11,7 @@ from pat2vec.util.parse_date import validate_input_dates
 EPIC_PATIENTS_FIELDS = [
     "patient_DurableKey",
     "patient_CreatedWhen",
-    "patient_UpdatedWhen",
+    "patient_BirthDate",  # Added to match generator
     "patient_Age",
     "patient_Gender",
     "patient_Ethnicity",
@@ -28,7 +28,7 @@ def search_epic_patients(
     cohort_searcher_with_terms_and_search=None,
     patient_durable_keys=None,
     id_field_name="patient_DurableKey",
-    time_field="patient_CreatedWhen",
+    time_field="patient_BirthDate",
     fields_override: Optional[List[str]] = None,
     start_year: Union[int, str] = 1995,
     start_month: Union[int, str] = 1,
@@ -112,9 +112,9 @@ def get_epic_patients(
     )
 
     id_field_name = "patient_DurableKey"
-    time_field = "patient_CreatedWhen"
+    time_field = "patient_BirthDate"
 
-    if pat_batch.empty:
+    if pat_batch.empty and batch_mode:
         return pd.DataFrame({"client_idcode": [current_pat_client_id_code]})
 
     if batch_mode:

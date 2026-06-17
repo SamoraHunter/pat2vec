@@ -112,7 +112,7 @@ def get_epic_encounters(
     id_field_name = "activity_PatientDurableKey"
     time_field = "activity_AdmissionDate"
 
-    if pat_batch.empty:
+    if pat_batch.empty and batch_mode:
         return pd.DataFrame({"client_idcode": [current_pat_client_id_code]})
 
     if batch_mode:

@@ -89,7 +89,7 @@ def get_current_pat_report_annotations(
         if len(filtered_report_annotations) > 0:
 
             processed_annotations = calculate_pretty_name_count_features(
-                filtered_report_annotations
+                filtered_report_annotations, suffix="reports"
             )
 
         else:

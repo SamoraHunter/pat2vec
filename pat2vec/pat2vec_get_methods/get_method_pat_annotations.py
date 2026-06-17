@@ -62,6 +62,14 @@ def get_current_pat_annotations(
 
     start_time = config_obj.start_time
 
+    # Apply annotation filters if provided in config_obj
+    if hasattr(config_obj, "filter_arguments") and config_obj.filter_arguments:
+        from pat2vec.util.post_processing_annotations import filter_annot_dataframe2
+
+        batch_epr_docs_annotations = filter_annot_dataframe2(
+            batch_epr_docs_annotations, config_obj.filter_arguments
+        )
+
     p_bar_entry = "annotations_epr"
 
     update_pbar(
@@ -82,6 +90,24 @@ def get_current_pat_annotations(
     # Filter the batch_epr_docs_annotations DataFrame based on the target_date_range
     if batch_epr_docs_annotations is not None:
 
+        # Standardize the time column name if 'updatetime' is missing but 'basicobs_entered' exists
+        if (
+            "updatetime" not in batch_epr_docs_annotations.columns
+            and "basicobs_entered" in batch_epr_docs_annotations.columns
+        ):
+            batch_epr_docs_annotations = batch_epr_docs_annotations.rename(
+                columns={"basicobs_entered": "updatetime"}
+            )
+
+        # Support Epic-style CreatedWhen timestamps
+        if (
+            "updatetime" not in batch_epr_docs_annotations.columns
+            and "document_CreatedWhen" in batch_epr_docs_annotations.columns
+        ):
+            batch_epr_docs_annotations = batch_epr_docs_annotations.rename(
+                columns={"document_CreatedWhen": "updatetime"}
+            )
+
         # Filter the dataframe based on the target date range
         filtered_batch_epr_docs_annotations = filter_dataframe_by_timestamp(
             batch_epr_docs_annotations,
@@ -99,7 +125,7 @@ def get_current_pat_annotations(
 
             # Calculate pretty name count features for the filtered dataframe
             df_pat_target = calculate_pretty_name_count_features(
-                filtered_batch_epr_docs_annotations
+                filtered_batch_epr_docs_annotations, suffix="epr"
             )
 
         else:

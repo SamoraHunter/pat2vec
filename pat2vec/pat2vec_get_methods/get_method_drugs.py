@@ -3,12 +3,14 @@ from datetime import datetime, timezone
 from typing import Callable, Dict, List, Optional, Tuple, Union
 
 import pandas as pd
+import numpy as np
 from IPython.display import display
 
 from pat2vec.util.filter_dataframe_by_timestamp import filter_dataframe_by_timestamp
 from pat2vec.util.get_start_end_year_month import get_start_end_year_month
 from pat2vec.util.methods_get import convert_date
 from pat2vec.util.parse_date import validate_input_dates
+from pat2vec.pat2vec_get_methods.get_method_epic_orders import search_epic_orders
 
 DRUG_FIELDS = [
     "client_idcode",
@@ -345,6 +347,65 @@ def get_current_pat_drugs(
             output_filename=None,
             config_obj=config_obj,
         )
+
+    # --- Integrate Epic Orders for Drugs if enabled --- #
+    # This integration is for drugs, so we filter Epic orders
+    # to only include types that might represent medication orders.
+    if config_obj.main_options.get("epic_orders", False):
+        if config_obj.verbosity >= 1:
+            print("Fetching Epic Orders for drugs.")
+
+        epic_order_data = search_epic_orders(
+            cohort_searcher_with_terms_and_search=cohort_searcher_with_terms_and_search,
+            patient_durable_keys=current_pat_client_id_code,
+            id_field_name="document_PatientDurableKey",
+            time_field="document_UpdatedWhen",  # Use UpdatedWhen as primary time for orders
+            fields_override=[
+                "document_PatientDurableKey",
+                "document_UpdatedWhen",
+                "document_Name",
+                "document_Content",
+                "document_OrderClass",
+                "id",
+            ],
+            start_year=start_year,
+            start_month=start_month,
+            start_day=start_day,
+            end_year=end_year,
+            end_month=end_month,
+            end_day=end_day,
+            additional_custom_search_string='document_OrderClass:("Medication")',  # Filter for medication orders
+            index_name="epic_orders",
+            output_filename=None,
+            config_obj=config_obj,
+        )
+
+        if not epic_order_data.empty:
+            # Standardize column names to match 'order' schema
+            epic_order_data.rename(
+                columns={
+                    "document_PatientDurableKey": "client_idcode",
+                    "document_UpdatedWhen": "order_createdwhen",  # Map to createdwhen for consistency
+                    "document_Name": "order_name",
+                    "document_Content": "order_summaryline",
+                    "id": "order_guid",
+                },
+                inplace=True,
+            )
+
+            # Add/ensure other expected columns from 'order', filling with NaN if not present
+            for col in [
+                "order_entered",
+                "order_performeddtm",
+                "order_holdreasontext",
+                "clientvisit_visitidcode",
+            ]:
+                if col not in epic_order_data.columns:
+                    epic_order_data[col] = np.nan
+            epic_order_data["order_typecode"] = "medication"  # Explicitly set type
+
+            # Concatenate Epic order data with existing drugs data
+            drugs = pd.concat([drugs, epic_order_data], ignore_index=True)
 
     if len(drugs) == 0:
         return pd.DataFrame({"client_idcode": [current_pat_client_id_code]})

@@ -113,7 +113,7 @@ def get_epic_orders(
     id_field_name = "document_PatientDurableKey"
     time_field = "document_UpdatedWhen"
 
-    if pat_batch.empty:
+    if pat_batch.empty and batch_mode:
         return pd.DataFrame({"client_idcode": [current_pat_client_id_code]})
 
     if batch_mode:

@@ -111,7 +111,7 @@ def get_current_pat_textual_obs_annotations(
         if len(filtered_textual_obs_annotations) > 0:
 
             processed_annotations = calculate_pretty_name_count_features(
-                filtered_textual_obs_annotations
+                filtered_textual_obs_annotations, suffix="textual_obs"
             )
 
         else:

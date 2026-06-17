@@ -269,7 +269,7 @@ def get_bmi_features(
         )
 
     # Check if we have BMI calculation data
-    bmi_calculation_data = current_pat_raw_bmi[
+    bmi_calculation_data = current_pat_raw_bmi[  # type: ignore
         current_pat_raw_bmi["obscatalogmasteritem_displayname"] == "OBS BMI Calculation"
     ]
 

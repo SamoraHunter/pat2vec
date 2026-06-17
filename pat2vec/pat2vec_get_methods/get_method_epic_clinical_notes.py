@@ -11,7 +11,7 @@ from pat2vec.util.parse_date import validate_input_dates
 EPIC_CLINICAL_NOTES_FIELDS = [
     "document_PatientDurableKey",
     "document_CreatedWhen",
-    "document_ServiceDate",
+    "document_ServiceDate",  # Re-added as it might be used in some contexts
     "document_Name",
     "document_Author",
     "document_AuthorSpecialty",
@@ -24,7 +24,7 @@ def search_epic_clinical_notes(
     cohort_searcher_with_terms_and_search=None,
     patient_durable_keys=None,
     id_field_name="document_PatientDurableKey",
-    time_field="document_ServiceDate",
+    time_field="document_CreatedWhen",
     fields_override: Optional[List[str]] = None,
     start_year: Union[int, str] = 1995,
     start_month: Union[int, str] = 1,
@@ -110,9 +110,9 @@ def get_epic_clinical_notes(
     )
 
     id_field_name = "document_PatientDurableKey"
-    time_field = "document_ServiceDate"
+    time_field = "document_CreatedWhen"
 
-    if pat_batch.empty:
+    if pat_batch.empty and batch_mode:
         return pd.DataFrame({"client_idcode": [current_pat_client_id_code]})
 
     if batch_mode:

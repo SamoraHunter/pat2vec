@@ -226,7 +226,12 @@ def get_appointments(
             config_obj=config_obj,
         )
 
-    current_pat_raw.rename(columns={"HospitalID": "client_idcode"}, inplace=True)
+    if "HospitalID" in current_pat_raw.columns:
+        current_pat_raw.rename(columns={"HospitalID": "client_idcode"}, inplace=True)
+
+    # Ensure client_idcode is present for grouping
+    if "client_idcode" not in current_pat_raw.columns:
+        current_pat_raw["client_idcode"] = current_pat_client_id_code
 
     if len(current_pat_raw) == 0:
         return pd.DataFrame({"client_idcode": [current_pat_client_id_code]})

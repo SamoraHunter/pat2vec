@@ -13,7 +13,7 @@ EPIC_MEDICAL_HISTORY_FIELDS = [
     "document_CreatedWhen",
     "document_Name",
     "document_Diagnosis",
-    "document_Status",
+    "document_Comment",  # Changed to match generator
     "document_SourceId",
     "id",
 ]
@@ -111,7 +111,7 @@ def get_epic_medical_history(
     id_field_name = "document_PatientDurableKey"
     time_field = "document_CreatedWhen"
 
-    if pat_batch.empty:
+    if pat_batch.empty and batch_mode:
         return pd.DataFrame({"client_idcode": [current_pat_client_id_code]})
 
     if batch_mode:
@@ -160,12 +160,12 @@ def get_epic_medical_history(
             sanitized_diag = "".join(c if c.isalnum() else "_" for c in diag_val)
             features[f"epic_med_hist_diag_{sanitized_diag}"] = 1
 
-    # Extract binary features based on status
-    if "document_Status" in current_pat_raw.columns:
-        unique_statuses = current_pat_raw["document_Status"].dropna().unique()
-        for status_val in unique_statuses:
-            sanitized_status = "".join(c if c.isalnum() else "_" for c in status_val)
-            features[f"epic_med_hist_status_{sanitized_status}"] = 1
+    # Extract binary features based on document_Comment
+    if "document_Comment" in current_pat_raw.columns:
+        unique_comments = current_pat_raw["document_Comment"].dropna().unique()
+        for comment_val in unique_comments:
+            sanitized_comment = "".join(c if c.isalnum() else "_" for c in comment_val)
+            features[f"epic_med_hist_comment_{sanitized_comment}"] = 1
 
     if config_obj.verbosity >= 6:
         display(features)

@@ -10,6 +10,9 @@ from scipy import stats
 from pat2vec.util.filter_dataframe_by_timestamp import filter_dataframe_by_timestamp
 from pat2vec.util.get_start_end_year_month import get_start_end_year_month
 from pat2vec.util.parse_date import validate_input_dates
+from pat2vec.pat2vec_get_methods.get_method_epic_lab_results import (
+    search_epic_lab_results,
+)
 
 BLOODS_FIELDS = [
     "client_idcode",
@@ -171,7 +174,7 @@ def get_current_pat_bloods(
 
     bloods_time_field = config_obj.bloods_time_field
 
-    if pat_batch.empty:
+    if pat_batch.empty and batch_mode:
         return pd.DataFrame({"client_idcode": [current_pat_client_id_code]})
 
     if batch_mode:
@@ -200,6 +203,61 @@ def get_current_pat_bloods(
             output_filename=None,
             config_obj=config_obj,
         )
+
+    # --- Integrate Epic Lab Results if enabled ---
+    if config_obj.main_options.get("epic_lab_results", False):
+        if config_obj.verbosity >= 1:
+            print("Fetching Epic Lab Results for bloods.")
+
+        epic_lab_data = search_epic_lab_results(
+            cohort_searcher_with_terms_and_search=cohort_searcher_with_terms_and_search,
+            patient_durable_keys=current_pat_client_id_code,
+            id_field_name="document_PatientDurableKey",
+            time_field="document_CollectedDate",  # Use CollectedDate as primary time for labs
+            fields_override=[
+                "document_PatientDurableKey",
+                "document_CollectedDate",
+                "document_Name",
+                "document_Fields.valueNum",
+                "id",  # Use Epic's 'id' as a guid
+            ],
+            start_year=start_year,
+            start_month=start_month,
+            start_day=start_day,
+            end_year=end_year,
+            end_month=end_month,
+            end_day=end_day,
+            output_filename=None,
+            config_obj=config_obj,
+        )
+
+        if not epic_lab_data.empty:
+            # Standardize column names to match basic_observations for bloods processing
+            epic_lab_data.rename(
+                columns={
+                    "document_PatientDurableKey": "client_idcode",
+                    "document_CollectedDate": "basicobs_entered",
+                    "document_Name": "basicobs_itemname_analysed",
+                    "document_Fields.valueNum": "basicobs_value_numeric",
+                    "id": "basicobs_guid",  # Use Epic's 'id' as the guid
+                },
+                inplace=True,
+            )
+
+            # Add/ensure other expected columns from basic_observations, filling with NaN if not present
+            for col in ["clientvisit_serviceguid", "updatetime"]:
+                if col not in epic_lab_data.columns:
+                    epic_lab_data[col] = np.nan
+
+            # Ensure basicobs_value_numeric is numeric
+            epic_lab_data["basicobs_value_numeric"] = pd.to_numeric(
+                epic_lab_data["basicobs_value_numeric"], errors="coerce"
+            )
+
+            # Concatenate Epic lab data with existing bloods data
+            current_pat_bloods = pd.concat(
+                [current_pat_bloods, epic_lab_data], ignore_index=True
+            )
 
     # Ensure only target columns are present. Useful if source data isn't directly from ES.
     target_cols = [
