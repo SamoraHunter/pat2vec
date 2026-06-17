@@ -11,8 +11,8 @@ from pat2vec.pat2vec_search.cogstack_search_methods import (
 )
 from pat2vec.util.get_dummy_data_cohort_searcher import (
     cohort_searcher_with_terms_and_search_dummy,
+    generate_uuid_list,
 )
-from pat2vec.util.pre_processing import generate_uuid_list
 
 logger = logging.getLogger(__name__)
 
@@ -307,6 +307,120 @@ def get_treatment_records_by_drug_order_name(
     return filtered_drug_records
 
 
+def get_treatment_records_by_drug_order_name_epic(
+    pat2vec_obj: Any,
+    term: str,
+    verbose: int = 0,
+    column_fields_to_match: List[str] = ["document_Name", "document_Content"],
+) -> pd.DataFrame:
+    """Retrieves drug order records from the 'epic_orders' index matching a search term."""
+    if pat2vec_obj is None:
+        raise ValueError("pat2vec_obj cannot be None")
+
+    config_obj = pat2vec_obj.config_obj
+    start_date = f"{config_obj.global_start_year}-{config_obj.global_start_month}-{config_obj.global_start_day}"
+    end_date = f"{config_obj.global_end_year}-{config_obj.global_end_month}-{config_obj.global_end_day}"
+
+    field_list = [
+        "document_PatientDurableKey",
+        "document_OrderClass",
+        "document_Name",
+        "document_Content",
+        "document_UpdatedWhen",
+        "id",
+    ]
+
+    if verbose >= 5:
+        logger.info(f"Searching epic_orders for drug term: {term}")
+
+    if not pat2vec_obj.config_obj.testing:
+        # Perform fuzzy search in epic_orders index
+        # Filter for Medication class if possible via query string
+        search_string = (
+            f'document_OrderClass:("Medication") AND "{term}" '
+            f"AND document_UpdatedWhen:[{start_date} TO {end_date}]"
+        )
+        drug_treatment_docs = cohort_searcher_no_terms_fuzzy(
+            index_name="epic_orders",
+            fields_list=field_list,
+            search_string=search_string,
+        )
+    else:
+        search_string = (
+            f'document_OrderClass:("Medication") AND "{term}" '
+            f"AND document_UpdatedWhen:[{start_date} TO {end_date}]"
+        )
+        drug_treatment_docs = cohort_searcher_with_terms_and_search_dummy(
+            index_name="epic_orders",
+            fields_list=field_list,
+            term_name="document_PatientDurableKey",
+            entered_list=generate_uuid_list(
+                random.randint(0, 10), random.choice(["P", "V"])
+            ),
+            search_string=search_string,
+        )
+
+    if drug_treatment_docs is None:
+        drug_treatment_docs = pd.DataFrame()
+
+    if drug_treatment_docs.empty:
+        return pd.DataFrame()
+
+    # Standardize column name for fuzzy matching logic compatibility
+    if "document_PatientDurableKey" in drug_treatment_docs.columns:
+        drug_treatment_docs.rename(
+            columns={"document_PatientDurableKey": "client_idcode"}, inplace=True
+        )
+    if "id" in drug_treatment_docs.columns:
+        drug_treatment_docs.rename(columns={"id": "order_guid"}, inplace=True)
+
+    def find_matching_columns(row, search_term):
+        matched_cols = []
+        for field in column_fields_to_match:
+            if field in row and pd.notna(row[field]):
+                match_score = fuzz.partial_ratio(
+                    str(row[field]).lower(), search_term.lower()
+                )
+                if match_score >= 80:
+                    matched_cols.append(field)
+        return matched_cols if matched_cols else None
+
+    column_name = f"matched_{term.lower().replace(' ', '_')}"
+    drug_treatment_docs[column_name] = drug_treatment_docs.apply(
+        lambda row: find_matching_columns(row, term), axis=1
+    )
+
+    filtered_drug_records = drug_treatment_docs[
+        drug_treatment_docs[column_name].notna()
+    ]
+
+    # Standardize remaining columns for merge compatibility
+    if not filtered_drug_records.empty:
+        if (
+            "document_Name" in filtered_drug_records.columns
+            and "order_name" not in filtered_drug_records.columns
+        ):
+            filtered_drug_records["order_name"] = filtered_drug_records["document_Name"]
+        if (
+            "document_Content" in filtered_drug_records.columns
+            and "order_summaryline" not in filtered_drug_records.columns
+        ):
+            filtered_drug_records["order_summaryline"] = filtered_drug_records[
+                "document_Content"
+            ]
+        if (
+            "document_UpdatedWhen" in filtered_drug_records.columns
+            and "order_entered" not in filtered_drug_records.columns
+        ):
+            filtered_drug_records["order_entered"] = filtered_drug_records[
+                "document_UpdatedWhen"
+            ]
+        if "order_holdreasontext" not in filtered_drug_records.columns:
+            filtered_drug_records["order_holdreasontext"] = None
+
+    return filtered_drug_records
+
+
 # treatment_docs = get_treatment_records_by_drug_order_name(
 #     pat2vec_obj=pat2vec_obj,
 #     term="biktarvy",
@@ -371,14 +485,29 @@ def iterative_drug_treatment_search(
         if verbose >= 1:
             logger.info(f"Searching for term: {term}")
 
-        # Retrieve treatment records for the current search term
-        treatment_records = get_treatment_records_by_drug_order_name(
+        # Retrieve treatment records from both EPR 'order' and 'epic_orders' indices
+        epr_records = get_treatment_records_by_drug_order_name(
             pat2vec_obj=pat2vec_obj,
             term=term,
             verbose=verbose,
             all_fields=all_fields,
             column_fields_to_match=column_fields_to_match,
         )
+
+        epic_records = pd.DataFrame()
+        if pat2vec_obj.config_obj.main_options.get("epic_orders"):
+            epic_records = get_treatment_records_by_drug_order_name_epic(
+                pat2vec_obj=pat2vec_obj,
+                term=term,
+                verbose=verbose,
+            )
+
+        if not epr_records.empty and not epic_records.empty:
+            treatment_records = pd.concat(
+                [epr_records, epic_records], ignore_index=True
+            )
+        else:
+            treatment_records = epr_records if not epr_records.empty else epic_records
 
         if treatment_records.empty:
             if verbose >= 1:
