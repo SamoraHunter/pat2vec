@@ -22,6 +22,7 @@ MAPPINGS = [
         "raw_bloods",
         "client_idcode",
         ["client_idcode", "basicobs_entered"],
+        None,
     ),
     (
         "pre_drugs_batch_path",
@@ -29,6 +30,7 @@ MAPPINGS = [
         "raw_drugs",
         "client_idcode",
         ["client_idcode", "order_entered"],
+        None,
     ),
     (
         "pre_diagnostics_batch_path",
@@ -36,6 +38,7 @@ MAPPINGS = [
         "raw_diagnostics",
         "client_idcode",
         ["client_idcode", "order_entered"],
+        None,
     ),
     (
         "pre_news_batch_path",
@@ -43,6 +46,7 @@ MAPPINGS = [
         "raw_news",
         "client_idcode",
         ["client_idcode", "observationdocument_recordeddtm"],
+        None,
     ),
     (
         "pre_bmi_batch_path",
@@ -50,6 +54,71 @@ MAPPINGS = [
         "raw_bmi",
         "client_idcode",
         ["client_idcode", "observationdocument_recordeddtm"],
+        None,
+    ),
+    (
+        "pre_obs_batch_path",
+        "raw_data",
+        "raw_smoking",
+        "client_idcode",
+        ["client_idcode", "observationdocument_recordeddtm"],
+        "CORE_SmokingStatus",
+    ),
+    (
+        "pre_obs_batch_path",
+        "raw_data",
+        "raw_vte",
+        "client_idcode",
+        ["client_idcode", "observationdocument_recordeddtm"],
+        "CORE_VTE_STATUS",
+    ),
+    (
+        "pre_obs_batch_path",
+        "raw_data",
+        "raw_resus",
+        "client_idcode",
+        ["client_idcode", "observationdocument_recordeddtm"],
+        "CORE_RESUS_STATUS",
+    ),
+    (
+        "pre_obs_batch_path",
+        "raw_data",
+        "raw_core_02",
+        "client_idcode",
+        ["client_idcode", "observationdocument_recordeddtm"],
+        "CORE_SpO2",
+    ),
+    (
+        "pre_obs_batch_path",
+        "raw_data",
+        "raw_bed",
+        "client_idcode",
+        ["client_idcode", "observationdocument_recordeddtm"],
+        "CORE_BedNumber3",
+    ),
+    (
+        "pre_obs_batch_path",
+        "raw_data",
+        "raw_hospsite",
+        "client_idcode",
+        ["client_idcode", "observationdocument_recordeddtm"],
+        "CORE_HospitalSite",
+    ),
+    (
+        "pre_obs_batch_path",
+        "raw_data",
+        "raw_obs",
+        "client_idcode",
+        ["client_idcode", "observationdocument_recordeddtm"],
+        None,
+    ),
+    (
+        "pre_misc_batch_path",
+        "raw_data",
+        "raw_covid",
+        "client_idcode",
+        ["client_idcode", "basicobs_entered"],
+        None,
     ),
     (
         "pre_demo_batch_path",
@@ -57,6 +126,7 @@ MAPPINGS = [
         "raw_demographics",
         "client_idcode",
         ["client_idcode", "updatetime"],
+        None,
     ),
     (
         "pre_document_batch_path",
@@ -64,6 +134,7 @@ MAPPINGS = [
         "raw_epr_docs",
         "client_idcode",
         ["client_idcode", "updatetime"],
+        None,
     ),
     (
         "pre_document_batch_path_mct",
@@ -71,6 +142,7 @@ MAPPINGS = [
         "raw_mct_docs",
         "client_idcode",
         ["client_idcode", "observationdocument_recordeddtm"],
+        None,
     ),
     (
         "pre_textual_obs_document_batch_path",
@@ -78,6 +150,7 @@ MAPPINGS = [
         "raw_textual_obs",
         "client_idcode",
         ["client_idcode", "basicobs_entered"],
+        None,
     ),
     (
         "pre_document_batch_path_reports",
@@ -85,6 +158,7 @@ MAPPINGS = [
         "raw_reports",
         "client_idcode",
         ["client_idcode", "updatetime"],
+        None,
     ),
     (
         "pre_appointments_batch_path",
@@ -92,6 +166,72 @@ MAPPINGS = [
         "raw_appointments",
         "HospitalID",
         ["HospitalID", "AppointmentDateTime"],
+        None,
+    ),
+    # Epic Raw Data
+    (
+        "pre_epic_encounters_batch_path",
+        "raw_data",
+        "raw_epic_encounters",
+        "client_idcode",
+        ["client_idcode", "activity_AdmissionDate"],
+        None,
+    ),
+    (
+        "pre_epic_clinical_notes_batch_path",
+        "raw_data",
+        "raw_epic_clinical_notes",
+        "client_idcode",
+        ["client_idcode", "document_CreatedWhen"],
+        None,
+    ),
+    (
+        "pre_epic_medical_history_batch_path",
+        "raw_data",
+        "raw_epic_medical_history",
+        "client_idcode",
+        ["client_idcode", "document_CreatedWhen"],
+        None,
+    ),
+    (
+        "pre_epic_orders_batch_path",
+        "raw_data",
+        "raw_epic_orders",
+        "client_idcode",
+        ["client_idcode", "document_UpdatedWhen"],
+        None,
+    ),
+    (
+        "pre_epic_lab_results_batch_path",
+        "raw_data",
+        "raw_epic_lab_results",
+        "client_idcode",
+        ["client_idcode", "document_CollectedDate"],
+        None,
+    ),
+    (
+        "pre_epic_patients_batch_path",
+        "raw_data",
+        "raw_epic_patients",
+        "client_idcode",
+        ["client_idcode", "patient_CreatedWhen"],
+        None,
+    ),
+    (
+        "pre_epic_imaging_reports_batch_path",
+        "raw_data",
+        "raw_epic_imaging_reports",
+        "client_idcode",
+        ["client_idcode", "document_CreatedWhen"],
+        None,
+    ),
+    (
+        "pre_epic_clinical_notes_appointments_batch_path",
+        "raw_data",
+        "raw_epic_clinical_notes_appointments",
+        "client_idcode",
+        ["client_idcode", "document_CreatedWhen"],
+        None,
     ),
     # Annotations
     (
@@ -100,6 +240,7 @@ MAPPINGS = [
         "ann_epr_docs",
         "client_idcode",
         ["client_idcode", "updatetime"],
+        None,
     ),
     (
         "pre_document_annotation_batch_path_mct",
@@ -107,6 +248,7 @@ MAPPINGS = [
         "ann_mct_docs",
         "client_idcode",
         ["client_idcode", "observationdocument_recordeddtm"],
+        None,
     ),
     (
         "pre_textual_obs_annotation_batch_path",
@@ -114,6 +256,7 @@ MAPPINGS = [
         "ann_textual_obs",
         "client_idcode",
         ["client_idcode", "basicobs_entered"],
+        None,
     ),
     (
         "pre_document_annotation_batch_path_reports",
@@ -121,6 +264,47 @@ MAPPINGS = [
         "ann_reports",
         "client_idcode",
         ["client_idcode", "updatetime"],
+        None,
+    ),
+    (
+        "pre_epic_clinical_notes_annotation_batch_path",
+        "annotations",
+        "ann_epic_clinical_notes",
+        "client_idcode",
+        ["client_idcode", "document_CreatedWhen"],
+        None,
+    ),
+    (
+        "pre_epic_clinical_notes_appointments_annotation_batch_path",
+        "annotations",
+        "ann_epic_clinical_notes_appointments",
+        "client_idcode",
+        ["client_idcode", "document_CreatedWhen"],
+        None,
+    ),
+    (
+        "pre_epic_medical_history_annotation_batch_path",
+        "annotations",
+        "ann_epic_medical_history",
+        "client_idcode",
+        ["client_idcode", "document_CreatedWhen"],
+        None,
+    ),
+    (
+        "pre_epic_imaging_reports_annotation_batch_path",
+        "annotations",
+        "ann_epic_imaging_reports",
+        "client_idcode",
+        ["client_idcode", "document_CreatedWhen"],
+        None,
+    ),
+    (
+        "pre_epic_orders_annotation_batch_path",
+        "annotations",
+        "ann_epic_orders",
+        "client_idcode",
+        ["client_idcode", "document_CreatedWhen"],
+        None,
     ),
     # Features
     (
@@ -129,6 +313,7 @@ MAPPINGS = [
         "features",
         "client_idcode",
         ["client_idcode"],
+        None,
     ),
 ]
 
@@ -216,7 +401,7 @@ def migrate_csv_to_db(config_obj: Any):
                     connection.execute(CreateSchema(schema))
 
     # 2. Iterate Mappings
-    for dir_attr, schema, table, id_col, index_columns in MAPPINGS:
+    for dir_attr, schema, table, id_col, index_columns, filter_val in MAPPINGS:
         if not hasattr(config_obj, dir_attr):
             logger.warning(
                 f"Config object missing attribute {dir_attr}, skipping {table}"
@@ -247,6 +432,12 @@ def migrate_csv_to_db(config_obj: Any):
         for i, f in enumerate(tqdm(files, desc=f"Reading {table}")):
             try:
                 df = pd.read_csv(os.path.join(dir_path, f))
+
+                if filter_val and not df.empty:
+                    col = "obscatalogmasteritem_displayname"
+                    if col in df.columns:
+                        df = df[df[col] == filter_val]
+
                 # Ensure ID column is present if not in CSV (e.g. inferred from filename)
                 # But usually pat2vec saves ID in CSV.
                 # Just in case for features which might strictly use filename as ID sometimes?
@@ -257,7 +448,8 @@ def migrate_csv_to_db(config_obj: Any):
                 if table == "raw_appointments" and id_col not in df.columns:
                     pass
 
-                dfs.append(df)
+                if not df.empty:
+                    dfs.append(df)
 
                 if len(dfs) >= batch_size:
                     _write_batch(dfs, engine, schema, table)
@@ -269,7 +461,7 @@ def migrate_csv_to_db(config_obj: Any):
             _write_batch(dfs, engine, schema, table)
 
     # 3. Create Indexes
-    for dir_attr, schema, table, id_col, index_columns in MAPPINGS:
+    for dir_attr, schema, table, id_col, index_columns, filter_val in MAPPINGS:
         create_indexes(engine, schema, table, index_columns)
 
     logger.info("Migration completed.")

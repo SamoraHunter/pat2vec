@@ -139,6 +139,14 @@ def generate_schema_from_cluster(
             "observations",
             "order",
             "pims_apps*",
+            "epic_encounters",
+            "epic_clinical_notes",
+            "epic_medical_history",
+            "epic_orders",
+            "epic_lab_results",
+            "epic_patients",
+            "epic_imaging_reports",
+            "epic_clinical_notes_appointments",
         ]
 
     schemas = {}

@@ -51,34 +51,44 @@ def generate_date_list(
         chronological_start = start_date
         chronological_end = start_date + time_delta
 
-    # Use the pre-constructed datetime objects from the config object
-    global_start_date = config_obj.global_start_date
-    global_end_date = config_obj.global_end_date
-
     # Make all datetimes timezone-aware using the modern 'zoneinfo'
     # This assumes all naive datetimes are in UTC.
     utc_tz = ZoneInfo("UTC")
-    if chronological_start.tzinfo is None:
-        chronological_start = chronological_start.replace(tzinfo=utc_tz)
-    if chronological_end.tzinfo is None:
-        chronological_end = chronological_end.replace(tzinfo=utc_tz)
-    if global_start_date.tzinfo is None:
-        global_start_date = global_start_date.replace(tzinfo=utc_tz)
-    if global_end_date.tzinfo is None:
-        # Set the time to the very end of the day to make the boundary inclusive
-        global_end_date = datetime(
-            global_end_date.year,
-            global_end_date.month,
-            global_end_date.day,
-            23,
-            59,
-            59,
-            999999,
-        ).replace(tzinfo=utc_tz)
+
+    def _ensure_utc(dt):
+        if dt is None:
+            return None
+        return dt.replace(tzinfo=utc_tz) if dt.tzinfo is None else dt.astimezone(utc_tz)
+
+    chronological_start = _ensure_utc(chronological_start)
+    chronological_end = _ensure_utc(chronological_end)
+
+    global_start_limit = _ensure_utc(getattr(config_obj, "global_start_date", None))
+    global_end_limit = _ensure_utc(getattr(config_obj, "global_end_date", None))
+
+    # If end limit is exactly at midnight, it likely represents an inclusive date.
+    # Adjust to end of day to ensure boundary overlaps are captured correctly.
+    if (
+        global_end_limit
+        and global_end_limit.hour == 0
+        and global_end_limit.minute == 0
+        and global_end_limit.second == 0
+    ):
+        global_end_limit = global_end_limit.replace(
+            hour=23, minute=59, second=59, microsecond=999999
+        )
 
     # Clamp the calculated range to the global boundaries
-    final_start_date = max(chronological_start, global_start_date)
-    final_end_date = min(chronological_end, global_end_date)
+    final_start_date = (
+        max(chronological_start, global_start_limit)
+        if global_start_limit
+        else chronological_start
+    )
+    final_end_date = (
+        min(chronological_end, global_end_limit)
+        if global_end_limit
+        else chronological_end
+    )
 
     # Use logging instead of print
     if getattr(config_obj, "verbosity", 0) >= 1:

@@ -195,6 +195,10 @@ def save_patient_features(
         ValueError: If an unknown `storage_backend` is specified.
         Exception: Propagates exceptions from database operations.
     """
+    if features_df.empty:
+        logging.debug(f"features_df is empty for patient {patient_id}, skipping save.")
+        return
+
     if config_obj.storage_backend == "database":
         try:
             engine = config_obj.db_engine
@@ -320,7 +324,16 @@ def save_patient_features(
             raise
 
     elif config_obj.storage_backend == "file":
-        pass
+        output_dir = os.path.join(config_obj.current_pat_lines_path, str(patient_id))
+        os.makedirs(output_dir, exist_ok=True)
+        output_file = os.path.join(output_dir, f"{patient_id}.csv")
+        if overwrite and os.path.exists(output_file):
+            os.remove(output_file)
+            logging.debug(f"Overwriting existing feature file: {output_file}")
+        features_df.to_csv(
+            output_file, index=False, mode="a", header=not os.path.exists(output_file)
+        )
+        logging.debug(f"Saved features for patient {patient_id} to {output_file}")
     else:
         raise ValueError(f"Unknown storage_backend: {config_obj.storage_backend}")
 
