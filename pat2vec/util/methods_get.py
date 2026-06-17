@@ -687,6 +687,9 @@ def create_folders(all_patient_list: List[str], config_obj: Any = None) -> None:
             for path in [
                 pre_annotation_path,
                 pre_annotation_path_mrc,
+                config_obj.pre_epic_clinical_notes_annotation_batch_path,
+                config_obj.pre_epic_clinical_notes_appointments_annotation_batch_path,
+                config_obj.pre_epic_imaging_reports_annotation_batch_path,
                 current_pat_lines_path,
             ]:
                 folder_path = os.path.join(path, str(patient_id))
@@ -712,6 +715,9 @@ def create_folders(all_patient_list: List[str], config_obj: Any = None) -> None:
             for path in [
                 pre_annotation_path,
                 pre_annotation_path_mrc,
+                config_obj.pre_epic_clinical_notes_annotation_batch_path,
+                config_obj.pre_epic_clinical_notes_appointments_annotation_batch_path,
+                config_obj.pre_epic_imaging_reports_annotation_batch_path,
                 current_pat_lines_path,
             ]:
                 folder_path = (path + "/" + str(patient_id)).replace("//", "/")
@@ -751,6 +757,19 @@ def create_folders_for_pat(patient_id: str, config_obj: Any = None) -> None:
         for path in [
             pre_annotation_path,
             pre_annotation_path_mrc,
+            config_obj.pre_epic_clinical_notes_annotation_batch_path,
+            config_obj.pre_epic_clinical_notes_appointments_annotation_batch_path,
+            config_obj.pre_epic_imaging_reports_annotation_batch_path,
+            config_obj.pre_demo_batch_path,
+            config_obj.pre_bloods_batch_path,
+            config_obj.pre_drugs_batch_path,
+            config_obj.pre_diagnostics_batch_path,
+            config_obj.pre_news_batch_path,
+            config_obj.pre_bmi_batch_path,
+            config_obj.pre_appointments_batch_path,
+            config_obj.pre_textual_obs_document_batch_path,
+            config_obj.pre_document_batch_path_reports,
+            config_obj.pre_document_batch_path_mct,
             current_pat_lines_path,
         ]:
             folder_path = os.path.join(path, str(patient_id))
@@ -775,6 +794,9 @@ def create_folders_for_pat(patient_id: str, config_obj: Any = None) -> None:
         for path in [
             pre_annotation_path,
             pre_annotation_path_mrc,
+            config_obj.pre_epic_clinical_notes_annotation_batch_path,
+            config_obj.pre_epic_clinical_notes_appointments_annotation_batch_path,
+            config_obj.pre_epic_imaging_reports_annotation_batch_path,
             current_pat_lines_path,
         ]:
             folder_path = (path + "/" + str(patient_id)).replace("//", "/")

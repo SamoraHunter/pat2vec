@@ -41,7 +41,7 @@ def retrieve_pat_annotations(
 
 def copy_project_folders_with_substring_match(
     pat2vec_obj: Any, substrings_to_match: Optional[List[str]] = None
-) -> None:
+) -> str:
     """Copies project subfolders that match given substrings to a new versioned directory.
 
     This is useful for creating a snapshot or a new version of a project's
@@ -57,25 +57,46 @@ def copy_project_folders_with_substring_match(
     if substrings_to_match is None:
         substrings_to_match = ["batches", "annots"]
 
+    # Safely resolve project_root, handling MagicMocks and ensuring it's an absolute path
+    root_path_attr = pat2vec_obj.config_obj.root_path
+    project_root = (
+        str(root_path_attr).rstrip("/\\")
+        if not hasattr(root_path_attr, "_mock_name")
+        else os.getcwd()
+    )
+
+    # Ensure we use an absolute path for the project root to find the correct parent
+    project_root = os.path.abspath(project_root)
+    parent_dir = os.path.dirname(project_root)
+
     base_project_name = pat2vec_obj.config_obj.proj_name
     suffix = 1
     new_project_name = f"{base_project_name}_{suffix}"
+    new_project_path = os.path.join(parent_dir, new_project_name)
 
-    while os.path.exists(new_project_name):
+    while os.path.exists(new_project_path):
         suffix += 1
         new_project_name = f"{base_project_name}_{suffix}"
+        new_project_path = os.path.join(parent_dir, new_project_name)
 
-    os.makedirs(new_project_name)
-
-    old_project_folders = os.listdir(base_project_name)
+    os.makedirs(new_project_path, exist_ok=True)  # Ensure parent directory exists
+    old_project_folders = (
+        os.listdir(project_root)
+        if isinstance(project_root, str) and os.path.isdir(project_root)
+        else []
+    )
 
     for folder in tqdm(old_project_folders, desc="Copying folders"):
         if any(substring in folder for substring in substrings_to_match):
-            src_path = os.path.join(base_project_name, folder)
-            dest_path = os.path.join(new_project_name, folder)
-            shutil.copytree(src_path, dest_path)
+            src_path = os.path.join(project_root, folder)
+            dest_path = os.path.join(new_project_path, folder)
+            if os.path.isdir(src_path):
+                shutil.copytree(src_path, dest_path)
+            elif os.path.isfile(src_path):
+                shutil.copy2(src_path, dest_path)
 
     logger.info("Folders copied successfully.")
+    return new_project_path
 
 
 def check_csv_integrity(

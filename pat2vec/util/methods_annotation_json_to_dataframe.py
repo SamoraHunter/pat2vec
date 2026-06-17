@@ -46,6 +46,10 @@ def json_to_dataframe(
     if any(json_data.values()):
         done = False
 
+        # Standardize document identifier column name to avoid conflict with MedCAT entity 'id'
+        # This is common in Epic tables where the primary key is 'id'.
+        target_guid_column = "document_guid" if guid_column == "id" else guid_column
+
         df_parts = []
 
         keys = list(json_data["entities"].keys())
@@ -75,32 +79,34 @@ def json_to_dataframe(
             "Subject_Confidence",
             "text_sample",
             "full_doc",
-            guid_column,
+            target_guid_column,
         ]
 
         for i in range(0, len(keys)):
 
             entities_data = json_data["entities"][keys[i]]
-            pretty_name = entities_data["pretty_name"]
-            cui = entities_data["cui"]
-            type_ids = entities_data["type_ids"]
-            types = entities_data["types"]
-            source_value = entities_data["source_value"]
-            detected_name = entities_data["detected_name"]
-            acc = entities_data["acc"]
-            context_similarity = entities_data["context_similarity"]
-            start = entities_data["start"]
-            end = entities_data["end"]
-            icd10 = entities_data["icd10"]
-            ontologies = entities_data["ontologies"]
-            snomed = entities_data["snomed"]
-            id = entities_data["id"]
-            meta_anns = entities_data["meta_anns"]
+            pretty_name = entities_data.get("pretty_name")
+            cui = entities_data.get("cui")
+            type_ids = entities_data.get("type_ids", [])
+            types = entities_data.get("types", [])
+            source_value = entities_data.get("source_value")
+            detected_name = entities_data.get("detected_name")
+            acc = entities_data.get("acc", 1.0)
+            context_similarity = entities_data.get("context_similarity", 1.0)
+            start = entities_data.get("start", 0)
+            end = entities_data.get("end", 0)
+            icd10 = entities_data.get("icd10", [])
+            ontologies = entities_data.get("ontologies", [])
+            snomed = entities_data.get("snomed", [])
+            id = entities_data.get("id")
+            meta_anns = entities_data.get("meta_anns", {})
 
             # Parse meta annotations
             parsed_meta_anns = parse_meta_anns(meta_anns)
 
-            mapped_annot_doc_entity = doc[text_column]
+            mapped_annot_doc_entity = (
+                str(doc[text_column]) if pd.notna(doc[text_column]) else ""
+            )
 
             document_len = len(mapped_annot_doc_entity)
 
@@ -112,7 +118,7 @@ def json_to_dataframe(
             if include_text_sample:
                 text_sample_value = mapped_annot_doc_entity[virtual_start:virtual_end]
 
-            updatetime = doc[time_column]
+            updatetime_value = doc[time_column]
 
             document_guid_value = doc[guid_column]
 
@@ -129,7 +135,7 @@ def json_to_dataframe(
             data = [
                 [
                     current_pat_client_id_code,
-                    updatetime,
+                    updatetime_value,
                     pretty_name,
                     cui,
                     type_ids,
@@ -174,6 +180,9 @@ def json_to_dataframe(
             raise e
 
     else:
+        # Standardize document identifier column name for empty DataFrames
+        target_guid_column = "document_guid" if guid_column == "id" else guid_column
+
         columns = [
             "client_idcode",
             time_column,
@@ -199,7 +208,7 @@ def json_to_dataframe(
             "Subject_Confidence",
             "text_sample",
             "full_doc",
-            guid_column,
+            target_guid_column,
         ]
 
         empty_df = pd.DataFrame(data=None, columns=columns)

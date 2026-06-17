@@ -151,10 +151,11 @@ def multi_annots_to_df(
 
     try:
         if not final_df.empty:  # Only join if there is data
-            if config_obj.add_icd10 and config_obj.add_opc4s:
-                final_df = join_icd10_OPC4S_codes_to_annot(df=final_df, inner=False)
-            elif config_obj.add_icd10:
+            # Apply mappings sequentially to allow multiple sources to contribute codes.
+            if config_obj.add_icd10:
                 final_df = join_icd10_codes_to_annot(df=final_df, inner=False)
+            if config_obj.add_opc4s:
+                final_df = join_icd10_OPC4S_codes_to_annot(df=final_df, inner=False)
     except Exception as e:
         if config_obj.verbosity >= 1:
             logger.warning(f"Error joining ICD10/OPC4S codes: {str(e)}")
