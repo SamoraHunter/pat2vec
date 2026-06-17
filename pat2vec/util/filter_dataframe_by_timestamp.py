@@ -54,11 +54,14 @@ def filter_dataframe_by_timestamp(
         except Exception:
             return pd.NaT
 
-    # Parse each value individually to handle mixed timezones and formats safely,
-    # then force the Series to a tz-aware datetime64[ns, UTC] dtype for safe comparison.
-    df_copy[timestamp_string] = pd.to_datetime(
-        df_copy[timestamp_string].apply(_parse_to_utc), utc=True, errors="coerce"
-    )
+    if timestamp_string in df_copy.columns:
+        # Parse each value individually to handle mixed timezones and formats safely,
+        # then force the Series to a tz-aware datetime64[ns, UTC] dtype for safe comparison.
+        df_copy[timestamp_string] = pd.to_datetime(
+            df_copy[timestamp_string].apply(_parse_to_utc), utc=True, errors="coerce"
+        )
+    else:
+        raise KeyError(f"Column '{timestamp_string}' not found in DataFrame.")
 
     # Drop NaN timestamps only if dropna is True
     if dropna:
@@ -67,7 +70,7 @@ def filter_dataframe_by_timestamp(
     # Create start and end datetime objects
     if all(v is not None for v in [start_year, start_month, start_day]):
         start_datetime = pd.Timestamp(
-            datetime(int(start_year), int(start_month), int(start_day), 0, 0, 0),
+            datetime(int(start_year), int(start_month), int(start_day)),
             tz="UTC",
         )
     else:
@@ -76,7 +79,7 @@ def filter_dataframe_by_timestamp(
 
     if all(v is not None for v in [end_year, end_month, end_day]):
         end_datetime = pd.Timestamp(
-            datetime(int(end_year), int(end_month), int(end_day), 23, 59, 59, 999999),
+            datetime(int(end_year), int(end_month), int(end_day), 23, 59, 59),
             tz="UTC",
         )
     else:
