@@ -24,6 +24,7 @@ EMPTY_ANNOT_COLS = [
     "icd10",
     "ontologies",
     "snomed",
+    "opcs4",
     "id",
     "Time_Value",
     "Time_Confidence",
@@ -57,10 +58,7 @@ def filter_annot_dataframe2(
     """
 
     # Initialize a boolean mask with True values for all rows
-    mask = pd.Series(True, index=dataframe.index)
-
-    if "cui" in dataframe.columns:
-        dataframe["cui"] = pd.to_numeric(dataframe["cui"], errors="coerce")
+    mask = pd.Series(True, index=dataframe.index)  # Keep this line
 
     # Apply filters based on the provided arguments
     for column, value in filter_args.items():
@@ -138,7 +136,18 @@ def produce_filtered_annotation_dataframe(
     if config_obj and getattr(config_obj, "storage_backend", "file") == "database":
         logger.info("Reading annotations from database...")
         try:
-            table_name = "ann_mct_docs" if mct else "ann_epr_docs"
+            if mct:
+                table_name = "ann_mct_docs"
+            elif filter_custom_args and "epic" in str(filter_custom_args):
+                # If custom args suggest an Epic source, try to determine which one.
+                # Defaulting to standard EPR for safety if ambiguous.
+                table_name = "ann_epr_docs"
+            else:
+                table_name = "ann_epr_docs"
+
+            # For the DB path, we want to optionally support multiple tables
+            # but usually this function is called with a specific context.
+
             logger.info(f"Reading from annotations.{table_name}")
             super_result = get_df_from_db(
                 config_obj, "annotations", table_name, patient_ids=pat_list
@@ -284,11 +293,26 @@ def join_icd10_codes_to_annot(df: pd.DataFrame, inner: bool = False) -> pd.DataF
         The DataFrame with ICD-10 codes joined.
     """
 
-    mfp = (
-        "../../snomed_icd10_map/data/tls_Icd10cmHumanReadableMap_US1000124_20230901.tsv"
+    mfp = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)),
+        "..",
+        "..",
+        "snomed_methods",
+        "snomed_icd10_map",
+        "data",
+        "tls_Icd10cmHumanReadableMap_US1000124_20230901.tsv",
     )
 
     mdf = pd.read_csv(mfp, sep="\t")
+
+    # Prevent column clashing by dropping existing placeholders from the annotation DataFrame
+    cols_to_drop = [
+        c
+        for c in mdf.columns
+        if c in df.columns and c not in ["cui", "referencedComponentId"]
+    ]
+    if cols_to_drop:
+        df = df.drop(columns=cols_to_drop)
 
     if inner:
         result = pd.merge(
@@ -320,9 +344,23 @@ def join_icd10_OPC4S_codes_to_annot(
     """
 
     # ../home/cogstack/samora/_data/gloabl_files/
-    mfp = "../../snomed_to_icd10_opcs4/map.csv"
+    mfp = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)),
+        "..",
+        "..",
+        "snomed_methods",
+        "snomed_to_icd10_opcs4",
+        "map.csv",
+    )
 
     mdf = pd.read_csv(mfp)
+
+    # Prevent column clashing by dropping existing placeholders from the annotation DataFrame
+    cols_to_drop = [
+        c for c in mdf.columns if c in df.columns and c not in ["cui", "conceptId"]
+    ]
+    if cols_to_drop:
+        df = df.drop(columns=cols_to_drop)
 
     if inner:
         result = pd.merge(df, mdf, left_on="cui", right_on="conceptId", how="inner")
@@ -578,6 +616,11 @@ def retrieve_pat_annots_mct_epr(
     columns_mct: Optional[List[str]] = None,
     columns_to: Optional[List[str]] = None,
     columns_report: Optional[List[str]] = None,
+    columns_epic_imaging_reports: Optional[List[str]] = None,
+    columns_epic_medical_history: Optional[List[str]] = None,
+    columns_epic_orders: Optional[List[str]] = None,
+    columns_epic_clinical_notes: Optional[List[str]] = None,
+    columns_epic_clinical_notes_appointments: Optional[List[str]] = None,
     merge_columns: bool = True,
 ) -> pd.DataFrame:
     """Retrieves and merges annotation data for a single patient from multiple sources (files or database).
@@ -596,6 +639,10 @@ def retrieve_pat_annots_mct_epr(
         columns_mct: A list of columns to load from the MCT annotations CSV.
         columns_to: A list of columns to load from the textual observations annotations CSV.
         columns_report: A list of columns to load from the reports annotations CSV.
+        columns_epic_imaging_reports: A list of columns to load from the Epic imaging reports annotations CSV.
+        columns_epic_medical_history: A list of columns to load from the Epic medical history annotations CSV.
+        columns_epic_clinical_notes: A list of columns to load from the Epic clinical notes annotations CSV.
+        columns_epic_clinical_notes_appointments: A list of columns to load from the Epic clinical notes appointments annotations CSV.
         merge_columns (bool, optional): If True, attempts to merge corresponding
             columns (e.g., timestamps, content) from the different sources into a unified set of
             columns. Defaults to True.
@@ -613,6 +660,42 @@ def retrieve_pat_annots_mct_epr(
             "ann_mct_docs": ("mct", columns_mct),
             "ann_textual_obs": ("textual_obs", columns_to),
             "ann_reports": ("report", columns_report),
+            "ann_epic_clinical_notes": (
+                "epic_clinical_notes",
+                (
+                    columns_epic_clinical_notes
+                    if columns_epic_clinical_notes
+                    else columns_epr
+                ),
+            ),
+            "ann_epic_clinical_notes_appointments": (
+                "epic_clinical_notes_appointments",
+                (
+                    columns_epic_clinical_notes_appointments
+                    if columns_epic_clinical_notes_appointments
+                    else columns_epr
+                ),
+            ),
+            "ann_epic_imaging_reports": (
+                "epic_imaging_reports",
+                (
+                    columns_epic_imaging_reports
+                    if columns_epic_imaging_reports
+                    else columns_epr
+                ),
+            ),
+            "ann_epic_medical_history": (
+                "epic_medical_history",
+                (
+                    columns_epic_medical_history
+                    if columns_epic_medical_history
+                    else columns_epr
+                ),
+            ),
+            "ann_epic_orders": (
+                "epic_orders",
+                columns_epic_orders if columns_epic_orders else columns_epr,
+            ),
         }
         for table, (source_name, cols) in source_map.items():
             df = get_df_from_db(
@@ -633,6 +716,42 @@ def retrieve_pat_annots_mct_epr(
                 config_obj.pre_textual_obs_annotation_batch_path,
                 columns_to,
             ),
+            "epic_clinical_notes": (
+                config_obj.pre_epic_clinical_notes_annotation_batch_path,
+                (
+                    columns_epic_clinical_notes
+                    if columns_epic_clinical_notes
+                    else columns_epr
+                ),
+            ),
+            "epic_clinical_notes_appointments": (
+                config_obj.pre_epic_clinical_notes_appointments_annotation_batch_path,
+                (
+                    columns_epic_clinical_notes_appointments
+                    if columns_epic_clinical_notes_appointments
+                    else columns_epr
+                ),
+            ),
+            "epic_imaging_reports": (
+                config_obj.pre_epic_imaging_reports_annotation_batch_path,
+                (
+                    columns_epic_imaging_reports
+                    if columns_epic_imaging_reports
+                    else columns_epr
+                ),
+            ),
+            "epic_medical_history": (
+                config_obj.pre_epic_medical_history_annotation_batch_path,
+                (
+                    columns_epic_medical_history
+                    if columns_epic_medical_history
+                    else columns_epr
+                ),
+            ),
+            "epic_orders": (
+                config_obj.pre_epic_orders_annotation_batch_path,
+                columns_epic_orders if columns_epic_orders else columns_epr,
+            ),
             "report": (
                 config_obj.pre_document_annotation_batch_path_reports,
                 columns_report,
@@ -642,7 +761,9 @@ def retrieve_pat_annots_mct_epr(
             file_path = f"{base_path}/{client_idcode}.csv"
             if os.path.exists(file_path):
                 try:
-                    df = pd.read_csv(file_path, usecols=cols)
+                    avail = pd.read_csv(file_path, nrows=0).columns
+                    use_cols = [c for c in cols if c in avail] if cols else None
+                    df = pd.read_csv(file_path, usecols=use_cols)
                     df["annotation_batch_source"] = source_name
                     all_annots_dfs.append(df)
                 except Exception as e:
@@ -705,6 +826,29 @@ def retrieve_pat_annots_mct_epr(
                 all_annots["observation_valuetext_analysed"]
             )
 
+        if "document_Content" in all_annots.columns:
+            all_annots["body_analysed"] = all_annots["body_analysed"].fillna(
+                all_annots["document_Content"]
+            )
+
+        if "document_Comment" in all_annots.columns:
+            all_annots["body_analysed"] = all_annots["body_analysed"].fillna(
+                all_annots["document_Comment"]
+            )
+
+        if "document_CreatedWhen" in all_annots.columns:
+            all_annots["updatetime"] = all_annots["updatetime"].fillna(
+                all_annots["document_CreatedWhen"]
+            )
+
+        if "id" in all_annots.columns:
+            if "document_guid" in all_annots.columns:
+                all_annots["document_guid"] = all_annots["document_guid"].fillna(
+                    all_annots["id"]
+                )
+            else:
+                all_annots["document_guid"] = all_annots["id"]
+
     return all_annots
 
 
@@ -766,6 +910,22 @@ def remove_file_from_paths(
                     "raw_demographics",
                     "raw_textual_obs",
                     "raw_reports",
+                    "raw_covid",
+                    "raw_smoking",
+                    "raw_vte",
+                    "raw_resus",
+                    "raw_core_02",
+                    "raw_bed",
+                    "raw_hospsite",
+                    # Epic Tables
+                    "raw_epic_encounters",
+                    "raw_epic_clinical_notes",
+                    "raw_epic_medical_history",
+                    "raw_epic_orders",
+                    "raw_epic_lab_results",
+                    "raw_epic_patients",
+                    "raw_epic_imaging_reports",
+                    "raw_epic_clinical_notes_appointments",
                 ]
                 for t in raw_tables:
                     t_name = f'"raw_data_{t}"' if is_sqlite else f'"raw_data"."{t}"'
@@ -797,6 +957,11 @@ def remove_file_from_paths(
                     "ann_mct_docs",
                     "ann_textual_obs",
                     "ann_reports",
+                    "ann_epic_clinical_notes",
+                    "ann_epic_clinical_notes_appointments",
+                    "ann_epic_imaging_reports",
+                    "ann_epic_medical_history",
+                    "ann_epic_orders",
                 ]
                 for t in ann_tables:
                     t_ann = (

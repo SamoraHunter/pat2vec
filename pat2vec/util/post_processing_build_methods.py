@@ -220,9 +220,13 @@ def build_merged_epr_mct_annot_df(
                 "observationannotation_recordeddtm",
                 "basicobs_entered",
                 "observationdocument_recordeddtm",
+                "document_CreatedWhen",
             ],
-            "document_guid": ["basicobs_guid", "observation_guid"],
-            "annotation_description": ["obscatalogmasteritem_displayname"],
+            "document_guid": ["basicobs_guid", "observation_guid", "id"],
+            "annotation_description": [
+                "obscatalogmasteritem_displayname",
+                "document_Name",
+            ],
         }
         for target, sources in mappings.items():
             if target not in df.columns:
@@ -298,6 +302,15 @@ def build_merged_epr_mct_annot_df(
             ("annotations", "ann_mct_docs", "mct"),
             ("annotations", "ann_textual_obs", "textual_obs"),
             ("annotations", "ann_reports", "report"),
+            ("annotations", "ann_epic_medical_history", "epic_medical_history"),
+            ("annotations", "ann_epic_imaging_reports", "epic_imaging_reports"),
+            ("annotations", "ann_epic_clinical_notes", "epic_clinical_notes"),
+            ("annotations", "ann_epic_orders", "epic_orders"),
+            (
+                "annotations",
+                "ann_epic_clinical_notes_appointments",
+                "epic_clinical_notes_appointments",
+            ),
         ],
         file_retriever=lambda p, c: retrieve_pat_annots_mct_epr(  # type: ignore
             p,
@@ -322,6 +335,36 @@ def build_merged_epr_mct_annot_df(
                 not in ["body_analysed", "textualObs", "observation_valuetext_analysed"]
             ],
             columns_report=fetch_list,
+            columns_epic_clinical_notes=[
+                c
+                for c in fetch_list
+                if c
+                not in ["body_analysed", "textualObs", "observation_valuetext_analysed"]
+            ],
+            columns_epic_clinical_notes_appointments=[
+                c
+                for c in fetch_list
+                if c
+                not in ["body_analysed", "textualObs", "observation_valuetext_analysed"]
+            ],
+            columns_epic_imaging_reports=[
+                c
+                for c in fetch_list
+                if c
+                not in ["body_analysed", "textualObs", "observation_valuetext_analysed"]
+            ],
+            columns_epic_medical_history=[
+                c
+                for c in fetch_list
+                if c
+                not in ["body_analysed", "textualObs", "observation_valuetext_analysed"]
+            ],
+            columns_epic_lab_results=[
+                c
+                for c in fetch_list
+                if c
+                not in ["body_analysed", "textualObs", "observation_valuetext_analysed"]
+            ],
             merge_columns=False,  # Let annot_processor handle merging for the whole chunk
         ),
         overwrite=overwrite,
@@ -408,10 +451,15 @@ def build_merged_epr_mct_doc_df(
             ("observationdocument_recordeddtm", "updatetime"),
             ("document_guid", "observation_guid"),
             ("document_guid", "basicobs_guid"),
+            ("document_guid", "id"),
             ("document_description", "obscatalogmasteritem_displayname"),
             ("document_description", "basicobs_itemname_analysed"),
+            ("document_description", "document_Name"),
             ("body_analysed", "observation_valuetext_analysed"),
             ("body_analysed", "textualObs"),
+            ("body_analysed", "document_Content"),
+            ("body_analysed", "document_Comment"),
+            ("updatetime", "document_CreatedWhen"),
         ]:
             if col1 in df.columns and col2 in df.columns:
                 df[col1] = df[col1].fillna(df[col2])
@@ -433,6 +481,17 @@ def build_merged_epr_mct_doc_df(
         "basicobs_itemname_analysed",
         "textualObs",
         "basicobs_guid",
+        "document_Content",
+        "document_CreatedWhen",
+        "document_Name",
+        "id",
+        "document_Comment",
+        "document_Author",
+        "document_AuthorSpecialty",
+        "document_EncounterEpicCsn",
+        "document_EncounterKey",
+        "document_OrderClass",
+        "document_LabResultEpicId",
     ]
 
     merged_path = _generic_merged_builder(
@@ -445,6 +504,16 @@ def build_merged_epr_mct_doc_df(
             ("raw_data", "raw_mct_docs", "mct"),
             ("raw_data", "raw_textual_obs", "textual_obs"),
             ("raw_data", "raw_reports", "report"),
+            ("raw_data", "raw_epic_medical_history", "epic_medical_history"),
+            ("raw_data", "raw_epic_clinical_notes", "epic_clinical_notes"),
+            (
+                "raw_data",
+                "raw_epic_clinical_notes_appointments",
+                "epic_clinical_notes_appointments",
+            ),
+            ("raw_data", "raw_epic_imaging_reports", "epic_imaging_reports"),
+            ("raw_data", "raw_epic_orders", "epic_orders"),
+            ("raw_data", "raw_epic_lab_results", "epic_lab_results"),
         ],
         file_retriever=lambda p, c: retrieve_pat_docs_mct_epr(
             p,
@@ -453,6 +522,11 @@ def build_merged_epr_mct_doc_df(
             columns_mct=DOC_STANDARD_COLS,
             columns_to=DOC_STANDARD_COLS,
             columns_report=DOC_STANDARD_COLS,
+            columns_epic_clinical_notes=DOC_STANDARD_COLS,
+            columns_epic_imaging_reports=DOC_STANDARD_COLS,
+            columns_epic_clinical_notes_appointments=DOC_STANDARD_COLS,
+            columns_epic_orders=DOC_STANDARD_COLS,
+            columns_epic_lab_results=DOC_STANDARD_COLS,
             merge_columns=False,  # Let doc_processor handle merging for the whole chunk
         ),
         overwrite=overwrite,
@@ -526,6 +600,12 @@ def retrieve_pat_docs_mct_epr(
     columns_mct: Optional[List[str]] = None,
     columns_to: Optional[List[str]] = None,
     columns_report: Optional[List[str]] = None,
+    columns_epic_imaging_reports: Optional[List[str]] = None,
+    columns_epic_medical_history: Optional[List[str]] = None,
+    columns_epic_clinical_notes: Optional[List[str]] = None,
+    columns_epic_clinical_notes_appointments: Optional[List[str]] = None,
+    columns_epic_orders: Optional[List[str]] = None,
+    columns_epic_lab_results: Optional[List[str]] = None,
     merge_columns: bool = True,
 ) -> pd.DataFrame:
     """Retrieves and merges document data for a patient from multiple sources (file or DB).
@@ -562,6 +642,22 @@ def retrieve_pat_docs_mct_epr(
             "raw_mct_docs": ("mct", columns_mct),
             "raw_textual_obs": ("textual_obs", columns_to),
             "raw_reports": ("report", columns_report),
+            "raw_epic_medical_history": (
+                "epic_medical_history",
+                columns_epic_medical_history,
+            ),
+            "raw_epic_imaging_reports": (
+                "epic_imaging_reports",
+                columns_epic_imaging_reports,
+            ),
+            "raw_epic_clinical_notes": (
+                "epic_clinical_notes",
+                columns_epic_clinical_notes,
+            ),
+            "raw_epic_clinical_notes_appointments": (
+                "epic_clinical_notes_appointments",
+                columns_epic_clinical_notes_appointments,
+            ),
         }
 
         for table, (source_name, cols) in sources.items():
@@ -597,6 +693,15 @@ def retrieve_pat_docs_mct_epr(
             config_obj.pre_textual_obs_document_batch_path
         )
         pre_document_batch_path_reports = config_obj.pre_document_batch_path_reports
+        pre_epic_clinical_notes_batch_path = (
+            config_obj.pre_epic_clinical_notes_batch_path
+        )
+        pre_epic_clinical_notes_appointments_batch_path = (
+            config_obj.pre_epic_clinical_notes_appointments_batch_path
+        )
+        pre_epic_imaging_reports_batch_path = (
+            config_obj.pre_epic_imaging_reports_batch_path
+        )
 
         epr_file_path = f"{pre_document_batch_path}/{client_idcode}.csv"
         mct_file_path = f"{pre_document_batch_path_mct}/{client_idcode}.csv"
@@ -604,27 +709,121 @@ def retrieve_pat_docs_mct_epr(
             f"{pre_textual_obs_document_batch_path}/{client_idcode}.csv"
         )
         report_file_path = f"{pre_document_batch_path_reports}/{client_idcode}.csv"
+        epic_med_hist_file_path = (
+            f"{config_obj.pre_epic_medical_history_batch_path}/{client_idcode}.csv"
+        )
+        epic_notes_file_path = (
+            f"{pre_epic_clinical_notes_batch_path}/{client_idcode}.csv"
+        )
+        epic_appt_file_path = (
+            f"{pre_epic_clinical_notes_appointments_batch_path}/{client_idcode}.csv"
+        )
+        epic_imaging_file_path = (
+            f"{pre_epic_imaging_reports_batch_path}/{client_idcode}.csv"
+        )
+        epic_orders_file_path = (
+            f"{config_obj.pre_epic_orders_batch_path}/{client_idcode}.csv"
+        )
+        epic_lab_results_file_path = (
+            f"{config_obj.pre_epic_lab_results_batch_path}/{client_idcode}.csv"
+        )
 
         dfs = []
         if os.path.exists(epr_file_path):
-            dfa = pd.read_csv(epr_file_path, usecols=columns_epr)
+            avail = pd.read_csv(epr_file_path, nrows=0).columns
+            use_cols = [c for c in columns_epr if c in avail] if columns_epr else None
+            dfa = pd.read_csv(epr_file_path, usecols=use_cols)
             dfa["document_batch_source"] = "epr"
             dfs.append(dfa)
 
         if os.path.exists(mct_file_path):
-            dfa_mct = pd.read_csv(mct_file_path, usecols=columns_mct)
+            avail = pd.read_csv(mct_file_path, nrows=0).columns
+            use_cols = [c for c in columns_mct if c in avail] if columns_mct else None
+            dfa_mct = pd.read_csv(mct_file_path, usecols=use_cols)
             dfa_mct["document_batch_source"] = "mct"
             dfs.append(dfa_mct)
 
         if os.path.exists(textual_obs_files_path):
-            dfa_to = pd.read_csv(textual_obs_files_path, usecols=columns_to)
+            avail = pd.read_csv(textual_obs_files_path, nrows=0).columns
+            use_cols = [c for c in columns_to if c in avail] if columns_to else None
+            dfa_to = pd.read_csv(textual_obs_files_path, usecols=use_cols)
             dfa_to["document_batch_source"] = "textual_obs"
             dfs.append(dfa_to)
 
         if os.path.exists(report_file_path):
-            dfr = pd.read_csv(report_file_path, usecols=columns_report)
+            avail = pd.read_csv(report_file_path, nrows=0).columns
+            use_cols = (
+                [c for c in columns_report if c in avail] if columns_report else None
+            )
+            dfr = pd.read_csv(report_file_path, usecols=use_cols)
             dfr["document_batch_source"] = "report"
             dfs.append(dfr)
+
+        if os.path.exists(epic_notes_file_path):
+            avail = pd.read_csv(epic_notes_file_path, nrows=0).columns
+            use_cols = (
+                [c for c in columns_epic_clinical_notes if c in avail]
+                if columns_epic_clinical_notes
+                else None
+            )
+            df_epic = pd.read_csv(epic_notes_file_path, usecols=use_cols)
+            df_epic["document_batch_source"] = "epic_clinical_notes"
+            dfs.append(df_epic)
+
+        if os.path.exists(epic_med_hist_file_path):
+            avail = pd.read_csv(epic_med_hist_file_path, nrows=0).columns
+            use_cols = (
+                [c for c in columns_epic_medical_history if c in avail]
+                if columns_epic_medical_history
+                else None
+            )
+            df_med_hist = pd.read_csv(epic_med_hist_file_path, usecols=use_cols)
+            df_med_hist["document_batch_source"] = "epic_medical_history"
+            dfs.append(df_med_hist)
+
+        if os.path.exists(epic_appt_file_path):
+            avail = pd.read_csv(epic_appt_file_path, nrows=0).columns
+            use_cols = (
+                [c for c in columns_epic_clinical_notes_appointments if c in avail]
+                if columns_epic_clinical_notes_appointments
+                else None
+            )
+            df_epic_appt = pd.read_csv(epic_appt_file_path, usecols=use_cols)
+            df_epic_appt["document_batch_source"] = "epic_clinical_notes_appointments"
+            dfs.append(df_epic_appt)
+
+        if os.path.exists(epic_imaging_file_path):
+            avail = pd.read_csv(epic_imaging_file_path, nrows=0).columns
+            use_cols = (
+                [c for c in columns_epic_imaging_reports if c in avail]
+                if columns_epic_imaging_reports
+                else None
+            )
+            df_epic_imaging = pd.read_csv(epic_imaging_file_path, usecols=use_cols)
+            df_epic_imaging["document_batch_source"] = "epic_imaging_reports"
+            dfs.append(df_epic_imaging)
+
+        if os.path.exists(epic_orders_file_path):
+            avail = pd.read_csv(epic_orders_file_path, nrows=0).columns
+            use_cols = (
+                [c for c in columns_epic_orders if c in avail]
+                if columns_epic_orders
+                else None
+            )
+            df_epic_orders = pd.read_csv(epic_orders_file_path, usecols=use_cols)
+            df_epic_orders["document_batch_source"] = "epic_orders"
+            dfs.append(df_epic_orders)
+
+        if os.path.exists(epic_lab_results_file_path):
+            avail = pd.read_csv(epic_lab_results_file_path, nrows=0).columns
+            use_cols = (
+                [c for c in columns_epic_lab_results if c in avail]
+                if columns_epic_lab_results
+                else None
+            )
+            df_epic_lab = pd.read_csv(epic_lab_results_file_path, usecols=use_cols)
+            df_epic_lab["document_batch_source"] = "epic_lab_results"
+            dfs.append(df_epic_lab)
 
         if not dfs:
             return pd.DataFrame()
@@ -639,6 +838,8 @@ def retrieve_pat_docs_mct_epr(
             ("document_guid", "observation_guid"),
             ("document_description", "obscatalogmasteritem_displayname"),
             ("body_analysed", "observation_valuetext_analysed"),
+            ("body_analysed", "document_Content"),
+            ("body_analysed", "document_Comment"),
         ]:
             if col1 in all_docs.columns and col2 in all_docs.columns:
                 all_docs[col1] = all_docs[col1].fillna(all_docs[col2])
@@ -706,17 +907,28 @@ def get_annots_joined_to_docs(
             columns_mct=EMPTY_ANNOT_COLS,
             columns_to=EMPTY_ANNOT_COLS,
             columns_report=EMPTY_ANNOT_COLS,
+            columns_epic_clinical_notes=EMPTY_ANNOT_COLS,
+            columns_epic_clinical_notes_appointments=EMPTY_ANNOT_COLS,
+            columns_epic_imaging_reports=EMPTY_ANNOT_COLS,
+            columns_epic_medical_history=EMPTY_ANNOT_COLS,
+            columns_epic_orders=EMPTY_ANNOT_COLS,
         )
         if annots.empty:
             return pd.DataFrame()
 
-        docs = retrieve_pat_docs_mct_epr(
+        docs = retrieve_pat_docs_mct_epr(  # type: ignore
             pat_id,
             cfg,
             columns_epr=DOC_STANDARD_COLS,
             columns_mct=DOC_STANDARD_COLS,
             columns_to=DOC_STANDARD_COLS,
             columns_report=DOC_STANDARD_COLS,
+            columns_epic_clinical_notes=DOC_STANDARD_COLS,
+            columns_epic_clinical_notes_appointments=DOC_STANDARD_COLS,
+            columns_epic_imaging_reports=DOC_STANDARD_COLS,
+            columns_epic_medical_history=DOC_STANDARD_COLS,
+            columns_epic_orders=DOC_STANDARD_COLS,
+            columns_epic_lab_results=DOC_STANDARD_COLS,
         )
         if docs.empty:
             return annots
@@ -739,6 +951,17 @@ def get_annots_joined_to_docs(
         "basicobs_itemname_analysed",
         "textualObs",
         "basicobs_guid",
+        "document_Content",
+        "document_CreatedWhen",
+        "document_Name",
+        "id",
+        "document_Author",
+        "document_AuthorSpecialty",
+        "document_EncounterEpicCsn",
+        "document_EncounterKey",
+        "document_Comment",
+        "document_OrderClass",
+        "document_LabResultEpicId",
     ]
     JOINED_COLS = list(dict.fromkeys(EMPTY_ANNOT_COLS + DOC_STANDARD_COLS))
 
@@ -790,6 +1013,62 @@ def merge_demographics_csv(
     )
 
 
+def merge_textual_obs_csv(
+    all_pat_list: List[str], config_obj: Any, overwrite: bool = False
+) -> str:
+    """Merge all textual observations data (files or DB) that match the patient list."""
+    return _generic_merged_builder(
+        all_pat_list=all_pat_list,
+        config_obj=config_obj,
+        output_filename="merged_textual_obs.csv",
+        standard_cols=[
+            "client_idcode",
+            "basicobs_guid",
+            "textualObs",
+            "basicobs_entered",
+            "clientvisit_visitidcode",
+        ],
+        db_sources=[("raw_data", "raw_textual_obs", None)],
+        file_retriever=lambda p, c: (
+            pd.read_csv(os.path.join(c.pre_textual_obs_document_batch_path, f"{p}.csv"))
+            if os.path.isfile(
+                os.path.join(c.pre_textual_obs_document_batch_path, f"{p}.csv")
+            )
+            else pd.DataFrame()
+        ),
+        overwrite=overwrite,
+        chunk_size=1,  # Textual observations can be large
+    )
+
+
+def merge_reports_csv(
+    all_pat_list: List[str], config_obj: Any, overwrite: bool = False
+) -> str:
+    """Merge all reports data (files or DB) that match the patient list."""
+    return _generic_merged_builder(
+        all_pat_list=all_pat_list,
+        config_obj=config_obj,
+        output_filename="merged_reports.csv",
+        standard_cols=[
+            "client_idcode",
+            "document_guid",
+            "body_analysed",
+            "updatetime",
+            "clientvisit_visitidcode",
+        ],
+        db_sources=[("raw_data", "raw_reports", None)],
+        file_retriever=lambda p, c: (
+            pd.read_csv(os.path.join(c.pre_document_batch_path_reports, f"{p}.csv"))
+            if os.path.isfile(
+                os.path.join(c.pre_document_batch_path_reports, f"{p}.csv")
+            )
+            else pd.DataFrame()
+        ),
+        overwrite=overwrite,
+        chunk_size=1,  # Reports can be large
+    )
+
+
 def merge_bmi_csv(
     all_pat_list: List[str], config_obj: Any, overwrite: bool = False
 ) -> str:
@@ -813,6 +1092,29 @@ def merge_bmi_csv(
             else pd.DataFrame()
         ),
         overwrite=overwrite,
+    )
+
+
+def merge_bloods_csv(
+    all_pat_list: List[str], config_obj: Any, overwrite: bool = False
+) -> str:
+    """Builds a merged CSV file of bloods data from patient batch files or database."""
+    return _generic_merged_builder(
+        all_pat_list=all_pat_list,
+        config_obj=config_obj,
+        output_filename="merged_bloods.csv",
+        standard_cols=[
+            "client_idcode",
+            "basicobs_itemname_analysed",
+            "basicobs_value_numeric",
+            "basicobs_entered",
+            "clientvisit_serviceguid",
+            "updatetime",
+        ],
+        db_sources=[("raw_data", "raw_bloods", None)],
+        file_retriever=retrieve_pat_bloods,
+        overwrite=overwrite,
+        float_format="%.6f",
     )
 
 
@@ -900,6 +1202,100 @@ def merge_drugs_csv(
     )
 
 
+def merge_epic_medical_history_csv(
+    all_pat_list: List[str], config_obj: Any, overwrite: bool = False
+) -> str:
+    """Merge all Epic medical history data that match the patient list."""
+    return _generic_merged_builder(
+        all_pat_list=all_pat_list,
+        config_obj=config_obj,
+        output_filename="merged_epic_medical_history.csv",
+        standard_cols=[
+            "client_idcode",
+            "document_CreatedWhen",
+            "document_Name",
+            "document_Diagnosis",
+            "document_Status",
+            "document_SourceId",
+            "document_Comment",
+        ],
+        db_sources=[("raw_data", "raw_epic_medical_history", None)],
+        file_retriever=lambda p, c: (
+            pd.read_csv(os.path.join(c.pre_epic_medical_history_batch_path, f"{p}.csv"))
+            if os.path.isfile(
+                os.path.join(c.pre_epic_medical_history_batch_path, f"{p}.csv")
+            )
+            else pd.DataFrame()
+        ),
+        overwrite=overwrite,
+    )
+
+
+def merge_epic_imaging_reports_csv(
+    all_pat_list: List[str], config_obj: Any, overwrite: bool = False
+) -> str:
+    """Merge all Epic imaging reports data that match the patient list."""
+    return _generic_merged_builder(
+        all_pat_list=all_pat_list,
+        config_obj=config_obj,
+        output_filename="merged_epic_imaging_reports.csv",
+        standard_cols=[
+            "client_idcode",
+            "document_CreatedWhen",
+            "document_Name",
+            "document_ImagingModality",
+            "document_StudyStatus",
+            "document_AccessionNumber",
+            "document_Content",
+        ],
+        db_sources=[("raw_data", "raw_epic_imaging_reports", None)],
+        file_retriever=lambda p, c: (
+            pd.read_csv(os.path.join(c.pre_epic_imaging_reports_batch_path, f"{p}.csv"))
+            if os.path.isfile(
+                os.path.join(c.pre_epic_imaging_reports_batch_path, f"{p}.csv")
+            )
+            else pd.DataFrame()
+        ),
+        overwrite=overwrite,
+        chunk_size=1,  # Large text content
+    )
+
+
+def merge_epic_clinical_notes_appointments_csv(
+    all_pat_list: List[str], config_obj: Any, overwrite: bool = False
+) -> str:
+    """Merge all Epic clinical notes appointments data that match the patient list."""
+    return _generic_merged_builder(
+        all_pat_list=all_pat_list,
+        config_obj=config_obj,
+        output_filename="merged_epic_clinical_notes_appointments.csv",
+        standard_cols=[
+            "client_idcode",
+            "document_CreatedWhen",
+            "document_Name",
+            "document_EncounterEpicCsn",
+            "document_EncounterKey",
+            "document_Content",
+        ],
+        db_sources=[("raw_data", "raw_epic_clinical_notes_appointments", None)],
+        file_retriever=lambda p, c: (
+            pd.read_csv(
+                os.path.join(
+                    c.pre_epic_clinical_notes_appointments_batch_path, f"{p}.csv"
+                )
+            )
+            if os.path.isfile(
+                os.path.join(
+                    c.pre_epic_clinical_notes_appointments_batch_path, f"{p}.csv"
+                )
+            )
+            else pd.DataFrame()
+        ),
+        overwrite=overwrite,
+        chunk_size=1,  # Clinical notes are large
+    )
+
+
 def merge_appointments_csv(
     all_pat_list: List[str], config_obj: Any, overwrite: bool = False
 ) -> str:
@@ -908,7 +1304,16 @@ def merge_appointments_csv(
         all_pat_list=all_pat_list,
         config_obj=config_obj,
         output_filename="merged_appointments.csv",
-        standard_cols=[],  # Appointments doesn't have a hardcoded empty header list in existing code
+        standard_cols=[
+            "client_idcode",
+            "HospitalID",
+            "AppointmentType",
+            "AppointmentDateTime",
+            "ConsultantCode",
+            "ClinicCode",
+            "Specialty",
+            "DateCreated",
+        ],
         db_sources=[("raw_data", "raw_appointments", None)],
         file_retriever=lambda p, c: (
             pd.read_csv(os.path.join(c.pre_appointments_batch_path, f"{p}.csv"))
@@ -917,4 +1322,266 @@ def merge_appointments_csv(
         ),
         overwrite=overwrite,
         patient_id_col="HospitalID",
+    )
+
+
+def merge_epic_encounters_csv(
+    all_pat_list: List[str], config_obj: Any, overwrite: bool = False
+) -> str:
+    """Merge all Epic encounters data that match the patient list."""
+    return _generic_merged_builder(
+        all_pat_list=all_pat_list,
+        config_obj=config_obj,
+        output_filename="merged_epic_encounters.csv",
+        standard_cols=[
+            "client_idcode",
+            "activity_AdmissionDate",
+            "activity_DischargeDate",
+            "activity_Department",
+            "activity_Type",
+            "activity_VisitClass",
+            "activity_HospitalService",
+        ],
+        db_sources=[("raw_data", "raw_epic_encounters", None)],
+        file_retriever=lambda p, c: (
+            pd.read_csv(os.path.join(c.pre_epic_encounters_batch_path, f"{p}.csv"))
+            if os.path.isfile(
+                os.path.join(c.pre_epic_encounters_batch_path, f"{p}.csv")
+            )
+            else pd.DataFrame()
+        ),
+        overwrite=overwrite,
+    )
+
+
+def merge_epic_lab_results_csv(
+    all_pat_list: List[str], config_obj: Any, overwrite: bool = False
+) -> str:
+    """Merge all Epic lab results data that match the patient list."""
+    return _generic_merged_builder(
+        all_pat_list=all_pat_list,
+        config_obj=config_obj,
+        output_filename="merged_epic_lab_results.csv",
+        standard_cols=[
+            "client_idcode",  # Changed to match generator
+            "document_CreatedWhen",  # Changed to match generator
+            "document_Name",  # Changed to match generator
+            "document_Content",  # Changed to match generator
+            "document_CollectedDate",  # Changed to match generator
+            "document_LabResultEpicId",  # Changed to match generator
+            "document_Fields.valueText",  # Changed to match generator
+            "id",  # Changed to match generator
+        ],
+        db_sources=[("raw_data", "raw_epic_lab_results", None)],
+        file_retriever=lambda p, c: (
+            pd.read_csv(os.path.join(c.pre_epic_lab_results_batch_path, f"{p}.csv"))
+            if os.path.isfile(
+                os.path.join(c.pre_epic_lab_results_batch_path, f"{p}.csv")
+            )
+            else pd.DataFrame()
+        ),
+        overwrite=overwrite,
+    )
+
+
+def merge_epic_orders_csv(
+    all_pat_list: List[str], config_obj: Any, overwrite: bool = False
+) -> str:
+    """Merge all Epic orders data that match the patient list."""
+    return _generic_merged_builder(
+        all_pat_list=all_pat_list,
+        config_obj=config_obj,
+        output_filename="merged_epic_orders.csv",
+        standard_cols=[
+            "client_idcode",
+            "document_Name",
+            "document_OrderClass",
+            "document_OrderDate",
+            "document_OrderStatus",
+            "document_UpdatedWhen",
+            "document_Content",
+        ],
+        db_sources=[("raw_data", "raw_epic_orders", None)],
+        file_retriever=lambda p, c: (
+            pd.read_csv(os.path.join(c.pre_epic_orders_batch_path, f"{p}.csv"))
+            if os.path.isfile(os.path.join(c.pre_epic_orders_batch_path, f"{p}.csv"))
+            else pd.DataFrame()
+        ),
+        overwrite=overwrite,
+    )
+
+
+def merge_epic_clinical_notes_csv(
+    all_pat_list: List[str], config_obj: Any, overwrite: bool = False
+) -> str:
+    """Merge all Epic clinical notes data that match the patient list."""
+    return _generic_merged_builder(
+        all_pat_list=all_pat_list,
+        config_obj=config_obj,
+        output_filename="merged_epic_clinical_notes.csv",
+        standard_cols=[
+            "client_idcode",
+            "document_PatientDurableKey",  # Added for join
+            "document_CreatedWhen",  # Added for time filter
+            "document_Content",  # Added for content
+            "document_Name",
+            "document_Author",
+            "document_AuthorSpecialty",
+            "id",  # Added for unique reference
+        ],
+        db_sources=[("raw_data", "raw_epic_clinical_notes", None)],
+        file_retriever=lambda p, c: (
+            pd.read_csv(os.path.join(c.pre_epic_clinical_notes_batch_path, f"{p}.csv"))
+            if os.path.isfile(
+                os.path.join(c.pre_epic_clinical_notes_batch_path, f"{p}.csv")
+            )
+            else pd.DataFrame()
+        ),
+        overwrite=overwrite,
+        chunk_size=1,  # Large text content
+    )
+
+
+def merge_epic_patients_csv(
+    all_pat_list: List[str], config_obj: Any, overwrite: bool = False
+) -> str:
+    """Merge all Epic patient demographic data that match the patient list."""
+    return _generic_merged_builder(
+        all_pat_list=all_pat_list,
+        config_obj=config_obj,
+        output_filename="merged_epic_patients.csv",
+        standard_cols=[
+            "client_idcode",
+            "patient_Age",
+            "patient_Gender",
+            "patient_Ethnicity",
+            "patient_SmokingStatus",
+            "patient_MaritalStatus",
+            "patient_IsCancer",
+            "patient_DateOfDeath",
+        ],
+        db_sources=[("raw_data", "raw_epic_patients", None)],
+        file_retriever=lambda p, c: (
+            pd.read_csv(os.path.join(c.pre_epic_patients_batch_path, f"{p}.csv"))
+            if os.path.isfile(os.path.join(c.pre_epic_patients_batch_path, f"{p}.csv"))
+            else pd.DataFrame()
+        ),
+        overwrite=overwrite,
+    )
+
+
+def merge_covid_csv(
+    all_pat_list: List[str], config_obj: Any, overwrite: bool = False
+) -> str:
+    """Merge all COVID data (files or DB) that match the patient list."""
+    return _generic_merged_builder(
+        all_pat_list=all_pat_list,
+        config_obj=config_obj,
+        output_filename="merged_covid.csv",
+        standard_cols=[
+            "client_idcode",
+            "basicobs_guid",
+            "basicobs_itemname_analysed",
+            "basicobs_value_analysed",
+            "basicobs_entered",
+            "clientvisit_visitidcode",
+        ],
+        db_sources=[("raw_data", "raw_covid", None)],
+        file_retriever=lambda p, c: (
+            pd.read_csv(os.path.join(c.pre_misc_batch_path, f"{p}.csv"))
+            if os.path.isfile(os.path.join(c.pre_misc_batch_path, f"{p}.csv"))
+            else pd.DataFrame()
+        ),
+        overwrite=overwrite,
+    )
+
+
+def _merge_observation_sub_type(
+    all_pat_list: List[str],
+    config_obj: Any,
+    table_name: str,
+    output_name: str,
+    overwrite: bool,
+    display_name: Optional[str] = None,
+) -> str:
+    """Helper to merge specific sub-types of clinical observations."""
+
+    def sub_type_filter(df: pd.DataFrame) -> pd.DataFrame:
+        if display_name and "obscatalogmasteritem_displayname" in df.columns:
+            return df[df["obscatalogmasteritem_displayname"] == display_name]
+        return df
+
+    return _generic_merged_builder(
+        all_pat_list=all_pat_list,
+        config_obj=config_obj,
+        output_filename=f"merged_{output_name}.csv",
+        standard_cols=[
+            "observation_guid",
+            "client_idcode",
+            "obscatalogmasteritem_displayname",
+            "observation_valuetext_analysed",
+            "observationdocument_recordeddtm",
+            "clientvisit_visitidcode",
+        ],
+        db_sources=[("raw_data", table_name, None)],
+        file_retriever=lambda p, c: (
+            pd.read_csv(os.path.join(c.pre_obs_batch_path, f"{p}.csv"))
+            if os.path.isfile(os.path.join(c.pre_obs_batch_path, f"{p}.csv"))
+            else pd.DataFrame()
+        ),
+        overwrite=overwrite,
+    )
+
+
+def merge_smoking_csv(
+    all_pat_list: List[str], config_obj: Any, overwrite: bool = False
+) -> str:
+    """Merge all smoking status data."""
+    return _merge_observation_sub_type(
+        all_pat_list, config_obj, "raw_smoking", "smoking", overwrite
+    )
+
+
+def merge_vte_status_csv(
+    all_pat_list: List[str], config_obj: Any, overwrite: bool = False
+) -> str:
+    """Merge all VTE status data."""
+    return _merge_observation_sub_type(
+        all_pat_list, config_obj, "raw_vte", "vte_status", overwrite
+    )
+
+
+def merge_hosp_site_csv(
+    all_pat_list: List[str], config_obj: Any, overwrite: bool = False
+) -> str:
+    """Merge all hospital site data."""
+    return _merge_observation_sub_type(
+        all_pat_list, config_obj, "raw_hospsite", "hosp_site", overwrite
+    )
+
+
+def merge_core_resus_csv(
+    all_pat_list: List[str], config_obj: Any, overwrite: bool = False
+) -> str:
+    """Merge all resuscitation status data."""
+    return _merge_observation_sub_type(
+        all_pat_list, config_obj, "raw_resus", "core_resus", overwrite
+    )
+
+
+def merge_core_02_csv(
+    all_pat_list: List[str], config_obj: Any, overwrite: bool = False
+) -> str:
+    """Merge all core oxygen saturation data."""
+    return _merge_observation_sub_type(
+        all_pat_list, config_obj, "raw_core_02", "core_02", overwrite
+    )
+
+
+def merge_bed_csv(
+    all_pat_list: List[str], config_obj: Any, overwrite: bool = False
+) -> str:
+    """Merge all bed location data."""
+    return _merge_observation_sub_type(
+        all_pat_list, config_obj, "raw_bed", "bed", overwrite
     )

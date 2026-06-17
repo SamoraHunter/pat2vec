@@ -16,6 +16,10 @@ def build_ipw_dataframe(
     mode: str = "earliest",
     include_mct: bool = True,
     include_textual_obs: bool = True,
+    include_epic_clinical_notes: bool = True,
+    include_epic_clinical_notes_appointments: bool = True,
+    include_epic_imaging_reports: bool = True,
+    include_epic_medical_history: bool = True,
     custom_pat_list: Optional[List[str]] = None,
 ) -> pd.DataFrame:
     """Builds a DataFrame of Individual Patient Window (IPW) records.
@@ -38,6 +42,14 @@ def build_ipw_dataframe(
             (MRC clinical notes) in the search. Defaults to True.
         include_textual_obs: If True, includes annotations from
             textual observations. Defaults to True.
+        include_epic_imaging_reports: If True, includes annotations from
+            Epic imaging reports. Defaults to True.
+        include_epic_clinical_notes: If True, includes annotations from
+            Epic clinical notes. Defaults to True.
+        include_epic_medical_history: If True, includes annotations from
+            Epic medical history. Defaults to True.
+        include_epic_clinical_notes_appointments: If True, includes annotations from
+            Epic clinical notes appointments. Defaults to True.
         custom_pat_list: A specific list of patient IDs to
             process. If empty, the patient list is derived from the database or files in
             the `pre_document_batch_path`. Defaults to an empty list.
@@ -151,6 +163,10 @@ def build_ipw_dataframe(
             mode=mode,
             include_mct=include_mct,  # Boolean argument to include MCT
             include_textual_obs=include_textual_obs,  # Boolean argument to include textual_obs
+            include_epic_clinical_notes=include_epic_clinical_notes,
+            include_epic_clinical_notes_appointments=include_epic_clinical_notes_appointments,
+            include_epic_imaging_reports=include_epic_imaging_reports,
+            include_epic_medical_history=include_epic_medical_history,
         )
 
         if not res.empty:

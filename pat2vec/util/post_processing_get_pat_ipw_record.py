@@ -181,6 +181,10 @@ def get_pat_ipw_record(
     verbose: int = 0,
     include_mct: bool = True,
     include_textual_obs: bool = True,
+    include_epic_clinical_notes: bool = True,
+    include_epic_clinical_notes_appointments: bool = True,
+    include_epic_imaging_reports: bool = True,
+    include_epic_medical_history: bool = True,
 ) -> pd.DataFrame:
     """Retrieves a patient's Individual Patient Window (IPW) record.
 
@@ -208,6 +212,12 @@ def get_pat_ipw_record(
             (MRC clinical notes) in the search. Defaults to True.
         include_textual_obs: If True, includes annotations from
             textual observations. Defaults to True.
+        include_epic_medical_history: If True, includes annotations from
+            Epic medical history. Defaults to True.
+        include_epic_clinical_notes: If True, includes annotations from
+            Epic clinical notes. Defaults to True.
+        include_epic_clinical_notes_appointments: If True, includes annotations from
+            Epic clinical notes appointments. Defaults to True.
 
     Returns:
         pd.DataFrame: A DataFrame containing the single IPW record for the patient.
@@ -285,6 +295,102 @@ def get_pat_ipw_record(
             "ann_textual_obs",
         )
 
+    # Get Epic Clinical Notes record
+    fsr_epic = pd.DataFrame()
+    if include_epic_clinical_notes:
+        fsr_epic = _get_source_record(
+            current_pat_idcode,
+            config_obj.pre_epic_clinical_notes_annotation_batch_path,
+            "document_CreatedWhen",
+            ["document_CreatedWhen"] + base_necessary_columns,
+            annot_filter_arguments,
+            filter_codes,
+            mode,
+            verbose,
+            config_obj,
+            "ann_epic_clinical_notes",
+        )
+
+    # Get Epic Medical History record
+    fsr_epic_med = pd.DataFrame()
+    if include_epic_medical_history:
+        fsr_epic_med = _get_source_record(
+            current_pat_idcode,
+            config_obj.pre_epic_medical_history_annotation_batch_path,
+            "document_CreatedWhen",
+            ["document_CreatedWhen"] + base_necessary_columns,
+            annot_filter_arguments,
+            filter_codes,
+            mode,
+            verbose,
+            config_obj,
+            "ann_epic_medical_history",
+        )
+
+    # Get Epic Clinical Notes Appointments record
+    fsr_epic_appt = pd.DataFrame()
+    if include_epic_clinical_notes_appointments:
+        fsr_epic_appt = _get_source_record(
+            current_pat_idcode,
+            config_obj.pre_epic_clinical_notes_appointments_annotation_batch_path,
+            "document_CreatedWhen",
+            ["document_CreatedWhen"] + base_necessary_columns,
+            annot_filter_arguments,
+            filter_codes,
+            mode,
+            verbose,
+            config_obj,
+            "ann_epic_clinical_notes_appointments",
+        )
+
+    # Get Epic Imaging Reports record
+    fsr_imaging = pd.DataFrame()
+    if include_epic_imaging_reports:
+        fsr_imaging = _get_source_record(
+            current_pat_idcode,
+            config_obj.pre_epic_imaging_reports_annotation_batch_path,
+            "document_CreatedWhen",
+            ["document_CreatedWhen"] + base_necessary_columns,
+            annot_filter_arguments,
+            filter_codes,
+            mode,
+            verbose,
+            config_obj,
+            "ann_epic_imaging_reports",
+        )
+
+    # Get Epic Orders record
+    fsr_epic_orders = pd.DataFrame()
+    if config_obj.main_options.get("epic_orders_annotations"):
+        fsr_epic_orders = _get_source_record(
+            current_pat_idcode,
+            config_obj.pre_epic_orders_annotation_batch_path,
+            "document_CreatedWhen",
+            ["document_CreatedWhen"] + base_necessary_columns,
+            annot_filter_arguments,
+            filter_codes,
+            mode,
+            verbose,
+            config_obj,
+            "ann_epic_orders",
+        )
+
+    # Get Reports record
+    fsr_reports = pd.DataFrame()
+    # Reports are annotatable, so they should be included in IPW record search
+    fsr_reports = _get_source_record(
+        current_pat_idcode,
+        config_obj.pre_document_annotation_batch_path_reports,
+        "updatetime",
+        ["updatetime"] + base_necessary_columns,
+        annot_filter_arguments,
+        filter_codes,
+        mode,
+        verbose,
+        config_obj,
+        "ann_reports",
+    )
+
     # Prepare dataframes for comparison
     dfs_to_compare = []
 
@@ -303,6 +409,36 @@ def get_pat_ipw_record(
         fsr_textual_obs["source"] = "textual_obs"
         dfs_to_compare.append(fsr_textual_obs)
 
+    if include_epic_clinical_notes and not fsr_epic.empty:
+        fsr_epic = fsr_epic.copy()
+        fsr_epic["source"] = "Epic_Clinical_Notes"
+        dfs_to_compare.append(fsr_epic)
+
+    if include_epic_medical_history and not fsr_epic_med.empty:
+        fsr_epic_med = fsr_epic_med.copy()
+        fsr_epic_med["source"] = "Epic_Medical_History"
+        dfs_to_compare.append(fsr_epic_med)
+
+    if include_epic_clinical_notes_appointments and not fsr_epic_appt.empty:
+        fsr_epic_appt = fsr_epic_appt.copy()
+        fsr_epic_appt["source"] = "Epic_Appt_Notes"
+        dfs_to_compare.append(fsr_epic_appt)
+
+    if include_epic_imaging_reports and not fsr_imaging.empty:
+        fsr_imaging = fsr_imaging.copy()
+        fsr_imaging["source"] = "Epic_Imaging_Reports"
+        dfs_to_compare.append(fsr_imaging)
+
+    if not fsr_epic_orders.empty:
+        fsr_epic_orders = fsr_epic_orders.copy()
+        fsr_epic_orders["source"] = "Epic_Orders"
+        dfs_to_compare.append(fsr_epic_orders)
+
+    if not fsr_reports.empty:
+        fsr_reports = fsr_reports.copy()
+        fsr_reports["source"] = "Reports"
+        dfs_to_compare.append(fsr_reports)
+
     # Standardize timestamp column names
     for df in dfs_to_compare:
         if "observationdocument_recordeddtm" in df.columns:
@@ -314,6 +450,11 @@ def get_pat_ipw_record(
             if "updatetime" in df.columns:
                 df.drop(columns=["updatetime"], inplace=True)
             df.rename(columns={"basicobs_entered": "updatetime"}, inplace=True)
+        elif "document_CreatedWhen" in df.columns:
+            # Epic timestamp field
+            if "updatetime" in df.columns:
+                df.drop(columns=["updatetime"], inplace=True)
+            df.rename(columns={"document_CreatedWhen": "updatetime"}, inplace=True)
         elif "updatetime" not in df.columns:
             if verbose > 10:
                 logger.warning(
@@ -377,12 +518,18 @@ def get_pat_ipw_record(
         start_datetime = datetime(
             int(config_obj.global_start_year),
             int(config_obj.global_start_month),
-            int(config_obj.global_start_day),
+            int(config_obj.global_start_day),  # Pass global_start_day
+            0,
+            0,
+            0,  # Start of the day
         )
         end_datetime = datetime(
             int(config_obj.global_end_year),
             int(config_obj.global_end_month),
-            int(config_obj.global_end_day),
+            int(config_obj.global_end_day),  # Pass global_end_day
+            0,
+            0,
+            0,  # Start of the day for consistency with test
         )
 
         if not config_obj.lookback:

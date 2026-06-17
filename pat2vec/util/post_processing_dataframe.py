@@ -87,6 +87,9 @@ def convert_true_to_float(df: pd.DataFrame, columns: List[str] = None) -> pd.Dat
             "census_white",
             "census_asian_or_asian_british",
             "census_other_ethnic_group",
+            "epic_pat_iscancer",
+            "epic_pat_isfetus",
+            "epic_pat_deceased",
         ]
     df[columns] = df[columns].replace({"True": 1.0, "False": 0.0}).astype(float)
     return df
