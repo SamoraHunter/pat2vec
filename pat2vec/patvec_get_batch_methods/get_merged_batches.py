@@ -280,25 +280,26 @@ def get_merged_pat_batch_bloods(
                     )
                     return batch_target
 
-                db_table_name = (
-                    f"{schema_name}_{table_name}"
-                    if engine.name == "sqlite"
-                    else table_name
-                )
-                db_schema = None if engine.name == "sqlite" else schema_name
+                if not batch_target.empty:  # Only save if there is data
+                    db_table_name = (
+                        f"{schema_name}_{table_name}"
+                        if engine.name == "sqlite"
+                        else table_name
+                    )
+                    db_schema = None if engine.name == "sqlite" else schema_name
 
-                logging.info(
-                    f"Writing {len(batch_target)} records to database table '{db_schema}.{db_table_name}'..."
-                )
-                batch_target.to_sql(
-                    name=db_table_name,
-                    con=engine,
-                    schema=db_schema,
-                    if_exists="replace",
-                    index=False,
-                    chunksize=10000,  # Good practice for large datasets
-                )
-                logging.info("Finished writing to database.")
+                    logging.info(
+                        f"Writing {len(batch_target)} records to database table '{db_table_name}'..."
+                    )
+                    batch_target.to_sql(
+                        name=db_table_name,
+                        con=engine,
+                        schema=db_schema,
+                        if_exists="replace",
+                        index=False,
+                        chunksize=10000,  # Good practice for large datasets
+                    )
+                    logging.info("Finished writing to database.")
 
             return batch_target
 
@@ -855,6 +856,10 @@ def get_merged_pat_batch_mct_docs(
                 f"observationdocument_recordeddtm:[{global_start_year}-{global_start_month}-{global_start_day} TO {global_end_year}-{global_end_month}-{global_end_day}]",
             )
 
+            if batch_target.empty:
+                logging.warning("No MCT documents found for given patient list.")
+                return batch_target
+
             batch_target = apply_data_type_mct_docs_filters(config_obj, batch_target)
 
             col_list_drop_nan = [
@@ -862,14 +867,18 @@ def get_merged_pat_batch_mct_docs(
                 "observationdocument_recordeddtm",
                 "client_idcode",
             ]
-            batch_target = batch_target.dropna(subset=col_list_drop_nan).copy()
+            # Ensure columns exist before dropna to avoid KeyError
+            valid_cols = [c for c in col_list_drop_nan if c in batch_target.columns]
+            batch_target = batch_target.dropna(subset=valid_cols).copy()
 
             if split_clinical_notes_bool:
                 batch_target = split_and_append_chunks(
                     batch_target, epr=False, mct=True
                 )
 
-            if store_pat_batch_docs or overwrite_stored_pat_docs:
+            if (
+                store_pat_batch_docs or overwrite_stored_pat_docs
+            ) and not batch_target.empty:
                 engine = config_obj.db_engine
                 if not engine:
                     logging.error(

@@ -6,7 +6,10 @@ from pat2vec.pat2vec_search.cogstack_search_methods import (
     list_chunker,
     set_index_safe_wrapper,
     initialize_cogstack_client,
+    iterative_multi_term_cohort_searcher_no_terms_fuzzy_epic_clinical_notes,
+    get_all_fields_for_method,
 )
+from pat2vec.util.get_method_index_map import GET_METHOD_INDEX_MAP
 
 
 class TestCogstackSearchMethods(unittest.TestCase):
@@ -79,3 +82,160 @@ class TestCogstackSearchMethods(unittest.TestCase):
         ) as mock_cogstack:
             initialize_cogstack_client(mock_config)
             mock_cogstack.assert_called_once()
+
+    def test_reindex_with_duplicate_columns(self):
+        """Test that reindexing handles duplicate columns by deduplicating first."""
+        # This simulates the logic inside the searchers that caused the ValueError
+        df_new = pd.DataFrame([[1, 2, 1]], columns=["A", "B", "A"])  # Duplicate 'A'
+        existing_df = pd.DataFrame(columns=["A", "B", "C"])
+
+        combined_cols = existing_df.columns.union(df_new.columns)
+
+        # deduplicate first (this is the fix)
+        df_fixed = df_new.loc[:, ~df_new.columns.duplicated()]
+        result = df_fixed.reindex(columns=combined_cols)
+        self.assertCountEqual(result.columns, ["A", "B", "C"])
+
+    @patch("pat2vec.pat2vec_search.cogstack_search_methods.pd.read_csv")
+    @patch("pat2vec.pat2vec_search.cogstack_search_methods.os.path.exists")
+    @patch(
+        "pat2vec.pat2vec_search.cogstack_search_methods.cohort_searcher_no_terms_fuzzy"
+    )
+    @patch("pat2vec.pat2vec_search.cogstack_search_methods.pd.DataFrame.to_csv")
+    @patch(
+        "pat2vec.pat2vec_search.cogstack_search_methods.initialize_cogstack_client"
+    )  # Mock global cs init
+    def test_iterative_clinical_notes_handles_duplicate_columns_on_append(
+        self,
+        mock_init_cs,
+        mock_to_csv,
+        mock_cohort_searcher,
+        mock_exists,
+        mock_read_csv,
+    ):
+        """
+        Test that iterative_multi_term_cohort_searcher_no_terms_fuzzy_epic_clinical_notes
+        correctly handles duplicate columns when appending to an existing file,
+        without raising a ValueError. This specifically tests the rename and reindex logic.
+        """
+        # Simulate an existing CSV file
+        mock_exists.return_value = True
+        mock_read_csv.return_value = pd.DataFrame(
+            {
+                "client_idcode": ["P_OLD"],
+                "updatetime": ["2023-01-01"],
+                "body_analysed": ["Old clinical note"],
+                "document_guid": ["OLD_GUID"],
+                "document_Name": [
+                    "Old Document Name"
+                ],  # This will become 'document_description'
+                "search_term": ["old_term"],
+                "some_other_field": ["extra_data"],
+            }
+        )
+
+        # Simulate new search results from cohort_searcher_no_terms_fuzzy
+        # This DataFrame will be passed to the iterative function, which then renames columns.
+        # We want to ensure that even if the *original* `docs` from `cohort_searcher_no_terms_fuzzy`
+        # has fields that, after renaming, would clash with other fields in `docs` or `existing_data`,
+        # the deduplication logic handles it.
+        mock_cohort_searcher.return_value = pd.DataFrame(
+            {
+                "document_PatientDurableKey": [
+                    "P_NEW"
+                ],  # Will be renamed to client_idcode
+                "document_CreatedWhen": ["2023-01-02"],  # Will be renamed to updatetime
+                "document_Content": [
+                    "New clinical note"
+                ],  # Will be renamed to body_analysed
+                "id": ["NEW_GUID"],  # Will be renamed to document_guid
+                "document_Name": [
+                    "New Document Name"
+                ],  # Will be renamed to document_description
+                # Add a column that might exist in existing_data or clash after rename
+                "client_idcode": [
+                    "P_NEW_CLASH"
+                ],  # This will cause a duplicate 'client_idcode' after rename
+                "_index": ["epic_clinical_notes"],
+                "_score": [1.0],
+            }
+        )
+
+        # Mock the global cs object
+        mock_init_cs.return_value = MagicMock()
+
+        # Call the function under test with append=True and all_fields=True to maximize potential for clashes
+        result_df = iterative_multi_term_cohort_searcher_no_terms_fuzzy_epic_clinical_notes(
+            terms_list=["new_term"],
+            treatment_doc_filename="test_clinical_notes.csv",
+            start_year="2023",
+            start_month="01",
+            start_day="01",
+            end_year="2023",
+            end_month="01",
+            end_day="31",
+            append=True,
+            debug=True,
+            all_fields=True,  # Request all fields to increase chance of column clashes
+        )
+
+        # Assert that no ValueError was raised (the test would fail before this if it was)
+        self.assertIsInstance(result_df, pd.DataFrame)
+        self.assertFalse(result_df.empty)
+
+        # Assert that the final DataFrame has unique columns
+        self.assertEqual(len(result_df.columns), len(set(result_df.columns)))
+
+        # Assert that both existing and new data are present
+        self.assertEqual(len(result_df), 2)
+        self.assertIn("P_OLD", result_df["client_idcode"].tolist())
+        self.assertIn("P_NEW", result_df["client_idcode"].tolist())  # The renamed one
+        self.assertNotIn(
+            "P_NEW_CLASH", result_df["client_idcode"].tolist()
+        )  # The duplicate should have been dropped
+
+        self.assertIn("Old clinical note", result_df["body_analysed"].tolist())
+        self.assertIn("New clinical note", result_df["body_analysed"].tolist())
+
+        # Verify that to_csv was called to save the updated data
+        mock_to_csv.assert_called_once()
+
+    @patch("pat2vec.pat2vec_search.cogstack_search_methods.initialize_cogstack_client")
+    def test_epic_indices_integration(self, mock_initialize_cogstack_client):
+        """
+        Test that Epic indices are correctly integrated by verifying their presence
+        in GET_METHOD_INDEX_MAP and attempting to retrieve fields.
+        """
+        mock_cs_instance = MagicMock()
+        mock_initialize_cogstack_client.return_value = mock_cs_instance
+        mock_cs_instance.get_index_fields.return_value = ["field1", "field2"]
+
+        # Filter for Epic-related methods in GET_METHOD_INDEX_MAP
+        epic_methods = {
+            method: index
+            for method, index in GET_METHOD_INDEX_MAP.items()
+            if method.startswith("get_epic_")
+        }
+
+        self.assertGreater(
+            len(epic_methods), 0, "No Epic methods found in GET_METHOD_INDEX_MAP"
+        )
+
+        for method_name, expected_index in epic_methods.items():
+            with self.subTest(method=method_name, index=expected_index):
+                # Call get_all_fields_for_method for each Epic method
+                fields = get_all_fields_for_method(method_name)
+
+                # Assert that initialize_cogstack_client was called
+                mock_initialize_cogstack_client.assert_called()
+
+                # Assert that get_index_fields was called with the correct index
+                mock_cs_instance.get_index_fields.assert_any_call(expected_index)
+
+                # Assert that fields are returned (even if dummy)
+                self.assertIsInstance(fields, list)
+                self.assertGreater(len(fields), 0)
+
+                # Reset mocks for the next subtest
+                mock_cs_instance.get_index_fields.reset_mock()
+                mock_initialize_cogstack_client.reset_mock()

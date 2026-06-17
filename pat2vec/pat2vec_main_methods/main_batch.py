@@ -29,6 +29,25 @@ from pat2vec.pat2vec_get_methods.get_method_news import get_news
 from pat2vec.pat2vec_get_methods.get_method_pat_annotations import (
     get_current_pat_annotations,
 )
+from pat2vec.pat2vec_get_methods.get_method_epic_encounters import get_epic_encounters
+from pat2vec.pat2vec_get_methods.get_method_epic_clinical_notes import (
+    get_epic_clinical_notes,
+)
+from pat2vec.pat2vec_get_methods.get_method_epic_medical_history import (
+    get_epic_medical_history,
+)
+from pat2vec.pat2vec_get_methods.get_method_epic_orders import get_epic_orders
+from pat2vec.pat2vec_get_methods.get_method_epic_orders_annotations import (
+    get_current_pat_epic_orders_annotations,
+)
+from pat2vec.pat2vec_get_methods.get_method_epic_lab_results import get_epic_lab_results
+from pat2vec.pat2vec_get_methods.get_method_epic_patients import get_epic_patients
+from pat2vec.pat2vec_get_methods.get_method_epic_imaging_reports import (
+    get_epic_imaging_reports,
+)
+from pat2vec.pat2vec_get_methods.get_method_epic_clinical_notes_appointments import (
+    get_epic_clinical_notes_appointments,
+)
 from pat2vec.pat2vec_get_methods.get_method_smoking import get_smoking
 from pat2vec.pat2vec_get_methods.get_method_vte_status import get_vte_status
 from pat2vec.util.methods_get import (
@@ -168,6 +187,7 @@ def main_batch(
                 # This makes the calling mechanism more robust and easier to extend.
                 funcs_with_cohort_searcher = {
                     get_current_pat_drugs,
+                    get_current_pat_bloods,
                     get_current_pat_diagnostics,
                     get_current_pat_annotations,
                     get_current_pat_annotations_mrc_cs,
@@ -181,6 +201,15 @@ def main_batch(
                     get_current_pat_report_annotations,
                     get_current_pat_textual_obs_annotations,
                     get_appointments,
+                    get_epic_encounters,
+                    get_epic_clinical_notes,
+                    get_current_pat_epic_orders_annotations,
+                    get_epic_medical_history,
+                    get_epic_orders,
+                    get_epic_lab_results,
+                    get_epic_patients,
+                    get_epic_imaging_reports,
+                    get_epic_clinical_notes_appointments,
                 }
                 funcs_with_cat = {
                     get_current_pat_annotations,
@@ -286,6 +315,62 @@ def main_batch(
                         "batch_arg": "pat_batch",
                         "batch_key": "batch_appointments",
                     },
+                    {
+                        "option": "epic_encounters",
+                        "pbar": "epic_enc",
+                        "func": get_epic_encounters,
+                        "batch_arg": "pat_batch",
+                        "batch_key": "batch_epic_encounters",
+                    },
+                    {
+                        "option": "epic_clinical_notes",
+                        "pbar": "epic_notes",
+                        "func": get_epic_clinical_notes,
+                        "batch_arg": "pat_batch",
+                        "batch_key": "batch_epic_clinical_notes",
+                    },
+                    {
+                        "option": "epic_medical_history",
+                        "pbar": "epic_hist",
+                        "func": get_epic_medical_history,
+                        "batch_arg": "pat_batch",
+                        "batch_key": "batch_epic_medical_history",
+                    },
+                    {
+                        "option": "epic_orders",
+                        "pbar": "epic_orders",
+                        "func": get_epic_orders,
+                        "batch_arg": "pat_batch",
+                        "batch_key": "batch_epic_orders",
+                    },
+                    {
+                        "option": "epic_lab_results",
+                        "pbar": "epic_lab",
+                        "func": get_epic_lab_results,
+                        "batch_arg": "pat_batch",
+                        "batch_key": "batch_epic_lab_results",
+                    },
+                    {
+                        "option": "epic_patients",
+                        "pbar": "epic_pat",
+                        "func": get_epic_patients,
+                        "batch_arg": "pat_batch",
+                        "batch_key": "batch_epic_patients",
+                    },
+                    {
+                        "option": "epic_imaging_reports",
+                        "pbar": "epic_img",
+                        "func": get_epic_imaging_reports,
+                        "batch_arg": "pat_batch",
+                        "batch_key": "batch_epic_imaging_reports",
+                    },
+                    {
+                        "option": "epic_clinical_notes_appointments",
+                        "pbar": "epic_appt_notes",
+                        "func": get_epic_clinical_notes_appointments,
+                        "batch_arg": "pat_batch",
+                        "batch_key": "batch_epic_clinical_notes_appointments",
+                    },
                     # Annotation functions with more complex signatures
                     {
                         "option": "annotations",
@@ -293,6 +378,13 @@ def main_batch(
                         "func": get_current_pat_annotations,
                         "batch_arg": "batch_epr_docs_annotations",
                         "batch_key": "batch_epr_docs_annotations",
+                    },
+                    {
+                        "option": "epic_orders_annotations",
+                        "pbar": "ann_epic_orders",
+                        "func": get_current_pat_epic_orders_annotations,
+                        "batch_arg": "epic_orders_annotations",
+                        "batch_key": "batch_epic_orders_annotations",
                     },
                     {
                         "option": "annotations_mrc",

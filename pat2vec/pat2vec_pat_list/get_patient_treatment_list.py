@@ -447,6 +447,30 @@ def get_all_patients_list(config_obj: Any) -> List[str]:
         if options.get("drugs", False) or options.get("diagnostics", False):
             add_index("order", id_field_term)
 
+        # Epic Indices (standardize ID field to document_PatientDurableKey)
+        epic_id_field = "document_PatientDurableKey"
+        if id_field_term.endswith(".keyword"):
+            epic_id_field += ".keyword"
+
+        epic_options = [
+            "epic_encounters",
+            "epic_clinical_notes",
+            "epic_medical_history",
+            "epic_orders",
+            "epic_lab_results",
+            "epic_patients",
+            "epic_imaging_reports",
+            "epic_clinical_notes_appointments",
+        ]
+
+        for opt in epic_options:
+            if options.get(opt, False):
+                idx_name = opt
+                add_index(idx_name, epic_id_field)
+                # Some Epic tables might use standard client_idcode mapping
+                if opt == "epic_patients":
+                    add_index("epic_patients", id_field_term)
+
         # Default fallback if nothing specific is enabled
         if not indices_to_check:
             if config_obj.verbosity > 0:

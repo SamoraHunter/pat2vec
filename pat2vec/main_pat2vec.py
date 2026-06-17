@@ -59,6 +59,26 @@ from pat2vec.patvec_get_batch_methods.main_get_pat_batch_textual_obs_annotations
 from pat2vec.patvec_get_batch_methods.main_get_pat_batch_textual_obs_docs import (
     get_pat_batch_textual_obs_docs,
 )
+from pat2vec.pat2vec_get_methods.get_method_epic_encounters import (
+    search_epic_encounters,
+)
+from pat2vec.pat2vec_get_methods.get_method_epic_clinical_notes import (
+    search_epic_clinical_notes,
+)
+from pat2vec.pat2vec_get_methods.get_method_epic_medical_history import (
+    search_epic_medical_history,
+)
+from pat2vec.pat2vec_get_methods.get_method_epic_orders import search_epic_orders
+from pat2vec.pat2vec_get_methods.get_method_epic_lab_results import (
+    search_epic_lab_results,
+)
+from pat2vec.pat2vec_get_methods.get_method_epic_patients import search_epic_patients
+from pat2vec.pat2vec_get_methods.get_method_epic_imaging_reports import (
+    search_epic_imaging_reports,
+)
+from pat2vec.pat2vec_get_methods.get_method_epic_clinical_notes_appointments import (
+    search_epic_clinical_notes_appointments,
+)
 from pat2vec.util import config_pat2vec
 from pat2vec.util.generate_date_list import generate_date_list
 from pat2vec.util.get_best_gpu import set_best_gpu
@@ -186,6 +206,9 @@ class main:
                 logging.warning("cohort_searcher_with_terms_and_search is disabled.")
             self.cohort_searcher_with_terms_and_search = None
 
+        logging.debug(
+            f"DEBUG: Final self.cohort_searcher_with_terms_and_search = {self.cohort_searcher_with_terms_and_search}"
+        )
         self.all_patient_list = get_all_patients_list(self.config_obj)
         self.current_pat_lines_path = config_obj.current_pat_lines_path
         self.sftp_client = config_obj.sftp_obj
@@ -534,6 +557,70 @@ class main:
                 "args": {"search_term": None},
                 "empty": empty_return,
             },
+            {
+                "option": "epic_encounters",
+                "var": "batch_epic_encounters",
+                "func": search_epic_encounters,
+                "args": {"id_field_name": "activity_PatientDurableKey"},
+                "empty": empty_return,
+                "id_arg": "patient_durable_keys",
+            },
+            {
+                "option": "epic_clinical_notes",
+                "var": "batch_epic_clinical_notes",
+                "func": search_epic_clinical_notes,
+                "args": {},
+                "empty": empty_return,
+                "id_arg": "patient_durable_keys",
+            },
+            {
+                "option": "epic_medical_history",
+                "var": "batch_epic_medical_history",
+                "func": search_epic_medical_history,
+                "args": {},
+                "empty": empty_return,
+                "id_arg": "patient_durable_keys",
+            },
+            {
+                "option": "epic_orders",
+                "var": "batch_epic_orders",
+                "func": search_epic_orders,
+                "args": {},
+                "empty": empty_return,
+                "id_arg": "patient_durable_keys",
+            },
+            {
+                "option": "epic_lab_results",
+                "var": "batch_epic_lab_results",
+                "func": search_epic_lab_results,
+                "args": {},
+                "empty": empty_return,
+                "id_arg": "patient_durable_keys",
+            },
+            {
+                "option": "epic_patients",
+                "var": "batch_epic_patients",
+                "func": search_epic_patients,
+                "args": {"id_field_name": "patient_DurableKey"},
+                "empty": empty_return,
+                "id_arg": "patient_durable_keys",
+            },
+            {
+                "option": "epic_imaging_reports",
+                "var": "batch_epic_imaging_reports",
+                "func": search_epic_imaging_reports,
+                "args": {},
+                "empty": empty_return,
+                "id_arg": "patient_durable_keys",
+            },
+            {
+                "option": "epic_clinical_notes_appointments",
+                "var": "batch_epic_clinical_notes_appointments",
+                "func": search_epic_clinical_notes_appointments,
+                "args": {},
+                "empty": empty_return,
+                "id_arg": "patient_durable_keys",
+            },
         ]
 
         # Configuration for annotation batches
@@ -569,12 +656,34 @@ class main:
         # Fetch standard batches
         for config in batch_configs:
             if self.config_obj.main_options.get(config["option"], True):
-                batches[config["var"]] = config["func"](
-                    current_pat_client_id_code=current_pat_client_id_code,
-                    config_obj=self.config_obj,
-                    cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search,
+                id_arg_name = config.get("id_arg", "current_pat_client_id_code")
+                call_kwargs = {
+                    id_arg_name: (
+                        [current_pat_client_id_code]
+                        if id_arg_name == "patient_durable_keys"
+                        else current_pat_client_id_code
+                    ),
+                    "config_obj": self.config_obj,
+                    "cohort_searcher_with_terms_and_search": self.cohort_searcher_with_terms_and_search,
                     **config["args"],
+                }
+                if id_arg_name == "patient_durable_keys":
+                    call_kwargs["output_filename"] = None
+
+                res = config["func"](**call_kwargs)
+
+                id_col = (
+                    config["args"].get("id_field_name", "document_PatientDurableKey")
+                    if id_arg_name == "patient_durable_keys"
+                    else "client_idcode"
                 )
+                if (
+                    not res.empty
+                    and id_col in res.columns
+                    and id_col != "client_idcode"
+                ):
+                    res.rename(columns={id_col: "client_idcode"}, inplace=True)
+                batches[config["var"]] = res
             else:
                 batches[config["var"]] = config["empty"]
 
@@ -626,6 +735,17 @@ class main:
             "batch_hospsite": ("raw_hospsite", "client_idcode"),
             "batch_resus": ("raw_resus", "client_idcode"),
             "batch_obs": ("raw_obs", "client_idcode"),
+            "batch_epic_encounters": ("raw_epic_encounters", "client_idcode"),
+            "batch_epic_clinical_notes": ("raw_epic_clinical_notes", "client_idcode"),
+            "batch_epic_medical_history": ("raw_epic_medical_history", "client_idcode"),
+            "batch_epic_orders": ("raw_epic_orders", "client_idcode"),
+            "batch_epic_lab_results": ("raw_epic_lab_results", "client_idcode"),
+            "batch_epic_patients": ("raw_epic_patients", "client_idcode"),
+            "batch_epic_imaging_reports": ("raw_epic_imaging_reports", "client_idcode"),
+            "batch_epic_clinical_notes_appointments": (
+                "raw_epic_clinical_notes_appointments",
+                "client_idcode",
+            ),
         }
 
         for batch_key, (table_name, id_col) in batch_to_table.items():
@@ -637,8 +757,6 @@ class main:
                     self.config_obj,
                     id_column=id_col,
                 )
-
-        return batches
 
     def _setup_patient_time_window(
         self, current_pat_client_id_code: str
@@ -801,10 +919,22 @@ class main:
                 "option": "annotations_mrc",
             },
             {
+                "key": "batch_textual_obs_annotations",
+                "time_col": "basicobs_entered",
+                "text_col": None,
+                "option": "textual_obs",
+            },
+            {
                 "key": "batch_reports_docs_annotations",
                 "time_col": "updatetime",
                 "text_col": None,
                 "option": "annotations_reports",
+            },
+            {
+                "key": "batch_epic_orders_annotations",
+                "time_col": "document_CreatedWhen",
+                "text_col": None,
+                "option": "epic_orders_annotations",
             },
         ]
 
@@ -815,13 +945,19 @@ class main:
                     time_col = config["time_col"]
                     text_col = config["text_col"]
 
+                    if time_col not in batch.columns:
+                        logging.warning(
+                            f"Cleaning skipped for {config['key']}: column '{time_col}' missing."
+                        )
+                        continue
+
                     try:
                         batch[time_col] = pd.to_datetime(
                             batch[time_col], errors="coerce", utc=True
                         )
                         batch.dropna(subset=[time_col], inplace=True)
 
-                        if text_col:
+                        if text_col and text_col in batch.columns:
                             batch.dropna(subset=[text_col], inplace=True)
                             batch = batch[
                                 batch[text_col].apply(lambda x: isinstance(x, str))
@@ -841,17 +977,18 @@ class main:
                 "EPR annotations: %d", len(batches["batch_epr_docs_annotations"])
             )
             logging.debug(
-                "EPR annotations mct:", len(batches["batch_epr_docs_annotations_mct"])
+                "EPR annotations mct: %d",
+                len(batches["batch_epr_docs_annotations_mct"]),
             )
             logging.debug(
                 "textual obs docs: %d", len(batches["batch_textual_obs_docs"])
             )
             logging.debug(
-                "textual obs annotations:",
+                "textual obs annotations: %d",
                 len(batches["batch_textual_obs_annotations"]),
             )
             logging.debug(
-                "batch_report_docs_annotations:",
+                "batch_report_docs_annotations: %d",
                 len(batches["batch_reports_docs_annotations"]),
             )
 
@@ -886,6 +1023,9 @@ class main:
                     logging.debug(
                         f"Processing date {date_slice} for patient {current_pat_client_id_code}..."
                     )
+                logging.debug(
+                    f"DEBUG: _process_patient_slices: cohort_searcher_with_terms_and_search = {self.cohort_searcher_with_terms_and_search}"
+                )
 
                 if self.config_obj.calculate_vectors:
                     self.config_obj.last_lines = main_batch(
