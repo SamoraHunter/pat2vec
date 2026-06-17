@@ -56,6 +56,60 @@ DATA_TYPE_CONFIG: Dict[str, Dict[str, str]] = {
         "path_attr": "pre_demo_batch_path",
         "id_column": "client_idcode",
     },
+    "obs": {
+        "db_table": "raw_obs",
+        "db_schema": "raw_data",
+        "path_attr": "pre_obs_batch_path",
+        "id_column": "client_idcode",
+    },
+    "smoking": {
+        "db_table": "raw_smoking",
+        "db_schema": "raw_data",
+        "path_attr": "pre_obs_batch_path",
+        "id_column": "client_idcode",
+        "display_name_filter": "CORE_SmokingStatus",
+    },
+    "vte_status": {
+        "db_table": "raw_vte",
+        "db_schema": "raw_data",
+        "path_attr": "pre_obs_batch_path",
+        "id_column": "client_idcode",
+        "display_name_filter": "CORE_VTE_STATUS",
+    },
+    "hosp_site": {
+        "db_table": "raw_hospsite",
+        "db_schema": "raw_data",
+        "path_attr": "pre_obs_batch_path",
+        "id_column": "client_idcode",
+        "display_name_filter": "CORE_HospitalSite",
+    },
+    "core_resus": {
+        "db_table": "raw_resus",
+        "db_schema": "raw_data",
+        "path_attr": "pre_obs_batch_path",
+        "id_column": "client_idcode",
+        "display_name_filter": "CORE_RESUS_STATUS",
+    },
+    "core_02": {
+        "db_table": "raw_core_02",
+        "db_schema": "raw_data",
+        "path_attr": "pre_obs_batch_path",
+        "id_column": "client_idcode",
+        "display_name_filter": "CORE_SpO2",
+    },
+    "bed": {
+        "db_table": "raw_bed",
+        "db_schema": "raw_data",
+        "path_attr": "pre_obs_batch_path",
+        "id_column": "client_idcode",
+        "display_name_filter": "CORE_BedNumber3",
+    },
+    "covid": {
+        "db_table": "raw_covid",
+        "db_schema": "raw_data",
+        "path_attr": "pre_misc_batch_path",
+        "id_column": "client_idcode",
+    },
     "textual_obs": {
         "db_table": "raw_textual_obs",
         "db_schema": "raw_data",
@@ -92,10 +146,89 @@ DATA_TYPE_CONFIG: Dict[str, Dict[str, str]] = {
         "path_attr": "pre_textual_obs_annotation_batch_path",
         "id_column": "client_idcode",
     },
-    "report_annotations": {
+    "reports_annotations": {  # Added missing entry for reports_annotations
         "db_table": "ann_reports",
         "db_schema": "annotations",
         "path_attr": "pre_document_annotation_batch_path_reports",
+        "id_column": "client_idcode",
+    },
+    "epic_orders_annotations": {
+        "db_table": "ann_epic_orders",
+        "db_schema": "annotations",
+        "path_attr": "pre_epic_orders_annotation_batch_path",
+        "id_column": "client_idcode",
+    },
+    "epic_clinical_notes_annotations": {
+        "db_table": "ann_epic_clinical_notes",
+        "db_schema": "annotations",
+        "path_attr": "pre_epic_clinical_notes_annotation_batch_path",
+        "id_column": "client_idcode",
+    },
+    "epic_clinical_notes_appointments_annotations": {
+        "db_table": "ann_epic_clinical_notes_appointments",
+        "db_schema": "annotations",
+        "path_attr": "pre_epic_clinical_notes_appointments_annotation_batch_path",
+        "id_column": "client_idcode",
+    },
+    "epic_imaging_reports_annotations": {
+        "db_table": "ann_epic_imaging_reports",
+        "db_schema": "annotations",
+        "path_attr": "pre_epic_imaging_reports_annotation_batch_path",
+        "id_column": "client_idcode",
+    },
+    "epic_medical_history_annotations": {
+        "db_table": "ann_epic_medical_history",
+        "db_schema": "annotations",
+        "path_attr": "pre_epic_medical_history_annotation_batch_path",
+        "id_column": "client_idcode",
+    },
+    "epic_encounters": {
+        "db_table": "raw_epic_encounters",
+        "db_schema": "raw_data",
+        "path_attr": "pre_epic_encounters_batch_path",
+        "id_column": "client_idcode",
+    },
+    "epic_clinical_notes": {
+        "db_table": "raw_epic_clinical_notes",
+        "db_schema": "raw_data",
+        "path_attr": "pre_epic_clinical_notes_batch_path",
+        "id_column": "client_idcode",
+        "time_field": "document_CreatedWhen",  # Added time_field
+    },
+    "epic_medical_history": {
+        "db_table": "raw_epic_medical_history",
+        "db_schema": "raw_data",
+        "path_attr": "pre_epic_medical_history_batch_path",
+        "id_column": "client_idcode",
+    },
+    "epic_orders": {
+        "db_table": "raw_epic_orders",
+        "db_schema": "raw_data",
+        "path_attr": "pre_epic_orders_batch_path",
+        "id_column": "client_idcode",
+    },
+    "epic_lab_results": {
+        "db_table": "raw_epic_lab_results",
+        "db_schema": "raw_data",
+        "path_attr": "pre_epic_lab_results_batch_path",
+        "id_column": "client_idcode",
+    },
+    "epic_patients": {
+        "db_table": "raw_epic_patients",
+        "db_schema": "raw_data",
+        "path_attr": "pre_epic_patients_batch_path",
+        "id_column": "client_idcode",
+    },
+    "epic_imaging_reports": {
+        "db_table": "raw_epic_imaging_reports",
+        "db_schema": "raw_data",
+        "path_attr": "pre_epic_imaging_reports_batch_path",
+        "id_column": "client_idcode",
+    },
+    "epic_clinical_notes_appointments": {
+        "db_table": "raw_epic_clinical_notes_appointments",
+        "db_schema": "raw_data",
+        "path_attr": "pre_epic_clinical_notes_appointments_batch_path",
         "id_column": "client_idcode",
     },
 }
@@ -142,7 +275,14 @@ def retrieve_patient_data(
         file_path = f"{base_path}/{client_idcode}.csv"
 
         try:
-            return pd.read_csv(file_path)
+            df = pd.read_csv(file_path)
+            # Apply concept-specific filtering for mixed observation directories
+            filter_val = config.get("display_name_filter")
+            if filter_val and not df.empty:
+                col = "obscatalogmasteritem_displayname"
+                if col in df.columns:
+                    df = df[df[col] == filter_val]
+            return df
         except FileNotFoundError:
             return pd.DataFrame()
         except Exception as e:
