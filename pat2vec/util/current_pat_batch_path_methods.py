@@ -40,7 +40,12 @@ class PathsClass:
             f"current_pat_documents_annotations_batches{self.suffix}/",
             f"current_pat_documents_annotations_batches_mct{self.suffix}/",
             f"current_pat_documents_annotations_batches_reports{self.suffix}/",
+            f"current_pat_epic_clinical_notes_annotations_batches{self.suffix}/",
+            f"current_pat_epic_clinical_notes_appointments_annotations_batches{self.suffix}/",
+            f"current_pat_epic_medical_history_annotations_batches{self.suffix}/",
+            f"current_pat_epic_imaging_reports_annotations_batches{self.suffix}/",
             f"current_pat_document_batches{self.suffix}/",
+            f"current_pat_epic_orders_annotations_batches{self.suffix}/",
             f"current_pat_document_batches_mct{self.suffix}/",
             f"current_pat_document_batches_reports{self.suffix}/",
             f"current_pat_bloods_batches{self.suffix}/",
@@ -50,11 +55,11 @@ class PathsClass:
             f"current_pat_obs_batches{self.suffix}/",
             f"current_pat_bmi_batches{self.suffix}/",
             f"current_pat_demo_batches{self.suffix}/",
-            # f'current_pat_misc_batches{self.suffix}/', #Dynamically created
+            f"current_pat_misc_batches{self.suffix}/",
             f"current_pat_lines_parts{self.suffix}/",
             f"current_pat_appointments_batches{self.suffix}/",
             f"current_pat_textual_obs_document_batches{self.suffix}/",
-            f"current_pat_textual_obs_annotation_batches{self.suffix}/",
+            f"current_pat_textual_obs_annotations_batches{self.suffix}/",
             f"merged_input_pat_batches{self.suffix}/",
         ]
 

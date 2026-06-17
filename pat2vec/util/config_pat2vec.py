@@ -93,12 +93,13 @@ class config_class:
         sample_treatment_docs: int = 0,
         test_data_path: Optional[str] = None,
         test_schema_path: Optional[str] = None,
-        credentials_path: str = "../../credentials.py",
+        credentials_path: str = "../../../credentials.py",
         storage_backend: str = "database",
         db_connection_string: Optional[str] = None,
         check_patient_existence: bool = True,
         testing_elastic: bool = False,
         include_text_sample_in_annots: bool = False,
+        all_patient_list: Optional[List[str]] = None,
     ) -> None:
         """Initializes the configuration object for the pat2vec pipeline.
         This class holds all configuration parameters for a pat2vec run, including
@@ -207,6 +208,7 @@ class config_class:
                 Defaults to `True`.
             testing_elastic: If `True`, testing mode will interact with a real (mocked/test)
                 Elasticsearch instance instead of using dummy data generators.
+            all_patient_list: An optional list of patient IDs to process.
         """
 
         if prefetch_pat_batches and individual_patient_window:
@@ -224,14 +226,22 @@ class config_class:
         #: If `True`, fetches all raw data for all patients before processing. May use significant memory.
         self.prefetch_pat_batches = prefetch_pat_batches
 
+        #: An optional list of patient IDs to process.
+        self.all_patient_list = all_patient_list
+
         #: If `True`, calculates feature vectors. If `False`, only extracts batches.
         self.calculate_vectors = calculate_vectors  # Calculate vectors for each patient else just extract batches
 
         #: Validate IPW configuration early to prevent TypeErrors
-        if individual_patient_window and individual_patient_window_df is None:
-            raise ValueError(
-                "individual_patient_window_df must be provided when individual_patient_window is True."
-            )
+        if individual_patient_window:
+            if individual_patient_window_df is None:
+                raise ValueError(
+                    "individual_patient_window_df must be provided when individual_patient_window is True."
+                )
+            # Resolve and set the ID column name early to satisfy downstream checks
+            if individual_patient_id_column_name is None:
+                individual_patient_id_column_name = patient_id_column_name
+            self.individual_patient_id_column_name = individual_patient_id_column_name
 
         #: The name of the current project, used for creating project-specific folders.
         self.proj_name = proj_name
@@ -342,9 +352,19 @@ class config_class:
         self.pre_document_annotation_batch_path_mct = (
             f"current_pat_documents_annotations_batches_mct{self.suffix}/"
         )
+        self.pre_epic_clinical_notes_annotation_batch_path = (
+            f"current_pat_epic_clinical_notes_annotations_batches{self.suffix}/"
+        )
+        self.pre_epic_clinical_notes_appointments_annotation_batch_path = f"current_pat_epic_clinical_notes_appointments_annotations_batches{self.suffix}/"
+        self.pre_epic_imaging_reports_annotation_batch_path = (
+            f"current_pat_epic_imaging_reports_annotations_batches{self.suffix}/"
+        )
         #: Path to the report annotation batches directory.
         self.pre_report_annotation_batch_path_report = (
-            f"current_pat_documents_annotations_batches_report{self.suffix}/"
+            f"current_pat_documents_annotations_batches_reports{self.suffix}/"
+        )
+        self.pre_epic_orders_annotation_batch_path = (
+            f"current_pat_epic_orders_annotations_batches{self.suffix}/"
         )
 
         #: Path to the document batches directory.
@@ -361,11 +381,13 @@ class config_class:
 
         #: Path to the textual observation annotation batches directory.
         self.pre_textual_obs_annotation_batch_path = (
-            f"current_pat_textual_obs_annotation_batches{self.suffix}/"
+            f"current_pat_textual_obs_annotations_batches{self.suffix}/"
         )
 
         #: Path to the report batches directory.
-        self.pre_report_batch_path = f"current_pat_report_batches{self.suffix}/"
+        self.pre_report_batch_path = (
+            f"current_pat_document_batches_reports{self.suffix}/"
+        )
 
         #: Path to the bloods batches directory.
         self.pre_bloods_batch_path = f"current_pat_bloods_batches{self.suffix}/"
@@ -571,7 +593,9 @@ class config_class:
                 "vte_status": False,
                 "hosp_site": False,
                 "core_resus": False,
+                "obs": False,
                 "news": False,
+                "smoking": False,
                 "annotations": False,
                 "annotations_mrc": False,
                 "negated_presence_annotations": False,
@@ -579,6 +603,16 @@ class config_class:
                 "annotations_reports": False,
                 "covid": False,
                 "textual_obs": False,
+                # Epic Options
+                "epic_encounters": False,
+                "epic_clinical_notes": False,
+                "epic_medical_history": False,
+                "epic_orders": False,
+                "epic_orders_annotations": False,
+                "epic_lab_results": False,
+                "epic_patients": False,
+                "epic_imaging_reports": False,
+                "epic_clinical_notes_appointments": False,
             }
             if self.verbosity >= 1:
                 logger.info(self.main_options)
@@ -652,10 +686,32 @@ class config_class:
                 f"current_pat_documents_annotations_batches_mct{self.suffix}/",
             )
 
+            self.pre_epic_clinical_notes_annotation_batch_path = os.path.join(
+                self.root_path,
+                f"current_pat_epic_clinical_notes_annotations_batches{self.suffix}/",
+            )
+            self.pre_epic_clinical_notes_appointments_annotation_batch_path = os.path.join(
+                self.root_path,
+                f"current_pat_epic_clinical_notes_appointments_annotations_batches{self.suffix}/",
+            )
+
+            self.pre_epic_imaging_reports_annotation_batch_path = os.path.join(
+                self.root_path,
+                f"current_pat_epic_imaging_reports_annotations_batches{self.suffix}/",
+            )
+            self.pre_epic_orders_annotation_batch_path = os.path.join(
+                self.root_path,
+                f"current_pat_epic_orders_annotations_batches{self.suffix}/",
+            )
+            self.pre_epic_medical_history_annotation_batch_path = os.path.join(
+                self.root_path,
+                f"current_pat_epic_medical_history_annotations_batches{self.suffix}/",
+            )
+
             #: Path to the textual observation annotation batches directory.
             self.pre_textual_obs_annotation_batch_path = os.path.join(
                 self.root_path,
-                f"current_pat_textual_obs_annotation_batches{self.suffix}/",
+                f"current_pat_textual_obs_annotations_batches{self.suffix}/",
             )
 
             self.pre_textual_obs_document_batch_path = os.path.join(
@@ -709,8 +765,8 @@ class config_class:
             )
 
             #: Path to the demographics batches directory.
-            self.pre_demo_batch_path = os.path.join(
-                self.root_path, f"current_pat_demo_batches{self.suffix}/"
+            self.pre_report_batch_path = os.path.join(
+                self.root_path, f"current_pat_document_batches_reports{self.suffix}/"
             )
 
             self.pre_misc_batch_path = os.path.join(
@@ -719,6 +775,35 @@ class config_class:
 
             self.pre_appointments_batch_path = os.path.join(
                 self.root_path, f"current_pat_appointments_batches{self.suffix}/"
+            )
+
+            # Epic Batch Paths
+            self.pre_epic_encounters_batch_path = os.path.join(
+                self.root_path, f"current_pat_epic_encounters_batches{self.suffix}/"
+            )
+            self.pre_epic_clinical_notes_batch_path = os.path.join(
+                self.root_path, f"current_pat_epic_clinical_notes_batches{self.suffix}/"
+            )
+            self.pre_epic_medical_history_batch_path = os.path.join(
+                self.root_path,
+                f"current_pat_epic_medical_history_batches{self.suffix}/",
+            )
+            self.pre_epic_orders_batch_path = os.path.join(
+                self.root_path, f"current_pat_epic_orders_batches{self.suffix}/"
+            )
+            self.pre_epic_lab_results_batch_path = os.path.join(
+                self.root_path, f"current_pat_epic_lab_results_batches{self.suffix}/"
+            )
+            self.pre_epic_patients_batch_path = os.path.join(
+                self.root_path, f"current_pat_epic_patients_batches{self.suffix}/"
+            )
+            self.pre_epic_imaging_reports_batch_path = os.path.join(
+                self.root_path,
+                f"current_pat_epic_imaging_reports_batches{self.suffix}/",
+            )
+            self.pre_epic_clinical_notes_appointments_batch_path = os.path.join(
+                self.root_path,
+                f"current_pat_epic_clinical_notes_appointments_batches{self.suffix}/",
             )
 
             #: Path to the merged input batches directory.
@@ -938,10 +1023,14 @@ class config_class:
                 int(self.global_start_month),
                 int(self.global_start_day),
             )
+            # Ensure the end date covers the full day to avoid losing boundary data points.
             self.global_end_date = datetime(
                 int(self.global_end_year),
                 int(self.global_end_month),
                 int(self.global_end_day),
+                0,
+                0,
+                0,
             )
         except (ValueError, TypeError):
             self.global_start_date = None
@@ -1047,7 +1136,7 @@ class config_class:
 
                 self.patient_dict = build_patient_dict(
                     dataframe=self.individual_patient_window_df,
-                    patient_id_column=self.individual_patient_id_column_name,
+                    patient_id_column=id_column_name,
                     start_column=offset_column_name,
                     end_column=end_date_column_name,
                 )
@@ -1084,19 +1173,24 @@ class config_class:
 
                 self.patient_dict = build_patient_dict(
                     dataframe=self.individual_patient_window_df,
-                    patient_id_column=self.individual_patient_id_column_name,
-                    start_column=self.individual_patient_window_start_column_name,  # Use the now-converted original column
-                    end_column=f"{start_column_name}_offset",
+                    patient_id_column=id_column_name,
+                    start_column=(
+                        offset_column_name
+                        if self.lookback
+                        else self.individual_patient_window_start_column_name
+                    ),
+                    end_column=(
+                        self.individual_patient_window_start_column_name
+                        if self.lookback
+                        else offset_column_name
+                    ),
                 )
 
             logger.info(
                 f"Built patient_dict with {len(self.patient_dict)} patients from {len(self.individual_patient_window_df)} rows."
             )
 
-            #: Number of patient lines, dynamic for IPW.
-            self.n_pat_lines = (
-                None  # N_pat_lines will be dynamic for each pat... or potentially?
-            )
+            self.n_pat_lines = None
             self.date_list = None  # We will generate this in main_pat2vec under individiual patient window
 
         if self.verbosity > 1:
@@ -1140,6 +1234,7 @@ class config_class:
             "vte_status": True,
             "hosp_site": True,
             "core_resus": True,
+            "obs": True,
             "news": True,
             "smoking": True,
             "annotations": True,
@@ -1149,6 +1244,16 @@ class config_class:
             "annotations_reports": True,
             "covid": True,
             "textual_obs": True,
+            # Epic Test Implementations
+            "epic_encounters": True,
+            "epic_clinical_notes": True,
+            "epic_medical_history": True,
+            "epic_orders": True,
+            "epic_orders_annotations": True,
+            "epic_lab_results": True,
+            "epic_patients": True,
+            "epic_imaging_reports": True,
+            "epic_clinical_notes_appointments": True,
         }
 
     def _update_main_options(self) -> None:

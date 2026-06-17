@@ -59,6 +59,14 @@ def anonymize_feature_names(df: pd.DataFrame) -> Tuple[pd.DataFrame, Dict[str, s
             "census_",  # from ethnicity_list filter
             "bed_",  # from bed_list filter
             "bmi_",  # from bmi_list filter
+            "epic_enc_",
+            "epic_note_appt_",
+            "epic_note_",
+            "epic_med_hist_",
+            "epic_order_",
+            "epic_lab_",
+            "epic_pat_",
+            "epic_img_",
         ],
         key=len,
         reverse=True,

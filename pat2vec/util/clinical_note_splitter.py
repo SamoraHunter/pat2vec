@@ -11,8 +11,8 @@ logger = logging.getLogger(__name__)
 def find_date(
     txt: str,
     original_update_time_value: Optional[Timestamp] = None,
-    reg: str = "Entered on -",
-    window: int = 20,
+    reg: str = r"Entered on -",
+    window: int = 50,
     verbosity: int = 0,
 ) -> List[Dict[str, Any]]:
     """Finds and extracts date-stamped text chunks from a larger text body.
@@ -36,62 +36,75 @@ def find_date(
     """
 
     m = regex.finditer(reg, txt)
-    text_start = 0
-    chunks = []
-    for match in m:
-        # logger.debug("end",match.span()[1])
-        date_window_start = match.span()[1]
-        date_window_end = date_window_start + window
-        dw = txt[date_window_start:date_window_end]
-        dw = dw.strip()
-        # logger.debug(dw)
+    chunks: List[Dict[str, Any]] = []
 
-        ts = regex.findall(r"[\d]{2}-\w{3}-[\d]{4} [\d]{2}:[\d]{2}", dw)
-        date_l = 0  # used to find start of next section
-        date_found = False
-        if len(ts) == 1:
-            # timestamp found ok
-            date_found = True
-            date = pd.to_datetime(ts[0])
-            date_l = len(ts[0])
-        else:
-            if len(ts) == 0:
-                # no timestamp found
+    # Store all found date entry points and their parsed dates
+    date_entries: List[Tuple[int, int, pd.Timestamp]] = []
+
+    for match_reg in m:
+        # The actual date string is expected right after the 'reg' match
+        date_window_start_idx = match_reg.span()[1]
+        date_window_end_idx = date_window_start_idx + window
+        date_text_window = txt[date_window_start_idx:date_window_end_idx].strip()
+
+        # Regex to capture DD-Mon-YYYY HH:MM or YYYY-MM-DD HH:MM:SS
+        ts_match = regex.search(
+            r"(\d{1,2}-[A-Za-z]{3}-\d{4}|\d{4}-\d{2}-\d{2})\s*\d{1,2}:\d{2}(?::\d{2})?",
+            date_text_window,
+        )
+
+        if ts_match:
+            date_str = ts_match.group(0)
+            try:
+                parsed_date = pd.to_datetime(date_str)
+                end_of_date_string_in_text = date_window_start_idx + ts_match.end()
+                date_entries.append(
+                    (match_reg.span()[0], end_of_date_string_in_text, parsed_date)
+                )
+            except Exception as e:
                 if verbosity > 1:
-                    logger.debug(f"no timestamp found in '{dw}'")
-                else:
-                    pass
+                    logger.debug(f"Could not parse date '{date_str}': {e}")
+        elif verbosity > 1:
+            logger.debug(f"No timestamp found in '{date_text_window}'.")
 
-            else:
-                if verbosity > 1:
-                    # multiple matches
-                    logger.debug(f"too many timestamps found in '{dw}'")
-                else:
-                    pass
+    if not date_entries:
+        return [
+            {
+                "text": txt,
+                "date": original_update_time_value,
+                "date_found": False,
+                "text_start": 0,
+                "text_end": len(txt),
+            }
+        ]
 
-            # date = None
-            # return original date to avoid None
-            date = original_update_time_value
-
-        # +1 as all seem to be 1 char short
-        text_end = match.span()[1] + date_l + 1
-        chunk_t = txt[text_start:text_end]
+    # Handle text before the first date entry
+    if date_entries[0][0] > 0:
         chunks.append(
             {
-                "text": chunk_t,
-                "date_text": dw,
-                "date": date,
-                "date_found": date_found,
-                "text_start": text_start,
-                "text_end": text_end,
+                "text": txt[0 : date_entries[0][0]],
+                "date": original_update_time_value,
+                "date_found": False,
+                "text_start": 0,
+                "text_end": date_entries[0][0],
             }
         )
 
-        # next window starts at end of this one, try
-        if date_found:
-            text_start = match.span()[1] + date_l + 1
-        else:
-            text_start = match.span()[0]
+    for i in range(len(date_entries)):
+        # Start index is the beginning of the marker (e.g., "Entered on -")
+        start_idx = date_entries[i][0]
+        # End index is the beginning of the next entry, or end of string
+        end_idx = date_entries[i + 1][0] if i < len(date_entries) - 1 else len(txt)
+
+        chunks.append(
+            {
+                "text": txt[start_idx:end_idx],
+                "date": date_entries[i][2],
+                "date_found": True,
+                "text_start": start_idx,
+                "text_end": end_idx,
+            }
+        )
 
     return chunks
 
@@ -129,18 +142,26 @@ def split_clinical_notes(
         d = row["body_analysed"]
         ch = []
         try:
-            ch = find_date(
-                d, original_update_time_value=row["updatetime"], verbosity=verbosity_val
-            )
-            extracted.append(
-                {"id": row["id"], "client_idcode": row["client_idcode"], "chunks": ch}
-            )
+            if d:  # Only try to find dates if there's text
+                ch = find_date(
+                    d,
+                    original_update_time_value=row["updatetime"],
+                    verbosity=verbosity_val,
+                )
+                row_id = row.get("id", row.get("_id", "unknown"))
+                extracted.append(
+                    {"id": row_id, "client_idcode": row["client_idcode"], "chunks": ch}
+                )
 
-            document_description_list.append(row["document_description"])
-            id_list.append(row["id"])
-            document_guid_list.append(row["document_guid"])
-            clientvisit_visitidcode_list.append(row["clientvisit_visitidcode"])
-            index_list.append(row["_index"])
+                document_description_list.append(
+                    row.get("document_description", "Unknown")
+                )
+                id_list.append(row_id)
+                document_guid_list.append(row.get("document_guid", "Unknown"))
+                clientvisit_visitidcode_list.append(
+                    row.get("clientvisit_visitidcode", "Unknown")
+                )
+                index_list.append(row.get("_index", "Unknown"))
         except Exception:
             ch = []
 
@@ -170,7 +191,13 @@ def split_clinical_notes(
             new_docs.append(nd)
             counter += 1
         counter_1 += 1
-    processed = pd.DataFrame(new_docs)
+    processed = (
+        pd.DataFrame(new_docs).assign(
+            updatetime=lambda x: pd.to_datetime(x["updatetime"])
+        )
+        if new_docs
+        else pd.DataFrame()
+    )
     none_rows = pd.DataFrame(none_rows)
     return processed, none_rows
 
@@ -213,15 +240,20 @@ def split_clinical_notes_mct(
             ch = find_date(
                 d, row["observationdocument_recordeddtm"], verbosity=verbosity_val
             )
+            row_id = row.get("id", row.get("_id", "unknown"))
             extracted.append(
-                {"id": row["id"], "client_idcode": row["client_idcode"], "chunks": ch}
+                {"id": row_id, "client_idcode": row["client_idcode"], "chunks": ch}
             )
 
-            document_description_list.append(row["obscatalogmasteritem_displayname"])
-            id_list.append(row["id"])
-            document_guid_list.append(row["observation_guid"])
-            clientvisit_visitidcode_list.append(row["clientvisit_visitidcode"])
-            index_list.append(row["_index"])
+            document_description_list.append(
+                row.get("obscatalogmasteritem_displayname", "Unknown")
+            )
+            id_list.append(row_id)
+            document_guid_list.append(row.get("observation_guid", "Unknown"))
+            clientvisit_visitidcode_list.append(
+                row.get("clientvisit_visitidcode", "Unknown")
+            )
+            index_list.append(row.get("_index", "Unknown"))
 
         except Exception:
             ch = []
@@ -239,6 +271,7 @@ def split_clinical_notes_mct(
                 "client_idcode": ex["client_idcode"],
                 "observation_valuetext_analysed": ch["text"],
                 "observationdocument_recordeddtm": ch["date"],
+                "updatetime": ch["date"],
             }
             nd["obscatalogmasteritem_displayname"] = (
                 f"{document_description_list[counter_1]}_clinical note chunk_{counter}"
@@ -252,7 +285,119 @@ def split_clinical_notes_mct(
             new_docs.append(nd)
             counter += 1
         counter_1 += 1
-    processed = pd.DataFrame(new_docs)
+    if new_docs:
+        processed = pd.DataFrame(new_docs).assign(
+            updatetime=lambda x: pd.to_datetime(x["updatetime"])
+        )
+        # Explicitly convert updatetime to avoid FutureWarning in pandas
+        processed["updatetime"] = pd.to_datetime(processed["updatetime"])
+    else:
+        processed = pd.DataFrame(
+            columns=[
+                "client_idcode",
+                "body_analysed",
+                "updatetime",
+                "document_description",
+                "_id",
+                "document_guid",
+                "clientvisit_visitidcode",
+                "_index",
+                "source_file",
+            ]
+        )
+
+    none_rows = pd.DataFrame(none_rows)
+    return processed, none_rows
+
+
+def split_epic_clinical_notes(
+    clin_note: pd.DataFrame, verbosity_val: int = 0
+) -> Tuple[pd.DataFrame, pd.DataFrame]:
+    """Splits clinical notes from Epic schema DataFrame into date-stamped chunks.
+
+    This function iterates through a DataFrame of Epic clinical notes (assuming an
+    Epic-like schema with 'document_Content' and 'document_CreatedWhen' columns). It uses
+    the `find_date` function to break down each note's text into smaller
+    documents based on embedded timestamps.
+
+    Args:
+        clin_note: A DataFrame containing the clinical notes to be split.
+        verbosity_val: The verbosity level passed to the `find_date` function.
+
+    Returns:
+        A tuple containing two DataFrames:
+        - pd.DataFrame: The processed notes, split into smaller chunks.
+        - pd.DataFrame: The original rows of notes that could not be split.
+    """
+    extracted = []
+    none_found = []
+    document_name_list = []
+    id_list = []
+    document_guid_list = []  # Assuming 'id' in Epic is like a GUID
+    encounter_epic_csn_list = []
+    encounter_key_list = []
+    index_list = []
+    none_rows = []
+
+    for index, row in clin_note.iterrows():
+        d = row["document_Content"]
+        ch = []
+        try:
+            ch = find_date(
+                d,
+                original_update_time_value=row["document_CreatedWhen"],
+                verbosity=verbosity_val,
+            )
+            row_id = row.get("id", row.get("_id", "unknown"))
+            extracted.append(
+                {
+                    "id": row_id,
+                    "client_idcode": row["document_PatientDurableKey"],
+                    "chunks": ch,
+                }
+            )
+
+            document_name_list.append(row.get("document_Name", "Unknown"))
+            id_list.append(row_id)
+            document_guid_list.append(
+                row_id
+            )  # Using 'id' as document_guid for Epic notes
+            encounter_epic_csn_list.append(row.get("document_EncounterEpicCsn"))
+            encounter_key_list.append(row.get("document_EncounterKey"))
+            index_list.append(row.get("_index", "Unknown"))
+        except Exception:
+            ch = []
+
+        if len(ch) == 0:
+            none_found.append(d)
+            none_rows.append(row)
+
+    new_docs = []
+    counter_1 = 0
+    for ex in extracted:
+        counter = 0
+        for ch in ex["chunks"]:
+            nd = {
+                "document_PatientDurableKey": ex["client_idcode"],
+                "document_Content": ch["text"],
+                "document_CreatedWhen": ch["date"],
+                "document_Name": f"{document_name_list[counter_1]}_clinical note chunk_{counter}",
+                "id": id_list[counter_1],
+                "_index": index_list[counter_1],
+                "document_EncounterEpicCsn": encounter_epic_csn_list[counter_1],
+                "document_EncounterKey": encounter_key_list[counter_1],
+                "source_file": ex["id"],
+            }
+            new_docs.append(nd)
+            counter += 1
+        counter_1 += 1
+    processed = (
+        pd.DataFrame(new_docs).assign(
+            document_CreatedWhen=lambda x: pd.to_datetime(x["document_CreatedWhen"])
+        )
+        if new_docs
+        else pd.DataFrame()
+    )
     none_rows = pd.DataFrame(none_rows)
     return processed, none_rows
 
@@ -280,53 +425,98 @@ def split_and_append_chunks(
     """
 
     # Filter clinical and non-clinical notes
-    column_name = "document_description"
-    column_name_mct = "obscatalogmasteritem_displayname"
+    clinical_notes = pd.DataFrame()
+    non_clinical_notes = docs.copy()
+    split_function = None
 
-    if column_name in docs.columns:
-        clinical_notes = docs[docs[column_name] == "Clinical Note"].copy()
-        non_clinical_notes = docs[docs[column_name] != "Clinical Note"]
+    # Determine the type of clinical notes and the appropriate splitting function
+    if "document_description" in docs.columns and epr:
+        clinical_notes = docs[docs["document_description"] == "Clinical Note"].copy()
+        non_clinical_notes = docs[docs["document_description"] != "Clinical Note"]
+        split_function = split_clinical_notes
         if verbosity > 1:
-            logger.debug(f"Found column '{column_name}' in DataFrame.")
-    elif column_name_mct in docs.columns:
+            logger.debug("Identified EPR clinical notes for splitting.")
+    elif "obscatalogmasteritem_displayname" in docs.columns and mct:
         clinical_notes = docs[
-            docs[column_name_mct] == "AoMRC_ClinicalSummary_FT"
+            docs["obscatalogmasteritem_displayname"] == "AoMRC_ClinicalSummary_FT"
         ].copy()
-        non_clinical_notes = docs[docs[column_name_mct] != "AoMRC_ClinicalSummary_FT"]
+        non_clinical_notes = docs[
+            docs["obscatalogmasteritem_displayname"] != "AoMRC_ClinicalSummary_FT"
+        ]
+        split_function = split_clinical_notes_mct
         if verbosity > 1:
-            logger.debug(f"Found column '{column_name_mct}' in DataFrame.")
+            logger.debug("Identified MCT clinical notes for splitting.")
+    elif "document_Name" in docs.columns and "document_Content" in docs.columns:
+        # Assuming Epic clinical notes are identified by having both document_Name and document_Content
+        # and potentially a specific pattern in document_Name if needed.
+        # For now, let's assume any document with content and a name could be split.
+        # A more robust check might involve a list of known Epic clinical note names.
+        is_epic_clinical_note = docs["document_Name"].str.contains(
+            "note", case=False, na=False
+        ) | docs["document_Name"].str.contains("summary", case=False, na=False)
+
+        clinical_notes = docs[is_epic_clinical_note].copy()
+        non_clinical_notes = docs[~is_epic_clinical_note]
+        split_function = split_epic_clinical_notes
+        if verbosity > 1:
+            logger.debug("Identified Epic clinical notes for splitting.")
     else:
-        raise ValueError(
-            f"Neither {column_name} nor {column_name_mct} found in DataFrame columns."
-        )
+        if verbosity > 1:
+            logger.debug(
+                "No identifiable clinical notes for splitting based on known patterns."
+            )
+        # If no clinical notes are identified, return the original DataFrame
+        return docs
 
     # Check verbosity and print sizes if needed
     if verbosity > 1:
         logger.debug(f"Size of clinical_notes dataframe: {len(clinical_notes)}")
         logger.debug(f"Size of non_clinical_notes dataframe: {len(non_clinical_notes)}")
 
-    # Rename the '_id' column to 'id'
-    clinical_notes.rename(columns={"_id": "id"}, inplace=True)
+    if clinical_notes.empty:
+        return docs  # No clinical notes to split, return original docs
 
-    if epr:
-        # Split clinical notes according to epr schema
-        split_clinical_notes_result, none_found = split_clinical_notes(
+    # Rename the '_id' column to 'id' if it exists and is not already 'id'
+    if "_id" in clinical_notes.columns and "id" not in clinical_notes.columns:
+        clinical_notes.rename(columns={"_id": "id"}, inplace=True)
+
+    if split_function:
+        split_clinical_notes_result, none_found = split_function(
             clinical_notes, verbosity_val=verbosity
         )
-    if mct:
-        # Split clinical notes according to mct schema
-        split_clinical_notes_result, none_found = split_clinical_notes_mct(
-            clinical_notes, verbosity_val=verbosity
+    else:
+        split_clinical_notes_result = pd.DataFrame()
+        none_found = (
+            clinical_notes  # If no split function, all clinical notes are "none_found"
         )
 
     # Rename id back to _id in none_found to match existing schema and avoid "no column named id" errors
     if not none_found.empty and "id" in none_found.columns:
         none_found.rename(columns={"id": "_id"}, inplace=True)
 
+    # Standardize Epic patient ID column to client_idcode for concatenation
+    if "document_PatientDurableKey" in split_clinical_notes_result.columns:
+        split_clinical_notes_result.rename(
+            columns={"document_PatientDurableKey": "client_idcode"}, inplace=True
+        )
+    if "document_PatientDurableKey" in none_found.columns:
+        none_found.rename(
+            columns={"document_PatientDurableKey": "client_idcode"}, inplace=True
+        )
+    if "document_PatientDurableKey" in non_clinical_notes.columns:
+        non_clinical_notes.rename(
+            columns={"document_PatientDurableKey": "client_idcode"}, inplace=True
+        )
+
     # Concatenate non-clinical and split clinical notes
     concatenated_notes = pd.concat([non_clinical_notes, split_clinical_notes_result])
 
     concatenated_notes = pd.concat([concatenated_notes, none_found], ignore_index=True)
+
+    # Ensure unique columns before returning to prevent ValueError in subsequent operations
+    concatenated_notes = concatenated_notes.loc[
+        :, ~concatenated_notes.columns.duplicated()
+    ]
 
     # Reset index
     concatenated_notes.reset_index(inplace=True)

@@ -384,6 +384,15 @@ def check_patients_existence(
     Returns:
         A list of patient IDs that were found in the index.
     """
+    if (
+        config_obj
+        and getattr(config_obj, "testing", False)
+        and not getattr(config_obj, "testing_elastic", False)
+    ):
+        # Bypassing ES check during non-elastic testing to allow dummy data generators to work.
+        # This fixes the "invalid codes" warning and prevents patient filtering in tests.
+        return patient_ids
+
     from pat2vec.pat2vec_search.cogstack_search_methods import (
         check_patients_existence as real_check,
     )
