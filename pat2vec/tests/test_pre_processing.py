@@ -34,6 +34,11 @@ class TestPreProcessing(unittest.TestCase):
         self.mock_config.testing = False
         self.mock_config.testing_elastic = False
         self.mock_config.client_idcode_term_name = "client_idcode"
+        self.mock_config.main_options = {
+            "annotations": True,
+            "annotations_mrc": True,
+            "textual_obs": True,
+        }
 
         self.mock_pat2vec_obj = MagicMock()
         self.mock_pat2vec_obj.config_obj = self.mock_config
@@ -271,17 +276,19 @@ class TestPreProcessing(unittest.TestCase):
             os.path.join("/fake/root", "treatment_docs.csv"),
             start_day="31",
             start_month="12",
-            start_year="2021",  # global_end_year becomes start_year
+            start_year="2021",
             end_day="01",
             end_month="01",
-            end_year="2020",  # global_start_year becomes end_year
-            debug=False,
-            overwrite=False,
+            end_year="2020",
+            append=True,
             additional_filters=None,
             all_fields=False,
             method="fuzzy",
             fuzzy=2,
             slop=1,
+            testing=False,
+            testing_elastic=False,
+            debug=False,
         )
 
     @patch(
@@ -405,13 +412,15 @@ class TestPreProcessing(unittest.TestCase):
             end_day="31",
             end_month="12",
             end_year="2020",
-            debug=False,
-            overwrite=False,
             additional_filters=additional_filters,
             all_fields=False,
             method="fuzzy",
             fuzzy=2,
             slop=1,
+            testing=False,
+            debug=False,
+            testing_elastic=False,
+            append=True,  # Added missing default parameter
         )
         mock_search_mct.assert_called_once_with(
             term_list,
@@ -422,14 +431,15 @@ class TestPreProcessing(unittest.TestCase):
             end_day="31",
             end_month="12",
             end_year="2020",
+            debug=False,  # Added missing default parameter
             append=True,
-            additional_filters=additional_filters,
             all_fields=False,
             method="fuzzy",
             fuzzy=2,
             slop=1,
             testing=False,
             testing_elastic=False,
+            additional_filters=additional_filters,  # Added missing parameter
         )
         mock_search_textual_obs.assert_called_once_with(
             term_list,
@@ -440,14 +450,15 @@ class TestPreProcessing(unittest.TestCase):
             end_day="31",
             end_month="12",
             end_year="2020",
+            debug=False,  # Added missing default parameter
             append=True,
-            additional_filters=additional_filters,
             all_fields=False,
             method="fuzzy",
             fuzzy=2,
             slop=1,
             testing=False,
             testing_elastic=False,
+            additional_filters=additional_filters,  # Added missing parameter
         )
 
     @patch("pat2vec.util.pre_processing.cohort_searcher_with_terms_and_search_dummy")
@@ -519,8 +530,8 @@ class TestPreProcessing(unittest.TestCase):
         mock_search_epr,
     ):
         """Test that output directory is created if it doesn't exist."""
-        # Simulate output file and directory not existing for all relevant checks
-        self.mock_exists.side_effect = [False, False, False, False, False]
+        # Simulate output file not existing for all relevant checks
+        self.mock_exists.return_value = False
         mock_search_epr.return_value = pd.DataFrame(
             {"col1": [1], "updatetime": ["2020-01-01"]}
         )
@@ -536,7 +547,7 @@ class TestPreProcessing(unittest.TestCase):
             self.mock_pat2vec_obj, term_list
         )
 
-        mock_makedirs.assert_called_once_with("/fake/root")
+        mock_makedirs.assert_called_once_with("/fake/root", exist_ok=True)
         mock_to_csv.assert_called_once()
 
     @patch(
