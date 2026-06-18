@@ -9,13 +9,19 @@ It exposes the main functions and methods of the pat2vec library for easy access
 
 __version__ = "0.3.4"
 
-from .main_pat2vec import main
+from .main_pat2vec import (
+    main,
+)
 from .pat2vec_get_methods.get_method_appointments import (
     APPOINTMENT_FIELDS,
     get_appointments,
     search_appointments,
 )
-from .pat2vec_get_methods.get_method_bed import BED_FIELDS, get_bed, search_bed_data
+from .pat2vec_get_methods.get_method_bed import (
+    BED_FIELDS,
+    get_bed,
+    search_bed_data,
+)
 from .pat2vec_get_methods.get_method_bloods import (
     BLOODS_FIELDS,
     get_current_pat_bloods,
@@ -79,6 +85,49 @@ from .pat2vec_get_methods.get_method_drugs import (
     prepare_drug_datetime,
     search_drug_orders,
 )
+from .pat2vec_get_methods.get_method_epic_clinical_notes import (
+    EPIC_CLINICAL_NOTES_FIELDS,
+    get_epic_clinical_notes,
+    search_epic_clinical_notes,
+)
+from .pat2vec_get_methods.get_method_epic_clinical_notes_appointments import (
+    EPIC_CLINICAL_NOTES_APPOINTMENTS_FIELDS,
+    get_epic_clinical_notes_appointments,
+    search_epic_clinical_notes_appointments,
+)
+from .pat2vec_get_methods.get_method_epic_encounters import (
+    EPIC_ENCOUNTER_FIELDS,
+    get_epic_encounters,
+    search_epic_encounters,
+)
+from .pat2vec_get_methods.get_method_epic_imaging_reports import (
+    EPIC_IMAGING_REPORTS_FIELDS,
+    get_epic_imaging_reports,
+    search_epic_imaging_reports,
+)
+from .pat2vec_get_methods.get_method_epic_lab_results import (
+    EPIC_LAB_RESULTS_FIELDS,
+    get_epic_lab_results,
+    search_epic_lab_results,
+)
+from .pat2vec_get_methods.get_method_epic_medical_history import (
+    EPIC_MEDICAL_HISTORY_FIELDS,
+    get_epic_medical_history,
+    search_epic_medical_history,
+)
+from .pat2vec_get_methods.get_method_epic_orders import (
+    EPIC_ORDERS_FIELDS,
+    get_epic_orders,
+    search_epic_orders,
+)
+from .pat2vec_get_methods.get_method_epic_orders_annotations import (
+    get_current_pat_epic_orders_annotations,
+)
+from .pat2vec_get_methods.get_method_epic_patients import (
+    EPIC_PATIENTS_FIELDS,
+    get_epic_patients,
+    search_epic_patients,
+)
 from .pat2vec_get_methods.get_method_hosp_site import (
     HOSP_SITE_FIELDS,
     SEARCH_TERM,
@@ -92,7 +141,15 @@ from .pat2vec_get_methods.get_method_news import (
     get_news,
     search_news_observations,
 )
-from .pat2vec_get_methods.get_method_pat_annotations import get_current_pat_annotations
+from .pat2vec_get_methods.get_method_obs import (
+    get_current_pat_obs,
+)
+from .pat2vec_get_methods.get_method_pat_annotations import (
+    get_current_pat_annotations,
+)
+from .pat2vec_get_methods.get_method_problem_list import (
+    get_current_pat_problem_list,
+)
 from .pat2vec_get_methods.get_method_report_annotations import (
     get_current_pat_report_annotations,
 )
@@ -113,8 +170,12 @@ from .pat2vec_get_methods.get_method_vte_status import (
     prepare_vte_data,
     search_vte,
 )
-from .pat2vec_get_methods.test_get_method_demo import TestGetMethodDemo
-from .pat2vec_main_methods.main_batch import main_batch
+from .pat2vec_get_methods.test_get_method_demo import (
+    TestGetMethodDemo,
+)
+from .pat2vec_main_methods.main_batch import (
+    main_batch,
+)
 from .pat2vec_pat_list.get_patient_treatment_list import (
     analyze_client_codes,
     extract_treatment_id_list_from_docs,
@@ -134,7 +195,18 @@ from .pat2vec_search.cogstack_search_methods import (
     get_all_fields_for_method,
     initialize_cogstack_client,
     iterative_multi_term_cohort_searcher_no_terms_fuzzy,
+    iterative_multi_term_cohort_searcher_no_terms_fuzzy_diagnostics,
+    iterative_multi_term_cohort_searcher_no_terms_fuzzy_drugs,
+    iterative_multi_term_cohort_searcher_no_terms_fuzzy_epic_clinical_notes,
+    iterative_multi_term_cohort_searcher_no_terms_fuzzy_epic_clinical_notes_appointments,
+    iterative_multi_term_cohort_searcher_no_terms_fuzzy_epic_encounters,
+    iterative_multi_term_cohort_searcher_no_terms_fuzzy_epic_imaging_reports,
+    iterative_multi_term_cohort_searcher_no_terms_fuzzy_epic_lab_results,
+    iterative_multi_term_cohort_searcher_no_terms_fuzzy_epic_medical_history,
+    iterative_multi_term_cohort_searcher_no_terms_fuzzy_epic_orders,
     iterative_multi_term_cohort_searcher_no_terms_fuzzy_mct,
+    iterative_multi_term_cohort_searcher_no_terms_fuzzy_obs,
+    iterative_multi_term_cohort_searcher_no_terms_fuzzy_reports,
     iterative_multi_term_cohort_searcher_no_terms_fuzzy_textual_obs,
     list_chunker,
     set_index_safe_wrapper,
@@ -145,8 +217,14 @@ from .pat2vec_search.data_helper_functions import (
     append_age_at_record_series,
     df_column_uniquify,
 )
-from .pat2vec_search.matcher import find_all_matches, match_terms_in_text, matcher
-from .pat2vec_search.nearest import nearest
+from .pat2vec_search.matcher import (
+    find_all_matches,
+    match_terms_in_text,
+    matcher,
+)
+from .pat2vec_search.nearest import (
+    nearest,
+)
 from .pat2vec_search.search_helper_functions import (
     bulk_str_extract,
     bulk_str_extract_round_robin,
@@ -161,9 +239,15 @@ from .pat2vec_search.search_multiprocess import (
     cohort_searcher_with_terms_and_search_multi,
     pull_and_write,
 )
-from .pat2vec_search.test_cogstack_search_methods import TestCogstackSearchMethods
-from .pat2vec_search.test_data_helper_functions import TestDataHelperFunctions
-from .pat2vec_search.test_matcher import TestMatcher
+from .pat2vec_search.test_cogstack_search_methods import (
+    TestCogstackSearchMethods,
+)
+from .pat2vec_search.test_data_helper_functions import (
+    TestDataHelperFunctions,
+)
+from .pat2vec_search.test_matcher import (
+    TestMatcher,
+)
 from .patvec_get_batch_methods.get_merged_batches import (
     get_merged_pat_batch_appointments,
     get_merged_pat_batch_bloods,
@@ -182,28 +266,49 @@ from .patvec_get_batch_methods.get_merged_batches import (
     verify_split_data_concatenated,
     verify_split_data_individual,
 )
-from .patvec_get_batch_methods.get_prefetch_batches import BatchConfig, prefetch_batches
+from .patvec_get_batch_methods.get_prefetch_batches import (
+    BatchConfig,
+    prefetch_batches,
+)
 from .patvec_get_batch_methods.main_get_pat_batch_appointments import (
     get_pat_batch_appointments,
 )
-from .patvec_get_batch_methods.main_get_pat_batch_bloods import get_pat_batch_bloods
-from .patvec_get_batch_methods.main_get_pat_batch_bmi import get_pat_batch_bmi
-from .patvec_get_batch_methods.main_get_pat_batch_demo import get_pat_batch_demo
+from .patvec_get_batch_methods.main_get_pat_batch_bloods import (
+    get_pat_batch_bloods,
+)
+from .patvec_get_batch_methods.main_get_pat_batch_bmi import (
+    get_pat_batch_bmi,
+)
+from .patvec_get_batch_methods.main_get_pat_batch_demo import (
+    get_pat_batch_demo,
+)
 from .patvec_get_batch_methods.main_get_pat_batch_diagnostics import (
     get_pat_batch_diagnostics,
 )
-from .patvec_get_batch_methods.main_get_pat_batch_drugs import get_pat_batch_drugs
-from .patvec_get_batch_methods.main_get_pat_batch_epr_docs import get_pat_batch_epr_docs
+from .patvec_get_batch_methods.main_get_pat_batch_drugs import (
+    get_pat_batch_drugs,
+)
+from .patvec_get_batch_methods.main_get_pat_batch_epr_docs import (
+    get_pat_batch_epr_docs,
+)
 from .patvec_get_batch_methods.main_get_pat_batch_epr_docs_annotations import (
     get_pat_batch_epr_docs_annotations,
 )
-from .patvec_get_batch_methods.main_get_pat_batch_mct_docs import get_pat_batch_mct_docs
+from .patvec_get_batch_methods.main_get_pat_batch_mct_docs import (
+    get_pat_batch_mct_docs,
+)
 from .patvec_get_batch_methods.main_get_pat_batch_mct_docs_annotations import (
     get_pat_batch_mct_docs_annotations,
 )
-from .patvec_get_batch_methods.main_get_pat_batch_news import get_pat_batch_news
-from .patvec_get_batch_methods.main_get_pat_batch_obs import get_pat_batch_obs
-from .patvec_get_batch_methods.main_get_pat_batch_reports import get_pat_batch_reports
+from .patvec_get_batch_methods.main_get_pat_batch_news import (
+    get_pat_batch_news,
+)
+from .patvec_get_batch_methods.main_get_pat_batch_obs import (
+    get_pat_batch_obs,
+)
+from .patvec_get_batch_methods.main_get_pat_batch_reports import (
+    get_pat_batch_reports,
+)
 from .patvec_get_batch_methods.main_get_pat_batch_reports_docs_annotations import (
     get_pat_batch_reports_docs_annotations,
 )
@@ -213,92 +318,6 @@ from .patvec_get_batch_methods.main_get_pat_batch_textual_obs_annotations import
 from .patvec_get_batch_methods.main_get_pat_batch_textual_obs_docs import (
     get_pat_batch_textual_obs_docs,
 )
-from .tests.test_anonymisation_data_methods import TestAnonymisationDataMethods
-from .tests.test_anonymisation_deid_documents import TestDeIdAnonymizer
-from .tests.test_calculate_interval import TestCalculateInterval
-from .tests.test_config_class import TestConfigClass
-from .tests.test_database_backend import TestDatabaseBackend
-from .tests.test_database_backend_extended import TestDatabaseBackendExtended
-from .tests.test_docker_elastic import TestElasticContainer
-from .tests.test_elastic_population import TestElasticPopulation
-from .tests.test_elasticsearch_methods import TestElasticsearchMethods
-from .tests.test_ethnicity_abstractor import TestEthnicityAbstractor
-from .tests.test_evaluation_methods_ploting import TestEvaluationMethodsPloting
-from .tests.test_filter_dataframe_by_timestamp_extended import (
-    TestFilterDataFrameByTimestampExtended,
-)
-from .tests.test_filter_methods import TestFilterMethods
-from .tests.test_generate_date_list import TestGenerateDateList
-from .tests.test_generate_elastic_schema import TestGenerateElasticSchema
-from .tests.test_get_dummy_data_cohort_searcher_get_date import (
-    TestCreateRandomDateFromGlobals,
-)
-from .tests.test_get_start_end_year_month import MockConfig, TestGetStartEndYearMonth
-from .tests.test_global_date_validation import TestGlobalDateValidation
-from .tests.test_individual_patient_window import TestIndividualPatientWindow
-from .tests.test_integration_data_integrity import TestIntegrationDataIntegrity
-from .tests.test_integration_elastic import TestIntegrationElastic
-from .tests.test_logger_setup import TestLoggerSetup
-from .tests.test_medcat_misc_methods import TestMedcatMiscMethods
-from .tests.test_methods_annotation_filter_annot_dataframe import (
-    TestFilterAnnotDataframe,
-)
-from .tests.test_methods_annotation_multi_annots_to_df import TestMultiAnnotsToDf
-from .tests.test_methods_get import TestFilterDataFrameByTimestamp
-from .tests.test_methods_get_medcat import TestMethodsGetMedcat
-from .tests.test_parse_date import TestDateValidationForElasticsearch
-from .tests.test_pat_maker_full_flow import (
-    TestBatchRetrievalDB,
-    TestPatMakerFullFlow,
-    TestPatMakerLogic,
-)
-from .tests.test_post_processing import TestPostProcessing
-from .tests.test_post_processing_build_ipw_dataframe import TestBuildIpwDataframe
-from .tests.test_post_processing_get_pat_ipw_record import TestGetPatIpwRecord
-from .tests.test_post_processing_medcat import TestPostProcessingMedcat
-from .tests.test_post_processing_process_csv_files import TestProcessCsvFiles
-from .tests.test_pre_get_drug_treatment_docs import TestPreGetDrugTreatmentDocs
-from .tests.test_pre_processing import TestPreProcessing
-from .tests.test_presentation_methods import TestPresentationMethods
-from .tests.test_retrieve_data import TestRetrieveData
-from .tests.test_schema_consistency import TestSchemaConsistency
-from .tests.test_util_clinical_note_splitter import TestClinicalNoteSplitter
-from .tests.test_util_compile_requirements import TestCompileRequirements
-from .tests.test_util_current_pat_batch_path_methods import (
-    TestCurrentPatBatchPathMethods,
-)
-from .tests.test_util_dummy_data_helpers import TestDummyDataHelpers
-from .tests.test_util_evaluation_methods import HAS_YDATA, TestEvaluationMethods
-from .tests.test_util_get_best_gpu import TestGetBestGpu
-from .tests.test_util_get_dummy_data_medcat_annotation import (
-    TestGetDummyDataMedcatAnnotation,
-)
-from .tests.test_util_get_method_maps import TestMethodMaps
-from .tests.test_util_helper_functions import TestHelperFunctions
-from .tests.test_util_impute_data_for_pipe import TestImputeDataForPipe
-from .tests.test_util_methods_annotation import TestMethodsAnnotation
-from .tests.test_util_methods_annotation_get_pat_document_annotation_batch import (
-    TestAnnotationBatchOrchestration,
-)
-from .tests.test_util_methods_annotation_json_to_dataframe import (
-    TestMethodsAnnotationJsonToDataframe,
-)
-from .tests.test_util_methods_annotation_regex import TestMethodsAnnotationRegex
-from .tests.test_util_methods_get import TestUtilMethodsGet
-from .tests.test_util_methods_post_get import TestMethodsPostGet
-from .tests.test_util_migrate_to_db import TestMigrateToDb
-from .tests.test_util_post_processing_annotations import TestPostProcessingAnnotations
-from .tests.test_util_post_processing_build_methods import (
-    TestPostProcessingBuildMethods,
-)
-from .tests.test_util_post_processing_dataframe import TestPostProcessingDataframe
-from .tests.test_util_post_processing_plotting import TestPostProcessingPlotting
-from .tests.test_util_post_processing_process_csv_files import (
-    TestPostProcessingProcessCsvFiles,
-)
-from .tests.test_util_post_processing_utils import TestPostProcessingUtils
-from .tests.test_util_testing_helpers import TestTestingHelpers
-from .tests.test_util_utilities import TestDummyDataLogic, TestMethodsGet
 from .util.anonymisation_data_methods import (
     anonymize_feature_names,
     deanonymize_feature_names,
@@ -308,12 +327,15 @@ from .util.anonymisation_deid_documents import (
     anonymize_dataframe_quick,
     anonymize_single_text,
 )
-from .util.calculate_interval import calculate_interval
+from .util.calculate_interval import (
+    calculate_interval,
+)
 from .util.clinical_note_splitter import (
     find_date,
     split_and_append_chunks,
     split_clinical_notes,
     split_clinical_notes_mct,
+    split_epic_clinical_notes,
 )
 from .util.compile_requirements import (
     append_to_file,
@@ -325,16 +347,25 @@ from .util.config_pat2vec import (
     update_global_start_date,
     validate_and_fix_global_dates,
 )
-from .util.current_pat_batch_path_methods import PathsClass
-from .util.docker_elastic import ElasticContainer
+from .util.current_pat_batch_path_methods import (
+    PathsClass,
+)
+from .util.docker_elastic import (
+    ElasticContainer,
+)
 from .util.elasticsearch_methods import (
     get_guess_datetime_column,
     guess_datetime_columns,
     handle_inconsistent_dtypes,
     ingest_data_to_elasticsearch,
 )
-from .util.ethnicity_abstractor import EthnicityAbstractor
-from .util.evaluation_methods import CsvProfiler, compare_ipw_annotation_rows
+from .util.ethnicity_abstractor import (
+    EthnicityAbstractor,
+)
+from .util.evaluation_methods import (
+    CsvProfiler,
+    compare_ipw_annotation_rows,
+)
 from .util.evaluation_methods_ploting import (
     generate_pie_charts,
     plot_calibration_curve,
@@ -344,24 +375,44 @@ from .util.evaluation_methods_ploting import (
     plot_precision_recall_curve,
     plot_roc_curve,
 )
-from .util.filter_dataframe_by_timestamp import filter_dataframe_by_timestamp
+from .util.filter_dataframe_by_timestamp import (
+    filter_dataframe_by_timestamp,
+)
 from .util.filter_methods import (
     apply_bloods_data_type_filter,
+    apply_data_type_diagnostics_filters,
+    apply_data_type_drugs_filters,
+    apply_data_type_epic_clinical_notes_appointments_filters,
+    apply_data_type_epic_clinical_notes_filters,
+    apply_data_type_epic_imaging_reports_filters,
+    apply_data_type_epic_lab_results_filters,
+    apply_data_type_epic_medical_history_filters,
+    apply_data_type_epic_orders_filters,
+    apply_data_type_epic_patients_filters,
     apply_data_type_epr_docs_filters,
     apply_data_type_mct_docs_filters,
+    apply_data_type_news_filters,
+    apply_data_type_obs_filters,
+    apply_data_type_reports_filters,
+    apply_data_type_textual_obs_filters,
     filter_dataframe_by_fuzzy_terms,
 )
-from .util.generate_date_list import generate_date_list
+from .util.generate_date_list import (
+    generate_date_list,
+)
 from .util.generate_elastic_schema import (
     create_schema_from_dataframe,
     generate_elastic_schema,
     generate_mapping_for_dataframe,
     generate_schema_from_cluster,
 )
-from .util.get_best_gpu import set_best_gpu
+from .util.get_best_gpu import (
+    set_best_gpu,
+)
 from .util.get_dummy_data_cohort_searcher import (
     cohort_searcher_with_terms_and_search_dummy,
     create_random_date_from_globals,
+    dummy_CAT,
     extract_date_range,
     extract_search_term_obscatalogmasteritem_displayname,
     generate_appointments_data,
@@ -374,6 +425,14 @@ from .util.get_dummy_data_cohort_searcher import (
     generate_covid_observations_data,
     generate_diagnostic_orders_data,
     generate_drug_orders_data,
+    generate_epic_clinical_notes_appointments_data,
+    generate_epic_clinical_notes_data,
+    generate_epic_encounters_data,
+    generate_epic_imaging_reports_data,
+    generate_epic_lab_results_data,
+    generate_epic_medical_history_data,
+    generate_epic_orders_data,
+    generate_epic_patients_data,
     generate_epr_documents_data,
     generate_epr_documents_personal_data,
     generate_hospital_site_data,
@@ -383,6 +442,7 @@ from .util.get_dummy_data_cohort_searcher import (
     generate_observations_data,
     generate_patient_timeline,
     generate_patient_timeline_faker,
+    generate_problem_list_data,
     generate_smoking_data,
     generate_uuid,
     generate_uuid_list,
@@ -395,7 +455,6 @@ from .util.get_dummy_data_cohort_searcher import (
 )
 from .util.get_dummy_data_medcat_annotation import (
     augment_dummy_annotations_file,
-    dummy_CAT,
     dummy_medcat_annotation_generator,
     random_sample,
 )
@@ -409,7 +468,9 @@ from .util.get_method_index_map import (
     get_all_method_indices,
     get_index_for_method,
 )
-from .util.get_start_end_year_month import get_start_end_year_month
+from .util.get_start_end_year_month import (
+    get_start_end_year_month,
+)
 from .util.helper_functions import (
     HELPER_FUNCTIONS_VERSION,
     clear_patient_features,
@@ -425,8 +486,13 @@ from .util.helper_functions import (
     save_raw_patient_batch,
     try_parse_list_string,
 )
-from .util.impute_data_for_pipe import mean_impute_dataframe, save_missing_percentage
-from .util.logger_setup import setup_logger
+from .util.impute_data_for_pipe import (
+    mean_impute_dataframe,
+    save_missing_percentage,
+)
+from .util.logger_setup import (
+    setup_logger,
+)
 from .util.medcat_misc_methods import (
     create_ner_results_dataframe,
     extract_labels_from_medcat_annotation_export,
@@ -440,14 +506,27 @@ from .util.methods_annotation import (
     annot_pat_batch_docs,
     calculate_pretty_name_count_features,
     check_pat_document_annotation_complete,
+    multi_annots_to_df_epic_clinical_notes,
+    multi_annots_to_df_epic_clinical_notes_appointments,
+    multi_annots_to_df_epic_imaging_reports,
+    multi_annots_to_df_epic_lab_results,
+    multi_annots_to_df_epic_medical_history,
+    multi_annots_to_df_epic_orders,
+    multi_annots_to_df_epr_docs,
     multi_annots_to_df_mct,
     multi_annots_to_df_reports,
     multi_annots_to_df_textual_obs,
 )
-from .util.methods_annotation_filter_annot_dataframe import filter_annot_dataframe
+from .util.methods_annotation_filter_annot_dataframe import (
+    filter_annot_dataframe,
+)
 from .util.methods_annotation_get_pat_document_annotation_batch import (
     get_pat_batch_textual_obs_annotation_batch,
     get_pat_document_annotation_batch,
+    get_pat_document_annotation_batch_epic_clinical_notes,
+    get_pat_document_annotation_batch_epic_clinical_notes_appointments,
+    get_pat_document_annotation_batch_epic_imaging_reports,
+    get_pat_document_annotation_batch_epic_medical_history,
     get_pat_document_annotation_batch_mct,
     get_pat_document_annotation_batch_reports,
 )
@@ -459,7 +538,9 @@ from .util.methods_annotation_multi_annots_to_df import (
     multi_annots_to_df,
     temporary_file,
 )
-from .util.methods_annotation_regex import append_regex_term_counts
+from .util.methods_annotation_regex import (
+    append_regex_term_counts,
+)
 from .util.methods_get import (
     add_offset_column,
     build_patient_dict,
@@ -486,15 +567,23 @@ from .util.methods_get import (
     write_csv_wrapper,
     write_remote,
 )
-from .util.methods_get_medcat import get_cat
+from .util.methods_get_medcat import (
+    get_cat,
+)
 from .util.methods_post_get import (
     check_csv_files_in_directory,
     check_csv_integrity,
     copy_project_folders_with_substring_match,
     retrieve_pat_annotations,
 )
-from .util.migrate_to_db import MAPPINGS, create_indexes, migrate_csv_to_db
-from .util.parse_date import validate_input_dates
+from .util.migrate_to_db import (
+    MAPPINGS,
+    create_indexes,
+    migrate_csv_to_db,
+)
+from .util.parse_date import (
+    validate_input_dates,
+)
 from .util.post_processing_annotations import (
     EMPTY_ANNOT_COLS,
     check_list_presence,
@@ -510,7 +599,9 @@ from .util.post_processing_annotations import (
     remove_file_from_paths,
     retrieve_pat_annots_mct_epr,
 )
-from .util.post_processing_build_ipw_dataframe import build_ipw_dataframe
+from .util.post_processing_build_ipw_dataframe import (
+    build_ipw_dataframe,
+)
 from .util.post_processing_build_methods import (
     build_merged_bloods,
     build_merged_epr_mct_annot_df,
@@ -519,11 +610,29 @@ from .util.post_processing_build_methods import (
     join_docs_to_annots,
     load_merged_epr_mct_annots,
     merge_appointments_csv,
+    merge_bed_csv,
+    merge_bloods_csv,
     merge_bmi_csv,
+    merge_core_02_csv,
+    merge_core_resus_csv,
+    merge_covid_csv,
     merge_demographics_csv,
     merge_diagnostics_csv,
     merge_drugs_csv,
+    merge_epic_clinical_notes_appointments_csv,
+    merge_epic_clinical_notes_csv,
+    merge_epic_encounters_csv,
+    merge_epic_imaging_reports_csv,
+    merge_epic_lab_results_csv,
+    merge_epic_medical_history_csv,
+    merge_epic_orders_csv,
+    merge_epic_patients_csv,
+    merge_hosp_site_csv,
     merge_news_csv,
+    merge_reports_csv,
+    merge_smoking_csv,
+    merge_textual_obs_csv,
+    merge_vte_status_csv,
     optimize_dtypes,
     retrieve_pat_bloods,
     retrieve_pat_docs_mct_epr,
@@ -542,12 +651,16 @@ from .util.post_processing_dataframe import (
     missing_percentage_df,
     save_missing_values_pickle,
 )
-from .util.post_processing_get_pat_ipw_record import get_pat_ipw_record
+from .util.post_processing_get_pat_ipw_record import (
+    get_pat_ipw_record,
+)
 from .util.post_processing_medcat import (
     coerce_document_df_to_medcat_trainer_input,
     sample_by_terms,
 )
-from .util.post_processing_plotting import plot_missing_pattern_bloods
+from .util.post_processing_plotting import (
+    plot_missing_pattern_bloods,
+)
 from .util.post_processing_process_csv_files import (
     process_csv_files,
     process_csv_files_multi,
@@ -560,6 +673,7 @@ from .util.post_processing_utils import (
 )
 from .util.pre_get_drug_treatment_docs import (
     get_treatment_records_by_drug_order_name,
+    get_treatment_records_by_drug_order_name_epic,
     iterative_drug_treatment_search,
 )
 from .util.pre_processing import (
@@ -577,8 +691,13 @@ from .util.presentation_methods import (
     create_powerpoint_slides_client_idcode_groups,
     group_images_by_suffix,
 )
-from .util.retrieve_data import DATA_TYPE_CONFIG, retrieve_patient_data
-from .util.testing_helpers import read_test_data
+from .util.retrieve_data import (
+    DATA_TYPE_CONFIG,
+    retrieve_patient_data,
+)
+from .util.testing_helpers import (
+    read_test_data,
+)
 
 # Define the public API of the package
 __all__ = [
@@ -599,91 +718,30 @@ __all__ = [
     "DRUG_FIELDS",
     "DeIdAnonymizer",
     "EMPTY_ANNOT_COLS",
+    "EPIC_CLINICAL_NOTES_APPOINTMENTS_FIELDS",
+    "EPIC_CLINICAL_NOTES_FIELDS",
+    "EPIC_ENCOUNTER_FIELDS",
+    "EPIC_IMAGING_REPORTS_FIELDS",
+    "EPIC_LAB_RESULTS_FIELDS",
+    "EPIC_MEDICAL_HISTORY_FIELDS",
+    "EPIC_ORDERS_FIELDS",
+    "EPIC_PATIENTS_FIELDS",
     "ElasticContainer",
     "EthnicityAbstractor",
     "GET_METHOD_DEFAULT_FIELDS_MAP",
     "GET_METHOD_INDEX_MAP",
-    "HAS_YDATA",
     "HELPER_FUNCTIONS_VERSION",
     "HOSP_SITE_FIELDS",
     "MAPPINGS",
-    "MockConfig",
     "PathsClass",
     "SEARCH_TERM",
     "SEARCH_TERM_ES",
     "SEARCH_TERM_PLAIN",
     "SMOKING_FIELDS",
-    "TestAnnotationBatchOrchestration",
-    "TestAnonymisationDataMethods",
-    "TestBatchRetrievalDB",
-    "TestBuildIpwDataframe",
-    "TestCalculateInterval",
-    "TestClinicalNoteSplitter",
     "TestCogstackSearchMethods",
-    "TestCompileRequirements",
-    "TestConfigClass",
-    "TestCreateRandomDateFromGlobals",
-    "TestCurrentPatBatchPathMethods",
     "TestDataHelperFunctions",
-    "TestDatabaseBackend",
-    "TestDatabaseBackendExtended",
-    "TestDateValidationForElasticsearch",
-    "TestDeIdAnonymizer",
-    "TestDummyDataHelpers",
-    "TestDummyDataLogic",
-    "TestElasticContainer",
-    "TestElasticPopulation",
-    "TestElasticsearchMethods",
-    "TestEthnicityAbstractor",
-    "TestEvaluationMethods",
-    "TestEvaluationMethodsPloting",
-    "TestFilterAnnotDataframe",
-    "TestFilterDataFrameByTimestamp",
-    "TestFilterDataFrameByTimestampExtended",
-    "TestFilterMethods",
-    "TestGenerateDateList",
-    "TestGenerateElasticSchema",
-    "TestGetBestGpu",
-    "TestGetDummyDataMedcatAnnotation",
     "TestGetMethodDemo",
-    "TestGetPatIpwRecord",
-    "TestGetStartEndYearMonth",
-    "TestGlobalDateValidation",
-    "TestHelperFunctions",
-    "TestImputeDataForPipe",
-    "TestIndividualPatientWindow",
-    "TestIntegrationDataIntegrity",
-    "TestIntegrationElastic",
-    "TestLoggerSetup",
     "TestMatcher",
-    "TestMedcatMiscMethods",
-    "TestMethodMaps",
-    "TestMethodsAnnotation",
-    "TestMethodsAnnotationJsonToDataframe",
-    "TestMethodsAnnotationRegex",
-    "TestMethodsGet",
-    "TestMethodsGetMedcat",
-    "TestMethodsPostGet",
-    "TestMigrateToDb",
-    "TestMultiAnnotsToDf",
-    "TestPatMakerFullFlow",
-    "TestPatMakerLogic",
-    "TestPostProcessing",
-    "TestPostProcessingAnnotations",
-    "TestPostProcessingBuildMethods",
-    "TestPostProcessingDataframe",
-    "TestPostProcessingMedcat",
-    "TestPostProcessingPlotting",
-    "TestPostProcessingProcessCsvFiles",
-    "TestPostProcessingUtils",
-    "TestPreGetDrugTreatmentDocs",
-    "TestPreProcessing",
-    "TestPresentationMethods",
-    "TestProcessCsvFiles",
-    "TestRetrieveData",
-    "TestSchemaConsistency",
-    "TestTestingHelpers",
-    "TestUtilMethodsGet",
     "VTE_FIELDS",
     "add_offset_column",
     "aggregate_dataframe_mean",
@@ -698,8 +756,21 @@ __all__ = [
     "append_regex_term_counts",
     "append_to_file",
     "apply_bloods_data_type_filter",
+    "apply_data_type_diagnostics_filters",
+    "apply_data_type_drugs_filters",
+    "apply_data_type_epic_clinical_notes_appointments_filters",
+    "apply_data_type_epic_clinical_notes_filters",
+    "apply_data_type_epic_imaging_reports_filters",
+    "apply_data_type_epic_lab_results_filters",
+    "apply_data_type_epic_medical_history_filters",
+    "apply_data_type_epic_orders_filters",
+    "apply_data_type_epic_patients_filters",
     "apply_data_type_epr_docs_filters",
     "apply_data_type_mct_docs_filters",
+    "apply_data_type_news_filters",
+    "apply_data_type_obs_filters",
+    "apply_data_type_reports_filters",
+    "apply_data_type_textual_obs_filters",
     "augment_dummy_annotations_file",
     "build_ipw_dataframe",
     "build_merged_bloods",
@@ -808,6 +879,14 @@ __all__ = [
     "generate_diagnostic_orders_data",
     "generate_drug_orders_data",
     "generate_elastic_schema",
+    "generate_epic_clinical_notes_appointments_data",
+    "generate_epic_clinical_notes_data",
+    "generate_epic_encounters_data",
+    "generate_epic_imaging_reports_data",
+    "generate_epic_lab_results_data",
+    "generate_epic_medical_history_data",
+    "generate_epic_orders_data",
+    "generate_epic_patients_data",
     "generate_epr_documents_data",
     "generate_epr_documents_personal_data",
     "generate_hospital_site_data",
@@ -819,6 +898,7 @@ __all__ = [
     "generate_patient_timeline",
     "generate_patient_timeline_faker",
     "generate_pie_charts",
+    "generate_problem_list_data",
     "generate_schema_from_cluster",
     "generate_smoking_data",
     "generate_uuid",
@@ -844,6 +924,9 @@ __all__ = [
     "get_current_pat_bloods",
     "get_current_pat_diagnostics",
     "get_current_pat_drugs",
+    "get_current_pat_epic_orders_annotations",
+    "get_current_pat_obs",
+    "get_current_pat_problem_list",
     "get_current_pat_report_annotations",
     "get_current_pat_textual_obs_annotations",
     "get_default_fields_for_method",
@@ -853,6 +936,14 @@ __all__ = [
     "get_demographics_data",
     "get_df_from_db",
     "get_empty_date_vector",
+    "get_epic_clinical_notes",
+    "get_epic_clinical_notes_appointments",
+    "get_epic_encounters",
+    "get_epic_imaging_reports",
+    "get_epic_lab_results",
+    "get_epic_medical_history",
+    "get_epic_orders",
+    "get_epic_patients",
     "get_free_gpu",
     "get_guess_datetime_column",
     "get_hosp_site",
@@ -888,6 +979,10 @@ __all__ = [
     "get_pat_batch_textual_obs_annotations",
     "get_pat_batch_textual_obs_docs",
     "get_pat_document_annotation_batch",
+    "get_pat_document_annotation_batch_epic_clinical_notes",
+    "get_pat_document_annotation_batch_epic_clinical_notes_appointments",
+    "get_pat_document_annotation_batch_epic_imaging_reports",
+    "get_pat_document_annotation_batch_epic_medical_history",
     "get_pat_document_annotation_batch_mct",
     "get_pat_document_annotation_batch_reports",
     "get_pat_ipw_record",
@@ -898,6 +993,7 @@ __all__ = [
     "get_start_end_year_month",
     "get_treatment_docs_by_iterative_multi_term_cohort_searcher_no_terms_fuzzy",
     "get_treatment_records_by_drug_order_name",
+    "get_treatment_records_by_drug_order_name_epic",
     "get_vte_status",
     "group_images_by_suffix",
     "guess_datetime_columns",
@@ -909,7 +1005,18 @@ __all__ = [
     "is_safe_host",
     "iterative_drug_treatment_search",
     "iterative_multi_term_cohort_searcher_no_terms_fuzzy",
+    "iterative_multi_term_cohort_searcher_no_terms_fuzzy_diagnostics",
+    "iterative_multi_term_cohort_searcher_no_terms_fuzzy_drugs",
+    "iterative_multi_term_cohort_searcher_no_terms_fuzzy_epic_clinical_notes",
+    "iterative_multi_term_cohort_searcher_no_terms_fuzzy_epic_clinical_notes_appointments",
+    "iterative_multi_term_cohort_searcher_no_terms_fuzzy_epic_encounters",
+    "iterative_multi_term_cohort_searcher_no_terms_fuzzy_epic_imaging_reports",
+    "iterative_multi_term_cohort_searcher_no_terms_fuzzy_epic_lab_results",
+    "iterative_multi_term_cohort_searcher_no_terms_fuzzy_epic_medical_history",
+    "iterative_multi_term_cohort_searcher_no_terms_fuzzy_epic_orders",
     "iterative_multi_term_cohort_searcher_no_terms_fuzzy_mct",
+    "iterative_multi_term_cohort_searcher_no_terms_fuzzy_obs",
+    "iterative_multi_term_cohort_searcher_no_terms_fuzzy_reports",
     "iterative_multi_term_cohort_searcher_no_terms_fuzzy_textual_obs",
     "join_docs_to_annots",
     "join_icd10_OPC4S_codes_to_annot",
@@ -927,14 +1034,39 @@ __all__ = [
     "mean_impute_dataframe",
     "medcat_trainer_export_to_df",
     "merge_appointments_csv",
+    "merge_bed_csv",
+    "merge_bloods_csv",
     "merge_bmi_csv",
+    "merge_core_02_csv",
+    "merge_core_resus_csv",
+    "merge_covid_csv",
     "merge_demographics_csv",
     "merge_diagnostics_csv",
     "merge_drugs_csv",
+    "merge_epic_clinical_notes_appointments_csv",
+    "merge_epic_clinical_notes_csv",
+    "merge_epic_encounters_csv",
+    "merge_epic_imaging_reports_csv",
+    "merge_epic_lab_results_csv",
+    "merge_epic_medical_history_csv",
+    "merge_epic_orders_csv",
+    "merge_epic_patients_csv",
+    "merge_hosp_site_csv",
     "merge_news_csv",
+    "merge_reports_csv",
+    "merge_smoking_csv",
+    "merge_textual_obs_csv",
+    "merge_vte_status_csv",
     "migrate_csv_to_db",
     "missing_percentage_df",
     "multi_annots_to_df",
+    "multi_annots_to_df_epic_clinical_notes",
+    "multi_annots_to_df_epic_clinical_notes_appointments",
+    "multi_annots_to_df_epic_imaging_reports",
+    "multi_annots_to_df_epic_lab_results",
+    "multi_annots_to_df_epic_medical_history",
+    "multi_annots_to_df_epic_orders",
+    "multi_annots_to_df_epr_docs",
     "multi_annots_to_df_mct",
     "multi_annots_to_df_reports",
     "multi_annots_to_df_textual_obs",
@@ -999,6 +1131,14 @@ __all__ = [
     "search_demographics",
     "search_diagnostic_orders",
     "search_drug_orders",
+    "search_epic_clinical_notes",
+    "search_epic_clinical_notes_appointments",
+    "search_epic_encounters",
+    "search_epic_imaging_reports",
+    "search_epic_lab_results",
+    "search_epic_medical_history",
+    "search_epic_orders",
+    "search_epic_patients",
     "search_hospital_site",
     "search_news_observations",
     "search_smoking",
@@ -1011,6 +1151,7 @@ __all__ = [
     "split_and_save_csv",
     "split_clinical_notes",
     "split_clinical_notes_mct",
+    "split_epic_clinical_notes",
     "stringlist2pylist",
     "stringlist2searchlist",
     "temporary_file",
