@@ -18,7 +18,6 @@ EPIC_LAB_RESULTS_FIELDS = [
     "document_AbnormalLevel",
     "document_LabResultEpicId",
     "document_Fields.valueText",
-    "document_Fields.valueNum",
     "id",
 ]
 
