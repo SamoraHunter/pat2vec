@@ -1,11 +1,11 @@
 import os
 from datetime import datetime, timezone
 from typing import Union, Optional, List
+import logging
 
 import numpy as np
 import pandas as pd
 from IPython.display import display
-from scipy import stats
 
 from pat2vec.util.filter_dataframe_by_timestamp import filter_dataframe_by_timestamp
 from pat2vec.util.get_start_end_year_month import get_start_end_year_month
@@ -13,6 +13,8 @@ from pat2vec.util.parse_date import validate_input_dates
 from pat2vec.pat2vec_get_methods.get_method_epic_lab_results import (
     search_epic_lab_results,
 )
+
+logger = logging.getLogger(__name__)
 
 BLOODS_FIELDS = [
     "client_idcode",
@@ -175,6 +177,10 @@ def get_current_pat_bloods(
     bloods_time_field = config_obj.bloods_time_field
 
     if pat_batch.empty and batch_mode:
+        if config_obj.verbosity >= 1:
+            logger.info(
+                f"pat_batch is empty for {current_pat_client_id_code}. Returning empty DataFrame."
+            )
         return pd.DataFrame({"client_idcode": [current_pat_client_id_code]})
 
     if batch_mode:
@@ -188,6 +194,10 @@ def get_current_pat_bloods(
             end_day,
             bloods_time_field,
         )
+        if config_obj.verbosity >= 1:
+            logger.info(
+                f"After filter_dataframe_by_timestamp (batch_mode): {len(current_pat_bloods)} rows for {current_pat_client_id_code}"
+            )
     else:
         current_pat_bloods = search_bloods_data(
             cohort_searcher_with_terms_and_search=cohort_searcher_with_terms_and_search,
@@ -203,6 +213,10 @@ def get_current_pat_bloods(
             output_filename=None,
             config_obj=config_obj,
         )
+        if config_obj.verbosity >= 1:
+            logger.info(
+                f"After search_bloods_data (non-batch_mode): {len(current_pat_bloods)} rows for {current_pat_client_id_code}"
+            )
 
     # --- Integrate Epic Lab Results if enabled ---
     if config_obj.main_options.get("epic_lab_results", False):
@@ -218,7 +232,7 @@ def get_current_pat_bloods(
                 "document_PatientDurableKey",
                 "document_CollectedDate",
                 "document_Name",
-                "document_Fields.valueNum",
+                "document_Fields.valueText",
                 "id",  # Use Epic's 'id' as a guid
             ],
             start_year=start_year,
@@ -238,7 +252,7 @@ def get_current_pat_bloods(
                     "document_PatientDurableKey": "client_idcode",
                     "document_CollectedDate": "basicobs_entered",
                     "document_Name": "basicobs_itemname_analysed",
-                    "document_Fields.valueNum": "basicobs_value_numeric",
+                    "document_Fields.valueText": "basicobs_value_numeric",
                     "id": "basicobs_guid",  # Use Epic's 'id' as the guid
                 },
                 inplace=True,
@@ -259,28 +273,14 @@ def get_current_pat_bloods(
                 [current_pat_bloods, epic_lab_data], ignore_index=True
             )
 
-    # Ensure only target columns are present. Useful if source data isn't directly from ES.
-    target_cols = [
-        "client_idcode",
-        "basicobs_itemname_analysed",
-        "basicobs_value_numeric",
-        "basicobs_entered",
-        "clientvisit_serviceguid",
-        "updatetime",
-    ]
-    # Include metadata columns if they exist (e.g. from ES), but don't fail if missing (e.g. from CSV)
-    available_cols = [
-        c
-        for c in ["_index", "_id", "_score"] + target_cols
-        if c in current_pat_bloods.columns
-    ]
-    current_pat_bloods = current_pat_bloods[available_cols]
-
-    if batch_mode:
-        current_pat_bloods["datetime"] = current_pat_bloods[bloods_time_field].copy()
-    else:
-        current_pat_bloods["datetime"] = pd.to_datetime(
-            current_pat_bloods[bloods_time_field], errors="coerce"
+    # Ensure 'datetime' column is always a proper datetime object for calculations.
+    # This handles both batch mode (where it might be a string copy) and non-batch mode.
+    current_pat_bloods["datetime"] = pd.to_datetime(
+        current_pat_bloods[bloods_time_field], errors="coerce"
+    )
+    if config_obj.verbosity >= 1:
+        logger.info(
+            f"After datetime conversion: {len(current_pat_bloods)} rows for {current_pat_client_id_code}"
         )
 
     basicobs_itemname_analysed_list = list(
@@ -291,188 +291,124 @@ def get_current_pat_bloods(
         elem: current_pat_bloods[current_pat_bloods.basicobs_itemname_analysed == elem]
         for elem in basicobs_itemname_analysed_list
     }
+    # Initialize the DataFrame that will hold the features for the current patient
+    # It will have one row for the current_pat_client_id_code
+    df_unique_filtered = pd.DataFrame({"client_idcode": [current_pat_client_id_code]})
 
-    df_unique = current_pat_bloods.copy()
+    # Ensure 'today' is UTC aware to match filtered data for duration calculations
+    today = datetime.now(timezone.utc)
 
-    df_unique.drop_duplicates(subset="client_idcode", inplace=True)
+    # The index for the single patient row in df_unique_filtered will always be 0
+    patient_row_index = 0
 
-    df_unique.reset_index(inplace=True)
-
-    obs_columns_list = basicobs_itemname_analysed_list
-
-    obs_columns_set = list(set(obs_columns_list))
-
-    obs_columns_set_columns_for_df = []
-    for i in range(0, len(obs_columns_set)):
-        obs_columns_set_columns_for_df.append(obs_columns_set[i] + "_mean")
-        obs_columns_set_columns_for_df.append(obs_columns_set[i] + "_median")
-        obs_columns_set_columns_for_df.append(obs_columns_set[i] + "_mode")
-        obs_columns_set_columns_for_df.append(obs_columns_set[i] + "_std")
-        obs_columns_set_columns_for_df.append(obs_columns_set[i] + "_num-tests")
-        obs_columns_set_columns_for_df.append(
-            obs_columns_set[i] + "_days-since-last-test"
-        )
-        obs_columns_set_columns_for_df.append(obs_columns_set[i] + "_max")
-        obs_columns_set_columns_for_df.append(obs_columns_set[i] + "_min")
-        obs_columns_set_columns_for_df.append(obs_columns_set[i] + "_most-recent")
-        obs_columns_set_columns_for_df.append(obs_columns_set[i] + "_earliest-test")
-        obs_columns_set_columns_for_df.append(
-            obs_columns_set[i] + "_days-between-first-last"
-        )
-        obs_columns_set_columns_for_df.append(
-            obs_columns_set[i] + "_contains-extreme-low"
-        )
-        obs_columns_set_columns_for_df.append(
-            obs_columns_set[i] + "_contains-extreme-high"
-        )
-
-    orig_columns = list(df_unique.columns)
-
-    comb_cols = orig_columns + obs_columns_set_columns_for_df
-
-    df_unique = df_unique.reindex(comb_cols, axis=1)
-
-    df_unique = df_unique.copy()
-    df_unique.drop(
-        [
-            "index",
-            "_index",
-            "_id",
-            "_score",
-            "basicobs_itemname_analysed",
-            "basicobs_value_numeric",
-            "basicobs_entered",
-            "clientvisit_serviceguid",
-            "datetime",
-            "updatetime",
-        ],
-        inplace=True,
-        axis=1,
-        errors="ignore",
-    )
-
-    if batch_mode:
-
-        today = datetime.now(timezone.utc)
-
-    else:
-        today = datetime.today()
-
-    df_unique_filtered = df_unique.copy()
-
-    i = 0
-
-    for j in range(0, len(basicobs_itemname_analysed_list)):
-        col_name = basicobs_itemname_analysed_list[j]
-
+    for col_name in basicobs_itemname_analysed_list:
         filtered_df = basicobs_itemname_analysed_df_dict.get(col_name)
 
-        filtered_column_values = filtered_df.basicobs_value_numeric.astype(
-            float
-        )._get_numeric_data()
+        # Filter out rows where basicobs_value_numeric is NaN or cannot be converted to numeric
+        # and ensure datetime is valid for sorting.
+        cleaned_df = filtered_df.copy()
+        if config_obj.verbosity >= 1:
+            logger.info(
+                f"cleaned_df (before numeric conversion and dropna) for {col_name}: {len(cleaned_df)} rows"
+            )
+        cleaned_df["basicobs_value_numeric"] = pd.to_numeric(
+            cleaned_df["basicobs_value_numeric"], errors="coerce"
+        )
+        cleaned_df = cleaned_df.dropna(subset=["basicobs_value_numeric", "datetime"])
 
-        df_len = len(filtered_df)
+        df_len = len(cleaned_df)
+        if config_obj.verbosity >= 1:
+            logger.info(
+                f"cleaned_df (after numeric conversion and dropna) for {col_name}: {df_len} rows"
+            )
+            if df_len > 0:
+                logger.info(
+                    f"Sample values: {cleaned_df['basicobs_value_numeric'].tolist()}"
+                )
 
         if df_len >= 1:
-            # Mean assurance*
-            agg_val = float(filtered_column_values.values[0])
-
-            df_unique_filtered.at[i, col_name + "_mean"] = agg_val
-
-        if df_len >= 2:
-            # try:
             # Mean
-            agg_val = filtered_column_values.mean()
-
-            df_unique_filtered.at[i, col_name + "_mean"] = agg_val
-
-            # recent
-            agg_val = filtered_df.sort_values(by="datetime").iloc[-1][
+            df_unique_filtered.at[patient_row_index, col_name + "_mean"] = cleaned_df[
                 "basicobs_value_numeric"
-            ]
+            ].mean()
 
-            df_unique_filtered.at[i, col_name + "_most-recent"] = agg_val
-
-            # earliest-test
-            agg_val = filtered_df.sort_values(by="datetime").iloc[0][
+            # Min
+            df_unique_filtered.at[patient_row_index, col_name + "_min"] = cleaned_df[
                 "basicobs_value_numeric"
+            ].min()
+
+            # Max
+            df_unique_filtered.at[patient_row_index, col_name + "_max"] = cleaned_df[
+                "basicobs_value_numeric"
+            ].max()
+
+            # Number of tests
+            df_unique_filtered.at[patient_row_index, col_name + "_num-tests"] = df_len
+
+            # Most recent value
+            df_unique_filtered.at[patient_row_index, col_name + "_most-recent"] = (
+                cleaned_df.sort_values(by="datetime").iloc[-1]["basicobs_value_numeric"]
+            )
+
+            # Earliest test value
+            df_unique_filtered.at[patient_row_index, col_name + "_earliest-test"] = (
+                cleaned_df.sort_values(by="datetime").iloc[0]["basicobs_value_numeric"]
+            )
+
+            # Days since last test (using the latest datetime from cleaned_df)
+            latest_date_object = cleaned_df.sort_values(by="datetime").iloc[-1][
+                "datetime"
             ]
-            df_unique_filtered.at[i, col_name + "_earliest-test"] = agg_val
+            delta_days_since_last = (today - latest_date_object).days
+            df_unique_filtered.at[
+                patient_row_index, col_name + "_days-since-last-test"
+            ] = delta_days_since_last
 
-            # days-since-last-test
-            date_object = filtered_df.sort_values(by="datetime").iloc[-1]["datetime"]
+            # Days between earliest and last
+            if df_len >= 2:
+                oldest_date_object = cleaned_df.sort_values(by="datetime").iloc[0][
+                    "datetime"
+                ]
+                delta_between_first_last = (
+                    latest_date_object - oldest_date_object
+                ).days
+                df_unique_filtered.at[
+                    patient_row_index, col_name + "_days-between-first-last"
+                ] = delta_between_first_last
 
-            delta = today - date_object
+            # Median (requires at least 1 value, but more meaningful with >=2)
+            df_unique_filtered.at[patient_row_index, col_name + "_median"] = cleaned_df[
+                "basicobs_value_numeric"
+            ].median()
 
-            agg_val = delta.days
+            # Mode (requires at least 1 value)
+            if not cleaned_df["basicobs_value_numeric"].mode().empty:
+                df_unique_filtered.at[patient_row_index, col_name + "_mode"] = (
+                    cleaned_df["basicobs_value_numeric"].mode().iloc[0]
+                )
 
-            df_unique_filtered.at[i, col_name + "_days-since-last-test"] = agg_val
-
-            # n tests
-
-            agg_val = len(filtered_column_values)
-
-            df_unique_filtered.at[i, col_name + "_num-tests"] = agg_val
-
-        if df_len >= 3:
-
-            # median
-            agg_val = filtered_column_values.median()
-            df_unique_filtered.at[i, col_name + "_median"] = agg_val
-
-            # mode
-            agg_val = np.atleast_1d(stats.mode(filtered_column_values)[0])[0]
-            df_unique_filtered.at[i, col_name + "_mode"] = agg_val
-
-            # std
-            agg_val = filtered_column_values.std()
-            df_unique_filtered.at[i, col_name + "_std"] = agg_val
-
-            # min
-            agg_val = min(filtered_column_values)
-            df_unique_filtered.at[i, col_name + "_min"] = agg_val
-
-            # max
-            agg_val = max(filtered_column_values)
-            df_unique_filtered.at[i, col_name + "_max"] = agg_val
+        if df_len >= 2:  # Standard deviation requires at least 2 values
+            # Std
+            df_unique_filtered.at[patient_row_index, col_name + "_std"] = cleaned_df[
+                "basicobs_value_numeric"
+            ].std()
 
             # contains extreme low
-            col_name_mean = (
-                basicobs_itemname_analysed_df_dict.get(col_name)
-                .basicobs_value_numeric._get_numeric_data()
-                .mean()
-            )
-            col_name_std = (
-                basicobs_itemname_analysed_df_dict.get(col_name)
-                .basicobs_value_numeric._get_numeric_data()
-                .std()
-            )
+            col_name_mean = cleaned_df["basicobs_value_numeric"].mean()
+            col_name_std = cleaned_df["basicobs_value_numeric"].std()
 
             col_name_low = col_name_mean - (col_name_std * 3)
 
-            agg_val = int(float(min(filtered_column_values)) < col_name_low)
-            df_unique_filtered.at[i, col_name + "_contains-extreme-low"] = agg_val
+            df_unique_filtered.at[
+                patient_row_index, col_name + "_contains-extreme-low"
+            ] = int(cleaned_df["basicobs_value_numeric"].min() < col_name_low)
 
             # contains extreme high
             col_name_high = col_name_mean + (col_name_std * 3)
 
-            agg_val = int(float(max(filtered_column_values)) > col_name_high)
-
-            df_unique_filtered.at[i, col_name + "_contains-extreme-high"] = agg_val
-
-            # days_between earliest and last
-
-            latest = filtered_df.sort_values(by="datetime").iloc[-1]["datetime"]
-
-            oldest = filtered_df.sort_values(by="datetime").iloc[0]["datetime"]
-
-            delta = latest - oldest
-
-            agg_val = delta.days
-
-            df_unique_filtered.at[i, col_name + "_days-between-first-last"] = agg_val
-
-            # current_pat_bloods = df_unique_filtered
+            df_unique_filtered.at[
+                patient_row_index, col_name + "_contains-extreme-high"
+            ] = int(cleaned_df["basicobs_value_numeric"].max() > col_name_high)
 
     if config_obj.verbosity >= 6:
         display(df_unique_filtered)
