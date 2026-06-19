@@ -1099,10 +1099,14 @@ class config_class:
                         f"Median time between {start_column_name} and {end_date_column_name}: {median_days} days"
                     )
 
-            if self.lookback:
+            # For IPW+lookback mode, exclude days from the offset calculation
+            # because IPW uses the patient's actual window boundaries from anchor_date - duration
+            if self.individual_patient_window and self.lookback:
+                time_offset = -relativedelta(months=months, years=years)
+            elif self.lookback:
                 time_offset = -relativedelta(days=days, months=months, years=years)
-
             else:
+                # Forward look or non-IPW mode
                 time_offset = relativedelta(days=days, months=months, years=years)
 
             if offset_column_name in self.individual_patient_window_df.columns:
