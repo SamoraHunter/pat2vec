@@ -78,6 +78,7 @@ class TestMethodsPostGet(unittest.TestCase):
 
         pat2vec_obj = MagicMock()
         pat2vec_obj.config_obj.proj_name = proj_name
+        pat2vec_obj.config_obj.root_path = os.path.join(self.test_dir, proj_name)
 
         # Change current dir to test dir so relative paths in the function work
         original_cwd = os.getcwd()
