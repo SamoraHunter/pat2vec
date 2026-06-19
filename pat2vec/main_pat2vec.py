@@ -852,6 +852,22 @@ class main:
         self.config_obj.global_end_year = str(p_real_end.year).zfill(4)
         self.config_obj.global_end_month = str(p_real_end.month).zfill(2)
         self.config_obj.global_end_day = str(p_real_end.day).zfill(2)
+        # Update datetime objects to match the year/month/day components
+        from datetime import datetime as dt_class
+
+        self.config_obj.global_start_date = dt_class(
+            int(self.config_obj.global_start_year),
+            int(self.config_obj.global_start_month),
+            int(self.config_obj.global_start_day),
+        )
+        self.config_obj.global_end_date = dt_class(
+            int(self.config_obj.global_end_year),
+            int(self.config_obj.global_end_month),
+            int(self.config_obj.global_end_day),
+            0,
+            0,
+            0,
+        )
         self.config_obj.start_date = date_for_generate
 
         date_list = generate_date_list(
