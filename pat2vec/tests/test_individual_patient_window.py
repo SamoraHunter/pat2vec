@@ -89,13 +89,13 @@ class TestIndividualPatientWindow(unittest.TestCase):
         self.assertIn("P001", config.patient_dict)
         start_date_p1, end_date_p1 = config.patient_dict["P001"]
 
-        # For lookback, the end_date should be before the start_date
-        expected_start_p1 = pd.Timestamp("2020-01-01", tz="UTC")
-        expected_end_p1 = pd.Timestamp("2019-01-01", tz="UTC")
+        # For lookback, the start_date should be before the end_date (chronological order)
+        expected_start_p1 = pd.Timestamp("2019-01-01", tz="UTC")
+        expected_end_p1 = pd.Timestamp("2020-01-01", tz="UTC")
 
         self.assertEqual(start_date_p1, expected_start_p1)
         self.assertEqual(end_date_p1, expected_end_p1)
-        self.assertTrue(start_date_p1 > end_date_p1)
+        self.assertTrue(start_date_p1 < end_date_p1)
 
     def test_ipw_with_preexisting_offset_column(self):
         """Test IPW logic when the offset column already exists in the DataFrame."""
