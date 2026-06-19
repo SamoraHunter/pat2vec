@@ -212,17 +212,8 @@ def save_patient_features(
             if id_column not in features_df.columns:
                 features_df[id_column] = patient_id
 
-            # Always pack features into JSON for simplicity and to avoid DB column limits.
-            logging.debug(
-                f"Packing {len(features_df.columns)} features into 'features_json' column."
-            )
-            # Separate ID
-            ids = features_df[id_column]
-            # Serialize features to JSON
-            features_json = features_df.drop(columns=[id_column]).apply(
-                lambda x: x.to_json(), axis=1
-            )
-            features_df = pd.DataFrame({id_column: ids, "features_json": features_json})
+            # For database storage, keep individual columns for proper querying
+            # (JSON packing was previously used to avoid DB column limits)
 
             with engine.begin() as connection:
                 # Handle SQLite differences
