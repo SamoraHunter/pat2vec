@@ -2,7 +2,10 @@ from pat2vec.util.filter_methods import (
     apply_bloods_data_type_filter,
     filter_dataframe_by_fuzzy_terms,
 )
-from pat2vec.util.helper_functions import get_df_from_db
+from pat2vec.util.helper_functions import (
+    get_df_from_db,
+    get_df_from_db_with_temporal_filter,
+)
 from pat2vec.util.methods_get import exist_check
 
 
@@ -63,13 +66,50 @@ def get_pat_batch_bloods(
             table_name = "raw_bloods"
             schema_name = "raw_data"
 
+            # Determine date range for filtering
+            start_date = None
+            end_date = None
+
+            # Check patient_dict first (for IPW with anchor dates)
+            pat_dates = None
+            if (
+                hasattr(config_obj, "patient_dict")
+                and config_obj.patient_dict is not None
+            ):
+                pat_dates = config_obj.patient_dict.get(current_pat_client_id_code)
+            if pat_dates and len(pat_dates) == 2:
+                start_date, end_date = pat_dates
+            elif config_obj.individual_patient_window:
+                # Use global dates from config
+                try:
+                    start_date_str = f"{config_obj.global_start_year}-{config_obj.global_start_month.zfill(2)}-{config_obj.global_start_day.zfill(2)}"
+                    end_date_str = f"{config_obj.global_end_year}-{config_obj.global_end_month.zfill(2)}-{config_obj.global_end_day.zfill(2)}"
+                    start_date = pd.to_datetime(start_date_str)
+                    end_date = pd.to_datetime(end_date_str)
+                except (ValueError, TypeError) as e:
+                    logging.warning(
+                        f"Could not parse dates for IPW temporal filter: {e}"
+                    )
+
             if not overwrite_stored_pat_observations:
-                df = get_df_from_db(
-                    config_obj,
-                    schema_name,
-                    table_name,
-                    patient_ids=[current_pat_client_id_code],
-                )
+                # Fetch with temporal filtering if in IPW mode
+                if start_date is not None and end_date is not None:
+                    df = get_df_from_db_with_temporal_filter(
+                        config_obj,
+                        schema_name,
+                        table_name,
+                        patient_ids=[current_pat_client_id_code],
+                        time_column=bloods_time_field,
+                        start_date=start_date,
+                        end_date=end_date,
+                    )
+                else:
+                    df = get_df_from_db(
+                        config_obj,
+                        schema_name,
+                        table_name,
+                        patient_ids=[current_pat_client_id_code],
+                    )
                 if not df.empty:
                     return df
         except Exception as e:
