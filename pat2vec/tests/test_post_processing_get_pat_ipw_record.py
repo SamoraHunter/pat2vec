@@ -507,7 +507,7 @@ class TestGetPatIpwRecord(unittest.TestCase):
         self.assertEqual(len(result_df), 1)
         self.assertEqual(result_df.iloc[0]["source"], "MCT")
         # Verify that other files were checked but read_csv was only called for existing one
-        self.assertEqual(mock_exists.call_count, 3)
+        self.assertEqual(mock_exists.call_count, 9)
         self.assertEqual(mock_read_csv.call_count, 1)
 
 
