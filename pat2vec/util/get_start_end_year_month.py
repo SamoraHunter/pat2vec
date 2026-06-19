@@ -66,10 +66,26 @@ def get_start_end_year_month(
     elif len(target_date_range) >= 3:
         try:
             start_year, start_month, start_day = target_date_range[0:3]
-            start_date = datetime.date(
-                int(start_year), int(start_month), int(start_day)
-            )
-            end_date = start_date + time_window_interval_delta
+
+            # When IPW+lookback is enabled, use the overall patient window instead of sliding windows
+            if getattr(config_obj, "individual_patient_window", False) and getattr(
+                config_obj, "lookback", False
+            ):
+                start_date = datetime.date(
+                    int(config_obj.global_start_year),
+                    int(config_obj.global_start_month),
+                    int(config_obj.global_start_day),
+                )
+                end_date = datetime.date(
+                    int(config_obj.global_end_year),
+                    int(config_obj.global_end_month),
+                    int(config_obj.global_end_day),
+                )
+            else:
+                start_date = datetime.date(
+                    int(start_year), int(start_month), int(start_day)
+                )
+                end_date = start_date + time_window_interval_delta
         except (ValueError, TypeError, IndexError) as e:
             raise ValueError(f"Invalid date components in {target_date_range}: {e}")
 
