@@ -23,7 +23,7 @@ import random
 import warnings
 import logging
 
-warnings.filterwarnings("ignore")
+warnings.filterwarnings("ignore", category=DeprecationWarning)  # Keep this line
 
 # Suppress Elasticsearch logger
 logging.getLogger("elasticsearch").setLevel(logging.WARNING)
@@ -351,6 +351,9 @@ def cohort_searcher_with_terms_and_search(
     global cs
     if cs is None:
         initialize_cogstack_client()
+    if cs is None:
+        logging.error("CogStack client is not initialized. Returning empty DataFrame.")
+        return pd.DataFrame()
     if len(entered_list) >= 10000:
 
         results = []
@@ -432,6 +435,9 @@ def cohort_searcher_with_terms_no_search(
     global cs
     if cs is None:
         initialize_cogstack_client()
+    if cs is None:
+        logging.error("CogStack client is not initialized. Returning empty DataFrame.")
+        return pd.DataFrame()
     if len(entered_list) >= 10000:
         results = []
         chunked_list = list_chunker(entered_list)
@@ -475,6 +481,9 @@ def cohort_searcher_no_terms(
     global cs
     if cs is None:
         initialize_cogstack_client()
+    if cs is None:
+        logging.error("CogStack client is not initialized. Returning empty DataFrame.")
+        return pd.DataFrame()
     query = {
         "from": 0,
         "size": 10000,
@@ -509,6 +518,9 @@ def cohort_searcher_no_terms_fuzzy(
     global cs
     if cs is None:
         initialize_cogstack_client()
+    if cs is None:
+        logging.error("CogStack client is not initialized. Returning empty DataFrame.")
+        return pd.DataFrame()
     if method == "fuzzy":
         # Fuzzy query
         query = {
@@ -622,6 +634,29 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy(
         return pd.DataFrame()
 
     if cs is None:
+        # Skip ES connection in testing mode to avoid credential errors and warnings
+        if testing:
+            from pat2vec.util.get_dummy_data_cohort_searcher import (
+                cohort_searcher_with_terms_and_search_dummy,
+            )
+
+            search_string = f"updatetime:[{start_year}-{start_month}-{start_day} TO {end_year}-{end_month}-{end_day}]"
+            return cohort_searcher_with_terms_and_search_dummy(
+                index_name="epr_documents",
+                fields_list=[
+                    "client_idcode",
+                    "updatetime",
+                    "body_analysed",
+                    "document_guid",
+                    "document_description",
+                ],
+                term_name=uuid_column_name,
+                entered_list=terms_list,
+                global_start_day=start_day,
+                global_end_day=end_day,
+                search_string=search_string,
+            )
+
         initialize_cogstack_client()
     file_exists = exists(treatment_doc_filename) if treatment_doc_filename else False
 
@@ -849,6 +884,29 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy_mct(
 
     global cs
     if cs is None:
+        # Skip ES connection in testing mode to avoid credential errors and warnings
+        if testing:
+            from pat2vec.util.get_dummy_data_cohort_searcher import (
+                cohort_searcher_with_terms_and_search_dummy,
+            )
+
+            search_string = f"updatetime:[{start_year}-{start_month}-{start_day} TO {end_year}-{end_month}-{end_day}]"
+            return cohort_searcher_with_terms_and_search_dummy(
+                index_name="observations",
+                fields_list=[
+                    "client_idcode",
+                    "updatetime",
+                    "body_analysed",
+                    "document_guid",
+                    "document_description",
+                ],
+                term_name=uuid_column_name,
+                entered_list=terms_list,
+                global_start_day=start_day,
+                global_end_day=end_day,
+                search_string=search_string,
+            )
+
         initialize_cogstack_client()
     file_exists = exists(treatment_doc_filename) if treatment_doc_filename else False
 
@@ -1020,7 +1078,7 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy_mct(
         # If no documents were found for any term, return an empty DataFrame
         if not all_docs:
             logging.warning("No documents were found for any of the terms.")
-            if treatment_doc_filename and file_exists:
+            if treatment_doc_filename and file_exists and append:
                 docs_prev = pd.read_csv(treatment_doc_filename)
                 logging.info(
                     f"Loaded existing file and no docs found: {treatment_doc_filename}"
@@ -2594,7 +2652,6 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy_epic_lab_results(
                 "document_AbnormalLevel",
                 "document_LabResultEpicId",
                 "document_Fields.valueText",
-                "document_Fields.valueNum",
                 "id",
             ]
             if all_fields:
@@ -2811,7 +2868,7 @@ def initialize_cogstack_client(config_obj=None):
             logging.info(f"Loaded credentials from: {credentials_path}")
         except (ImportError, FileNotFoundError, TypeError) as e:
             logging.warning(
-                "Could not load credentials from %s. Error: %s. Falling back to default.",
+                "Could not load credentials from %s. Error: %s. Attempting to create one.",
                 credentials_path,
                 e,
             )
@@ -2829,10 +2886,11 @@ def initialize_cogstack_client(config_obj=None):
             }
         except ImportError:
             logging.warning("No credentials file found. Attempting to create one.")
-            # create_credentials_file()
+            create_credentials_file()
             try:
                 from credentials import username, password, api_key, hosts
 
+                importlib.reload(sys.modules["credentials"])
                 creds = {
                     "username": username,
                     "password": password,
@@ -2841,11 +2899,11 @@ def initialize_cogstack_client(config_obj=None):
                 }
             except ImportError:
                 logging.warning(
-                    "Still no credentials file found. CogStack client will not be initialized."
+                    "Failed to import credentials after creation. CogStack client will not be initialized."
                 )
                 return None
 
-    logging.info("Imported cogstack_v8_lite from pat2vec.util .")
+    logging.info("Initializing CogStack client...")
     logging.info(f"Username: {creds.get('username')}")
 
     if creds.get("api_key"):
