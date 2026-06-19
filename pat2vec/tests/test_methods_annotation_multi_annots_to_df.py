@@ -221,15 +221,21 @@ class TestMultiAnnotsToDf(unittest.TestCase):
         mock_join_icd10.assert_called_once()
 
     @patch(
+        "pat2vec.util.methods_annotation_multi_annots_to_df.join_icd10_codes_to_annot"
+    )
+    @patch(
         "pat2vec.util.methods_annotation_multi_annots_to_df.join_icd10_OPC4S_codes_to_annot"
     )
     @patch("pat2vec.util.methods_annotation_multi_annots_to_df.json_to_dataframe")
-    def test_icd10_opcs4_join_logic(self, mock_json_to_df, mock_join_opcs4):
+    def test_icd10_opcs4_join_logic(
+        self, mock_json_to_df, mock_join_opcs4, mock_join_icd10
+    ):
         """Test that ICD10 and OPC4S codes are joined when both flags are True."""
         # Arrange
         self.mock_config.add_icd10 = True
         self.mock_config.add_opc4s = True
         mock_json_to_df.return_value = self.df_from_json_1
+        mock_join_icd10.return_value = self.df_from_json_1.copy()
         mock_join_opcs4.return_value = self.df_from_json_1.copy()
 
         # Act
@@ -242,6 +248,7 @@ class TestMultiAnnotsToDf(unittest.TestCase):
         )
 
         # Assert
+        mock_join_icd10.assert_called_once()
         mock_join_opcs4.assert_called_once()
 
     @patch("pat2vec.util.methods_annotation_multi_annots_to_df.json_to_dataframe")
