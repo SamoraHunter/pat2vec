@@ -120,7 +120,7 @@ class TestMethodsAnnotation(unittest.TestCase):
         """Verify horizontal vector generation from pretty names."""
         df = pd.DataFrame({"pretty_name": ["Asthma", "Asthma", "Diabetes"]})
         res = calculate_pretty_name_count_features(df, suffix="test")
-        self.assertEqual(res.at[0, "Asthma"], 2.0)
-        self.assertEqual(res.at[0, "Diabetes"], 1.0)
+        self.assertEqual(res.at[0, "pretty_name_count_test_Asthma"], 2.0)
+        self.assertEqual(res.at[0, "pretty_name_count_test_Diabetes"], 1.0)
 
         self.assertIsNone(calculate_pretty_name_count_features(pd.DataFrame()))
