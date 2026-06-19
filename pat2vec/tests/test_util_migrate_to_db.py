@@ -48,6 +48,7 @@ class TestMigrateToDb(unittest.TestCase):
                     "raw_bloods",
                     "client_idcode",
                     ["client_idcode"],
+                    None,
                 )
             ],
         ):
@@ -83,6 +84,7 @@ class TestMigrateToDb(unittest.TestCase):
                     "raw_bloods",
                     "client_idcode",
                     ["client_idcode"],
+                    None,
                 )
             ],
         ):
