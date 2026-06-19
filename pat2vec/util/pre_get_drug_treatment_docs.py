@@ -495,13 +495,13 @@ def iterative_drug_treatment_search(
         )
 
         epic_records = pd.DataFrame()
-        if pat2vec_obj.config_obj.main_options.get("epic_orders"):
+        main_opts = getattr(pat2vec_obj.config_obj, "main_options", {})
+        if isinstance(main_opts, dict) and main_opts.get("epic_orders"):
             epic_records = get_treatment_records_by_drug_order_name_epic(
                 pat2vec_obj=pat2vec_obj,
                 term=term,
                 verbose=verbose,
             )
-
         if not epr_records.empty and not epic_records.empty:
             treatment_records = pd.concat(
                 [epr_records, epic_records], ignore_index=True

@@ -5,7 +5,6 @@ from typing import Any, List, Optional  # Keep typing imports together
 import os
 import psutil
 import logging
-import gc  # Import gc module explicitly
 import pandas as pd
 from sqlalchemy import text, inspect
 from sqlalchemy.schema import CreateSchema
@@ -415,6 +414,85 @@ def save_raw_patient_batch(
         logging.error(f"Failed to save raw batch {table_name} for {patient_id}: {e}")
 
 
+def save_annotations_to_db(
+    df: pd.DataFrame,
+    patient_id: str,
+    table_name: str,
+    config_obj: Any,
+    id_column: str = "client_idcode",
+) -> None:
+    """Saves an annotation batch for a patient to the database.
+
+    Args:
+        df: The DataFrame containing the annotations.
+        patient_id: The patient identifier.
+        table_name: The target table name (without schema prefix).
+        config_obj: The configuration object.
+        id_column: The column name for the patient ID in this table.
+    """
+    if config_obj.storage_backend != "database":
+        return
+
+    try:
+        engine = config_obj.db_engine
+        if not engine:
+            return
+
+        schema_name = "annotations"
+
+        # Ensure ID column is present
+        if id_column not in df.columns:
+            df[id_column] = patient_id
+
+        with engine.begin() as connection:
+            if engine.name == "sqlite":
+                target_table = f"{schema_name}_{table_name}"
+                target_schema = None
+                del_query = text(
+                    f'DELETE FROM "{target_table}" WHERE "{id_column}" = :pat_id'
+                )
+            else:
+                target_table = table_name
+                target_schema = schema_name
+                del_query = text(
+                    f'DELETE FROM "{schema_name}"."{table_name}" WHERE "{id_column}" = :pat_id'
+                )
+
+                if not connection.dialect.has_schema(connection, schema_name):
+                    connection.execute(CreateSchema(schema_name))
+
+            inspector = inspect(connection)
+            if inspector.has_table(target_table, schema=target_schema):
+                connection.execute(del_query, {"pat_id": patient_id})
+
+            # Convert any list/dict/tuple columns to JSON strings for database compatibility
+            for col in df.columns:
+                if df[col].apply(lambda x: isinstance(x, (list, dict, tuple))).any():
+                    df[col] = df[col].apply(
+                        lambda x: (
+                            json.dumps(x) if isinstance(x, (list, dict, tuple)) else x
+                        )
+                    )
+
+            if not df.empty:
+                df.to_sql(
+                    name=target_table,
+                    con=connection,
+                    schema=target_schema,
+                    if_exists="append",
+                    index=False,
+                )
+
+                # Ensure index on ID column
+                ensure_index(
+                    connection, table_name, schema_name, id_column, engine.name
+                )
+    except Exception as e:
+        logging.error(
+            f"Failed to save annotation batch {table_name} for {patient_id}: {e}"
+        )
+
+
 def get_all_features(config_obj: Any) -> pd.DataFrame:
     """Retrieves all patient features from the configured backend.
 
@@ -521,163 +599,184 @@ def get_df_from_db(
             return pd.DataFrame()
 
         with engine.connect() as connection:
-            # Optimized path: Filter by patient IDs using SQL WHERE clause
-            if patient_ids is not None:
-                if len(patient_ids) == 0:
-                    return pd.DataFrame()
+            # Determine actual table name for inspection/reading
+            if engine.name == "sqlite":
+                target_table = f"{schema}_{table}"
+                target_schema = None
+            else:
+                target_table = table
+                target_schema = schema
 
-                # Chunking to avoid parameter limits (SQLite limit 999)
-                chunk_size = 900
-                if len(patient_ids) > chunk_size:
-                    dfs = []
-                    for i in range(0, len(patient_ids), chunk_size):
-                        chunk = patient_ids[i : i + chunk_size]
-                        # Recursive call for each chunk
-                        dfs.append(
-                            get_df_from_db(
-                                config_obj,
-                                schema,
-                                table,
-                                chunk,
-                                patient_id_column,
-                                columns,
-                            )
-                        )
-                    return pd.concat(dfs, ignore_index=True) if dfs else pd.DataFrame()
+            inspector = inspect(connection)
+            if not inspector.has_table(target_table, schema=target_schema):
+                logger.warning(
+                    f"Table '{target_table}' not found in database. Returning empty DataFrame."
+                )
+                return pd.DataFrame()
 
-                # Handle SQLite vs. others quoting/naming
+            chunk_size = 900
+            all_data = []
+
+            if patient_ids is None:
+                query_str = f"SELECT {', '.join(columns) if columns else '*'} FROM {target_table}"
+                df = pd.read_sql(text(query_str), connection, params={})
+                return df
+
+            if len(patient_ids) == 0:
+                return pd.DataFrame()
+
+            for i in range(0, len(patient_ids), chunk_size):
+                chunk = patient_ids[i : i + chunk_size]
+
+                query_str_chunk = f"SELECT {', '.join(columns) if columns else '*'} FROM {target_table}"
+
+                placeholders = ", ".join([f":id_{j}" for j in range(len(chunk))])
+                query_str_chunk += f' WHERE "{patient_id_column}" IN ({placeholders})'
+                params = {f"id_{j}": pid for j, pid in enumerate(chunk)}
+
+                df_chunk = pd.read_sql(text(query_str_chunk), connection, params=params)
+                all_data.append(df_chunk)
+
+            return (
+                pd.concat(all_data, ignore_index=True) if all_data else pd.DataFrame()
+            )
+
+    except Exception as e:
+        logger.error(
+            f"Error in get_df_from_db reading from database for {schema}.{table}: {e}"
+        )
+        return pd.DataFrame()
+
+
+def get_df_from_db_with_temporal_filter(
+    config_obj: Any,
+    schema: str,
+    table: str,
+    patient_ids: Optional[List[str]] = None,
+    time_column: str = "updatetime",
+    start_date: Optional[Any] = None,
+    end_date: Optional[Any] = None,
+    patient_id_column: str = "client_idcode",
+) -> pd.DataFrame:
+    """Retrieves DataFrame from database with optional temporal filtering.
+
+    Args:
+        config_obj: Configuration object with database engine.
+        schema: Database schema name.
+        table: Table name.
+        patient_ids: List of patient IDs to filter.
+        time_column: Name of the datetime column to filter on.
+        start_date: Start date for temporal filter (inclusive).
+        end_date: End date for temporal filter (inclusive).
+        patient_id_column: Name of the patient ID column.
+
+    Returns:
+        DataFrame with filtered data, or empty DataFrame on error.
+    """
+    try:
+        engine = config_obj.db_engine
+        if not engine:
+            logging.error("Database engine not initialized in config_obj.")
+            return pd.DataFrame()
+
+        with engine.connect() as connection:
+            # Chunking for SQLite parameter limits
+            chunk_size = 900
+            all_data = []
+
+            if patient_ids is None or len(patient_ids) == 0:
+                return pd.DataFrame()
+
+            for i in range(0, len(patient_ids), chunk_size):
+                chunk = patient_ids[i : i + chunk_size]
+
+                # Build table reference based on dialect
                 if engine.name == "sqlite":
                     full_table_name = f'"{schema}_{table}"'
                 else:
                     full_table_name = f'"{schema}"."{table}"'
 
-                # Defensive check: Ensure table exists before querying
-                table_to_check = (
-                    f"{schema}_{table}" if engine.name == "sqlite" else table
-                )
-                schema_to_check = None if engine.name == "sqlite" else schema
-                inspector = inspect(engine)
-                if not inspector.has_table(table_to_check, schema=schema_to_check):
-                    return pd.DataFrame()
+                # Build WHERE clause
+                where_clauses = []
+                params = {}
 
-                if not columns:  # If no columns are specified, it's a full column fetch
-                    cols_str = "*"
-                else:
-                    # Use provided columns as-is. The builder-level fetch_list already
-                    # excludes text for annotations, but includes it for documents.
-                    cols_str = ", ".join([f'"{c}"' for c in columns])
+                # Patient ID filter
+                patient_where = f'"{patient_id_column}" IN ({", ".join([f":p{i}" for i in range(len(chunk))])})'
+                where_clauses.append(patient_where)
+                params.update({f"p{i}": str(pid) for i, pid in enumerate(chunk)})
 
-                # Explicitly cast to str and strip to handle numpy types or whitespace issues
-                params = {f"p{i}": str(pid) for i, pid in enumerate(patient_ids)}
-                placeholders = ", ".join([f":p{i}" for i in range(len(patient_ids))])
+                # Temporal filter if dates provided
+                if start_date is not None and end_date is not None:
 
-                query_str = f'SELECT {cols_str} FROM {full_table_name} WHERE "{patient_id_column}" IN ({placeholders})'
-                query = text(query_str)
-                # Fetch data for the whole chunk of patients at once.
-                # Since builders already restrict columns and chunk IDs, this is efficient.
-                df = pd.read_sql(query, connection, params=params)
-                gc.collect()
+                    def _format_datetime_for_sql(dt):
+                        """Convert datetime to string suitable for SQL comparison.
 
-            # Legacy path: Full table read (fallback if no IDs provided)
-            else:
-                table_name = f"{schema}_{table}" if engine.name == "sqlite" else table
-                schema_arg = None if engine.name == "sqlite" else schema
+                        For timezone-aware datetimes, extracts just the date portion.
+                        For naive datetimes, uses the date part only.
+                        Ensures proper handling of the full day by using date-only strings
+                        which SQLite will compare as 'string <= date'.
+                        """
+                        if pd.isna(dt):
+                            return None
+                        # Convert to string representation
+                        dt_str = str(dt)
+                        # Extract just the date portion (YYYY-MM-DD)
+                        # Handle both ISO format (2023-01-01T00:00:00+00:00) and space-separated formats
+                        if "T" in dt_str:
+                            # ISO format like '2023-01-01T00:00:00+00:00'
+                            date_part = dt_str.split("T")[0]
+                        elif " " in dt_str:
+                            # Space-separated like '2023-01-01 00:00:00' or '2023-01-01 00:00:00+00:00'
+                            parts = dt_str.split(" ")
+                            date_part = parts[0]
+                        else:
+                            # Already just the date part
+                            date_part = dt_str
+                        return date_part
 
-                inspector = inspect(engine)
-                if not inspector.has_table(table_name, schema=schema_arg):
-                    return pd.DataFrame()
+                    params["start_date"] = _format_datetime_for_sql(start_date)
 
-                df = pd.read_sql_table(
-                    table_name, connection, schema=schema_arg, columns=columns
-                )
+                    # For end_date, we need to ensure it includes the entire day.
+                    # The issue: '2023-01-01T00:00:00' <= '2023-01-01' is FALSE in SQLite
+                    # because string comparison treats '2023-01-01...' > '2023-01-01'.
+                    # The solution: use date + 1 day for end, and use < instead of <=
+                    import datetime as dt_module
 
-            # Check for packed JSON features and unpack if present
-            if "features_json" in df.columns:
-                # Only unpack non-null rows
-                json_mask = df["features_json"].notna()
-                if json_mask.any():
-                    logger.debug(
-                        "Unpacking 'features_json' column in get_df_from_db..."
-                    )
-                    unpacked = pd.json_normalize(
-                        df.loc[json_mask, "features_json"].apply(json.loads).tolist()
-                    )
-                    unpacked.index = df.loc[json_mask].index
-                    df = pd.concat(
-                        [df.drop(columns=["features_json"]), unpacked], axis=1
-                    )
-
-            return df
-
-    except Exception as e:
-        # Log debug if table missing (common in some flows), error otherwise
-        if "no such table" in str(e).lower() or "does not exist" in str(e).lower():
-            logger.debug(f"Table {schema}.{table} not found or error: {e}")
-        else:
-            logger.error(f"Error reading from DB table {schema}.{table}: {e}")
-        return pd.DataFrame()
-
-
-def save_annotations_to_db(
-    df: pd.DataFrame,
-    patient_id: str,
-    table_name: str,
-    config_obj: Any,
-    id_column: str = "client_idcode",
-    schema_name: str = "annotations",
-) -> None:
-    """Saves an annotation DataFrame to the database."""
-    if getattr(config_obj, "storage_backend", "file") != "database":
-        return
-
-    try:
-        engine = config_obj.db_engine
-        if not engine:
-            return
-
-        with engine.begin() as connection:
-            if engine.name == "sqlite":
-                target_table = f"{schema_name}_{table_name}"
-                target_schema = None
-                del_query = text(
-                    f'DELETE FROM "{target_table}" WHERE "{id_column}" = :pat_id'
-                )
-            else:
-                target_table = table_name
-                target_schema = schema_name
-                del_query = text(
-                    f'DELETE FROM "{schema_name}"."{table_name}" WHERE "{id_column}" = :pat_id'
-                )
-
-                if not connection.dialect.has_schema(connection, schema_name):
-                    connection.execute(CreateSchema(schema_name))
-
-            inspector = inspect(connection)
-            if inspector.has_table(target_table, schema=target_schema):
-                connection.execute(del_query, {"pat_id": patient_id})
-
-            # Convert any list/dict/tuple columns to JSON strings for database compatibility
-            for col in df.columns:
-                # Check for list or dict types and serialize them to JSON strings
-                if df[col].apply(lambda x: isinstance(x, (list, dict, tuple))).any():
-                    df[col] = df[col].apply(
-                        lambda x: (
-                            json.dumps(x) if isinstance(x, (list, dict, tuple)) else x
+                    end_date_obj = pd.to_datetime(end_date)
+                    if isinstance(end_date_obj, pd.Timestamp) and hasattr(
+                        end_date_obj, "date"
+                    ):
+                        end_date_only = end_date_obj.date()
+                        # Add one day to include the entire end date
+                        end_date_next = (
+                            end_date_only + dt_module.timedelta(days=1)
+                        ).isoformat()
+                        params["end_date"] = (
+                            end_date_next.split("T")[0]
+                            if "T" in end_date_next
+                            else end_date_next
                         )
+                    else:
+                        # Fallback to original behavior
+                        params["end_date"] = _format_datetime_for_sql(end_date)
+
+                    where_clauses.append(
+                        f'"{time_column}" >= :start_date AND "{time_column}" < :end_date'
                     )
 
-            if not df.empty:
-                df.to_sql(
-                    name=target_table,
-                    con=connection,
-                    schema=target_schema,
-                    if_exists="append",
-                    index=False,
-                )
+                where_clause = " WHERE " + " AND ".join(where_clauses)
 
-                ensure_index(
-                    connection, table_name, schema_name, id_column, engine.name
-                )
+                query_str = f"SELECT * FROM {full_table_name} {where_clause}"
+                query = text(query_str)
+
+                df_chunk = pd.read_sql(query, connection, params=params)
+                all_data.append(df_chunk)
+
+            result_df = (
+                pd.concat(all_data, ignore_index=True) if all_data else pd.DataFrame()
+            )
+            return result_df
 
     except Exception as e:
-        logging.error(f"Failed to save annotations to database for {patient_id}: {e}")
+        logging.error(f"Error with temporal database filter for {table}: {e}")
+        return pd.DataFrame()

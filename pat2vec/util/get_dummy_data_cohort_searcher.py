@@ -1652,7 +1652,9 @@ def generate_epic_lab_results_data(
             "document_LabResultEpicId": [
                 faker.random_number(digits=8) for _ in range(num_rows)
             ],
-            "document_Fields.valueText": [faker.word() for _ in range(num_rows)],
+            "document_Fields.valueText": [
+                str(random.uniform(1, 100)) for _ in range(num_rows)
+            ],
             "id": [faker.uuid4() for _ in range(num_rows)],
         }
         df_holder_list.append(pd.DataFrame(data))
