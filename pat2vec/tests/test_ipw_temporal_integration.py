@@ -4,6 +4,7 @@ import os
 import shutil
 import tempfile
 from datetime import datetime
+from dateutil.relativedelta import relativedelta
 from unittest.mock import MagicMock, patch
 
 from pat2vec.util.config_pat2vec import config_class
@@ -45,8 +46,8 @@ class TestIPWTemporalIntegration(unittest.TestCase):
         self.config = config_class(
             storage_backend="database",
             db_connection_string=self.db_connection_string,
-            testing=True,
-            verbosity=0,
+            testing=True,  # Keep testing=True
+            verbosity=1,  # Set verbosity to 1 to see info logs
             proj_name=self.project_name,
             root_path=self.test_dir,
             all_patient_list=[self.patient_1, self.patient_2],
@@ -55,8 +56,13 @@ class TestIPWTemporalIntegration(unittest.TestCase):
             individual_patient_window_start_column_name="anchor_date",
             individual_patient_id_column_name="client_idcode",
             years=1,  # 1 year window duration
+            months=0,
+            days=0,
             lookback=False,
-            batch_mode=True,  # type: ignore
+            time_window_interval_delta=relativedelta(
+                years=1
+            ),  # Produce a single summary vector
+            batch_mode=True,
             calculate_vectors=True,
             main_options={
                 "bloods": True,
