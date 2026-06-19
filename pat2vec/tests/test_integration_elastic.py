@@ -31,6 +31,9 @@ class TestIntegrationElastic(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
+        # Clear global CogStack client to prevent state leakage to other tests
+        csm.cs = None
+
         cls.container.stop()
         if os.path.exists(cls.creds_file_name):
             os.remove(cls.creds_file_name)
@@ -76,3 +79,7 @@ class TestIntegrationElastic(unittest.TestCase):
         # Verify data exists in one of the core indices
         res = client.elastic.count(index="epr_documents")
         self.assertGreater(res["count"], 0)
+
+
+if __name__ == "__main__":
+    unittest.main()
