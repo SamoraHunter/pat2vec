@@ -359,6 +359,12 @@ def get_current_pat_bloods(
             latest_date_object = cleaned_df.sort_values(by="datetime").iloc[-1][
                 "datetime"
             ]
+            if pd.notna(latest_date_object):
+                latest_date_object = (
+                    latest_date_object.tz_localize("UTC")
+                    if latest_date_object.tzinfo is None
+                    else latest_date_object.astimezone(timezone.utc)
+                )
             delta_days_since_last = (today - latest_date_object).days
             df_unique_filtered.at[
                 patient_row_index, col_name + "_days-since-last-test"
@@ -369,6 +375,12 @@ def get_current_pat_bloods(
                 oldest_date_object = cleaned_df.sort_values(by="datetime").iloc[0][
                     "datetime"
                 ]
+                if pd.notna(oldest_date_object):
+                    oldest_date_object = (
+                        oldest_date_object.tz_localize("UTC")
+                        if oldest_date_object.tzinfo is None
+                        else oldest_date_object.astimezone(timezone.utc)
+                    )
                 delta_between_first_last = (
                     latest_date_object - oldest_date_object
                 ).days
