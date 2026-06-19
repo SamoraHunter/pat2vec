@@ -441,7 +441,7 @@ class TestUtilMethodsGet(unittest.TestCase):
         create_folders(all_patient_list, config)
 
         # Expect mkdir to be called for each patient in each path
-        self.assertEqual(mock_sftp.mkdir.call_count, len(all_patient_list) * 3)
+        self.assertEqual(mock_sftp.mkdir.call_count, len(all_patient_list) * 6)
 
     @patch("pat2vec.util.methods_get.os.makedirs")
     @patch("pat2vec.util.methods_get.sftp_exists", return_value=False)
@@ -471,4 +471,4 @@ class TestUtilMethodsGet(unittest.TestCase):
         create_folders_for_pat("P_001", config)
 
         # Expect mkdir to be called for each path for the single patient
-        self.assertEqual(mock_sftp.mkdir.call_count, 3)
+        self.assertEqual(mock_sftp.mkdir.call_count, 6)
