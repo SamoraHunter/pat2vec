@@ -82,6 +82,10 @@ class TestBuildIpwDataframe(unittest.TestCase):
             mode="earliest",
             include_mct=True,
             include_textual_obs=True,
+            include_epic_clinical_notes=True,
+            include_epic_clinical_notes_appointments=True,
+            include_epic_imaging_reports=True,
+            include_epic_medical_history=True,
         )
 
     @patch("pat2vec.util.post_processing_build_ipw_dataframe.get_pat_ipw_record")
@@ -107,6 +111,10 @@ class TestBuildIpwDataframe(unittest.TestCase):
             mode="earliest",
             include_mct=True,
             include_textual_obs=True,
+            include_epic_clinical_notes=True,
+            include_epic_clinical_notes_appointments=True,
+            include_epic_imaging_reports=True,
+            include_epic_medical_history=True,
         )
         self.assertEqual(len(result_df), 1)
         self.assertEqual(result_df.iloc[0]["client_idcode"], "P001")
@@ -229,6 +237,10 @@ class TestBuildIpwDataframe(unittest.TestCase):
             mode="earliest",  # Default mode
             include_mct=False,
             include_textual_obs=False,
+            include_epic_clinical_notes=True,
+            include_epic_clinical_notes_appointments=True,
+            include_epic_imaging_reports=True,
+            include_epic_medical_history=True,
         )
 
     @patch("pat2vec.util.post_processing_build_ipw_dataframe.get_pat_ipw_record")
