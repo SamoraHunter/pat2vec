@@ -559,7 +559,7 @@ class TestPreProcessing(unittest.TestCase):
     @patch(
         "pat2vec.util.pre_processing.iterative_multi_term_cohort_searcher_no_terms_fuzzy_textual_obs"
     )
-    @patch("os.path.exists", return_value=False)
+    @patch("pat2vec.util.pre_processing.os.path.exists", return_value=False)
     @patch("os.makedirs")
     @patch("pandas.DataFrame.to_csv")
     def test_get_treatment_docs_merge_columns(
