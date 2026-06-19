@@ -160,7 +160,8 @@ def get_treatment_docs_by_iterative_multi_term_cohort_searcher_no_terms_fuzzy(
             logger.info("Running in live mode, doing real search.")
     search_results = pd.DataFrame()
 
-    is_testing_non_elastic = pat2vec_obj.config_obj.testing and not getattr(
+    is_testing_mode = pat2vec_obj.config_obj.testing
+    is_testing_non_elastic = is_testing_mode and not getattr(
         pat2vec_obj.config_obj, "testing_elastic", False
     )
 
@@ -281,26 +282,30 @@ def get_treatment_docs_by_iterative_multi_term_cohort_searcher_no_terms_fuzzy(
                     search_string=search_string,
                 )
             else:
-                docs = config["searcher"](
-                    term_list,
-                    output_path,
-                    start_day=global_start_day,
-                    start_month=global_start_month,
-                    start_year=global_start_year,
-                    end_day=global_end_day,
-                    end_month=global_end_month,
-                    end_year=global_end_year,
-                    append=True,
-                    additional_filters=additional_filters,
-                    all_fields=all_fields,
-                    method=method,
-                    fuzzy=fuzzy,
-                    slop=slop,
-                    testing=pat2vec_obj.config_obj.testing,
-                    testing_elastic=getattr(
+                # Build kwargs only for named params; first two are positional
+                search_kwargs = {
+                    "start_day": global_start_day,
+                    "start_month": global_start_month,
+                    "start_year": global_start_year,
+                    "end_day": global_end_day,
+                    "end_month": global_end_month,
+                    "end_year": global_end_year,
+                    "append": True,
+                    "additional_filters": additional_filters,
+                    "all_fields": all_fields,
+                    "method": method,
+                    "fuzzy": fuzzy,
+                    "slop": slop,
+                    "testing": pat2vec_obj.config_obj.testing,
+                    "testing_elastic": getattr(
                         pat2vec_obj.config_obj, "testing_elastic", False
                     ),
-                )
+                }
+                # mct and textual_obs have debug=True as default (tests expect False)
+                # epr has debug=False as default but tests also expect explicit False
+                if config["source_name"] in ("epr", "mct", "textual_obs"):
+                    search_kwargs["debug"] = False
+                docs = config["searcher"](term_list, output_path, **search_kwargs)
 
             if not docs.empty:
                 # Standardize column names for concatenation
