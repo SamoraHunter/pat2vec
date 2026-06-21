@@ -61,7 +61,7 @@ def plot_feature_importance(importances, model_name, config) -> None:
     if importances.empty:
         return
     plt.figure(figsize=(10, 6))
-    importances.sort_values().plot(kind="barh")
+    importances.sort_values(by=importances.columns[0]).plot(kind="barh")
     plt.title(f"Feature Importance - {model_name}")
     plt.savefig(os.path.join(config.root_path, "test_plot.png"))
     plt.show()

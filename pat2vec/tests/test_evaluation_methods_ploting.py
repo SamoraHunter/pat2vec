@@ -83,8 +83,8 @@ class TestEvaluationMethodsPloting(unittest.TestCase):
     @patch("pat2vec.util.evaluation_methods_ploting.plt")
     def test_plot_feature_importance_basic(self, mock_plt):
         """Test basic feature importance plotting."""
-        feature_importances = pd.Series(
-            [0.5, 0.3, 0.2], index=["feat1", "feat2", "feat3"]
+        feature_importances = pd.DataFrame(
+            {"importance": [0.5, 0.3, 0.2]}, index=["feat1", "feat2", "feat3"]
         )
         model_name = "TestModel"
 
@@ -100,7 +100,7 @@ class TestEvaluationMethodsPloting(unittest.TestCase):
         self, mock_figure, mock_show, mock_savefig
     ):
         """Test feature importance plotting with empty data."""
-        feature_importances = pd.Series([])
+        feature_importances = pd.DataFrame({"importance": []})
         model_name = "TestModel"
 
         plot_feature_importance(feature_importances, model_name, self.mock_config)

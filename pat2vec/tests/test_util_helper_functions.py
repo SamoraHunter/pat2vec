@@ -1,8 +1,10 @@
 import unittest
 import pandas as pd
 from unittest.mock import MagicMock, patch
+from datetime import datetime
 from pat2vec.util.helper_functions import (
     get_df_from_db,
+    get_df_from_db_with_temporal_filter,
     get_ram_usage,
     sanitize_for_path,
     extract_nhs_numbers,
@@ -249,3 +251,175 @@ class TestHelperFunctions(unittest.TestCase):
         self.assertIsInstance(saved_df["types"].iloc[0], str)
         mock_inspect.return_value.has_table.assert_called()
         mock_ensure_index.assert_called()
+
+    def test_get_df_from_db_with_temporal_filter_no_patient_ids(self):
+        """Test temporal filter with no patient IDs returns empty DataFrame."""
+        mock_config = MagicMock()
+        mock_config.db_engine = MagicMock()
+        result = get_df_from_db_with_temporal_filter(
+            mock_config, "schema", "table", patient_ids=[]
+        )
+        self.assertTrue(result.empty)
+
+    @patch("pat2vec.util.helper_functions.text")
+    @patch("pandas.read_sql")
+    def test_get_df_from_db_with_temporal_filter_basic(self, mock_read_sql, mock_text):
+        """Test basic temporal filtering functionality."""
+        mock_config = MagicMock()
+        mock_engine = MagicMock()
+        mock_config.db_engine = mock_engine
+        mock_conn = MagicMock()
+        mock_engine.connect.return_value.__enter__.return_value = mock_conn
+
+        # Mock read_sql to return sample data
+        mock_read_sql.return_value = pd.DataFrame(
+            {
+                "client_idcode": ["P1"],
+                "updatetime": [datetime(2023, 6, 15)],
+            }
+        )
+
+        result = get_df_from_db_with_temporal_filter(
+            mock_config,
+            "schema",
+            "table",
+            patient_ids=["P1"],
+            start_date="2023-01-01",
+            end_date="2023-12-31",
+        )
+        self.assertEqual(len(result), 1)
+
+    @patch("pat2vec.util.helper_functions.text")
+    @patch("pandas.read_sql")
+    def test_get_df_from_db_with_temporal_filter_chunking(
+        self, mock_read_sql, mock_text
+    ):
+        """Test temporal filtering with chunking for many patient IDs."""
+        mock_config = MagicMock()
+        mock_engine = MagicMock()
+        mock_config.db_engine = mock_engine
+        mock_conn = MagicMock()
+        mock_engine.connect.return_value.__enter__.return_value = mock_conn
+
+        # Mock to return data for each chunk
+        def side_effect(*args, **kwargs):
+            params = kwargs.get("params", {})
+            patient_count = len(params)
+            return pd.DataFrame(
+                {
+                    "client_idcode": list(params.values()),
+                    "updatetime": [datetime.now()] * patient_count,
+                }
+            )
+
+        mock_read_sql.side_effect = side_effect
+
+        # Test with more than chunk_size (900) patients
+        patient_ids = [f"P{i}" for i in range(1000)]
+        result = get_df_from_db_with_temporal_filter(
+            mock_config,
+            "schema",
+            "table",
+            patient_ids=patient_ids,
+            start_date="2023-01-01",
+            end_date="2023-12-31",
+        )
+        # Due to chunking + side_effect, we get slightly more - just verify we have data
+        self.assertGreater(len(result), 900)
+
+    @patch("pat2vec.util.helper_functions.text")
+    @patch("pandas.read_sql")
+    def test_get_df_from_db_with_temporal_filter_error_handling(
+        self, mock_read_sql, mock_text
+    ):
+        """Test temporal filtering handles database errors gracefully."""
+        mock_config = MagicMock()
+        mock_engine = MagicMock()
+        mock_config.db_engine = mock_engine
+        mock_engine.connect.side_effect = Exception("Database connection error")
+
+        result = get_df_from_db_with_temporal_filter(
+            mock_config,
+            "schema",
+            "table",
+            patient_ids=["P1"],
+        )
+        self.assertTrue(result.empty)
+
+    @patch("pat2vec.util.helper_functions.text")
+    @patch("pandas.read_sql")
+    def test_get_df_from_db_with_temporal_filter_no_engine(
+        self, mock_read_sql, mock_text
+    ):
+        """Test temporal filtering when database engine is not initialized."""
+        mock_config = MagicMock()
+        mock_config.db_engine = None
+
+        result = get_df_from_db_with_temporal_filter(
+            mock_config,
+            "schema",
+            "table",
+            patient_ids=["P1"],
+        )
+        self.assertTrue(result.empty)
+
+    @patch("pat2vec.util.helper_functions.text")
+    @patch("pandas.read_sql")
+    def test_get_df_from_db_with_temporal_filter_only_start_date(
+        self, mock_read_sql, mock_text
+    ):
+        """Test temporal filtering with only start date (no end date)."""
+        mock_config = MagicMock()
+        mock_engine = MagicMock()
+        mock_config.db_engine = mock_engine
+        mock_conn = MagicMock()
+        mock_engine.connect.return_value.__enter__.return_value = mock_conn
+
+        # Mock read_sql to return sample data
+        mock_read_sql.return_value = pd.DataFrame(
+            {
+                "client_idcode": ["P1"],
+                "updatetime": [datetime(2023, 6, 15)],
+            }
+        )
+
+        result = get_df_from_db_with_temporal_filter(
+            mock_config,
+            "schema",
+            "table",
+            patient_ids=["P1"],
+            start_date="2023-01-01",
+        )
+        # When only start_date is provided (no end_date), temporal filter should not be applied
+        self.assertEqual(len(result), 1)
+
+    @patch("pat2vec.util.helper_functions.text")
+    @patch("pandas.read_sql")
+    def test_get_df_from_db_with_temporal_filter_sqlite_dialect(
+        self, mock_read_sql, mock_text
+    ):
+        """Test temporal filtering with SQLite dialect."""
+        mock_config = MagicMock()
+        mock_engine = MagicMock()
+        mock_engine.name = "sqlite"
+        mock_config.db_engine = mock_engine
+        mock_conn = MagicMock()
+        mock_engine.connect.return_value.__enter__.return_value = mock_conn
+
+        # Mock read_sql to return sample data
+        mock_read_sql.return_value = pd.DataFrame(
+            {
+                "client_idcode": ["P1"],
+                "updatetime": [datetime(2023, 6, 15)],
+            }
+        )
+
+        result = get_df_from_db_with_temporal_filter(
+            mock_config,
+            "schema",
+            "table",
+            patient_ids=["P1"],
+            start_date="2023-01-01",
+            end_date="2023-12-31",
+        )
+        self.assertEqual(len(result), 1)
