@@ -209,7 +209,15 @@ class main:
         logging.debug(
             f"DEBUG: Final self.cohort_searcher_with_terms_and_search = {self.cohort_searcher_with_terms_and_search}"
         )
-        self.all_patient_list = get_all_patients_list(self.config_obj)
+        # Respect all_patient_list if explicitly provided in config
+        if (
+            hasattr(self.config_obj, "all_patient_list")
+            and self.config_obj.all_patient_list is not None
+            and len(self.config_obj.all_patient_list) > 0
+        ):
+            self.all_patient_list = self.config_obj.all_patient_list.copy()
+        else:
+            self.all_patient_list = get_all_patients_list(self.config_obj)
         self.current_pat_lines_path = config_obj.current_pat_lines_path
         self.sftp_client = config_obj.sftp_obj
 
