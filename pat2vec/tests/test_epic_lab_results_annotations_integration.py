@@ -135,7 +135,12 @@ class TestEpicLabResultsAnnotationsIntegration(unittest.TestCase):
             text_column="document_Fields.valueText",
         )
         annotated_df = multi_annots_to_df_epic_lab_results(
-            self.test_patient_id, db_raw_lab, multi_annots, self.config, mock_tqdm
+            self.test_patient_id,
+            db_raw_lab,
+            multi_annots,
+            self.config,
+            mock_tqdm,
+            time_column="document_CollectedDate",
         )
         # For SQLite, the schema name is prepended to the table name
         annot_table = "annotations_ann_epic_lab_results"

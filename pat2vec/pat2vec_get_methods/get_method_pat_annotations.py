@@ -108,6 +108,15 @@ def get_current_pat_annotations(
                 columns={"document_CreatedWhen": "updatetime"}
             )
 
+        # Support Epic-style CollectedDate timestamps
+        if (
+            "updatetime" not in batch_epr_docs_annotations.columns
+            and "document_CollectedDate" in batch_epr_docs_annotations.columns
+        ):
+            batch_epr_docs_annotations = batch_epr_docs_annotations.rename(
+                columns={"document_CollectedDate": "updatetime"}
+            )
+
         # Filter the dataframe based on the target date range
         filtered_batch_epr_docs_annotations = filter_dataframe_by_timestamp(
             batch_epr_docs_annotations,
