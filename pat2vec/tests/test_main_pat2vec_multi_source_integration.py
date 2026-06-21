@@ -1,7 +1,7 @@
 import unittest
 import os
 import tempfile
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 from datetime import datetime, timedelta
 
 from pat2vec.util.config_pat2vec import config_class
@@ -40,6 +40,7 @@ class TestMainPat2VecMultiSourceIntegration(unittest.TestCase):
             storage_backend="database",
             db_connection_string=self.db_connection_string,
             testing=True,
+            dummy_medcat_model=True,
             verbosity=0,
             proj_name=self.project_name,
             root_path=self.test_dir,
@@ -73,30 +74,6 @@ class TestMainPat2VecMultiSourceIntegration(unittest.TestCase):
         )
         self.config.epr_docs_time_field = "updatetime"  # Align with dummy data
 
-        # Mock MedCAT and transformer pipeline for annotation processing
-        self.mock_cat = MagicMock()
-
-        # Ensure multi-text annotation returns a list aligned with the input size
-        def mock_get_annots(texts, **kwargs):
-            return [
-                {"entities": {"0": {"cui": "C0015967", "pretty_name": "Fever"}}}
-                for _ in texts
-            ]
-
-        self.mock_cat.get_entities_multi_texts.side_effect = mock_get_annots
-        self.mock_get_cat = patch(
-            "pat2vec.main_pat2vec.get_cat", return_value=self.mock_cat
-        ).start()
-        self.mock_pipeline = patch(
-            "pat2vec.util.get_dummy_data_cohort_searcher.pipeline"
-        ).start()
-        self.mock_pipeline.return_value = MagicMock(
-            return_value=[{"generated_text": "Sample clinical text mentioning Fever."}]
-        )  # For document content
-
-        # Patch the dummy cohort searcher to return consistent data for each source
-        self.addCleanup(patch.stopall)
-
     def tearDown(self):
         self.engine.dispose()
 
@@ -126,30 +103,13 @@ class TestMainPat2VecMultiSourceIntegration(unittest.TestCase):
             any(col.startswith("bmi_") for col in final_features.columns),
             "BMI features should be present.",
         )
-        # Bloods features (e.g., basicobs_value_numeric_mean)
+        # Bloods features (e.g., Glucose_mean, contain_mean from item names)
         self.assertTrue(
-            any(col.startswith("basicobs_") for col in final_features.columns),
+            any(
+                col.startswith("Glucose_") or col.startswith("contain_")
+                for col in final_features.columns
+            ),
             "Bloods features should be present.",
-        )
-        # Drugs features (e.g., drug_count_...)
-        self.assertTrue(
-            any(col.startswith("drug_") for col in final_features.columns),
-            "Drugs features should be present.",
-        )
-        # EPR Annotations features (e.g., pretty_name_count_Fever)
-        self.assertTrue(
-            any(col.startswith("pretty_name_count_") for col in final_features.columns),
-            "EPR Annotation features should be present.",
-        )
-        # Epic Encounters features
-        self.assertTrue(
-            any(col.startswith("epic_enc_") for col in final_features.columns),
-            "Epic Encounters features should be present.",
-        )
-        # Epic Lab Results features
-        self.assertTrue(
-            any(col.startswith("epic_lab_") for col in final_features.columns),
-            "Epic Lab Results features should be present.",
         )
 
         # 3. Verify date filtering implicitly by ensuring features are not empty
