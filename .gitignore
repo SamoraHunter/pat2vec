@@ -242,3 +242,4 @@ run_ci.sh
 .INSTRUCTIONS.md
 ai.md
 python-3.10.18-linux-24.04-x64.tar.gz
+.ECRF/*

@@ -89,10 +89,12 @@ class TestCogstackSearchMethods(unittest.TestCase):
         df_new = pd.DataFrame([[1, 2, 1]], columns=["A", "B", "A"])  # Duplicate 'A'
         existing_df = pd.DataFrame(columns=["A", "B", "C"])
 
-        combined_cols = existing_df.columns.union(df_new.columns)
-
         # deduplicate first (this is the fix)
         df_fixed = df_new.loc[:, ~df_new.columns.duplicated()]
+        existing_fixed = existing_df.loc[:, ~existing_df.columns.duplicated()]
+
+        combined_cols = existing_fixed.columns.union(df_fixed.columns)
+
         result = df_fixed.reindex(columns=combined_cols)
         self.assertCountEqual(result.columns, ["A", "B", "C"])
 

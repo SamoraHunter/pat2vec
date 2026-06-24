@@ -239,13 +239,13 @@ from .pat2vec_search.search_multiprocess import (
     cohort_searcher_with_terms_and_search_multi,
     pull_and_write,
 )
-from .pat2vec_search.test_cogstack_search_methods import (
+from .tests.test_cogstack_search_methods import (
     TestCogstackSearchMethods,
 )
-from .pat2vec_search.test_data_helper_functions import (
+from .tests.test_data_helper_functions import (
     TestDataHelperFunctions,
 )
-from .pat2vec_search.test_matcher import (
+from .tests.test_matcher import (
     TestMatcher,
 )
 from .patvec_get_batch_methods.get_merged_batches import (
