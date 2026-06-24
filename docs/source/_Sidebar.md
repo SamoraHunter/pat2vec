@@ -2,11 +2,14 @@
 
 *   [Home](Home)
 *   [Installation Guide](Installation)
-*   [Configuration Guide](Configuration-Guide)
 *   [Usage Guide](Usage)
+*   [Configuration Guide](Configuration-Guide)
+*   [Searches](Searches)
+*   [Example Searches Guide](Example-Searches-Guide)
 *   [Contributing](Contributing)
 
 ---
+
 ### Reference
 
 *   [Architecture and Diagrams](Architecture-and-Diagrams)

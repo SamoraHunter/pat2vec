@@ -33,7 +33,7 @@ def search_core_resus_observations(
     output_filename: Optional[str] = "core_resus_search_results.csv",
     overwrite: bool = False,
     config_obj: Optional[object] = None,
-):
+) -> pd.DataFrame:
     """Searches for CORE_RESUS_STATUS observation data within a date range.
 
     Uses a cohort searcher to find CORE_RESUS_STATUS observation data for
@@ -140,7 +140,7 @@ def search_core_resus_observations(
 
 def calculate_core_resus_features(
     features_data, term_prefix="core_resus_status", negate_biochem=False
-):
+) -> dict:
     """Calculates resuscitation status features from observations.
 
     Counts the occurrences of "For cardiopulmonary resuscitation" and "Not for
@@ -187,7 +187,7 @@ def get_core_resus(
     batch_mode=False,
     cohort_searcher_with_terms_and_search=None,
     config_obj=None,
-):
+) -> pd.DataFrame:
     """Retrieves CORE_RESUS_STATUS features for a patient within a date range.
 
     This function fetches CORE_RESUS_STATUS data, either from a pre-loaded

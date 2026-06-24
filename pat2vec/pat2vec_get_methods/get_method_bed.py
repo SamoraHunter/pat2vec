@@ -41,9 +41,9 @@ def search_bed_data(
     Uses a cohort searcher to find bed data based on a search term and date range.
 
     Args:
-        cohort_searcher_with_terms_and_search (Optional[Callable]): The function for
+        cohort_searcher_with_terms_and_search: The function for
             cohort searching. Defaults to None.
-        client_id_codes (Optional[Union[str, List[str]]]): The client ID code(s) of
+        client_id_codes: The client ID code(s) of
             the patient(s). Defaults to None.
         client_idcode_name (str): The name of the client ID code field in the
             index. Defaults to "client_idcode.keyword".
@@ -71,6 +71,10 @@ def search_bed_data(
 
     Returns:
         pd.DataFrame: A DataFrame containing the raw bed data.
+
+    Raises:
+        ValueError: If `cohort_searcher_with_terms_and_search`, `client_id_codes`,
+            or `bed_time_field` is None, or if any date component is None.
     """
     if (
         output_filename
@@ -148,7 +152,7 @@ def get_bed(
 
     Args:
         current_pat_client_id_code (str): The client ID code of the patient.
-        target_date_range (tuple): A tuple representing the target date range.
+        target_date_range (Tuple): A tuple representing the target date range.
         pat_batch (pd.DataFrame): The DataFrame containing patient data for batch mode.
         config_obj (Optional[object]): Configuration object. Defaults to None.
         cohort_searcher_with_terms_and_search (Optional[Callable]): The function for
@@ -158,6 +162,9 @@ def get_bed(
         pd.DataFrame: A DataFrame containing CORE_BedNumber3 features for the
             specified patient. If no data is found, a DataFrame with only the
             'client_idcode' is returned.
+
+    Raises:
+        ValueError: If `config_obj` is None.
     """
     batch_mode = config_obj.batch_mode
 

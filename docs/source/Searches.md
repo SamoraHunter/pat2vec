@@ -48,11 +48,13 @@ pat2vec_obj = main(config_obj=config_obj, cogstack=True)
 ### 2. Search Blood Test Data
 
 ```python
+from pat2vec import search_bloods_data
+
 # Define patient IDs
 patient_ids = ['PATIENT001', 'PATIENT002', 'PATIENT003']
 
 # Search for blood test data
-df_bloods = pat2vec.pat2vec_get_methods.get_method_bloods.search_bloods_data(
+df_bloods = search_bloods_data(
     cohort_searcher_with_terms_and_search=pat2vec_obj.cohort_searcher_with_terms_and_search,
     client_id_codes=patient_ids
 )
@@ -68,7 +70,7 @@ print(df_bloods.head())
 You can specify custom date ranges to focus on specific time periods:
 
 ```python
-df_bloods = pat2vec.pat2vec_get_methods.get_method_bloods.search_bloods_data(
+df_bloods = search_bloods_data(
     cohort_searcher_with_terms_and_search=pat2vec_obj.cohort_searcher_with_terms_and_search,
     client_id_codes=patient_ids,
     start_year=2020,
@@ -86,7 +88,7 @@ Add additional search criteria using the `additional_custom_search_string` param
 
 ```python
 # Search for specific blood tests only
-df_bloods = pat2vec.pat2vec_get_methods.get_method_bloods.search_bloods_data(
+df_bloods = search_bloods_data(
     cohort_searcher_with_terms_and_search=pat2vec_obj.cohort_searcher_with_terms_and_search,
     client_id_codes=patient_ids,
     additional_custom_search_string='AND basicobs_itemname_analysed:("Hemoglobin" OR "Creatinine")'
@@ -98,7 +100,7 @@ df_bloods = pat2vec.pat2vec_get_methods.get_method_bloods.search_bloods_data(
 If your data uses different field names, you can specify them:
 
 ```python
-df_bloods = pat2vec.pat2vec_get_methods.get_method_bloods.search_bloods_data(
+df_bloods = search_bloods_data(
     cohort_searcher_with_terms_and_search=pat2vec_obj.cohort_searcher_with_terms_and_search,
     client_id_codes=patient_ids,
     client_idcode_name="patient_id.keyword",  # Different patient ID field
@@ -162,7 +164,7 @@ The function includes built-in validation and will raise helpful error messages:
 
 ```python
 try:
-    df_bloods = pat2vec.pat2vec_get_methods.get_method_bloods.search_bloods_data(
+    df_bloods = search_bloods_data(
         cohort_searcher_with_terms_and_search=pat2vec_obj.cohort_searcher_with_terms_and_search,
         client_id_codes=patient_ids
     )
@@ -175,13 +177,15 @@ except ValueError as e:
 Blood test data can be combined with other clinical data types:
 
 ```python
+from pat2vec import search_demographics, search_drug_orders
+
 # Get multiple data types for the same patients
-df_demographics = pat2vec.pat2vec_get_methods.get_method_demo.search_demographics(
+df_demographics = search_demographics(
     cohort_searcher_with_terms_and_search=pat2vec_obj.cohort_searcher_with_terms_and_search,
     client_id_codes=patient_ids
 )
 
-df_drugs = pat2vec.pat2vec_get_methods.get_method_drugs.search_drug_orders(
+df_drugs = search_drug_orders(
     cohort_searcher_with_terms_and_search=pat2vec_obj.cohort_searcher_with_terms_and_search,
     client_id_codes=patient_ids
 )

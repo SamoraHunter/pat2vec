@@ -11,18 +11,28 @@ def get_current_pat_obs(
     pat_batch: pd.DataFrame,
     search_term: str,
     config_obj: Any,
-) -> pd.DataFrame:
+) -> dict:
     """Extracts features for generic observations based on a search term.
 
+    This function filters observations for a specific patient and observation type
+    within a date range, computes numeric aggregates, and returns feature columns.
+
     Args:
-        current_pat_client_id_code: The patient's ID code.
-        target_date_range: A tuple of (start_datetime, end_datetime).
-        pat_batch: DataFrame containing a batch of observations.
-        search_term: The specific observation type to filter for.
-        config_obj: The configuration object.
+        current_pat_client_id_code (str): The patient's ID code used to filter data.
+        target_date_range (Tuple[Any, Any]): A tuple of (start_datetime, end_datetime)
+            representing the temporal window for filtering observations.
+        pat_batch (pd.DataFrame): DataFrame containing a batch of observation records.
+        search_term (str): The specific observation type name to filter for.
+        config_obj (Any): Configuration object with attributes like `obs_time_field`
+            andbatch_mode settings.
 
     Returns:
-        pd.DataFrame: A single-row DataFrame containing observation features.
+        pd.DataFrame: A single-row DataFrame containing aggregated observation features
+            with column names prefixed by the search term. Returns empty DataFrame if
+            no matching data is found.
+
+    Raises:
+        ValueError: If required configuration attributes are missing.
     """
     if pat_batch is None or pat_batch.empty:
         return pd.DataFrame()

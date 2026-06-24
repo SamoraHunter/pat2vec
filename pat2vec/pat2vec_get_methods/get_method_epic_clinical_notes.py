@@ -100,7 +100,29 @@ def get_epic_clinical_notes(
     config_obj=None,
     cohort_searcher_with_terms_and_search=None,
 ):
-    """Retrieves epic_clinical_notes features for a patient within a date range."""
+    """Retrieves Epic clinical notes features for a patient within a date range.
+
+    This function retrieves Epic clinical notes data, either from a pre-loaded
+    batch DataFrame or by querying the database, and then processes it to create
+    one-hot encoded binary features based on document names (e.g., "Progress Note").
+
+    Args:
+        current_pat_client_id_code: The client ID code of the patient.
+        target_date_range (Tuple): A tuple representing the target date range as
+            (start_year, start_month, end_year, end_month).
+        pat_batch (pd.DataFrame): The DataFrame containing patient data for batch mode.
+        config_obj (Optional[object]): Configuration object. Required for processing settings.
+        cohort_searcher_with_terms_and_search (Optional[Callable]): The function for
+            cohort searching. Used when not in batch mode.
+
+    Returns:
+        pd.DataFrame: A DataFrame containing Epic clinical notes features for the
+            specified patient. Binary columns are created for each unique document name.
+            If no data is found, a DataFrame with only the 'client_idcode' is returned.
+
+    Raises:
+        ValueError: If `config_obj` is None.
+    """
     if config_obj is None:
         raise ValueError("config_obj cannot be None.")
 

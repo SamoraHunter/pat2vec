@@ -58,41 +58,51 @@ def search_drug_orders(
     overwrite: bool = False,
     config_obj: Optional[object] = None,
 ) -> pd.DataFrame:
-    """Searches for drug/medication orders within a date range.
+    """Searches for drug/medication orders within a specified date range.
 
-    Uses a cohort searcher to find medication orders for specified patients.
+     Uses a cohort searcher function to query Elasticsearch and retrieve medication
+     orders for the specified patient(s). The search filters by order type 'medication'
+     and the specified time window defined by start_year, start_month, end_year,
+     and end_month parameters. Optionally saves results to CSV or loads existing data.
 
-    Args:
-        cohort_searcher_with_terms_and_search (Optional[Callable]): The function for
-            cohort searching. Defaults to None.
-        client_id_codes (Optional[Union[str, List[str]]]): The client ID code(s) of
-            the patient(s). Defaults to None.
-        drug_time_field (str): The timestamp field for filtering drug orders.
-            Defaults to 'order_createdwhen'.
-        fields_override (Optional[List[str]]): A list of fields to override the
-            default `DRUG_FIELDS`. Defaults to None.
-        start_year (str): Start year for the search. Defaults to '1995'.
-        start_month (str): Start month for the search. Defaults to '01'.
-        start_day (str): Start day for the search. Defaults to '01'.
-        end_year (str): End year for the search. Defaults to '2025'.
-        end_month (str): End month for the search. Defaults to '12'.
-        end_day (str): End day for the search. Defaults to '12'.
-        additional_custom_search_string (Optional[str]): An additional string to
-            append to the search query. Defaults to None.
-        index_name (str): The name of the Elasticsearch index to search.
-            Defaults to "order".
-        output_filename (Optional[str]): The filename or path to a CSV file to
-            load from or save to. Defaults to "drugs_search_results.csv".
-        overwrite (bool): If True, perform the search even if `output_filename`
-            exists. Defaults to False.
-        config_obj (Optional[object]): Configuration object containing root_path.
-            Defaults to None.
+     Args:
+         cohort_searcher_with_terms_and_search (Optional[Callable]): The function for
+             cohort searching. Defaults to None.
+         client_id_codes (Optional[Union[str, List[str]]]): The client ID code(s) of
+             the patient(s). Defaults to None.
+         drug_time_field (str): The timestamp field for filtering drug orders.
+             Defaults to 'order_createdwhen'.
+         fields_override (Optional[List[str]]): A list of fields to override the
+             default `DRUG_FIELDS`. Defaults to None.
+         start_year (str): Start year for the search. Defaults to '1995'.
+         start_month (str): Start month for the search. Defaults to '01'.
+         start_day (str): Start day for the search. Defaults to '01'.
+         end_year (str): End year for the search. Defaults to '2025'.
+         end_month (str): End month for the search. Defaults to '12'.
+         end_day (str): End day for the search. Defaults to '12'.
+         additional_custom_search_string (Optional[str]): An additional string to
+             append to the search query. Defaults to None.
+         index_name (str): The name of the Elasticsearch index to search.
+             Defaults to "order".
+         output_filename (Optional[str]): The filename or path to a CSV file to
+             load from or save to. Defaults to "drugs_search_results.csv".
+         overwrite (bool): If True, perform the search even if `output_filename`
+             exists. Defaults to False.
+         config_obj (Optional[object]): Configuration object containing root_path.
+             Defaults to None.
 
     Returns:
-        pd.DataFrame: A DataFrame containing the raw drug order data.
+         pd.DataFrame: A DataFrame containing the raw drug order data with columns
+             from DRUG_FIELDS (client_idcode, order_guid, order_name, order_summaryline,
+             order_holdreasontext, order_entered, clientvisit_visitidcode,
+             order_performeddtm, order_createdwhen).
 
-    Raises:
-        ValueError: If essential arguments are None.
+     Raises:
+         ValueError: If cohort_searcher_with_terms_and_search is None, client_id_codes is None,
+             or drug_time_field is None. These parameters are required for searching.
+         RuntimeError: If the search query fails due to Elasticsearch connectivity issues
+             or invalid index configuration.
+         OSError: If there are permissions issues when saving output_filename.
     """
     if (
         output_filename
@@ -159,15 +169,21 @@ def prepare_drug_datetime(
     """Prepares the datetime column for drug data processing.
 
     Creates a 'datetime' column by either copying the specified time field
-    (in batch mode) or converting it to datetime objects.
+    (in batch mode) or converting it to datetime objects. This function is
+    essential for normalizing drug order timestamps before feature calculation.
 
     Args:
-        drugs_data (pd.DataFrame): Raw drug order data.
-        drug_time_field (str): The name of the time field to process.
-        batch_mode (bool): Whether the function is running in batch mode. Defaults to False.
+        drugs_data (pd.DataFrame): Raw drug order data containing raw timestamp fields.
+        drug_time_field (str): The name of the time field to process (e.g., 'order_createdwhen').
+        batch_mode (bool): Whether the function is running in batch mode. In batch mode,
+            the datetime column is copied directly without conversion. Defaults to False.
 
     Returns:
-        pd.DataFrame: The input DataFrame with an added 'datetime' column.
+        pd.DataFrame: The input DataFrame with an added 'datetime' column containing
+            properly formatted datetime objects.
+
+    Raises:
+        ValueError: If drug_time_field does not exist in drugs_data.
     """
     data = drugs_data.copy()
 
@@ -187,19 +203,28 @@ def calculate_drug_features(
 ) -> Dict:
     """Calculates drug features for each order type based on config flags.
 
-    Computes features like the number of orders, days since the last order,
-    and the time span between the first and last order, depending on the
-    flags in `drugs_arg_dict`.
+    Computes time-based and count features for medication orders including
+    the number of orders, days since the last order, and the time span between
+    first and last orders. The features calculated depend on the flags provided
+    in `drugs_arg_dict`.
 
     Args:
-        order_name_df_dict (Dict[str, pd.DataFrame]): A dictionary mapping drug order
-            names to their corresponding DataFrames.
-        order_name_list (List[str]): A list of unique order names to process.
-        drugs_arg_dict (Dict): A dictionary of flags indicating which features to calculate.
-        batch_mode (bool): Whether the function is running in batch mode. Defaults to False.
+        order_name_df_dict (Dict[str, pd.DataFrame]): A dictionary mapping drug order names
+            to their corresponding filtered DataFrames containing only that medication type.
+        order_name_list (List[str]): A list of unique order names (medication types) to process.
+        drugs_arg_dict (Dict): A dictionary of boolean flags indicating which features to calculate.
+            Expected keys include '_num-drug-order', '_days-since-last-drug-order', and
+            '_days-between-first-last-drug'.
+        batch_mode (bool): Whether the function is running in batch mode. In batch mode, uses
+            UTC timezone for date calculations. Defaults to False.
 
     Returns:
-        Dict: A dictionary of calculated features.
+        Dict: A dictionary where keys are feature names (e.g., 'aspirin_num-drug-order')
+            and values are the calculated feature values.
+
+    Raises:
+        ValueError: If order_name_df_dict is None or empty.
+        TypeError: If order_name_list is not a list.
     """
     if batch_mode:
         today = datetime.now(timezone.utc)
@@ -250,16 +275,26 @@ def create_drug_features_dataframe(
 ) -> pd.DataFrame:
     """Creates the final drug features DataFrame.
 
-    Combines the patient's ID with the calculated drug features into a
-    single-row DataFrame.
+    Aggregates the patient's client ID code with all calculated drug features
+    into a single-row DataFrame. This function also includes relevant columns
+    from the original drug data that are not part of the feature dictionary,
+    providing a complete patientprofile for downstream processing.
 
     Args:
-        current_pat_client_id_code (str): The patient's client ID.
-        drug_features (Dict): The dictionary of calculated features.
-        original_data (pd.DataFrame): The original drug data, used for reference.
+        current_pat_client_id_code (str): The unique identifier for the patient.
+            This becomes the primary key in the resulting DataFrame.
+        drug_features (Dict): A dictionary containing calculated drug features
+            with keys like 'drug_name_num-drug-order' and values as feature values.
+        original_data (pd.DataFrame): The raw drug order data used to extract
+            non-feature columns that should be preserved (e.g., demographic info).
 
     Returns:
-        pd.DataFrame: A single-row DataFrame containing the final features.
+        pd.DataFrame: A single-row DataFrame containing the patient's ID code,
+            selected columns from original_data, and all calculated drug features.
+
+    Raises:
+        ValueError: If current_pat_client_id_code is empty or None.
+        KeyError: If required columns are missing from original_data.
     """
     base_df = pd.DataFrame({"client_idcode": [current_pat_client_id_code]})
 
@@ -289,27 +324,39 @@ def get_current_pat_drugs(
 ) -> pd.DataFrame:
     """Retrieves drug/medication features for a patient within a date range.
 
-    This function fetches drug order data, either from a pre-loaded batch or
-    by searching. It then calculates time-based features for each type of
-    drug order based on the provided configuration.
+    This function fetches drug order data, either from a pre-loaded batch dataset
+    or by performing an Elasticsearch search. It then calculates time-based and
+    count features for each medication type based on configuration flags.
+    Supports integration with Epic orders if enabled in the configuration.
 
     Args:
-        current_pat_client_id_code (str): The client ID code of the patient.
-        target_date_range (Tuple): A tuple representing the target date range.
-        pat_batch (pd.DataFrame): The DataFrame containing patient data for batch mode.
-        config_obj (Optional[object]): Configuration object containing settings like
-            `batch_mode`, `drug_time_field`, and feature engineering arguments.
+        current_pat_client_id_code (str): The unique client ID code of the patient
+            for whom to retrieve drug data.
+        target_date_range (Tuple): A tuple of (start_date, end_date) defining the
+            time window for filtering drug orders. Dates should be datetime objects.
+        pat_batch (pd.DataFrame): A DataFrame containing pre-loaded patient data
+            for batch processing mode. Ignored in non-batch mode.
+        config_obj (Optional[object]): Configuration object containing critical settings:
+            - batch_mode: Whether to use batch processing
+            - drug_time_field: The timestamp field name in drug data
+            - feature_engineering_arg_dict: Flags for which features to calculate
+            - main_options: Whether Epic orders integration is enabled
+            - verbosity: Controls output logging level
             Defaults to None.
-        cohort_searcher_with_terms_and_search (Optional[Callable]): The function for
-            cohort searching. Defaults to None.
+        cohort_searcher_with_terms_and_search (Optional[Callable]): A function for
+            performing Elasticsearch queries against the pat2vec data store. Required
+            when not in batch mode and pat_batch is empty.
 
     Returns:
-        pd.DataFrame: A DataFrame containing drug order features for the
-            specified patient.
-    """
-    if config_obj is None:
-        raise ValueError("config_obj cannot be None.")
+        pd.DataFrame: A single-row DataFrame containing drug order features for the
+            specified patient, including client ID code and calculated feature columns.
+            Returns an empty DataFrame with just client_idcode if no drugs are found.
 
+    Raises:
+        ValueError: If config_obj is None or missing required attributes (batch_mode,
+            drug_time_field, feature_engineering_arg_dict).
+        TypeError: If target_date_range is not a tuple or dates are invalid.
+    """
     batch_mode = config_obj.batch_mode
     drug_time_field = config_obj.drug_time_field
     drugs_arg_dict = config_obj.feature_engineering_arg_dict.get("drugs", {})

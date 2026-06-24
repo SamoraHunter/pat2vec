@@ -26,14 +26,38 @@ def get_current_pat_epic_orders_annotations(
 
     Args:
         current_pat_client_id_code (str): The unique identifier for the patient.
-        target_date_range (Tuple): The date range to filter annotations by.
+        target_date_range (Tuple): A tuple containing the start and end dates for
+            filtering annotations as (start_year, start_month, end_year, end_month).
         epic_orders_annotations (Optional[pd.DataFrame]): DataFrame containing
-            Epic Order annotations for a batch of patients.
-        config_obj (Optional[object]): Configuration object with settings.
-        t (Optional[object]): A progress bar object for updating status.
+            Epic Order annotations for a batch of patients. Can be None if no
+            batch data is available.
+        config_obj (Optional[object]): Configuration object with settings such as
+            `batch_mode`, `verbosity`, `start_time`. Required for determining
+            processing behavior.
+        t (Optional[object]): A progress bar object for updating status during
+            processing. Defaults to None.
+        cohort_searcher_with_terms_and_search (Optional[Callable]): Optional callable
+            search function for direct database queries. Currently unused but included
+            for API consistency. Defaults to None.
+        cat (Optional[object]): Optional MedCAT object for annotation processing.
+            Currently unused but included for API consistency. Defaults to None.
 
     Returns:
-        pd.DataFrame: A DataFrame containing the calculated annotation features.
+        pd.DataFrame: A DataFrame containing the calculated annotation features for
+            the specified patient. Includes 'client_idcode' column and count-based
+            features derived from 'pretty_name' values (e.g., epic_orders_pretty_name_X).
+
+    Raises:
+        ValueError: If `config_obj` is None.
+
+    Examples:
+        >>> config = ConfigObject(batch_mode=True, verbosity=0)
+        >>> result = get_current_pat_epic_orders_annotations(
+        ...     current_pat_client_id_code="12345",
+        ...     target_date_range=(2020, 1, 2021, 12),
+        ...     epic_orders_annotations=batch_df,
+        ...     config_obj=config
+        ... )
     """
     if config_obj is None:
         raise ValueError(

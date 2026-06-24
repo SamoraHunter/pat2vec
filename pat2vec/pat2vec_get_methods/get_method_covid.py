@@ -137,7 +137,7 @@ def calculate_covid_features(
     features_data: pd.DataFrame,
     current_pat_client_id_code: str,
     negate_biochem: bool = False,
-) -> pd.DataFrame:
+) -> dict:
     """Generates a binary feature for COVID-19 test results.
 
     Creates a binary flag `covid_positive` which is 1 if any 'positive'
@@ -181,7 +181,7 @@ def get_covid(
     pat_batch: pd.DataFrame,
     config_obj: Optional[object] = None,
     cohort_searcher_with_terms_and_search: Optional[Callable] = None,
-) -> pd.DataFrame:
+) -> dict:
     """Retrieves COVID-19 test features for a patient within a date range.
 
     Args:

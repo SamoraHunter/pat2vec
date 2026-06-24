@@ -140,6 +140,9 @@ def prepare_smoking_data(raw_data: pd.DataFrame) -> pd.DataFrame:
 
     Returns:
         pd.DataFrame: A cleaned DataFrame containing only valid smoking status records.
+
+    Raises:
+        KeyError: If required columns are missing from the input DataFrame.
     """
     data = raw_data[raw_data["obscatalogmasteritem_displayname"] == SEARCH_TERM].copy()
     data.dropna(inplace=True)

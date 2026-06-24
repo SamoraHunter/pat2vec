@@ -64,12 +64,37 @@ def search_news_observations(
     """Searches for NEWS/NEWS2 observation data within a date range.
 
     Args:
-        output_filename (Optional[str]): The filename or path to a CSV file to
-            load from or save to. Defaults to "news_search_results.csv".
-        overwrite (bool): If True, perform the search even if `output_filename`
-            exists. Defaults to False.
-        config_obj (Optional[object]): Configuration object containing root_path.
-            Defaults to None.
+        cohort_searcher_with_terms_and_search: The cohort searcher function for
+            executing the search query. Cannot be None.
+        client_id_codes: Client ID codes (string or list of strings) to search.
+            Cannot be None.
+        observations_time_field (str): Field name for observation timestamp for
+            date range filtering. Defaults to "observationdocument_recordeddtm".
+        fields_override (Optional[List[str]]): Custom list of fields to return.
+            Uses default observation fields if None.
+        start_year (str): Start year for date range. Defaults to "1995".
+        start_month (str): Start month for date range. Defaults to "01".
+        start_day (str): Start day for date range. Defaults to "01".
+        end_year (str): End year for date range. Defaults to "2025".
+        end_month (str): End month for date range. Defaults to "12".
+        end_day (str): End day for date range. Defaults to "12".
+        additional_custom_search_string: Additional custom search string to append
+            to the query.
+        index_name (str): Elasticsearch index name to search. Defaults to
+            "observations".
+        output_filename (Optional[str]): Path to save results as CSV. Set to None
+            to skip saving. Defaults to "news_search_results.csv".
+        overwrite (bool): If True, re-run search even if output file exists.
+            Defaults to False.
+        config_obj (Optional[object]): Configuration object with root_path and
+            proj_name attributes for path construction. Defaults to None.
+
+    Returns:
+        pd.DataFrame: DataFrame containing the searched NEWS observation records.
+
+    Raises:
+        ValueError: If cohort_searcher_with_terms_and_search or client_id_codes is
+            None.
     """
     if (
         output_filename
@@ -154,20 +179,32 @@ def get_news(
     This function fetches NEWS (National Early Warning Score) observation data,
     either from a pre-loaded batch or by searching. It then calculates summary
     statistics (mean, median, std, etc.) for each component of the NEWS score.
+    Feature columns include: news_score, news_systolic_bp, news_diastolic_bp,
+    news_respiration_rate, news_heart_rate, news_oxygen_saturation, news_temperature,
+    news_avpu, and more.
 
     Args:
-        current_pat_client_id_code (str): The client ID code of the patient.
-        target_date_range (Tuple): A tuple representing the target date range.
-        pat_batch (pd.DataFrame): The DataFrame containing patient data for batch mode.
+        current_pat_client_id_code (str): The client ID code of the patient to
+            retrieve NEWS features for.
+        target_date_range (Tuple): Date range tuple specifying the time period
+            to search. Expected format is (start_date, end_date).
+        pat_batch (pd.DataFrame): Patient batch DataFrame containing observation
+            records for batch mode processing.
         config_obj (Optional[object]): Configuration object with settings like
-            `batch_mode` and `client_idcode_term_name`. Defaults to None.
-        cohort_searcher_with_terms_and_search (Optional[Callable]): The function for
-            cohort searching. Defaults to None.
-        fields_override (Optional[List[str]]): A list of fields to override the
-            default search fields. Defaults to None.
+            `batch_mode`, `negate_biochem`, and `verbosity`. Defaults to None.
+        cohort_searcher_with_terms_and_search (Optional[Callable]): The cohort
+            searcher function used when batch_mode is False. Cannot be None in
+            non-batch mode. Defaults to None.
+        fields_override (Optional[List[str]]): A list of field names to override
+            the default observation search fields. Defaults to None.
 
     Returns:
-        pd.DataFrame: A DataFrame containing NEWS features for the specified patient.
+        pd.DataFrame: DataFrame containing calculated NEWS feature statistics for
+            each patient, with columns like news_score_mean, news_systolic_bp_std,
+            etc., plus client_idcode identifier column.
+
+    Raises:
+        ValueError: If config_obj is None when required.
     """
 
     start_year, start_month, end_year, end_month, start_day, end_day = (

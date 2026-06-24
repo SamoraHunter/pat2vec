@@ -39,7 +39,47 @@ def search_epic_orders(
     overwrite: bool = False,
     config_obj: Optional[object] = None,
 ):
-    """Searches for Epic orders data for patients within a date range."""
+    """Searches for Epic orders data for patients within a date range.
+
+    Uses a cohort searcher to query the Elasticsearch index for Epic orders.
+    If `output_filename` is provided, the function will attempt to load
+    existing data from disk or save the search results to disk.
+
+    Args:
+        cohort_searcher_with_terms_and_search (Optional[Callable]): The function for
+            cohort searching. Required for executing queries.
+        patient_durable_keys (Optional[Union[str, List[str]]]): The patient durable key(s)
+            for filtering orders. Required for specifying patients.
+        id_field_name (str): The field name to filter on for patient keys.
+            Defaults to "document_PatientDurableKey".
+        time_field (str): The timestamp field for filtering orders.
+            Defaults to "document_UpdatedWhen".
+        fields_override (Optional[List[str]]): A list of fields to override the
+            default `EPIC_ORDERS_FIELDS`. Defaults to None.
+        start_year (Union[int, str]): Start year for the search. Defaults to 1995.
+        start_month (Union[int, str]): Start month for the search. Defaults to 1.
+        start_day (Union[int, str]): Start day for the search. Defaults to 1.
+        end_year (Union[int, str]): End year for the search. Defaults to 2025.
+        end_month (Union[int, str]): End month for the search. Defaults to 12.
+        end_day (Union[int, str]): End day for the search. Defaults to 12.
+        additional_custom_search_string (Optional[str]): An additional string to
+            append to the search query. Defaults to None.
+        index_name (str): The name of the Elasticsearch index to search.
+            Defaults to "epic_orders".
+        output_filename (Optional[str]): The filename or path to a CSV file to
+            load from or save to. Defaults to "epic_orders_results.csv".
+        overwrite (bool): If True, perform the search even if `output_filename`
+            exists. Defaults to False.
+        config_obj (Optional[object]): Configuration object containing root_path
+            and proj_name. Defaults to None.
+
+    Returns:
+        pd.DataFrame: A DataFrame containing the raw Epic orders data.
+
+    Raises:
+        ValueError: When `cohort_searcher_with_terms_and_search` or `patient_durable_keys`
+            is None, or when date components are invalid.
+    """
     if (
         output_filename
         and config_obj
@@ -101,7 +141,34 @@ def get_epic_orders(
     config_obj=None,
     cohort_searcher_with_terms_and_search=None,
 ):
-    """Retrieves epic_orders features for a patient within a date range."""
+    """Retrieves Epic orders features for a patient within a date range.
+
+    This function retrieves Epic orders data, either from a pre-loaded
+    batch DataFrame or by querying the database, and then processes it to create
+    one-hot encoded binary features based on order class and order status.
+
+    Args:
+        current_pat_client_id_code: The client ID code of the patient.
+        target_date_range (Tuple): A tuple representing the target date range as
+            (start_year, start_month, end_year, end_month).
+        pat_batch (pd.DataFrame): The DataFrame containing patient data for batch mode.
+        config_obj (Optional[object]): Configuration object. Required for processing settings.
+        cohort_searcher_with_terms_and_search (Optional[Callable]): The function for
+            cohort searching. Used when not in batch mode.
+
+    Returns:
+        pd.DataFrame: A DataFrame containing Epic orders features for the specified patient.
+            Binary columns are created for each unique order class and status.
+            If no data is found, a DataFrame with only the 'client_idcode' is returned.
+
+    Raises:
+        ValueError: If `config_obj` is None.
+
+    Returns:
+        pd.DataFrame: A DataFrame containing Epic orders features for the specified patient.
+            Binary columns are created for each unique order class and status.
+            If no data is found, a DataFrame with only the 'client_idcode' is returned.
+    """
     if config_obj is None:
         raise ValueError("config_obj cannot be None.")
 

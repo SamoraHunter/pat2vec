@@ -38,12 +38,13 @@ def search_bmi_observations(
     """Searches for BMI-related observation data within a date range.
 
     Uses a cohort searcher to find observations related to BMI, weight, and height.
+    Results can be saved to or loaded from a CSV file if specified.
 
     Args:
         cohort_searcher_with_terms_and_search (Optional[Callable]): The function for
             cohort searching. Defaults to None.
-        client_id_codes (Optional[Union[str, List[str]]]): The client ID code(s) of
-            the patient(s). Defaults to None.
+        client_id_codes (Optional[str]): The client ID code(s) of the patient(s).
+            Can be a single string or list of strings. Defaults to None.
         observations_time_field (str): The timestamp field for filtering
             observations. Defaults to 'observationdocument_recordeddtm'.
         fields_override (Optional[List[str]]): A list of fields to override the
@@ -61,15 +62,18 @@ def search_bmi_observations(
         output_filename (Optional[str]): The filename or path to a CSV file to
             load from or save to. Defaults to "bmi_search_results.csv".
         overwrite (bool): If True, perform the search even if `output_filename`
-            exists. Defaults to False.
-        config_obj (Optional[object]): Configuration object containing root_path.
-            Defaults to None.
+            exists and skip loading from cache. Defaults to False.
+        config_obj (Optional[object]): Configuration object containing root_path
+            and proj_name for output file path construction. Defaults to None.
 
     Returns:
-        pd.DataFrame: A DataFrame containing the raw BMI observation data.
+        pd.DataFrame: A DataFrame containing the raw BMI observation data with
+            columns defined in BMI_FIELDS.
 
     Raises:
-        ValueError: If essential arguments are None.
+        ValueError: If `cohort_searcher_with_terms_and_search`, `client_id_codes`,
+            or `observations_time_field` is None.
+        ValueError: If date components are all None.
     """
     if (
         output_filename
@@ -142,17 +146,19 @@ def calculate_bmi_features(bmi_sample, term_prefix="bmi", negate_biochem=False):
     """Calculate statistical features from BMI, weight, or height observations.
 
     Computes mean, median, standard deviation, and other specific features
-    based on the term prefix.
+    based on the term prefix. For BMI-specific data, includes high/low/extreme flags.
 
     Args:
-        bmi_sample (pd.DataFrame): DataFrame containing the observation data.
+        bmi_sample (pd.DataFrame): DataFrame containing the observation data with
+            'observation_valuetext_analysed' column.
         term_prefix (str): Prefix for feature column names (e.g., 'bmi',
             'weight', 'height'). Defaults to "bmi".
         negate_biochem (bool): If True, returns features with NaN values when
             no data is available. Defaults to False.
 
     Returns:
-        Dict[str, Union[float, int]]: A dictionary of calculated features.
+        Dict[str, Union[float, int]]: A dictionary of calculated features including
+            mean, median, std, and prefix-specific metrics like high/low/extreme for BMI.
     """
     features = {}
 
@@ -213,20 +219,25 @@ def get_bmi_features(
 
     This function fetches BMI, weight, and height data, either from a pre-loaded
     batch or by searching, and then calculates statistical features for each.
+    Features include mean, median, std, min, max, and clinical thresholds where applicable.
 
     Args:
         current_pat_client_id_code (str): The client ID code of the patient.
         target_date_range (Tuple[int, int, int, int, int, int]): A tuple
-            representing the target date range.
+            representing the target date range as (start_year, start_month,
+            end_year, end_month, start_day, end_day).
         pat_batch (pd.DataFrame): The DataFrame containing patient data for batch mode.
-        config_obj (Optional[object]): Configuration object containing batch_mode
-            and other settings. Defaults to None.
+        config_obj (Optional[object]): Configuration object containing batch_mode,
+            negate_biochem, and other settings. Defaults to None.
         cohort_searcher_with_terms_and_search (Optional[Callable]): The function for
             cohort searching. Defaults to None.
 
     Returns:
-        pd.DataFrame: A DataFrame containing BMI-related features for the
-            specified patient.
+        pd.DataFrame: A single-row DataFrame containing BMI-related features for the
+            specified patient including client_idcode and statistical metrics.
+
+    Raises:
+        ValueError: If config_obj is None.
     """
     if config_obj is None:
         raise ValueError(

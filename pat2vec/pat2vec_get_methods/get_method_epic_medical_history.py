@@ -37,7 +37,43 @@ def search_epic_medical_history(
     overwrite: bool = False,
     config_obj: Optional[object] = None,
 ):
-    """Searches for Epic medical history data for patients within a date range."""
+    """Searches for Epic medical history data for patients within a date range.
+
+    Args:
+        cohort_searcher_with_terms_and_search: The cohort searcher function for
+            executing the search query. Cannot be None.
+        patient_durable_keys: Patient durable keys (string or list of strings) to
+            search. Cannot be None.
+        id_field_name (str): Field name for patient ID lookup in Elasticsearch.
+            Defaults to "document_PatientDurableKey".
+        time_field (str): Timestamp field for date range filtering. Defaults to
+            "document_CreatedWhen".
+        fields_override (Optional[List[str]]): Custom list of fields to return.
+            Uses default EPIC_MEDICAL_HISTORY_FIELDS if None.
+        start_year (Union[int, str]): Start year for date range. Defaults to 1995.
+        start_month (Union[int, str]): Start month for date range. Defaults to 1.
+        start_day (Union[int, str]): Start day for date range. Defaults to 1.
+        end_year (Union[int, str]): End year for date range. Defaults to 2025.
+        end_month (Union[int, str]): End month for date range. Defaults to 12.
+        end_day (Union[int, str]): End day for date range. Defaults to 12.
+        additional_custom_search_string: Additional custom search string to append
+            to the query.
+        index_name (str): Elasticsearch index name to search. Defaults to
+            "epic_medical_history".
+        output_filename (Optional[str]): Path to save results as CSV. Set to None
+            to skip saving. Defaults to "epic_medical_history_results.csv".
+        overwrite (bool): If True, re-run search even if output file exists.
+            Defaults to False.
+        config_obj (Optional[object]): Configuration object with root_path and
+            proj_name attributes for path construction. Defaults to None.
+
+    Returns:
+        pd.DataFrame: DataFrame containing the searched medical history records.
+
+    Raises:
+        ValueError: If cohort_searcher_with_terms_and_search or patient_durable_keys
+            is None.
+    """
     if (
         output_filename
         and config_obj
@@ -99,7 +135,27 @@ def get_epic_medical_history(
     config_obj=None,
     cohort_searcher_with_terms_and_search=None,
 ):
-    """Retrieves epic_medical_history features for a patient within a date range."""
+    """Retrieves epic_medical_history features for a patient within a date range.
+
+    Args:
+        current_pat_client_id_code: The client ID code of the patient to retrieve
+            data for.
+        target_date_range (Tuple): Date range tuple specifying the time period to
+            search.
+        pat_batch (pd.DataFrame): Patient batch DataFrame for batch mode processing.
+        config_obj (Optional[object]): Configuration object with settings like
+            batch_mode and verbosity. Cannot be None.
+        cohort_searcher_with_terms_and_search (Optional[Callable]): The cohort
+            searcher function used when batch_mode is False. Defaults to None.
+
+    Returns:
+        pd.DataFrame: DataFrame containing extracted medical history features for
+            the patient, including binary flags for each unique document name,
+            diagnosis, and comment found.
+
+    Raises:
+        ValueError: If config_obj is None.
+    """
     if config_obj is None:
         raise ValueError("config_obj cannot be None.")
 

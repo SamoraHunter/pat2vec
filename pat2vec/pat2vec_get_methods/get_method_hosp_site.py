@@ -41,17 +41,43 @@ def search_hospital_site(
 ):
     """Search hospital site observations via cohort search API.
 
+    Searches for CORE_HospitalSite observations within a specified date range.
+    Results can be cached to or loaded from a CSV file if specified.
+
     Args:
+        cohort_searcher_with_terms_and_search (Optional[Callable]): The function for
+            cohort searching. Defaults to None.
+        client_id_codes (str): The client ID code(s) of the patient(s). Can be a single
+            string or list of strings. Defaults to None.
+        observations_time_field (str): The timestamp field for filtering
+            observations. Defaults to 'observationdocument_recordeddtm'.
         fields_override (Optional[List[str]]): A list of fields to override the
             default `HOSP_SITE_FIELDS`. Defaults to None.
+        start_year (str): Start year for the search. Defaults to '1995'.
+        start_month (str): Start month for the search. Defaults to '01'.
+        start_day (str): Start day for the search. Defaults to '01'.
+        end_year (str): End year for the search. Defaults to '2025'.
+        end_month (str): End month for the search. Defaults to '12'.
+        end_day (str): End day for the search. Defaults to '12'.
+        additional_custom_search_string (Optional[str]): An additional string to
+            append to the search query. Defaults to None.
+        client_idcode_term_name (str): The Elasticsearch term name for client ID code.
+            Defaults to "client_idcode.keyword".
         index_name (str): The name of the Elasticsearch index to search.
             Defaults to "observations".
         output_filename (Optional[str]): The filename or path to a CSV file to
             load from or save to. Defaults to "hosp_site_search_results.csv".
         overwrite (bool): If True, perform the search even if `output_filename`
-            exists. Defaults to False.
-        config_obj (Optional[object]): Configuration object containing root_path.
-            Defaults to None.
+            exists and skip loading from cache. Defaults to False.
+        config_obj (Optional[object]): Configuration object containing root_path
+            and proj_name for output file path construction. Defaults to None.
+
+    Returns:
+        pd.DataFrame: A DataFrame containing hospital site observation data with
+            columns defined in HOSP_SITE_FIELDS.
+
+    Raises:
+        ValueError: If `cohort_searcher_with_terms_and_search` or `client_id_codes` is None.
     """
     if (
         output_filename
@@ -111,7 +137,15 @@ def search_hospital_site(
 
 
 def prepare_hospital_site_data(raw_data):
-    """Filter to valid CORE_HospitalSite records and drop NAs."""
+    """Filter to valid CORE_HospitalSite records and drop rows with missing values.
+
+    Args:
+        raw_data (pd.DataFrame): Raw hospital site observation data.
+
+    Returns:
+        pd.DataFrame: Filtered DataFrame containing only valid CORE_HospitalSite
+            records with no missing values in any column.
+    """
     data = raw_data[raw_data["obscatalogmasteritem_displayname"] == SEARCH_TERM].copy()
     data.dropna(inplace=True)
     return data
@@ -120,7 +154,22 @@ def prepare_hospital_site_data(raw_data):
 def calculate_hospital_site_features(
     features_data, current_pat_client_id_code, negate_biochem=False
 ):
-    """Generate binary hospital site features from observation values."""
+    """Generate binary hospital site features from observation values.
+
+    Creates binary indicators for hospital sites (DH and PRUH) based on whether
+    the observation_valuetext_analysed contains the respective site codes.
+
+    Args:
+        features_data (pd.DataFrame): DataFrame containing filteredhospital site
+            observation data with 'observation_valuetext_analysed' column.
+        current_pat_client_id_code (str): The client ID code of the patient.
+        negate_biochem (bool): If True, sets hospital site features to NaN when
+            no data is available. Defaults to False.
+
+    Returns:
+        pd.DataFrame: A single-row DataFrame with binary indicators for hospital
+            sites including 'client_idcode', '{term}_dh', and '{term}_ph'.
+    """
     term = "hosp_site".lower()
     features = pd.DataFrame({"client_idcode": [current_pat_client_id_code]})
 
@@ -147,19 +196,26 @@ def get_hosp_site(
 
     This function fetches hospital site observation data, either from a pre-loaded
     batch or by searching, and then creates binary features indicating the presence
-    of records from specific hospital sites.
+    of records from specific hospital sites (DH and PRUH).
 
     Args:
         current_pat_client_id_code (str): The client ID code of the patient.
-        target_date_range (Tuple): A tuple representing the target date range.
+        target_date_range (Tuple[int, int, int, int, int, int]): A tuple representing
+            the target date range as (start_year, start_month, end_year, end_month,
+            start_day, end_day).
         pat_batch (pd.DataFrame): The DataFrame containing patient data for batch mode.
         config_obj (Optional[object]): Configuration object with settings like
-            `batch_mode` and `negate_biochem`. Defaults to None.
+            `batch_mode`, `negate_biochem`, and `client_idcode_term_name`.
+            Defaults to None.
         cohort_searcher_with_terms_and_search (Optional[Callable]): The function for
             cohort searching. Defaults to None.
 
     Returns:
-        pd.DataFrame: A DataFrame containing hospital site features for the patient.
+        pd.DataFrame: A single-row DataFrame containing hospital site features for the
+            patient including 'client_idcode', 'hosp_site_dh', and 'hosp_site_ph'.
+
+    Raises:
+        ValueError: If config_obj is None.
     """
     if config_obj is None:
         raise ValueError(

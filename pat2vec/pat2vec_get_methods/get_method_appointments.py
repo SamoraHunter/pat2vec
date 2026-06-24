@@ -95,6 +95,10 @@ def search_appointments(
 
     Returns:
         pd.DataFrame: A DataFrame containing the raw appointment data.
+
+    Raises:
+        ValueError: When `cohort_searcher_with_terms_and_search`, `client_id_codes`,
+            `appointments_time_field`, or date components are None.
     """
     if (
         output_filename

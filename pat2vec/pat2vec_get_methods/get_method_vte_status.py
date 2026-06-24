@@ -140,6 +140,10 @@ def prepare_vte_data(raw_data: pd.DataFrame) -> pd.DataFrame:
 
     Returns:
         pd.DataFrame: A cleaned DataFrame containing only valid VTE status records.
+
+    Raises:
+        KeyError: If required columns are missing from the input DataFrame.
+        ValueError: If `raw_data` is None or empty.
     """
     data = raw_data[raw_data["obscatalogmasteritem_displayname"] == SEARCH_TERM].copy()
     data.dropna(inplace=True)
@@ -164,6 +168,9 @@ def calculate_vte_features(
 
     Returns:
         pd.DataFrame: A single-row DataFrame with summary statistics for VTE status.
+
+    Raises:
+        KeyError: If required columns are missing from the input DataFrame.
     """
     term = "vte_status"
     mapping = {

@@ -34,7 +34,7 @@ def search_core_o2_observations(
     output_filename: Optional[str] = "core_o2_search_results.csv",
     overwrite: bool = False,
     config_obj: Optional[object] = None,
-):
+) -> pd.DataFrame:
     """Searches for CORE_SpO2 observation data within a date range.
 
     Uses a cohort searcher to find CORE_SpO2 observation data for specified
@@ -141,7 +141,7 @@ def search_core_o2_observations(
     return results
 
 
-def clean_observation_value(value):
+def clean_observation_value(value) -> Optional[str]:
     """Cleans an observation value to be used as a feature name.
 
     Replaces characters that are invalid in column names.
@@ -158,7 +158,7 @@ def clean_observation_value(value):
     return str(value).replace("-", "_").replace("%", "pct")
 
 
-def calculate_core_o2_features(features_data, search_term="CORE_SpO2"):
+def calculate_core_o2_features(features_data, search_term="CORE_SpO2") -> dict:
     """Calculates O2 saturation features from CORE_SpO2 observations.
 
     Creates binary features for each unique observation value found in the data.
@@ -191,7 +191,7 @@ def get_core_02(
     pat_batch,
     config_obj=None,
     cohort_searcher_with_terms_and_search=None,
-):
+) -> pd.DataFrame:
     """Retrieves CORE_SpO2 features for a patient within a date range.
 
     This function fetches CORE_SpO2 (oxygen saturation) data, either from a

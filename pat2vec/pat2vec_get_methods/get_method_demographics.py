@@ -29,12 +29,18 @@ def get_demo(
 
     Args:
         current_pat_client_id_code (str): The client ID code for the patient.
-        target_date_range (Tuple): The date range for which to get data.
+        target_date_range (Tuple): The date range for which to get data. Tuple format:
+            (start_year, start_month, end_year, end_month, start_day, end_day).
         pat_batch (pd.DataFrame): The batch DataFrame containing demographic data.
-        config_obj (Optional[object]): Configuration object. Defaults to None.
+        config_obj (Optional[object]): Configuration object with verbosity settings.
+            Defaults to None.
 
     Returns:
-        pd.DataFrame: A single-row DataFrame with demographic features.
+        pd.DataFrame: A single-row DataFrame with demographic features including age,
+            male (binary), dead (binary), and one-hot encoded ethnicity columns.
+
+    Raises:
+        Exception: If multiple rows are processed when only one is expected.
     """
     # Filters the raw pat batch of data to return the latest row of raw data within the target date range
     current_pat_demo = get_demographics3_batch(
@@ -126,7 +132,11 @@ def _process_age(demo_dataframe: pd.DataFrame) -> pd.DataFrame:
             including a 'client_dob' column.
 
     Returns:
-        pd.DataFrame: The DataFrame with an added 'age' column.
+        pd.DataFrame: The DataFrame with an added 'age' column calculated from
+            date of birth to record datetime.
+
+    Raises:
+        Exception: If the input DataFrame contains more than one row.
     """
     demo_dataframe = append_age_at_record_series(demo_dataframe)
 
@@ -146,7 +156,10 @@ def _process_ethnicity(demo_dataframe: pd.DataFrame) -> pd.DataFrame:
             including a 'client_racecode' column.
 
     Returns:
-        pd.DataFrame: The DataFrame with added one-hot encoded census ethnicity columns.
+        pd.DataFrame: The DataFrame with added one-hot encoded census ethnicity columns
+            including 'census_white', 'census_asian_or_asian_british',
+            'census_black_african_caribbean_or_black_british',
+            'census_mixed_or_multiple_ethnic_groups', and 'census_other_ethnic_group'.
 
     Raises:
         Exception: If the input DataFrame contains more than one row.
@@ -221,10 +234,13 @@ def _process_sex(demo_dataframe: pd.DataFrame) -> pd.DataFrame:
 
     Args:
         demo_dataframe (pd.DataFrame): DataFrame containing demographic information,
-            including a 'client_gendercode' column.
+            including a 'client_gendercode' column with values like 'Male', 'Female'.
 
     Returns:
         pd.DataFrame: The DataFrame with an added 'male' column (1 for Male, 0 for Female).
+
+    Raises:
+        Exception: If the input DataFrame contains more than one row.
     """
     sex_map = {"Male": 1, "Female": 0, "male": 1, "female": 0}
     demo_dataframe["male"] = demo_dataframe["client_gendercode"].map(sex_map)
@@ -241,10 +257,13 @@ def _process_dead(demo_dataframe: pd.DataFrame) -> pd.DataFrame:
 
     Args:
         demo_dataframe (pd.DataFrame): DataFrame containing demographic information,
-            including a 'client_deceaseddtm' column.
+            including a 'client_deceaseddtm' column with datetime values or strings.
 
     Returns:
         pd.DataFrame: The DataFrame with an added 'dead' column (1 if deceased, 0 otherwise).
+
+    Raises:
+        Exception: If the input DataFrame contains more than one row.
     """
     demo_dataframe["dead"] = demo_dataframe["client_deceaseddtm"].apply(
         lambda x: int(isinstance(x, str))
@@ -271,15 +290,20 @@ def get_demographics3_batch(
 
     Args:
         patlist (List[str]): A list of patient client ID codes.
-        target_date_range (Tuple): The date range for which to retrieve data.
+        target_date_range (Tuple): The date range for which to retrieve data. Tuple format:
+            (start_year, start_month, end_year, end_month, start_day, end_day).
         pat_batch (pd.DataFrame): The DataFrame containing patient data for batch mode.
-        config_obj (Optional[object]): Configuration object. Defaults to None.
+        config_obj (Optional[object]): Configuration object with settings like `batch_mode`.
+            Defaults to None.
         cohort_searcher_with_terms_and_search (Optional[Callable]): The function for
             cohort searching. Defaults to None.
 
     Returns:
         pd.DataFrame: A DataFrame containing the most recent demographic record
-            for the patient(s) in the date range.
+            for the patient(s) in the date range. Includes all demographic fields.
+
+    Raises:
+        Exception: If batch processing returns multiple rows unexpectedly.
     """
     batch_mode = config_obj.batch_mode
 

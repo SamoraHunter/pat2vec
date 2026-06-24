@@ -148,6 +148,9 @@ def get_demographics_data(pat2vec_obj: object, pat_list: List[str]) -> pd.DataFr
 
     Returns:
         pd.DataFrame: Processed demographics data.
+
+    Raises:
+        ValueError: If config attributes are missing or search fails.
     """
     config = pat2vec_obj.config_obj
 
@@ -194,6 +197,9 @@ def process_demographics_data(
     Returns:
         pd.DataFrame: Processed demographics data containing the single most
             recent record for the patient(s).
+
+    Raises:
+        Exception: Annotated but caught; returns fallback DataFrame on error.
     """
     if len(demo_data) == 0:
         # No data found, return DataFrame with just patient IDs
@@ -230,14 +236,18 @@ def get_demographics3(
 
     Args:
         patlist (List[str]): List of patient IDs.
-        target_date_range (Tuple): A tuple representing the target date range.
+        target_date_range (Tuple): A tuple representing the target date range as
+            (start_year, start_month, end_year, end_month, start_day, end_day).
         cohort_searcher_with_terms_and_search (Callable): The function for cohort
-            searching.
-        config_obj (Optional[object]): Configuration object containing settings.
-            Defaults to None.
+            searching. Must accept index_name, fields_list, term_name,
+            entered_list, and search_string parameters.
+        config_obj (Optional[object]): Configuration object containing settings
+            like global_start_year, global_end_year, verbosity, etc. Defaults
+            to None.
 
     Returns:
-        pd.DataFrame: Demographics information for the specified patients.
+        pd.DataFrame: Demographics information for the specified patients, with
+            the most recent record per patient.
 
     Raises:
         ValueError: If `config_obj` or `cohort_searcher_with_terms_and_search` is

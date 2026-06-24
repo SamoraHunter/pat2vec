@@ -38,7 +38,52 @@ def search_epic_clinical_notes_appointments(
     overwrite: bool = False,
     config_obj: Optional[object] = None,
 ):
-    """Searches for Epic clinical notes related to appointments within a date range."""
+    """Searches for Epic clinical notes related to appointments within a date range.
+
+    This function queries an Elasticsearch index for clinical notes and appointments
+    associated with specific patients within a specified time range. Results can be
+    saved to CSV or loaded from existing files if not overwritten.
+
+    Args:
+        cohort_searcher_with_terms_and_search: A callable search function that takes
+            index_name, fields_list, term_name, entered_list, and search_string as
+            arguments. Required for fetching data.
+        patient_durable_keys: Patient identifier(s) to search for. Can be a single
+            string or a list of strings.
+        id_field_name: Name of the field containing patient identifiers in the index.
+            Defaults to "document_PatientDurableKey".
+        time_field: Name of the timestamp field to filter on. Defaults to
+            "document_CreatedWhen".
+        fields_override: Optional list of specific fields to retrieve. If None, uses
+            default EPIC_CLINICAL_NOTES_APPOINTMENTS_FIELDS.
+        start_year: Start year for the date range filter. Defaults to 1995.
+        start_month: Start month for the date range filter (1-12). Defaults to 1.
+        start_day: Start day for the date range filter (1-31). Defaults to 1.
+        end_year: End year for the date range filter. Defaults to 2025.
+        end_month: End month for the date range filter (1-12). Defaults to 12.
+        end_day: End day for the date range filter (1-31). Defaults to 12.
+        additional_custom_search_string: Optional additional search query string to
+            append to the main search. Defaults to None.
+        index_name: Name of the Elasticsearch index to search. Defaults to
+            "epic_clinical_notes_appointments".
+        output_filename: Path where results should be saved as CSV. If None, results
+            are not saved to file. Defaults to
+            "epic_clinical_notes_appointments_results.csv".
+        overwrite: If True, overwrites existing output files. If False and the file
+            exists, loads data from the file instead of searching. Defaults to False.
+        config_obj: Optional configuration object with root_path and proj_name attributes
+            for constructing file paths. Defaults to None.
+
+    Returns:
+        pd.DataFrame: A DataFrame containing the search results with columns for
+            document_PatientDurableKey, document_CreatedWhen, document_UpdatedWhen,
+            document_Name, document_Content, and other specified fields.
+
+    Raises:
+        ValueError: If cohort_searcher_with_terms_and_search is None or if
+            patient_durable_keys is None.
+        ValueError: If validate_input_dates fails to validate the date parameters.
+    """
     if (
         output_filename
         and config_obj
@@ -100,7 +145,32 @@ def get_epic_clinical_notes_appointments(
     config_obj=None,
     cohort_searcher_with_terms_and_search=None,
 ):
-    """Retrieves epic_clinical_notes_appointments features for a patient."""
+    """Retrieves epic_clinical_notes_appointments features for a patient.
+
+    This function processes clinical notes and appointments for a specific patient
+    within a given date range. It supports batch mode processing (using pre-filtered
+    batches) or real-time search mode.
+
+    Args:
+        current_pat_client_id_code: The unique identifier for the patient whose
+            annotations are being retrieved.
+        target_date_range: A tuple representing the date range to filter notes by.
+            Used in conjunction with config_obj to determine start/end dates.
+        pat_batch: A DataFrame containing pre-filtered annotation data for a batch
+            of patients. Used in batch mode processing.
+        config_obj: Configuration object with attributes like batch_mode, verbosity,
+            and methods for date handling. Required for determining processing mode.
+        cohort_searcher_with_terms_and_search: Optional callable search function used
+            when not in batch mode to query the database directly.
+
+    Returns:
+        pd.DataFrame: A DataFrame containing extracted features from clinical notes
+            and appointments. Includes a 'client_idcode' column and one-hot encoded
+            columns for each unique document_Name found (with sanitized names).
+
+    Raises:
+        ValueError: If config_obj is None.
+    """
     if config_obj is None:
         raise ValueError("config_obj cannot be None.")
 

@@ -78,7 +78,9 @@ def search_bloods_data(
             Defaults to None.
 
     Returns:
-        pd.DataFrame: A DataFrame containing the raw bloods data.
+        pd.DataFrame: A DataFrame containing the raw bloods data with columns from
+            BLOODS_FIELDS (e.g., client_idcode, basicobs_itemname_analysed,
+            basicobs_value_numeric, basicobs_entered, etc.).
 
     Raises:
         ValueError: If `cohort_searcher_with_terms_and_search` or `client_id_codes`
@@ -155,18 +157,28 @@ def get_current_pat_bloods(
 
     Args:
         current_pat_client_id_code (str): The client ID code of the patient.
-        target_date_range (Tuple): A tuple representing the target date range.
+        target_date_range (Tuple[Tuple[int, int], Tuple[int, int]]): A tuple containing
+            ((start_year, start_month), (end_year, end_month)) for the date range.
         pat_batch (pd.DataFrame): The DataFrame containing patient data for batch mode.
         batch_mode (bool): Indicates if batch mode is enabled. This is controlled
             by `config_obj.batch_mode`. Defaults to False.
         cohort_searcher_with_terms_and_search (Optional[Callable]): The function for
             cohort searching. Defaults to None.
         config_obj (Optional[object]): Configuration object with settings like
-            `batch_mode` and `bloods_time_field`. Defaults to None.
+            `batch_mode`, `bloods_time_field`, `client_idcode_term_name`,
+            and `main_options`. Defaults to None.
 
     Returns:
-        pd.DataFrame: A DataFrame containing the calculated blood test features
-            for the specified patient.
+        pd.DataFrame: A DataFrame containing calculated blood test features for the
+            specified patient. Each row represents one patient, with columns for
+            each unique blood test type including statistics (mean, median, std,
+            min, max), counts (num-tests), temporal features (days-since-last-test),
+            and flags (contains-extreme-low, contains-extreme-high).
+
+    Raises:
+        AttributeError: If `config_obj` is None or missing required attributes
+            (e.g., `batch_mode`, `bloods_time_field`, `client_idcode_term_name`,
+            `main_options`).
     """
     batch_mode = config_obj.batch_mode
 
