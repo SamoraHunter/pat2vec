@@ -23,7 +23,32 @@ T_config = TypeVar("T_config", bound="config_class")
 # NOTE: This class is very large. Consider refactoring into smaller, more focused
 # configuration objects (e.g., `PathConfig`, `TimeWindowConfig`, `FeatureConfig`).
 class config_class:
-    """Initializes the configuration object for the pat2vec pipeline."""
+    """Configuration object for the pat2vec feature extraction pipeline.
+
+    This class holds all configuration parameters for a pat2vec run, including
+    file paths, time window settings, feature selection, and operational flags.
+    It serves as the central configuration hub that controls how patient data
+    is processed through the entire pipeline.
+
+    Key functionality:
+        - Defines data extraction time windows (start/end dates, lookback/lookforward)
+        - Selects which features to extract (demographics, bloods, etc.)
+        - Configures storage backend (database or file system)
+        - Sets up patient cohort filtering and sampling options
+        - Manages MedCAT configuration for NLP annotation
+
+    Attributes:
+        remote_dump: Flag for remote SFTP data dumping.
+        suffix: Output folder name suffix.
+        treatment_doc_filename: Input document containing the cohort list.
+        treatment_control_ratio_n: Treatment vs control patient ratio.
+        proj_name: Current project name (affects output paths).
+        main_options: Dictionary of boolean flags for feature extraction options.
+
+    Example:
+        >>> config = config_class(proj_name="my_project", start_date=(2020, 1, 1))
+        >>> # Use config with FeatureExtractionPipeline
+    """
 
     def __init__(
         self,

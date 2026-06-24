@@ -187,7 +187,7 @@ The following instructions are for setting up a development environment from the
         git clone https://github.com/SamoraHunter/snomed_methods.git
         ```
     -   **Add MedCAT model**: Create a `medcat_models` directory and copy your MedCAT model pack (`.zip`) into it.
-    -   **Add credentials**: Create a `credentials.py` file. You can use `pat2vec/pat2vec/config/credentials_template.py` as a starting point.
+    -   **Add credentials**: Create a `credentials.py` file by copying `config/credentials_template.py` from the pat2vec repository. You must populate this file with your Elasticsearch credentials before running an analysis.
 
     Your final directory structure should look like the one described in the Usage section.
 
@@ -222,7 +222,7 @@ To install, clone the repository, navigate into it, and run the script:
 After running the script, you must perform two manual steps:
     The script creates a directory structure in the parent folder of `pat2vec`.
     -   **Place MedCAT model:** Copy your model pack into the `medcat_models` directory created by the script.
-    -   **Populate credentials:** Edit the `credentials.py` file created by the script and fill in your details.
+    -   **Populate credentials:** Edit the `credentials.py` file (created in the parent directory) and fill in your Elasticsearch connection details. You can use `config/credentials_template.py` as a reference for required fields.
 
 Finally, activate the environment to begin working:
     ```shell
@@ -237,7 +237,15 @@ This guide outlines the steps to run a `pat2vec` analysis after completing the i
 
 Before running an analysis, ensure your project directory is set up correctly. If you used the `install_pat2vec.sh` script, much of this is done for you.
 
-1.  **Populate `credentials.py`**: In the parent directory of your `pat2vec` clone, edit `credentials.py` with your Elasticsearch credentials.
+1.  **Populate `credentials.py`**: 
+    - Copy `config/credentials_template.py` from the pat2vec repository to your project root (alongside the pat2vec and snomed_methods folders)
+    - Rename it to `credentials.py`
+    - Fill in your Elasticsearch credentials:
+      ```python
+      elastic_user = "your_username"
+      elastic_password = "your_password"
+      elastic_hosts = "http://localhost:9200"  # or your Elasticsearch host
+      ```
 2.  **Add MedCAT Model**: Copy your MedCAT model pack (`.zip`) into the `medcat_models` directory.
 
 Your final directory structure should look like this:
@@ -287,9 +295,11 @@ To use a specific database (e.g. PostgreSQL):
 config_obj = config_class(
     # ... other options ...
     storage_backend='database',  # Default is 'database'
-    db_connection_string='postgresql://user:password@localhost/pat2vec_db'
+    db_connection_string='postgresql://user:password@localhost/pat2vec_db'  # SQLite used by default when not specified
 )
 ```
+
+**Note**: When `db_connection_string` is not provided, the system uses a local SQLite database named `{project_name}.db` in your project folder.
 
 ## Building the Documentation
 

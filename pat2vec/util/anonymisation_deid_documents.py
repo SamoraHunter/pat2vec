@@ -367,7 +367,27 @@ class DeIdAnonymizer:
             raise
 
     def _verify_single_text(self, original: str, anonymized: str) -> Dict[str, Any]:
-        """Verifies anonymization quality for a single text."""
+        """Verifies anonymization quality for a single text.
+
+        Compares the original text with its anonymized version to assess
+        what PII entities were detected and whether they were properly redacted.
+
+        Args:
+            original: The original text before anonymization.
+            anonymized: The anonymized text after processing.
+
+        Returns:
+            A dictionary containing:
+                - `entities_found`: Number of PII entities detected in the original text.
+                - `entity_types`: List of unique entity type labels found (e.g., PERSON, ADDRESS).
+                - `original_length`: Character length of the original text.
+                - `anonymized_length`: Character length of the anonymized text.
+                - `entities`: A list of detailed PII entity information including text, label,
+                    start/end positions, and confidence scores.
+
+        Raises:
+            RuntimeError: If the DeIdModel has not been loaded before calling this method.
+        """
         entities = self.get_structured_annotations(original)
 
         verification = {
@@ -383,7 +403,27 @@ class DeIdAnonymizer:
     def _verify_multiple_texts(
         self, original_texts: List[str], anonymized_texts: List[str], sample_size: int
     ) -> Dict[str, Any]:
-        """Verifies anonymization quality for a sample of multiple texts."""
+        """Verifies anonymization quality for a sample of multiple texts.
+
+        Compares the original texts with their anonymized versions to assess
+        overall anonymization quality across a sample set.
+
+        Args:
+            original_texts: A list of original text strings before anonymization.
+            anonymized_texts: A list of anonymized text strings after processing.
+            sample_size: The number of texts to include in the verification sample.
+
+        Returns:
+            A dictionary containing:
+                - `sample_size`: Number of texts in the verification sample.
+                - `total_texts`: Total number of texts processed (for context).
+                - `total_entities_in_sample`: Total PII entities found across the sample.
+                - `unique_entity_types`: List of unique entity type labels found in the sample.
+                - `avg_entities_per_text`: Average number of entities per text in the sample.
+
+        Raises:
+            RuntimeError: If the DeIdModel has not been loaded before calling this method.
+        """
         import random
 
         # Sample texts for verification
