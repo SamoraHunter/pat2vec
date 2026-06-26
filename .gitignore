@@ -243,3 +243,7 @@ run_ci.sh
 ai.md
 python-3.10.18-linux-24.04-x64.tar.gz
 .ECRF/*
+.devcontainer/devcontainer-lock.json
+.devcontainer/devcontainer.json
+.actrc
+ECRF/
