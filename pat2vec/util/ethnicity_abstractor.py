@@ -1,14 +1,27 @@
 import pandas as pd
 
-"""The script is designed to process a column of free text entries in a CSV file under an "ethnicity" field. Its goal is to match these entries with corresponding categories from the UK census.
+"""
+The EthnicityAbstractor module processes free-text ethnicity entries and maps them to standardized UK census categories.
 
-It references groups outlined in the style guide provided by https://www.ethnicity-facts-figures.service.gov.uk/style-guide/ethnic-groups. The script doesn't use fuzzy matching, but it allows for handling edge cases by adding specific conditions within the script.
+This module provides tools for converting diverse ethnic self-identification text into compliant UK census format.
+It is designed to process a column of free-text entries in a CSV file under an "ethnicity" field, matching
+these with corresponding categories from the UK census categories as outlined in the style guide provided by
+https://www.ethnicity-facts-figures.service.gov.uk/style-guide/ethnic-groups.
 
-To improve accuracy, certain country groups have been adjusted to ensure more precise mappings. The script assumes each country contains a single ethnic group for simplicity, categorizing them under the default ethnic group unless the user specifies otherwise (e.g., "Asian Caribbean").
+Features:
+    - Exact keyword matching (case-insensitive)
+    - Configurable default ethnicities for specific nationalities
+    - Explicit racial terms take precedence over national/country terms
+    - Predefined lists of ethnic groups, countries, and nationalities
 
-It's important to note that both the categorization lists and output lists may contain errors and ambiguities, so manual review of the script's outputs is necessary.
+Note:
+    The categorization lists and output may contain errors and ambiguities.
+    Manual review of outputs is strongly recommended.
 
-Additionally, if a user explicitly specifies a racial group (e.g., "White"), it takes precedence over the national origin term provided in the entry."""
+Example usage:
+    >>> abstractor = EthnicityAbstractor()
+    >>> df_result = abstractor.abstractEthenticity(df, "output", "ethnicity_col")
+"""
 
 
 class EthnicityAbstractor:
