@@ -6,10 +6,10 @@ flowchart TD
     D --> F[Set date ranges]
     E --> F
     F --> G{Check testing mode}
-    
+
     G -->|True| H[Testing Mode: Generate dummy data]
     G -->|False| I[Live Mode: Real search]
-    
+
     H --> H1[Loop through term_list]
     H1 --> H2[Generate random search iterations]
     H2 --> H3[Create search string with terms and dates]
@@ -20,11 +20,11 @@ flowchart TD
     H7 -->|Yes| H1
     H7 -->|No| H8[Concatenate all dummy results]
     H8 --> J[Process file operations]
-    
+
     I --> I1[Call iterative_multi_term_cohort_searcher_no_terms_fuzzy]
     I1 --> I2[Execute real search with date range and filters]
     I2 --> J
-    
+
     J --> K{File exists and overwrite?}
     K -->|Yes| L[Create directory if needed]
     K -->|No| M{File exists?}
@@ -36,31 +36,31 @@ flowchart TD
     O --> R{MCT enabled?}
     P --> R
     Q --> R
-    
+
     R -->|Yes| S[Call iterative_multi_term_cohort_searcher_no_terms_fuzzy_mct]
     R -->|No| T{Textual observations enabled?}
-    
+
     S --> S1[Search MCT data with same parameters]
     S1 --> S2[Concatenate MCT results with main results]
     S2 --> S3[Fill body_analysed NaN with observation_valuetext_analysed]
     S3 --> S4[Fill updatetime NaN with basicobs_entered]
     S4 --> U{Textual observations enabled?}
-    
+
     U -->|No| V[Return combined results]
     U -->|Yes| W[Call iterative_multi_term_cohort_searcher_no_terms_fuzzy_textual_obs]
-    
+
     T -->|Yes| W
     T -->|No| V
-    
+
     W --> W1[Search textual observations with same parameters]
     W1 --> W2[Concatenate textual obs results]
     W2 --> W3[Fill body_analysed NaN with textualObs]
     W3 --> W4[Fill updatetime NaN with observationdocument_recordeddtm]
     W4 --> X[Return final combined results]
-    
+
     V --> Y[End: Return search results]
     X --> Y
-    
+
     style A fill:#e1f5fe
     style Y fill:#c8e6c9
     style H fill:#fff3e0

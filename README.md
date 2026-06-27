@@ -237,7 +237,7 @@ This guide outlines the steps to run a `pat2vec` analysis after completing the i
 
 Before running an analysis, ensure your project directory is set up correctly. If you used the `install_pat2vec.sh` script, much of this is done for you.
 
-1.  **Populate `credentials.py`**: 
+1.  **Populate `credentials.py`**:
     - Copy `config/credentials_template.py` from the pat2vec repository to your project root (alongside the pat2vec and snomed_methods folders)
     - Rename it to `credentials.py`
     - Fill in your Elasticsearch credentials:

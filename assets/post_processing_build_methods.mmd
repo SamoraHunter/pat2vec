@@ -1,6 +1,6 @@
 graph TD
     A[Patient List] --> B[Data Source Selection]
-    
+
     B --> C[Individual Patient Files]
     C --> D[EPR Documents]
     C --> E[MCT Documents]
@@ -13,44 +13,44 @@ graph TD
     C --> L[Diagnostics]
     C --> M[Drugs]
     C --> N[Appointments]
-    
+
     D --> O[build_merged_epr_mct_doc_df]
     E --> O
     F --> O
     G --> O
-    
+
     O --> P[docs_mct_epr.csv]
-    
+
     Q[build_merged_epr_mct_annot_df] --> R[annots_mct_epr.csv]
-    
+
     P --> S[join_docs_to_annots]
     R --> S
     S --> T[Merged Annotations + Documents]
-    
+
     H --> U[build_merged_bloods]
     U --> V[bloods_batches.csv]
-    
+
     I --> W[merge_demographics_csv]
     W --> X[merged_demographics.csv]
-    
+
     J --> Y[merge_bmi_csv]
     Y --> Z[merged_bmi.csv]
-    
+
     K --> AA[merge_news_csv]
     AA --> AB[merged_news.csv]
-    
+
     L --> AC[merge_diagnostics_csv]
     AC --> AD[merged_diagnostics.csv]
-    
+
     M --> AE[merge_drugs_csv]
     AE --> AF[merged_drugs.csv]
-    
+
     N --> AG[merge_appointments_csv]
     AG --> AH[merged_appointments.csv]
-    
+
     AI[filter_annot_dataframe] --> AJ[Filtered Annotations]
     R --> AI
-    
+
     AK[Config Object] --> O
     AK --> Q
     AK --> U
@@ -60,12 +60,12 @@ graph TD
     AK --> AC
     AK --> AE
     AK --> AG
-    
+
     AL[get_annots_joined_to_docs] --> O
     AL --> Q
     AL --> S
     AL --> T
-    
+
     style A fill:#e1f5fe
     style AK fill:#f3e5f5
     style T fill:#e8f5e8

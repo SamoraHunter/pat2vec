@@ -7,27 +7,27 @@ flowchart TD
     F --> G[Update progress bar]
     G --> H[Extract start/end dates from target_date_range]
     H --> I{batch_epr_docs_annotations is not None?}
-    
+
     I -->|No| J[Create DataFrame with client_idcode only]
     I -->|Yes| K[Filter dataframe by timestamp using date range]
     K --> L{Filtered annotations length > 0?}
-    
+
     L -->|No| M[Create DataFrame with client_idcode only]
     L -->|Yes| N[Calculate pretty name count features]
     N --> O[Set df_pat_target to calculated features]
-    
+
     M --> P{verbosity >= 6?}
     J --> P
     O --> P
-    
+
     P -->|Yes| Q[Display df_pat_target]
     P -->|No| R[Return df_pat_target]
     Q --> R
-    
+
     C --> S[End: Exception]
     E --> S
     R --> T[End: Success]
-    
+
     style A fill:#e1f5fe
     style C fill:#ffebee
     style E fill:#ffebee

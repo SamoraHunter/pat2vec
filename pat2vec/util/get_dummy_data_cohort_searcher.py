@@ -138,20 +138,25 @@ def generate_epr_documents_data(
     use_GPT: bool = True,
     fields_list: Optional[List[str]] = None,
 ) -> pd.DataFrame:
-    """Generates dummy EPR document data."""
-    """
+    """Generates dummy EPR document data.
+
     Args:
-        num_rows: Number of rows to generate for each client.
+        num_rows: Number of rows to generate per client.
         entered_list: List of client IDs to generate data for.
         global_start_year: Start year for the random date range.
         global_start_month: Start month for the random date range.
         global_end_year: End year for the random date range.
         global_end_month: End month for the random date range.
-        use_GPT: If True, uses a text generation model for the document body.
+        global_start_day: Start day for the random date range. Defaults to 1.
+        global_end_day: End day for the random date range. Defaults to 31.
+        use_GPT: If True, uses a text generation model for document body.
         fields_list: List of columns to include in the DataFrame.
 
     Returns:
         A pandas DataFrame with generated dummy EPR document data.
+
+    Raises:
+        None
     """
     if fields_list is None:
         fields_list = [
@@ -367,16 +372,21 @@ def generate_diagnostic_orders_data(
     """Generates dummy data for the 'diagnostic_orders' index.
 
     Args:
-        num_rows: Number of rows to generate for each client.
+        num_rows: Number of rows to generate per client.
         entered_list: List of client IDs to generate data for.
         global_start_year: Start year for the random date range.
         global_start_month: Start month for the random date range.
         global_end_year: End year for the random date range.
         global_end_month: End month for the random date range.
+        global_start_day: Start day for the random date range. Defaults to 1.
+        global_end_day: End day for the random date range. Defaults to 31.
         fields_list: List of columns to include in the DataFrame.
 
     Returns:
         A pandas DataFrame with generated dummy diagnostic order data.
+
+    Raises:
+        None
     """
 
     df_holder_list = []
@@ -481,17 +491,22 @@ def generate_drug_orders_data(
     """Generates dummy data for the 'drug_orders' index.
 
     Args:
-        num_rows: Number of rows to generate for each client.
+        num_rows: Number of rows to generate per client.
         entered_list: List of client IDs to generate data for.
         global_start_year: Start year for the random date range.
         global_start_month: Start month for the random date range.
         global_end_year: End year for the random date range.
         global_end_month: End month for the random date range.
+        global_start_day: Start day for the random date range. Defaults to 1.
+        global_end_day: End day for the random date range. Defaults to 31.
         fields_list: List of columns to include in the DataFrame.
-        base_date: Optional datetime to use as reference for generating test dates.
+        base_date: Optional datetime reference for testing.
 
     Returns:
         A pandas DataFrame with generated dummy drug order data.
+
+    Raises:
+        None
     """
     df_holder_list = []
 
@@ -833,16 +848,21 @@ def generate_appointments_data(
     """Generates dummy data for the 'pims_apps' index.
 
     Args:
-        num_rows: Number of rows to generate for each client.
+        num_rows: Number of rows to generate per client.
         entered_list: List of client IDs to generate data for.
         global_start_year: Start year for the random date range.
         global_start_month: Start month for the random date range.
         global_end_year: End year for the random date range.
         global_end_month: End month for the random date range.
+        global_start_day: Start day for the random date range. Defaults to 1.
+        global_end_day: End day for the random date range. Defaults to 31.
         fields_list: List of columns to include in the DataFrame.
 
     Returns:
         A pandas DataFrame with generated dummy appointment data.
+
+    Raises:
+        None
     """
     df_holder_list = []
 
@@ -1051,17 +1071,22 @@ def generate_basic_observations_data(
     """Generates dummy data for the 'basic_observations' index.
 
     Args:
-        num_rows: Number of rows to generate for each client.
+        num_rows: Number of rows to generate per client.
         entered_list: List of client IDs to generate data for.
         global_start_year: Start year for the random date range.
         global_start_month: Start month for the random date range.
         global_end_year: End year for the random date range.
         global_end_month: End month for the random date range.
+        global_start_day: Start day for the random date range. Defaults to 1.
+        global_end_day: End day for the random date range. Defaults to 31.
         fields_list: List of columns to include in the DataFrame.
-        base_date: Optional datetime to use as reference for generating test dates.
+        base_date: Optional datetime reference for testing.
 
     Returns:
         A pandas DataFrame with generated dummy basic observation data.
+
+    Raises:
+        None
     """
     if fields_list is None:
         fields_list = [
@@ -1366,16 +1391,21 @@ def generate_epic_encounters_data(
     """Generates dummy data for the 'epic_encounters' index.
 
     Args:
-        num_rows: Number of rows to generate for each client.
+        num_rows: Number of rows to generate per client.
         entered_list: List of client IDs to generate data for.
         global_start_year: Start year for the random date range.
         global_start_month: Start month for the random date range.
         global_end_year: End year for the random date range.
         global_end_month: End month for the random date range.
+        global_start_day: Start day for the random date range. Defaults to 1.
+        global_end_day: End day for the random date range. Defaults to 31.
         fields_list: List of columns to include in the DataFrame.
 
     Returns:
         A pandas DataFrame with generated dummy encounter data.
+
+    Raises:
+        None
     """
     df_holder_list = []
 
@@ -1452,7 +1482,26 @@ def generate_epic_clinical_notes_data(
         "id",
     ],
 ) -> pd.DataFrame:
-    """Generates dummy data for the 'epic_medical_history' index."""
+    """Generates dummy data for the 'epic_clinical_notes' index.
+
+    Args:
+        num_rows: Number of rows to generate per client.
+        entered_list: List of client IDs to generate data for.
+        global_start_year: Start year for the random date range.
+        global_start_month: Start month for the random date range.
+        global_end_year: End year for the random date range.
+        global_end_month: End month for the random date range.
+        global_start_day: Start day for the random date range. Defaults to 1.
+        global_end_day: End day for the random date range. Defaults to 31.
+        use_GPT: If True, uses a text generation model for clinical notes content.
+        fields_list: List of columns to include in the DataFrame.
+
+    Returns:
+        A pandas DataFrame with generated dummy clinical note data.
+
+    Raises:
+        None
+    """
     df_holder_list = []
 
     for client_id_code in entered_list:
@@ -1519,7 +1568,25 @@ def generate_epic_medical_history_data(
         "id",
     ],
 ) -> pd.DataFrame:
-    """Generates dummy data for the 'epic_medical_history' index."""
+    """Generates dummy data for the 'epic_medical_history' index.
+
+    Args:
+        num_rows: Number of rows to generate per client.
+        entered_list: List of client IDs to generate data for.
+        global_start_year: Start year for the random date range.
+        global_start_month: Start month for the random date range.
+        global_end_year: End year for the random date range.
+        global_end_month: End month for the random date range.
+        global_start_day: Start day for the random date range. Defaults to 1.
+        global_end_day: End day for the random date range. Defaults to 31.
+        fields_list: List of columns to include in the DataFrame.
+
+    Returns:
+        A pandas DataFrame with generated dummy medical history data.
+
+    Raises:
+        None
+    """
     df_holder_list = []
 
     for client_id_code in entered_list:
@@ -1580,7 +1647,25 @@ def generate_epic_orders_data(
         "id",
     ],
 ) -> pd.DataFrame:
-    """Generates dummy data for the 'epic_orders' index."""
+    """Generates dummy data for the 'epic_orders' index.
+
+    Args:
+        num_rows: Number of rows to generate per client.
+        entered_list: List of client IDs to generate data for.
+        global_start_year: Start year for the random date range.
+        global_start_month: Start month for the random date range.
+        global_end_year: End year for the random date range.
+        global_end_month: End month for the random date range.
+        global_start_day: Start day for the random date range. Defaults to 1.
+        global_end_day: End day for the random date range. Defaults to 31.
+        fields_list: List of columns to include in the DataFrame.
+
+    Returns:
+        A pandas DataFrame with generated dummy orders data.
+
+    Raises:
+        None
+    """
     df_holder_list = []
 
     for client_id_code in entered_list:
@@ -1662,14 +1747,32 @@ def generate_epic_lab_results_data(
         "document_CreatedWhen",
         "document_Name",
         "document_Content",
-        "document_LabComponentValue",  # Added for compatibility with annotation methods
+        "document_LabComponentValue",
         "document_CollectedDate",
         "document_LabResultEpicId",
         "document_Fields.valueText",
         "id",
     ],
 ) -> pd.DataFrame:
-    """Generates dummy data for the 'epic_lab_results' index."""
+    """Generates dummy data for the 'epic_lab_results' index.
+
+    Args:
+        num_rows: Number of rows to generate per client.
+        entered_list: List of client IDs to generate data for.
+        global_start_year: Start year for the random date range.
+        global_start_month: Start month for the random date range.
+        global_end_year: End year for the random date range.
+        global_end_month: End month for the random date range.
+        global_start_day: Start day for the random date range. Defaults to 1.
+        global_end_day: End day for the random date range. Defaults to 31.
+        fields_list: List of columns to include in the DataFrame.
+
+    Returns:
+        A pandas DataFrame with generated dummy lab result data.
+
+    Raises:
+        None
+    """
     df_holder_list = []
 
     for client_id_code in entered_list:
@@ -1738,7 +1841,25 @@ def generate_epic_patients_data(
         "id",
     ],
 ) -> pd.DataFrame:
-    """Generates dummy data for the 'epic_patients' index."""
+    """Generates dummy data for the 'epic_patients' index.
+
+    Args:
+        num_rows: Number of rows to generate per client.
+        entered_list: List of client IDs to generate data for.
+        global_start_year: Start year for the random date range.
+        global_start_month: Start month for the random date range.
+        global_end_year: End year for the random date range.
+        global_end_month: End month for the random date range.
+        global_start_day: Start day for the random date range. Defaults to 1.
+        global_end_day: End day for the random date range. Defaults to 31.
+        fields_list: List of columns to include in the DataFrame.
+
+    Returns:
+        A pandas DataFrame with generated dummy patient data.
+
+    Raises:
+        None
+    """
     df_holder_list = []
     for client_id_code in entered_list:
         dob = faker.date_of_birth(minimum_age=18, maximum_age=90)
@@ -1787,7 +1908,25 @@ def generate_epic_imaging_reports_data(
         "id",
     ],
 ) -> pd.DataFrame:
-    """Generates dummy data for the 'epic_imaging_reports' index."""
+    """Generates dummy data for the 'epic_imaging_reports' index.
+
+    Args:
+        num_rows: Number of rows to generate per client.
+        entered_list: List of client IDs to generate data for.
+        global_start_year: Start year for the random date range.
+        global_start_month: Start month for the random date range.
+        global_end_year: End year for the random date range.
+        global_end_month: End month for the random date range.
+        global_start_day: Start day for the random date range. Defaults to 1.
+        global_end_day: End day for the random date range. Defaults to 31.
+        fields_list: List of columns to include in the DataFrame.
+
+    Returns:
+        A pandas DataFrame with generated dummy imaging report data.
+
+    Raises:
+        None
+    """
     df_holder_list = []
     for client_id_code in entered_list:
         data = {
@@ -2494,8 +2633,6 @@ def cohort_searcher_with_terms_and_search_dummy(
 
 
 def generate_patient_timeline(client_idcode: str) -> str:
-
-    # Set the logging level to suppress INFO messages
     """Generates a random patient timeline using a GPT-2 model.
 
     Creates a short, semi-realistic clinical note timeline for a patient,
@@ -2506,6 +2643,9 @@ def generate_patient_timeline(client_idcode: str) -> str:
 
     Returns:
         A string containing the patient's dummy timeline.
+
+    Raises:
+        None
     """
     logging.getLogger("transformers").setLevel(logging.WARNING)
     generator = pipeline("text-generation", model="gpt2")
@@ -2807,16 +2947,21 @@ def generate_covid_observations_data(
     """Generates dummy data for COVID-19 test observations.
 
     Args:
-        num_rows: Number of rows to generate for each client.
+        num_rows: Number of rows to generate per client.
         entered_list: List of client IDs to generate data for.
         global_start_year: Start year for the random date range.
         global_start_month: Start month for the random date range.
         global_end_year: End year for the random date range.
         global_end_month: End month for the random date range.
+        global_start_day: Start day for the random date range. Defaults to 1.
+        global_end_day: End day for the random date range. Defaults to 31.
         fields_list: List of columns to include in the DataFrame.
 
     Returns:
         A pandas DataFrame with generated dummy COVID-19 observation data.
+
+    Raises:
+        None
     """
     from pat2vec.pat2vec_get_methods.get_method_covid import (
         COVID_FIELDS,
@@ -2888,16 +3033,21 @@ def generate_hospital_site_data(
     """Generates dummy data for hospital site observations.
 
     Args:
-        num_rows: Number of rows to generate for each client.
+        num_rows: Number of rows to generate per client.
         entered_list: List of client IDs to generate data for.
         global_start_year: Start year for the random date range.
         global_start_month: Start month for the random date range.
         global_end_year: End year for the random date range.
         global_end_month: End month for the random date range.
+        global_start_day: Start day for the random date range. Defaults to 1.
+        global_end_day: End day for the random date range. Defaults to 31.
         fields_list: List of columns to include in the DataFrame.
 
     Returns:
         A pandas DataFrame with generated dummy hospital site data.
+
+    Raises:
+        None
     """
     df_holder_list = []
 
@@ -2976,7 +3126,25 @@ def generate_news_data(
         "clientvisit_visitidcode",
     ],
 ) -> pd.DataFrame:
-    """Generates dummy data for NEWS observations."""
+    """Generates dummy data for NEWS observations.
+
+    Args:
+        num_rows: Number of rows to generate per client.
+        entered_list: List of client IDs to generate data for.
+        global_start_year: Start year for the random date range.
+        global_start_month: Start month for the random date range.
+        global_end_year: End year for the random date range.
+        global_end_month: End month for the random date range.
+        global_start_day: Start day for the random date range. Defaults to 1.
+        global_end_day: End day for the random date range. Defaults to 31.
+        fields_list: List of columns to include in the DataFrame.
+
+    Returns:
+        A pandas DataFrame with generated dummy NEWS observation data.
+
+    Raises:
+        None
+    """
     df_holder_list = []
 
     # List of NEWS component names expected by get_method_news.py
@@ -3051,17 +3219,22 @@ def generate_bmi_data(
     """Generates dummy data for BMI, Weight, and Height observations.
 
     Args:
-        num_rows: Number of rows to generate for each client.
+        num_rows: Number of rows to generate per client.
         entered_list: List of client IDs to generate data for.
         global_start_year: Start year for the random date range.
         global_start_month: Start month for the random date range.
         global_end_year: End year for the random date range.
         global_end_month: End month for the random date range.
+        global_start_day: Start day for the random date range. Defaults to 1.
+        global_end_day: End day for the random date range. Defaults to 31.
         fields_list: List of columns to include in the DataFrame.
-        base_date: Optional datetime to use as reference for generating test dates.
+        base_date: Optional datetime reference for testing.
 
     Returns:
         A pandas DataFrame with generated dummy BMI-related data.
+
+    Raises:
+        None
     """
     df_holder_list = []
     observation_types = ["OBS BMI Calculation", "OBS Weight", "OBS Height"]
@@ -3738,16 +3911,21 @@ def generate_bed_data(
     """Generates dummy data for bed number observations.
 
     Args:
-        num_rows: Number of rows to generate for each client.
+        num_rows: Number of rows to generate per client.
         entered_list: List of client IDs to generate data for.
         global_start_year: Start year for the random date range.
         global_start_month: Start month for the random date range.
         global_end_year: End year for the random date range.
         global_end_month: End month for the random date range.
+        global_start_day: Start day for the random date range. Defaults to 1.
+        global_end_day: End day for the random date range. Defaults to 31.
         fields_list: List of columns to include in the DataFrame.
 
     Returns:
         A pandas DataFrame with generated dummy bed data.
+
+    Raises:
+        None
     """
     df_holder_list = []
 
@@ -3812,7 +3990,25 @@ def generate_vte_data(
     global_end_day: int = 31,
     fields_list: List[str] = VTE_FIELDS,
 ) -> pd.DataFrame:
-    """Generates dummy data for VTE status observations."""
+    """Generates dummy data for VTE status observations.
+
+    Args:
+        num_rows: Number of rows to generate per client.
+        entered_list: List of client IDs to generate data for.
+        global_start_year: Start year for the random date range.
+        global_start_month: Start month for the random date range.
+        global_end_year: End year for the random date range.
+        global_end_month: End month for the random date range.
+        global_start_day: Start day for the random date range. Defaults to 1.
+        global_end_day: End day for the random date range. Defaults to 31.
+        fields_list: List of columns to include in the DataFrame.
+
+    Returns:
+        A pandas DataFrame with generated dummy VTE status data.
+
+    Raises:
+        None
+    """
     df_holder_list = []
     vte_statuses = [
         "High risk of VTE High risk of bleeding",
@@ -3867,7 +4063,25 @@ def generate_smoking_data(
     global_end_day: int = 31,
     fields_list: List[str] = SMOKING_FIELDS,
 ) -> pd.DataFrame:
-    """Generates dummy data for smoking status observations."""
+    """Generates dummy data for smoking status observations.
+
+    Args:
+        num_rows: Number of rows to generate per client.
+        entered_list: List of client IDs to generate data for.
+        global_start_year: Start year for the random date range.
+        global_start_month: Start month for the random date range.
+        global_end_year: End year for the random date range.
+        global_end_month: End month for the random date range.
+        global_start_day: Start day for the random date range. Defaults to 1.
+        global_end_day: End day for the random date range. Defaults to 31.
+        fields_list: List of columns to include in the DataFrame.
+
+    Returns:
+        A pandas DataFrame with generated dummy smoking status data.
+
+    Raises:
+        None
+    """
     df_holder_list = []
     smoking_statuses = ["Current smoker", "Ex-smoker", "Never smoked", "Smoker"]
 
@@ -3922,16 +4136,21 @@ def generate_core_o2_data(
     """Generates dummy data for CORE_SpO2 (oxygen saturation) observations.
 
     Args:
-        num_rows: Number of rows to generate for each client.
+        num_rows: Number of rows to generate per client.
         entered_list: List of client IDs to generate data for.
         global_start_year: Start year for the random date range.
         global_start_month: Start month for the random date range.
         global_end_year: End year for the random date range.
         global_end_month: End month for the random date range.
+        global_start_day: Start day for the random date range. Defaults to 1.
+        global_end_day: End day for the random date range. Defaults to 31.
         fields_list: List of columns to include in the DataFrame.
 
     Returns:
         A pandas DataFrame with generated dummy SpO2 data.
+
+    Raises:
+        None
     """
     df_holder_list = []
 
@@ -3998,16 +4217,21 @@ def generate_core_resus_data(
     """Generates dummy data for CORE_RESUS_STATUS observations.
 
     Args:
-        num_rows: Number of rows to generate for each client.
+        num_rows: Number of rows to generate per client.
         entered_list: List of client IDs to generate data for.
         global_start_year: Start year for the random date range.
         global_start_month: Start month for the random date range.
         global_end_year: End year for the random date range.
         global_end_month: End month for the random date range.
+        global_start_day: Start day for the random date range. Defaults to 1.
+        global_end_day: End day for the random date range. Defaults to 31.
         fields_list: List of columns to include in the DataFrame.
 
     Returns:
         A pandas DataFrame with generated dummy resuscitation status data.
+
+    Raises:
+        None
     """
     df_holder_list = []
 

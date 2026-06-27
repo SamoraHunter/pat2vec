@@ -7,7 +7,7 @@ The `config_class` is the central configuration object that controls all aspects
 The configuration class manages three primary areas:
 
 1. **Feature Selection**: Which clinical data types to extract and process
-2. **Time Window Definition**: How to slice patient data temporally  
+2. **Time Window Definition**: How to slice patient data temporally
 3. **Processing Parameters**: Technical settings for data handling and output
 
 ## Core Configuration Parameters
@@ -115,7 +115,7 @@ config_obj = config_class(
     treatment_doc_filename='cohort_patients.csv',
     main_options={
         'demo': True,
-        'drugs': True, 
+        'drugs': True,
         'bloods': True,
         'annotations': True,
         'diagnostics': True,
