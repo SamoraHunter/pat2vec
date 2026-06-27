@@ -25,28 +25,32 @@ def get_current_pat_textual_obs_annotations(
     count-based features from the 'pretty_name' of the annotations.
 
     Args:
-        current_pat_client_id_code (str): The unique identifier for the patient.
-        target_date_range (Tuple): The date range to filter annotations by.
-        textual_obs_annotations (Optional[pd.DataFrame]): DataFrame containing
-            textual observation annotations for a batch of patients.
-        config_obj (Optional[object]): Configuration object with settings such as
-            `verbosity` and `start_time`. Defaults to None.
-        t (Optional[object]): A progress bar object for updating status. Defaults
-            to None.
-        cohort_searcher_with_terms_and_search (Optional[Callable]): Placeholder
-            for a cohort searcher function, unused in this implementation.
+        current_pat_client_id_code: The unique identifier for the patient.
+        target_date_range: A tuple containing (start_date, end_date) defining
+            the time period to filter annotations by.
+        textual_obs_annotations: DataFrame containing textual observation
+            annotations for a batch of patients. Must contain 'basicobs_entered'
+            column for timestamp filtering and 'pretty_name' for feature
+            extraction.
+        config_obj: Configuration object with settings such as `verbosity` and
+            `start_time`. Cannot be None.
+        t: Optional progress bar object for updating status during processing.
             Defaults to None.
-        cat (Optional[object]): Placeholder for a MedCAT object, unused in this
-            implementation. Defaults to None.
+        cohort_searcher_with_terms_and_search: Placeholder for a cohort searcher
+            function, unused in this implementation. Defaults to None.
+        cat: Placeholder for a MedCAT object, unused in this implementation.
+            Defaults to None.
 
     Returns:
         pd.DataFrame: A DataFrame containing the calculated annotation features
-            for the specified patient. If no annotations are found, a DataFrame
-            with only the 'client_idcode' is returned.
+            for the specified patient. If no annotations are found, returns a
+            DataFrame with only the 'client_idcode' column.
 
     Raises:
-        ValueError: If `config_obj`, `textual_obs_annotations`,
-            `current_pat_client_id_code`, or `target_date_range` is None.
+        ValueError: If `config_obj` is None.
+        ValueError: If `textual_obs_annotations` is None.
+        ValueError: If `current_pat_client_id_code` is None.
+        ValueError: If `target_date_range` is None.
     """
 
     if config_obj is None:
@@ -64,12 +68,6 @@ def get_current_pat_textual_obs_annotations(
     if target_date_range is None:
         raise ValueError(
             "target_date_range cannot be None. Please provide a valid target date range."
-        )
-
-    # get the start and end time for the provided target date range
-    if config_obj is None:
-        raise ValueError(
-            "config_obj cannot be None. Please provide a valid configuration."
         )
 
     start_time = config_obj.start_time

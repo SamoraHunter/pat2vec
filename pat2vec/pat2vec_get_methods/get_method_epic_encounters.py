@@ -38,7 +38,44 @@ def search_epic_encounters(
     overwrite: bool = False,
     config_obj: Optional[object] = None,
 ):
-    """Searches for Epic encounter data for patients within a date range."""
+    """Searches for Epic encounter data for patients within a date range.
+
+    Args:
+        cohort_searcher_with_terms_and_search: A callable function that performs
+            the cohort search with terms and search string. Cannot be None.
+        patient_durable_keys: Patient durable keys (DurableKey) to search for.
+            Can be a single string or list of strings. Cannot be None.
+        id_field_name: Name of the field containing the patient identifier.
+            Defaults to "activity_PatientDurableKey".
+        time_field: Name of the field containing the timestamp for date filtering.
+            Defaults to "activity_AdmissionDate".
+        fields_override: Optional list of field names to include in the search
+            results. If None, uses EPIC_ENCOUNTER_FIELDS defaults.
+        start_year: Starting year for date range filtering. Defaults to 1995.
+        start_month: Starting month for date range filtering. Defaults to 1.
+        start_day: Starting day for date range filtering. Defaults to 1.
+        end_year: Ending year for date range filtering. Defaults to 2025.
+        end_month: Ending month for date range filtering. Defaults to 12.
+        end_day: Ending day for date range filtering. Defaults to 12.
+        additional_custom_search_string: Optional custom search string to append
+            to the main search query.
+        index_name: Name of the Elasticsearch index to search. Defaults to
+            "epic_encounters".
+        output_filename: Optional filename to save results as CSV. If provided
+            and file exists, will load existing data unless overwrite=True.
+            Defaults to "epic_encounters_results.csv".
+        overwrite: If True, overwrites existing output file. Defaults to False.
+        config_obj: Configuration object with `root_path` and `proj_name`
+            attributes for constructing output path. Can be None.
+
+    Returns:
+        pd.DataFrame: DataFrame containing the search results matching the
+            specified criteria. Columns depend on the fields searched.
+
+    Raises:
+        ValueError: If `cohort_searcher_with_terms_and_search` is None.
+        ValueError: If `patient_durable_keys` is None.
+    """
     if (
         output_filename
         and config_obj
@@ -100,7 +137,30 @@ def get_epic_encounters(
     config_obj=None,
     cohort_searcher_with_terms_and_search=None,
 ):
-    """Retrieves epic_encounters features for a patient within a date range."""
+    """Retrieves epic_encounters features for a patient within a date range.
+
+    Args:
+        current_pat_client_id_code: The unique identifier code for the patient
+            to retrieve encounter data for.
+        target_date_range: The date range tuple specifying the time period to
+            search for encounter data.
+        pat_batch: DataFrame containing batched patient records. Used in batch
+            mode to filter data by timestamp.
+        config_obj: Configuration object with attributes like `batch_mode`,
+            `verbosity`, and methods like `get_start_end_year_month`. Cannot
+            be None.
+        cohort_searcher_with_terms_and_search: Optional callable function for
+            searching encounter data when not in batch mode. Required when
+            batch_mode=False.
+
+    Returns:
+        pd.DataFrame: DataFrame containing extracted features from encounters
+            including binary flags for unique encounter types and visit classes
+            observed. Always includes 'client_idcode' column.
+
+    Raises:
+        ValueError: If `config_obj` is None.
+    """
     if config_obj is None:
         raise ValueError("config_obj cannot be None.")
 

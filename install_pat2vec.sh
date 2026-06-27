@@ -9,16 +9,21 @@ DEV_MODE=false
 # Store the absolute path to global_files directory (one level up from pat2vec)
 SCRIPT_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 GLOBAL_FILES_DIR="$(dirname "$SCRIPT_DIR")"
+CUSTOM_GLOBAL_FILES_DIR=""  # May be overridden by --global-files-dir
 
 show_help() {
     echo "Usage: ./install_pat2vec.sh [OPTIONS]"
     echo "Options:"
-    echo "  -h, --help           Show this help message"
-    echo "  -p, --proxy          Install with proxy support"
-    echo "  --no-clone           Skip git clone operations"
-    echo "  -f, --force          Remove existing files and perform fresh install"
-    echo "  -a, --all            Install all components (overrides default lite installation)"
-    echo "  --dev                Install development dependencies"
+    echo "  -h, --help                    Show this help message"
+    echo "  -p, --proxy                   Install with proxy support"
+    echo "  --no-clone                    Skip git clone operations"
+    echo "  -f, --force                   Remove existing files and perform fresh install"
+    echo "  -a, --all                     Install all components (overrides default lite installation)"
+    echo "  --dev                         Install development dependencies"
+    echo "  --global-files-dir <path>     Override the global files directory (default: parent of pat2vec)"
+    echo ""
+    echo "Dev container example:"
+    echo "  bash install_pat2vec.sh --dev --global-files-dir \"\$HOME/.pat2vec_global\""
 }
 
 setup_medcat_models() {
@@ -64,15 +69,18 @@ copy_credentials() {
     echo "Starting credentials copy process..."
     echo "Target directory: $GLOBAL_FILES_DIR"
 
-    local source_file="$GLOBAL_FILES_DIR/pat2vec/pat2vec/util/credentials.py"
+    # Always source credentials from within the pat2vec repo itself (SCRIPT_DIR),
+    # not from GLOBAL_FILES_DIR, which may be a custom/separate location.
+    local source_file="$SCRIPT_DIR/pat2vec/util/credentials.py"
     local target_file="$GLOBAL_FILES_DIR/credentials.py"
 
     echo "Looking for credentials at: $source_file"
 
     # Check if source file exists
     if [ ! -f "$source_file" ]; then
-        echo "ERROR: Source credentials file not found at: $source_file"
-        return 1
+        echo "WARNING: Source credentials file not found at: $source_file"
+        echo "Skipping credentials copy — create $target_file manually if needed."
+        return 0
     fi
 
     echo "Source file found at: $source_file"
@@ -180,7 +188,6 @@ main() {
 
 (
     # Run in a subshell with -e to exit immediately on error without killing the parent shell.
-    # This makes error handling cleaner than manually checking every command.
     set -e
 
 # Parse command line arguments
@@ -191,10 +198,25 @@ while [[ $# -gt 0 ]]; do
         -f|--force) FORCE_CLEAN=true; shift;;
         -a|--all) INSTALL_MODE="all"; shift;;
         --dev) DEV_MODE=true; shift;;
+        --global-files-dir)
+            if [ -z "$2" ] || [[ "$2" == -* ]]; then
+                echo "ERROR: --global-files-dir requires a path argument." >&2
+                exit 1
+            fi
+            CUSTOM_GLOBAL_FILES_DIR="$2"
+            shift 2;;
         -h|--help) show_help; return 0;;
         *) echo "Unknown option: $1"; show_help; exit 1;;
     esac
 done
+
+# Apply custom global files dir if provided, otherwise use the default
+if [ -n "$CUSTOM_GLOBAL_FILES_DIR" ]; then
+    GLOBAL_FILES_DIR="$(realpath -m "$CUSTOM_GLOBAL_FILES_DIR")"
+    echo "Using custom global files directory: $GLOBAL_FILES_DIR"
+    # Create it if it doesn't exist yet
+    mkdir -p "$GLOBAL_FILES_DIR" || { echo "ERROR: Could not create directory: $GLOBAL_FILES_DIR" >&2; exit 1; }
+fi
 
 # Validate proxy variables if proxy mode is enabled
 if [ "$PROXY_MODE" = true ]; then
@@ -213,7 +235,8 @@ fi
 # Pre-flight check for write permissions in the global files directory
 if [ ! -w "$GLOBAL_FILES_DIR" ]; then
     echo "ERROR: No write permission in the target directory: '$GLOBAL_FILES_DIR'." >&2
-    echo "Please run this script as a user with write permissions, or specify a writable path with a future '--global-files-dir' option." >&2
+    echo "Tip: In a dev container, use --global-files-dir to pick a writable location, e.g.:" >&2
+    echo "     bash install_pat2vec.sh --dev --global-files-dir \"\$HOME/.pat2vec_global\"" >&2
     exit 1
 fi
 
@@ -295,12 +318,10 @@ echo "Installing SpaCy model..."
 SPACY_MODEL_URL="https://github.com/explosion/spacy-models/releases/download/en_core_web_md-3.7.1/en_core_web_md-3.7.1-py3-none-any.whl"
 pip_spacy_args=()
 if [ "$PROXY_MODE" = true ]; then
-    # If using proxy, install the package by name from the local mirror index.
     pip_spacy_args+=("en-core-web-md==3.7.1")
     pip_spacy_args+=("--trusted-host" "$INTERNAL_PROXY_HOST")
     pip_spacy_args+=("-i" "$INTERNAL_PYPI_MIRROR")
 else
-    # Otherwise, install directly from the public URL.
     pip_spacy_args+=("$SPACY_MODEL_URL")
 fi
 
@@ -315,6 +336,7 @@ deactivate
 echo ""
 echo "----------------------------------------------------"
 echo "Installation completed successfully!"
+echo "Global files directory: $GLOBAL_FILES_DIR"
 echo "To activate the environment, run: source $VENV_DIR/bin/activate"
 echo "----------------------------------------------------"
 

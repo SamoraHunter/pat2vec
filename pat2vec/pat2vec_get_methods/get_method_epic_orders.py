@@ -163,11 +163,6 @@ def get_epic_orders(
 
     Raises:
         ValueError: If `config_obj` is None.
-
-    Returns:
-        pd.DataFrame: A DataFrame containing Epic orders features for the specified patient.
-            Binary columns are created for each unique order class and status.
-            If no data is found, a DataFrame with only the 'client_idcode' is returned.
     """
     if config_obj is None:
         raise ValueError("config_obj cannot be None.")

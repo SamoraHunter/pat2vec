@@ -112,7 +112,7 @@ class CogStack(object):
                 key auth (api=True).
 
         Returns:
-            A new CogStack instance connected to the Elasticsearch cluster.
+            CogStack: Returns self instance connected to the Elasticsearch cluster.
 
         Raises:
             Exception: If Elasticsearch connection fails during initialization.
@@ -426,7 +426,13 @@ def cohort_searcher_with_terms_and_search(
     Returns:
         pd.DataFrame: A DataFrame containing the search results with all
             specified fields and document metadata. Empty DataFrame if
-            no results found or CogStack client not initialized.
+            no results found or CogStack client not initialized. When
+            entered_list >= 10000, returns a list of DataFrames due to
+            chunked processing.
+
+    Raises:
+        Exception: If merging results fails (re-raises exceptions from
+            dataframe operations).
     """
     global cs
     if cs is None:
@@ -491,6 +497,11 @@ def set_index_safe_wrapper(df: pd.DataFrame) -> pd.DataFrame:
     This wrapper function tries to set the 'id' column as the index and
     returns the original DataFrame if it fails, logging a warning.
 
+    Note:
+        The current implementation has a bug where df.set_index("id") does not
+        assign the result back to df. Consider using df = df.set_index("id")
+        instead.
+
     Args:
         df: The pandas DataFrame to modify.
 
@@ -525,8 +536,14 @@ def cohort_searcher_with_terms_no_search(
         entered_list: The list of values to search for in the `term_name` field.
 
     Returns:
-        pd.DataFrame: A DataFrame containing the search results. For large
-            lists, returns a list of DataFrames (chunked).
+        pd.DataFrame or List[pd.DataFrame]: A DataFrame containing the search
+            results. For large lists (>=10000), returns a list of DataFrames
+            where each chunk has been processed through set_index_safe_wrapper.
+            When entry_list < 10000, returns a single DataFrame.
+
+    Raises:
+        Exception: Re-raises exceptions from Elasticsearch queries or dataframe
+            operations during chunked processing.
     """
     global cs
     if cs is None:
