@@ -14,6 +14,26 @@ except ImportError:
     spacy = None  # type: ignore
 
 
+# Default PII labels from the MedCAT DeId model description.
+# Used as a fallback when the loaded model's pii_labels attribute is empty,
+# which can happen due to MedCAT version mismatches.
+_DEFAULT_PII_LABELS = [
+    "Address Line",
+    "Date",
+    "Date Of Birth",
+    "Email",
+    "Hospital Number",
+    "Initials",
+    "Name",
+    "Nhs Number",
+    "Postcode",
+    "Telephone Number",
+    "Gmc Number",
+    "HCPC Number",
+    "Accession Number",
+]
+
+
 class DeIdAnonymizer:
     """A class for anonymizing clinical text using MedCAT's DeIdModel.
 
@@ -32,7 +52,10 @@ class DeIdAnonymizer:
     """
 
     def __init__(
-        self, model_path: Optional[Union[str, Path]] = None, log_level: str = "INFO"
+        self,
+        model_path: Optional[Union[str, Path]] = None,
+        log_level: str = "INFO",
+        disable_chunking: bool = True,
     ):
         """Initializes the DeIdAnonymizer.
 
@@ -40,12 +63,19 @@ class DeIdAnonymizer:
             model_path: Optional path to the MedCAT DeIdModel pack. If provided,
                 the model is loaded upon initialization.
             log_level: The logging level for the instance (e.g., "INFO", "DEBUG").
+            disable_chunking: If True (default), disables the chunking overlap
+                window on the transformer NER component. This prevents multiprocessing
+                from hanging in most environments. Note: disabling chunking means only
+                the first ~512 tokens of very long documents will be processed.
+                Set to False only if your documents are short or you have confirmed
+                chunking works in your environment.
         """
         self.model: Optional[Type[DeIdModel]] = None
         self.model_path = model_path
         self.is_loaded: bool = False
         self.pii_labels: List[str] = []
         self.anonymization_log: List[Dict[str, Any]] = []
+        self.disable_chunking = disable_chunking
 
         # Setup logging
         self.logger = logging.getLogger(f"{__name__}.DeIdAnonymizer")
@@ -72,7 +102,8 @@ class DeIdAnonymizer:
             True if the model was loaded successfully, False otherwise.
         """
         try:
-            Path(model_path)
+            # FIX: assign the Path object so .exists() is available
+            model_path = Path(model_path)
             if not model_path.exists():
                 self.logger.error(f"Model path does not exist: {model_path}")
                 return False
@@ -83,29 +114,38 @@ class DeIdAnonymizer:
             self.is_loaded = self.model is not None
 
             # Hotfix for a spaCy extension error that can occur with some MedCAT models.
-            # The 'link_candidates' attribute is expected by a serialization pipe
-            # but may not be registered if the model pack doesn't include a linker.
-            # We register it here with a safe default to prevent crashes.
             if not spacy.tokens.Span.has_extension("link_candidates"):
                 self.logger.info(
-                    "Registering missing 'link_candidates' spaCy extension to prevent serialization errors."
+                    "Registering missing 'link_candidates' spaCy extension."
                 )
                 spacy.tokens.Span.set_extension("link_candidates", default=[])
 
-            # Inspect the model for PII labels it's configured to redact
+            # FIX: pii_labels is often empty due to MedCAT version mismatches.
+            # Fall back to the known default labels from the model description.
             self.pii_labels = getattr(self.model, "pii_labels", [])
-            self.logger.info("DeIdModel loaded successfully")
+            if not self.pii_labels:
+                self.logger.warning(
+                    "Model's 'pii_labels' attribute is empty. "
+                    "Falling back to default PII label list. "
+                    "Override `anonymizer.pii_labels` if your model targets different concepts."
+                )
+                self.pii_labels = _DEFAULT_PII_LABELS
+                self.model.pii_labels = self.pii_labels
+
             self.logger.info(
                 f"Model configured to redact PII labels: {self.pii_labels}"
             )
-            if not self.pii_labels:
-                self.logger.warning(
-                    "The loaded model has an empty 'pii_labels' list. "
-                    "This means no PII will be redacted. Please check the model configuration."
-                )
+
+            # FIX: disable chunking overlap to prevent multiprocessing hanging.
+            # The warning from MedCAT itself recommends this approach.
+            if self.disable_chunking:
+                self._apply_chunking_fix()
+
             self._log_operation(
-                "model_loaded", {"path": str(model_path), "pii_labels": self.pii_labels}
+                "model_loaded",
+                {"path": str(model_path), "pii_labels": self.pii_labels},
             )
+            self.logger.info("DeIdModel loaded successfully")
             return True
 
         except ValueError as e:
@@ -118,6 +158,31 @@ class DeIdAnonymizer:
             self.logger.error(f"Unexpected error during model loading: {e}")
             return False
 
+    def _apply_chunking_fix(self) -> None:
+        """Disables the chunking overlap window on the transformer NER component.
+
+        This prevents multiprocessing from hanging, which is a known issue with
+        some MedCAT model configurations. Disabling chunking means only the first
+        ~512 tokens of long documents will be de-identified.
+
+        The fix navigates model.cat._addl_ner[0] to reach the TransformersNER
+        component where the chunking config lives.
+        """
+        try:
+            ner = self.model.cat._addl_ner[0]
+            ner.config.general.chunking_overlap_window = None
+            ner.create_eval_pipeline()
+            self.logger.info(
+                "Chunking overlap window disabled on TransformersNER to prevent "
+                "multiprocessing hang. Documents longer than ~512 tokens will only "
+                "have their first ~512 tokens de-identified."
+            )
+        except (AttributeError, IndexError) as e:
+            self.logger.warning(
+                f"Could not apply chunking fix (model structure may differ): {e}. "
+                "If processing hangs, inspect `model.cat._addl_ner` manually."
+            )
+
     def _check_model_loaded(self) -> None:
         """Checks if a model is loaded, raising a RuntimeError if not."""
         if not self.is_loaded or self.model is None:
@@ -126,7 +191,7 @@ class DeIdAnonymizer:
                 "provide model_path during initialization."
             )
 
-    def _log_operation(self, operation: str, details: Dict[str, Any]) -> None:  # type: ignore
+    def _log_operation(self, operation: str, details: Dict[str, Any]) -> None:
         """Log an anonymization operation for audit purposes."""
         log_entry = {
             "operation": operation,
@@ -190,6 +255,7 @@ class DeIdAnonymizer:
             texts: A list of input texts to anonymize.
             redact: If True, replaces PII with asterisks. If False, uses type tags.
             n_process: The number of processes to use for parallel execution.
+                Defaults to 1. Use caution with values > 1 if chunking is enabled.
             batch_size: The number of texts to process in each batch.
             verify_sample: If True, verifies a random sample of the results and
                 returns a report.
@@ -233,7 +299,7 @@ class DeIdAnonymizer:
     def anonymize_dataframe(
         self,
         df: pd.DataFrame,
-        text_columns: List[str],
+        text_columns: Union[str, List[str]],
         redact: bool = True,
         inplace: bool = False,
         suffix: str = "_anonymized",
@@ -244,14 +310,14 @@ class DeIdAnonymizer:
 
         Args:
             df: The input DataFrame.
-            text_columns: A list of column names containing the text to be
-                anonymized.
+            text_columns: A column name (str) or list of column names containing
+                the text to be anonymized.
             redact: If True, replaces PII with asterisks. If False, uses type tags.
             inplace: If True, modifies the DataFrame in place by overwriting the
                 original text columns. If False, returns a new DataFrame with
                 anonymized columns added.
-            suffix: The suffix to add to new anonymized column names. This is
-                ignored if `inplace` is True.
+            suffix: The suffix to add to new anonymized column names. Ignored
+                if `inplace` is True.
             n_process: The number of processes for parallel execution.
             batch_size: The number of texts to process in each batch.
 
@@ -260,23 +326,24 @@ class DeIdAnonymizer:
         """
         self._check_model_loaded()
 
+        # FIX: accept a plain string column name as well as a list
+        if isinstance(text_columns, str):
+            text_columns = [text_columns]
+
         # Validate columns exist
         missing_cols = [col for col in text_columns if col not in df.columns]
         if missing_cols:
             raise ValueError(f"Columns not found in DataFrame: {missing_cols}")
 
-        # Create working copy if not inplace
         result_df = df if inplace else df.copy()
         total_texts_processed = 0
 
         for col in text_columns:
             self.logger.info(f"Anonymizing column: {col}")
 
-            # Handle NaN values
             texts_to_process = df[col].fillna("").astype(str).tolist()
             total_texts_processed += len(texts_to_process)
 
-            # Anonymize texts
             anonymized_texts = self.model.deid_multi_texts(
                 texts_to_process,
                 redact=redact,
@@ -284,7 +351,6 @@ class DeIdAnonymizer:
                 batch_size=batch_size,
             )
 
-            # Update DataFrame
             if inplace:
                 result_df[col] = anonymized_texts
             else:
@@ -305,9 +371,6 @@ class DeIdAnonymizer:
 
     def inspect_text(self, text: str) -> List[Dict[str, Any]]:
         """Inspects text to find and log PII entities without anonymizing.
-
-        This method is useful for debugging and understanding what the loaded
-        model is capable of detecting in a given piece of text.
 
         Args:
             text: The text to inspect.
@@ -339,8 +402,8 @@ class DeIdAnonymizer:
             text: The input text to analyze.
 
         Returns:
-            A list of dictionaries, where each dictionary contains details
-            (text, label, start, end, confidence) for an identified PII entity.
+            A list of dictionaries with details (text, label, start, end,
+            confidence) for each identified PII entity.
         """
         self._check_model_loaded()
 
@@ -355,9 +418,7 @@ class DeIdAnonymizer:
                         "label": ent.label_,
                         "start": ent.start_char,
                         "end": ent.end_char,
-                        "confidence": getattr(
-                            ent, "_.acc", None
-                        ),  # Confidence if available
+                        "confidence": getattr(ent, "_.acc", None),
                     }
                 )
 
@@ -368,30 +429,10 @@ class DeIdAnonymizer:
             raise
 
     def _verify_single_text(self, original: str, anonymized: str) -> Dict[str, Any]:
-        """Verifies anonymization quality for a single text.
-
-        Compares the original text with its anonymized version to assess
-        what PII entities were detected and whether they were properly redacted.
-
-        Args:
-            original: The original text before anonymization.
-            anonymized: The anonymized text after processing.
-
-        Returns:
-            A dictionary containing:
-                - `entities_found`: Number of PII entities detected in the original text.
-                - `entity_types`: List of unique entity type labels found (e.g., PERSON, ADDRESS).
-                - `original_length`: Character length of the original text.
-                - `anonymized_length`: Character length of the anonymized text.
-                - `entities`: A list of detailed PII entity information including text, label,
-                    start/end positions, and confidence scores.
-
-        Raises:
-            RuntimeError: If the DeIdModel has not been loaded before calling this method.
-        """
+        """Verifies anonymization quality for a single text."""
         entities = self.get_structured_annotations(original)
 
-        verification = {
+        return {
             "entities_found": len(entities),
             "entity_types": list(set(ent["label"] for ent in entities)),
             "original_length": len(original),
@@ -399,41 +440,18 @@ class DeIdAnonymizer:
             "entities": entities,
         }
 
-        return verification
-
     def _verify_multiple_texts(
         self, original_texts: List[str], anonymized_texts: List[str], sample_size: int
     ) -> Dict[str, Any]:
-        """Verifies anonymization quality for a sample of multiple texts.
-
-        Compares the original texts with their anonymized versions to assess
-        overall anonymization quality across a sample set.
-
-        Args:
-            original_texts: A list of original text strings before anonymization.
-            anonymized_texts: A list of anonymized text strings after processing.
-            sample_size: The number of texts to include in the verification sample.
-
-        Returns:
-            A dictionary containing:
-                - `sample_size`: Number of texts in the verification sample.
-                - `total_texts`: Total number of texts processed (for context).
-                - `total_entities_in_sample`: Total PII entities found across the sample.
-                - `unique_entity_types`: List of unique entity type labels found in the sample.
-                - `avg_entities_per_text`: Average number of entities per text in the sample.
-
-        Raises:
-            RuntimeError: If the DeIdModel has not been loaded before calling this method.
-        """
+        """Verifies anonymization quality for a sample of multiple texts."""
         import random
 
-        # Sample texts for verification
         indices = random.sample(
             range(len(original_texts)), min(sample_size, len(original_texts))
         )
 
         total_entities = 0
-        all_entity_types = set()
+        all_entity_types: set = set()
 
         for i in indices:
             verification = self._verify_single_text(
@@ -442,15 +460,13 @@ class DeIdAnonymizer:
             total_entities += verification["entities_found"]
             all_entity_types.update(verification["entity_types"])
 
-        report = {
+        return {
             "sample_size": len(indices),
             "total_texts": len(original_texts),
             "total_entities_in_sample": total_entities,
             "unique_entity_types": list(all_entity_types),
             "avg_entities_per_text": total_entities / len(indices) if indices else 0,
         }
-
-        return report
 
     def generate_report(self) -> Dict[str, Any]:
         """Generates a summary report of all operations performed.
@@ -462,13 +478,11 @@ class DeIdAnonymizer:
         if not self.anonymization_log:
             return {"message": "No anonymization operations performed yet"}
 
-        # Count operations by type
-        operation_counts = {}
+        operation_counts: Dict[str, int] = {}
         for log_entry in self.anonymization_log:
             op_type = log_entry["operation"]
             operation_counts[op_type] = operation_counts.get(op_type, 0) + 1
 
-        # Calculate total texts processed
         total_texts = 0
         for log_entry in self.anonymization_log:
             if log_entry["operation"] == "single_text":
@@ -478,10 +492,11 @@ class DeIdAnonymizer:
             elif log_entry["operation"] == "dataframe":
                 total_texts += log_entry["details"].get("total_texts", 0)
 
-        report = {
+        return {
             "model_path": str(self.model_path) if self.model_path else None,
             "model_loaded": self.is_loaded,
             "pii_labels_in_use": self.pii_labels,
+            "chunking_disabled": self.disable_chunking,
             "total_operations": len(self.anonymization_log),
             "operation_breakdown": operation_counts,
             "total_texts_processed": total_texts,
@@ -497,8 +512,6 @@ class DeIdAnonymizer:
             ),
         }
 
-        return report
-
     def save_log(self, filepath: Union[str, Path]) -> None:
         """Saves the anonymization operation log to a JSON file.
 
@@ -509,7 +522,6 @@ class DeIdAnonymizer:
 
         filepath = Path(filepath)
 
-        # Convert timestamps to strings for JSON serialization
         log_data = []
         for entry in self.anonymization_log:
             entry_copy = entry.copy()
@@ -522,11 +534,15 @@ class DeIdAnonymizer:
         self.logger.info(f"Anonymization log saved to: {filepath}")
 
 
-# Convenience functions for quick usage
+# ---------------------------------------------------------------------------
+# Convenience functions
+# ---------------------------------------------------------------------------
+
+
 def anonymize_single_text(
     text: str, model_path: Union[str, Path], redact: bool = True
 ) -> str:
-    """A convenience function to quickly anonymize a single text string.
+    """Quickly anonymize a single text string.
 
     Args:
         text: The input text to anonymize.
@@ -542,114 +558,43 @@ def anonymize_single_text(
 
 def anonymize_dataframe_quick(
     df: pd.DataFrame,
-    text_columns: List[str],
+    text_columns: Union[str, List[str]],
     model_path: Union[str, Path],
     redact: bool = True,
+    suffix: str = "_anonymized",
+    inplace: bool = False,
+    n_process: int = 1,
+    batch_size: int = 100,
 ) -> pd.DataFrame:
-    """A convenience function to quickly anonymize columns in a DataFrame.
+    """Quickly anonymize one or more columns in a DataFrame.
 
     Args:
         df: The input DataFrame.
-        text_columns: A list of column names to anonymize.
+        text_columns: A column name (str) or list of column names to anonymize.
         model_path: The path to the DeIdModel pack.
         redact: If True, replaces PII with asterisks. If False, uses type tags.
+        suffix: Suffix appended to new anonymized column names (ignored if inplace).
+        inplace: If True, overwrites the original columns instead of adding new ones.
+        n_process: Number of processes for parallel execution (default 1).
+        batch_size: Number of texts per batch (default 100).
 
     Returns:
-        A new DataFrame with anonymized text columns.
+        A DataFrame with the specified text columns anonymized.
+
+    Example:
+        >>> result = anonymize_dataframe_quick(
+        ...     df,
+        ...     text_columns='body_analysed',
+        ...     model_path='/path/to/model.zip',
+        ... )
     """
     anonymizer = DeIdAnonymizer(model_path)
-    return anonymizer.anonymize_dataframe(df, text_columns, redact=redact)
-
-
-# # Example usage and testing
-# if __name__ == "__main__":
-#     # --- IMPORTANT ---
-#     # This example requires a pre-trained MedCAT DeIdModel pack.
-# # # You need to provide the path to your model pack below.
-# # # For demonstration, we use a placeholder path.
-# # # Replace this with the actual path to your model.
-# # model_path = "/path/to/your/deid_model_pack"
-
-# # # Check if the model path is a placeholder
-# # if model_path == "/path/to/your/deid_model_pack" or not os.path.exists(model_path):
-# #     logger.warning("=" * 80)
-# #     logger.warning("WARNING: De-identification model path is not set or is invalid.")
-# #     logger.warning(f"Please update 'model_path' in the __main__ block of this script.")
-# #     logger.warning(f"Current path: {model_path}")
-# #     logger.warning("Skipping anonymization example.")
-# #     logger.warning("=" * 80)
-# # else:
-# #     # Initialize anonymizer
-# #     anonymizer = DeIdAnonymizer(model_path)
-
-# #     # Test single text anonymization
-# #     test_text = (
-# #         "Patient John Doe, born on 1980-01-15, visited Dr. Smith on 2023-10-26."
-# #     )
-# #     anonymized, verification = anonymizer.anonymize_text(
-# #         test_text, redact=True, verify=True
-# #     )
-# #     logger.info("--- Single Text Anonymization ---")
-# #     logger.info(f"Original: {test_text}")
-# #     logger.info(f"Anonymized: {anonymized}")
-# #     logger.info(f"Verification: {verification}")
-
-# #     # Add diagnostic check if anonymization did not change the text
-# #     if anonymized == test_text:
-# #         logger.warning("\n" + "=" * 20 + " DIAGNOSTIC " + "=" * 20)
-# #         logger.warning("WARNING: Anonymized text is identical to the original text.")
-# #         logger.warning("This indicates that no PII was redacted.")
-# #         logger.warning("Running inspection to see what PII entities the model detected...")
-# #         anonymizer.inspect_text(test_text)
-# #         logger.warning("\nPossible reasons for no redaction:")
-# #         logger.warning(
-# #             "1. The model did not detect any PII in the text (see inspection results above)."
-# #         )
-# #         logger.warning(
-# #             "2. The model's `pii_labels` list is empty or misconfigured. "
-# #             f"Current labels: {anonymizer.pii_labels}"
-# #         )
-# #         logger.warning("=" * 52)
-
-# #     logger.info("\n" + "=" * 50 + "\n")
-
-# #     # Test DataFrame anonymization
-# #     test_df = pd.DataFrame(
-# #         {
-# #             "id": [1, 2, 3],
-# #             "body_analysed": [
-# #                 "Patient Jane Smith was seen on 2023-01-15",
-# #                 "Dr. Brown reviewed case P12345 at Kings Hospital",
-# #                 "Contact number: 07123456789, address: 123 Oak Street",
-# #             ],
-# #         }
-# #     )
-
-# #     logger.info("--- DataFrame Anonymization ---")
-# #     logger.info("Original DataFrame:")
-# #     logger.info(test_df)
-
-# #     anonymized_df = anonymizer.anonymize_dataframe(test_df, ["body_analysed"])
-
-# #     logger.info("\nAnonymized DataFrame:")
-# #     logger.info(anonymized_df)
-
-# #     # Add diagnostic check for the DataFrame
-# #     if anonymized_df["body_analysed_anonymized"].equals(test_df["body_analysed"]):
-# #         logger.warning("\n" + "=" * 20 + " DIAGNOSTIC " + "=" * 20)
-# #         logger.warning("WARNING: Anonymized DataFrame column is identical to the original.")
-# #         logger.warning("Running inspection on the first row of the DataFrame...")
-# #         anonymizer.inspect_text(test_df["body_analysed"].iloc[0])
-# #         logger.warning("=" * 52)
-
-# #     logger.info("\n" + "=" * 50 + "\n")
-
-# #     # Generate and print a report
-# #     report = anonymizer.generate_report()
-# #     logger.info("--- Anonymization Report ---")
-# #     logger.info(report)
-
-# #     # Save the log
-# #     anonymizer.save_log("anonymization_log.json")
-
-# # logger.info("\nDeIdAnonymizer module execution finished.")
+    return anonymizer.anonymize_dataframe(
+        df,
+        text_columns=text_columns,
+        redact=redact,
+        suffix=suffix,
+        inplace=inplace,
+        n_process=n_process,
+        batch_size=batch_size,
+    )
