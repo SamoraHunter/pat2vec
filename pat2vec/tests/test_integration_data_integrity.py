@@ -24,6 +24,18 @@ class TestIntegrationDataIntegrity(unittest.TestCase):
         self.db_path = os.path.join(self.test_dir, f"{self.project_name}.sqlite")
         self.db_connection_string = f"sqlite:///{self.db_path}"
 
+        # Patch initialize_cogstack_client and create_credentials_file BEFORE creating main()
+        self.patcher_initialize_cogstack_client = patch(
+            "pat2vec.pat2vec_search.cogstack_search_methods.initialize_cogstack_client",
+            return_value=None,
+        ).start()
+        self.addCleanup(self.patcher_initialize_cogstack_client.stop)
+
+        self.patcher_create_credentials_file = patch(
+            "pat2vec.pat2vec_search.cogstack_search_methods.create_credentials_file"
+        ).start()
+        self.addCleanup(self.patcher_create_credentials_file.stop)
+
         # Initialize config with testing enabled (uses dummy data)
         self.config = config_class(
             testing=True,
