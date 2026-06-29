@@ -35,10 +35,12 @@ The `install_pat2vec.sh` script automates the full setup.
     chmod +x install_pat2vec.sh
     ./install_pat2vec.sh
     ```
-    The script supports several options:
-    -   `--proxy`: Use if you are behind a corporate proxy.
-    -   `--dev`: Installs development dependencies (e.g., `pytest`).
-    -   `--force`: Performs a clean installation, removing any existing environment.
+  The script supports several options:
+    -   `--proxy`: Use if you are behind a corporate proxy that mirrors Python packages.
+    -   `--dev`: Installs development dependencies (e.g., `pytest`, `nbmake`) for running tests.
+    -   `--all`: Installs all optional feature dependencies.
+    -   `--force`: Removes any existing virtual environment and performs a clean installation.
+    -   `--no-clone`: Skips cloning the `snomed_methods` repository if you already have it.
 
 3.  **Activate the environment:**
     ```shell
