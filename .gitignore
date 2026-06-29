@@ -250,3 +250,4 @@ ECRF/
 doc_status.json
 *_env*/
 docstring_coverage_report.json
+.secrets
