@@ -4,6 +4,7 @@ from pat2vec.util.helper_functions import get_df_from_db
 from pat2vec.util.methods_get import exist_check
 
 
+import json
 import pandas as pd
 from sqlalchemy import text
 
@@ -119,6 +120,64 @@ def get_pat_batch_mct_docs(
                     try:
                         engine = config_obj.db_engine
                         if engine:
+                            # Drop Elasticsearch/MongoDB metadata columns and index column that conflict with SQLite
+                            cols_to_drop = [
+                                "_id",
+                                "_index",
+                                "_score",
+                                "search_term",
+                                "index",
+                            ]
+                            for col in cols_to_drop:
+                                batch_target.drop(
+                                    columns=col, inplace=True, errors="ignore"
+                                )
+
+                            # Fix problematic backslashes in text columns that cause SQLite parameter binding issues
+                            text_cols = [
+                                "observation_valuetext_analysed",
+                                "obscatalogmasteritem_displayname",
+                            ]
+                            for col in text_cols:
+                                if col in batch_target.columns:
+                                    batch_target[col] = (
+                                        batch_target[col]
+                                        .astype(str)
+                                        .str.replace("\\", "", regex=False)
+                                    )
+
+                            # Convert Timestamp columns to strings for SQLite compatibility
+                            timestamp_cols = [
+                                "updatetime",
+                                "observationdocument_recordeddtm",
+                                "basicobs_entered",
+                                "observationdocument_createdwhen",
+                                "document_CreatedWhen",
+                            ]
+                            for col in timestamp_cols:
+                                if col in batch_target.columns:
+                                    batch_target[col] = pd.to_datetime(
+                                        batch_target[col], errors="coerce"
+                                    ).dt.strftime("%Y-%m-%d %H:%M:%S")
+
+                            # Convert any list/dict/tuple columns to JSON strings for database compatibility
+                            for col in batch_target.columns:
+                                if batch_target[col].dtype == "object":
+                                    if (
+                                        batch_target[col]
+                                        .apply(
+                                            lambda x: isinstance(x, (list, dict, tuple))
+                                        )
+                                        .any()
+                                    ):
+                                        batch_target[col] = batch_target[col].apply(
+                                            lambda x: (
+                                                json.dumps(x)
+                                                if isinstance(x, (list, dict, tuple))
+                                                else x
+                                            )
+                                        )
+
                             with engine.begin() as connection:
                                 table_name = "raw_mct_docs"
                                 schema_name = "raw_data"
