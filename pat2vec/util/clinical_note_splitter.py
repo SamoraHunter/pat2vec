@@ -518,7 +518,7 @@ def split_and_append_chunks(
         :, ~concatenated_notes.columns.duplicated()
     ]
 
-    # Reset index
-    concatenated_notes.reset_index(inplace=True)
+    # Reset index, dropping the old index to avoid "index" column with SQL databases
+    concatenated_notes.reset_index(drop=True, inplace=True)
 
     return concatenated_notes
