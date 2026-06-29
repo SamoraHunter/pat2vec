@@ -1,6 +1,7 @@
 #!/bin/bash
 
-VENV_DIR="$(pwd)/pat2vec_env"
+VENV_NAME="pat2vec_env"
+VENV_DIR="$(pwd)/$VENV_NAME"
 PROXY_MODE=false
 CLONE_REPOS=true
 FORCE_CLEAN=false
@@ -20,10 +21,11 @@ show_help() {
     echo "  -f, --force                   Remove existing files and perform fresh install"
     echo "  -a, --all                     Install all components (overrides default lite installation)"
     echo "  --dev                         Install development dependencies"
+    echo "  --name <name>                 Name for the virtual environment (default: pat2vec_env)"
     echo "  --global-files-dir <path>     Override the global files directory (default: parent of pat2vec)"
     echo ""
     echo "Dev container example:"
-    echo "  bash install_pat2vec.sh --dev --global-files-dir \"\$HOME/.pat2vec_global\""
+    echo "  bash install_pat2vec.sh --dev --name pat2vec_devcontainer --global-files-dir \"\$HOME/.pat2vec_global\""
 }
 
 setup_medcat_models() {
@@ -198,6 +200,14 @@ while [[ $# -gt 0 ]]; do
         -f|--force) FORCE_CLEAN=true; shift;;
         -a|--all) INSTALL_MODE="all"; shift;;
         --dev) DEV_MODE=true; shift;;
+        --name)
+            if [ -z "$2" ] || [[ "$2" == -* ]]; then
+                echo "ERROR: --name requires a name argument." >&2
+                exit 1
+            fi
+            VENV_NAME="$2"
+            VENV_DIR="$(pwd)/$VENV_NAME"
+            shift 2;;
         --global-files-dir)
             if [ -z "$2" ] || [[ "$2" == -* ]]; then
                 echo "ERROR: --global-files-dir requires a path argument." >&2
@@ -328,7 +338,7 @@ fi
 pip install "${pip_spacy_args[@]}"
 
 echo "Adding virtual environment to Jupyter kernelspec..."
-python -m ipykernel install --user --name=pat2vec_env
+python -m ipykernel install --user --name="$VENV_NAME"
 
 echo "Deactivating virtual environment..."
 deactivate
@@ -336,6 +346,8 @@ deactivate
 echo ""
 echo "----------------------------------------------------"
 echo "Installation completed successfully!"
+echo "Virtual environment: $VENV_DIR"
+echo "Kernel name: $VENV_NAME"
 echo "Global files directory: $GLOBAL_FILES_DIR"
 echo "To activate the environment, run: source $VENV_DIR/bin/activate"
 echo "----------------------------------------------------"

@@ -248,3 +248,4 @@ python-3.10.18-linux-24.04-x64.tar.gz
 .actrc
 ECRF/
 doc_status.json
+*_env*/
