@@ -124,12 +124,17 @@ class main:
 
     This class relies heavily on the `config_obj` for its behavior.
 
-    Attributes:
-        config_obj (config_class): The configuration object that controls the pipeline.
+     Attributes:
+        config_obj: The configuration object that controls the pipeline. Can be an instance of
+            config_class or None (will create a default instance internally).
         cs (CogStack): An instance of the CogStack client for data retrieval.
         all_patient_list (list): The list of patient IDs to be processed.
-        cat (MedCAT): A MedCAT instance for clinical text annotation if required.
-        t (tqdm.trange): A progress bar for monitoring the process.
+        cat: MedCAT model instance for clinical text annotation if required. Set via
+            `get_cat()` in `__init__`.
+        t (tqdm.trange): Progress bar object for monitoring the process. Created via
+            `trange()` in `__init__`.
+        cohort_searcher_with_terms_and_search: Dynamically-assigned search function
+            (either CogStack or dummy variant). Set in `__init__` based on cogstack flag.
     """
 
     def __init__(
@@ -151,11 +156,14 @@ class main:
             cogstack: If True, connects to a CogStack Elasticsearch instance.
                 If False, a dummy searcher is used for testing.
             use_filter: If True, applies a CUI filter to the MedCAT model.
-            json_filter_path: Path to a JSON file containing the CUI filter.
+            json_filter_path: Path to a JSON file containing the CUI filter. Defaults
+                to None.
             random_seed_val: The random seed for reproducibility.
-            hostname: Deprecated. SFTP settings are now in the config object.
+            hostname: Deprecated. SFTP settings are now in the config object. This
+                parameter is stored as `self.hostname` but should not be used for new code.
             config_obj: The main configuration object. If None, a default
-                configuration is created.
+                configuration is created. Can also accept an instance of config_class
+                or None (will create internally).
         """
         self.batch_mode = config_obj.batch_mode
         self.remote_dump = config_obj.remote_dump  # Deprecated
