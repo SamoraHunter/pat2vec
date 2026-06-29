@@ -11,6 +11,7 @@ try:
 except ImportError:
     MEDCAT_AVAILABLE = False  # type: ignore
     DeIdModel = None  # type: ignore
+    spacy = None  # type: ignore
 
 
 class DeIdAnonymizer:
