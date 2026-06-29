@@ -379,6 +379,34 @@ def save_raw_patient_batch(
             if inspector.has_table(target_table, schema=target_schema):
                 connection.execute(del_query, {"pat_id": patient_id})
 
+            # Debug output - show columns before and after drop
+            print(
+                f"DEBUG helper_functions: Before drop - columns: {df.columns.tolist()}"
+            )
+
+            # Drop Elasticsearch/MongoDB metadata columns and index column that conflict with SQLite
+            # Note: updatetime is preserved for demographics table as it's required by get_demographics3_batch
+            cols_to_drop = ["_id", "_index", "_score", "search_term", "index"]
+            if table_name != "raw_demographics":
+                cols_to_drop.append("updatetime")
+            for col in cols_to_drop:
+                if col in df.columns:
+                    print(f"DEBUG helper_functions: Dropping column {col}")
+                    df.drop(columns=col, inplace=True)
+
+            print(
+                f"DEBUG helper_functions: After drop - columns: {df.columns.tolist()}"
+            )
+
+            # Fix problematic backslashes in text columns that cause SQLite parameter binding issues
+            text_cols = [
+                "observation_valuetext_analysed",
+                "obscatalogmasteritem_displayname",
+            ]
+            for col in text_cols:
+                if col in df.columns:
+                    df[col] = df[col].astype(str).str.replace("\\", "", regex=False)
+
             # Convert any list/dict/tuple columns to JSON strings for database compatibility
             for col in df.columns:
                 if df[col].apply(lambda x: isinstance(x, (list, dict, tuple))).any():
