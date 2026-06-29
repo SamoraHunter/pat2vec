@@ -16,6 +16,13 @@ class TestDeIdAnonymizer(unittest.TestCase):
 
     def setUp(self):
         """Set up common test fixtures and mocks."""
+        # Patch MEDCAT_AVAILABLE first so DeIdAnonymizer doesn't raise ImportError
+        self.patcher_medcat_available = patch(
+            "pat2vec.util.anonymisation_deid_documents.MEDCAT_AVAILABLE",
+            new=True,
+        )
+        self.mock_medcat_available = self.patcher_medcat_available.start()
+
         # Mock DeIdModel and spacy globally for these tests to avoid needing local model packs
         self.patcher_deid = patch("pat2vec.util.anonymisation_deid_documents.DeIdModel")
         self.mock_deid_class = self.patcher_deid.start()
@@ -31,6 +38,7 @@ class TestDeIdAnonymizer(unittest.TestCase):
 
     def tearDown(self):
         """Clean up mocks after each test."""
+        self.patcher_medcat_available.stop()
         self.patcher_deid.stop()
         self.patcher_spacy.stop()
         self.patcher_path_exists.stop()
