@@ -52,6 +52,21 @@ class TestPreProcessing(unittest.TestCase):
         )
         self.addCleanup(self.patcher_exists.stop)
 
+        # Patch initialize_cogstack_client to avoid Elasticsearch connection attempts
+        patch_initialize = patch(
+            "pat2vec.pat2vec_search.cogstack_search_methods.initialize_cogstack_client",
+            return_value=None,
+        )
+        self.mock_initialize_cogstack_client = patch_initialize.start()
+        self.addCleanup(patch_initialize.stop)
+
+        # Patch tqdm to use standard tqdm instead of notebook backend
+        patch_tqdm = patch("pat2vec.pat2vec_search.cogstack_search_methods.tqdm")
+        self.mock_tqdm = patch_tqdm.start()
+        self.mock_tqdm.return_value.__enter__.return_value = self.mock_tqdm.return_value
+        self.mock_tqdm.return_value.__exit__ = lambda *args: None
+        self.addCleanup(patch_tqdm.stop)
+
     def setup_searcher_mocks(self, mock_epr, mock_mct, mock_text):
         """Helper to ensure searcher mocks return DataFrames instead of MagicMocks."""
         mock_epr.return_value = pd.DataFrame()
