@@ -385,10 +385,8 @@ def save_raw_patient_batch(
             )
 
             # Drop Elasticsearch/MongoDB metadata columns and index column that conflict with SQLite
-            # Note: updatetime is preserved for demographics table as it's required by get_demographics3_batch
+            # Note: updatetime is preserved for all raw_data tables as it's required for temporal processing
             cols_to_drop = ["_id", "_index", "_score", "search_term", "index"]
-            if table_name != "raw_demographics":
-                cols_to_drop.append("updatetime")
             for col in cols_to_drop:
                 if col in df.columns:
                     print(f"DEBUG helper_functions: Dropping column {col}")

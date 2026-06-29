@@ -73,6 +73,29 @@ def get_current_pat_report_annotations(
     )
 
     if report_annotations is not None:
+        # Use reports_time_field from config, default to "updatetime"
+        time_column = getattr(config_obj, "reports_time_field", "updatetime")
+
+        # Standardize time column names to match the configured field
+        # Check for alternative time columns that might exist in reports data
+        if time_column not in report_annotations.columns:
+            alternative_columns = [
+                "basicobs_entered",
+                "observationdocument_recordeddtm",
+                "document_CreatedWhen",
+                "updatetime",
+            ]
+            found_col = None
+            for alt_col in alternative_columns:
+                if alt_col in report_annotations.columns:
+                    found_col = alt_col
+                    break
+
+            # Rename to time_column if a source column was found
+            if found_col and found_col != time_column:
+                report_annotations = report_annotations.rename(
+                    columns={found_col: time_column}
+                )
 
         filtered_report_annotations = filter_dataframe_by_timestamp(
             report_annotations,
@@ -82,7 +105,7 @@ def get_current_pat_report_annotations(
             end_month,
             start_day,
             end_day,
-            "updatetime",
+            time_column,
             dropna=True,
         )
 

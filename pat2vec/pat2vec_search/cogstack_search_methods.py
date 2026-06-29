@@ -3038,8 +3038,8 @@ def initialize_cogstack_client(config_obj=None):
             }
         except ImportError:
             logging.warning("No credentials file found. Attempting to create one.")
-            create_credentials_file()
             try:
+                create_credentials_file()
                 from credentials import username, password, api_key, hosts
 
                 importlib.reload(sys.modules["credentials"])
@@ -3049,7 +3049,7 @@ def initialize_cogstack_client(config_obj=None):
                     "api_key": api_key,
                     "hosts": hosts,
                 }
-            except ImportError:
+            except (PermissionError, OSError, ImportError):
                 logging.warning(
                     "Failed to import credentials after creation. CogStack client will not be initialized."
                 )

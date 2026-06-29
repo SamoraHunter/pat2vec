@@ -79,7 +79,10 @@ class TestDeIdAnonymizer(unittest.TestCase):
         ) as cm:
             self.anonymizer.load_model(self.model_path)
             self.assertTrue(
-                any("no PII will be redacted" in line for line in cm.output)
+                any(
+                    "Falling back to default PII label list" in line
+                    for line in cm.output
+                )
             )
 
     def test_anonymize_text_single(self):

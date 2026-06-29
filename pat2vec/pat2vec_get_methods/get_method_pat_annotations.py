@@ -102,33 +102,20 @@ def get_current_pat_annotations(
 
     # Filter the batch_epr_docs_annotations DataFrame based on the target_date_range
     if batch_epr_docs_annotations is not None:
-
-        # Standardize the time column name if 'updatetime' is missing but 'basicobs_entered' exists
-        if (
-            "updatetime" not in batch_epr_docs_annotations.columns
-            and "basicobs_entered" in batch_epr_docs_annotations.columns
-        ):
-            batch_epr_docs_annotations = batch_epr_docs_annotations.rename(
-                columns={"basicobs_entered": "updatetime"}
-            )
-
-        # Support Epic-style CreatedWhen timestamps
-        if (
-            "updatetime" not in batch_epr_docs_annotations.columns
-            and "document_CreatedWhen" in batch_epr_docs_annotations.columns
-        ):
-            batch_epr_docs_annotations = batch_epr_docs_annotations.rename(
-                columns={"document_CreatedWhen": "updatetime"}
-            )
-
-        # Support Epic-style CollectedDate timestamps
-        if (
-            "updatetime" not in batch_epr_docs_annotations.columns
-            and "document_CollectedDate" in batch_epr_docs_annotations.columns
-        ):
-            batch_epr_docs_annotations = batch_epr_docs_annotations.rename(
-                columns={"document_CollectedDate": "updatetime"}
-            )
+        # Standardize time column names to 'updatetime' for EPR document annotations
+        # Check each source-specific time column and rename if updatetime doesn't exist
+        if "updatetime" not in batch_epr_docs_annotations.columns:
+            time_columns_to_check = [
+                ("basicobs_entered", "updatetime"),
+                ("observationdocument_recordeddtm", "updatetime"),
+                ("document_CreatedWhen", "updatetime"),
+                ("document_CollectedDate", "updatetime"),
+            ]
+            for old_col, new_col in time_columns_to_check:
+                if old_col in batch_epr_docs_annotations.columns:
+                    batch_epr_docs_annotations = batch_epr_docs_annotations.rename(
+                        columns={old_col: new_col}
+                    )
 
         # Filter the dataframe based on the target date range
         filtered_batch_epr_docs_annotations = filter_dataframe_by_timestamp(

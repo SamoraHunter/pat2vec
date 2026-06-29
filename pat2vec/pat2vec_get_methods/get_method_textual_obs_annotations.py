@@ -92,6 +92,29 @@ def get_current_pat_textual_obs_annotations(
 
     # filter the textual observation annotations based on the provided target date range
     if textual_obs_annotations is not None:
+        # Use textual_obs_time_field from config, default to "basicobs_entered"
+        time_column = getattr(config_obj, "textual_obs_time_field", "basicobs_entered")
+
+        # Standardize time column names to match the configured field
+        # Check for alternative time columns that might exist in textual obs data
+        if time_column not in textual_obs_annotations.columns:
+            alternative_columns = [
+                "updatetime",
+                "observationdocument_recordeddtm",
+                "document_CreatedWhen",
+                "basicobs_entered",
+            ]
+            found_col = None
+            for alt_col in alternative_columns:
+                if alt_col in textual_obs_annotations.columns:
+                    found_col = alt_col
+                    break
+
+            # Rename to time_column if a source column was found
+            if found_col and found_col != time_column:
+                textual_obs_annotations = textual_obs_annotations.rename(
+                    columns={found_col: time_column}
+                )
 
         filtered_textual_obs_annotations = filter_dataframe_by_timestamp(
             textual_obs_annotations,
@@ -101,7 +124,7 @@ def get_current_pat_textual_obs_annotations(
             end_month,
             start_day,
             end_day,
-            "basicobs_entered",
+            time_column,
             dropna=True,
         )
 
