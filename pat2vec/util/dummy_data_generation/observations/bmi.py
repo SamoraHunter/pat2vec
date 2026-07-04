@@ -69,13 +69,9 @@ def generate_bmi_data(
         date_values = []
         if base_date is not None:
             # For testing: generate dates within a predictable range around base_date
-            # Generate dates centered around base_date with small offsets
+            # All rows use the same date to ensure they're captured when filtering for single-day windows
+            test_day = max(1, min(28, base_date.day))
             for i in range(num_rows):
-                # Use positive offsets to ensure dates are >= base_date (within reasonable range)
-                day_offset = (
-                    0 if num_rows == 1 else (i * 2) - 1
-                )  # For 2 rows: -1, +1 giving days before and after
-                test_day = max(1, min(28, base_date.day + day_offset))
                 date_values.append(
                     datetime(
                         base_date.year,
