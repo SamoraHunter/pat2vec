@@ -23,6 +23,11 @@ from pat2vec.util.dummy_data_files.dummy_lists import (
     drug_names,
     ethnicity_list,
 )
+
+# Import from dummy_data_generation for backward compatibility
+from pat2vec.util.dummy_data_generation.generator_helpers import (
+    create_random_date_from_globals,
+)
 import numpy as np
 import calendar
 
