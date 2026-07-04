@@ -20,6 +20,8 @@ def generate_epic_clinical_notes_appointments_data(
     global_start_month: int,
     global_end_year: int = 2023,
     global_end_month: int = 12,
+    global_start_day: int = 1,
+    global_end_day: int = 31,
     fields_list: list[str] = [
         "document_PatientDurableKey",
         "document_CreatedWhen",
@@ -39,6 +41,8 @@ def generate_epic_clinical_notes_appointments_data(
             global_start_month,
             global_end_year,
             global_end_month,
+            global_start_day,
+            global_end_day,
         )
         data = {
             "document_PatientDurableKey": [client_id_code] * num_rows,

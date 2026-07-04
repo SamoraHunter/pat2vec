@@ -40,6 +40,8 @@ def generate_epr_documents_data(
     global_end_year: int,
     global_end_month: int,
     use_GPT: bool = True,
+    global_start_day: int = 1,
+    global_end_day: int = 31,
     fields_list: Optional[List[str]] = None,
 ) -> pd.DataFrame:
     """Generates dummy EPR document data.
@@ -98,6 +100,8 @@ def generate_epr_documents_data(
                     global_start_month,
                     global_end_year,
                     global_end_month,
+                    global_start_day,
+                    global_end_day,
                 ).strftime("%Y-%m-%dT%H:%M:%S")
                 for _ in range(num_rows)
             ],
@@ -140,6 +144,8 @@ def generate_epr_documents_personal_data(
     global_start_month: int,
     global_end_year: int,
     global_end_month: int,
+    global_start_day: int = 1,
+    global_end_day: int = 31,
     fields_list: List[str] = [
         "client_idcode",
         "client_firstname",
@@ -200,6 +206,8 @@ def generate_epr_documents_personal_data(
                     global_start_month,
                     global_end_year,
                     global_end_month,
+                    global_start_day,
+                    global_end_day,
                 ).strftime("%Y-%m-%dT%H:%M:%S")
                 for _ in range(num_rows)
             ],

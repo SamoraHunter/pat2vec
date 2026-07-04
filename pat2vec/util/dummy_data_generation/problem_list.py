@@ -21,6 +21,8 @@ def generate_problem_list_data(
     global_start_month: int,
     global_end_year: int = 2023,
     global_end_month: int = 12,
+    global_start_day: int = 1,
+    global_end_day: int = 31,
     fields_list: List[str] = [
         "client_idcode",
         "problem_name",
@@ -45,6 +47,8 @@ def generate_problem_list_data(
                     global_start_month,
                     global_end_year,
                     global_end_month,
+                    global_start_day,
+                    global_end_day,
                 ).strftime("%Y-%m-%dT%H:%M:%S")
                 for _ in range(num_rows)
             ],

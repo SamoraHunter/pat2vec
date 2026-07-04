@@ -21,6 +21,8 @@ def generate_appointments_data(
     global_start_month: int,
     global_end_year: int,
     global_end_month: int,
+    global_start_day: int = 1,
+    global_end_day: int = 31,
     fields_list: List[str] = [
         "Popular",
         "AppointmentType",
@@ -81,6 +83,8 @@ def generate_appointments_data(
                     global_start_month,
                     global_end_year,
                     global_end_month,
+                    global_start_day,
+                    global_end_day,
                 ).strftime("%Y-%m-%dT%H:%M:%S")
                 for _ in range(num_rows)
             ],
@@ -100,6 +104,8 @@ def generate_appointments_data(
                     global_start_month,
                     global_end_year,
                     global_end_month,
+                    global_start_day,
+                    global_end_day,
                 ).strftime("%Y-%m-%dT%H:%M:%S")
                 for _ in range(num_rows)
             ],

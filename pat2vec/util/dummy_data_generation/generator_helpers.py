@@ -59,7 +59,12 @@ def maybe_nan(value: Any, probability: float = 0.2) -> Any:
 
 
 def create_random_date_from_globals(
-    start_year: int, start_month: int, end_year: int, end_month: int
+    start_year: int,
+    start_month: int,
+    end_year: int,
+    end_month: int,
+    start_day: Optional[int] = None,
+    end_day: Optional[int] = None,
 ) -> datetime:
     """Generates a random datetime within a given month-level range.
 
@@ -68,13 +73,25 @@ def create_random_date_from_globals(
         start_month: The starting month.
         end_year: The ending year.
         end_month: The ending month.
+        start_day: The optional starting day (defaults to 1 of start month).
+        end_day: The optional ending day (defaults to last day of end month).
 
     Returns:
         A random datetime object within the specified range.
     """
-    start_dt = datetime(start_year, start_month, 1)
+    # Convert day params to int for robustness (handles string "01" from config)
+    start_day_val = int(start_day) if start_day is not None else 1
+    end_day_val = (
+        int(end_day)
+        if end_day is not None
+        else calendar.monthrange(end_year, int(end_month))[1]
+    )
+
+    start_dt = datetime(start_year, start_month, start_day_val, 0, 0, 0)
+
     _, num_days_in_end_month = calendar.monthrange(end_year, int(end_month))
-    end_dt = datetime(end_year, end_month, num_days_in_end_month, 23, 59, 59)
+    end_day_final = min(end_day_val, num_days_in_end_month)
+    end_dt = datetime(end_year, end_month, end_day_final, 23, 59, 59)
 
     time_difference = end_dt - start_dt
     total_seconds = int(time_difference.total_seconds())

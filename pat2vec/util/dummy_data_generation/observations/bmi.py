@@ -24,6 +24,8 @@ def generate_bmi_data(
     global_start_month: int,
     global_end_year: int,
     global_end_month: int,
+    global_start_day: int = 1,
+    global_end_day: int = 31,
     fields_list: List[str] = BMI_FIELDS,
     base_date: Optional[datetime] = None,
 ) -> pd.DataFrame:
@@ -118,6 +120,8 @@ def generate_bmi_data(
                                 global_start_month,
                                 global_end_year,
                                 global_end_month,
+                                global_start_day,
+                                global_end_day,
                             )
                         )
         data = {

@@ -518,6 +518,8 @@ def generate_observations_MRC_text_data(
     global_start_month: int,
     global_end_year: int,
     global_end_month: int,
+    global_start_day: int = 1,
+    global_end_day: int = 31,
     use_GPT: bool = False,
     fields_list=None,
 ) -> pd.DataFrame:
@@ -567,6 +569,8 @@ def generate_observations_MRC_text_data(
                     global_start_month,
                     global_end_year,
                     global_end_month,
+                    global_start_day,
+                    global_end_day,
                 ).strftime("%Y-%m-%dT%H:%M:%S")
                 for _ in range(num_rows)
             ],
@@ -606,6 +610,8 @@ def generate_observations_data_generic(
     global_start_month: int,
     global_end_year: int,
     global_end_month: int,
+    global_start_day: int = 1,
+    global_end_day: int = 31,
     search_term: str = "Test",
     fields_list=None,
 ) -> pd.DataFrame:
@@ -642,6 +648,8 @@ def generate_observations_data_generic(
                     global_start_month,
                     global_end_year,
                     global_end_month,
+                    global_start_day,
+                    global_end_day,
                 ).strftime("%Y-%m-%dT%H:%M:%S")
                 for _ in range(num_rows)
             ],

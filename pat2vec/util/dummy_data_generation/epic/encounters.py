@@ -22,6 +22,8 @@ def generate_epic_encounters_data(
     global_start_month: int,
     global_end_year: int = 2023,
     global_end_month: int = 12,
+    global_start_day: int = 1,
+    global_end_day: int = 31,
     fields_list: List[str] = [
         "activity_PatientDurableKey",
         "activity_AdmissionDate",
@@ -42,6 +44,8 @@ def generate_epic_encounters_data(
             global_start_month,
             global_end_year,
             global_end_month,
+            global_start_day,
+            global_end_day,
         )
         discharge_date = admission_date + timedelta(days=random.randint(1, 30))
 

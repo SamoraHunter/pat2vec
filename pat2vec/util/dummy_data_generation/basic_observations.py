@@ -27,6 +27,8 @@ def generate_basic_observations_data(
     global_start_month: int,
     global_end_year: int,
     global_end_month: int,
+    global_start_day: int = 1,
+    global_end_day: int = 31,
     fields_list: Optional[List[str]] = None,
     base_date: Optional[datetime] = None,
 ) -> pd.DataFrame:
@@ -84,6 +86,8 @@ def generate_basic_observations_data(
                     global_start_month,
                     global_end_year,
                     global_end_month,
+                    global_start_day,
+                    global_end_day,
                 ).strftime("%Y-%m-%dT%H:%M:%S")
                 for _ in range(num_rows)
             ]
@@ -93,6 +97,8 @@ def generate_basic_observations_data(
                     global_start_month,
                     global_end_year,
                     global_end_month,
+                    global_start_day,
+                    global_end_day,
                 ).strftime("%Y-%m-%dT%H:%M:%S")
                 for _ in range(num_rows)
             ]
@@ -102,6 +108,8 @@ def generate_basic_observations_data(
                     global_start_month,
                     global_end_year,
                     global_end_month,
+                    global_start_day,
+                    global_end_day,
                 ).strftime("%Y-%m-%dT%H:%M:%S")
                 for _ in range(num_rows)
             ]
@@ -165,6 +173,8 @@ def generate_observations_data(
     global_start_month: int,
     global_end_year: int = 2023,
     global_end_month: int = 12,
+    global_start_day: int = 1,
+    global_end_day: int = 31,
     search_term: str = "Test",
     fields_list: Optional[List[str]] = None,
 ) -> pd.DataFrame:
@@ -215,6 +225,8 @@ def generate_observations_data(
                     global_start_month,
                     global_end_year,
                     global_end_month,
+                    global_start_day,
+                    global_end_day,
                 ).strftime("%Y-%m-%dT%H:%M:%S")
                 for _ in range(num_rows)
             ],
@@ -248,6 +260,8 @@ def generate_basic_observations_textual_obs_data(
     global_start_month: int,
     global_end_year: int,
     global_end_month: int,
+    global_start_day: int = 1,
+    global_end_day: int = 31,
     fields_list: Optional[List[str]] = None,
 ) -> pd.DataFrame:
     """Generates dummy textual data for the 'basic_observations' index."""
@@ -293,6 +307,8 @@ def generate_basic_observations_textual_obs_data(
                     global_start_month,
                     global_end_year,
                     global_end_month,
+                    global_start_day,
+                    global_end_day,
                 ).strftime("%Y-%m-%dT%H:%M:%S")
                 for _ in range(num_rows)
             ],
@@ -308,6 +324,8 @@ def generate_basic_observations_textual_obs_data(
                     global_start_month,
                     global_end_year,
                     global_end_month,
+                    global_start_day,
+                    global_end_day,
                 ).strftime("%Y-%m-%dT%H:%M:%S")
                 for _ in range(num_rows)
             ],

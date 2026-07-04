@@ -17,6 +17,8 @@ def generate_core_o2_data(
     global_start_month: int,
     global_end_year: int,
     global_end_month: int,
+    global_start_day: int = 1,
+    global_end_day: int = 31,
     fields_list: Optional[List[str]] = CORE_O2_FIELDS,
 ) -> pd.DataFrame:
     """Generates dummy data for CORE_SpO2 (oxygen saturation) observations.
@@ -66,6 +68,8 @@ def generate_core_o2_data(
                     global_start_month,
                     global_end_year,
                     global_end_month,
+                    global_start_day,
+                    global_end_day,
                 ).strftime("%Y-%m-%dT%H:%M:%S")
                 for _ in range(num_rows)
             ],
