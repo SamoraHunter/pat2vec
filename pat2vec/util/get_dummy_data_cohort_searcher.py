@@ -166,8 +166,6 @@ def generate_epr_documents_data(
                     global_start_month,
                     global_end_year,
                     global_end_month,
-                    global_start_day,
-                    global_end_day,
                 ).strftime("%Y-%m-%dT%H:%M:%S")
                 for _ in range(num_rows)
             ],
@@ -286,8 +284,6 @@ def generate_epr_documents_personal_data(
                     global_start_month,
                     global_end_year,
                     global_end_month,
-                    global_start_day,
-                    global_end_day,
                 ).strftime("%Y-%m-%d")
                 for _ in range(num_rows)
             ],
@@ -384,8 +380,6 @@ def generate_diagnostic_orders_data(
                     global_start_month,
                     global_end_year,
                     global_end_month,
-                    global_start_day,
-                    global_end_day,
                 ).strftime("%Y-%m-%dT%H:%M:%S")
                 for _ in range(num_rows)
             ],
@@ -395,8 +389,6 @@ def generate_diagnostic_orders_data(
                     global_start_month,
                     global_end_year,
                     global_end_month,
-                    global_start_day,
-                    global_end_day,
                 ).strftime("%Y-%m-%dT%H:%M:%S")
                 for _ in range(num_rows)
             ],
@@ -411,8 +403,6 @@ def generate_diagnostic_orders_data(
                     global_start_month,
                     global_end_year,
                     global_end_month,
-                    global_start_day,
-                    global_end_day,
                 ).strftime("%Y-%m-%dT%H:%M:%S")
                 for _ in range(num_rows)
             ],
@@ -508,8 +498,6 @@ def generate_drug_orders_data(
                     global_start_month,
                     global_end_year,
                     global_end_month,
-                    global_start_day,
-                    global_end_day,
                 ).strftime("%Y-%m-%dT%H:%M:%S")
                 for _ in range(num_rows)
             ]
@@ -519,8 +507,6 @@ def generate_drug_orders_data(
                     global_start_month,
                     global_end_year,
                     global_end_month,
-                    global_start_day,
-                    global_end_day,
                 ).strftime("%Y-%m-%dT%H:%M:%S")
                 for _ in range(num_rows)
             ]
@@ -530,8 +516,6 @@ def generate_drug_orders_data(
                     global_start_month,
                     global_end_year,
                     global_end_month,
-                    global_start_day,
-                    global_end_day,
                 ).strftime("%Y-%m-%dT%H:%M:%S")
                 for _ in range(num_rows)
             ]
@@ -645,8 +629,6 @@ def generate_observations_MRC_text_data(
                     global_start_month,
                     global_end_year,
                     global_end_month,
-                    global_start_day,
-                    global_end_day,
                 ).strftime("%Y-%m-%dT%H:%M:%S")
                 for _ in range(num_rows)
             ],
@@ -748,8 +730,6 @@ def generate_observations_Reports_text_data(
                     global_start_month,
                     global_end_year,
                     global_end_month,
-                    global_start_day,
-                    global_end_day,
                 ).strftime("%Y-%m-%dT%H:%M:%S")
                 for _ in range(num_rows)
             ],
@@ -867,8 +847,6 @@ def generate_appointments_data(
                     global_start_month,
                     global_end_year,
                     global_end_month,
-                    global_start_day,
-                    global_end_day,
                 ).strftime("%Y-%m-%dT%H:%M:%S")
                 for _ in range(num_rows)
             ],
@@ -890,8 +868,6 @@ def generate_appointments_data(
                     global_start_month,
                     global_end_year,
                     global_end_month,
-                    global_start_day,
-                    global_end_day,
                 ).strftime("%Y-%m-%dT%H:%M:%S")
                 for _ in range(num_rows)
             ],
@@ -1013,8 +989,6 @@ def generate_observations_data(
                     global_start_month,
                     global_end_year,
                     global_end_month,
-                    global_start_day,
-                    global_end_day,
                 ).strftime("%Y-%m-%dT%H:%M:%S")
                 for _ in range(num_rows)
             ],
@@ -1124,8 +1098,6 @@ def generate_basic_observations_data(
                     global_start_month,
                     global_end_year,
                     global_end_month,
-                    global_start_day,
-                    global_end_day,
                 ).strftime("%Y-%m-%dT%H:%M:%S")
                 for _ in range(num_rows)
             ]
@@ -1135,8 +1107,6 @@ def generate_basic_observations_data(
                     global_start_month,
                     global_end_year,
                     global_end_month,
-                    global_start_day,
-                    global_end_day,
                 ).strftime("%Y-%m-%dT%H:%M:%S")
                 for _ in range(num_rows)
             ]
@@ -1146,8 +1116,6 @@ def generate_basic_observations_data(
                     global_start_month,
                     global_end_year,
                     global_end_month,
-                    global_start_day,
-                    global_end_day,
                 ).strftime("%Y-%m-%dT%H:%M:%S")
                 for _ in range(num_rows)
             ]
@@ -1264,8 +1232,6 @@ def generate_basic_observations_textual_obs_data(
                     global_start_month,
                     global_end_year,
                     global_end_month,
-                    global_start_day,
-                    global_end_day,
                 ).strftime("%Y-%m-%dT%H:%M:%S")
                 for _ in range(num_rows)
             ],
@@ -1281,8 +1247,6 @@ def generate_basic_observations_textual_obs_data(
                     global_start_month,
                     global_end_year,
                     global_end_month,
-                    global_start_day,
-                    global_end_day,
                 ).strftime("%Y-%m-%dT%H:%M:%S")
                 for _ in range(num_rows)
             ],
@@ -1403,8 +1367,6 @@ def generate_epic_encounters_data(
             global_start_month,
             global_end_year,
             global_end_month,
-            global_start_day,
-            global_end_day,
         )
         discharge_date = admission_date + timedelta(days=random.randint(1, 30))
 
@@ -1501,8 +1463,6 @@ def generate_epic_clinical_notes_data(
                     global_start_month,
                     global_end_year,
                     global_end_month,
-                    global_start_day,
-                    global_end_day,
                 ).strftime("%Y-%m-%dT%H:%M:%S")
                 for _ in range(num_rows)
             ],
@@ -1586,8 +1546,6 @@ def generate_epic_medical_history_data(
                     global_start_month,
                     global_end_year,
                     global_end_month,
-                    global_start_day,
-                    global_end_day,
                 ).strftime("%Y-%m-%dT%H:%M:%S")
                 for _ in range(num_rows)
             ],
@@ -1662,8 +1620,6 @@ def generate_epic_orders_data(
             global_start_month,
             global_end_year,
             global_end_month,
-            global_start_day,
-            global_end_day,
         )
         data = {
             "document_PatientDurableKey": [client_id_code] * num_rows,
@@ -1673,8 +1629,6 @@ def generate_epic_orders_data(
                     global_start_month,
                     global_end_year,
                     global_end_month,
-                    global_start_day,
-                    global_end_day,
                 ).strftime("%Y-%m-%dT%H:%M:%S")
                 for _ in range(num_rows)
             ],
@@ -1684,8 +1638,6 @@ def generate_epic_orders_data(
                     global_start_month,
                     global_end_year,
                     global_end_month,
-                    global_start_day,
-                    global_end_day,
                 ).strftime("%Y-%m-%dT%H:%M:%S")
                 for _ in range(num_rows)
             ],
@@ -1769,8 +1721,6 @@ def generate_epic_lab_results_data(
             global_start_month,
             global_end_year,
             global_end_month,
-            global_start_day,
-            global_end_day,
         )
         data = {
             "document_PatientDurableKey": [client_id_code] * num_rows,
@@ -1780,8 +1730,6 @@ def generate_epic_lab_results_data(
                     global_start_month,
                     global_end_year,
                     global_end_month,
-                    global_start_day,
-                    global_end_day,
                 ).strftime("%Y-%m-%dT%H:%M:%S")
                 for _ in range(num_rows)
             ],
@@ -1925,8 +1873,6 @@ def generate_epic_imaging_reports_data(
                     global_start_month,
                     global_end_year,
                     global_end_month,
-                    global_start_day,
-                    global_end_day,
                 ).strftime("%Y-%m-%dT%H:%M:%S")
                 for _ in range(num_rows)
             ],
@@ -1984,8 +1930,6 @@ def generate_epic_clinical_notes_appointments_data(
             global_start_month,
             global_end_year,
             global_end_month,
-            global_start_day,
-            global_end_day,
         )
         data = {
             "document_PatientDurableKey": [client_id_code] * num_rows,
@@ -2208,7 +2152,7 @@ def cohort_searcher_with_terms_and_search_dummy(
             num_rows = random.choices(range(1, 6), probabilities)[0]
             # Use a default base_date of June 15, 2023 for consistent test behavior
             # But generate dates within the range that would be filtered (June 14-17 to cover possible date slices)
-            base_date = datetime(2023, 6, 14)
+            base_date = datetime(2023, 6, 15)
             print(
                 f"DEBUG cohort_searcher: Generating BMI data with num_rows={num_rows}, base_date={base_date}"
             )
@@ -2991,8 +2935,6 @@ def generate_covid_observations_data(
                     global_start_month,
                     global_end_year,
                     global_end_month,
-                    global_start_day,
-                    global_end_day,
                 )
                 for _ in range(num_rows)
             ],
@@ -3082,8 +3024,6 @@ def generate_hospital_site_data(
                     global_start_month,
                     global_end_year,
                     global_end_month,
-                    global_start_day,
-                    global_end_day,
                 ).strftime("%Y-%m-%dT%H:%M:%S")
                 for _ in range(num_rows)
             ],
@@ -3183,8 +3123,6 @@ def generate_news_data(
                     global_start_month,
                     global_end_year,
                     global_end_month,
-                    global_start_day,
-                    global_end_day,
                 ).strftime("%Y-%m-%dT%H:%M:%S")
                 for _ in range(num_rows)
             ],
@@ -3266,13 +3204,9 @@ def generate_bmi_data(
         date_values = []
         if base_date is not None:
             # For testing: generate dates within a predictable range around base_date
-            # Generate dates centered around base_date with small offsets
+            # All rows use the same date to ensure they're captured when filtering for single-day windows
+            test_day = max(1, min(28, base_date.day))
             for i in range(num_rows):
-                # Use positive offsets to ensure dates are >= base_date (within reasonable range)
-                day_offset = (
-                    0 if num_rows == 1 else (i * 2) - 1
-                )  # For 2 rows: -1, +1 giving days before and after
-                test_day = max(1, min(28, base_date.day + day_offset))
                 date_values.append(
                     datetime(
                         base_date.year,
@@ -3319,8 +3253,6 @@ def generate_bmi_data(
                                 global_start_month,
                                 global_end_year,
                                 global_end_month,
-                                global_start_day,
-                                global_end_day,
                             )
                         )
 
@@ -3961,8 +3893,6 @@ def generate_bed_data(
                     global_start_month,
                     global_end_year,
                     global_end_month,
-                    global_start_day,
-                    global_end_day,
                 ).strftime("%Y-%m-%dT%H:%M:%S")
                 for _ in range(num_rows)
             ],
@@ -4035,8 +3965,6 @@ def generate_vte_data(
                     global_start_month,
                     global_end_year,
                     global_end_month,
-                    global_start_day,
-                    global_end_day,
                 ).strftime("%Y-%m-%dT%H:%M:%S")
                 for _ in range(num_rows)
             ],
@@ -4105,8 +4033,6 @@ def generate_smoking_data(
                     global_start_month,
                     global_end_year,
                     global_end_month,
-                    global_start_day,
-                    global_end_day,
                 ).strftime("%Y-%m-%dT%H:%M:%S")
                 for _ in range(num_rows)
             ],
@@ -4186,8 +4112,6 @@ def generate_core_o2_data(
                     global_start_month,
                     global_end_year,
                     global_end_month,
-                    global_start_day,
-                    global_end_day,
                 ).strftime("%Y-%m-%dT%H:%M:%S")
                 for _ in range(num_rows)
             ],
@@ -4261,8 +4185,6 @@ def generate_core_resus_data(
                     global_start_month,
                     global_end_year,
                     global_end_month,
-                    global_start_day,
-                    global_end_day,
                 ).strftime("%Y-%m-%dT%H:%M:%S")
                 for _ in range(num_rows)
             ],
@@ -4379,8 +4301,6 @@ def generate_problem_list_data(
                     global_start_month,
                     global_end_year,
                     global_end_month,
-                    global_start_day,
-                    global_end_day,
                 ).strftime("%Y-%m-%dT%H:%M:%S")
                 for _ in range(num_rows)
             ],
