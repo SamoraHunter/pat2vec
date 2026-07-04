@@ -90,63 +90,6 @@ def maybe_nan(value: Any, probability: float = 0.2) -> Union[Any, float]:
     return value if random.random() > probability else np.nan
 
 
-def create_random_date_from_globals(
-    start_year: Union[int, str],
-    start_month: Union[int, str],
-    end_year: Union[int, str] = 2023,
-    end_month: Union[int, str] = 12,
-    start_day: Union[int, str] = 1,
-    end_day: Union[int, str] = 31,
-) -> datetime:
-    """Generates a random datetime within a given month-level range.
-
-      Args:
-          start_year: The starting year.
-          start_month: The starting month.
-          end_year: The ending year. Defaults to 2023.
-          end_month: The ending month. Defaults to 12.
-          start_day: The starting day. Defaults to 1.
-          end_day: The ending day. Defaults to 31.
-
-      Returns:
-          A random datetime object within the specified range.
-
-    Raises:
-          TypeError: When invalid date components are provided.
-    """
-    # Input validation for test compatibility
-    for val in [start_year, start_month, start_day, end_year, end_month, end_day]:
-        if not isinstance(val, (int, str)) or (
-            isinstance(val, str) and not val.replace("-", "").isdigit()
-        ):
-            raise TypeError(
-                f"Date component must be an integer or numeric string, got {type(val)}"
-            )
-
-    s_year, s_month, s_day = int(start_year), int(start_month), int(start_day)
-    e_year, e_month, e_day = int(end_year), int(end_month), int(end_day)
-
-    # Clamp days to valid range for the given month and year
-    s_day = max(1, min(s_day, calendar.monthrange(s_year, s_month)[1]))
-    e_day = max(1, min(e_day, calendar.monthrange(e_year, e_month)[1]))
-
-    # Create candidate datetimes for the range
-    start_dt = datetime(s_year, s_month, s_day, 0, 0, 0)
-    end_dt = datetime(e_year, e_month, e_day, 23, 59, 59)
-
-    # Handle invalid ranges by returning the start date, as expected by unit tests
-    # We normalize to date-only comparison to match test expectations for simple range checks
-    if start_dt > end_dt:
-        return start_dt
-
-    time_difference = end_dt - start_dt
-    total_seconds = int(time_difference.total_seconds())
-
-    # Use + 1 to make the range inclusive of the last second
-    random_second = random.randrange(total_seconds + 1)
-    return start_dt + timedelta(seconds=random_second)
-
-
 def generate_epr_documents_data(
     num_rows: int,
     entered_list: List[str],
