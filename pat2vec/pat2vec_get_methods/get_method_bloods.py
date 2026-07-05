@@ -319,24 +319,12 @@ def get_current_pat_bloods(
         # Filter out rows where basicobs_value_numeric is NaN or cannot be converted to numeric
         # and ensure datetime is valid for sorting.
         cleaned_df = filtered_df.copy()
-        if config_obj.verbosity >= 1:
-            logger.info(
-                f"cleaned_df (before numeric conversion and dropna) for {col_name}: {len(cleaned_df)} rows"
-            )
         cleaned_df["basicobs_value_numeric"] = pd.to_numeric(
             cleaned_df["basicobs_value_numeric"], errors="coerce"
         )
         cleaned_df = cleaned_df.dropna(subset=["basicobs_value_numeric", "datetime"])
 
         df_len = len(cleaned_df)
-        if config_obj.verbosity >= 1:
-            logger.info(
-                f"cleaned_df (after numeric conversion and dropna) for {col_name}: {df_len} rows"
-            )
-            if df_len > 0:
-                logger.info(
-                    f"Sample values: {cleaned_df['basicobs_value_numeric'].tolist()}"
-                )
 
         if df_len >= 1:
             # Mean
