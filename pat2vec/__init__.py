@@ -171,7 +171,10 @@ from .pat2vec_get_methods.get_method_vte_status import (
     search_vte,
 )
 from .pat2vec_get_methods.test_get_method_demo import (
+    TestGetDemographics3,
     TestGetMethodDemo,
+    TestProcessDemographicsData,
+    TestSearchDemographics,
 )
 from .pat2vec_main_methods.main_batch import (
     main_batch,
@@ -344,6 +347,98 @@ from .util.current_pat_batch_path_methods import (
 from .util.docker_elastic import (
     ElasticContainer,
 )
+from .util.dummy_data_generation.appointments import (
+    generate_appointments_data,
+)
+from .util.dummy_data_generation.basic_observations import (
+    generate_basic_observations_data,
+    generate_basic_observations_textual_obs_data,
+    generate_observations_data,
+)
+from .util.dummy_data_generation.covid import (
+    generate_covid_observations_data,
+)
+from .util.dummy_data_generation.elasticsearch_population import (
+    generate_observations_MRC_text_data,
+    generate_observations_data_generic,
+    populate_elastic_with_dummy_data,
+)
+from .util.dummy_data_generation.epic.appointments import (
+    generate_epic_clinical_notes_appointments_data,
+)
+from .util.dummy_data_generation.epic.clinical_notes import (
+    generate_epic_clinical_notes_data,
+    generate_epic_medical_history_data,
+    generate_epic_orders_data,
+    generate_patient_timeline,
+    get_patient_timeline_dummy,
+)
+from .util.dummy_data_generation.epic.encounters import (
+    generate_epic_encounters_data,
+)
+from .util.dummy_data_generation.epic.imaging_reports import (
+    generate_epic_imaging_reports_data,
+)
+from .util.dummy_data_generation.epic.lab_results import (
+    generate_epic_lab_results_data,
+)
+from .util.dummy_data_generation.epic.patients import (
+    generate_epic_patients_data,
+)
+from .util.dummy_data_generation.epr_documents import (
+    generate_epr_documents_data,
+    generate_epr_documents_personal_data,
+)
+from .util.dummy_data_generation.generator_helpers import (
+    create_random_date_from_globals,
+    extract_date_range,
+    extract_search_term_obscatalogmasteritem_displayname,
+    generate_uuid,
+    generate_uuid_list,
+    is_safe_host,
+    maybe_nan,
+)
+from .util.dummy_data_generation.observation_router import (
+    cohort_searcher_with_terms_and_search_dummy,
+)
+from .util.dummy_data_generation.observations.bed import (
+    generate_bed_data,
+)
+from .util.dummy_data_generation.observations.bmi import (
+    generate_bmi_data,
+)
+from .util.dummy_data_generation.observations.core_o2 import (
+    generate_core_o2_data,
+)
+from .util.dummy_data_generation.observations.core_resus import (
+    generate_core_resus_data,
+)
+from .util.dummy_data_generation.observations.hospital_site import (
+    generate_hospital_site_data,
+)
+from .util.dummy_data_generation.observations.news import (
+    generate_news_data,
+)
+from .util.dummy_data_generation.observations.smoking import (
+    generate_smoking_data,
+)
+from .util.dummy_data_generation.observations.textual import (
+    generate_observations_Reports_text_data,
+)
+from .util.dummy_data_generation.observations.vte_status import (
+    generate_vte_data,
+)
+from .util.dummy_data_generation.orders import (
+    generate_diagnostic_orders_data,
+    generate_drug_orders_data,
+)
+from .util.dummy_data_generation.problem_list import (
+    generate_problem_list_data,
+)
+from .util.dummy_data_generation.sequence_generators import (
+    generate_patient_timeline_faker,
+    run_generate_patient_timeline_and_append,
+)
 from .util.elasticsearch_methods import (
     get_guess_datetime_column,
     guess_datetime_columns,
@@ -401,48 +496,7 @@ from .util.get_best_gpu import (
     set_best_gpu,
 )
 from .util.get_dummy_data_cohort_searcher import (
-    cohort_searcher_with_terms_and_search_dummy,
-    create_random_date_from_globals,
     dummy_CAT,
-    extract_date_range,
-    extract_search_term_obscatalogmasteritem_displayname,
-    generate_appointments_data,
-    generate_basic_observations_data,
-    generate_basic_observations_textual_obs_data,
-    generate_bed_data,
-    generate_bmi_data,
-    generate_core_o2_data,
-    generate_core_resus_data,
-    generate_covid_observations_data,
-    generate_diagnostic_orders_data,
-    generate_drug_orders_data,
-    generate_epic_clinical_notes_appointments_data,
-    generate_epic_clinical_notes_data,
-    generate_epic_encounters_data,
-    generate_epic_imaging_reports_data,
-    generate_epic_lab_results_data,
-    generate_epic_medical_history_data,
-    generate_epic_orders_data,
-    generate_epic_patients_data,
-    generate_epr_documents_data,
-    generate_epr_documents_personal_data,
-    generate_hospital_site_data,
-    generate_news_data,
-    generate_observations_MRC_text_data,
-    generate_observations_Reports_text_data,
-    generate_observations_data,
-    generate_patient_timeline,
-    generate_patient_timeline_faker,
-    generate_problem_list_data,
-    generate_smoking_data,
-    generate_uuid,
-    generate_uuid_list,
-    generate_vte_data,
-    get_patient_timeline_dummy,
-    is_safe_host,
-    maybe_nan,
-    populate_elastic_with_dummy_data,
-    run_generate_patient_timeline_and_append,
 )
 from .util.get_dummy_data_medcat_annotation import (
     augment_dummy_annotations_file,
@@ -461,6 +515,22 @@ from .util.get_method_index_map import (
 )
 from .util.get_start_end_year_month import (
     get_start_end_year_month,
+)
+from .util.helper_functions import (
+    HELPER_FUNCTIONS_VERSION,
+    clear_patient_features,
+    ensure_index,
+    extract_nhs_numbers,
+    get_all_features,
+    get_df_from_db,
+    get_df_from_db_with_temporal_filter,
+    get_ram_usage,
+    get_search_client_idcode_list_from_nhs_number_list,
+    sanitize_for_path,
+    save_annotations_to_db,
+    save_patient_features,
+    save_raw_patient_batch,
+    try_parse_list_string,
 )
 from .util.impute_data_for_pipe import (
     mean_impute_dataframe,
@@ -533,6 +603,7 @@ from .util.methods_get import (
     exist_check,
     filter_stripped_list,
     get_empty_date_vector,
+    get_free_gpu,
     list_dir_wrapper,
     read_csv_wrapper,
     read_remote,
@@ -705,6 +776,7 @@ __all__ = [
     "EthnicityAbstractor",
     "GET_METHOD_DEFAULT_FIELDS_MAP",
     "GET_METHOD_INDEX_MAP",
+    "HELPER_FUNCTIONS_VERSION",
     "HOSP_SITE_FIELDS",
     "MAPPINGS",
     "PathsClass",
@@ -712,7 +784,10 @@ __all__ = [
     "SEARCH_TERM_ES",
     "SEARCH_TERM_PLAIN",
     "SMOKING_FIELDS",
+    "TestGetDemographics3",
     "TestGetMethodDemo",
+    "TestProcessDemographicsData",
+    "TestSearchDemographics",
     "VTE_FIELDS",
     "add_offset_column",
     "aggregate_dataframe_mean",
@@ -769,6 +844,7 @@ __all__ = [
     "check_pat_document_annotation_complete",
     "check_patients_existence",
     "clean_observation_value",
+    "clear_patient_features",
     "coerce_document_df_to_medcat_trainer_input",
     "cohort_searcher_no_terms",
     "cohort_searcher_no_terms_fuzzy",
@@ -812,6 +888,7 @@ __all__ = [
     "dummy_CAT",
     "dummy_medcat_annotation_generator",
     "dump_results",
+    "ensure_index",
     "enum_exact_target_date_vector",
     "enum_target_date_vector",
     "exist_check",
@@ -820,6 +897,7 @@ __all__ = [
     "extract_datetime_from_binary_columns_chunk_reader",
     "extract_datetime_to_column",
     "extract_labels_from_medcat_annotation_export",
+    "extract_nhs_numbers",
     "extract_search_term_obscatalogmasteritem_displayname",
     "extract_treatment_id_list_from_docs",
     "extract_types_from_csv",
@@ -863,6 +941,7 @@ __all__ = [
     "generate_observations_MRC_text_data",
     "generate_observations_Reports_text_data",
     "generate_observations_data",
+    "generate_observations_data_generic",
     "generate_patient_timeline",
     "generate_patient_timeline_faker",
     "generate_pie_charts",
@@ -872,6 +951,7 @@ __all__ = [
     "generate_uuid",
     "generate_uuid_list",
     "generate_vte_data",
+    "get_all_features",
     "get_all_fields_for_method",
     "get_all_method_default_fields",
     "get_all_method_indices",
@@ -901,6 +981,8 @@ __all__ = [
     "get_demographics3",
     "get_demographics3_batch",
     "get_demographics_data",
+    "get_df_from_db",
+    "get_df_from_db_with_temporal_filter",
     "get_empty_date_vector",
     "get_epic_clinical_notes",
     "get_epic_clinical_notes_appointments",
@@ -910,6 +992,7 @@ __all__ = [
     "get_epic_medical_history",
     "get_epic_orders",
     "get_epic_patients",
+    "get_free_gpu",
     "get_guess_datetime_column",
     "get_hosp_site",
     "get_index_for_method",
@@ -952,6 +1035,8 @@ __all__ = [
     "get_pat_document_annotation_batch_reports",
     "get_pat_ipw_record",
     "get_patient_timeline_dummy",
+    "get_ram_usage",
+    "get_search_client_idcode_list_from_nhs_number_list",
     "get_smoking",
     "get_start_end_year_month",
     "get_treatment_docs_by_iterative_multi_term_cohort_searcher_no_terms_fuzzy",
@@ -1075,10 +1160,14 @@ __all__ = [
     "run_generate_patient_timeline_and_append",
     "run_pip_compile",
     "sample_by_terms",
+    "sanitize_for_path",
     "sanitize_hospital_ids",
+    "save_annotations_to_db",
     "save_group",
     "save_missing_percentage",
     "save_missing_values_pickle",
+    "save_patient_features",
+    "save_raw_patient_batch",
     "search_appointments",
     "search_bed_data",
     "search_bloods_data",
@@ -1115,6 +1204,7 @@ __all__ = [
     "stringlist2searchlist",
     "temporary_file",
     "test_datetime_formats",
+    "try_parse_list_string",
     "update_global_start_date",
     "update_pbar",
     "validate_and_fix_global_dates",

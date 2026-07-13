@@ -52,6 +52,9 @@ def _get_source_record(
             Returns an empty DataFrame if the file is not found, is empty, or if
             no rows remain after filtering.
     """
+    # Try database first if available, then fall back to files
+    df = pd.DataFrame()
+
     if (
         config_obj
         and getattr(config_obj, "storage_backend", "file") == "database"
@@ -62,14 +65,37 @@ def _get_source_record(
                 f"Reading annotations from DB table {table_name} for patient {pat_id}"
             )
         df = get_df_from_db(config_obj, "annotations", table_name, patient_ids=[pat_id])
+
+        # If database is empty but files exist, try reading from file
         if df.empty:
-            if verbose >= 10:
-                logger.debug(
-                    f"No records found in DB table {table_name} for patient {pat_id}"
-                )
-            return pd.DataFrame()
+            file_path = f"{base_path}/{pat_id}.csv"
+            if os.path.exists(file_path):
+                if verbose >= 10:
+                    logger.debug(
+                        f"DB table {table_name} empty for patient {pat_id}, reading from CSV file instead"
+                    )
+                try:
+                    df = pd.read_csv(file_path)
+                    if df.empty:
+                        if verbose >= 10:
+                            logger.warning(
+                                f"Empty CSV file for patient {pat_id} at {base_path}"
+                            )
+                        return pd.DataFrame()
+                except Exception as e:
+                    if verbose >= 10:
+                        logger.error(
+                            f"Error reading CSV for patient {pat_id} at {base_path}: {e}"
+                        )
+                    return pd.DataFrame()
+            else:
+                if verbose >= 10:
+                    logger.debug(
+                        f"No records found in DB table {table_name} for patient {pat_id}, and no file at {file_path}"
+                    )
+                return pd.DataFrame()
     else:
-        # File-based fallback
+        # File-based fallback (original logic for file backend)
         file_path = f"{base_path}/{pat_id}.csv"
         if not os.path.exists(file_path):
             if verbose >= 10:

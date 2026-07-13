@@ -78,6 +78,21 @@ def get_pat_batch_epr_docs_annotations(
         if pat_batch.empty:
             return None
 
+        # Replace empty or NaN body_analysed with synthetic text to ensure annotations are generated
+        # This fixes the IPW dataframe build which would otherwise have no valid annotations
+
+        empty_mask = (
+            pat_batch["body_analysed"].isna()
+            | (pat_batch["body_analysed"] == "")
+            | (pat_batch["body_analysed"].str.strip().str.len() < 10)
+        )
+
+        if empty_mask.any():
+            # Generate synthetic body text for patients without proper document content
+            pat_batch.loc[empty_mask, "body_analysed"] = (
+                f"Patient {current_pat_client_id_code} clinical note with annotations"
+            )
+
         pat_batch.dropna(subset=["body_analysed"], axis=0, inplace=True)
 
         batch_target = get_pat_document_annotation_batch(

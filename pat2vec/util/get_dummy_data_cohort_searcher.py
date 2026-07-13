@@ -151,12 +151,13 @@ def generate_epr_documents_data(
             "document_guid": [str(uuid.uuid4()).split("-")[0] for _ in range(num_rows)],
             "document_description": ["clinical_note_summary" for i in range(num_rows)],
             # "body_analysed": [faker.paragraph() for _ in range(num_rows)],
+            # Generate more realistic clinical notes by combining sample mentions
             "body_analysed": [
                 (
                     generate_patient_timeline(current_pat_client_id_code)
                     if use_GPT
                     else get_patient_timeline_dummy(current_pat_client_id_code)
-                    or "Patient presented with clinical symptoms for evaluation."
+                    or generate_synthetic_clinical_note(current_pat_client_id_code)
                 )
                 for _ in range(num_rows)
             ],
@@ -4203,6 +4204,75 @@ def generate_core_o2_data(
     return final_df[fields_list]
 
 
+def _calculate_age_at_observation(dob: datetime, observation_date: datetime) -> int:
+    """Calculates age in years at the time of observation.
+
+    Args:
+        dob: Date of birth as a datetime object.
+        observation_date: The date of the observation.
+
+    Returns:
+        Age in years as an integer.
+    """
+    age = observation_date.year - dob.year
+    if (observation_date.month, observation_date.day) < (dob.month, dob.day):
+        age -= 1
+    return age
+
+
+def _get_dnr_probability(age: int, is_icu_hdu: bool = False) -> float:
+    """Returns probability of "Not for CPR" status based on age and context.
+
+    Realistic clinical patterns:
+    - Young patients (<60): >95% "Not for CPR"
+    - Middle age (60-80): 80-90% "Not for CPR" with gradual increase in DNR
+    - Elderly (>80): ~70% "Not for CPR", 20-25% "For CPR"
+
+    ICU/HDU patients have higher rates of DNR/DNH decisions.
+
+    Args:
+        age: Patient's age in years.
+        is_icu_hdu: Whether the observation is from ICU/HDU context.
+
+    Returns:
+        Probability of "Not for cardiopulmonary resuscitation".
+    """
+    if age < 60:
+        base_prob = random.uniform(0.95, 0.98)
+    elif age < 80:
+        age_factor = (age - 60) / 20
+        base_prob = 0.80 + age_factor * 0.10
+    else:
+        base_prob = random.uniform(0.70, 0.75)
+
+    if is_icu_hdu:
+        base_prob += random.uniform(0.10, 0.20)
+        base_prob = min(base_prob, 0.99)
+
+    return base_prob
+
+
+def _determine_resuscitation_status(
+    age: int, observation_date: datetime, is_icu_hdu: bool = False
+) -> str:
+    """Determines resuscitation status based on age and context.
+
+    Args:
+        age: Patient's age in years.
+        observation_date: Date of the observation.
+        is_icu_hdu: Whether this is an ICU/HDU context.
+
+    Returns:
+        Either "For cardiopulmonary resuscitation" or "Not for cardiopulmonary resuscitation".
+    """
+    not_for_cpr_prob = _get_dnr_probability(age, is_icu_hdu)
+
+    if random.random() < not_for_cpr_prob:
+        return "Not for cardiopulmonary resuscitation"
+    else:
+        return "For cardiopulmonary resuscitation"
+
+
 def generate_core_resus_data(
     num_rows: int,
     entered_list: List[str],
@@ -4214,7 +4284,14 @@ def generate_core_resus_data(
     global_end_day: int = 31,
     fields_list: List[str] = CORE_RESUS_FIELDS,
 ) -> pd.DataFrame:
-    """Generates dummy data for CORE_RESUS_STATUS observations.
+    """Generates dummy data for CORE_RESUS_STATUS observations with realistic clinical patterns.
+
+    The function now incorporates age-correlated probability distributions for resuscitation status:
+    - Young patients (<60): >95% "Not for CPR"
+    - Middle age (60-80): 80-90% "Not for CPR" with gradual increase in DNR
+    - Elderly (>80): ~70% "Not for CPR", 20-25% "For CPR"
+
+    ICU/HDU contexts have higher rates of DNR/DNH decisions.
 
     Args:
         num_rows: Number of rows to generate per client.
@@ -4235,37 +4312,50 @@ def generate_core_resus_data(
     """
     df_holder_list = []
 
-    # These are the exact values the feature calculation function looks for.
-    resuscitation_statuses = [
-        "For cardiopulmonary resuscitation",
-        "Not for cardiopulmonary resuscitation",
-    ]
-
     for client_id_code in entered_list:
+        dob = faker.date_of_birth(minimum_age=18, maximum_age=90)
+
         data = {
             "observation_guid": [faker.uuid4() for _ in range(num_rows)],
             "client_idcode": [client_id_code for _ in range(num_rows)],
             "obscatalogmasteritem_displayname": [
                 "CORE_RESUS_STATUS" for _ in range(num_rows)
             ],
-            "observation_valuetext_analysed": [
-                random.choice(resuscitation_statuses) for _ in range(num_rows)
-            ],
-            "observationdocument_recordeddtm": [
-                create_random_date_from_globals(
-                    global_start_year,
-                    global_start_month,
-                    global_end_year,
-                    global_end_month,
-                    global_start_day,
-                    global_end_day,
-                ).strftime("%Y-%m-%dT%H:%M:%S")
-                for _ in range(num_rows)
-            ],
-            "clientvisit_visitidcode": [
-                f"visit_{faker.random_number(digits=8)}" for _ in range(num_rows)
-            ],
+            "observation_valuetext_analysed": [],
+            "observationdocument_recordeddtm": [],
+            "clientvisit_visitidcode": [],
         }
+
+        observation_dates = []
+        resus_statuses = []
+        visit_ids = []
+
+        for _ in range(num_rows):
+            obs_date = create_random_date_from_globals(
+                global_start_year,
+                global_start_month,
+                global_end_year,
+                global_end_month,
+                global_start_day,
+                global_end_day,
+            )
+
+            age_at_observation = _calculate_age_at_observation(dob, obs_date)
+
+            is_icu_hdu = random.random() < 0.15
+
+            status = _determine_resuscitation_status(
+                age_at_observation, obs_date, is_icu_hdu
+            )
+
+            resus_statuses.append(status)
+            observation_dates.append(obs_date.strftime("%Y-%m-%dT%H:%M:%S"))
+            visit_ids.append(f"visit_{faker.random_number(digits=8)}")
+
+        data["observation_valuetext_analysed"] = resus_statuses
+        data["observationdocument_recordeddtm"] = observation_dates
+        data["clientvisit_visitidcode"] = visit_ids
+
         df_holder_list.append(pd.DataFrame(data))
 
     if not df_holder_list:
@@ -4402,3 +4492,42 @@ generate_diagnostics_data = generate_diagnostic_orders_data
 generate_drugs_data = generate_drug_orders_data
 generate_reports_data = generate_observations_Reports_text_data
 generate_vte_status_data = generate_vte_data
+
+
+def generate_synthetic_clinical_note(client_idcode: str) -> str:
+    """Generates a synthetic clinical note with varied mentions for annotation testing.
+
+    This function creates realistic-looking clinical notes that include common
+    medical terms and conditions. These notes are designed to work well with
+    dummy MedCAT annotations, ensuring IPW demonstration has valid data.
+
+    Args:
+        client_idcode: The patient ID (used for reproducibility via hashing).
+
+    Returns:
+        A synthetic clinical note string containing various medical mentions.
+    """
+    # Sample medical conditions and symptoms from the gold standard CUIs
+    sample_conditions = [
+        "Patient has a history of hypertension.",
+        "The patient reports persistent cough and fever.",
+        "Shortness of breath noted on examination.",
+        "Fever with chills was recorded.",
+        "Hyperlipidemia diagnosed on previous visit.",
+        "Diarrhea reported for 3 days duration.",
+    ]
+
+    # Use hash of client_idcode to ensure reproducibility while having variety
+    seed = abs(hash(client_idcode)) % len(sample_conditions)
+
+    # Generate a clinical note with 2-4 random conditions/symptoms
+    import random
+
+    random.seed(seed + 100)  # Different seed per patient but deterministic
+
+    num_mentions = min(random.randint(2, 4), len(sample_conditions))
+    selected_mentions = random.sample(sample_conditions, num_mentions)
+
+    clinical_note = " ".join(selected_mentions) + " Clinical evaluation completed."
+
+    return clinical_note

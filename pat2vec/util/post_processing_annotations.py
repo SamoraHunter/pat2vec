@@ -705,7 +705,49 @@ def retrieve_pat_annots_mct_epr(
                 patient_ids=[client_idcode],
                 columns=cols,
             )
-            if not df.empty:
+
+            # If database is empty but file exists, try reading from file
+            if df.empty:
+                path_map = {
+                    "epr": config_obj.pre_document_annotation_batch_path,
+                    "mct": config_obj.pre_document_annotation_batch_path_mct,
+                    "textual_obs": config_obj.pre_textual_obs_annotation_batch_path,
+                    "epic_clinical_notes": config_obj.pre_epic_clinical_notes_annotation_batch_path,
+                    "epic_clinical_notes_appointments": config_obj.pre_epic_clinical_notes_appointments_annotation_batch_path,
+                    "epic_imaging_reports": config_obj.pre_epic_imaging_reports_annotation_batch_path,
+                    "epic_medical_history": config_obj.pre_epic_medical_history_annotation_batch_path,
+                    "epic_orders": config_obj.pre_epic_orders_annotation_batch_path,
+                    "report": config_obj.pre_document_annotation_batch_path_reports,
+                }
+
+                # Map table names to path keys
+                table_to_path_key = {
+                    "ann_epr_docs": "epr",
+                    "ann_mct_docs": "mct",
+                    "ann_textual_obs": "textual_obs",
+                    "ann_epic_clinical_notes": "epic_clinical_notes",
+                    "ann_epic_clinical_notes_appointments": "epic_clinical_notes_appointments",
+                    "ann_epic_imaging_reports": "epic_imaging_reports",
+                    "ann_epic_medical_history": "epic_medical_history",
+                    "ann_epic_orders": "epic_orders",
+                    "ann_reports": "report",
+                }
+
+                path_key = table_to_path_key.get(table)
+                if path_key and path_key in path_map:
+                    base_path = path_map[path_key]
+                    file_path = f"{base_path}/{client_idcode}.csv"
+                    if os.path.exists(file_path):
+                        try:
+                            avail = pd.read_csv(file_path, nrows=0).columns
+                            use_cols = [c for c in cols if c in avail] if cols else None
+                            df = pd.read_csv(file_path, usecols=use_cols)
+                            if not df.empty:
+                                df["annotation_batch_source"] = source_name
+                                all_annots_dfs.append(df)
+                        except Exception as e:
+                            logger.debug(f"File fallback failed for {file_path}: {e}")
+            else:
                 df["annotation_batch_source"] = source_name
                 all_annots_dfs.append(df)
     else:

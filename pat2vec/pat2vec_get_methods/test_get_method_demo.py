@@ -170,7 +170,7 @@ class TestSearchDemographics(unittest.TestCase):
             config_with_paths.root_path = tmpdir
             config_with_paths.proj_name = "test_project"
 
-            result = search_demographics(
+            search_demographics(
                 cohort_searcher_with_terms_and_search=mock_cohort_searcher,
                 client_id_codes=["P1"],
                 start_year="2020",
@@ -183,7 +183,7 @@ class TestSearchDemographics(unittest.TestCase):
                 output_filename="demographics.csv",
             )
 
-            expected_path = os.path.join(tmpdir, "test_project", "demographics.csv")
+            os.path.join(tmpdir, "test_project", "demographics.csv")
             mock_cohort_searcher.assert_called_once()
 
     @patch(
@@ -199,7 +199,7 @@ class TestSearchDemographics(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmpdir:
             test_file = os.path.join(tmpdir, "demographics.csv")
 
-            result1 = search_demographics(
+            search_demographics(
                 cohort_searcher_with_terms_and_search=mock_cohort_searcher,
                 client_id_codes=["P1"],
                 start_year="2020",
@@ -288,7 +288,7 @@ class TestGetDemographics3(unittest.TestCase):
         mock_config = MagicMock()
         mock_config.verbosity = 0
 
-        result = get_demographics3(
+        get_demographics3(
             patlist=["P1", "P2"],
             target_date_range=(2020, 1, 1, 2020, 12, 31),
             cohort_searcher_with_terms_and_search=MagicMock(),
