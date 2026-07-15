@@ -1,4 +1,6 @@
+import gc
 import logging
+from contextlib import contextmanager
 from typing import List, Union, Optional, Dict, Any, Tuple, Type
 from pathlib import Path
 import pandas as pd
@@ -12,6 +14,13 @@ except ImportError:
     MEDCAT_AVAILABLE = False  # type: ignore
     DeIdModel = None  # type: ignore
     spacy = None  # type: ignore
+
+try:
+    from tqdm.auto import tqdm
+
+    TQDM_AVAILABLE = True
+except ImportError:
+    TQDM_AVAILABLE = False
 
 
 # Default PII labels from the MedCAT DeId model description.
@@ -32,6 +41,35 @@ _DEFAULT_PII_LABELS = [
     "HCPC Number",
     "Accession Number",
 ]
+
+
+@contextmanager
+def suppress_gc_collect():
+    """Neutralizes gc.collect() calls for the duration of the block.
+
+    MedCAT's internal pipeline (medcat/pipe.py -> _ensure_serializable /
+    serialize_entities) calls gc.collect() once per document. In long-running
+    Python sessions with large objects already resident in memory (e.g. a big
+    DataFrame), each of these calls walks the whole tracked object graph and
+    can dominate runtime -- in testing this accounted for >90% of wall-clock
+    time on a GPU-bound inference workload, making it look like the GPU was
+    never being used when in fact it was idle waiting on gc.collect().
+
+    Note: gc.disable() alone does NOT fix this, because MedCAT calls
+    gc.collect() explicitly rather than relying on automatic triggering.
+    This context manager patches gc.collect itself to a no-op instead.
+
+    Safe for inference-only workloads (no long-lived reference cycles are
+    being created here). If you run this over a very large DataFrame for a
+    long time, prefer the chunked methods below, which call a real
+    gc.collect() between chunks.
+    """
+    real_collect = gc.collect
+    gc.collect = lambda *args, **kwargs: 0
+    try:
+        yield
+    finally:
+        gc.collect = real_collect
 
 
 class DeIdAnonymizer:
@@ -56,6 +94,7 @@ class DeIdAnonymizer:
         model_path: Optional[Union[str, Path]] = None,
         log_level: str = "INFO",
         disable_chunking: bool = True,
+        chunking_overlap_window: Optional[int] = None,
     ):
         """Initializes the DeIdAnonymizer.
 
@@ -64,11 +103,26 @@ class DeIdAnonymizer:
                 the model is loaded upon initialization.
             log_level: The logging level for the instance (e.g., "INFO", "DEBUG").
             disable_chunking: If True (default), disables the chunking overlap
-                window on the transformer NER component. This prevents multiprocessing
-                from hanging in most environments. Note: disabling chunking means only
-                the first ~512 tokens of very long documents will be processed.
-                Set to False only if your documents are short or you have confirmed
-                chunking works in your environment.
+                window on the transformer NER component. Note: disabling chunking
+                means only the first ~512 tokens of very long documents will be
+                scanned for PII -- anything beyond that is NOT redacted, which is
+                a real information-governance risk for long clinical notes.
+
+                IMPORTANT: the hang risk this guards against is specifically tied
+                to *multiprocessing* (n_process > 1) -- see the warning in
+                MedCAT's own deid.py source. If you always call with n_process=1
+                (recommended when using a GPU, since multiple processes fight
+                over CUDA context anyway), you do NOT need to disable chunking.
+                Consider setting disable_chunking=False and passing
+                chunking_overlap_window explicitly, or call `enable_chunking()`
+                after construction once you've confirmed n_process=1 works
+                without hanging in your environment.
+            chunking_overlap_window: If disable_chunking is False, sets this
+                stride/overlap value (in tokens) on the transformer NER
+                component so long documents are scanned in overlapping windows
+                rather than truncated at ~512 tokens. A small positive value
+                (e.g. 32-50) is a reasonable starting point. Ignored if
+                disable_chunking is True.
         """
         self.model: Optional[Type[DeIdModel]] = None
         self.model_path = model_path
@@ -76,6 +130,7 @@ class DeIdAnonymizer:
         self.pii_labels: List[str] = []
         self.anonymization_log: List[Dict[str, Any]] = []
         self.disable_chunking = disable_chunking
+        self.chunking_overlap_window = chunking_overlap_window
 
         # Setup logging
         self.logger = logging.getLogger(f"{__name__}.DeIdAnonymizer")
@@ -140,6 +195,11 @@ class DeIdAnonymizer:
             # The warning from MedCAT itself recommends this approach.
             if self.disable_chunking:
                 self._apply_chunking_fix()
+            elif self.chunking_overlap_window is not None:
+                # User explicitly wants chunking enabled with a given overlap
+                # window -- apply it now (only safe with n_process=1; see
+                # docstring on __init__ and enable_chunking()).
+                self.enable_chunking(self.chunking_overlap_window)
 
             self._log_operation(
                 "model_loaded",
@@ -182,6 +242,109 @@ class DeIdAnonymizer:
                 f"Could not apply chunking fix (model structure may differ): {e}. "
                 "If processing hangs, inspect `model.cat._addl_ner` manually."
             )
+
+    def enable_chunking(
+        self, overlap_window: int = 32, silence_repeated_warning: bool = True
+    ) -> None:
+        """Enables chunking on the transformer NER component so long documents
+        are scanned in overlapping windows instead of being truncated at ~512
+        tokens.
+
+        SAFETY NOTE: only use this with n_process=1 in all subsequent
+        anonymize_* calls. The known hang risk documented in MedCAT's own
+        deid.py source is specifically about *multiprocessing*
+        (n_process > 1) combined with chunking -- not single-process use.
+        If you need multiple processes, leave chunking disabled instead, or
+        thoroughly test for hangs in your specific environment first.
+
+        Args:
+            overlap_window: The stride/overlap size in tokens. A small
+                positive value (e.g. 32-50) works well for typical clinical
+                notes. Must be >= 0 (None disables chunking).
+            silence_repeated_warning: MedCAT's own deid_multi_texts() logs a
+                warning about the multiprocessing hang risk on EVERY call --
+                which, when processing a DataFrame in many chunks, means the
+                same warning repeats constantly. Since this method's own
+                log message above already communicates that information once,
+                silence_repeated_warning=True (default) raises the level of
+                MedCAT's specific 'medcat.utils.ner.deid' logger to ERROR so
+                it stops repeating. This does not affect any other MedCAT
+                logging. Set False to keep seeing MedCAT's own warning on
+                every call.
+        """
+        self._check_model_loaded()
+        try:
+            ner = self.model.cat._addl_ner[0]
+            ner.config.general.chunking_overlap_window = overlap_window
+            ner.create_eval_pipeline()
+            self.disable_chunking = False
+            self.chunking_overlap_window = overlap_window
+            self.logger.info(
+                f"Chunking ENABLED with overlap_window={overlap_window}. "
+                "Long documents will now be scanned in full via overlapping "
+                "windows rather than truncated at ~512 tokens. "
+                "Ensure all anonymize_* calls use n_process=1."
+            )
+            if silence_repeated_warning:
+                logging.getLogger("medcat.utils.ner.deid").setLevel(logging.ERROR)
+                self.logger.info(
+                    "Silenced MedCAT's repeated per-call chunking warning "
+                    "(medcat.utils.ner.deid logger set to ERROR level). "
+                    "Call `silence_medcat_chunking_warning(False)` to restore it."
+                )
+        except (AttributeError, IndexError) as e:
+            self.logger.error(
+                f"Could not enable chunking (model structure may differ): {e}"
+            )
+            raise
+
+    def silence_medcat_chunking_warning(self, silence: bool = True) -> None:
+        """Toggles MedCAT's own repeated per-call chunking-hang warning.
+
+        This warning is emitted by MedCAT itself (not this wrapper class)
+        every time deid_multi_texts() is called while chunking is enabled --
+        which becomes noisy across many DataFrame chunks. This only affects
+        the specific 'medcat.utils.ner.deid' logger, not other MedCAT logging.
+
+        Args:
+            silence: If True, raises that logger to ERROR level (hiding the
+                warning). If False, restores it to WARNING level.
+        """
+        level = logging.ERROR if silence else logging.WARNING
+        logging.getLogger("medcat.utils.ner.deid").setLevel(level)
+        self.logger.info(
+            f"MedCAT chunking warning {'silenced' if silence else 'restored'} "
+            f"(medcat.utils.ner.deid logger set to {logging.getLevelName(level)})."
+        )
+
+    def get_gpu_status(self) -> Dict[str, Any]:
+        """Reports whether the underlying transformer NER model is on GPU.
+
+        Returns:
+            A dictionary with device info for the transformer component,
+            or an explanatory message if it could not be determined.
+        """
+        self._check_model_loaded()
+        try:
+            ner = self.model.cat._addl_ner[0]
+            info: Dict[str, Any] = {}
+            if hasattr(ner, "ner_pipe"):
+                info["ner_pipe_device"] = str(ner.ner_pipe.device)
+            try:
+                import torch
+
+                info["model_param_device"] = str(next(ner.model.parameters()).device)
+                info["cuda_available"] = torch.cuda.is_available()
+                if torch.cuda.is_available():
+                    info["cuda_device_name"] = torch.cuda.get_device_name(0)
+                    info["cuda_memory_allocated_mb"] = round(
+                        torch.cuda.memory_allocated(0) / 1024**2, 1
+                    )
+            except ImportError:
+                pass
+            return info
+        except (AttributeError, IndexError) as e:
+            return {"error": f"Could not determine GPU status: {e}"}
 
     def _check_model_loaded(self) -> None:
         """Checks if a model is loaded, raising a RuntimeError if not."""
@@ -248,6 +411,7 @@ class DeIdAnonymizer:
         batch_size: int = 100,
         verify_sample: bool = False,
         sample_size: int = 10,
+        suppress_gc: bool = True,
     ) -> Union[List[str], Tuple[List[str], Dict]]:
         """Anonymizes a list of text strings, with parallel processing support.
 
@@ -261,6 +425,13 @@ class DeIdAnonymizer:
                 returns a report.
             sample_size: The size of the random sample to verify if `verify_sample`
                 is True.
+            suppress_gc: If True (default), neutralizes MedCAT's internal
+                per-document gc.collect() calls for the duration of this call.
+                This can be a 10-20x speedup in long-running sessions with large
+                objects in memory, since gc.collect() cost scales with total
+                tracked objects, not just this operation's own allocations.
+                Safe for inference; set False if you suspect memory growth from
+                reference cycles on a very long-running process.
 
         Returns:
             If `verify_sample` is False, returns a list of anonymized texts.
@@ -270,9 +441,11 @@ class DeIdAnonymizer:
         self._check_model_loaded()
 
         try:
-            anonymized: List[str] = self.model.deid_multi_texts(
-                texts, redact=redact, n_process=n_process, batch_size=batch_size
-            )
+            ctx = suppress_gc_collect() if suppress_gc else _null_context()
+            with ctx:
+                anonymized: List[str] = self.model.deid_multi_texts(
+                    texts, redact=redact, n_process=n_process, batch_size=batch_size
+                )
 
             self._log_operation(
                 "multiple_texts",
@@ -281,6 +454,7 @@ class DeIdAnonymizer:
                     "redact": redact,
                     "n_process": n_process,
                     "batch_size": batch_size,
+                    "suppress_gc": suppress_gc,
                 },
             )
 
@@ -305,8 +479,15 @@ class DeIdAnonymizer:
         suffix: str = "_anonymized",
         n_process: int = 1,
         batch_size: int = 100,
+        suppress_gc: bool = True,
+        quiet_medcat_progress: bool = False,
     ) -> pd.DataFrame:
         """Anonymizes specified text columns in a pandas DataFrame.
+
+        For very large DataFrames where you want progress visibility and
+        crash-safety, prefer `anonymize_dataframe_chunked` instead -- this
+        method processes everything in one pass with no intermediate
+        checkpointing.
 
         Args:
             df: The input DataFrame.
@@ -318,8 +499,19 @@ class DeIdAnonymizer:
                 anonymized columns added.
             suffix: The suffix to add to new anonymized column names. Ignored
                 if `inplace` is True.
-            n_process: The number of processes for parallel execution.
+            n_process: The number of processes for parallel execution. Keep at 1
+                if using a GPU -- multiprocessing workers each try to grab CUDA
+                context independently, which causes conflicts/CPU fallback.
             batch_size: The number of texts to process in each batch.
+            suppress_gc: If True (default), neutralizes MedCAT's internal
+                per-document gc.collect() calls for the duration of this call.
+                See `suppress_gc_collect` docstring for details. This is often
+                the difference between the run appearing to hang at 0% GPU
+                utilization and running at full GPU utilization.
+            quiet_medcat_progress: If True, silences MedCAT's own internal
+                tqdm bar (one per column). Default False here since this
+                method only makes one call per column (not per-chunk), so
+                there's less bar-spam than in anonymize_dataframe_chunked.
 
         Returns:
             A DataFrame with the specified text columns anonymized.
@@ -338,23 +530,28 @@ class DeIdAnonymizer:
         result_df = df if inplace else df.copy()
         total_texts_processed = 0
 
-        for col in text_columns:
-            self.logger.info(f"Anonymizing column: {col}")
+        gc_ctx = suppress_gc_collect() if suppress_gc else _null_context()
+        progress_ctx = (
+            suppress_medcat_progress() if quiet_medcat_progress else _null_context()
+        )
+        with gc_ctx, progress_ctx:
+            for col in text_columns:
+                self.logger.info(f"Anonymizing column: {col}")
 
-            texts_to_process = df[col].fillna("").astype(str).tolist()
-            total_texts_processed += len(texts_to_process)
+                texts_to_process = df[col].fillna("").astype(str).tolist()
+                total_texts_processed += len(texts_to_process)
 
-            anonymized_texts = self.model.deid_multi_texts(
-                texts_to_process,
-                redact=redact,
-                n_process=n_process,
-                batch_size=batch_size,
-            )
+                anonymized_texts = self.model.deid_multi_texts(
+                    texts_to_process,
+                    redact=redact,
+                    n_process=n_process,
+                    batch_size=batch_size,
+                )
 
-            if inplace:
-                result_df[col] = anonymized_texts
-            else:
-                result_df[f"{col}{suffix}"] = anonymized_texts
+                if inplace:
+                    result_df[col] = anonymized_texts
+                else:
+                    result_df[f"{col}{suffix}"] = anonymized_texts
 
         self._log_operation(
             "dataframe",
@@ -364,8 +561,213 @@ class DeIdAnonymizer:
                 "total_texts": total_texts_processed,
                 "redact": redact,
                 "inplace": inplace,
+                "suppress_gc": suppress_gc,
             },
         )
+
+        return result_df
+
+    def anonymize_dataframe_chunked(
+        self,
+        df: pd.DataFrame,
+        text_columns: Union[str, List[str]],
+        redact: bool = True,
+        suffix: str = "_anonymized",
+        n_process: int = 1,
+        batch_size: int = 100,
+        chunk_size: int = 500,
+        suppress_gc: bool = True,
+        checkpoint_dir: Optional[Union[str, Path]] = None,
+        checkpoint_prefix: str = "deid_chunk",
+        show_progress: bool = True,
+        quiet_medcat_progress: bool = True,
+        resume_from_checkpoint: bool = True,
+    ) -> pd.DataFrame:
+        """Anonymizes a large DataFrame in row-chunks, with progress and optional
+        checkpointing to disk.
+
+        Recommended over `anonymize_dataframe` for large datasets: MedCAT's
+        internal batching (by character count, via `pipe_batch_size_in_chars`)
+        can cause its own progress bar to stay at 0% for the entire run even
+        though it's working correctly. Processing in explicit row-chunks here
+        gives you a progress bar that actually ticks, periodic real garbage
+        collection between chunks, and (optionally) resumable checkpoints.
+
+        Args:
+            df: The input DataFrame. Always processed in a new copy (inplace
+                is not supported here since chunk results are concatenated).
+            text_columns: A column name (str) or list of column names to anonymize.
+            redact: If True, replaces PII with asterisks. If False, uses type tags.
+            suffix: Suffix appended to new anonymized column names.
+            n_process: Number of processes for parallel execution. Keep at 1
+                if using a GPU.
+            batch_size: Batch size passed through to MedCAT's deid_multi_texts.
+            chunk_size: Number of DataFrame rows processed per chunk. Smaller
+                = more frequent progress updates and checkpoints, more gc
+                overhead between chunks. Tune based on average text length;
+                500 is a reasonable starting point for typical clinical notes.
+
+                IMPORTANT: if resuming across runs, chunk_size, chunk_size,
+                and the row order/length of `df` must match the original run
+                exactly, since chunk boundaries (and therefore checkpoint
+                filenames) are derived from row position. Don't reorder,
+                filter, or resize `df` between an interrupted run and its
+                resume, or chunk N will no longer correspond to the same rows.
+            suppress_gc: If True (default), neutralizes gc.collect() calls
+                *within* each chunk's processing (a real gc.collect() still
+                runs *between* chunks regardless, for cleanup).
+            checkpoint_dir: If provided, each completed chunk is written to this
+                directory as a parquet file, allowing you to resume or recover
+                partial results if the run is interrupted. If None, no
+                checkpointing occurs and results are only concatenated in memory.
+            checkpoint_prefix: Filename prefix used for checkpoint parquet files.
+            show_progress: If True and tqdm is available, displays a chunk-level
+                progress bar.
+            quiet_medcat_progress: If True (default), silences MedCAT's own
+                internal per-call tqdm bar so only this method's chunk-level
+                bar is visible. Otherwise you'll see a new short-lived bar
+                flash by for every column, in every chunk.
+            resume_from_checkpoint: If True (default) and checkpoint_dir is
+                given, any chunk whose checkpoint file already exists on disk
+                is loaded from that file instead of being recomputed. This is
+                what makes checkpointing actually useful for crash recovery --
+                re-running the same call after an interruption will skip
+                everything already completed and pick up where it left off.
+                Set False to force full recomputation even if checkpoints
+                exist (e.g. if you changed the model or redact settings and
+                want a clean re-run).
+
+        Returns:
+            A new DataFrame with the specified text columns anonymized
+            (original rows preserved, plus new `<col><suffix>` columns).
+        """
+        self._check_model_loaded()
+
+        if isinstance(text_columns, str):
+            text_columns = [text_columns]
+
+        missing_cols = [col for col in text_columns if col not in df.columns]
+        if missing_cols:
+            raise ValueError(f"Columns not found in DataFrame: {missing_cols}")
+
+        if checkpoint_dir is not None:
+            checkpoint_dir = Path(checkpoint_dir)
+            checkpoint_dir.mkdir(parents=True, exist_ok=True)
+
+        n_rows = len(df)
+        n_chunks = (n_rows + chunk_size - 1) // chunk_size
+        chunk_ranges = list(range(0, n_rows, chunk_size))
+
+        iterator = enumerate(chunk_ranges)
+        if show_progress and TQDM_AVAILABLE:
+            iterator = tqdm(
+                iterator,
+                total=len(chunk_ranges),
+                desc="Anonymizing chunks",
+                unit="chunk",
+            )
+        elif show_progress and not TQDM_AVAILABLE:
+            self.logger.warning("tqdm not installed; proceeding without progress bar.")
+
+        results = []
+        total_texts_processed = 0
+        n_resumed = 0
+        n_computed = 0
+
+        for i, start in iterator:
+            expected_len = min(chunk_size, n_rows - start)
+            checkpoint_path = (
+                checkpoint_dir / f"{checkpoint_prefix}_{i:05d}.parquet"
+                if checkpoint_dir is not None
+                else None
+            )
+
+            if (
+                resume_from_checkpoint
+                and checkpoint_path is not None
+                and checkpoint_path.exists()
+            ):
+                try:
+                    cached_chunk = pd.read_parquet(checkpoint_path)
+                    expected_cols = set(df.columns) | {
+                        f"{col}{suffix}" for col in text_columns
+                    }
+                    if len(cached_chunk) == expected_len and expected_cols.issubset(
+                        set(cached_chunk.columns)
+                    ):
+                        results.append(cached_chunk)
+                        n_resumed += 1
+                        continue
+                    else:
+                        self.logger.warning(
+                            f"Checkpoint {checkpoint_path.name} exists but doesn't "
+                            "match expected shape/columns for this run -- "
+                            "recomputing this chunk instead of trusting it."
+                        )
+                except Exception as e:
+                    self.logger.warning(
+                        f"Could not read checkpoint {checkpoint_path.name} "
+                        f"({e}) -- recomputing this chunk."
+                    )
+
+            chunk = df.iloc[start : start + chunk_size].copy()
+
+            # Ensure all columns are serializable to parquet by converting
+            # all object columns to string. This prevents Arrow conversion errors
+            # from mixed types (e.g., strings and NaN as float).
+            for col in chunk.columns:
+                if chunk[col].dtype == object:
+                    chunk[col] = chunk[col].astype(str)
+
+            gc_ctx = suppress_gc_collect() if suppress_gc else _null_context()
+            progress_ctx = (
+                suppress_medcat_progress() if quiet_medcat_progress else _null_context()
+            )
+            with gc_ctx, progress_ctx:
+                for col in text_columns:
+                    texts_to_process = chunk[col].fillna("").astype(str).tolist()
+                    total_texts_processed += len(texts_to_process)
+
+                    anonymized_texts = self.model.deid_multi_texts(
+                        texts_to_process,
+                        redact=redact,
+                        n_process=n_process,
+                        batch_size=batch_size,
+                    )
+                    chunk[f"{col}{suffix}"] = anonymized_texts
+
+            if checkpoint_path is not None:
+                chunk.to_parquet(checkpoint_path, index=False)
+
+            results.append(chunk)
+            n_computed += 1
+
+            # Real cleanup between chunks (not the neutralized version).
+            gc.collect()
+
+        result_df = pd.concat(results, ignore_index=True)
+
+        self._log_operation(
+            "dataframe_chunked",
+            {
+                "columns": text_columns,
+                "rows": n_rows,
+                "total_texts": total_texts_processed,
+                "redact": redact,
+                "chunk_size": chunk_size,
+                "n_chunks": n_chunks,
+                "n_resumed_from_checkpoint": n_resumed,
+                "n_computed": n_computed,
+                "suppress_gc": suppress_gc,
+                "checkpoint_dir": str(checkpoint_dir) if checkpoint_dir else None,
+            },
+        )
+
+        if n_resumed:
+            self.logger.info(
+                f"Resumed {n_resumed}/{n_chunks} chunks from existing checkpoints; "
+                f"computed {n_computed} new chunk(s)."
+            )
 
         return result_df
 
@@ -487,10 +889,14 @@ class DeIdAnonymizer:
         for log_entry in self.anonymization_log:
             if log_entry["operation"] == "single_text":
                 total_texts += 1
-            elif log_entry["operation"] == "multiple_texts":
-                total_texts += log_entry["details"]["count"]
-            elif log_entry["operation"] == "dataframe":
-                total_texts += log_entry["details"].get("total_texts", 0)
+            elif log_entry["operation"] in (
+                "multiple_texts",
+                "dataframe",
+                "dataframe_chunked",
+            ):
+                total_texts += log_entry["details"].get("count") or log_entry[
+                    "details"
+                ].get("total_texts", 0)
 
         return {
             "model_path": str(self.model_path) if self.model_path else None,
@@ -532,6 +938,50 @@ class DeIdAnonymizer:
             json.dump(log_data, f, indent=2)
 
         self.logger.info(f"Anonymization log saved to: {filepath}")
+
+
+@contextmanager
+def suppress_medcat_progress():
+    """Silences MedCAT's own internal tqdm progress bar.
+
+    medcat/cat.py's get_entities_multi_texts() wraps its document loop in its
+    own tqdm() call. When you call deid_multi_texts repeatedly yourself (e.g.
+    once per chunk, per column, in anonymize_dataframe_chunked), each call
+    spawns a *new* short-lived progress bar, which looks like a flicker of
+    unrelated bars appearing every N rows alongside your own chunk-level bar.
+    This patches medcat.cat.tqdm to a passthrough no-op for the duration of
+    the block so only your own progress bar is visible.
+
+    This only affects the medcat.cat module's tqdm reference (found by
+    inspecting its namespace at call-time), so other tqdm usages elsewhere
+    in your code/session are unaffected.
+    """
+    try:
+        import medcat.cat as _medcat_cat_module
+    except ImportError:
+        # MedCAT not importable in this environment -- nothing to patch.
+        yield
+        return
+
+    has_tqdm_attr = hasattr(_medcat_cat_module, "tqdm")
+    real_tqdm = getattr(_medcat_cat_module, "tqdm", None)
+
+    def _passthrough_tqdm(iterable=None, *args, **kwargs):
+        return iterable if iterable is not None else iter([])
+
+    if has_tqdm_attr:
+        _medcat_cat_module.tqdm = _passthrough_tqdm
+    try:
+        yield
+    finally:
+        if has_tqdm_attr:
+            _medcat_cat_module.tqdm = real_tqdm
+
+
+@contextmanager
+def _null_context():
+    """A no-op context manager, used when suppress_gc=False."""
+    yield
 
 
 # ---------------------------------------------------------------------------
