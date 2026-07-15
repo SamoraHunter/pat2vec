@@ -87,6 +87,9 @@ dev = [
     "black[jupyter]"
 ]
 
+[tool.pytest.ini_options]
+testpaths = ["pat2vec/tests"]
+
 [tool.setuptools]
 include-package-data = true
 
