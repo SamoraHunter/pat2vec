@@ -2121,11 +2121,11 @@ def cohort_searcher_with_terms_and_search_dummy(
                 entered_list,
                 global_start_year,
                 global_start_month,
-                final_global_start_day,
-                global_end_year,
-                global_end_month,
-                final_global_end_day,
                 fields_list=fields_list,
+                global_start_day=final_global_start_day,
+                global_end_year=global_end_year,
+                global_end_month=global_end_month,
+                global_end_day=final_global_end_day,
             )
 
         elif "basicobs_itemname_analysed:report" in search_string:

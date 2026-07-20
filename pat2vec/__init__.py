@@ -320,6 +320,8 @@ from .util.anonymisation_deid_documents import (
     DeIdAnonymizer,
     anonymize_dataframe_quick,
     anonymize_single_text,
+    suppress_gc_collect,
+    suppress_medcat_progress,
 )
 from .util.calculate_interval import (
     calculate_interval,
@@ -1378,6 +1380,8 @@ __all__ = [
     "split_epic_clinical_notes",
     "stringlist2pylist",
     "stringlist2searchlist",
+    "suppress_gc_collect",
+    "suppress_medcat_progress",
     "temporary_file",
     "test_datetime_formats",
     "try_parse_list_string",
