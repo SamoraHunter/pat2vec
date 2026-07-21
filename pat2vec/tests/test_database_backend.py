@@ -129,3 +129,61 @@ class TestDatabaseBackend(unittest.TestCase):
         self.assertIn("P001", result_df["client_idcode"].values)
         self.assertIn("P002", result_df["client_idcode"].values)
         self.assertFalse(result_df[result_df["client_idcode"] == "P001"].empty)
+
+    def test_get_df_from_db_non_existent_tables_warn(self):
+        """Test that accessing non-existent tables returns empty DataFrame."""
+        tables = [
+            ("annotations", "ann_epr_docs"),
+            ("annotations", "ann_mct_docs"),
+            ("raw_data", "raw_mct_docs"),
+            ("annotations", "ann_textual_obs"),
+        ]
+        for schema, table in tables:
+            result = get_df_from_db(
+                self.config,
+                schema=schema,
+                table=table,
+                patient_ids=["P001"],
+            )
+            self.assertTrue(result.empty)
+
+    def test_get_df_from_db_with_columns(self):
+        """Test that columns parameter filters selected columns."""
+        df = pd.DataFrame(
+            {
+                "client_idcode": ["P001", "P002"],
+                "col_to_keep": [1, 2],
+                "col_to_exclude": [3, 4],
+            }
+        )
+        df.to_sql("raw_data_test_columns", self.engine, index=False)
+
+        result = get_df_from_db(
+            self.config,
+            schema="raw_data",
+            table="test_columns",
+            patient_ids=["P001"],
+            columns=["client_idcode", "col_to_keep"],
+        )
+
+        self.assertEqual(list(result.columns), ["client_idcode", "col_to_keep"])
+        self.assertEqual(len(result.iloc[0]), 2)
+
+    def test_get_df_from_db_missing_columns(self):
+        """Test that missing columns are handled gracefully."""
+        df = pd.DataFrame(
+            {"client_idcode": ["P001"], "available_col": [1], "another_col": [2]}
+        )
+        df.to_sql("raw_data_test_missing", self.engine, index=False)
+
+        result = get_df_from_db(
+            self.config,
+            schema="raw_data",
+            table="test_missing",
+            patient_ids=["P001"],
+            columns=["available_col", "missing_col"],
+        )
+
+        # Only available column should be in result
+        self.assertIn("available_col", result.columns)
+        self.assertNotIn("missing_col", result.columns)
