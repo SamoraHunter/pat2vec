@@ -56,7 +56,7 @@ def find_date(
         if ts_match:
             date_str = ts_match.group(0)
             try:
-                parsed_date = pd.to_datetime(date_str)
+                parsed_date = pd.to_datetime(date_str, utc=True, errors="coerce")
                 end_of_date_string_in_text = date_window_start_idx + ts_match.end()
                 date_entries.append(
                     (match_reg.span()[0], end_of_date_string_in_text, parsed_date)
@@ -193,7 +193,9 @@ def split_clinical_notes(
         counter_1 += 1
     processed = (
         pd.DataFrame(new_docs).assign(
-            updatetime=lambda x: pd.to_datetime(x["updatetime"])
+            updatetime=lambda x: pd.to_datetime(
+                x["updatetime"], utc=True, errors="coerce"
+            )
         )
         if new_docs
         else pd.DataFrame()
@@ -287,10 +289,14 @@ def split_clinical_notes_mct(
         counter_1 += 1
     if new_docs:
         processed = pd.DataFrame(new_docs).assign(
-            updatetime=lambda x: pd.to_datetime(x["updatetime"])
+            updatetime=lambda x: pd.to_datetime(
+                x["updatetime"], utc=True, errors="coerce"
+            )
         )
         # Explicitly convert updatetime to avoid FutureWarning in pandas
-        processed["updatetime"] = pd.to_datetime(processed["updatetime"])
+        processed["updatetime"] = pd.to_datetime(
+            processed["updatetime"], utc=True, errors="coerce"
+        )
     else:
         processed = pd.DataFrame(
             columns=[
@@ -393,7 +399,9 @@ def split_epic_clinical_notes(
         counter_1 += 1
     processed = (
         pd.DataFrame(new_docs).assign(
-            document_CreatedWhen=lambda x: pd.to_datetime(x["document_CreatedWhen"])
+            document_CreatedWhen=lambda x: pd.to_datetime(
+                x["document_CreatedWhen"], utc=True, errors="coerce"
+            )
         )
         if new_docs
         else pd.DataFrame()

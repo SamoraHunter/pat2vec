@@ -157,7 +157,7 @@ def get_pat_batch_mct_docs(
                             for col in timestamp_cols:
                                 if col in batch_target.columns:
                                     batch_target[col] = pd.to_datetime(
-                                        batch_target[col], errors="coerce"
+                                        batch_target[col], errors="coerce", utc=True
                                     ).dt.strftime("%Y-%m-%d %H:%M:%S")
 
                             # Convert any list/dict/tuple columns to JSON strings for database compatibility

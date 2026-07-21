@@ -59,7 +59,9 @@ class TestClinicalNoteSplittingIntegration(unittest.TestCase):
                 {
                     "client_idcode": self.test_patient_id,
                     "body_analysed": body_text,
-                    "updatetime": self.base_date,  # Document level time
+                    "updatetime": pd.to_datetime(
+                        self.base_date, utc=True
+                    ),  # Document level time
                     "document_guid": "DOC_MULTI",
                     "document_description": "Clinical Note",
                 }
@@ -72,9 +74,12 @@ class TestClinicalNoteSplittingIntegration(unittest.TestCase):
         self.assertEqual(
             len(split_df), 2, "Document should be split into 2 rows based on dates."
         )
-        self.assertEqual(split_df.iloc[0]["updatetime"], pd.to_datetime(self.base_date))
         self.assertEqual(
-            split_df.iloc[1]["updatetime"], pd.to_datetime("2024-01-01 10:00:00")
+            split_df.iloc[0]["updatetime"], pd.to_datetime(self.base_date, utc=True)
+        )
+        self.assertEqual(
+            split_df.iloc[1]["updatetime"],
+            pd.to_datetime("2024-01-01 10:00:00", utc=True),
         )
 
         # 3. Setup Annotations for these chunks (Mocked logic)

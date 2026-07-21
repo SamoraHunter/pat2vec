@@ -14,7 +14,9 @@ class TestClinicalNoteSplitter(unittest.TestCase):
         txt = "Entered on - 26-Oct-2023 12:00 Part A. Entered on - 27-Oct-2023 14:00 Part B."
         chunks = find_date(txt)
         self.assertEqual(len(chunks), 2)
-        self.assertEqual(chunks[0]["date"], pd.to_datetime("2023-10-26 12:00"))
+        self.assertEqual(
+            chunks[0]["date"], pd.to_datetime("2023-10-26 12:00", utc=True)
+        )
         self.assertTrue(any("Part A" in c["text"] for c in chunks))
 
     def test_find_date_no_timestamp_fallback(self):
@@ -45,7 +47,7 @@ class TestClinicalNoteSplitter(unittest.TestCase):
                 "body_analysed": [
                     "Entered on - 26-Oct-2023 10:00 Text 1. Entered on - 27-Oct-2023 11:00 Text 2."
                 ],
-                "updatetime": [pd.to_datetime("2023-01-01")],
+                "updatetime": [pd.to_datetime("2023-01-01", utc=True)],
                 "document_description": ["Clinical Note"],
                 "document_guid": ["G1"],
                 "clientvisit_visitidcode": ["V1"],
@@ -55,7 +57,8 @@ class TestClinicalNoteSplitter(unittest.TestCase):
         processed, none_rows = split_clinical_notes(df)
         self.assertEqual(len(processed), 2)
         self.assertEqual(
-            processed.iloc[1]["updatetime"], pd.to_datetime("2023-10-27 11:00")
+            processed.iloc[1]["updatetime"],
+            pd.to_datetime("2023-10-27 11:00", utc=True),
         )
         self.assertTrue(none_rows.empty)
 
