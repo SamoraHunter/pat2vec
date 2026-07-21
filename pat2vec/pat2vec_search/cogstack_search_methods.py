@@ -12,6 +12,7 @@ import importlib.util
 from typing import Any, Dict, Generator, List, Optional, Tuple, Union
 
 import getpass
+import urllib3.exceptions
 
 from pat2vec.util.get_dummy_data_cohort_searcher import (
     cohort_searcher_with_terms_and_search_dummy,
@@ -28,7 +29,12 @@ warnings.filterwarnings("ignore", category=DeprecationWarning)  # Keep this line
 # Suppress Elasticsearch logger
 logging.getLogger("elasticsearch").setLevel(logging.WARNING)
 logging.getLogger("elastic_transport").setLevel(logging.WARNING)
-logging.getLogger("urllib3").setLevel(logging.WARNING)
+# Suppress InsecureRequestWarning for verify_certs=False
+warnings.filterwarnings(
+    "ignore",
+    message="Unverified HTTPS request is being made to host.*",
+    category=urllib3.exceptions.InsecureRequestWarning,
+)
 
 # add one level up to path with sys.path for importing actual credentials
 
