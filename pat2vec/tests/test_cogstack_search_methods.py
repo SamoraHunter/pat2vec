@@ -1,7 +1,9 @@
 import unittest
 from unittest.mock import MagicMock, patch
 import pandas as pd
+import urllib3.exceptions
 from pat2vec.pat2vec_search.cogstack_search_methods import (
+    CogStack,
     check_patients_existence,
     list_chunker,
     set_index_safe_wrapper,
@@ -241,3 +243,43 @@ class TestCogstackSearchMethods(unittest.TestCase):
                 # Reset mocks for the next subtest
                 mock_cs_instance.get_index_fields.reset_mock()
                 mock_initialize_cogstack_client.reset_mock()
+
+    @patch("pat2vec.pat2vec_search.cogstack_search_methods.elasticsearch.Elasticsearch")
+    def test_cogstack_verify_certs_disabled(self, mock_es_class):
+        """Test that CogStack initializes with verify_certs=False for both API and basic auth."""
+        # Test API key authentication
+        _ = CogStack(hosts=["https://cogstack01"], api_key="test_key", api=True)
+        mock_es_class.assert_any_call(
+            hosts=["https://cogstack01"],
+            api_key="test_key",
+            verify_certs=False,
+        )
+
+        # Test basic authentication
+        _ = CogStack(
+            hosts=["https://cogstack01"], username="user", password="pass", api=False
+        )
+        mock_es_class.assert_any_call(
+            hosts=["https://cogstack01"],
+            basic_auth=("user", "pass"),
+            verify_certs=False,
+        )
+
+    @patch("pat2vec.pat2vec_search.cogstack_search_methods.elasticsearch.Elasticsearch")
+    def test_cogstack_insecure_warning_suppressed(self, mock_es_class):
+        """Test that InsecureRequestWarning is suppressed during CogStack initialization."""
+        import warnings
+
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            _ = CogStack(hosts=["https://cogstack01"], api_key="test_key", api=True)
+
+            # Check no InsecureRequestWarning was raised
+            insecure_warnings = [
+                warning
+                for warning in w
+                if issubclass(
+                    warning.category, urllib3.exceptions.InsecureRequestWarning
+                )
+            ]
+            self.assertEqual(len(insecure_warnings), 0)
