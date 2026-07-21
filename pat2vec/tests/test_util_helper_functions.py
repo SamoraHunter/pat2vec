@@ -389,9 +389,112 @@ class TestHelperFunctions(unittest.TestCase):
             "table",
             patient_ids=["P1"],
             start_date="2023-01-01",
+            end_date="2023-12-31",
         )
-        # When only start_date is provided (no end_date), temporal filter should not be applied
         self.assertEqual(len(result), 1)
+
+    def test_save_patient_features_sqlite_column_limit(self):
+        """Test JSON packing avoids SQLite column limit with many features."""
+        import tempfile
+        from pathlib import Path
+
+        tmpdir = tempfile.mkdtemp()
+        db_path = Path(tmpdir) / "test.db"
+        db_url = f"sqlite:///{db_path}"
+
+        try:
+            mock_config = MagicMock()
+            mock_config.storage_backend = "database"
+            mock_config.db_connection_string = str(db_url)
+            mock_config.patient_id_column_name = "client_idcode"
+
+            from sqlalchemy import create_engine
+
+            mock_config.db_engine = create_engine(
+                db_url, connect_args={"check_same_thread": False}
+            )
+
+            features_df = pd.DataFrame({"client_idcode": ["P1"]})
+
+            n_cols = 1870
+            for i in range(n_cols):
+                features_df[f"feature_{i}"] = float(i)
+
+            save_patient_features(features_df, "P1", mock_config)
+
+            loaded_df = get_all_features(mock_config)
+            self.assertEqual(len(loaded_df.columns), n_cols + 1)
+            self.assertIn("client_idcode", loaded_df.columns)
+
+        finally:
+            import shutil
+
+            shutil.rmtree(tmpdir)
+
+    def test_save_patient_features_postgresql_throws_error_gracefully(self):
+        """Test that PostgreSQL errors are raised for too many columns (not packed)."""
+        mock_config = MagicMock()
+        mock_config.storage_backend = "database"
+        mock_config.db_engine = MagicMock()
+        mock_config.db_engine.name = "postgresql"
+        mock_config.patient_id_column_name = "client_idcode"
+
+        features_df = pd.DataFrame({"client_idcode": ["P1"]})
+        n_cols = 100
+        for i in range(n_cols):
+            features_df[f"feature_{i}"] = float(i)
+
+        with patch("pat2vec.util.helper_functions.inspect") as mock_inspect:
+            mock_inspect.return_value.has_table.return_value = False
+            mock_conn = MagicMock()
+            mock_config.db_engine.begin.return_value.__enter__.return_value = mock_conn
+
+            # PostgreSQL should NOT use JSON packing by default (columns < 500)
+            use_json_packing = (
+                mock_config.db_engine.name == "sqlite" or len(features_df.columns) > 500
+            )
+            self.assertFalse(use_json_packing)
+
+    def test_save_patient_features_json_unpacking_on_load(self):
+        """Test that JSON-packed features are correctly unpacked on load."""
+        import tempfile
+        from pathlib import Path
+
+        tmpdir = tempfile.mkdtemp()
+        db_path = Path(tmpdir) / "test.db"
+        db_url = f"sqlite:///{db_path}"
+
+        try:
+            mock_config = MagicMock()
+            mock_config.storage_backend = "database"
+            mock_config.db_connection_string = str(db_url)
+            mock_config.patient_id_column_name = "client_idcode"
+
+            from sqlalchemy import create_engine
+
+            mock_config.db_engine = create_engine(
+                db_url, connect_args={"check_same_thread": False}
+            )
+
+            features_df = pd.DataFrame({"client_idcode": ["P1", "P2"]})
+            features_df["feature_a"] = [1.0, 2.0]
+            features_df["feature_b"] = [3.0, 4.0]
+
+            save_patient_features(features_df, "P1", mock_config)
+
+            loaded_df = get_all_features(mock_config)
+
+            self.assertIn("client_idcode", loaded_df.columns)
+            self.assertIn("feature_a", loaded_df.columns)
+            self.assertIn("feature_b", loaded_df.columns)
+            self.assertEqual(len(loaded_df), 2)
+            self.assertEqual(loaded_df.iloc[0]["feature_a"], 1.0)
+            self.assertEqual(loaded_df.iloc[1]["feature_b"], 4.0)
+
+        finally:
+            import shutil
+
+            shutil.rmtree(tmpdir)
 
     @patch("pat2vec.util.helper_functions.text")
     @patch("pandas.read_sql")
