@@ -212,8 +212,9 @@ def save_patient_features(
             if id_column not in features_df.columns:
                 features_df[id_column] = patient_id
 
-            # For database storage, keep individual columns for proper querying
-            # (JSON packing was previously used to avoid DB column limits)
+            # For database storage with many features, pack features into JSON to avoid SQLite column limits
+            # JSON packing is used when: SQLite or when column count exceeds threshold (e.g., 500)
+            use_json_packing = engine.name == "sqlite" or len(features_df.columns) > 500
 
             with engine.begin() as connection:
                 # Handle SQLite differences
@@ -234,74 +235,145 @@ def save_patient_features(
                 ):
                     connection.execute(CreateSchema(schema_name))
 
+                inspector = inspect(connection)
+
                 # Check if table exists before trying to delete
                 if overwrite:
-                    inspector = inspect(connection)
                     if inspector.has_table(target_table, schema=target_schema):
                         del_query = text(del_query_str)
                         connection.execute(del_query, {"pat_id": patient_id})
 
-                # Check for missing columns and update schema
-                inspector = inspect(connection)
-                if inspector.has_table(target_table, schema=target_schema):
-                    existing_cols = {
-                        c["name"]
-                        for c in inspector.get_columns(
-                            target_table, schema=target_schema
-                        )
-                    }
-                    missing_cols = [
-                        c for c in features_df.columns if c not in existing_cols
-                    ]
+                # Skip schema evolution for JSON packing mode (all features go into single column)
+                if use_json_packing:
+                    logging.info(
+                        f"Using JSON packing mode to avoid column limit issues ({len(features_df.columns)} columns)"
+                    )
+                else:
+                    # Check for missing columns and update schema
+                    inspector = inspect(connection)
+                    if inspector.has_table(target_table, schema=target_schema):
+                        existing_cols = {
+                            c["name"]
+                            for c in inspector.get_columns(
+                                target_table, schema=target_schema
+                            )
+                        }
+                        missing_cols = [
+                            c for c in features_df.columns if c not in existing_cols
+                        ]
 
-                    if missing_cols:
-                        logging.info(
-                            f"Schema evolution: Adding {len(missing_cols)} new columns to table '{target_table}'"
-                        )
-                        for col in missing_cols:
-                            dtype = features_df[col].dtype
-                            if pd.api.types.is_integer_dtype(dtype):
-                                sql_type = "INTEGER"
-                            elif pd.api.types.is_float_dtype(dtype):
-                                sql_type = "FLOAT"
-                            else:
-                                sql_type = "TEXT"
+                        if missing_cols:
+                            logging.info(
+                                f"Schema evolution: Adding {len(missing_cols)} new columns to table '{target_table}'"
+                            )
+                            for col in missing_cols:
+                                dtype = features_df[col].dtype
+                                if pd.api.types.is_integer_dtype(dtype):
+                                    sql_type = "INTEGER"
+                                elif pd.api.types.is_float_dtype(dtype):
+                                    sql_type = "FLOAT"
+                                else:
+                                    sql_type = "TEXT"
 
-                            # Quote identifiers to handle special characters in column names
-                            col_clean = col.replace('"', '""')
-                            quoted_col = f'"{col_clean}"'
-                            if engine.name == "sqlite":
-                                table_ref = f'"{target_table}"'
-                            else:
-                                table_ref = (
-                                    f'"{target_schema}"."{target_table}"'
-                                    if target_schema
-                                    else f'"{target_table}"'
-                                )
-
-                            try:
-                                connection.execute(
-                                    text(
-                                        f"ALTER TABLE {table_ref} ADD COLUMN {quoted_col} {sql_type}"
+                                # Quote identifiers to handle special characters in column names
+                                col_clean = col.replace('"', '""')
+                                quoted_col = f'"{col_clean}"'
+                                if engine.name == "sqlite":
+                                    table_ref = f'"{target_table}"'
+                                else:
+                                    table_ref = (
+                                        f'"{target_schema}"."{target_table}"'
+                                        if target_schema
+                                        else f'"{target_table}"'
                                     )
-                                )
-                            except Exception as e:
-                                logging.error(
-                                    f"Failed to add column {col} to table: {e}"
-                                )
-                                raise e
 
-                logging.info(
-                    f"Inserting {len(features_df)} rows for patient {patient_id} into {target_table} (cols: {len(features_df.columns)})"
-                )
-                # Append the new features
-                features_df.to_sql(
-                    name=target_table,
-                    con=connection,
-                    schema=target_schema,
-                    if_exists="append",
-                    index=False,
-                )
+                                try:
+                                    connection.execute(
+                                        text(
+                                            f"ALTER TABLE {table_ref} ADD COLUMN {quoted_col} {sql_type}"
+                                        )
+                                    )
+                                except Exception as e:
+                                    logging.error(
+                                        f"Failed to add column {col} to table: {e}"
+                                    )
+                                    raise e
+
+                if use_json_packing:
+                    # Pack all features (except patient ID) into a JSON column
+                    id_col = config_obj.patient_id_column_name
+                    feature_cols = [c for c in features_df.columns if c != id_col]
+
+                    # Custom JSON encoder to handle Timestamps and other non-serializable types
+                    class FeatureJSONEncoder(json.JSONEncoder):
+                        def default(self, obj):
+                            if isinstance(obj, pd.Timestamp):
+                                return obj.isoformat()
+                            if hasattr(obj, "isoformat"):
+                                return obj.isoformat()
+                            return super().default(obj)
+
+                    packed_features = []
+                    for _, row in features_df.iterrows():
+                        # Create a dictionary of feature_name: value for all feature columns
+                        feature_dict = {col: row[col] for col in feature_cols}
+                        packed_row = {
+                            id_col: row[id_col],
+                            "features_json": json.dumps(
+                                feature_dict, cls=FeatureJSONEncoder
+                            ),
+                        }
+                        packed_features.append(packed_row)
+
+                    features_df_packed = pd.DataFrame(packed_features)
+
+                    logging.info(
+                        f"Packing {len(features_df.columns)} features into JSON for patient {patient_id}"
+                    )
+
+                    # Ensure the table exists with the correct schema (just ID + JSON column)
+                    if not inspector.has_table(target_table, schema=target_schema):
+                        create_sql = text(
+                            f'CREATE TABLE IF NOT EXISTS "{target_table}" '
+                            f'("{id_col}" TEXT, "features_json" TEXT)'
+                        )
+                        connection.execute(create_sql)
+
+                    # Delete existing rows for this patient(s) before inserting new ones
+                    if overwrite and not features_df_packed.empty:
+                        id_values = list(features_df_packed[id_col].unique())
+                        placeholders = ", ".join(
+                            [f":id_{i}" for i in range(len(id_values))]
+                        )
+                        delete_query = text(
+                            f'DELETE FROM "{target_table}" WHERE "{id_col}" IN ({placeholders})'
+                        )
+                        connection.execute(
+                            delete_query,
+                            {f"id_{i}": v for i, v in enumerate(id_values)},
+                        )
+
+                    # Save packed features (append mode)
+                    if not features_df_packed.empty:
+                        features_df_packed.to_sql(
+                            name=target_table,
+                            con=connection,
+                            schema=target_schema,
+                            if_exists="append",
+                            index=False,
+                        )
+                else:
+                    logging.info(
+                        f"Inserting {len(features_df)} rows for patient {patient_id} into {target_table} (cols: {len(features_df.columns)})"
+                    )
+                    # Append the new features
+                    features_df.to_sql(
+                        name=target_table,
+                        con=connection,
+                        schema=target_schema,
+                        if_exists="append",
+                        index=False,
+                    )
 
                 # Ensure index on ID column for performance
                 ensure_index(
@@ -631,11 +703,27 @@ def get_df_from_db(
                 )
                 return pd.DataFrame()
 
+            table_columns = [
+                c["name"]
+                for c in inspector.get_columns(target_table, schema=target_schema)
+            ]
+
+            if columns is not None:
+                available_columns = [c for c in columns if c in table_columns]
+                missing_columns = [c for c in columns if c not in table_columns]
+                if missing_columns:
+                    logger.debug(
+                        f"Columns {missing_columns} not found in table '{target_table}'. Available: {table_columns}"
+                    )
+                columns_to_use = available_columns if available_columns else None
+            else:
+                columns_to_use = None
+
             chunk_size = 900
             all_data = []
 
             if patient_ids is None:
-                query_str = f"SELECT {', '.join(columns) if columns else '*'} FROM {target_table}"
+                query_str = f"SELECT {', '.join(columns_to_use) if columns_to_use else '*'} FROM {target_table}"
                 df = pd.read_sql(text(query_str), connection, params={})
                 return df
 
@@ -645,13 +733,28 @@ def get_df_from_db(
             for i in range(0, len(patient_ids), chunk_size):
                 chunk = patient_ids[i : i + chunk_size]
 
-                query_str_chunk = f"SELECT {', '.join(columns) if columns else '*'} FROM {target_table}"
+                query_str_chunk = f"SELECT {', '.join(columns_to_use) if columns_to_use else '*'} FROM {target_table}"
 
                 placeholders = ", ".join([f":id_{j}" for j in range(len(chunk))])
                 query_str_chunk += f' WHERE "{patient_id_column}" IN ({placeholders})'
                 params = {f"id_{j}": pid for j, pid in enumerate(chunk)}
 
                 df_chunk = pd.read_sql(text(query_str_chunk), connection, params=params)
+
+                # Unpack JSON features for the features table
+                if schema == "features" and "features_json" in df_chunk.columns:
+                    json_mask = df_chunk["features_json"].notna()
+                    if json_mask.any():
+                        unpacked = pd.json_normalize(
+                            df_chunk.loc[json_mask, "features_json"]
+                            .apply(json.loads)
+                            .tolist()
+                        )
+                        unpacked.index = df_chunk.loc[json_mask].index
+                        df_chunk = df_chunk.drop(
+                            columns=["features_json"]
+                        ).combine_first(unpacked)
+
                 all_data.append(df_chunk)
 
             return (
@@ -787,6 +890,21 @@ def get_df_from_db_with_temporal_filter(
                 query = text(query_str)
 
                 df_chunk = pd.read_sql(query, connection, params=params)
+
+                # Unpack JSON features for the features table
+                if schema == "features" and "features_json" in df_chunk.columns:
+                    json_mask = df_chunk["features_json"].notna()
+                    if json_mask.any():
+                        unpacked = pd.json_normalize(
+                            df_chunk.loc[json_mask, "features_json"]
+                            .apply(json.loads)
+                            .tolist()
+                        )
+                        unpacked.index = df_chunk.loc[json_mask].index
+                        df_chunk = df_chunk.drop(
+                            columns=["features_json"]
+                        ).combine_first(unpacked)
+
                 all_data.append(df_chunk)
 
             result_df = (
