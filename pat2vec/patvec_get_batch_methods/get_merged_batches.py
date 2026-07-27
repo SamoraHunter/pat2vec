@@ -493,6 +493,12 @@ def get_merged_pat_batch_drugs(
                 )
                 db_schema = None if engine.name == "sqlite" else schema_name
 
+                # Drop Elasticsearch metadata columns before saving to database
+                cols_to_drop = ["_id", "_index", "_score"]
+                for col in cols_to_drop:
+                    if col in batch_target.columns:
+                        batch_target.drop(columns=col, inplace=True)
+
                 logging.info(
                     f"Writing {len(batch_target)} records to database table '{db_schema}.{db_table_name}'..."
                 )
@@ -694,6 +700,12 @@ def get_merged_pat_batch_diagnostics(
                 )
                 db_schema = None if engine.name == "sqlite" else schema_name
 
+                # Drop Elasticsearch metadata columns before saving to database
+                cols_to_drop = ["_id", "_index", "_score"]
+                for col in cols_to_drop:
+                    if col in batch_target.columns:
+                        batch_target.drop(columns=col, inplace=True)
+
                 logging.info(
                     f"Writing {len(batch_target)} records to database table '{db_schema}.{db_table_name}'..."
                 )
@@ -892,6 +904,12 @@ def get_merged_pat_batch_mct_docs(
                     else table_name
                 )
                 db_schema = None if engine.name == "sqlite" else schema_name
+
+                # Drop Elasticsearch metadata columns before saving to database
+                cols_to_drop = ["_id", "_index", "_score"]
+                for col in cols_to_drop:
+                    if col in batch_target.columns:
+                        batch_target.drop(columns=col, inplace=True)
 
                 logging.info(
                     f"Writing {len(batch_target)} records to database table '{db_schema}.{db_table_name}'..."
@@ -1095,6 +1113,12 @@ def get_merged_pat_batch_epr_docs(
                 )
                 db_schema = None if engine.name == "sqlite" else schema_name
 
+                # Drop Elasticsearch metadata columns before saving to database
+                cols_to_drop = ["_id", "_index", "_score"]
+                for col in cols_to_drop:
+                    if col in batch_target.columns:
+                        batch_target.drop(columns=col, inplace=True)
+
                 logging.info(
                     f"Writing {len(batch_target)} records to database table '{db_schema}.{db_table_name}'..."
                 )
@@ -1297,6 +1321,12 @@ def get_merged_pat_batch_textual_obs_docs(
                 )
                 db_schema = None if engine.name == "sqlite" else schema_name
 
+                # Drop Elasticsearch metadata columns before saving to database
+                cols_to_drop = ["_id", "_index", "_score"]
+                for col in cols_to_drop:
+                    if col in batch_target.columns:
+                        batch_target.drop(columns=col, inplace=True)
+
                 logging.info(
                     f"Writing {len(batch_target)} records to database table '{db_schema}.{db_table_name}'..."
                 )
@@ -1489,6 +1519,12 @@ def get_merged_pat_batch_appointments(
                 )
                 db_schema = None if engine.name == "sqlite" else schema_name
 
+                # Drop Elasticsearch metadata columns before saving to database
+                cols_to_drop = ["_id", "_index", "_score"]
+                for col in cols_to_drop:
+                    if col in batch_target.columns:
+                        batch_target.drop(columns=col, inplace=True)
+
                 logging.info(
                     f"Writing {len(batch_target)} records to database table '{db_schema}.{db_table_name}'..."
                 )
@@ -1673,6 +1709,12 @@ def get_merged_pat_batch_demo(
                 )
                 db_schema = None if engine.name == "sqlite" else schema_name
 
+                # Drop Elasticsearch metadata columns before saving to database
+                cols_to_drop = ["_id", "_index", "_score"]
+                for col in cols_to_drop:
+                    if col in batch_target.columns:
+                        batch_target.drop(columns=col, inplace=True)
+
                 logging.info(
                     f"Writing {len(batch_target)} records to database table '{db_schema}.{db_table_name}'..."
                 )
@@ -1827,6 +1869,12 @@ def get_merged_pat_batch_bmi(
                 )
                 db_schema = None if engine.name == "sqlite" else schema_name
 
+                # Drop Elasticsearch metadata columns before saving to database
+                cols_to_drop = ["_id", "_index", "_score"]
+                for col in cols_to_drop:
+                    if col in batch_target.columns:
+                        batch_target.drop(columns=col, inplace=True)
+
                 logging.info(
                     f"Writing {len(batch_target)} records to database table '{db_schema}.{db_table_name}'..."
                 )
@@ -1979,6 +2027,12 @@ def get_merged_pat_batch_obs(
                 )
                 db_schema = None if engine.name == "sqlite" else schema_name
 
+                # Drop Elasticsearch metadata columns before saving to database
+                cols_to_drop = ["_id", "_index", "_score"]
+                for col in cols_to_drop:
+                    if col in batch_target.columns:
+                        batch_target.drop(columns=col, inplace=True)
+
                 logging.info(
                     f"Writing {len(batch_target)} records to database table '{db_schema}.{db_table_name}'..."
                 )
@@ -2130,6 +2184,12 @@ def get_merged_pat_batch_news(
                     else table_name
                 )
                 db_schema = None if engine.name == "sqlite" else schema_name
+
+                # Drop Elasticsearch metadata columns before saving to database
+                cols_to_drop = ["_id", "_index", "_score"]
+                for col in cols_to_drop:
+                    if col in batch_target.columns:
+                        batch_target.drop(columns=col, inplace=True)
 
                 logging.info(
                     f"Writing {len(batch_target)} records to database table '{db_schema}.{db_table_name}'..."
@@ -2293,6 +2353,12 @@ def get_merged_pat_batch_reports(
                     else table_name
                 )
                 db_schema = None if engine.name == "sqlite" else schema_name
+
+                # Drop Elasticsearch metadata columns before saving to database
+                cols_to_drop = ["_id", "_index", "_score"]
+                for col in cols_to_drop:
+                    if col in batch_target.columns:
+                        batch_target.drop(columns=col, inplace=True)
 
                 logging.info(
                     f"Writing {len(batch_target)} records to database table '{db_schema}.{db_table_name}'..."

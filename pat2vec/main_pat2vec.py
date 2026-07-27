@@ -1167,6 +1167,7 @@ class main:
                 logging.info(
                     f"Patient {current_pat_client_id_code} already processed, skipping."
                 )
+            self.t.update(1)
             return
 
         if self.config_obj.storage_backend == "file":

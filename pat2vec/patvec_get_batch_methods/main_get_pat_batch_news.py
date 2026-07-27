@@ -100,6 +100,16 @@ def get_pat_batch_news(
             ):
 
                 if config_obj.storage_backend == "database" and not batch_target.empty:
+                    # Drop Elasticsearch metadata columns before saving to database
+
+                    cols_to_drop = ["_id", "_index", "_score"]
+
+                    for col in cols_to_drop:
+
+                        if col in batch_target.columns:
+
+                            batch_target.drop(columns=col, inplace=True)
+
                     try:
                         engine = config_obj.db_engine
                         if engine:

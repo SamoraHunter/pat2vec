@@ -164,6 +164,12 @@ def get_pat_batch_epr_docs(
             if batch_target.empty:
                 return batch_target
 
+            if config_obj.storage_backend == "database":
+                cols_to_drop = ["_id", "_index", "_score"]
+                for col in cols_to_drop:
+                    if col in batch_target.columns:
+                        batch_target.drop(columns=col, inplace=True)
+
             if config_obj.store_pat_batch_docs or overwrite_stored_pat_docs:
                 # batch_target.dropna(subset='body_analysed', inplace=True)
 
@@ -209,6 +215,13 @@ def get_pat_batch_epr_docs(
                             logging.debug(
                                 f"post_filter_split_notes_len: {len(batch_target)}"
                             )
+
+                # Drop Elasticsearch metadata columns and source_file before saving to database
+                if config_obj.storage_backend == "database":
+                    cols_to_drop = ["_id", "_index", "_score", "source_file"]
+                    for col in cols_to_drop:
+                        if col in batch_target.columns:
+                            batch_target.drop(columns=col, inplace=True)
 
                 if config_obj.storage_backend == "database" and not batch_target.empty:
                     try:
