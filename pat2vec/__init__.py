@@ -85,11 +85,13 @@ from .pat2vec_get_methods.get_method_drugs import (
     prepare_drug_datetime,
     search_drug_orders,
 )
-from .pat2vec_get_methods.get_method_epic_clinical_notes import (
-    EPIC_CLINICAL_NOTES_FIELDS,
-    get_epic_clinical_notes,
-    search_epic_clinical_notes,
-)
+
+# epic_clinical_notes now only available via annotations
+# from .pat2vec_get_methods.get_method_epic_clinical_notes import (
+#     EPIC_CLINICAL_NOTES_FIELDS,
+#     get_epic_clinical_notes,
+#     search_epic_clinical_notes,
+# )
 from .pat2vec_get_methods.get_method_epic_clinical_notes_appointments import (
     EPIC_CLINICAL_NOTES_APPOINTMENTS_FIELDS,
     get_epic_clinical_notes_appointments,
@@ -100,21 +102,25 @@ from .pat2vec_get_methods.get_method_epic_encounters import (
     get_epic_encounters,
     search_epic_encounters,
 )
-from .pat2vec_get_methods.get_method_epic_imaging_reports import (
-    EPIC_IMAGING_REPORTS_FIELDS,
-    get_epic_imaging_reports,
-    search_epic_imaging_reports,
-)
+
+# epic_imaging_reports now only available via annotations
+# from .pat2vec_get_methods.get_method_epic_imaging_reports import (
+#     EPIC_IMAGING_REPORTS_FIELDS,
+#     get_epic_imaging_reports,
+#     search_epic_imaging_reports,
+# )
 from .pat2vec_get_methods.get_method_epic_lab_results import (
     EPIC_LAB_RESULTS_FIELDS,
     get_epic_lab_results,
     search_epic_lab_results,
 )
-from .pat2vec_get_methods.get_method_epic_medical_history import (
-    EPIC_MEDICAL_HISTORY_FIELDS,
-    get_epic_medical_history,
-    search_epic_medical_history,
-)
+
+# epic_medical_history now only available via annotations
+# from .pat2vec_get_methods.get_method_epic_medical_history import (
+#     EPIC_MEDICAL_HISTORY_FIELDS,
+#     get_epic_medical_history,
+#     search_epic_medical_history,
+# )
 from .pat2vec_get_methods.get_method_epic_orders import (
     EPIC_ORDERS_FIELDS,
     get_epic_orders,

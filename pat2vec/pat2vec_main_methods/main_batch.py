@@ -30,21 +30,18 @@ from pat2vec.pat2vec_get_methods.get_method_pat_annotations import (
     get_current_pat_annotations,
 )
 from pat2vec.pat2vec_get_methods.get_method_epic_encounters import get_epic_encounters
-from pat2vec.pat2vec_get_methods.get_method_epic_clinical_notes import (
-    get_epic_clinical_notes,
-)
-from pat2vec.pat2vec_get_methods.get_method_epic_medical_history import (
-    get_epic_medical_history,
-)
-from pat2vec.pat2vec_get_methods.get_method_epic_orders import get_epic_orders
+
+# Note: epic_clinical_notes, epic_medical_history, epic_orders are now only available as annotations
 from pat2vec.pat2vec_get_methods.get_method_epic_orders_annotations import (
     get_current_pat_epic_orders_annotations,
 )
 from pat2vec.pat2vec_get_methods.get_method_epic_lab_results import get_epic_lab_results
 from pat2vec.pat2vec_get_methods.get_method_epic_patients import get_epic_patients
-from pat2vec.pat2vec_get_methods.get_method_epic_imaging_reports import (
-    get_epic_imaging_reports,
-)
+
+# epic_imaging_reports is now only available via annotations - commented out
+# from pat2vec.pat2vec_get_methods.get_method_epic_imaging_reports import (
+#     get_epic_imaging_reports,
+# )
 from pat2vec.pat2vec_get_methods.get_method_epic_clinical_notes_appointments import (
     get_epic_clinical_notes_appointments,
 )
@@ -202,13 +199,11 @@ def main_batch(
                     get_current_pat_textual_obs_annotations,
                     get_appointments,
                     get_epic_encounters,
-                    get_epic_clinical_notes,
+                    # epic_clinical_notes, epic_medical_history, epic_imaging_reports are now only available via annotations
+                    # get_epic_clinical_notes, get_epic_medical_history, get_epic_imaging_reports removed - use annotation versions instead
                     get_current_pat_epic_orders_annotations,
-                    get_epic_medical_history,
-                    get_epic_orders,
                     get_epic_lab_results,
                     get_epic_patients,
-                    get_epic_imaging_reports,
                     get_epic_clinical_notes_appointments,
                 }
                 funcs_with_cat = {
@@ -322,27 +317,11 @@ def main_batch(
                         "batch_arg": "pat_batch",
                         "batch_key": "batch_epic_encounters",
                     },
-                    {
-                        "option": "epic_clinical_notes",
-                        "pbar": "epic_notes",
-                        "func": get_epic_clinical_notes,
-                        "batch_arg": "pat_batch",
-                        "batch_key": "batch_epic_clinical_notes",
-                    },
-                    {
-                        "option": "epic_medical_history",
-                        "pbar": "epic_hist",
-                        "func": get_epic_medical_history,
-                        "batch_arg": "pat_batch",
-                        "batch_key": "batch_epic_medical_history",
-                    },
-                    {
-                        "option": "epic_orders",
-                        "pbar": "epic_orders",
-                        "func": get_epic_orders,
-                        "batch_arg": "pat_batch",
-                        "batch_key": "batch_epic_orders",
-                    },
+                    # epic_clinical_notes and epic_medical_history are only available via annotations
+                    # These feature configs are removed - use annotation options instead:
+                    # "epic_clinical_notes_annotations" -> get_current_pat_epic_clinical_notes_annotations
+                    # "epic_medical_history_annotations" -> get_current_pat_epic_medical_history_annotations
+                    # epic_orders is only available via annotations - removed feature config
                     {
                         "option": "epic_lab_results",
                         "pbar": "epic_lab",
@@ -357,13 +336,7 @@ def main_batch(
                         "batch_arg": "pat_batch",
                         "batch_key": "batch_epic_patients",
                     },
-                    {
-                        "option": "epic_imaging_reports",
-                        "pbar": "epic_img",
-                        "func": get_epic_imaging_reports,
-                        "batch_arg": "pat_batch",
-                        "batch_key": "batch_epic_imaging_reports",
-                    },
+                    # epic_imaging_reports is now only available via annotations - config removed
                     {
                         "option": "epic_clinical_notes_appointments",
                         "pbar": "epic_appt_notes",
@@ -411,6 +384,38 @@ def main_batch(
 
                 for i, config in enumerate(feature_configs):
                     if main_options.get(config["option"]):
+                        # Add debug logging for epic clinical notes annotations
+                        if (
+                            config["batch_key"]
+                            == "batch_epic_clinical_notes_annotations"
+                        ):
+                            print(
+                                "\n=== DEBUG: Processing epic clinical notes annotations ==="
+                            )
+                            print(f"Patient: {current_pat_client_id_code}")
+                            print(f"Batches keys available: {list(batches.keys())}")
+                            batch_data = batches.get(config["batch_key"])
+                            if batch_data is not None:
+                                print(f"Batch data type: {type(batch_data)}")
+                                print(
+                                    f"Batch row count: {len(batch_data) if batch_data is not None else 0}"
+                                )
+                                if batch_data is not None and not batch_data.empty:
+                                    print(
+                                        f"Batch columns (first 15): {batch_data.columns.tolist()[:15]}"
+                                    )
+                                    print(
+                                        f"Has pretty_name column: {'pretty_name' in batch_data.columns}"
+                                    )
+                                    print(
+                                        f"Has cui column: {'cui' in batch_data.columns}"
+                                    )
+                                else:
+                                    print("WARNING: Batch data is None or empty!")
+                            else:
+                                print("ERROR: Batch not found in batches dict!")
+                            print("==========================================\n")
+
                         update_pbar(
                             p_bar_entry, start_time, i, config["pbar"], t, config_obj
                         )
@@ -437,6 +442,33 @@ def main_batch(
 
                         # Call the function with the prepared arguments
                         feature_df = config["func"](**args)
+
+                        # Add debug logging after processing
+                        if (
+                            config["batch_key"]
+                            == "batch_epic_clinical_notes_annotations"
+                        ):
+                            print(
+                                "=== DEBUG: After epic clinical notes annotations processing ==="
+                            )
+                            print(f"Feature df type: {type(feature_df)}")
+                            print(
+                                f"Feature df shape: {feature_df.shape if feature_df is not None else 'None'}"
+                            )
+                            if feature_df is not None and hasattr(
+                                feature_df, "columns"
+                            ):
+                                print(
+                                    f"Feature columns (first 10): {list(feature_df.columns)[:10]}"
+                                )
+                                has_medcat = any(
+                                    "pretty_name" in col for col in feature_df.columns
+                                )
+                                print(f"Has MedCAT features: {has_medcat}")
+                            else:
+                                print("ERROR: Feature df is None or missing columns!")
+                            print("==========================================\n")
+
                         patient_vector.append(feature_df)
 
                 update_pbar(p_bar_entry, start_time, 2, "concatenating", t, config_obj)

@@ -18,20 +18,24 @@ from pat2vec.pat2vec_get_methods.get_method_drugs import DRUG_FIELDS
 from pat2vec.pat2vec_get_methods.get_method_hosp_site import HOSP_SITE_FIELDS
 from pat2vec.pat2vec_get_methods.get_method_smoking import SMOKING_FIELDS
 from pat2vec.pat2vec_get_methods.get_method_epic_encounters import EPIC_ENCOUNTER_FIELDS
-from pat2vec.pat2vec_get_methods.get_method_epic_imaging_reports import (
-    EPIC_IMAGING_REPORTS_FIELDS,
-)
+
+# epic_imaging_reports, epic_orders, epic_medical_history are now only available via annotations
+# from pat2vec.pat2vec_get_methods.get_method_epic_imaging_reports import (
+#     EPIC_IMAGING_REPORTS_FIELDS,
+# )
 from pat2vec.pat2vec_get_methods.get_method_epic_patients import EPIC_PATIENTS_FIELDS
 from pat2vec.pat2vec_get_methods.get_method_epic_lab_results import (
     EPIC_LAB_RESULTS_FIELDS,
 )
-from pat2vec.pat2vec_get_methods.get_method_epic_orders import EPIC_ORDERS_FIELDS
-from pat2vec.pat2vec_get_methods.get_method_epic_medical_history import (
-    EPIC_MEDICAL_HISTORY_FIELDS,
-)
-from pat2vec.pat2vec_get_methods.get_method_epic_clinical_notes import (
-    EPIC_CLINICAL_NOTES_FIELDS,
-)
+
+# epic_orders, epic_medical_history are now only available via annotations
+# from pat2vec.pat2vec_get_methods.get_method_epic_orders import EPIC_ORDERS_FIELDS
+# from pat2vec.pat2vec_get_methods.get_method_epic_medical_history import (
+#     EPIC_MEDICAL_HISTORY_FIELDS,
+# )
+# from pat2vec.pat2vec_get_methods.get_method_epic_clinical_notes import (
+#     EPIC_CLINICAL_NOTES_FIELDS,
+# )
 from pat2vec.pat2vec_get_methods.get_method_epic_clinical_notes_appointments import (
     EPIC_CLINICAL_NOTES_APPOINTMENTS_FIELDS,
 )
@@ -54,7 +58,8 @@ GET_METHOD_DEFAULT_FIELDS_MAP: Dict[str, List[str]] = {
     "get_hosp_site": HOSP_SITE_FIELDS,
     "get_smoking": SMOKING_FIELDS,
     "get_epic_encounters": EPIC_ENCOUNTER_FIELDS,
-    "get_epic_imaging_reports": EPIC_IMAGING_REPORTS_FIELDS,
+    # epic_imaging_reports, epic_orders, epic_medical_history are now only available via annotations
+    # "get_epic_imaging_reports": EPIC_IMAGING_REPORTS_FIELDS,
     "get_news": [],  # NEWS_FIELDS is not defined, use empty list for now
     "get_current_pat_annotations": EMPTY_ANNOT_COLS,
     "get_current_pat_annotations_mrc_cs": EMPTY_ANNOT_COLS,
@@ -62,9 +67,9 @@ GET_METHOD_DEFAULT_FIELDS_MAP: Dict[str, List[str]] = {
     "get_current_pat_epic_orders_annotations": EMPTY_ANNOT_COLS,
     "get_epic_patients": EPIC_PATIENTS_FIELDS,
     "get_epic_lab_results": EPIC_LAB_RESULTS_FIELDS,
-    "get_epic_orders": EPIC_ORDERS_FIELDS,
-    "get_epic_medical_history": EPIC_MEDICAL_HISTORY_FIELDS,
-    "get_epic_clinical_notes": EPIC_CLINICAL_NOTES_FIELDS,
+    # "get_epic_orders": EPIC_ORDERS_FIELDS,
+    # "get_epic_medical_history": EPIC_MEDICAL_HISTORY_FIELDS,
+    # "get_epic_clinical_notes": EPIC_CLINICAL_NOTES_FIELDS,
     "get_epic_clinical_notes_appointments": EPIC_CLINICAL_NOTES_APPOINTMENTS_FIELDS,
     "get_vte_status": VTE_FIELDS,
     "get_current_pat_report_annotations": EMPTY_ANNOT_COLS,

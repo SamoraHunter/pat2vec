@@ -62,20 +62,24 @@ from pat2vec.patvec_get_batch_methods.main_get_pat_batch_textual_obs_docs import
 from pat2vec.pat2vec_get_methods.get_method_epic_encounters import (
     search_epic_encounters,
 )
-from pat2vec.pat2vec_get_methods.get_method_epic_clinical_notes import (
-    search_epic_clinical_notes,
-)
-from pat2vec.pat2vec_get_methods.get_method_epic_medical_history import (
-    search_epic_medical_history,
-)
-from pat2vec.pat2vec_get_methods.get_method_epic_orders import search_epic_orders
+
+# epic_clinical_notes, epic_medical_history, epic_orders are now only available via annotations
+# from pat2vec.pat2vec_get_methods.get_method_epic_clinical_notes import (
+#     search_epic_clinical_notes,
+# )
+# from pat2vec.pat2vec_get_methods.get_method_epic_medical_history import (
+#     search_epic_medical_history,
+# )
+# from pat2vec.pat2vec_get_methods.get_method_epic_orders import search_epic_orders
 from pat2vec.pat2vec_get_methods.get_method_epic_lab_results import (
     search_epic_lab_results,
 )
 from pat2vec.pat2vec_get_methods.get_method_epic_patients import search_epic_patients
-from pat2vec.pat2vec_get_methods.get_method_epic_imaging_reports import (
-    search_epic_imaging_reports,
-)
+
+# epic_imaging_reports is now only available via annotations - commented out
+# from pat2vec.pat2vec_get_methods.get_method_epic_imaging_reports import (
+#     search_epic_imaging_reports,
+# )
 from pat2vec.pat2vec_get_methods.get_method_epic_clinical_notes_appointments import (
     search_epic_clinical_notes_appointments,
 )
@@ -94,7 +98,6 @@ from pat2vec.util.helper_functions import (
 )
 from pat2vec.util.methods_get import (
     create_folders_for_pat,
-    filter_stripped_list,
     list_dir_wrapper,
 )
 from pat2vec.util.methods_get_medcat import get_cat
@@ -273,8 +276,56 @@ class main:
                 if self.config_obj.verbosity > 0
                 else None
             )
+        elif self.config_obj.storage_backend == "database":
+            # Early fetch completed patients from database for progress bar filtering
+            try:
+                engine = config_obj.db_engine
+                if not engine:
+                    logging.warning(
+                        "Database engine not initialized. Cannot fetch existing patients."
+                    )
+                    self.stripped_list_start = []
+                else:
+                    inspector = inspect(engine)
+                    t_feat = (
+                        "features_features" if engine.name == "sqlite" else "features"
+                    )
+                    s_feat = None if engine.name == "sqlite" else "features"
+
+                    if inspector.has_table(t_feat, schema=s_feat):
+                        with engine.connect() as connection:
+                            full_t = (
+                                f'"{t_feat}"'
+                                if engine.name == "sqlite"
+                                else '"features"."features"'
+                            )
+                            id_col = config_obj.patient_id_column_name
+                            result = connection.execute(
+                                text(f'SELECT DISTINCT "{id_col}" FROM {full_t}')
+                            )
+                            self.stripped_list_start = [str(row[0]) for row in result]
+                            logging.info(
+                                f"Found {len(self.stripped_list_start)} existing patients in database."
+                            )
+                    else:
+                        self.stripped_list_start = []
+            except Exception as e:
+                logging.warning(f"Could not fetch existing patients from DB: {e}")
+                self.stripped_list_start = []
         else:
             self.stripped_list_start = []
+
+        # Filter out already-processed patients before creating progress bar
+        if len(self.stripped_list_start) > 0:
+            original_count = len(self.all_patient_list)
+            self.all_patient_list = [
+                p
+                for p in self.all_patient_list
+                if str(p) not in self.stripped_list_start
+            ]
+            logging.info(
+                f"Filtering {original_count - len(self.all_patient_list)} already-processed patients from progress bar"
+            )
 
         self.t = trange(
             len(self.all_patient_list),
@@ -347,55 +398,6 @@ class main:
                     "No pre-existing filters found in model. Processing all entities."
                 )
 
-        if self.config_obj.storage_backend == "database":
-            self.stripped_list_start = []
-            try:
-                engine = self.config_obj.db_engine
-                if not engine:
-                    logging.warning(
-                        "Database engine not initialized in config_obj. Cannot fetch existing patients."
-                    )
-                else:
-                    inspector = inspect(engine)
-                    # Check for table existence with SQLite support
-                    t_feat = (
-                        "features_features" if engine.name == "sqlite" else "features"
-                    )
-                    s_feat = None if engine.name == "sqlite" else "features"
-
-                    if inspector.has_table(t_feat, schema=s_feat):
-                        with engine.connect() as connection:
-                            full_t = (
-                                f'"{t_feat}"'
-                                if engine.name == "sqlite"
-                                else '"features"."features"'
-                            )
-                            id_col = self.config_obj.patient_id_column_name
-                            result = connection.execute(
-                                text(f'SELECT DISTINCT "{id_col}" FROM {full_t}')
-                            )
-                            self.stripped_list_start = [str(row[0]) for row in result]
-                            logging.info(
-                                f"Found {len(self.stripped_list_start)} existing patients in database."
-                            )
-            except Exception as e:
-                logging.warning(f"Could not fetch existing patients from DB: {e}")
-        else:
-            self.stripped_list = [
-                x.replace(".csv", "")
-                for x in list_dir_wrapper(
-                    path=self.current_pat_lines_path, config_obj=config_obj
-                )
-            ]
-            if not self.config_obj.individual_patient_window:
-                self.stripped_list, self.stripped_list_start = filter_stripped_list(
-                    self.stripped_list, config_obj=self.config_obj
-                )
-            else:
-                logging.info(
-                    "Skipped stripping patient list because individual_patient_window is enabled."
-                )
-
         self.n_pat_lines = config_obj.n_pat_lines
 
         if self.config_obj.prefetch_pat_batches:
@@ -429,7 +431,12 @@ class main:
             A dictionary where keys are batch names (e.g., 'batch_epr') and
             values are the corresponding pandas DataFrames. If a data source is
             disabled or returns no data, the value will be an empty DataFrame.
+
+        Debug logging: Logs epic_clinical_notes_annotations fetch status,
+        row counts, columns, and MedCAT feature presence.
         """
+        print("\n=== DEBUG _get_patient_data_batches START ===")
+        print(f"Patient: {current_pat_client_id_code}")
         empty_return = pd.DataFrame()
         empty_return_epr = pd.DataFrame(columns=["updatetime", "body_analysed"])
         empty_return_mct = pd.DataFrame(
@@ -581,30 +588,8 @@ class main:
                 "empty": empty_return,
                 "id_arg": "patient_durable_keys",
             },
-            {
-                "option": "epic_clinical_notes",
-                "var": "batch_epic_clinical_notes",
-                "func": search_epic_clinical_notes,
-                "args": {},
-                "empty": empty_return,
-                "id_arg": "patient_durable_keys",
-            },
-            {
-                "option": "epic_medical_history",
-                "var": "batch_epic_medical_history",
-                "func": search_epic_medical_history,
-                "args": {},
-                "empty": empty_return,
-                "id_arg": "patient_durable_keys",
-            },
-            {
-                "option": "epic_orders",
-                "var": "batch_epic_orders",
-                "func": search_epic_orders,
-                "args": {},
-                "empty": empty_return,
-                "id_arg": "patient_durable_keys",
-            },
+            # epic_clinical_notes, epic_medical_history, epic_orders are now only available via annotations
+            # The raw text data is not fetched directly - it's processed through annotation batch fetchers
             {
                 "option": "epic_lab_results",
                 "var": "batch_epic_lab_results",
@@ -621,14 +606,7 @@ class main:
                 "empty": empty_return,
                 "id_arg": "patient_durable_keys",
             },
-            {
-                "option": "epic_imaging_reports",
-                "var": "batch_epic_imaging_reports",
-                "func": search_epic_imaging_reports,
-                "args": {},
-                "empty": empty_return,
-                "id_arg": "patient_durable_keys",
-            },
+            # epic_imaging_reports is now only available via annotations - config removed
             {
                 "option": "epic_clinical_notes_appointments",
                 "var": "batch_epic_clinical_notes_appointments",
@@ -669,6 +647,8 @@ class main:
 
         batches = {}
 
+        print(f"DEBUG: About to fetch {len(batch_configs)} standard batches")
+
         # Fetch standard batches
         for config in batch_configs:
             if self.config_obj.main_options.get(config["option"], True):
@@ -687,6 +667,23 @@ class main:
                     call_kwargs["output_filename"] = None
 
                 res = config["func"](**call_kwargs)
+
+                # Add debug logging for epic clinical notes
+                if config["var"] == "batch_epic_clinical_notes_annotations":
+                    print("\n=== DEBUG batch_epic_clinical_notes_annotations ===")
+                    print(f"Result type: {type(res)}")
+                    print(f"Row count: {len(res) if res is not None else 'None'}")
+                    if res is not None and not res.empty:
+                        print(f"Columns: {res.columns.tolist()}")
+                        print(f"Has pretty_name: {'pretty_name' in res.columns}")
+                        print(f"Has cui: {'cui' in res.columns}")
+                        if "pretty_name" in res.columns:
+                            print(
+                                f"Unique pretty_names: {res['pretty_name'].nunique()}"
+                            )
+                    else:
+                        print("WARNING: Batch is None or empty!")
+                    print("==========================================\n")
 
                 id_col = (
                     config["args"].get("id_field_name", "document_PatientDurableKey")
@@ -721,6 +718,8 @@ class main:
                     batches[config["var"]] = batch_result
             else:
                 batches[config["var"]] = config["empty"]
+
+        print("\n=== DEBUG _get_patient_data_batches END ===")
 
         return batches
 
@@ -1178,7 +1177,7 @@ class main:
         # 1. Set up time window for the patient
         date_list = self._setup_patient_time_window(current_pat_client_id_code)
         if date_list is None:
-
+            self.t.update(1)
             return  # Skip patient if time window setup fails
 
         # 2. Update progress and fetch data batches

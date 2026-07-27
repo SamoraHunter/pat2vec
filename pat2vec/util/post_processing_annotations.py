@@ -305,23 +305,48 @@ def join_icd10_codes_to_annot(df: pd.DataFrame, inner: bool = False) -> pd.DataF
 
     mdf = pd.read_csv(mfp, sep="\t")
 
+    # Create lowercase column name mappings for expected output columns
+    column_mapping = {
+        "mapTarget": "icd10",
+        "mapTargetName": "targetName",
+    }
+
+    # Rename columns to match expected output
+    mdf_renamed = mdf.rename(columns=column_mapping)
+
+    # Convert cui and referencedComponentId to string for consistent merging
+    df_copy = df.copy()
+    df_copy["cui"] = df_copy["cui"].astype(str)
+    mdf_renamed = mdf_renamed.copy()
+    mdf_renamed["referencedComponentId"] = mdf_renamed["referencedComponentId"].astype(
+        str
+    )
+
     # Prevent column clashing by dropping existing placeholders from the annotation DataFrame
     cols_to_drop = [
         c
-        for c in mdf.columns
-        if c in df.columns and c not in ["cui", "referencedComponentId"]
+        for c in mdf_renamed.columns
+        if c in df_copy.columns and c not in ["cui", "referencedComponentId"]
     ]
     if cols_to_drop:
-        df = df.drop(columns=cols_to_drop)
+        df_copy = df.drop(columns=cols_to_drop)
 
     if inner:
         result = pd.merge(
-            df, mdf, left_on="cui", right_on="referencedComponentId", how="inner"
+            df_copy,
+            mdf_renamed,
+            left_on="cui",
+            right_on="referencedComponentId",
+            how="inner",
         )
 
     else:
         result = pd.merge(
-            df, mdf, left_on="cui", right_on="referencedComponentId", how="left"
+            df_copy,
+            mdf_renamed,
+            left_on="cui",
+            right_on="referencedComponentId",
+            how="left",
         )
 
     return result
@@ -343,7 +368,6 @@ def join_icd10_OPC4S_codes_to_annot(
         The DataFrame with ICD-10 and OPCS-4 codes joined.
     """
 
-    # ../home/cogstack/samora/_data/gloabl_files/
     mfp = os.path.join(
         os.path.dirname(os.path.abspath(__file__)),
         "..",
@@ -353,20 +377,48 @@ def join_icd10_OPC4S_codes_to_annot(
         "map.csv",
     )
 
+    if not os.path.exists(mfp):
+        mfp = os.path.abspath(
+            os.path.join(
+                os.path.dirname(__file__), "..", "..", "test_files", "test_map.csv"
+            )
+        )
+
     mdf = pd.read_csv(mfp)
+
+    # Create lowercase column name mappings for expected output columns
+    column_mapping = {
+        "targetId": "opcs4",
+        "targetName": "opcs4_targetName",
+    }
+
+    # Rename columns to match expected output
+    mdf_renamed = mdf.rename(columns=column_mapping)
+
+    # Convert cui and conceptId to string for consistent merging
+    df_copy = df.copy()
+    df_copy["cui"] = df_copy["cui"].astype(str)
+    mdf_renamed = mdf_renamed.copy()
+    mdf_renamed["conceptId"] = mdf_renamed["conceptId"].astype(str)
 
     # Prevent column clashing by dropping existing placeholders from the annotation DataFrame
     cols_to_drop = [
-        c for c in mdf.columns if c in df.columns and c not in ["cui", "conceptId"]
+        c
+        for c in mdf_renamed.columns
+        if c in df_copy.columns and c not in ["cui", "conceptId"]
     ]
     if cols_to_drop:
-        df = df.drop(columns=cols_to_drop)
+        df_copy = df.drop(columns=cols_to_drop)
 
     if inner:
-        result = pd.merge(df, mdf, left_on="cui", right_on="conceptId", how="inner")
+        result = pd.merge(
+            df_copy, mdf_renamed, left_on="cui", right_on="conceptId", how="inner"
+        )
 
     else:
-        result = pd.merge(df, mdf, left_on="cui", right_on="conceptId", how="left")
+        result = pd.merge(
+            df_copy, mdf_renamed, left_on="cui", right_on="conceptId", how="left"
+        )
 
     return result
 

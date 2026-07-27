@@ -281,12 +281,18 @@ class TestIndexIntegrationCompleteness(unittest.TestCase):
             "get_core_02": "core02",  # get_core_02 is implemented in get_method_core02.py
             "get_current_pat_annotations": "pat_annotations",  # in get_method_pat_annotations.py
             "get_current_pat_annotations_mrc_cs": "current_pat_annotations_mrc_cs",  # in get_method_current_pat_annotations_mrc_cs.py
+            "get_epic_clinical_notes": None,  # replaced with annotation version
+            "get_epic_medical_history": None,  # replaced with annotation version
+            "get_epic_imaging_reports": None,  # replaced with annotation version
+            "get_epic_orders": None,  # primary version is via annotations (though original still exists)
         }
 
         for method_name in index_map_mod.GET_METHOD_INDEX_MAP.keys():
             with self.subTest(method=method_name):
                 if method_name in exceptions:
                     mod_suffix = exceptions[method_name]
+                    if mod_suffix is None:
+                        continue  # Method intentionally excluded (replaced with annotation version)
                 else:
                     # Default logic: strip common prefixes and suffixes
                     mod_suffix = (
@@ -309,7 +315,15 @@ class TestIndexIntegrationCompleteness(unittest.TestCase):
 
     def test_default_fields_mappings(self):
         """Ensure every vectorization method has default fields defined for feature extraction."""
+        skipped_methods = {
+            "get_epic_clinical_notes",  # replaced with annotation version
+            "get_epic_medical_history",  # replaced with annotation version
+            "get_epic_imaging_reports",  # replaced with annotation version
+            "get_epic_orders",  # primary version is via annotations (though original still exists)
+        }
         for method_name in index_map_mod.GET_METHOD_INDEX_MAP.keys():
+            if method_name in skipped_methods:
+                continue
             with self.subTest(method=method_name):
                 self.assertIn(
                     method_name,
