@@ -1,0 +1,6 @@
+Unnamed: 0,conceptId,conceptName,projectName,mapBlock,mapGroup,mapPriority,rule,targetId,targetName
+0,38341003,"Hypertensive disorder, systemic arterial (disorder)",ICD10,1,1,1,ALTERNATIVE,O16.X,Unspecified maternal hypertension
+1,38341003,"Hypertensive disorder, systemic arterial (disorder)",ICD10,1,1,2,TRUE,I10.X,Essential (primary) hypertension
+0,8517006,Ex-smoker (finding),ICD10,1,1,1,TRUE,Z86.4,Personal history of psychoactive substance abuse
+0,278528006,Facial swelling (finding),ICD10,1,1,1,TRUE,R22.0,"Localized swelling, mass and lump, head"
+0,53461003,Normal size (finding),ICD10,1,1,1,TRUE,,No target
