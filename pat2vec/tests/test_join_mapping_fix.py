@@ -44,6 +44,7 @@ class TestJoinMappingCodes(unittest.TestCase):
         result = join_icd10_codes_to_annot(
             self.annotation_df.copy(),
             inner=True,
+            file_path=self.icd10_map_path,
         )
 
         # Should have 5 rows due to duplicates in map (CUI 38341003 has multiple ICD-10 codes, appears twice = 2*2 + 1 = 5)
@@ -65,6 +66,7 @@ class TestJoinMappingCodes(unittest.TestCase):
         result = join_icd10_codes_to_annot(
             self.annotation_df.copy(),
             inner=False,
+            file_path=self.icd10_map_path,
         )
 
         # Should have 6 rows due to duplicates in map (CUI 38341003 has multiple ICD-10 codes, appears twice in annotations = 2*2 + 1 + 1 non-matching = 6)
@@ -104,6 +106,7 @@ class TestJoinMappingCodes(unittest.TestCase):
         result = join_icd10_OPC4S_codes_to_annot(
             self.annotation_df.copy(),
             inner=True,
+            file_path=self.map_csv_path,
         )
 
         # Should have 5 rows due to duplicates in map.csv (CUI 38341003 has multiple entries)
@@ -118,6 +121,7 @@ class TestJoinMappingCodes(unittest.TestCase):
         result = join_icd10_OPC4S_codes_to_annot(
             self.annotation_df.copy(),
             inner=False,
+            file_path=self.map_csv_path,
         )
 
         # Should have 6 rows due to duplicates in map.csv + 1 non-matching row
@@ -149,6 +153,7 @@ class TestJoinMappingCodes(unittest.TestCase):
         result = join_icd10_codes_to_annot(
             self.annotation_df.copy(),
             inner=False,
+            file_path=self.icd10_map_path,
         )
 
         # Should have icd10 column
@@ -166,6 +171,7 @@ class TestJoinMappingCodes(unittest.TestCase):
         result = join_icd10_OPC4S_codes_to_annot(
             self.annotation_df.copy(),
             inner=False,
+            file_path=self.map_csv_path,
         )
 
         # Should have opcs4 column (renamed from targetId in map.csv)

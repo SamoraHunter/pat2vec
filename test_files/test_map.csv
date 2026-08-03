@@ -1,5 +1,6 @@
-,conceptId,conceptName,projectName,mapBlock,mapGroup,mapPriority,rule,targetId,targetName
-0,278528006,Facial swelling (finding),ICD10,1,1,1,TRUE,R22.0,"Localized swelling, mass and lump, head"
-0,53461003,Normal size (finding),ICD10,1,1,1,TRUE,,No target
-0,286933003,Confusional state (disorder),ICD10,1,1,1,ALTERNATIVE,F05.8,Other delirium
-1,286933003,Confusional state (disorder),ICD10,1,1,2,ALTERNATIVE,F44.8,Other dissociative [conversion] disorders
+conceptId,conceptName,targetId,targetName
+38341003,Hypertension,I10,Hypertension
+38341003,Hypertension,I11,Hypertensive chronic kidney disease
+8517006,Smoking,Z86.4,Personal history of smoking
+100,Test Concept 1,X10,test concept 1
+101,Test Concept 2,X11,test concept 2

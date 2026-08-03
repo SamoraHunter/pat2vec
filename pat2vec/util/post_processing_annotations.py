@@ -279,7 +279,11 @@ def extract_types_from_csv(directory: str) -> List[str]:
     return list(all_types)
 
 
-def join_icd10_codes_to_annot(df: pd.DataFrame, inner: bool = False) -> pd.DataFrame:
+def join_icd10_codes_to_annot(
+    df: pd.DataFrame,
+    inner: bool = False,
+    file_path: Optional[str] = None,
+) -> pd.DataFrame:
     """Joins ICD-10 codes to an annotation DataFrame.
 
     This function merges the input DataFrame `df` with a predefined ICD-10 mapping
@@ -288,20 +292,36 @@ def join_icd10_codes_to_annot(df: pd.DataFrame, inner: bool = False) -> pd.DataF
     Args:
         df: The annotation DataFrame.
         inner: If True, performs an inner merge; otherwise, performs a left merge.
+        file_path: Optional path to the ICD-10 mapping file. If not provided, uses default
+                   production data or falls back to test files.
 
     Returns:
         The DataFrame with ICD-10 codes joined.
     """
 
-    mfp = os.path.join(
-        os.path.dirname(os.path.abspath(__file__)),
-        "..",
-        "..",
-        "snomed_methods",
-        "snomed_icd10_map",
-        "data",
-        "tls_Icd10cmHumanReadableMap_US1000124_20230901.tsv",
-    )
+    if file_path is None:
+        mfp = os.path.join(
+            os.path.dirname(os.path.abspath(__file__)),
+            "..",
+            "..",
+            "snomed_methods",
+            "snomed_icd10_map",
+            "data",
+            "tls_Icd10cmHumanReadableMap_US1000124_20230901.tsv",
+        )
+
+        if not os.path.exists(mfp):
+            mfp = os.path.abspath(
+                os.path.join(
+                    os.path.dirname(__file__),
+                    "..",
+                    "..",
+                    "test_files",
+                    "tls_Icd10_test_sample.tsv",
+                )
+            )
+    else:
+        mfp = file_path
 
     mdf = pd.read_csv(mfp, sep="\t")
 
@@ -353,7 +373,9 @@ def join_icd10_codes_to_annot(df: pd.DataFrame, inner: bool = False) -> pd.DataF
 
 
 def join_icd10_OPC4S_codes_to_annot(
-    df: pd.DataFrame, inner: bool = False
+    df: pd.DataFrame,
+    inner: bool = False,
+    file_path: Optional[str] = None,
 ) -> pd.DataFrame:
     """Joins ICD-10 and OPCS-4 codes to an annotation DataFrame.
 
@@ -363,26 +385,31 @@ def join_icd10_OPC4S_codes_to_annot(
     Args:
         df: The annotation DataFrame.
         inner: If True, performs an inner merge; otherwise, performs a left merge.
+        file_path: Optional path to the OPCS-4 mapping file. If not provided, uses default
+                   production data or falls back to test files.
 
     Returns:
         The DataFrame with ICD-10 and OPCS-4 codes joined.
     """
 
-    mfp = os.path.join(
-        os.path.dirname(os.path.abspath(__file__)),
-        "..",
-        "..",
-        "snomed_methods",
-        "snomed_to_icd10_opcs4",
-        "map.csv",
-    )
-
-    if not os.path.exists(mfp):
-        mfp = os.path.abspath(
-            os.path.join(
-                os.path.dirname(__file__), "..", "..", "test_files", "test_map.csv"
-            )
+    if file_path is None:
+        mfp = os.path.join(
+            os.path.dirname(os.path.abspath(__file__)),
+            "..",
+            "..",
+            "snomed_methods",
+            "snomed_to_icd10_opcs4",
+            "map.csv",
         )
+
+        if not os.path.exists(mfp):
+            mfp = os.path.abspath(
+                os.path.join(
+                    os.path.dirname(__file__), "..", "..", "test_files", "test_map.csv"
+                )
+            )
+    else:
+        mfp = file_path
 
     mdf = pd.read_csv(mfp)
 
