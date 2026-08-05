@@ -7,6 +7,7 @@ import pandas as pd
 from unittest.mock import MagicMock, patch
 
 from pat2vec.util.post_processing_build_methods import (
+    build_merged_epr_mct_annot_df,
     optimize_dtypes,
     join_docs_to_annots,
     retrieve_pat_bloods,
@@ -292,3 +293,113 @@ class TestPostProcessingBuildMethodsExtended:
         # Left join means annots rows are preserved with NaN for missing matches
         assert len(result) == 1
         assert pd.isna(result.iloc[0]["content"])
+
+    def test_build_merged_epr_mct_annot_df_empty_database_tables(self):
+        """Test annotation merging when database tables don't exist yet (epic indices).
+
+        This simulates the scenario where:
+        1. pat2vec ran but epic annotations tables don't contain data for these patients
+        2. Tables may not exist yet because no MedCAT annotations were found
+
+        The fix ensures that even with empty results, the CSV is created with proper headers.
+        """
+        import tempfile
+        import shutil
+
+        # Create temp directory for this test
+        test_dir = tempfile.mkdtemp()
+        try:
+            config_obj = MagicMock()
+            config_obj.root_path = test_dir
+            config_obj.proj_name = "test_project"
+            config_obj.storage_backend = "database"
+            config_obj.db_engine = MagicMock()
+
+            # Mock get_df_from_db to return empty DataFrames (like non-existent tables)
+            with patch(
+                "pat2vec.util.post_processing_build_methods.get_df_from_db"
+            ) as mock_get_df:
+                # Return empty DataFrame for each table query
+                mock_get_df.return_value = pd.DataFrame(columns=["client_idcode"])
+
+                output_path = build_merged_epr_mct_annot_df(
+                    ["P1", "P2"], config_obj, overwrite=True
+                )
+
+            # Verify file was created with headers even though no data exists
+            assert os.path.exists(output_path)
+            df = pd.read_csv(output_path)
+            # Should have empty DataFrame with headers from EMPTY_ANNOT_COLS
+            assert len(df) == 0
+        finally:
+            shutil.rmtree(test_dir)
+
+    def test_build_merged_epr_mct_annot_df_with_partial_data(self):
+        """Test annotation merging when some epic tables have data but others don't.
+
+        This simulates partial success where:
+        1. Some annotation tables exist with patient data
+        2. Other tables (new epic indices) are empty
+
+        The merged file should contain data from non-empty tables.
+        """
+        import tempfile
+        import shutil
+
+        test_dir = tempfile.mkdtemp()
+        try:
+            config_obj = MagicMock()
+            config_obj.root_path = test_dir
+            config_obj.proj_name = "test_project"
+            config_obj.storage_backend = "database"
+            config_obj.db_engine = MagicMock()
+
+            # Create non-empty DataFrame for one table, empty for others
+            df_epr = pd.DataFrame(
+                {
+                    "client_idcode": ["P1"],
+                    "cui": [100],
+                    "updatetime": ["2024-01-01"],
+                    "pretty_name": ["Test Annotation"],
+                }
+            )
+
+            # Empty DataFrames for epic tables
+            empty_df = pd.DataFrame(columns=["client_idcode"])
+
+            def mock_get_df_side_effect(
+                config,
+                schema,
+                table,
+                patient_ids=None,
+                patient_id_column="client_idcode",
+                columns=None,
+            ):
+                # Return non-empty for epr docs, empty for epic tables
+                if "ann_epr_docs" in table:
+                    return df_epr
+                elif (
+                    "ann_epic_" in table
+                    or "ann_reports" in table
+                    or "ann_textual_obs" in table
+                ):
+                    return empty_df
+                else:
+                    return pd.DataFrame()
+
+            with patch(
+                "pat2vec.util.post_processing_build_methods.get_df_from_db",
+                side_effect=mock_get_df_side_effect,
+            ):
+                output_path = build_merged_epr_mct_annot_df(
+                    ["P1"], config_obj, overwrite=True
+                )
+
+            # Should have data from EPR docs
+            assert os.path.exists(output_path)
+            df = pd.read_csv(output_path)
+            assert len(df) > 0
+            assert "cui" in df.columns
+
+        finally:
+            shutil.rmtree(test_dir)

@@ -35,7 +35,6 @@ from pat2vec.util.post_processing import (
 
 
 class TestPostProcessing(unittest.TestCase):
-
     def setUp(self):
         self.test_dir = tempfile.mkdtemp()
         self.config_obj = MagicMock()
@@ -111,20 +110,19 @@ class TestPostProcessing(unittest.TestCase):
             index=False,
         )
 
-        # Sample ICD-10 data
+        # Sample ICD-10 map data
         self.icd10_map_df = pd.DataFrame(
             {
                 "referencedComponentId": [100, 101, 102],
-                "icd10": ["J45", "J44", "I10"],
-                "targetId": ["J45", "J44", "I10"],
+                "mapTarget": ["J45", "J44", "I10"],
+                "mapTargetName": ["Asthma", "COPD", "Hypertension"],
             }
         )
         self.icd10_opcs4_map_df = pd.DataFrame(
             {
                 "conceptId": [100, 101, 102],
-                "icd10": ["J45", "J44", "I10"],
-                "opcs4": ["X10", "X11", "X12"],
-                "targetId": ["J45", "J44", "I10"],
+                "targetId": ["X10", "X11", "X12"],
+                "targetName": ["Test Concept 1", "Test Concept 2", "Test Concept 3"],
             }
         )
 
@@ -138,11 +136,26 @@ class TestPostProcessing(unittest.TestCase):
         shutil.rmtree(self.test_dir)
 
     def _mock_read_csv(self, filepath, **kwargs):
-        if isinstance(filepath, str):
-            if "snomed_icd10_map" in filepath:
-                return self.icd10_map_df
-            if "snomed_to_icd10_opcs4" in filepath:
-                return self.icd10_opcs4_map_df
+        if isinstance(filepath, str) or hasattr(filepath, "__fspath__"):
+            path_str = str(filepath)
+            # ICD-10 mapping file patterns (including production and fallback paths)
+            icd10_patterns = [
+                "snomed_icd10_map",
+                "tls_Icd10",
+                "Icd10cmHumanReadableMap",
+                "test_icd10",
+            ]
+            for pattern in icd10_patterns:
+                if pattern in path_str:
+                    return self.icd10_map_df
+            # OPCS-4 mapping file patterns
+            opcs4_patterns = [
+                "snomed_to_icd10_opcs4",
+                "test_map.csv",
+            ]
+            for pattern in opcs4_patterns:
+                if pattern in path_str:
+                    return self.icd10_opcs4_map_df
         # Fallback for actual file reads using unpatched version
         return self.original_read_csv(filepath, **kwargs)
 

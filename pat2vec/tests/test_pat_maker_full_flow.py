@@ -93,9 +93,9 @@ class TestPatMakerFullFlow(unittest.TestCase):
         mock_cat = MagicMock()
         # Mock get_entities_multi_texts to return empty or dummy annotations
         # This prevents the annotation step from failing
-        mock_cat.get_entities_multi_texts.side_effect = lambda texts: [
-            {"entities": {}}
-        ] * len(texts)
+        mock_cat.get_entities_multi_texts.side_effect = lambda texts: (
+            [{"entities": {}}] * len(texts)
+        )
         mock_get_cat.return_value = mock_cat
 
         # Ensure main_batch returns a real DataFrame so to_sql actually runs

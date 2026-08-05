@@ -54,8 +54,8 @@ class TestPresentationMethods(unittest.TestCase):
         # Mock the presentation object and its nested components
         mock_pres = MagicMock()
         mock_presentation_cls.return_value = mock_pres
-        mock_inches.side_effect = (
-            lambda x: x
+        mock_inches.side_effect = lambda x: (
+            x
         )  # Simply return the input value for positioning
 
         images = ["img1.png", "img2.jpg"]

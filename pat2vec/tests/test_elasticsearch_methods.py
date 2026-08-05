@@ -12,7 +12,6 @@ from pat2vec.util.elasticsearch_methods import (
 
 
 class TestElasticsearchMethods(unittest.TestCase):
-
     def test_handle_inconsistent_dtypes(self):
         """Test casting columns to the majority data type."""
         df = pd.DataFrame(

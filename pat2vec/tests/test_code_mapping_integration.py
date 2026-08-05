@@ -1,3 +1,4 @@
+import os
 import unittest
 import pandas as pd
 from unittest.mock import MagicMock, patch
@@ -13,6 +14,8 @@ from pat2vec.util.methods_annotation import (
     annot_pat_batch_docs,
     multi_annots_to_df_reports,
 )
+
+original_read_csv = pd.read_csv
 
 
 class TestCodeMappingIntegration(unittest.TestCase):
@@ -46,10 +49,10 @@ class TestCodeMappingIntegration(unittest.TestCase):
 
         # Mock MedCAT CAT
         self.mock_cat = MagicMock()
-        # Mock entities return (CUIs that match our dummy maps)
+        # Mock entities return (CUIs that match our dummy maps - from test_icd10_map.tsv)
         self.mock_cat.get_entities_multi_texts.return_value = [
-            {"entities": {"e1": {"cui": "SNOMED_C1", "pretty_name": "Asthma"}}},
-            {"entities": {"e2": {"cui": "SNOMED_P1", "pretty_name": "Incision"}}},
+            {"entities": {"e1": {"cui": "100", "pretty_name": "Asthma"}}},
+            {"entities": {"e2": {"cui": "101", "pretty_name": "Incision"}}},
         ]
 
         # Patch get_cat in the namespace where it is called
@@ -57,22 +60,44 @@ class TestCodeMappingIntegration(unittest.TestCase):
             f"{__name__}.get_cat", return_value=self.mock_cat
         ).start()
 
-        # Define dummy mapping data
+        # Define dummy mapping data matching test_icd10_map.tsv format
+        # For ICD-10: referencedComponentId -> mapTarget (which becomes icd10)
         self.icd10_map = pd.DataFrame(
-            {"referencedComponentId": ["SNOMED_C1"], "icd10": ["J45.9"]}
+            {
+                "referencedComponentId": [100, 101],
+                "mapTarget": ["J45", "J44"],
+                "mapTargetName": ["Asthma", "COPD"],
+            }
         )
-        self.opcs4_map = pd.DataFrame({"conceptId": ["SNOMED_P1"], "opcs4": ["W12.3"]})
+        # For OPCS-4: conceptId -> targetId (which becomes opcs4), matching test_map.csv format
+        self.opcs4_map = pd.DataFrame(
+            {
+                "conceptId": [100, 101],
+                "targetId": ["X10", "X11"],
+                "targetName": ["Test Concept 1", "Test Concept 2"],
+            }
+        )
 
         # Patch pd.read_csv to serve our dummy mapping tables when requested by join logic
         self.patch_read_csv = patch("pandas.read_csv").start()
 
         def side_effect(path, **kwargs):
             path_str = str(path)
-            if "snomed_icd10_map" in path_str:
-                return self.icd10_map
-            if "snomed_to_icd10_opcs4" in path_str:
+            filename = os.path.basename(path_str)
+            icd10_patterns = [
+                "test_icd10",
+                "tls_Icd10",
+                "Icd10cmHumanReadableMap",
+                "icd10_map",
+            ]
+            # Match ICD-10 test mapping files (including production and fallback patterns)
+            for pattern in icd10_patterns:
+                if pattern in filename or pattern in path_str:
+                    return self.icd10_map
+            # Match OPCS-4 mapping file (both test and fallback patterns)
+            if "test_map.csv" == filename or "snomed_to_icd10_opcs4" in path_str:
                 return self.opcs4_map
-            return pd.read_csv(path, **kwargs)
+            return original_read_csv(path, **kwargs)
 
         self.patch_read_csv.side_effect = side_effect
         self.addCleanup(patch.stopall)
@@ -125,13 +150,13 @@ class TestCodeMappingIntegration(unittest.TestCase):
         self.assertIn("icd10", annotated_df.columns)
         self.assertIn("opcs4", annotated_df.columns)
 
-        # Verify SNOMED_C1 mapped to J45.9
-        asthma_row = annotated_df[annotated_df["cui"] == "SNOMED_C1"]
-        self.assertEqual(asthma_row.iloc[0]["icd10"], "J45.9")
+        # Verify CUI 100 mapped to J45
+        asthma_row = annotated_df[annotated_df["cui"] == "100"]
+        self.assertEqual(asthma_row.iloc[0]["icd10"], "J45")
 
-        # Verify SNOMED_P1 mapped to W12.3
-        proc_row = annotated_df[annotated_df["cui"] == "SNOMED_P1"]
-        self.assertEqual(proc_row.iloc[0]["opcs4"], "W12.3")
+        # Verify CUI 101 mapped to X11 (OPCS-4)
+        proc_row = annotated_df[annotated_df["cui"] == "101"]
+        self.assertEqual(proc_row.iloc[0]["opcs4"], "X11")
 
 
 if __name__ == "__main__":

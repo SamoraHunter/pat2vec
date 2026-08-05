@@ -6,7 +6,6 @@ from pat2vec.util.docker_elastic import ElasticContainer
 
 
 class TestElasticContainer(unittest.TestCase):
-
     def setUp(self):
         self.container = ElasticContainer()
 
@@ -162,7 +161,6 @@ class TestElasticContainer(unittest.TestCase):
                 self.container, "_get_host_gateway_ip", return_value="172.17.0.1"
             ),
         ):
-
             self.container._wait_for_ready(timeout=5)
             self.assertEqual(self.container.host, "127.0.0.1")
 

@@ -122,7 +122,6 @@ class TestIndexIntegrationCompleteness(unittest.TestCase):
     def test_search_methods_presence(self):
         """Ensure every index has a dedicated iterative fuzzy searcher."""
         for idx in self.indices:
-
             if idx in [
                 "bloods",
                 "bmi",

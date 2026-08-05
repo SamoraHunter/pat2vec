@@ -9,8 +9,16 @@ from pat2vec.util.get_dummy_data_cohort_searcher import (
     generate_epr_documents_data,
     dummy_CAT,
 )
-from pat2vec.util.helper_functions import save_raw_patient_batch, get_df_from_db, save_patient_features, get_all_features  # type: ignore
-from pat2vec.util.methods_annotation import annot_pat_batch_docs, multi_annots_to_df_epr_docs  # type: ignore
+from pat2vec.util.helper_functions import (
+    save_raw_patient_batch,
+    get_df_from_db,
+    save_patient_features,
+    get_all_features,
+)  # type: ignore
+from pat2vec.util.methods_annotation import (
+    annot_pat_batch_docs,
+    multi_annots_to_df_epr_docs,
+)  # type: ignore
 from pat2vec.pat2vec_get_methods.get_method_pat_annotations import (
     get_current_pat_annotations,
 )

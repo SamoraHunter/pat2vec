@@ -9,7 +9,6 @@ import pat2vec.pat2vec_search.cogstack_search_methods as csm
 
 
 class TestIntegrationElastic(unittest.TestCase):
-
     @classmethod
     def setUpClass(cls):
         # Spin up container

@@ -10,6 +10,7 @@ class MockConfig:
     def __init__(self):
         self.batch_mode = False
         self.verbosity = 0
+        self.start_time = None
         self.global_start_year = 1995
         self.global_start_month = 1
         self.global_start_day = 1
@@ -17,6 +18,7 @@ class MockConfig:
         self.global_end_month = 12
         self.global_end_day = 31
         self.time_window_interval_delta = timedelta(days=1)
+        self.start_time = None
 
 
 def test_get_epic_patients():

@@ -12,6 +12,7 @@ class MockConfig:
     def __init__(self):
         self.batch_mode = False
         self.verbosity = 0
+        self.start_time = None
         self.global_start_year = 1995
         self.global_start_month = 1
         self.global_start_day = 1
