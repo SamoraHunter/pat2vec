@@ -247,7 +247,6 @@ def get_treatment_records_by_drug_order_name(
             f"AND {drug_time_field}:[{start_date} TO {end_date}]",
         )
     else:
-
         drug_treatment_docs = cohort_searcher_with_terms_and_search_dummy(
             index_name="order",
             fields_list=field_list,
@@ -471,7 +470,6 @@ def iterative_drug_treatment_search(
         # check output_file_path exists:
 
         if os.path.exists(output_file_path):
-
             if verbose >= 1:
                 logger.info(f"output_file_path exists: {output_file_path}")
                 logger.info(f"removing existing file: {output_file_path}")

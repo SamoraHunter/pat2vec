@@ -91,7 +91,6 @@ def get_pat_batch_textual_obs_docs(
 
     try:
         if should_fetch:
-
             batch_target = cohort_searcher_with_terms_and_search(
                 index_name="basic_observations",
                 fields_list=[
@@ -160,7 +159,6 @@ def get_pat_batch_textual_obs_docs(
                     batch_target.to_csv(batch_obs_target_path)
 
         else:
-
             batch_target = pd.read_csv(batch_obs_target_path)
 
         return batch_target

@@ -7,10 +7,8 @@ from pat2vec.util.methods_annotation_get_pat_document_annotation_batch import (
 )
 from pat2vec.util.methods_get import exist_check
 
-
 import pandas as pd
 from sqlalchemy import text
-
 
 import logging
 import json
@@ -19,7 +17,11 @@ from typing import Any, Optional
 
 
 def get_pat_batch_epr_docs_annotations(
-    current_pat_client_id_code: str, config_obj: Any, cat: Any, t: Any
+    current_pat_client_id_code: str,
+    config_obj: Any,
+    cat: Any,
+    t: Any,
+    cohort_searcher_with_terms_and_search: Optional[Any] = None,
 ) -> Optional[pd.DataFrame]:
     """Retrieves or creates annotations for a patient's EPR document batch.
 
@@ -78,6 +80,21 @@ def get_pat_batch_epr_docs_annotations(
         if pat_batch.empty:
             return None
 
+        # Standardize column names: check for original ES columns and rename to standardized names
+        # If data came from DB, it may still have original ES column names (document_Content instead of body_analysed)
+        column_aliases = {
+            "body_analysed": ["document_Content"],
+            "updatetime": ["document_CreatedWhen"],
+            "document_guid": ["id"],
+        }
+        for std_col, es_cols in column_aliases.items():
+            # If standardized col doesn't exist but one of the original ES cols does, rename it
+            if std_col not in pat_batch.columns:
+                for es_col in es_cols:
+                    if es_col in pat_batch.columns:
+                        pat_batch = pat_batch.rename(columns={es_col: std_col})
+                        break
+
         # Replace empty or NaN body_analysed with synthetic text to ensure annotations are generated
         # This fixes the IPW dataframe build which would otherwise have no valid annotations
 
@@ -134,9 +151,7 @@ def get_pat_batch_epr_docs_annotations(
                 cols_to_drop = ["_id", "_index", "_score"]
 
                 for col in cols_to_drop:
-
                     if col in batch_target.columns:
-
                         batch_target.drop(columns=col, inplace=True)
 
                 # Create a copy and serialize lists to strings for SQL compatibility

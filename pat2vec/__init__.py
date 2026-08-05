@@ -85,42 +85,33 @@ from .pat2vec_get_methods.get_method_drugs import (
     prepare_drug_datetime,
     search_drug_orders,
 )
-
-# epic_clinical_notes now only available via annotations
-# from .pat2vec_get_methods.get_method_epic_clinical_notes import (
-#     EPIC_CLINICAL_NOTES_FIELDS,
-#     get_epic_clinical_notes,
-#     search_epic_clinical_notes,
-# )
+from .pat2vec_get_methods.get_method_epic_clinical_notes_annotations import (
+    get_current_pat_epic_clinical_notes_annotations,
+)
 from .pat2vec_get_methods.get_method_epic_clinical_notes_appointments import (
     EPIC_CLINICAL_NOTES_APPOINTMENTS_FIELDS,
     get_epic_clinical_notes_appointments,
     search_epic_clinical_notes_appointments,
+)
+from .pat2vec_get_methods.get_method_epic_clinical_notes_appointments_annotations import (
+    get_current_pat_epic_clinical_notes_appointments_annotations,
 )
 from .pat2vec_get_methods.get_method_epic_encounters import (
     EPIC_ENCOUNTER_FIELDS,
     get_epic_encounters,
     search_epic_encounters,
 )
-
-# epic_imaging_reports now only available via annotations
-# from .pat2vec_get_methods.get_method_epic_imaging_reports import (
-#     EPIC_IMAGING_REPORTS_FIELDS,
-#     get_epic_imaging_reports,
-#     search_epic_imaging_reports,
-# )
+from .pat2vec_get_methods.get_method_epic_imaging_reports_annotations import (
+    get_current_pat_epic_imaging_reports_annotations,
+)
 from .pat2vec_get_methods.get_method_epic_lab_results import (
     EPIC_LAB_RESULTS_FIELDS,
     get_epic_lab_results,
     search_epic_lab_results,
 )
-
-# epic_medical_history now only available via annotations
-# from .pat2vec_get_methods.get_method_epic_medical_history import (
-#     EPIC_MEDICAL_HISTORY_FIELDS,
-#     get_epic_medical_history,
-#     search_epic_medical_history,
-# )
+from .pat2vec_get_methods.get_method_epic_medical_history_annotations import (
+    get_current_pat_epic_medical_history_annotations,
+)
 from .pat2vec_get_methods.get_method_epic_orders import (
     EPIC_ORDERS_FIELDS,
     get_epic_orders,
@@ -288,6 +279,18 @@ from .patvec_get_batch_methods.main_get_pat_batch_diagnostics import (
 from .patvec_get_batch_methods.main_get_pat_batch_drugs import (
     get_pat_batch_drugs,
 )
+from .patvec_get_batch_methods.main_get_pat_batch_epic_clinical_notes_annotations import (
+    get_pat_batch_epic_clinical_notes_annotations,
+)
+from .patvec_get_batch_methods.main_get_pat_batch_epic_imaging_reports_annotations import (
+    get_pat_batch_epic_imaging_reports_annotations,
+)
+from .patvec_get_batch_methods.main_get_pat_batch_epic_medical_history_annotations import (
+    get_pat_batch_epic_medical_history_annotations,
+)
+from .patvec_get_batch_methods.main_get_pat_batch_epic_orders_annotations import (
+    get_pat_batch_epic_orders_annotations,
+)
 from .patvec_get_batch_methods.main_get_pat_batch_epr_docs import (
     get_pat_batch_epr_docs,
 )
@@ -328,6 +331,11 @@ from .util.anonymisation_deid_documents import (
     anonymize_single_text,
     suppress_gc_collect,
     suppress_medcat_progress,
+)
+from .util.anonymize_column import (
+    ColumnAnonymizer,
+    anonymize_column,
+    deanonymize_column,
 )
 from .util.calculate_interval import (
     calculate_interval,
@@ -727,6 +735,28 @@ from .util.migrate_to_db import (
 from .util.parse_date import (
     validate_input_dates,
 )
+from .util.patient_identifier_conversion import (
+    convert_durable_key_to_hospital_numbers,
+    convert_durable_key_to_mrn,
+    convert_durable_key_to_nhs_numbers,
+    convert_durable_key_to_source_id,
+    convert_durable_keys_to_hospital_numbers,
+    convert_durable_keys_to_mrns,
+    convert_durable_keys_to_nhs_numbers,
+    convert_durable_keys_to_source_ids,
+    convert_hospital_number_to_durable_key,
+    convert_hospital_numbers_to_durable_keys,
+    convert_mrn_to_durable_key,
+    convert_mrns_to_durable_keys,
+    convert_nhs_number_to_durable_key,
+    convert_nhs_numbers_to_durable_keys,
+    convert_source_id_to_durable_key,
+    convert_source_ids_to_durable_keys,
+    extract_hospital_numbers,
+    extract_mrn,
+    extract_nhs_number,
+    extract_source_id,
+)
 from .util.post_processing_annotations import (
     EMPTY_ANNOT_COLS,
     check_list_presence,
@@ -874,6 +904,7 @@ __all__ = [
     "CORE_RESUS_FIELDS",
     "COVID_FIELDS",
     "CogStack",
+    "ColumnAnonymizer",
     "CsvProfiler",
     "DATA_TYPE_CONFIG",
     "DAY_OF_WEEK_WEIGHTS",
@@ -896,11 +927,8 @@ __all__ = [
     "EMERGENCY_TIME_WINDOW",
     "EMPTY_ANNOT_COLS",
     "EPIC_CLINICAL_NOTES_APPOINTMENTS_FIELDS",
-    "EPIC_CLINICAL_NOTES_FIELDS",
     "EPIC_ENCOUNTER_FIELDS",
-    "EPIC_IMAGING_REPORTS_FIELDS",
     "EPIC_LAB_RESULTS_FIELDS",
-    "EPIC_MEDICAL_HISTORY_FIELDS",
     "EPIC_ORDERS_FIELDS",
     "EPIC_PATIENTS_FIELDS",
     "ElasticContainer",
@@ -956,6 +984,7 @@ __all__ = [
     "aggregate_dataframe_mean",
     "analyze_client_codes",
     "annot_pat_batch_docs",
+    "anonymize_column",
     "anonymize_dataframe_quick",
     "anonymize_feature_names",
     "anonymize_single_text",
@@ -1022,6 +1051,22 @@ __all__ = [
     "compute_feature_stats",
     "config_class",
     "convert_date",
+    "convert_durable_key_to_hospital_numbers",
+    "convert_durable_key_to_mrn",
+    "convert_durable_key_to_nhs_numbers",
+    "convert_durable_key_to_source_id",
+    "convert_durable_keys_to_hospital_numbers",
+    "convert_durable_keys_to_mrns",
+    "convert_durable_keys_to_nhs_numbers",
+    "convert_durable_keys_to_source_ids",
+    "convert_hospital_number_to_durable_key",
+    "convert_hospital_numbers_to_durable_keys",
+    "convert_mrn_to_durable_key",
+    "convert_mrns_to_durable_keys",
+    "convert_nhs_number_to_durable_key",
+    "convert_nhs_numbers_to_durable_keys",
+    "convert_source_id_to_durable_key",
+    "convert_source_ids_to_durable_keys",
     "convert_timestamp_to_tuple",
     "convert_true_to_float",
     "copy_files_and_dirs",
@@ -1045,6 +1090,7 @@ __all__ = [
     "create_schema_from_dataframe",
     "dataframe_generator",
     "date_cleaner",
+    "deanonymize_column",
     "deanonymize_feature_names",
     "demo_to_latest",
     "determine_document_date",
@@ -1062,9 +1108,13 @@ __all__ = [
     "extract_datetime_from_binary_columns",
     "extract_datetime_from_binary_columns_chunk_reader",
     "extract_datetime_to_column",
+    "extract_hospital_numbers",
     "extract_labels_from_medcat_annotation_export",
+    "extract_mrn",
+    "extract_nhs_number",
     "extract_nhs_numbers",
     "extract_search_term_obscatalogmasteritem_displayname",
+    "extract_source_id",
     "extract_treatment_id_list_from_docs",
     "extract_types_from_csv",
     "filter_and_select_rows",
@@ -1150,6 +1200,10 @@ __all__ = [
     "get_current_pat_bloods",
     "get_current_pat_diagnostics",
     "get_current_pat_drugs",
+    "get_current_pat_epic_clinical_notes_annotations",
+    "get_current_pat_epic_clinical_notes_appointments_annotations",
+    "get_current_pat_epic_imaging_reports_annotations",
+    "get_current_pat_epic_medical_history_annotations",
     "get_current_pat_epic_orders_annotations",
     "get_current_pat_obs",
     "get_current_pat_problem_list",
@@ -1163,12 +1217,9 @@ __all__ = [
     "get_df_from_db",
     "get_df_from_db_with_temporal_filter",
     "get_empty_date_vector",
-    "get_epic_clinical_notes",
     "get_epic_clinical_notes_appointments",
     "get_epic_encounters",
-    "get_epic_imaging_reports",
     "get_epic_lab_results",
-    "get_epic_medical_history",
     "get_epic_orders",
     "get_epic_patients",
     "get_free_gpu",
@@ -1196,6 +1247,10 @@ __all__ = [
     "get_pat_batch_demo",
     "get_pat_batch_diagnostics",
     "get_pat_batch_drugs",
+    "get_pat_batch_epic_clinical_notes_annotations",
+    "get_pat_batch_epic_imaging_reports_annotations",
+    "get_pat_batch_epic_medical_history_annotations",
+    "get_pat_batch_epic_orders_annotations",
     "get_pat_batch_epr_docs",
     "get_pat_batch_epr_docs_annotations",
     "get_pat_batch_mct_docs",
@@ -1361,12 +1416,9 @@ __all__ = [
     "search_demographics",
     "search_diagnostic_orders",
     "search_drug_orders",
-    "search_epic_clinical_notes",
     "search_epic_clinical_notes_appointments",
     "search_epic_encounters",
-    "search_epic_imaging_reports",
     "search_epic_lab_results",
-    "search_epic_medical_history",
     "search_epic_orders",
     "search_epic_patients",
     "search_hospital_site",

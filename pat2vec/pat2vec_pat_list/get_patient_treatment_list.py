@@ -322,7 +322,6 @@ def get_all_patients_list(config_obj: Any) -> List[str]:
         patient_ids = ipw_df[id_column].unique().tolist()
 
     elif not is_static_test:  # Covers live mode and testing_elastic mode
-
         patient_ids = extract_treatment_id_list_from_docs(config_obj)
 
         # Fallback for testing_elastic: if generated file is missing, try static test data
@@ -349,7 +348,6 @@ def get_all_patients_list(config_obj: Any) -> List[str]:
                     config_obj.patient_id_column_name = "client_idcode"
 
     else:  # This is now only for static testing
-
         if not hasattr(config_obj, "test_data_path") or not config_obj.test_data_path:
             raise ValueError(
                 "In testing mode, 'test_data_path' must be set in the config object."
@@ -370,7 +368,6 @@ def get_all_patients_list(config_obj: Any) -> List[str]:
     all_epr_patient_list_path = config_obj.all_epr_patient_list_path
 
     if config_obj.use_controls:
-
         control_ids = generate_control_list(
             treatment_client_id_list=patient_ids,
             treatment_control_ratio_n=config_obj.treatment_control_ratio_n,

@@ -76,7 +76,6 @@ def get_current_pat_annotations_mrc_cs(
     # display(batch_epr_docs_annotations)
 
     if batch_mct_docs_annotations is not None:
-
         filtered_batch_mct_docs_annotations = filter_dataframe_by_timestamp(
             batch_mct_docs_annotations,
             start_year,
@@ -90,7 +89,6 @@ def get_current_pat_annotations_mrc_cs(
         )
 
         if len(filtered_batch_mct_docs_annotations) > 0:
-
             df_pat_target = calculate_pretty_name_count_features(
                 filtered_batch_mct_docs_annotations, suffix="mct"
             )

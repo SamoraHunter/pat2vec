@@ -154,7 +154,6 @@ def build_ipw_dataframe(
 
     results_list = []
     for pat in tqdm(pat_list_stripped, desc="Building IPW DataFrame"):
-
         res = get_pat_ipw_record(
             current_pat_idcode=pat,
             annot_filter_arguments=annot_filter_arguments,

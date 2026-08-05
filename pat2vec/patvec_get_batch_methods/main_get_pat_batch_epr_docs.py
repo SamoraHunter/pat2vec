@@ -107,9 +107,7 @@ def get_pat_batch_epr_docs(
         should_fetch = True
 
     try:
-
         if should_fetch:
-
             batch_target = cohort_searcher_with_terms_and_search(
                 index_name="epr_documents",
                 fields_list="""client_idcode document_guid document_description body_analysed updatetime clientvisit_visitidcode""".split(),
@@ -125,7 +123,6 @@ def get_pat_batch_epr_docs(
                     )
                     is not None
                 ):
-
                     if config_obj.verbosity >= 1:
                         logging.info(
                             "applying doc type filter to EPR docs",
@@ -187,13 +184,11 @@ def get_pat_batch_epr_docs(
                     logging.debug("get_epr_docs_postdropna: %d", len(batch_target))
 
                 if split_clinical_notes_bool and not batch_target.empty:
-
                     batch_target = split_and_append_chunks(batch_target, epr=True)
 
                     # if drop out of range notes, filter batch_target by global date. before writing.
 
                     if config_obj.filter_split_notes:
-
                         pre_filter_split_notes_len = len(batch_target)
 
                         # reuse dataframe filter

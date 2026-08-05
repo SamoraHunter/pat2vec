@@ -176,7 +176,6 @@ def multi_annots_to_df_textual_obs(
     all_annot_dfs = []
 
     for i in range(0, len(pat_batch)):
-
         doc_to_annot_df = json_to_dataframe(
             json_data=multi_annots[i],
             doc=pat_batch.iloc[i],
@@ -379,7 +378,6 @@ def multi_annots_to_df_reports(
     all_annot_dfs = []
 
     for i in range(0, len(pat_batch)):
-
         doc_to_annot_df = json_to_dataframe(
             json_data=multi_annots[i],
             doc=pat_batch.iloc[i],
@@ -987,7 +985,6 @@ def multi_annots_to_df_mct(
     all_annot_dfs = []
 
     for i in range(0, len(pat_batch)):
-
         doc_to_annot_df = json_to_dataframe(
             json_data=multi_annots[i],
             doc=pat_batch.iloc[i],

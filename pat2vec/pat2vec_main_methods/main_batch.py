@@ -2,6 +2,10 @@ import time
 import logging
 import traceback
 import pandas as pd
+from pat2vec.pat2vec_get_methods import (
+    get_method_epic_imaging_reports_annotations,
+    get_method_epic_medical_history_annotations,
+)
 from pat2vec.pat2vec_get_methods.get_method_appointments import get_appointments
 from pat2vec.pat2vec_get_methods.get_method_report_annotations import (
     get_current_pat_report_annotations,
@@ -31,7 +35,7 @@ from pat2vec.pat2vec_get_methods.get_method_pat_annotations import (
 )
 from pat2vec.pat2vec_get_methods.get_method_epic_encounters import get_epic_encounters
 
-# Note: epic_clinical_notes, epic_medical_history, epic_orders are now only available as annotations
+# Note: epic_clinical_notes (via epic_clinical_notes_annotations option with get_current_pat_epic_clinical_notes_annotations), epic_medical_history, epic_orders are now only available as annotations
 from pat2vec.pat2vec_get_methods.get_method_epic_orders_annotations import (
     get_current_pat_epic_orders_annotations,
 )
@@ -44,6 +48,12 @@ from pat2vec.pat2vec_get_methods.get_method_epic_patients import get_epic_patien
 # )
 from pat2vec.pat2vec_get_methods.get_method_epic_clinical_notes_appointments import (
     get_epic_clinical_notes_appointments,
+)
+from pat2vec.pat2vec_get_methods.get_method_epic_clinical_notes_annotations import (
+    get_current_pat_epic_clinical_notes_annotations,
+)
+from pat2vec.pat2vec_get_methods.get_method_epic_clinical_notes_appointments_annotations import (
+    get_current_pat_epic_clinical_notes_appointments_annotations,
 )
 from pat2vec.pat2vec_get_methods.get_method_smoking import get_smoking
 from pat2vec.pat2vec_get_methods.get_method_vte_status import get_vte_status
@@ -151,16 +161,13 @@ def main_batch(
     already_done = False
 
     if current_pat_client_id_code not in stripped_list_start:
-
         if skip_additional_listdir:
             stripped_list = stripped_list_start
         else:
-
             if exist_check(
                 current_pat_lines_path + str(current_pat_client_id_code),
                 config_obj=config_obj,
             ):
-
                 if (n_pat_lines is not None) and (
                     len(
                         list_dir_wrapper(
@@ -175,7 +182,6 @@ def main_batch(
             stripped_list = stripped_list_start.copy()
 
         if current_pat_client_id_code not in stripped_list and not already_done:
-
             try:
                 patient_vector = []
                 p_bar_entry = current_pat_client_id_code + "_" + str(target_date_range)
@@ -205,15 +211,26 @@ def main_batch(
                     get_epic_lab_results,
                     get_epic_patients,
                     get_epic_clinical_notes_appointments,
+                    get_current_pat_epic_clinical_notes_annotations,
+                    get_method_epic_imaging_reports_annotations,
+                    get_method_epic_medical_history_annotations,
                 }
                 funcs_with_cat = {
                     get_current_pat_annotations,
                     get_current_pat_annotations_mrc_cs,
+                    get_current_pat_epic_clinical_notes_annotations,
+                    get_current_pat_epic_orders_annotations,
+                    get_method_epic_imaging_reports_annotations,
+                    get_method_epic_medical_history_annotations,
                 }
                 funcs_with_t = {
                     get_current_pat_annotations,
                     get_current_pat_annotations_mrc_cs,
                     get_current_pat_textual_obs_annotations,
+                    get_current_pat_epic_clinical_notes_annotations,
+                    get_current_pat_epic_orders_annotations,
+                    get_method_epic_imaging_reports_annotations,
+                    get_method_epic_medical_history_annotations,
                 }
 
                 feature_configs = [
@@ -317,11 +334,6 @@ def main_batch(
                         "batch_arg": "pat_batch",
                         "batch_key": "batch_epic_encounters",
                     },
-                    # epic_clinical_notes and epic_medical_history are only available via annotations
-                    # These feature configs are removed - use annotation options instead:
-                    # "epic_clinical_notes_annotations" -> get_current_pat_epic_clinical_notes_annotations
-                    # "epic_medical_history_annotations" -> get_current_pat_epic_medical_history_annotations
-                    # epic_orders is only available via annotations - removed feature config
                     {
                         "option": "epic_lab_results",
                         "pbar": "epic_lab",
@@ -336,13 +348,26 @@ def main_batch(
                         "batch_arg": "pat_batch",
                         "batch_key": "batch_epic_patients",
                     },
-                    # epic_imaging_reports is now only available via annotations - config removed
                     {
                         "option": "epic_clinical_notes_appointments",
                         "pbar": "epic_appt_notes",
                         "func": get_epic_clinical_notes_appointments,
                         "batch_arg": "pat_batch",
                         "batch_key": "batch_epic_clinical_notes_appointments",
+                    },
+                    {
+                        "option": "epic_clinical_notes_annotations",
+                        "pbar": "ann_epic_clinical_notes",
+                        "func": get_current_pat_epic_clinical_notes_annotations,
+                        "batch_arg": "epic_clinical_notes_annotations",
+                        "batch_key": "batch_epic_clinical_notes_annotations",
+                    },
+                    {
+                        "option": "epic_clinical_notes_appointments_annotations",
+                        "pbar": "ann_epic_clinical_notes_appointments",
+                        "func": get_current_pat_epic_clinical_notes_appointments_annotations,
+                        "batch_arg": "epic_clinical_notes_appointments_annotations",
+                        "batch_key": "batch_epic_clinical_notes_appointments_annotations",
                     },
                     # Annotation functions with more complex signatures
                     {
@@ -522,9 +547,7 @@ def main_batch(
 
                         pat_concatted.to_csv(output_path)
                     else:
-
                         if multi_process:
-
                             write_remote(
                                 output_path, pat_concatted, config_obj=config_obj
                             )
@@ -537,7 +560,7 @@ def main_batch(
                         p_bar_entry,
                         start_time,
                         2,
-                        f"Done {len(pat_concatted.columns)} cols in {int(time.time() - start_time)}s, {int((len(pat_concatted.columns)+1)/int(time.time() - start_time)+1)} p/s",
+                        f"Done {len(pat_concatted.columns)} cols in {int(time.time() - start_time)}s, {int((len(pat_concatted.columns) + 1) / int(time.time() - start_time) + 1)} p/s",
                         t,
                         config_obj,
                     )

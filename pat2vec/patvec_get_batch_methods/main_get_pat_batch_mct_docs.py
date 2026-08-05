@@ -122,9 +122,7 @@ def get_pat_batch_mct_docs(
                     cols_to_drop = ["_id", "_index", "_score"]
 
                     for col in cols_to_drop:
-
                         if col in batch_target.columns:
-
                             batch_target.drop(columns=col, inplace=True)
 
                     try:

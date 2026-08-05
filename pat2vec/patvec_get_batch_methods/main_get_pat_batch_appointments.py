@@ -138,9 +138,7 @@ def get_pat_batch_appointments(
                     cols_to_drop = ["_id", "_index", "_score"]
 
                     for col in cols_to_drop:
-
                         if col in batch_target.columns:
-
                             batch_target.drop(columns=col, inplace=True)
 
                     try:
@@ -159,7 +157,7 @@ def get_pat_batch_appointments(
                                 )
                                 if config_obj.overwrite_stored_pat_observations:
                                     del_query = text(
-                                        f"DELETE FROM {db_table if engine.name == 'sqlite' else f'{schema_name}.{table_name}'} WHERE \"HospitalID\" = :pat_id"
+                                        f'DELETE FROM {db_table if engine.name == "sqlite" else f"{schema_name}.{table_name}"} WHERE "HospitalID" = :pat_id'
                                     )
                                     connection.execute(
                                         del_query,

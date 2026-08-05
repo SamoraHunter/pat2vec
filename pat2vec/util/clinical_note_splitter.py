@@ -345,25 +345,39 @@ def split_epic_clinical_notes(
     index_list = []
     none_rows = []
 
+    # Determine column names based on available columns (handle both original ES and standardized names)
+    text_col = (
+        "body_analysed" if "body_analysed" in clin_note.columns else "document_Content"
+    )
+    time_col = (
+        "updatetime" if "updatetime" in clin_note.columns else "document_CreatedWhen"
+    )
+    guid_col = "document_guid" if "document_guid" in clin_note.columns else "id"
+
     for index, row in clin_note.iterrows():
-        d = row["document_Content"]
+        d = row[text_col]
         ch = []
         try:
             ch = find_date(
                 d,
-                original_update_time_value=row["document_CreatedWhen"],
+                original_update_time_value=row[time_col],
                 verbosity=verbosity_val,
             )
-            row_id = row.get("id", row.get("_id", "unknown"))
+            row_id = row.get(guid_col, row.get("_id", "unknown"))
             extracted.append(
                 {
-                    "id": row_id,
+                    guid_col: row_id,
                     "client_idcode": row["document_PatientDurableKey"],
                     "chunks": ch,
                 }
             )
 
-            document_name_list.append(row.get("document_Name", "Unknown"))
+            name_col = (
+                "document_description"
+                if "document_description" in clin_note.columns
+                else "document_Name"
+            )
+            document_name_list.append(row.get(name_col, "Unknown"))
             id_list.append(row_id)
             document_guid_list.append(
                 row_id
@@ -454,14 +468,24 @@ def split_and_append_chunks(
         split_function = split_clinical_notes_mct
         if verbosity > 1:
             logger.debug("Identified MCT clinical notes for splitting.")
-    elif "document_Name" in docs.columns and "document_Content" in docs.columns:
-        # Assuming Epic clinical notes are identified by having both document_Name and document_Content
-        # and potentially a specific pattern in document_Name if needed.
+    elif ("document_Name" in docs.columns and "document_Content" in docs.columns) or (
+        "document_description" in docs.columns and "body_analysed" in docs.columns
+    ):
+        # Assuming Epic clinical notes are identified by having both document_Name (original)
+        # or document_description (standardized) AND document_Content (original) or body_analysed (standardized).
         # For now, let's assume any document with content and a name could be split.
         # A more robust check might involve a list of known Epic clinical note names.
-        is_epic_clinical_note = docs["document_Name"].str.contains(
+
+        # Use the appropriate column names based on what's available
+        name_col = (
+            "document_description"
+            if "document_description" in docs.columns
+            else "document_Name"
+        )
+
+        is_epic_clinical_note = docs[name_col].str.contains(
             "note", case=False, na=False
-        ) | docs["document_Name"].str.contains("summary", case=False, na=False)
+        ) | docs[name_col].str.contains("summary", case=False, na=False)
 
         clinical_notes = docs[is_epic_clinical_note].copy()
         non_clinical_notes = docs[~is_epic_clinical_note]

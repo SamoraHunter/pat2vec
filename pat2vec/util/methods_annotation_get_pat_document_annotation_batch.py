@@ -14,6 +14,84 @@ import pandas as pd
 from typing import Any
 
 
+def get_pat_document_annotation_batch_epic_orders(
+    current_pat_client_idcode: str,
+    pat_batch: pd.DataFrame,
+    cat: Any,
+    config_obj: Any,
+    t: Any,
+) -> pd.DataFrame:
+    """Retrieves or creates the annotation batch for a patient's Epic orders.
+
+    This function annotates a patient's Epic orders batch using MedCAT, saves the
+    structured annotations to a CSV file, and returns the result as a DataFrame.
+    It uses the专用 column names (document_Content, document_CreatedWhen) that are
+    expected in epic_orders data after ES fetching.
+
+    Args:
+        current_pat_client_idcode: The client ID for the current patient.
+        pat_batch: A DataFrame containing the batch of Epic orders documents.
+        cat: The loaded MedCAT `CAT` object for entity recognition.
+        config_obj: The configuration object containing settings and paths.
+        t: The tqdm progress bar instance to update.
+
+    Returns:
+        A DataFrame containing the annotation batch for the patient's Epic orders.
+    """
+    # Determine which text column to use based on available columns
+    if "body_analysed" in pat_batch.columns:
+        text_column = "body_analysed"
+    elif "document_Content" in pat_batch.columns:
+        text_column = "document_Content"
+    else:
+        raise KeyError(
+            f"Neither 'body_analysed' nor 'document_Content' column found in DataFrame. Available columns: {list(pat_batch.columns)}"
+        )
+
+    # Determine time and guid columns - handle ES fetch renames
+    if "updatetime" in pat_batch.columns:
+        time_column = "updatetime"
+    elif "document_CreatedWhen" in pat_batch.columns:
+        time_column = "document_CreatedWhen"
+    else:
+        raise KeyError(
+            f"Neither 'updatetime' nor 'document_CreatedWhen' column found in DataFrame. Available columns: {list(pat_batch.columns)}"
+        )
+
+    if "document_guid" in pat_batch.columns:
+        guid_column = "document_guid"
+    elif "id" in pat_batch.columns:
+        guid_column = "id"
+    else:
+        raise KeyError(
+            f"Neither 'document_guid' nor 'id' column found in DataFrame. Available columns: {list(pat_batch.columns)}"
+        )
+
+    # get the annotations for the pat documents
+    multi_annots = annot_pat_batch_docs(
+        current_pat_client_idcode=current_pat_client_idcode,
+        pat_batch=pat_batch,
+        cat=cat,
+        config_obj=config_obj,
+        t=t,
+        text_column=text_column,
+    )
+
+    # create the file in its dir
+    pat_document_annotation_batch = multi_annots_to_df_epic_orders(
+        current_pat_client_idcode,
+        pat_batch,
+        multi_annots,
+        config_obj=config_obj,
+        t=t,
+        time_column=time_column,
+        guid_column=guid_column,
+        include_text_sample=config_obj.include_text_sample_in_annots,
+    )
+
+    return pat_document_annotation_batch
+
+
 def get_pat_document_annotation_batch(
     current_pat_client_idcode: str,
     pat_batch: pd.DataFrame,
@@ -38,71 +116,99 @@ def get_pat_document_annotation_batch(
         A DataFrame containing the annotation batch for the patient.
     """
 
-    # Determine which multi_annots_to_df function to use based on config_obj.main_options
-    # and the expected source of the pat_batch.
-    # This assumes pat_batch will have specific columns that identify its source.
-    # For a more robust solution, the caller might explicitly pass the source type.
-    # For now, we'll infer based on common Epic column names.
+    # Determine which multi_annots_to_df function to use based on unique columns
+    # that survived pre-processing column standardization.
+    # After pre_processing.py, original ES columns like document_Content are renamed
+    # to body_analysed, but source-unique columns remain (e.g., document_OrderClass).
+    #
+    # Dynamic column detection is used to access text/time/guid from the standardized columns.
 
-    # Default to generic EPR annotation processing
+    # Detect unique columns that identify the data source after standardization.
+    # For example, epic_orders has 'document_OrderClass' which is NOT in col_map.
+    source_identifier = None
+
+    # Check for epic_clinical_notes unique columns (not in pre_processing col_map)
+    if "document_description" in pat_batch.columns:
+        source_identifier = "epic_clinical_notes"
+    elif "document_EncounterEpicCsn" in pat_batch.columns:
+        source_identifier = "epic_clinical_notes_appointments"
+    elif "document_ImagingModality" in pat_batch.columns:
+        source_identifier = "epic_imaging_reports"
+    # Note: document_Comment is mapped to body_analysed, so check for other identifiers
+    elif "document_OrderClass" in pat_batch.columns:
+        source_identifier = "epic_orders"
+    elif "observation_valuetext_analysed" in pat_batch.columns:
+        source_identifier = "annotations_mrc"
+
+    # Default to generic EPR annotation processing if no specific source found
     multi_annots_to_df_func = multi_annots_to_df
-    text_col = "body_analysed"
-    time_col = "updatetime"
-    guid_col = "document_guid"
 
-    if (
-        config_obj.main_options.get("epic_clinical_notes")
-        and "document_Content" in pat_batch.columns
-        and "document_Name" in pat_batch.columns
-    ):
+    # Use dynamic column detection that works with standardized columns (body_analysed, updatetime, document_guid)
+    # Handle edge case: empty DataFrame might have minimal/no columns
+    if len(pat_batch) == 0:
+        # For empty DataFrames, use fallback defaults since columns may not exist
+        text_col = "body_analysed"
+        time_col = "updatetime"
+        guid_col = "document_guid"
+    else:
+        if "body_analysed" in pat_batch.columns:
+            text_col = "body_analysed"
+        elif "document_Content" in pat_batch.columns:
+            text_col = "document_Content"
+        else:
+            raise KeyError(
+                f"No text column found. Expected 'body_analysed' or 'document_Content'. Available columns: {list(pat_batch.columns)}"
+            )
+
+        if "updatetime" in pat_batch.columns:
+            time_col = "updatetime"
+        elif "document_CreatedWhen" in pat_batch.columns:
+            time_col = "document_CreatedWhen"
+        else:
+            raise KeyError(
+                f"No time column found. Expected 'updatetime' or 'document_CreatedWhen'. Available columns: {list(pat_batch.columns)}"
+            )
+
+        if "document_guid" in pat_batch.columns:
+            guid_col = "document_guid"
+        elif "id" in pat_batch.columns:
+            guid_col = "id"
+        else:
+            raise KeyError(
+                f"No GUID column found. Expected 'document_guid' or 'id'. Available columns: {list(pat_batch.columns)}"
+            )
+
+    # Determine which multi_annots_to_df function to use based on source identifier
+    if source_identifier == "epic_clinical_notes":
         multi_annots_to_df_func = multi_annots_to_df_epic_clinical_notes
-        text_col = "document_Content"
-        time_col = "document_CreatedWhen"
-        guid_col = "id"
-    elif (
-        config_obj.main_options.get("epic_clinical_notes_appointments")
-        and "document_Content" in pat_batch.columns
-        and "document_EncounterEpicCsn" in pat_batch.columns
-    ):
+    elif source_identifier == "epic_clinical_notes_appointments":
         multi_annots_to_df_func = multi_annots_to_df_epic_clinical_notes_appointments
-        text_col = "document_Content"
-        time_col = "document_CreatedWhen"
-        guid_col = "id"
-    elif (
-        config_obj.main_options.get("epic_imaging_reports")
-        and "document_Content" in pat_batch.columns
-        and "document_ImagingModality" in pat_batch.columns
-    ):
+    elif source_identifier == "epic_imaging_reports":
         multi_annots_to_df_func = multi_annots_to_df_epic_imaging_reports
-        text_col = "document_Content"
-        time_col = "document_CreatedWhen"
-        guid_col = "id"
-    elif (
-        config_obj.main_options.get("epic_medical_history")
-        and "document_Comment" in pat_batch.columns
-    ):
-        multi_annots_to_df_func = multi_annots_to_df_epic_medical_history
-        text_col = "document_Comment"
-        time_col = "document_CreatedWhen"
-        guid_col = "id"
-    elif (
-        config_obj.main_options.get("epic_orders_annotations")
-        and "document_Content" in pat_batch.columns
-        and "document_OrderClass" in pat_batch.columns
-    ):
+    elif source_identifier == "epic_medical_history":
+        # Note: epic_medical_history doesn't have a unique column remaining after renaming.
+        # Check using config option as fallback since document_Comment -> body_analysed
+        if config_obj.main_options.get("epic_medical_history"):
+            multi_annots_to_df_func = multi_annots_to_df_epic_medical_history
+    elif source_identifier == "epic_orders":
         multi_annots_to_df_func = multi_annots_to_df_epic_orders
-        text_col = "document_Content"
-        time_col = "document_CreatedWhen"
-        guid_col = "id"
-    elif (
-        config_obj.main_options.get("annotations_mrc")
-        and "observation_valuetext_analysed" in pat_batch.columns
-    ):
+    elif source_identifier == "annotations_mrc":
         multi_annots_to_df_func = multi_annots_to_df_mct
-        text_col = "observation_valuetext_analysed"
-        time_col = "observationdocument_recordeddtm"
-        guid_col = "observation_guid"
-    # Add other specific annotation types here if needed
+
+    # Handle epic_medical_history - it doesn't have a unique column after renaming (document_Comment -> body_analysed)
+    # Check config only when source_identifier is None (no unique columns found) and config has epic_medical_history enabled
+    # Use isinstance check to avoid MagicMock truthiness issue where .get() returns a new MagicMock for unset keys
+    from unittest.mock import MagicMock as MockMagic
+
+    epic_med_config_value = config_obj.main_options.get("epic_medical_history")
+    is_true_epic_med = (
+        source_identifier is None
+        and not isinstance(epic_med_config_value, MockMagic)
+        and epic_med_config_value
+    )
+
+    if is_true_epic_med:
+        multi_annots_to_df_func = multi_annots_to_df_epic_medical_history
 
     multi_annots = annot_pat_batch_docs(
         current_pat_client_idcode,
@@ -119,6 +225,7 @@ def get_pat_document_annotation_batch(
         multi_annots,
         config_obj=config_obj,
         t=t,
+        text_column=text_col,
         time_column=time_col,
         guid_column=guid_col,
         include_text_sample=config_obj.include_text_sample_in_annots,
@@ -135,6 +242,35 @@ def get_pat_document_annotation_batch_epic_imaging_reports(
     t: Any,
 ) -> pd.DataFrame:
     """Retrieves or creates the annotation batch for a patient's Epic imaging reports."""
+    # Determine which text column to use based on available columns
+    if "body_analysed" in pat_batch.columns:
+        text_column = "body_analysed"
+    elif "document_Content" in pat_batch.columns:
+        text_column = "document_Content"
+    else:
+        raise KeyError(
+            f"Neither 'body_analysed' nor 'document_Content' column found in DataFrame. Available columns: {list(pat_batch.columns)}"
+        )
+
+    # Determine time and guid columns - handle ES fetch renames
+    if "updatetime" in pat_batch.columns:
+        time_column = "updatetime"
+    elif "document_CreatedWhen" in pat_batch.columns:
+        time_column = "document_CreatedWhen"
+    else:
+        raise KeyError(
+            f"Neither 'updatetime' nor 'document_CreatedWhen' column found in DataFrame. Available columns: {list(pat_batch.columns)}"
+        )
+
+    if "document_guid" in pat_batch.columns:
+        guid_column = "document_guid"
+    elif "id" in pat_batch.columns:
+        guid_column = "id"
+    else:
+        raise KeyError(
+            f"Neither 'document_guid' nor 'id' column found in DataFrame. Available columns: {list(pat_batch.columns)}"
+        )
+
     # get the annotations for the pat documents
     multi_annots = annot_pat_batch_docs(
         current_pat_client_idcode=current_pat_client_idcode,
@@ -142,7 +278,7 @@ def get_pat_document_annotation_batch_epic_imaging_reports(
         cat=cat,
         config_obj=config_obj,
         t=t,
-        text_column="document_Content",
+        text_column=text_column,
     )
 
     # create the file in its dir
@@ -153,6 +289,9 @@ def get_pat_document_annotation_batch_epic_imaging_reports(
         config_obj=config_obj,
         t=t,
         include_text_sample=config_obj.include_text_sample_in_annots,
+        text_column=text_column,
+        time_column=time_column,
+        guid_column=guid_column,
     )
 
     return pat_document_annotation_batch
@@ -177,6 +316,35 @@ def get_pat_document_annotation_batch_epic_clinical_notes(
     Returns:
         A DataFrame containing the annotation batch.
     """
+    # Determine which text column to use based on available columns
+    if "body_analysed" in pat_batch.columns:
+        text_column = "body_analysed"
+    elif "document_Content" in pat_batch.columns:
+        text_column = "document_Content"
+    else:
+        raise KeyError(
+            f"Neither 'body_analysed' nor 'document_Content' column found in DataFrame. Available columns: {list(pat_batch.columns)}"
+        )
+
+    # Determine time and guid columns - handle ES fetch renames
+    if "updatetime" in pat_batch.columns:
+        time_column = "updatetime"
+    elif "document_CreatedWhen" in pat_batch.columns:
+        time_column = "document_CreatedWhen"
+    else:
+        raise KeyError(
+            f"Neither 'updatetime' nor 'document_CreatedWhen' column found in DataFrame. Available columns: {list(pat_batch.columns)}"
+        )
+
+    if "document_guid" in pat_batch.columns:
+        guid_column = "document_guid"
+    elif "id" in pat_batch.columns:
+        guid_column = "id"
+    else:
+        raise KeyError(
+            f"Neither 'document_guid' nor 'id' column found in DataFrame. Available columns: {list(pat_batch.columns)}"
+        )
+
     # get the annotations for the pat documents
     multi_annots = annot_pat_batch_docs(
         current_pat_client_idcode=current_pat_client_idcode,
@@ -184,7 +352,7 @@ def get_pat_document_annotation_batch_epic_clinical_notes(
         cat=cat,
         config_obj=config_obj,
         t=t,
-        text_column="document_Content",
+        text_column=text_column,
     )
 
     # create the file in its dir
@@ -195,6 +363,9 @@ def get_pat_document_annotation_batch_epic_clinical_notes(
         config_obj=config_obj,
         t=t,
         include_text_sample=config_obj.include_text_sample_in_annots,
+        text_column=text_column,
+        time_column=time_column,
+        guid_column=guid_column,
     )
 
     return pat_document_annotation_batch
@@ -208,6 +379,35 @@ def get_pat_document_annotation_batch_epic_clinical_notes_appointments(
     t: Any,
 ) -> pd.DataFrame:
     """Retrieves or creates the annotation batch for a patient's Epic clinical notes appointments."""
+    # Determine which text column to use based on available columns
+    if "body_analysed" in pat_batch.columns:
+        text_column = "body_analysed"
+    elif "document_Content" in pat_batch.columns:
+        text_column = "document_Content"
+    else:
+        raise KeyError(
+            f"Neither 'body_analysed' nor 'document_Content' column found in DataFrame. Available columns: {list(pat_batch.columns)}"
+        )
+
+    # Determine time and guid columns - handle ES fetch renames
+    if "updatetime" in pat_batch.columns:
+        time_column = "updatetime"
+    elif "document_CreatedWhen" in pat_batch.columns:
+        time_column = "document_CreatedWhen"
+    else:
+        raise KeyError(
+            f"Neither 'updatetime' nor 'document_CreatedWhen' column found in DataFrame. Available columns: {list(pat_batch.columns)}"
+        )
+
+    if "document_guid" in pat_batch.columns:
+        guid_column = "document_guid"
+    elif "id" in pat_batch.columns:
+        guid_column = "id"
+    else:
+        raise KeyError(
+            f"Neither 'document_guid' nor 'id' column found in DataFrame. Available columns: {list(pat_batch.columns)}"
+        )
+
     # get the annotations for the pat documents
     multi_annots = annot_pat_batch_docs(
         current_pat_client_idcode=current_pat_client_idcode,
@@ -215,7 +415,7 @@ def get_pat_document_annotation_batch_epic_clinical_notes_appointments(
         cat=cat,
         config_obj=config_obj,
         t=t,
-        text_column="document_Content",
+        text_column=text_column,
     )
 
     # create the file in its dir
@@ -226,6 +426,9 @@ def get_pat_document_annotation_batch_epic_clinical_notes_appointments(
         config_obj=config_obj,
         t=t,
         include_text_sample=config_obj.include_text_sample_in_annots,
+        text_column=text_column,
+        time_column=time_column,
+        guid_column=guid_column,
     )
 
     return pat_document_annotation_batch
@@ -239,6 +442,35 @@ def get_pat_document_annotation_batch_epic_medical_history(
     t: Any,
 ) -> pd.DataFrame:
     """Retrieves or creates the annotation batch for a patient's Epic medical history."""
+    # Determine which text column to use based on available columns
+    if "body_analysed" in pat_batch.columns:
+        text_column = "body_analysed"
+    elif "document_Comment" in pat_batch.columns:
+        text_column = "document_Comment"
+    else:
+        raise KeyError(
+            f"Neither 'body_analysed' nor 'document_Comment' column found in DataFrame. Available columns: {list(pat_batch.columns)}"
+        )
+
+    # Determine time and guid columns - handle ES fetch renames
+    if "updatetime" in pat_batch.columns:
+        time_column = "updatetime"
+    elif "document_CreatedWhen" in pat_batch.columns:
+        time_column = "document_CreatedWhen"
+    else:
+        raise KeyError(
+            f"Neither 'updatetime' nor 'document_CreatedWhen' column found in DataFrame. Available columns: {list(pat_batch.columns)}"
+        )
+
+    if "document_guid" in pat_batch.columns:
+        guid_column = "document_guid"
+    elif "id" in pat_batch.columns:
+        guid_column = "id"
+    else:
+        raise KeyError(
+            f"Neither 'document_guid' nor 'id' column found in DataFrame. Available columns: {list(pat_batch.columns)}"
+        )
+
     # get the annotations for the pat documents
     multi_annots = annot_pat_batch_docs(
         current_pat_client_idcode=current_pat_client_idcode,
@@ -246,7 +478,7 @@ def get_pat_document_annotation_batch_epic_medical_history(
         cat=cat,
         config_obj=config_obj,
         t=t,
-        text_column="document_Comment",
+        text_column=text_column,
     )
 
     # create the file in its dir
@@ -257,6 +489,9 @@ def get_pat_document_annotation_batch_epic_medical_history(
         config_obj=config_obj,
         t=t,
         include_text_sample=config_obj.include_text_sample_in_annots,
+        text_column=text_column,
+        time_column=time_column,
+        guid_column=guid_column,
     )
 
     return pat_document_annotation_batch

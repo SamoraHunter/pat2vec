@@ -55,30 +55,25 @@ def get_demo(
 
     # If the demo data is not empty
     if not current_pat_demo.drop(columns="client_idcode").isna().all().all():
-
         if not current_pat_demo["client_dob"].isna().any():
-
             current_pat_demo = _process_age(current_pat_demo)
 
         else:
             current_pat_demo["age"] = np.nan
 
         if not current_pat_demo["client_gendercode"].isna().any():
-
             current_pat_demo = _process_sex(current_pat_demo)
 
         else:
             current_pat_demo["male"] = np.nan
 
         if not current_pat_demo["client_deceaseddtm"].isna().any():
-
             current_pat_demo = _process_dead(current_pat_demo)
 
         else:
             current_pat_demo["dead"] = 0
 
         if not current_pat_demo["client_racecode"].isna().any():
-
             current_pat_demo = _process_ethnicity(current_pat_demo)
 
         else:
@@ -359,7 +354,6 @@ def get_demographics3_batch(
     pat_batch.reset_index(drop=True, inplace=True)
 
     if batch_mode:
-
         demo = filter_dataframe_by_timestamp(
             pat_batch,
             start_year,

@@ -1,8 +1,8 @@
 from pat2vec.util.helper_functions import get_df_from_db
 from pat2vec.util.methods_annotation_get_pat_document_annotation_batch import (
-    get_pat_document_annotation_batch,
+    get_pat_document_annotation_batch_epic_orders,
 )
-from pat2vec.util.methods_get import exist_check
+from pat2vec.util.methods_get import exist_check, update_pbar
 
 import pandas as pd
 from sqlalchemy import text
@@ -16,17 +16,33 @@ from typing import Any, Optional
 def _fetch_epic_orders_from_elasticsearch(
     current_pat_client_id_code: str,
     config_obj: Any,
+    cohort_searcher_with_terms_and_search: Optional[Any] = None,
+    t=None,
 ) -> pd.DataFrame:
     """Fetches Epic orders data from Elasticsearch.
 
     Args:
         current_pat_client_id_code: The patient's unique identifier.
         config_obj: The configuration object with search settings.
+        cohort_searcher_with_terms_and_search: Search function to use for ES queries.
+            If None, attempts to use config_obj.cohort_searcher_with_terms_and_search.
+        t: tqdm progress bar instance.
 
     Returns:
         A DataFrame containing the raw Epic orders for the patient.
     """
     try:
+        start_time = config_obj.start_time
+
+        update_pbar(
+            current_pat_client_id_code="",
+            start_time=start_time,
+            stage_int=0,
+            stage_str="epic_orders_batch_fetch",
+            t=t,
+            config_obj=config_obj,
+        )
+
         start_year = config_obj.global_start_year
         start_month = config_obj.global_start_month
         start_day = config_obj.global_start_day
@@ -39,7 +55,14 @@ def _fetch_epic_orders_from_elasticsearch(
                 f"DEBUG: _fetch_epic_orders_from_elasticsearch started for patient {current_pat_client_id_code}, date range: {start_year}-{start_month}-{start_day} to {end_year}-{end_month}-{end_day}"
             )
 
-        results = config_obj.cohort_searcher_with_terms_and_search(
+        # Use the provided search function or fall back to config_obj
+        search_func = (
+            cohort_searcher_with_terms_and_search
+            if cohort_searcher_with_terms_and_search is not None
+            else getattr(config_obj, "cohort_searcher_with_terms_and_search", None)
+        )
+
+        results = search_func(
             index_name="epic_orders",
             fields_list=None,
             term_name="document_PatientDurableKey",
@@ -63,10 +86,7 @@ def _fetch_epic_orders_from_elasticsearch(
                     columns={"document_PatientDurableKey": "client_idcode"},
                     inplace=True,
                 )
-            if "document_CreatedWhen" in results.columns:
-                results.rename(
-                    columns={"document_CreatedWhen": "updatetime"}, inplace=True
-                )
+
             if "document_Content" in results.columns:
                 results.rename(
                     columns={"document_Content": "body_analysed"}, inplace=True
@@ -95,6 +115,7 @@ def get_pat_batch_epic_orders_annotations(
     config_obj: Any,
     cat: Any,
     t: Any,
+    cohort_searcher_with_terms_and_search: Optional[Any] = None,
 ) -> Optional[pd.DataFrame]:
     """Retrieves or creates annotations for a patient's Epic orders batch.
 
@@ -108,6 +129,8 @@ def get_pat_batch_epic_orders_annotations(
         config_obj: The main configuration object.
         cat: The loaded MedCAT `CAT` object.
         t: The tqdm progress bar instance.
+        cohort_searcher_with_terms_and_search: Optional search function to fetch
+            data from Elasticsearch. If provided and DB returns empty, ES will be used.
 
     Returns:
         A DataFrame containing the annotations for the patient's Epic orders.
@@ -173,10 +196,8 @@ def get_pat_batch_epic_orders_annotations(
                     )
                 pat_batch = pd.DataFrame()
 
-        # If still empty, fetch from Elasticsearch
-        if pat_batch.empty and hasattr(
-            config_obj, "cohort_searcher_with_terms_and_search"
-        ):
+        # If still empty, fetch from Elasticsearch using provided search function
+        if pat_batch.empty and cohort_searcher_with_terms_and_search is not None:
             if config_obj.verbosity >= 5:
                 print(
                     f"DEBUG: Fetching epic_orders from ES for patient {current_pat_client_id_code} with date range {config_obj.global_start_year}-{config_obj.global_start_month} to {config_obj.global_end_year}-{config_obj.global_end_month}"
@@ -184,6 +205,8 @@ def get_pat_batch_epic_orders_annotations(
             pat_batch = _fetch_epic_orders_from_elasticsearch(
                 current_pat_client_id_code,
                 config_obj,
+                cohort_searcher_with_terms_and_search=cohort_searcher_with_terms_and_search,
+                t=t,
             )
             if config_obj.verbosity >= 5:
                 print(f"DEBUG: Got {len(pat_batch)} rows from ES for epic_orders")
@@ -197,11 +220,26 @@ def get_pat_batch_epic_orders_annotations(
             )
             return None
 
-        # Replace empty or NaN document_Content with synthetic text to ensure annotations are generated
+        # Standardize column names: check for original ES columns and rename to standardized names
+        # If data came from DB or file, it may still have original ES column names (document_Content instead of body_analysed)
+        column_aliases = {
+            "body_analysed": ["document_Content"],
+            "updatetime": ["document_CreatedWhen"],
+            "document_guid": ["id"],
+        }
+        for std_col, es_cols in column_aliases.items():
+            # If standardized col doesn't exist but one of the original ES cols does, rename it
+            if std_col not in pat_batch.columns:
+                for es_col in es_cols:
+                    if es_col in pat_batch.columns:
+                        pat_batch = pat_batch.rename(columns={es_col: std_col})
+                        break
+
+        # Replace empty or NaN body_analysed with synthetic text to ensure annotations are generated
         empty_mask = (
-            pat_batch["document_Content"].isna()
-            | (pat_batch["document_Content"] == "")
-            | (pat_batch["document_Content"].str.strip().str.len() < 10)
+            pat_batch["body_analysed"].isna()
+            | (pat_batch["body_analysed"] == "")
+            | (pat_batch["body_analysed"].str.strip().str.len() < 10)
         )
 
         if config_obj.verbosity >= 6:
@@ -220,7 +258,7 @@ def get_pat_batch_epic_orders_annotations(
                 )
 
         try:
-            batch_target = get_pat_document_annotation_batch(
+            batch_target = get_pat_document_annotation_batch_epic_orders(
                 current_pat_client_idcode=current_pat_client_id_code,
                 pat_batch=pat_batch,
                 cat=cat,

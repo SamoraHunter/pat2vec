@@ -83,7 +83,6 @@ def json_to_dataframe(
         ]
 
         for i in range(0, len(keys)):
-
             entities_data = json_data["entities"][keys[i]]
             pretty_name = entities_data.get("pretty_name")
             cui = entities_data.get("cui")
@@ -167,7 +166,6 @@ def json_to_dataframe(
             df_parts.append(df)
 
         try:
-
             super_df = pd.concat(df_parts)
             super_df.reset_index(drop=True, inplace=True)
             return super_df

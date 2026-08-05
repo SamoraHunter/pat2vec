@@ -131,7 +131,6 @@ def get_current_pat_annotations(
         )
 
         if len(filtered_batch_epr_docs_annotations) > 0:
-
             # Calculate pretty name count features for the filtered dataframe
             df_pat_target = calculate_pretty_name_count_features(
                 filtered_batch_epr_docs_annotations, suffix="epr"

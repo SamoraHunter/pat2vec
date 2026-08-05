@@ -14,6 +14,12 @@ import json
 # Moved from pat2vec.util.post_processing_build_methods to break circular import
 logger = logging.getLogger(__name__)  # Ensure logger is defined at module level
 
+# Import MAPPINGS for schema information when creating empty tables
+try:
+    from .migrate_to_db import MAPPINGS
+except ImportError:
+    MAPPINGS = []
+
 
 def get_ram_usage():
     """Returns current RAM usage in GB."""
@@ -27,6 +33,38 @@ def sanitize_for_path(text: str) -> str:
     """Sanitizes a string to be safe for use in a file/directory path."""
     # Replace invalid characters with an underscore
     return re.sub(r'[\\/*?:"<>|()\s]', "_", text)
+
+
+def get_expected_columns_for_table(table_name: str, schema: str) -> List[str]:
+    """Returns the expected columns for a given table based on MAPPINGS.
+
+    This helper function looks up table definitions in the MAPPINGS list
+    to determine what columns should exist even when the initial batch is empty.
+
+    Args:
+        table_name: The table name without schema prefix (e.g., 'raw_drugs')
+        schema: The schema name ('raw_data' or 'annotations')
+
+    Returns:
+        A list of column names that should be in the table, including the ID column
+        and any index columns. Returns ['client_idcode'] if not found.
+    """
+    for mapping in MAPPINGS:
+        # mapping format: (dir_attr, schema, table, id_col, index_columns, filter_val)
+        if len(mapping) >= 5:
+            _, m_schema, m_table, m_id_col, m_index_cols = mapping[:5]
+            if m_schema == schema and m_table == table_name:
+                # Start with ID column
+                columns = [m_id_col] if m_id_col else []
+                # Add index columns (they represent expected data columns)
+                if m_index_cols:
+                    for col in m_index_cols:
+                        if col not in columns:
+                            columns.append(col)
+                return columns
+
+    # Fallback: default to client_idcode at minimum
+    return ["client_idcode"]
 
 
 def extract_nhs_numbers(input_string: str) -> List[str]:
@@ -486,6 +524,33 @@ def save_raw_patient_batch(
                         )
                     )
 
+            # Create table if it doesn't exist (even with empty DataFrame to ensure schema)
+            if not inspector.has_table(target_table, schema=target_schema):
+                # Use an empty DataFrame with expected columns to create the table
+                # This ensures all columns are created without adding any rows
+                # Check for truly empty DataFrame (no rows AND no columns) vs DataFrame with columns but no data
+                if df.empty and len(df.columns) == 0:
+                    # Truly empty - use minimum columns from MAPPINGS as fallback
+                    expected_cols = get_expected_columns_for_table(
+                        table_name, schema_name
+                    )
+                    if id_column not in expected_cols:
+                        expected_cols.insert(0, id_column)
+                    create_df = pd.DataFrame({col: [] for col in expected_cols})
+                else:
+                    # DataFrame has columns (possibly no data) - use those columns
+                    create_df = df.iloc[:0].copy()
+                create_df.to_sql(
+                    name=target_table,
+                    con=connection,
+                    schema=target_schema,
+                    if_exists="append",
+                    index=False,
+                )
+
+            # Save actual data if not empty
+
+            # Save actual data if not empty
             if not df.empty:
                 df.to_sql(
                     name=target_table,
@@ -563,6 +628,31 @@ def save_annotations_to_db(
                         )
                     )
 
+            # Create table if it doesn't exist (even with empty DataFrame to ensure schema)
+            if not inspector.has_table(target_table, schema=target_schema):
+                # Use an empty DataFrame with expected columns to create the table
+                # This ensures all columns are created without adding any rows
+                # Check for truly empty DataFrame (no rows AND no columns) vs DataFrame with columns but no data
+                if df.empty and len(df.columns) == 0:
+                    # Truly empty - use minimum columns from MAPPINGS as fallback
+                    expected_cols = get_expected_columns_for_table(
+                        table_name, schema_name
+                    )
+                    if id_column not in expected_cols:
+                        expected_cols.insert(0, id_column)
+                    create_df = pd.DataFrame({col: [] for col in expected_cols})
+                else:
+                    # DataFrame has columns (possibly no data) - use those columns
+                    create_df = df.iloc[:0].copy()
+                create_df.to_sql(
+                    name=target_table,
+                    con=connection,
+                    schema=target_schema,
+                    if_exists="append",
+                    index=False,
+                )
+
+            # Save actual data if not empty
             if not df.empty:
                 df.to_sql(
                     name=target_table,
@@ -698,9 +788,13 @@ def get_df_from_db(
 
             inspector = inspect(connection)
             if not inspector.has_table(target_table, schema=target_schema):
-                logger.warning(
-                    f"Table '{target_table}' not found in database. Returning empty DataFrame."
-                )
+                error_msg = f"Table '{target_table}' not found in database."
+                if config_obj.testing:
+                    raise RuntimeError(
+                        f"{error_msg} This likely means dummy data was never generated during testing mode. "
+                        "Please ensure the pat2vec initialization successfully saved batch data."
+                    )
+                logger.warning(f"{error_msg} Returning empty DataFrame.")
                 return pd.DataFrame()
 
             table_columns = [

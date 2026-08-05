@@ -95,7 +95,7 @@ class ElasticContainer:
         # Pull with retries
         retries = 3
         for i in range(retries):
-            logger.info(f"Pulling image {self.image} (attempt {i+1}/{retries})...")
+            logger.info(f"Pulling image {self.image} (attempt {i + 1}/{retries})...")
             result = subprocess.run(
                 ["docker", "pull", self.image], capture_output=True, text=True
             )

@@ -138,8 +138,7 @@ class DeIdAnonymizer:
         # Check if MedCAT is available
         if not MEDCAT_AVAILABLE:
             self.logger.error(
-                "MedCAT is not installed. Please install it using: "
-                "pip install medcat"
+                "MedCAT is not installed. Please install it using: pip install medcat"
             )
             raise ImportError("MedCAT is required but not installed")
 

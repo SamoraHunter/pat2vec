@@ -3,9 +3,11 @@ from typing import Union, Optional, List
 
 import pandas as pd
 from IPython.display import display
+from tqdm import tqdm
 
 from pat2vec.util.filter_dataframe_by_timestamp import filter_dataframe_by_timestamp
 from pat2vec.util.get_start_end_year_month import get_start_end_year_month
+from pat2vec.util.methods_get import update_pbar
 from pat2vec.util.parse_date import validate_input_dates
 
 EPIC_CLINICAL_NOTES_APPOINTMENTS_FIELDS = [
@@ -37,6 +39,7 @@ def search_epic_clinical_notes_appointments(
     output_filename: Optional[str] = "epic_clinical_notes_appointments_results.csv",
     overwrite: bool = False,
     config_obj: Optional[object] = None,
+    t: Optional[tqdm] = None,
 ):
     """Searches for Epic clinical notes related to appointments within a date range.
 
@@ -83,7 +86,20 @@ def search_epic_clinical_notes_appointments(
         ValueError: If cohort_searcher_with_terms_and_search is None or if
             patient_durable_keys is None.
         ValueError: If validate_input_dates fails to validate the date parameters.
+        t: Optional tqdm progress bar instance for updating progress during search.
+            Defaults to None.
     """
+    start_time = config_obj.start_time
+
+    update_pbar(
+        current_pat_client_id_code="",
+        start_time=start_time,
+        stage_int=0,
+        stage_str="epic_clinical_notes_appointments",
+        t=t,
+        config_obj=config_obj,
+    )
+
     if (
         output_filename
         and config_obj
@@ -144,6 +160,7 @@ def get_epic_clinical_notes_appointments(
     pat_batch,
     config_obj=None,
     cohort_searcher_with_terms_and_search=None,
+    t=None,
 ):
     """Retrieves epic_clinical_notes_appointments features for a patient.
 
@@ -162,6 +179,8 @@ def get_epic_clinical_notes_appointments(
             and methods for date handling. Required for determining processing mode.
         cohort_searcher_with_terms_and_search: Optional callable search function used
             when not in batch mode to query the database directly.
+        t: Optional progress bar instance for updating status during processing.
+            Defaults to None.
 
     Returns:
         pd.DataFrame: A DataFrame containing extracted features from clinical notes
@@ -204,6 +223,7 @@ def get_epic_clinical_notes_appointments(
             time_field=time_field,
             output_filename=None,
             config_obj=config_obj,
+            t=t,
         )
 
     if id_field_name in current_pat_raw.columns:

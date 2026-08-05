@@ -51,7 +51,6 @@ def get_cat(config_obj: Any) -> Optional[Union["CAT", dummy_CAT]]:  # type: igno
         )
 
     if config_obj.testing:
-
         if config_obj.dummy_medcat_model:
             logger.info("Returning dummy_CAT for testing.")
 
@@ -62,7 +61,6 @@ def get_cat(config_obj: Any) -> Optional[Union["CAT", dummy_CAT]]:  # type: igno
     model_path = None
 
     if config_obj.medcat:
-
         medcat_path = None
 
         # Check if the file exists
@@ -132,5 +130,4 @@ def get_cat(config_obj: Any) -> Optional[Union["CAT", dummy_CAT]]:  # type: igno
             # Handle the case where none of the conditions matched
             raise ValueError("No valid model path found in the configuration.")
     else:
-
         return None

@@ -143,7 +143,6 @@ def generate_epr_documents_data(
     df_holder_list = []
 
     for i in range(0, len(entered_list)):
-
         current_pat_client_id_code = entered_list[i]
 
         data = {
@@ -251,7 +250,6 @@ def generate_epr_documents_personal_data(
     df_holder_list = []
 
     for i in range(0, len(entered_list)):
-
         current_pat_client_id_code = entered_list[i]
 
         ethnicity = faker.random_element(ethnicity_list)
@@ -362,7 +360,6 @@ def generate_diagnostic_orders_data(
     df_holder_list = []
 
     for i in range(0, len(entered_list)):
-
         current_pat_client_id_code = entered_list[i]
 
         data = {
@@ -481,7 +478,6 @@ def generate_drug_orders_data(
     df_holder_list = []
 
     for i in range(0, len(entered_list)):
-
         current_pat_client_id_code = entered_list[i]
 
         if base_date is not None:
@@ -624,7 +620,6 @@ def generate_observations_MRC_text_data(
     df_holder_list = []
 
     for i in range(0, len(entered_list)):
-
         current_pat_client_id_code = entered_list[i]
 
         data = {
@@ -726,7 +721,6 @@ def generate_observations_Reports_text_data(
     df_holder_list = []
 
     for i in range(0, len(entered_list)):
-
         current_pat_client_id_code = entered_list[i]
 
         data = {
@@ -847,7 +841,6 @@ def generate_appointments_data(
     df_holder_list = []
 
     for i in range(0, len(entered_list)):
-
         current_pat_client_id_code = entered_list[i]
 
         data = {
@@ -998,7 +991,6 @@ def generate_observations_data(
     df_holder_list = []
 
     for i in range(0, len(entered_list)):
-
         current_pat_client_id_code = entered_list[i]
 
         data = {
@@ -1097,7 +1089,6 @@ def generate_basic_observations_data(
     df_holder_list = []
 
     for i in range(0, len(entered_list)):
-
         current_pat_client_id_code = entered_list[i]
 
         if base_date is not None:
@@ -1212,7 +1203,6 @@ def generate_basic_observations_textual_obs_data(
     global_end_day: int = 31,
     fields_list: Optional[List[str]] = None,
 ) -> pd.DataFrame:
-
     # logger.debug("generate_basic_observations_textual_obs_data")
     """
     Generates dummy textual data for the 'basic_observations' index.
@@ -1249,7 +1239,6 @@ def generate_basic_observations_textual_obs_data(
     df_holder_list = []
 
     for i in range(0, len(entered_list)):
-
         current_pat_client_id_code = entered_list[i]
 
         data = {

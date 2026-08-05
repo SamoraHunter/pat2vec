@@ -545,7 +545,6 @@ class EthnicityAbstractor:
             otherList = otherList + southAmericanCountries + northAmericanCountries
 
         if edgeCases:
-
             extraWhite = [
                 "australian",
                 "american",

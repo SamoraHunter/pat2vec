@@ -118,7 +118,6 @@ def get_pat_batch_obs(
                 config_obj.store_pat_batch_docs
                 or config_obj.overwrite_stored_pat_observations
             ):
-
                 if config_obj.storage_backend == "database":
                     safe_search_term = "".join(
                         e for e in search_term if e.isalnum() or e == "_"

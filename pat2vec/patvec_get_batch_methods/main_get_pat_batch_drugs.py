@@ -89,7 +89,6 @@ def get_pat_batch_drugs(
         should_fetch = True
 
     try:
-
         if should_fetch:
             batch_target = cohort_searcher_with_terms_and_search(
                 index_name="order",
@@ -110,9 +109,7 @@ def get_pat_batch_drugs(
                     cols_to_drop = ["_id", "_index", "_score"]
 
                     for col in cols_to_drop:
-
                         if col in batch_target.columns:
-
                             batch_target.drop(columns=col, inplace=True)
 
                     try:

@@ -664,7 +664,6 @@ def get_all_target_annots(
             sublist[i] = int(element)
 
     for i in tqdm(range(0, len(all_pat_list)), total=len(all_pat_list)):
-
         current_pat_idcode = all_pat_list[i]
 
         all_annots = retrieve_pat_annots_mct_epr(current_pat_idcode, config_obj)
@@ -910,19 +909,16 @@ def retrieve_pat_annots_mct_epr(
             ].fillna(all_annots["updatetime"])
 
         if "basicobs_entered" in all_annots.columns:
-
             all_annots["updatetime"] = all_annots["updatetime"].fillna(
                 all_annots["basicobs_entered"]
             )
 
         if "observationdocument_recordeddtm" in all_annots.columns:
-
             all_annots["updatetime"] = all_annots["updatetime"].fillna(
                 all_annots["observationdocument_recordeddtm"]
             )
 
         if "basicobs_guid" in all_annots.columns:
-
             if "document_guid" in all_annots.columns:
                 # Merge observation_guid to document_guid
                 all_annots["document_guid"] = all_annots["document_guid"].fillna(

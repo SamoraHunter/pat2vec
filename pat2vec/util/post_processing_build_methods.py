@@ -191,6 +191,8 @@ def _generic_merged_builder(
         pbar.update(n_chunks - pbar.n)
     pbar.close()
 
+    # Handle case where no data was found but we still need to create the file with headers
+    # This is important when tables don't exist yet (e.g., new epic indices on first run)
     if not any_data_found:
         logger.warning(
             f"No data found for {output_filename}. Creating empty file with headers."
@@ -831,7 +833,6 @@ def retrieve_pat_docs_mct_epr(
         all_docs = pd.concat(dfs, ignore_index=True)
 
     if merge_columns and not all_docs.empty:
-
         for col1, col2 in [
             ("updatetime", "observationdocument_recordeddtm"),
             ("observationdocument_recordeddtm", "updatetime"),

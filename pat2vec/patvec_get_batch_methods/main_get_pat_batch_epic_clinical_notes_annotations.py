@@ -2,7 +2,7 @@ from pat2vec.util.helper_functions import get_df_from_db
 from pat2vec.util.methods_annotation_get_pat_document_annotation_batch import (
     get_pat_document_annotation_batch_epic_clinical_notes,
 )
-from pat2vec.util.methods_get import exist_check
+from pat2vec.util.methods_get import exist_check, update_pbar
 
 import pandas as pd
 import logging
@@ -13,17 +13,33 @@ from typing import Any, Optional
 def _fetch_epic_clinical_notes_from_elasticsearch(
     current_pat_client_id_code: str,
     config_obj: Any,
+    cohort_searcher_with_terms_and_search: Optional[Any] = None,
+    t=None,
 ) -> pd.DataFrame:
     """Fetches Epic clinical notes data from Elasticsearch.
 
     Args:
         current_pat_client_id_code: The patient's unique identifier.
         config_obj: The configuration object with search settings.
+        cohort_searcher_with_terms_and_search: Search function to use for ES queries.
+            If None, attempts to use config_obj.cohort_searcher_with_terms_and_search.
+        t: tqdm progress bar instance.
 
     Returns:
         A DataFrame containing the raw Epic clinical notes for the patient.
     """
     try:
+        start_time = config_obj.start_time
+
+        update_pbar(
+            current_pat_client_id_code="",
+            start_time=start_time,
+            stage_int=0,
+            stage_str="epic_clinical_notes_batch_fetch",
+            t=t,
+            config_obj=config_obj,
+        )
+
         start_year = config_obj.global_start_year
         start_month = config_obj.global_start_month
         start_day = config_obj.global_start_day
@@ -31,7 +47,14 @@ def _fetch_epic_clinical_notes_from_elasticsearch(
         end_month = config_obj.global_end_month
         end_day = config_obj.global_end_day
 
-        results = config_obj.cohort_searcher_with_terms_and_search(
+        # Use the provided search function or fall back to config_obj
+        search_func = (
+            cohort_searcher_with_terms_and_search
+            if cohort_searcher_with_terms_and_search is not None
+            else getattr(config_obj, "cohort_searcher_with_terms_and_search", None)
+        )
+
+        results = search_func(
             index_name="epic_clinical_notes",
             fields_list=None,
             term_name="document_PatientDurableKey",
@@ -71,6 +94,7 @@ def get_pat_batch_epic_clinical_notes_annotations(
     config_obj: Any,
     cat: Any,
     t: Any,
+    cohort_searcher_with_terms_and_search: Optional[Any] = None,
 ) -> Optional[pd.DataFrame]:
     """Retrieves or creates annotations for a patient's Epic clinical notes batch.
 
@@ -84,6 +108,8 @@ def get_pat_batch_epic_clinical_notes_annotations(
         config_obj: The main configuration object.
         cat: The loaded MedCAT `CAT` object.
         t: The tqdm progress bar instance.
+        cohort_searcher_with_terms_and_search: Optional search function to fetch
+            data from Elasticsearch. If provided and DB returns empty, ES will be used.
 
     Returns:
         A DataFrame containing the annotations for the patient's Epic clinical notes.
@@ -145,13 +171,13 @@ def get_pat_batch_epic_clinical_notes_annotations(
             except (FileNotFoundError, pd.errors.EmptyDataError):
                 pat_batch = pd.DataFrame()
 
-        # If still empty, fetch from Elasticsearch
-        if pat_batch.empty and hasattr(
-            config_obj, "cohort_searcher_with_terms_and_search"
-        ):
+        # If still empty, fetch from Elasticsearch using provided search function
+        if pat_batch.empty and cohort_searcher_with_terms_and_search is not None:
             pat_batch = _fetch_epic_clinical_notes_from_elasticsearch(
                 current_pat_client_id_code,
                 config_obj,
+                cohort_searcher_with_terms_and_search=cohort_searcher_with_terms_and_search,
+                t=t,
             )
 
         if config_obj.verbosity >= 6:
@@ -160,7 +186,10 @@ def get_pat_batch_epic_clinical_notes_annotations(
             )
 
         if pat_batch.empty:
-            return None
+            logging.info(
+                f"No raw clinical notes found for patient {current_pat_client_id_code}, creating empty annotation batch"
+            )
+            return pd.DataFrame()
 
         batch_target = get_pat_document_annotation_batch_epic_clinical_notes(
             current_pat_client_idcode=current_pat_client_id_code,

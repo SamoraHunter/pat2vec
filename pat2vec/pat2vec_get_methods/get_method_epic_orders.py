@@ -3,9 +3,11 @@ from typing import Union, Optional, List
 
 import pandas as pd
 from IPython.display import display
+from tqdm import tqdm
 
 from pat2vec.util.filter_dataframe_by_timestamp import filter_dataframe_by_timestamp
 from pat2vec.util.get_start_end_year_month import get_start_end_year_month
+from pat2vec.util.methods_get import update_pbar
 from pat2vec.util.parse_date import validate_input_dates
 
 EPIC_ORDERS_FIELDS = [
@@ -38,6 +40,7 @@ def search_epic_orders(
     output_filename: Optional[str] = "epic_orders_results.csv",
     overwrite: bool = False,
     config_obj: Optional[object] = None,
+    t: Optional[tqdm] = None,
 ):
     """Searches for Epic orders data for patients within a date range.
 
@@ -72,6 +75,8 @@ def search_epic_orders(
             exists. Defaults to False.
         config_obj (Optional[object]): Configuration object containing root_path
             and proj_name. Defaults to None.
+        t: Optional tqdm progress bar instance for updating progress during search.
+            Defaults to None.
 
     Returns:
         pd.DataFrame: A DataFrame containing the raw Epic orders data.
@@ -89,6 +94,17 @@ def search_epic_orders(
         output_filename = os.path.join(
             config_obj.root_path, config_obj.proj_name, output_filename
         )
+
+    start_time = config_obj.start_time
+
+    update_pbar(
+        current_pat_client_id_code="",
+        start_time=start_time,
+        stage_int=0,
+        stage_str="epic_orders",
+        t=t,
+        config_obj=config_obj,
+    )
 
     if output_filename and os.path.exists(output_filename) and not overwrite:
         print(f"Loading existing epic orders data from {output_filename}")
@@ -140,6 +156,7 @@ def get_epic_orders(
     pat_batch,
     config_obj=None,
     cohort_searcher_with_terms_and_search=None,
+    t=None,
 ):
     """Retrieves Epic orders features for a patient within a date range.
 
@@ -155,6 +172,8 @@ def get_epic_orders(
         config_obj (Optional[object]): Configuration object. Required for processing settings.
         cohort_searcher_with_terms_and_search (Optional[Callable]): The function for
             cohort searching. Used when not in batch mode.
+        t: Optional progress bar instance for updating status during processing.
+            Defaults to None.
 
     Returns:
         pd.DataFrame: A DataFrame containing Epic orders features for the specified patient.
@@ -197,6 +216,7 @@ def get_epic_orders(
             time_field=time_field,
             output_filename=None,
             config_obj=config_obj,
+            t=t,
         )
 
     # Standardize identifier column for pat2vec joining

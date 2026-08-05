@@ -4,10 +4,8 @@ from pat2vec.util.methods_annotation_get_pat_document_annotation_batch import (
 )
 from pat2vec.util.methods_get import exist_check
 
-
 import pandas as pd
 from sqlalchemy import text
-
 
 import logging
 import json
@@ -16,7 +14,11 @@ from typing import Any, Optional
 
 
 def get_pat_batch_textual_obs_annotations(
-    current_pat_client_id_code: str, config_obj: Any, cat: Any, t: Any
+    current_pat_client_id_code: str,
+    config_obj: Any,
+    cat: Any,
+    t: Any,
+    cohort_searcher_with_terms_and_search: Optional[Any] = None,
 ) -> Optional[pd.DataFrame]:
     """Retrieves or creates annotations for a patient's textual observation batch.
 
@@ -63,7 +65,6 @@ def get_pat_batch_textual_obs_annotations(
     )
 
     if exist_check(current_pat_document_annotation_batch_path, config_obj=config_obj):
-
         # if annotation batch already created, read it
 
         batch_target = pd.read_csv(current_pat_document_annotation_batch_path)
@@ -127,9 +128,7 @@ def get_pat_batch_textual_obs_annotations(
                 cols_to_drop = ["_id", "_index", "_score"]
 
                 for col in cols_to_drop:
-
                     if col in batch_target.columns:
-
                         batch_target.drop(columns=col, inplace=True)
 
                 # Create a copy and serialize lists to strings for SQL compatibility

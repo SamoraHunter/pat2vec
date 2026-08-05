@@ -82,6 +82,25 @@ def get_current_pat_epic_orders_annotations(
     )
 
     if epic_orders_annotations is not None:
+        # Handle column name mismatch: annotations use 'updatetime' but we check for 'document_CreatedWhen'
+        time_column = "document_CreatedWhen"
+        alternative_columns = [
+            "updatetime",
+            "basicobs_entered",
+            "observationdocument_recordeddtm",
+            "document_CreatedWhen",
+        ]
+        found_col = None
+        for alt_col in alternative_columns:
+            if alt_col in epic_orders_annotations.columns:
+                found_col = alt_col
+                break
+
+        if found_col and found_col != time_column:
+            epic_orders_annotations = epic_orders_annotations.rename(
+                columns={found_col: time_column}
+            )
+
         filtered_annots = filter_dataframe_by_timestamp(
             epic_orders_annotations,
             start_year,
@@ -90,7 +109,7 @@ def get_current_pat_epic_orders_annotations(
             end_month,
             start_day,
             end_day,
-            "document_CreatedWhen",
+            time_column,
             dropna=True,
         )
 

@@ -92,7 +92,6 @@ def get_pat_batch_reports(
 
     try:
         if should_fetch:
-
             batch_target = cohort_searcher_with_terms_and_search(
                 index_name="basic_observations",
                 fields_list=[
@@ -127,9 +126,7 @@ def get_pat_batch_reports(
                     cols_to_drop = ["_id", "_index", "_score"]
 
                     for col in cols_to_drop:
-
                         if col in batch_target.columns:
-
                             batch_target.drop(columns=col, inplace=True)
 
                     try:
@@ -168,7 +165,6 @@ def get_pat_batch_reports(
                     batch_target.to_csv(batch_obs_target_path)
 
         else:
-
             batch_target = pd.read_csv(batch_obs_target_path)
 
         return batch_target

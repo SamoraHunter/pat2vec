@@ -447,7 +447,6 @@ def cohort_searcher_with_terms_and_search(
         logging.error("CogStack client is not initialized. Returning empty DataFrame.")
         return pd.DataFrame()
     if len(entered_list) >= 10000:
-
         results = []
         chunked_list = list_chunker(entered_list)
         for mini_list in chunked_list:
@@ -1214,7 +1213,6 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy_mct(
                 )
 
             else:
-
                 # Perform the search
                 term_docs = cohort_searcher_no_terms_fuzzy(
                     index_name="observations",
@@ -3413,7 +3411,6 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy_textual_obs(
                     slop=slop,
                 )
             else:
-
                 term_docs = cohort_searcher_with_terms_and_search_dummy(
                     index_name="basic_observations",
                     fields_list=field_list,

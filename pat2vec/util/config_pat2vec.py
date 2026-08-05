@@ -976,7 +976,6 @@ class config_class:
             )
 
             if root_path == f"../{self.proj_name}/":
-
                 try:
                     # Test if remote_path exists
                     self.sftp_client.chdir(self.pre_annotation_path)
@@ -1223,7 +1222,6 @@ class config_class:
             self.date_list = None  # We will generate this in main_pat2vec under individiual patient window
 
         if self.verbosity > 1:
-
             logger.debug(f"Debug message: global_start_year = {self.global_start_year}")
             logger.debug(
                 f"Debug message: global_start_month = {self.global_start_month}"
