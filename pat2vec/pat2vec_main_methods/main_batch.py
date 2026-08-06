@@ -3,8 +3,8 @@ import logging
 import traceback
 import pandas as pd
 from pat2vec.pat2vec_get_methods import (
-    get_method_epic_imaging_reports_annotations,
-    get_method_epic_medical_history_annotations,
+    get_current_pat_epic_imaging_reports_annotations,
+    get_current_pat_epic_medical_history_annotations,
 )
 from pat2vec.pat2vec_get_methods.get_method_appointments import get_appointments
 from pat2vec.pat2vec_get_methods.get_method_report_annotations import (
@@ -212,16 +212,16 @@ def main_batch(
                     get_epic_patients,
                     get_epic_clinical_notes_appointments,
                     get_current_pat_epic_clinical_notes_annotations,
-                    get_method_epic_imaging_reports_annotations,
-                    get_method_epic_medical_history_annotations,
+                    get_current_pat_epic_imaging_reports_annotations,
+                    get_current_pat_epic_medical_history_annotations,
                 }
                 funcs_with_cat = {
                     get_current_pat_annotations,
                     get_current_pat_annotations_mrc_cs,
                     get_current_pat_epic_clinical_notes_annotations,
                     get_current_pat_epic_orders_annotations,
-                    get_method_epic_imaging_reports_annotations,
-                    get_method_epic_medical_history_annotations,
+                    get_current_pat_epic_imaging_reports_annotations,
+                    get_current_pat_epic_medical_history_annotations,
                 }
                 funcs_with_t = {
                     get_current_pat_annotations,
@@ -229,8 +229,8 @@ def main_batch(
                     get_current_pat_textual_obs_annotations,
                     get_current_pat_epic_clinical_notes_annotations,
                     get_current_pat_epic_orders_annotations,
-                    get_method_epic_imaging_reports_annotations,
-                    get_method_epic_medical_history_annotations,
+                    get_current_pat_epic_imaging_reports_annotations,
+                    get_current_pat_epic_medical_history_annotations,
                 }
 
                 feature_configs = [
@@ -387,14 +387,14 @@ def main_batch(
                     {
                         "option": "epic_medical_history_annotations",
                         "pbar": "ann_epic_medical_history",
-                        "func": get_method_epic_medical_history_annotations,
+                        "func": get_current_pat_epic_medical_history_annotations,
                         "batch_arg": "epic_medical_history_annotations",
                         "batch_key": "batch_epic_medical_history_annotations",
                     },
                     {
                         "option": "epic_imaging_reports_annotations",
                         "pbar": "ann_epic_imaging_reports",
-                        "func": get_method_epic_imaging_reports_annotations,
+                        "func": get_current_pat_epic_imaging_reports_annotations,
                         "batch_arg": "epic_imaging_reports_annotations",
                         "batch_key": "batch_epic_imaging_reports_annotations",
                     },

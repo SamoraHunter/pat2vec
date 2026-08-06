@@ -768,9 +768,15 @@ class main:
 
         Returns:
             A DataFrame containing clinical note records with columns such as note
-            text, note type, creation time, and author.
+            text, note type, creation time, and author. If not found in database,
+            attempts to fetch from Elasticsearch if available.
         """
-        return retrieve_patient_data(patient_id, "epic_clinical_notes", self.config_obj)
+        return retrieve_patient_data(
+            patient_id,
+            "epic_clinical_notes",
+            self.config_obj,
+            cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search,
+        )
 
     def get_raw_epic_medical_history(self, patient_id: str) -> pd.DataFrame:
         """Retrieves raw Epic medical history data for a specific patient.
@@ -783,10 +789,14 @@ class main:
 
         Returns:
             A DataFrame containing medical history records with columns such as
-            condition/procedure description, onset date, and source.
+            condition/procedure description, onset date, and source. If not found in
+            database, attempts to fetch from Elasticsearch if available.
         """
         return retrieve_patient_data(
-            patient_id, "epic_medical_history", self.config_obj
+            patient_id,
+            "epic_medical_history",
+            self.config_obj,
+            cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search,
         )
 
     def get_raw_epic_orders(self, patient_id: str) -> pd.DataFrame:
@@ -800,9 +810,15 @@ class main:
 
         Returns:
             A DataFrame containing order records with columns such as order type,
-            ordered item, order time, and status.
+            ordered item, order time, and status. If not found in database,
+            attempts to fetch from Elasticsearch if available.
         """
-        return retrieve_patient_data(patient_id, "epic_orders", self.config_obj)
+        return retrieve_patient_data(
+            patient_id,
+            "epic_orders",
+            self.config_obj,
+            cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search,
+        )
 
     def get_raw_epic_lab_results(self, patient_id: str) -> pd.DataFrame:
         """Retrieves raw Epic laboratory results data for a specific patient.
@@ -815,9 +831,15 @@ class main:
 
         Returns:
             A DataFrame containing lab result records with columns such as test name,
-            result value, reference range, and collection time.
+            result value, reference range, and collection time. If not found in
+            database, attempts to fetch from Elasticsearch if available.
         """
-        return retrieve_patient_data(patient_id, "epic_lab_results", self.config_obj)
+        return retrieve_patient_data(
+            patient_id,
+            "epic_lab_results",
+            self.config_obj,
+            cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search,
+        )
 
     def get_epic_lab_results(self, patient_id: str) -> pd.DataFrame:
         """Retrieves Epic laboratory results data for a specific patient using direct search.
@@ -875,10 +897,14 @@ class main:
 
         Returns:
             A DataFrame containing imaging report records with columns such as report
-            text, report type, creation time, and author.
+            text, report type, creation time, and author. If not found in database,
+            attempts to fetch from Elasticsearch if available.
         """
         return retrieve_patient_data(
-            patient_id, "epic_imaging_reports", self.config_obj
+            patient_id,
+            "epic_imaging_reports",
+            self.config_obj,
+            cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search,
         )
 
     def get_raw_epic_clinical_notes_appointments(self, patient_id: str) -> pd.DataFrame:
@@ -893,9 +919,13 @@ class main:
         Returns:
             A DataFrame containing clinical notes appointments records with columns such as
             appointment datetime, appointment type, provider, location, and status.
+            If not found in database, attempts to fetch from Elasticsearch if available.
         """
         return retrieve_patient_data(
-            patient_id, "epic_clinical_notes_appointments", self.config_obj
+            patient_id,
+            "epic_clinical_notes_appointments",
+            self.config_obj,
+            cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search,
         )
 
     def get_raw_epic_patients(self, patient_id: str) -> pd.DataFrame:
@@ -910,8 +940,14 @@ class main:
         Returns:
             A DataFrame containing patient master data with columns such as full name,
             date of birth, gender, address, phone number, and primary language.
+            If not found in database, attempts to fetch from Elasticsearch if available.
         """
-        return retrieve_patient_data(patient_id, "epic_patients", self.config_obj)
+        return retrieve_patient_data(
+            patient_id,
+            "epic_patients",
+            self.config_obj,
+            cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search,
+        )
 
     def get_epic_patients(self, patient_id: str) -> pd.DataFrame:
         """Retrieves Epic patients master data for a specific patient using direct search.
@@ -1239,19 +1275,19 @@ class main:
             },
             {
                 "option": "epic_clinical_notes_annotations",
-                "var": "batch_epic_clinical_notes",
+                "var": "batch_epic_clinical_notes_annotations",
                 "func": get_pat_batch_epic_clinical_notes_annotations,
                 "empty": empty_return,  # Empty DataFrame for raw data table
             },
             {
                 "option": "epic_medical_history_annotations",
-                "var": "batch_epic_medical_history",
+                "var": "batch_epic_medical_history_annotations",
                 "func": get_pat_batch_epic_medical_history_annotations,
                 "empty": empty_return,  # Empty DataFrame for raw data table
             },
             {
                 "option": "epic_imaging_reports_annotations",
-                "var": "batch_epic_imaging_reports",
+                "var": "batch_epic_imaging_reports_annotations",
                 "func": get_pat_batch_epic_imaging_reports_annotations,
                 "empty": empty_return,  # Empty DataFrame for raw data table
             },
