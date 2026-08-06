@@ -84,15 +84,25 @@ def extract_treatment_id_list_from_docs(config_obj: Any) -> List[str]:
 
     # If patient_id_column_name is 'auto', use regex to find the most likely column
     if config_obj.patient_id_column_name == "auto":
-        if "client_idcode" in docs.columns:
-            config_obj.patient_id_column_name = "client_idcode"
-            if config_obj.verbosity > 0:
-                print("Auto-detected patient ID column: client_idcode (exact match)")
-        else:
-            # Define regex patterns for sample IDs
+        legacy_id_columns = ["client_idcode"]
+        epic_id_columns = [
+            "document_PatientDurableKey",
+            "activity_PatientDurableKey",
+            "patient_DurableKey",
+        ]
+
+        all_expected_id_columns = legacy_id_columns + epic_id_columns
+
+        for col in all_expected_id_columns:
+            if col in docs.columns:
+                config_obj.patient_id_column_name = col
+                if config_obj.verbosity > 0:
+                    print(f"Auto-detected patient ID column: {col} (exact match)")
+                break
+
+        if config_obj.patient_id_column_name == "auto":
             sample_id_patterns = [r"P\d{6}", r"V\d{6}"]
 
-            # Iterate through columns and find the one with the most matches to sample ID patterns
             best_match_column = None
             max_matches = 0
             for column in docs.columns:
