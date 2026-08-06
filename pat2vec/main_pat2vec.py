@@ -53,6 +53,15 @@ from pat2vec.patvec_get_batch_methods.main_get_pat_batch_reports import (
 from pat2vec.patvec_get_batch_methods.main_get_pat_batch_reports_docs_annotations import (
     get_pat_batch_reports_docs_annotations,
 )
+from pat2vec.patvec_get_batch_methods.main_get_pat_batch_epic_clinical_notes_annotations import (
+    get_pat_batch_epic_clinical_notes_annotations,
+)
+from pat2vec.patvec_get_batch_methods.main_get_pat_batch_epic_imaging_reports_annotations import (
+    get_pat_batch_epic_imaging_reports_annotations,
+)
+from pat2vec.patvec_get_batch_methods.main_get_pat_batch_epic_medical_history_annotations import (
+    get_pat_batch_epic_medical_history_annotations,
+)
 from pat2vec.patvec_get_batch_methods.main_get_pat_batch_epic_orders_annotations import (
     get_pat_batch_epic_orders_annotations,
 )
@@ -90,7 +99,6 @@ from pat2vec.pat2vec_get_methods.get_method_epic_clinical_notes_appointments imp
 from pat2vec.util.retrieve_data import retrieve_patient_data
 from pat2vec.util import config_pat2vec
 from pat2vec.util.generate_date_list import generate_date_list
-from pat2vec.util.post_processing_annotations import EMPTY_ANNOT_COLS
 from pat2vec.util.get_best_gpu import set_best_gpu
 from pat2vec.util.get_dummy_data_cohort_searcher import (
     cohort_searcher_with_terms_and_search_dummy,
@@ -856,6 +864,40 @@ class main:
                 return empty_df
             return pd.DataFrame()
 
+    def get_raw_epic_imaging_reports(self, patient_id: str) -> pd.DataFrame:
+        """Retrieves raw Epic imaging reports data for a specific patient.
+
+        Fetches imaging report records from the Epic system including radiology and
+        other diagnostic imaging reports.
+
+        Args:
+            patient_id: The unique identifier for the patient.
+
+        Returns:
+            A DataFrame containing imaging report records with columns such as report
+            text, report type, creation time, and author.
+        """
+        return retrieve_patient_data(
+            patient_id, "epic_imaging_reports", self.config_obj
+        )
+
+    def get_raw_epic_clinical_notes_appointments(self, patient_id: str) -> pd.DataFrame:
+        """Retrieves raw Epic clinical notes appointments data for a specific patient.
+
+        Fetches clinical notes appointments records from the Epic system including
+        scheduled appointments and related clinical notes.
+
+        Args:
+            patient_id: The unique identifier for the patient.
+
+        Returns:
+            A DataFrame containing clinical notes appointments records with columns such as
+            appointment datetime, appointment type, provider, location, and status.
+        """
+        return retrieve_patient_data(
+            patient_id, "epic_clinical_notes_appointments", self.config_obj
+        )
+
     def get_raw_epic_patients(self, patient_id: str) -> pd.DataFrame:
         """Retrieves raw Epic patients master data for a specific patient.
 
@@ -1006,7 +1048,6 @@ class main:
         empty_return_reports = pd.DataFrame(
             columns=["updatetime", "observation_valuetext_analysed"]
         )
-        empty_return_epic_orders = pd.DataFrame(columns=EMPTY_ANNOT_COLS)
 
         # Configuration for standard data batches
         batch_configs = [
@@ -1144,8 +1185,6 @@ class main:
                 "empty": empty_return,
                 "id_arg": "patient_durable_keys",
             },
-            # epic_clinical_notes, epic_medical_history, epic_orders are now only available via annotations
-            # The raw text data is not fetched directly - it's processed through annotation batch fetchers
             {
                 "option": "epic_lab_results",
                 "var": "batch_epic_lab_results",
@@ -1162,7 +1201,6 @@ class main:
                 "empty": empty_return,
                 "id_arg": "patient_durable_keys",
             },
-            # epic_imaging_reports is now only available via annotations - config removed
             {
                 "option": "epic_clinical_notes_appointments",
                 "var": "batch_epic_clinical_notes_appointments",
@@ -1200,10 +1238,28 @@ class main:
                 "empty": empty_return_reports,
             },
             {
+                "option": "epic_clinical_notes_annotations",
+                "var": "batch_epic_clinical_notes",
+                "func": get_pat_batch_epic_clinical_notes_annotations,
+                "empty": empty_return,  # Empty DataFrame for raw data table
+            },
+            {
+                "option": "epic_medical_history_annotations",
+                "var": "batch_epic_medical_history",
+                "func": get_pat_batch_epic_medical_history_annotations,
+                "empty": empty_return,  # Empty DataFrame for raw data table
+            },
+            {
+                "option": "epic_imaging_reports_annotations",
+                "var": "batch_epic_imaging_reports",
+                "func": get_pat_batch_epic_imaging_reports_annotations,
+                "empty": empty_return,  # Empty DataFrame for raw data table
+            },
+            {
                 "option": "epic_orders_annotations",
                 "var": "batch_epic_orders_annotations",
                 "func": get_pat_batch_epic_orders_annotations,
-                "empty": empty_return_epic_orders,
+                "empty": empty_return,  # Empty DataFrame for raw data table
             },
         ]
 
@@ -1231,8 +1287,11 @@ class main:
                 res = config["func"](**call_kwargs)
 
                 # Add debug logging for epic clinical notes
-                if config["var"] == "batch_epic_clinical_notes_annotations":
-                    print("\n=== DEBUG batch_epic_clinical_notes_annotations ===")
+                if config["var"] in (
+                    "batch_epic_clinical_notes",
+                    "batch_epic_clinical_notes_annotations",
+                ):
+                    print(f"\n=== DEBUG {config['var']} ===")
                     print(f"Result type: {type(res)}")
                     print(f"Row count: {len(res) if res is not None else 'None'}")
                     if res is not None and not res.empty:

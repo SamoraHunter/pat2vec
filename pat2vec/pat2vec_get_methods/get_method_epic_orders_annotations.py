@@ -82,6 +82,18 @@ def get_current_pat_epic_orders_annotations(
     )
 
     if epic_orders_annotations is not None:
+        # Handle empty DataFrames or DataFrames without timestamp column
+        if (
+            epic_orders_annotations.empty
+            or "updatetime" not in epic_orders_annotations.columns
+            and "document_CreatedWhen" not in epic_orders_annotations.columns
+        ):
+            # Empty or missing required columns - return just client_idcode
+            df_pat_target = pd.DataFrame(
+                data=[current_pat_client_id_code], columns=["client_idcode"]
+            )
+            return df_pat_target
+
         # Handle column name mismatch: annotations use 'updatetime' but we check for 'document_CreatedWhen'
         time_column = "document_CreatedWhen"
         alternative_columns = [
@@ -95,6 +107,13 @@ def get_current_pat_epic_orders_annotations(
             if alt_col in epic_orders_annotations.columns:
                 found_col = alt_col
                 break
+
+        # If no timestamp column found, return empty result
+        if not found_col:
+            df_pat_target = pd.DataFrame(
+                data=[current_pat_client_id_code], columns=["client_idcode"]
+            )
+            return df_pat_target
 
         if found_col and found_col != time_column:
             epic_orders_annotations = epic_orders_annotations.rename(
