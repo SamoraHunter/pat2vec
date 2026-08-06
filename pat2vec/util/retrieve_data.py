@@ -1,6 +1,6 @@
 import pandas as pd
 import logging
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 from pat2vec.util.helper_functions import get_df_from_db
 
 logger = logging.getLogger(__name__)
@@ -235,7 +235,10 @@ DATA_TYPE_CONFIG: Dict[str, Dict[str, str]] = {
 
 
 def retrieve_patient_data(
-    client_idcode: str, data_type: str, config_obj: Any
+    client_idcode: str,
+    data_type: str,
+    config_obj: Any,
+    cohort_searcher_with_terms_and_search: Optional[Any] = None,
 ) -> pd.DataFrame:
     """Retrieves patient data based on data type and storage backend configuration.
 
@@ -243,6 +246,8 @@ def retrieve_patient_data(
         client_idcode: The unique identifier for the patient.
         data_type: The type of data to retrieve (e.g., 'epr_docs', 'bloods', 'drugs').
         config_obj: The configuration object containing backend settings and paths.
+        cohort_searcher_with_terms_and_search: Optional search function to fetch
+            data from Elasticsearch if not found in database/CSV.
 
     Returns:
         pd.DataFrame: A DataFrame containing the requested data, or an empty DataFrame
@@ -257,13 +262,22 @@ def retrieve_patient_data(
     config = DATA_TYPE_CONFIG[data_type]
 
     if config_obj.storage_backend == "database":
-        return get_df_from_db(
+        df = get_df_from_db(
             config_obj,
             config["db_schema"],
             config["db_table"],
             patient_ids=[client_idcode],
             patient_id_column=config["id_column"],
         )
+        # For Epic types, try ES fallback if database is empty
+        if df.empty and data_type.startswith("epic_"):
+            df = _fetch_epic_data_from_es(
+                client_idcode,
+                data_type.replace("_annotations", ""),
+                config_obj,
+                cohort_searcher_with_terms_and_search,
+            )
+        return df
     else:
         # File-based backend
         path_attr = config["path_attr"]
@@ -284,7 +298,212 @@ def retrieve_patient_data(
                     df = df[df[col] == filter_val]
             return df
         except FileNotFoundError:
+            # For Epic types, try ES fallback if file not found
+            if (
+                data_type.startswith("epic_")
+                and cohort_searcher_with_terms_and_search is not None
+            ):
+                df = _fetch_epic_data_from_es(
+                    client_idcode,
+                    data_type.replace("_annotations", ""),
+                    config_obj,
+                    cohort_searcher_with_terms_and_search,
+                )
+                return df
             return pd.DataFrame()
         except Exception as e:
             logger.error(f"Error reading file {file_path}: {e}")
             return pd.DataFrame()
+
+
+def _fetch_epic_data_from_es(
+    client_idcode: str,
+    data_type: str,
+    config_obj: Any,
+    cohort_searcher_with_terms_and_search: Optional[Any] = None,
+) -> pd.DataFrame:
+    """Fetches Epic data from Elasticsearch if not found in database/CSV.
+
+    Args:
+        client_idcode: The unique identifier for the patient.
+        data_type: The type of Epic data (e.g., 'epic_imaging_reports').
+        config_obj: Configuration object with search function and date settings.
+        cohort_searcher_with_terms_and_search: Search function to use.
+
+    Returns:
+        pd.DataFrame: A DataFrame containing the fetched data, or empty if not found.
+    """
+    try:
+        from pat2vec.util.helper_functions import save_raw_patient_batch
+
+        start_year = config_obj.global_start_year
+        start_month = config_obj.global_start_month
+        start_day = config_obj.global_start_day
+        end_year = config_obj.global_end_year
+        end_month = config_obj.global_end_month
+        end_day = config_obj.global_end_day
+
+        search_string = f"document_UpdatedWhen:[{start_year}-{start_month}-{start_day} TO {end_year}-{end_month}-{end_day}]"
+
+        # Map data_type to appropriate term_name
+        term_map = {
+            "epic_clinical_notes": "document_PatientDurableKey",
+            "epic_medical_history": "document_PatientDurableKey",
+            "epic_orders": "document_PatientDurableKey",
+            "epic_lab_results": "document_PatientDurableKey",
+            "epic_patients": "patient_DurableKey",
+            "epic_encounters": "activity_PatientDurableKey",
+            "epic_clinical_notes_appointments": "document_PatientDurableKey",
+            "epic_imaging_reports": "document_PatientDurableKey",
+        }
+        term_name = term_map.get(data_type, "client_idcode")
+
+        # The search function is expected to return data with appropriate columns
+        # Define appropriate fields based on data type - include primary key, type-specific fields,
+        # and metadata columns for ES indexing (_index, _id, _score)
+        field_map = {
+            "epic_clinical_notes": [
+                "document_PatientDurableKey",
+                "document_CreatedWhen",
+                "document_text",
+                "updatetime",
+                "_index",
+                "_id",
+                "_score",
+            ],
+            "epic_medical_history": [
+                "document_PatientDurableKey",
+                "document_Category",
+                "document_Name",
+                "updatetime",
+                "_index",
+                "_id",
+                "_score",
+            ],
+            "epic_orders": [
+                "document_PatientDurableKey",
+                "order_Id",
+                "order_Type",
+                "updatetime",
+                "_index",
+                "_id",
+                "_score",
+            ],
+            "epic_lab_results": [
+                "document_PatientDurableKey",
+                "lab_ResultId",
+                "lab_TestName",
+                "updatetime",
+                "_index",
+                "_id",
+                "_score",
+            ],
+            "epic_patients": [
+                "patient_DurableKey",
+                "patient_FirstName",
+                "patient_LastName",
+                "patient_DoB",
+                "updatetime",
+                "_index",
+                "_id",
+                "_score",
+            ],
+            "epic_encounters": [
+                "activity_PatientDurableKey",
+                "activity_AdmissionDate",
+                "activity_DischargeDate",
+                "activity_Department",
+                "activity_Type",
+                "updatetime",
+                "_index",
+                "_id",
+                "_score",
+            ],
+            "epic_clinical_notes_appointments": [
+                "document_PatientDurableKey",
+                "appointment_Id",
+                "appointment_Time",
+                "updatetime",
+                "_index",
+                "_id",
+                "_score",
+            ],
+            "epic_imaging_reports": [
+                "document_PatientDurableKey",
+                "report_Type",
+                "report_Text",
+                "updatetime",
+                "_index",
+                "_id",
+                "_score",
+            ],
+        }
+
+        fields_list = field_map.get(data_type, ["client_idcode", "updatetime"])
+
+        results = cohort_searcher_with_terms_and_search(
+            index_name=data_type,
+            fields_list=fields_list,
+            term_name=term_name,
+            entered_list=[client_idcode],
+            search_string=search_string,
+        )
+
+        if results is not None and not results.empty:
+            # Rename ES columns to match database schema
+            # Handle document_PatientDurableKey -> client_idcode
+            if "document_PatientDurableKey" in results.columns:
+                results.rename(
+                    columns={"document_PatientDurableKey": "client_idcode"},
+                    inplace=True,
+                )
+            # Handle patient_DurableKey -> client_idcode (for epic_patients)
+            elif "patient_DurableKey" in results.columns:
+                results.rename(
+                    columns={"patient_DurableKey": "client_idcode"},
+                    inplace=True,
+                )
+            # Handle activity_PatientDurableKey -> client_idcode (for epic_encounters)
+            elif "activity_PatientDurableKey" in results.columns:
+                results.rename(
+                    columns={"activity_PatientDurableKey": "client_idcode"},
+                    inplace=True,
+                )
+
+            # Rename time fields to updatetime
+            if "document_CreatedWhen" in results.columns:
+                results.rename(
+                    columns={"document_CreatedWhen": "updatetime"}, inplace=True
+                )
+            elif "activity_AdmissionDate" in results.columns:
+                results.rename(
+                    columns={"activity_AdmissionDate": "updatetime"}, inplace=True
+                )
+
+            # Ensure client_idcode is present for db storage
+            if "client_idcode" not in results.columns:
+                results["client_idcode"] = client_idcode
+
+            # Save to database if using database backend
+            if config_obj.storage_backend == "database":
+                try:
+                    save_raw_patient_batch(
+                        results,
+                        client_idcode,
+                        (
+                            data_type.replace("raw_", "")
+                            if data_type.startswith("raw_")
+                            else data_type
+                        ),
+                        config_obj,
+                    )
+                except Exception as e:
+                    logger.debug(f"Failed to save ES data for {data_type}: {e}")
+
+            return results
+
+        return pd.DataFrame()
+
+    except Exception as e:
+        logger.error(f"Error fetching {data_type} from ES for {client_idcode}: {e}")
+        return pd.DataFrame()
