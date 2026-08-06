@@ -385,6 +385,20 @@ def main_batch(
                         "batch_key": "batch_epic_orders_annotations",
                     },
                     {
+                        "option": "epic_medical_history_annotations",
+                        "pbar": "ann_epic_medical_history",
+                        "func": get_method_epic_medical_history_annotations,
+                        "batch_arg": "epic_medical_history_annotations",
+                        "batch_key": "batch_epic_medical_history_annotations",
+                    },
+                    {
+                        "option": "epic_imaging_reports_annotations",
+                        "pbar": "ann_epic_imaging_reports",
+                        "func": get_method_epic_imaging_reports_annotations,
+                        "batch_arg": "epic_imaging_reports_annotations",
+                        "batch_key": "batch_epic_imaging_reports_annotations",
+                    },
+                    {
                         "option": "annotations_mrc",
                         "pbar": "annotations_mrc",
                         "func": get_current_pat_annotations_mrc_cs,
