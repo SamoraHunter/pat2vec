@@ -230,7 +230,19 @@ def generate_epic_encounters_data(
 
     final_df["search_term"] = "Condition"
 
-    unique_fields = list(dict.fromkeys(fields_list))
+    # Use default fields if fields_list is None or empty
+    unique_fields = (
+        list(dict.fromkeys(fields_list))
+        if fields_list
+        else [
+            "activity_PatientDurableKey",
+            "activity_AdmissionDate",
+            "activity_DischargeDate",
+            "activity_Department",
+            "activity_Type",
+            "id",
+        ]
+    )
 
     if (
         "activity_PatientDurableKey" in final_df.columns

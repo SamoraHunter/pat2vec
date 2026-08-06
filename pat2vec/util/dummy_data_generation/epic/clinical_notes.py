@@ -552,7 +552,19 @@ def generate_epic_clinical_notes_data(
         return pd.DataFrame(columns=fields_list)
 
     final_df = pd.concat(df_holder_list, ignore_index=True)
-    unique_fields = list(dict.fromkeys(fields_list))
+    # Use default fields if fields_list is None or empty
+    unique_fields = (
+        list(dict.fromkeys(fields_list))
+        if fields_list
+        else [
+            "document_PatientDurableKey",
+            "document_CreatedWhen",
+            "document_Content",
+            "document_Name",
+            "document_Comment",
+            "id",
+        ]
+    )
     target_col = "document_Content"
     if target_col in final_df.columns and target_col not in unique_fields:
         unique_fields.append(target_col)
@@ -620,7 +632,20 @@ def generate_epic_medical_history_data(
     if not df_holder_list:
         return pd.DataFrame(columns=fields_list)
     final_df = pd.concat(df_holder_list, ignore_index=True)
-    unique_fields = list(dict.fromkeys(fields_list))
+    # Use default fields if fields_list is None or empty
+    unique_fields = (
+        list(dict.fromkeys(fields_list))
+        if fields_list
+        else [
+            "document_PatientDurableKey",
+            "document_CreatedWhen",
+            "document_Diagnosis",
+            "document_DiagnosisConcepts",
+            "document_Name",
+            "document_Comment",
+            "id",
+        ]
+    )
     target_col = "document_Comment"
     if target_col in final_df.columns and target_col not in unique_fields:
         unique_fields.append(target_col)

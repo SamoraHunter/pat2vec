@@ -454,7 +454,20 @@ def generate_epic_imaging_reports_data(
 
     final_df = pd.concat(df_holder_list, ignore_index=True)
 
-    unique_fields = list(dict.fromkeys(fields_list))
+    # Use default fields if fields_list is None or empty
+    unique_fields = (
+        list(dict.fromkeys(fields_list))
+        if fields_list
+        else [
+            "document_PatientDurableKey",
+            "document_CreatedWhen",
+            "document_Name",
+            "document_Content",
+            "document_ImagingModality",
+            "document_StudyStatus",
+            "id",
+        ]
+    )
     target_col = "document_Content"
     if target_col in final_df.columns and target_col not in unique_fields:
         unique_fields.append(target_col)

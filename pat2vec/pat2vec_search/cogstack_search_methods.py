@@ -1407,9 +1407,7 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy_epic_imaging_reports(
                     index_name="epic_imaging_reports",
                     fields_list=field_list,
                     term_name="document_PatientDurableKey",
-                    entered_list=generate_uuid_list(
-                        random.randint(2, 10), random.choice(["P", "V"])
-                    ),
+                    entered_list=terms_list,  # Use actual patient IDs instead of random UUIDs
                     search_string=search_string,
                 )
 
@@ -1588,9 +1586,7 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy_epic_medical_history(
                     index_name="epic_medical_history",
                     fields_list=field_list,
                     term_name="document_PatientDurableKey",
-                    entered_list=generate_uuid_list(
-                        random.randint(2, 10), random.choice(["P", "V"])
-                    ),
+                    entered_list=terms_list,  # Use actual patient IDs instead of random UUIDs
                     search_string=search_string,
                 )
 
@@ -1771,9 +1767,7 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy_epic_clinical_notes(
                     index_name="epic_clinical_notes",
                     fields_list=field_list,
                     term_name="document_PatientDurableKey",
-                    entered_list=generate_uuid_list(
-                        random.randint(2, 10), random.choice(["P", "V"])
-                    ),
+                    entered_list=terms_list,  # Use actual patient IDs instead of random UUIDs
                     search_string=search_string,
                 )
 
@@ -1953,9 +1947,7 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy_epic_clinical_notes_appo
                     index_name="epic_clinical_notes_appointments",
                     fields_list=field_list,
                     term_name="document_PatientDurableKey",
-                    entered_list=generate_uuid_list(
-                        random.randint(2, 10), random.choice(["P", "V"])
-                    ),
+                    entered_list=terms_list,  # Use actual patient IDs instead of random UUIDs
                     search_string=search_string,
                 )
 
@@ -2521,9 +2513,7 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy_epic_encounters(
                     index_name="epic_encounters",
                     fields_list=field_list,
                     term_name="activity_PatientDurableKey",
-                    entered_list=generate_uuid_list(
-                        random.randint(2, 10), random.choice(["P", "V"])
-                    ),
+                    entered_list=terms_list,  # Use actual patient IDs instead of random UUIDs
                     search_string=search_string,
                 )
 
@@ -2824,9 +2814,7 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy_epic_lab_results(
                     index_name="epic_lab_results",
                     fields_list=field_list,
                     term_name="document_PatientDurableKey",
-                    entered_list=generate_uuid_list(
-                        random.randint(2, 10), random.choice(["P", "V"])
-                    ),
+                    entered_list=terms_list,  # Use actual patient IDs instead of random UUIDs
                     search_string=search_string,
                 )
 
