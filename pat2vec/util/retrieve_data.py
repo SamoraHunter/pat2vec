@@ -261,6 +261,25 @@ def retrieve_patient_data(
 
     config = DATA_TYPE_CONFIG[data_type]
 
+    # In testing mode with dummy generator, use the search function directly
+    if (
+        config_obj.testing
+        and not config_obj.testing_elastic
+        and cohort_searcher_with_terms_and_search is not None
+    ):
+        # Import for potential future use (currently not required)
+        try:
+            df = _fetch_data_from_dummy_generator(
+                client_idcode,
+                data_type,
+                config_obj,
+                cohort_searcher_with_terms_and_search,
+            )
+            return df
+        except Exception as e:
+            logger.error(f"Error fetching {data_type} from dummy generator: {e}")
+            return pd.DataFrame()
+
     if config_obj.storage_backend == "database":
         df = get_df_from_db(
             config_obj,
@@ -507,3 +526,268 @@ def _fetch_epic_data_from_es(
     except Exception as e:
         logger.error(f"Error fetching {data_type} from ES for {client_idcode}: {e}")
         return pd.DataFrame()
+
+
+def _fetch_data_from_dummy_generator(
+    client_idcode: str,
+    data_type: str,
+    config_obj: Any,
+    cohort_searcher_with_terms_and_search: Any,
+) -> pd.DataFrame:
+    """Fetch patient data using the dummy generator when in testing mode.
+
+    Args:
+        client_idcode: The unique identifier for the patient.
+        data_type: The type of data to retrieve.
+        config_obj: Configuration object with date settings and other params.
+        cohort_searcher_with_terms_and_search: The dummy search function to call.
+
+    Returns:
+        pd.DataFrame: A DataFrame containing the generated dummy data.
+    """
+    start_year = config_obj.global_start_year
+    start_month = config_obj.global_start_month
+    start_day = config_obj.global_start_day
+    end_year = config_obj.global_end_year
+    end_month = config_obj.global_end_month
+    end_day = config_obj.global_end_day
+
+    # Use specific search patterns that the dummy generator recognizes
+    if data_type == "drugs":
+        search_string = f"medication updatetime:[{start_year}-{start_month}-{start_day} TO {end_year}-{end_month}-{end_day}]"
+    elif data_type == "diagnostics":
+        search_string = f"diagnostic updatetime:[{start_year}-{start_month}-{start_day} TO {end_year}-{end_month}-{end_day}]"
+    else:
+        search_string = f"updatetime:[{start_year}-{start_month}-{start_day} TO {end_year}-{end_month}-{end_day}]"
+
+    # Map data types to indices that dummy_generator recognizes
+    index_name_map = {
+        "drugs": "order",  # Use 'order' not 'drug_orders'
+        "bloods": "basic_observations",
+        "epr_docs": "epr_documents",
+        "mct_docs": "observations",
+        "demographics": "epr_documents",
+        "diagnostics": "order",  # diagnostics are under 'order' with 'diagnostic' in search_string
+        "news": "basic_observations",
+        "bmi": "basic_observations",
+        "obs": "basic_observations",
+        "smoking": "basic_observations",
+        "vte_status": "basic_observations",
+        "hosp_site": "basic_observations",
+        "core_resus": "basic_observations",
+        "core_02": "basic_observations",
+        "bed": "basic_observations",
+        "covid": "basic_observations",
+        "textual_obs": "basic_observations",
+        "reports": "basic_observations",
+        "appointments": "pims_apps*",
+    }
+
+    index_name = index_name_map.get(data_type, data_type)
+
+    field_map = {
+        "drugs": [
+            "order_guid",
+            "client_idcode",
+            "order_name",
+            "order_summaryline",
+            "order_holdreasontext",
+            "order_entered",
+            "order_createdwhen",
+            "_id",
+            "_index",
+            "_score",
+        ],
+        "bloods": [
+            "basicobs_guid",
+            "client_idcode",
+            "basicobs_itemname_analysed",
+            "basicobs_value_numeric",
+            "basicobs_entered",
+            "updatetime",
+            "_id",
+            "_index",
+            "_score",
+        ],
+        "epr_docs": [
+            "client_idcode",
+            "document_guid",
+            "document_description",
+            "body_analysed",
+            "updatetime",
+            "_id",
+            "_index",
+            "_score",
+        ],
+        "mct_docs": [
+            "observation_guid",
+            "client_idcode",
+            "obscatalogmasteritem_displayname",
+            "observation_valuetext_analysed",
+            "observationdocument_recordeddtm",
+            "_id",
+            "_index",
+            "_score",
+        ],
+        "demographics": [
+            "client_idcode",
+            "client_firstname",
+            "client_lastname",
+            "client_dob",
+            "client_gendercode",
+            "updatetime",
+        ],
+        "diagnostics": [
+            "order_guid",
+            "client_idcode",
+            "order_name",
+            "updatetime",
+            "_id",
+            "_index",
+            "_score",
+        ],
+        "news": [
+            "basicobs_guid",
+            "client_idcode",
+            "basicobs_itemname_analysed",
+            "basicobs_value_numeric",
+            "updatetime",
+            "_id",
+            "_index",
+            "_score",
+        ],
+        "bmi": [
+            "basicobs_guid",
+            "client_idcode",
+            "basicobs_itemname_analysed",
+            "basicobs_value_numeric",
+            "updatetime",
+            "_id",
+            "_index",
+            "_score",
+        ],
+        "obs": [
+            "observation_guid",
+            "client_idcode",
+            "obscatalogmasteritem_displayname",
+            "observation_valuetext_analysed",
+            "observationdocument_recordeddtm",
+            "_id",
+            "_index",
+            "_score",
+        ],
+        "smoking": [
+            "basicobs_guid",
+            "client_idcode",
+            "obscatalogmasteritem_displayname",
+            "observation_valuetext_analysed",
+            "updatetime",
+            "_id",
+            "_index",
+            "_score",
+        ],
+        "vte_status": [
+            "basicobs_guid",
+            "client_idcode",
+            "obscatalogmasteritem_displayname",
+            "observation_valuetext_analysed",
+            "updatetime",
+            "_id",
+            "_index",
+            "_score",
+        ],
+        "hosp_site": [
+            "basicobs_guid",
+            "client_idcode",
+            "obscatalogmasteritem_displayname",
+            "observation_valuetext_analysed",
+            "updatetime",
+            "_id",
+            "_index",
+            "_score",
+        ],
+        "core_resus": [
+            "basicobs_guid",
+            "client_idcode",
+            "obscatalogmasteritem_displayname",
+            "observation_valuetext_analysed",
+            "updatetime",
+            "_id",
+            "_index",
+            "_score",
+        ],
+        "core_02": [
+            "basicobs_guid",
+            "client_idcode",
+            "obscatalogmasteritem_displayname",
+            "basicobs_value_numeric",
+            "updatetime",
+            "_id",
+            "_index",
+            "_score",
+        ],
+        "bed": [
+            "basicobs_guid",
+            "client_idcode",
+            "obscatalogmasteritem_displayname",
+            "observation_valuetext_analysed",
+            "updatetime",
+            "_id",
+            "_index",
+            "_score",
+        ],
+        "covid": [
+            "observation_guid",
+            "client_idcode",
+            "obscatalogmasteritem_displayname",
+            "observation_valuetext_analysed",
+            "observationdocument_recordeddtm",
+            "_id",
+            "_index",
+            "_score",
+        ],
+        "textual_obs": [
+            "basicobs_guid",
+            "client_idcode",
+            "basicobs_itemname_analysed",
+            "basicobs_value_numeric",
+            "updatetime",
+            "textualObs",
+            "_id",
+            "_index",
+            "_score",
+        ],
+        "reports": [
+            "basicobs_guid",
+            "client_idcode",
+            "basicobs_itemname_analysed",
+            "textualObs",
+            "updatetime",
+            "_id",
+            "_index",
+            "_score",
+        ],
+        "appointments": [
+            "HospitalID",
+            "AppointmentDateTime",
+            "AppointmentType",
+            "_id",
+            "_index",
+            "_score",
+        ],
+    }
+
+    fields_list = field_map.get(data_type, ["client_idcode", "updatetime"])
+
+    results = cohort_searcher_with_terms_and_search(
+        index_name=index_name,
+        fields_list=fields_list,
+        term_name="client_idcode",
+        entered_list=[client_idcode],
+        search_string=search_string,
+    )
+
+    if results is not None and not results.empty:
+        return results
+
+    return pd.DataFrame()
