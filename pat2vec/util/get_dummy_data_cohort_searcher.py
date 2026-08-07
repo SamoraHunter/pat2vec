@@ -1480,6 +1480,17 @@ def generate_epic_clinical_notes_data(
     Raises:
         None
     """
+    # Provide default fields if not specified (for compatibility with annotation functions)
+    if fields_list is None:
+        fields_list = [
+            "document_PatientDurableKey",
+            "document_CreatedWhen",
+            "document_Content",
+            "document_Name",
+            "document_EncounterEpicCsn",
+            "id",
+        ]
+
     df_holder_list = []
 
     for client_id_code in entered_list:
@@ -1513,9 +1524,9 @@ def generate_epic_clinical_notes_data(
         df_holder_list.append(pd.DataFrame(data))
 
     if not df_holder_list:
-        return pd.DataFrame(columns=fields_list)
+        return pd.DataFrame(columns=fields_list if fields_list else [])
     final_df = pd.concat(df_holder_list, ignore_index=True)
-    unique_fields = list(dict.fromkeys(fields_list))
+    unique_fields = list(dict.fromkeys(fields_list)) if fields_list else []
     # Ensure document_Content is present if generated
     target_col = "document_Content"
     if target_col in final_df.columns and target_col not in unique_fields:
