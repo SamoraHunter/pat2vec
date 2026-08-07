@@ -282,6 +282,9 @@ from .patvec_get_batch_methods.main_get_pat_batch_drugs import (
 from .patvec_get_batch_methods.main_get_pat_batch_epic_clinical_notes_annotations import (
     get_pat_batch_epic_clinical_notes_annotations,
 )
+from .patvec_get_batch_methods.main_get_pat_batch_epic_clinical_notes_appointments_annotations import (
+    get_pat_batch_epic_clinical_notes_appointments_annotations,
+)
 from .patvec_get_batch_methods.main_get_pat_batch_epic_imaging_reports_annotations import (
     get_pat_batch_epic_imaging_reports_annotations,
 )
@@ -629,6 +632,7 @@ from .util.helper_functions import (
     get_all_features,
     get_df_from_db,
     get_df_from_db_with_temporal_filter,
+    get_expected_columns_for_table,
     get_ram_usage,
     get_search_client_idcode_list_from_nhs_number_list,
     sanitize_for_path,
@@ -678,6 +682,7 @@ from .util.methods_annotation_get_pat_document_annotation_batch import (
     get_pat_document_annotation_batch_epic_clinical_notes_appointments,
     get_pat_document_annotation_batch_epic_imaging_reports,
     get_pat_document_annotation_batch_epic_medical_history,
+    get_pat_document_annotation_batch_epic_orders,
     get_pat_document_annotation_batch_mct,
     get_pat_document_annotation_batch_reports,
 )
@@ -1222,6 +1227,7 @@ __all__ = [
     "get_epic_lab_results",
     "get_epic_orders",
     "get_epic_patients",
+    "get_expected_columns_for_table",
     "get_free_gpu",
     "get_guess_datetime_column",
     "get_hosp_site",
@@ -1248,6 +1254,7 @@ __all__ = [
     "get_pat_batch_diagnostics",
     "get_pat_batch_drugs",
     "get_pat_batch_epic_clinical_notes_annotations",
+    "get_pat_batch_epic_clinical_notes_appointments_annotations",
     "get_pat_batch_epic_imaging_reports_annotations",
     "get_pat_batch_epic_medical_history_annotations",
     "get_pat_batch_epic_orders_annotations",
@@ -1267,6 +1274,7 @@ __all__ = [
     "get_pat_document_annotation_batch_epic_clinical_notes_appointments",
     "get_pat_document_annotation_batch_epic_imaging_reports",
     "get_pat_document_annotation_batch_epic_medical_history",
+    "get_pat_document_annotation_batch_epic_orders",
     "get_pat_document_annotation_batch_mct",
     "get_pat_document_annotation_batch_reports",
     "get_pat_ipw_record",

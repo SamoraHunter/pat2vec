@@ -644,6 +644,18 @@ def save_annotations_to_db(
                 else:
                     # DataFrame has columns (possibly no data) - use those columns
                     create_df = df.iloc[:0].copy()
+
+                # For annotation tables, ensure core annotation columns are always present
+                if schema_name == "annotations":
+                    annotation_additional_cols = [
+                        col
+                        for col in ["text_sample", "full_doc"]
+                        if col not in list(create_df.columns)
+                    ]
+                    if annotation_additional_cols:
+                        for col in annotation_additional_cols:
+                            create_df[col] = pd.NA
+
                 create_df.to_sql(
                     name=target_table,
                     con=connection,
