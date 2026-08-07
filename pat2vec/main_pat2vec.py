@@ -56,6 +56,9 @@ from pat2vec.patvec_get_batch_methods.main_get_pat_batch_reports_docs_annotation
 from pat2vec.patvec_get_batch_methods.main_get_pat_batch_epic_clinical_notes_annotations import (
     get_pat_batch_epic_clinical_notes_annotations,
 )
+from pat2vec.patvec_get_batch_methods.main_get_pat_batch_epic_clinical_notes_appointments_annotations import (
+    get_pat_batch_epic_clinical_notes_appointments_annotations,
+)
 from pat2vec.patvec_get_batch_methods.main_get_pat_batch_epic_imaging_reports_annotations import (
     get_pat_batch_epic_imaging_reports_annotations,
 )
@@ -155,6 +158,8 @@ class main:
         cohort_searcher_with_terms_and_search: Dynamically-assigned search function
             (either CogStack or dummy variant). Set in `__init__` based on cogstack flag.
     """
+
+    cohort_searcher_with_terms_and_search = None
 
     def __init__(
         self,
@@ -434,7 +439,12 @@ class main:
             A DataFrame containing drug records for the patient, with columns such as
             drug name, dosage, administration time, and other relevant clinical information.
         """
-        return retrieve_patient_data(patient_id, "drugs", self.config_obj)
+        return retrieve_patient_data(
+            patient_id,
+            "drugs",
+            self.config_obj,
+            cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search,
+        )
 
     def get_raw_bloods(self, patient_id: str) -> pd.DataFrame:
         """Retrieves raw blood test data for a specific patient.
@@ -449,7 +459,12 @@ class main:
             A DataFrame containing blood test records with columns such as test name,
             result value, reference range, and collection time.
         """
-        return retrieve_patient_data(patient_id, "bloods", self.config_obj)
+        return retrieve_patient_data(
+            patient_id,
+            "bloods",
+            self.config_obj,
+            cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search,
+        )
 
     def get_raw_epr_docs(self, patient_id: str) -> pd.DataFrame:
         """Retrieves raw EPR (Electronic Patient Record) documents for a specific patient.
@@ -463,7 +478,12 @@ class main:
             A DataFrame containing EPR document records with columns such as document
             text, creation/update time, author, and document type.
         """
-        return retrieve_patient_data(patient_id, "epr_docs", self.config_obj)
+        return retrieve_patient_data(
+            patient_id,
+            "epr_docs",
+            self.config_obj,
+            cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search,
+        )
 
     def get_raw_demographics(self, patient_id: str) -> pd.DataFrame:
         """Retrieves raw demographic data for a specific patient.
@@ -478,7 +498,12 @@ class main:
             A DataFrame containing demographic records with columns such as patient ID,
             name, DOB, gender, address, and other identifying information.
         """
-        return retrieve_patient_data(patient_id, "demographics", self.config_obj)
+        return retrieve_patient_data(
+            patient_id,
+            "demographics",
+            self.config_obj,
+            cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search,
+        )
 
     def get_raw_mct_docs(self, patient_id: str) -> pd.DataFrame:
         """Retrieves raw MCT (MedCAT-annotated) documents for a specific patient.
@@ -493,7 +518,12 @@ class main:
             A DataFrame containing MCT document records with annotation data including
             identified concepts, CUIs, and entity context.
         """
-        return retrieve_patient_data(patient_id, "mct_docs", self.config_obj)
+        return retrieve_patient_data(
+            patient_id,
+            "mct_docs",
+            self.config_obj,
+            cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search,
+        )
 
     def get_raw_textual_obs(self, patient_id: str) -> pd.DataFrame:
         """Retrieves raw textual observation data for a specific patient.
@@ -508,7 +538,12 @@ class main:
             A DataFrame containing textual observation records with columns such as
             observation text, category, and timestamp.
         """
-        return retrieve_patient_data(patient_id, "textual_obs", self.config_obj)
+        return retrieve_patient_data(
+            patient_id,
+            "textual_obs",
+            self.config_obj,
+            cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search,
+        )
 
     def get_raw_reports(self, patient_id: str) -> pd.DataFrame:
         """Retrieves raw report data for a specific patient.
@@ -523,7 +558,12 @@ class main:
             A DataFrame containing report records with columns such as report text,
             report type, author, and timestamp.
         """
-        return retrieve_patient_data(patient_id, "reports", self.config_obj)
+        return retrieve_patient_data(
+            patient_id,
+            "reports",
+            self.config_obj,
+            cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search,
+        )
 
     def get_raw_diagnostics(self, patient_id: str) -> pd.DataFrame:
         """Retrieves raw diagnostic data for a specific patient.
@@ -538,7 +578,12 @@ class main:
             A DataFrame containing diagnostic records with columns such as diagnosis
             code, description, onset date, and status.
         """
-        return retrieve_patient_data(patient_id, "diagnostics", self.config_obj)
+        return retrieve_patient_data(
+            patient_id,
+            "diagnostics",
+            self.config_obj,
+            cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search,
+        )
 
     def get_raw_news(self, patient_id: str) -> pd.DataFrame:
         """Retrieves raw NEWS (National Early Warning Score) data for a specific patient.
@@ -553,7 +598,12 @@ class main:
             A DataFrame containing NEWS observation records with columns such as
             parameter name, value, timestamp, and clinician ID.
         """
-        return retrieve_patient_data(patient_id, "news", self.config_obj)
+        return retrieve_patient_data(
+            patient_id,
+            "news",
+            self.config_obj,
+            cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search,
+        )
 
     def get_raw_bmi(self, patient_id: str) -> pd.DataFrame:
         """Retrieves raw BMI (Body Mass Index) data for a specific patient.
@@ -567,7 +617,12 @@ class main:
             A DataFrame containing BMI records with columns such as measurement time,
             height, weight, calculated BMI value, and measure type.
         """
-        return retrieve_patient_data(patient_id, "bmi", self.config_obj)
+        return retrieve_patient_data(
+            patient_id,
+            "bmi",
+            self.config_obj,
+            cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search,
+        )
 
     def get_raw_appointments(self, patient_id: str) -> pd.DataFrame:
         """Retrieves raw appointment/scheduling data for a specific patient.
@@ -582,7 +637,12 @@ class main:
             A DataFrame containing appointment records with columns such as appointment
             datetime, appointment type, provider, location, and status.
         """
-        return retrieve_patient_data(patient_id, "appointments", self.config_obj)
+        return retrieve_patient_data(
+            patient_id,
+            "appointments",
+            self.config_obj,
+            cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search,
+        )
 
     def get_raw_covid(self, patient_id: str) -> pd.DataFrame:
         """Retrieves raw COVID-19 testing data for a specific patient.
@@ -596,7 +656,12 @@ class main:
             A DataFrame containing COVID test records with columns such as test type,
             result, collection date, and test site.
         """
-        return retrieve_patient_data(patient_id, "covid", self.config_obj)
+        return retrieve_patient_data(
+            patient_id,
+            "covid",
+            self.config_obj,
+            cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search,
+        )
 
     def get_raw_smoking(self, patient_id: str) -> pd.DataFrame:
         """Retrieves raw smoking status data for a specific patient.
@@ -611,7 +676,12 @@ class main:
             A DataFrame containing smoking status records with columns such as
             smoking category, documentation time, and source.
         """
-        return retrieve_patient_data(patient_id, "smoking", self.config_obj)
+        return retrieve_patient_data(
+            patient_id,
+            "smoking",
+            self.config_obj,
+            cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search,
+        )
 
     def get_raw_core_02(self, patient_id: str) -> pd.DataFrame:
         """Retrieves raw CORE_SpO2 (oxygen saturation) data for a specific patient.
@@ -625,7 +695,12 @@ class main:
             A DataFrame containing CORE_SpO2 records with columns such as oxygen
             saturation value, measurement time, and device.
         """
-        return retrieve_patient_data(patient_id, "core_02", self.config_obj)
+        return retrieve_patient_data(
+            patient_id,
+            "core_02",
+            self.config_obj,
+            cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search,
+        )
 
     def get_raw_bed(self, patient_id: str) -> pd.DataFrame:
         """Retrieves raw bed assignment data for a specific patient.
@@ -639,7 +714,12 @@ class main:
             A DataFrame containing bed assignment records with columns such as
             bed number, ward, admission time, and discharge time.
         """
-        return retrieve_patient_data(patient_id, "bed", self.config_obj)
+        return retrieve_patient_data(
+            patient_id,
+            "bed",
+            self.config_obj,
+            cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search,
+        )
 
     def get_raw_vte(self, patient_id: str) -> pd.DataFrame:
         """Retrieves raw VTE (Venous Thromboembolism) risk assessment data
@@ -654,7 +734,12 @@ class main:
             A DataFrame containing VTE assessment records with columns such as
             risk category, assessment time, and recommendation.
         """
-        return retrieve_patient_data(patient_id, "vte_status", self.config_obj)
+        return retrieve_patient_data(
+            patient_id,
+            "vte_status",
+            self.config_obj,
+            cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search,
+        )
 
     def get_raw_hospsite(self, patient_id: str) -> pd.DataFrame:
         """Retrieves raw hospital site/organization data for a specific patient.
@@ -668,7 +753,12 @@ class main:
             A DataFrame containing hospital site records with columns such as
             site name, site code, and time period.
         """
-        return retrieve_patient_data(patient_id, "hosp_site", self.config_obj)
+        return retrieve_patient_data(
+            patient_id,
+            "hosp_site",
+            self.config_obj,
+            cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search,
+        )
 
     def get_raw_resus(self, patient_id: str) -> pd.DataFrame:
         """Retrieves raw resuscitation status data for a specific patient.
@@ -682,7 +772,12 @@ class main:
             A DataFrame containing resuscitation status records with columns such as
             code status, documentation time, and responsible clinician.
         """
-        return retrieve_patient_data(patient_id, "core_resus", self.config_obj)
+        return retrieve_patient_data(
+            patient_id,
+            "core_resus",
+            self.config_obj,
+            cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search,
+        )
 
     def get_raw_obs(self, patient_id: str) -> pd.DataFrame:
         """Retrieves raw general observation data for a specific patient.
@@ -697,7 +792,12 @@ class main:
             A DataFrame containing general observation records with various clinical
             measurements and assessment data.
         """
-        return retrieve_patient_data(patient_id, "obs", self.config_obj)
+        return retrieve_patient_data(
+            patient_id,
+            "obs",
+            self.config_obj,
+            cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search,
+        )
 
     def get_raw_epic_encounters(self, patient_id: str) -> pd.DataFrame:
         """Retrieves raw Epic encounters (admissions/visits) data for a specific patient.
@@ -712,7 +812,12 @@ class main:
             A DataFrame containing encounter records with columns such as encounter
             type, admit/discharge time, location, and encounter number.
         """
-        return retrieve_patient_data(patient_id, "epic_encounters", self.config_obj)
+        return retrieve_patient_data(
+            patient_id,
+            "epic_encounters",
+            self.config_obj,
+            cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search,
+        )
 
     def get_epic_encounters(self, patient_id: str) -> pd.DataFrame:
         """Retrieves Epic encounters (admissions/visits) data for a specific patient using direct search.
@@ -1297,6 +1402,12 @@ class main:
                 "func": get_pat_batch_epic_orders_annotations,
                 "empty": empty_return,  # Empty DataFrame for raw data table
             },
+            {
+                "option": "epic_clinical_notes_appointments_annotations",
+                "var": "batch_epic_clinical_notes_appointments_annotations",
+                "func": get_pat_batch_epic_clinical_notes_appointments_annotations,
+                "empty": empty_return,  # Empty DataFrame for raw data table
+            },
         ]
 
         batches = {}
@@ -1418,6 +1529,23 @@ class main:
                 "raw_epic_clinical_notes_appointments",
                 "client_idcode",
             ),
+            "batch_epic_clinical_notes_annotations": (
+                "ann_epic_clinical_notes",
+                "client_idcode",
+            ),
+            "batch_epic_medical_history_annotations": (
+                "ann_epic_medical_history",
+                "client_idcode",
+            ),
+            "batch_epic_orders_annotations": ("ann_epic_orders", "client_idcode"),
+            "batch_epic_imaging_reports_annotations": (
+                "ann_epic_imaging_reports",
+                "client_idcode",
+            ),
+            "batch_epic_clinical_notes_appointments_annotations": (
+                "ann_epic_clinical_notes_appointments",
+                "client_idcode",
+            ),
         }
 
         batch_to_option = {
@@ -1448,6 +1576,11 @@ class main:
             "batch_epic_patients": "epic_patients",
             "batch_epic_imaging_reports": "epic_imaging_reports",
             "batch_epic_clinical_notes_appointments": "epic_clinical_notes_appointments",
+            "batch_epic_clinical_notes_annotations": "epic_clinical_notes_annotations",
+            "batch_epic_medical_history_annotations": "epic_medical_history_annotations",
+            "batch_epic_orders_annotations": "epic_orders_annotations",
+            "batch_epic_imaging_reports_annotations": "epic_imaging_reports_annotations",
+            "batch_epic_clinical_notes_appointments_annotations": "epic_clinical_notes_appointments_annotations",
         }
 
         for batch_key, (table_name, id_col) in batch_to_table.items():
@@ -1478,6 +1611,88 @@ class main:
                 self.config_obj,
                 id_column=id_col,
             )
+
+    def _save_annotation_batches_to_db(
+        self, patient_id: str, batches: Dict[str, pd.DataFrame]
+    ) -> None:
+        """Saves annotation batches to the database if backend is enabled.
+
+        This ensures that annotation tables are created with proper schema
+        even when no annotations are generated (e.g., in testing mode).
+        """
+        if self.config_obj.storage_backend != "database":
+            return
+
+        from pat2vec.util.post_processing_annotations import EMPTY_ANNOT_COLS
+        from pat2vec.util.helper_functions import save_annotations_to_db
+
+        # Define table names and their corresponding option keys for ALL annotation sources
+        annotation_configs = [
+            {
+                "table": "ann_epr_docs",
+                "option": "annotations",
+            },
+            {
+                "table": "ann_mct_docs",
+                "option": "annotations_mrc",
+            },
+            {
+                "table": "ann_textual_obs",
+                "option": "textual_obs",
+            },
+            {
+                "table": "ann_reports",
+                "option": "annotations_reports",
+            },
+            {
+                "table": "ann_epic_clinical_notes",
+                "option": "epic_clinical_notes_annotations",
+            },
+            {
+                "table": "ann_epic_medical_history",
+                "option": "epic_medical_history_annotations",
+            },
+            {
+                "table": "ann_epic_imaging_reports",
+                "option": "epic_imaging_reports_annotations",
+            },
+            {
+                "table": "ann_epic_orders",
+                "option": "epic_orders_annotations",
+            },
+            {
+                "table": "ann_epic_clinical_notes_appointments",
+                "option": "epic_clinical_notes_appointments_annotations",
+            },
+        ]
+
+        for config in annotation_configs:
+            table_name = config.get("table")
+            option = config.get("option")
+
+            if not table_name or option is None:
+                continue
+
+            # Check if source option is enabled (default to True)
+            is_enabled = self.config_obj.main_options.get(option, True)
+
+            # Skip disabled sources
+            if not is_enabled:
+                continue
+
+            empty_df = pd.DataFrame(columns=EMPTY_ANNOT_COLS)
+            empty_df["client_idcode"] = patient_id
+
+            try:
+                save_annotations_to_db(
+                    empty_df,
+                    patient_id,
+                    table_name,
+                    self.config_obj,
+                    id_column="client_idcode",
+                )
+            except Exception as e:
+                logging.error(f"Failed to create annotation table {table_name}: {e}")
 
     def _setup_patient_time_window(
         self, current_pat_client_id_code: str
@@ -1666,6 +1881,12 @@ class main:
                 "time_col": "updatetime",
                 "text_col": None,
                 "option": "annotations_reports",
+            },
+            {
+                "key": "batch_epic_clinical_notes_annotations",
+                "time_col": "updatetime",
+                "text_col": None,
+                "option": "epic_clinical_notes_annotations",
             },
             {
                 "key": "batch_epic_orders_annotations",
@@ -1896,6 +2117,11 @@ class main:
             self.config_obj,
             self.config_obj.skipped_counter,
         )
+
+        # Create annotation tables before fetching batches to ensure they exist for get_df_from_db
+        if self.config_obj.storage_backend == "database":
+            self._save_annotation_batches_to_db(current_pat_client_id_code, {})
+
         batches = self._get_patient_data_batches(current_pat_client_id_code)
 
         # Save raw batches to DB if applicable
