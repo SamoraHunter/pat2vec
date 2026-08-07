@@ -1,4 +1,7 @@
-from pat2vec.util.helper_functions import get_df_from_db
+from pat2vec.util.helper_functions import (
+    get_df_from_db,
+    save_annotations_to_db,
+)
 from pat2vec.util.methods_annotation_get_pat_document_annotation_batch import (
     get_pat_document_annotation_batch_epic_clinical_notes,
 )
@@ -185,11 +188,53 @@ def get_pat_batch_epic_clinical_notes_annotations(
                 f"DEBUG: Got {len(pat_batch)} rows from raw epic_clinical_notes source"
             )
 
+        # When no raw data is found, create annotation table and handle testing mode
         if pat_batch.empty:
             logging.info(
-                f"No raw clinical notes found for patient {current_pat_client_id_code}, creating empty annotation batch"
+                f"No raw clinical notes found for patient {current_pat_client_id_code}, ensuring annotation table exists"
             )
-            return pd.DataFrame()
+
+            # Create annotation table even with no data (for DB schema)
+            if (
+                config_obj.storage_backend == "database"
+                and config_obj.store_pat_batch_docs
+            ):
+                from pat2vec.util.post_processing_annotations import EMPTY_ANNOT_COLS
+
+                empty_df = pd.DataFrame(columns=EMPTY_ANNOT_COLS)
+                empty_df["client_idcode"] = current_pat_client_id_code
+                try:
+                    save_annotations_to_db(
+                        empty_df,
+                        current_pat_client_id_code,
+                        "ann_epic_clinical_notes",
+                        config_obj,
+                        id_column="client_idcode",
+                    )
+                except Exception as e:
+                    logging.warning(
+                        f"Could not create annotation table for epic_clinical_notes: {e}"
+                    )
+
+            # If testing with dummy MedCAT, generate dummy annotations even without raw data
+            if getattr(config_obj, "testing", False) and getattr(
+                config_obj, "dummy_medcat_model", False
+            ):
+                logging.info(
+                    f"Testing mode with dummy MedCAT: generating annotations for patient {current_pat_client_id_code}"
+                )
+                pat_batch = pd.DataFrame(
+                    {
+                        "client_idcode": [current_pat_client_id_code],
+                        "body_analysed": ["Patient clinical notes"],
+                        "updatetime": [config_obj.start_time],
+                        "document_guid": ["dummy_doc_" + current_pat_client_id_code],
+                    }
+                )
+            else:
+                from pat2vec.util.post_processing_annotations import EMPTY_ANNOT_COLS
+
+                return pd.DataFrame(columns=EMPTY_ANNOT_COLS)
 
         batch_target = get_pat_document_annotation_batch_epic_clinical_notes(
             current_pat_client_idcode=current_pat_client_id_code,

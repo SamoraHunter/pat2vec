@@ -1,4 +1,8 @@
-from pat2vec.util.helper_functions import get_df_from_db, save_raw_patient_batch
+from pat2vec.util.helper_functions import (
+    get_df_from_db,
+    save_raw_patient_batch,
+    save_annotations_to_db,
+)
 from pat2vec.util.methods_annotation_get_pat_document_annotation_batch import (
     get_pat_document_annotation_batch_epic_imaging_reports,
 )
@@ -191,7 +195,45 @@ def get_pat_batch_epic_imaging_reports_annotations(
             )
 
         if pat_batch.empty:
-            return None
+            logging.info(
+                f"No raw imaging reports found for patient {current_pat_client_id_code}, ensuring annotation table exists"
+            )
+            if (
+                config_obj.storage_backend == "database"
+                and config_obj.store_pat_batch_docs
+            ):
+                from pat2vec.util.post_processing_annotations import EMPTY_ANNOT_COLS
+
+                empty_df = pd.DataFrame(columns=EMPTY_ANNOT_COLS)
+                empty_df["client_idcode"] = current_pat_client_id_code
+                try:
+                    save_annotations_to_db(
+                        empty_df,
+                        current_pat_client_id_code,
+                        "ann_epic_imaging_reports",
+                        config_obj,
+                        id_column="client_idcode",
+                    )
+                except Exception as e:
+                    logging.warning(
+                        f"Could not create annotation table for epic_imaging_reports: {e}"
+                    )
+
+            if getattr(config_obj, "testing", False) and getattr(
+                config_obj, "dummy_medcat_model", False
+            ):
+                pat_batch = pd.DataFrame(
+                    {
+                        "client_idcode": [current_pat_client_id_code],
+                        "body_analysed": ["Patient imaging report"],
+                        "updatetime": [config_obj.start_time],
+                        "document_guid": ["dummy_doc_" + current_pat_client_id_code],
+                    }
+                )
+            else:
+                from pat2vec.util.post_processing_annotations import EMPTY_ANNOT_COLS
+
+                return pd.DataFrame(columns=EMPTY_ANNOT_COLS)
 
         batch_target = get_pat_document_annotation_batch_epic_imaging_reports(
             current_pat_client_idcode=current_pat_client_id_code,

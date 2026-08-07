@@ -1,4 +1,7 @@
-from pat2vec.util.helper_functions import get_df_from_db
+from pat2vec.util.helper_functions import (
+    get_df_from_db,
+    save_annotations_to_db,
+)
 from pat2vec.util.methods_annotation_get_pat_document_annotation_batch import (
     get_pat_document_annotation_batch_epic_orders,
 )
@@ -215,10 +218,45 @@ def get_pat_batch_epic_orders_annotations(
             print(f"DEBUG: Got {len(pat_batch)} rows from raw epic_orders source")
 
         if pat_batch.empty:
-            print(
-                f"WARN: No data available for patient {current_pat_client_id_code} in epic_orders annotations"
+            logging.info(
+                f"No raw epic orders found for patient {current_pat_client_id_code}, ensuring annotation table exists"
             )
-            return None
+            if (
+                config_obj.storage_backend == "database"
+                and config_obj.store_pat_batch_docs
+            ):
+                from pat2vec.util.post_processing_annotations import EMPTY_ANNOT_COLS
+
+                empty_df = pd.DataFrame(columns=EMPTY_ANNOT_COLS)
+                empty_df["client_idcode"] = current_pat_client_id_code
+                try:
+                    save_annotations_to_db(
+                        empty_df,
+                        current_pat_client_id_code,
+                        "ann_epic_orders",
+                        config_obj,
+                        id_column="client_idcode",
+                    )
+                except Exception as e:
+                    logging.warning(
+                        f"Could not create annotation table for epic_orders: {e}"
+                    )
+
+            if getattr(config_obj, "testing", False) and getattr(
+                config_obj, "dummy_medcat_model", False
+            ):
+                pat_batch = pd.DataFrame(
+                    {
+                        "client_idcode": [current_pat_client_id_code],
+                        "body_analysed": ["Patient order"],
+                        "updatetime": [config_obj.start_time],
+                        "document_guid": ["dummy_doc_" + current_pat_client_id_code],
+                    }
+                )
+            else:
+                from pat2vec.util.post_processing_annotations import EMPTY_ANNOT_COLS
+
+                return pd.DataFrame(columns=EMPTY_ANNOT_COLS)
 
         # Standardize column names: check for original ES columns and rename to standardized names
         # If data came from DB or file, it may still have original ES column names (document_Content instead of body_analysed)
