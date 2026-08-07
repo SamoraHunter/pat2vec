@@ -124,6 +124,46 @@ def extract_treatment_id_list_from_docs(config_obj: Any) -> List[str]:
                     print("best_match_column: None, attempting default client_idcode")
                 config_obj.patient_id_column_name = "client_idcode"
 
+    # Fallback: If patient_id_column_name is still not in docs.columns (e.g., when explicitly set but file has different column),
+    # try auto-detection to find a matching column
+    if config_obj.patient_id_column_name not in docs.columns:
+        legacy_id_columns = ["client_idcode"]
+        epic_id_columns = [
+            "document_PatientDurableKey",
+            "activity_PatientDurableKey",
+            "patient_DurableKey",
+        ]
+
+        all_expected_id_columns = legacy_id_columns + epic_id_columns
+
+        for col in all_expected_id_columns:
+            if col in docs.columns:
+                config_obj.patient_id_column_name = col
+                if config_obj.verbosity > 0:
+                    print(f"Auto-detected patient ID column: {col} (fallback match)")
+                break
+
+        # If still not found, try pattern matching
+        if config_obj.patient_id_column_name not in docs.columns:
+            sample_id_patterns = [r"P\d{6}", r"V\d{6}"]
+
+            best_match_column = None
+            max_matches = 0
+            for column in docs.columns:
+                column_matches = sum(
+                    docs[column]
+                    .astype(str)
+                    .str.contains("|".join(sample_id_patterns), na=False)
+                )
+                if column_matches > max_matches:
+                    max_matches = column_matches
+                    best_match_column = column
+
+            if best_match_column is not None:
+                config_obj.patient_id_column_name = best_match_column
+                if config_obj.verbosity > 2:
+                    print("best_match_column:", best_match_column)
+
     # drop the nan in column
     docs.dropna(subset=[config_obj.patient_id_column_name], inplace=True)
 
