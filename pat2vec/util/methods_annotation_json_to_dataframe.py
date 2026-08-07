@@ -14,6 +14,7 @@ def json_to_dataframe(
     time_column: str = "updatetime",
     guid_column: str = "document_guid",
     include_text_sample: bool = False,
+    testing: bool = False,
 ) -> pd.DataFrame:
     """Converts a MedCAT JSON entity dictionary to a pandas DataFrame.
 
@@ -36,10 +37,12 @@ def json_to_dataframe(
         time_column: The name of the column in `doc` containing the timestamp.
         guid_column: The name of the column in `doc` containing the document GUID.
         include_text_sample: If True, includes a text sample around the annotation.
+        testing: If True and entities is empty, inject synthetic annotation data.
 
     Returns:
         A pandas DataFrame where each row is a single annotation, or an empty
-        DataFrame if no entities are present in the input.
+        DataFrame if no entities are present in the input (or synthetic data
+        when testing=True with no entities).
     """
     logger = logging.getLogger(__name__)
 
@@ -178,39 +181,107 @@ def json_to_dataframe(
             raise e
 
     else:
-        # Standardize document identifier column name for empty DataFrames
-        target_guid_column = "document_guid" if guid_column == "id" else guid_column
+        if testing:
+            # In testing mode with no MedCAT entities, generate a synthetic annotation row
+            target_guid_column = "document_guid" if guid_column == "id" else guid_column
 
-        columns = [
-            "client_idcode",
-            time_column,
-            "pretty_name",
-            "cui",
-            "type_ids",
-            "types",
-            "source_value",
-            "detected_name",
-            "acc",
-            "context_similarity",
-            "start",
-            "end",
-            "icd10",
-            "ontologies",
-            "snomed",
-            "id",
-            "Time_Value",
-            "Time_Confidence",
-            "Presence_Value",
-            "Presence_Confidence",
-            "Subject_Value",
-            "Subject_Confidence",
-            "text_sample",
-            "full_doc",
-            target_guid_column,
-        ]
+            updatetime_value = doc[time_column] if time_column in doc.index else None
+            document_guid_value = doc[guid_column] if guid_column in doc.index else None
 
-        empty_df = pd.DataFrame(data=None, columns=columns)
-        return empty_df
+            data = [
+                [
+                    current_pat_client_id_code,
+                    updatetime_value,
+                    "Synthetic Entity",
+                    "TEST_SYNT_001",
+                    ["T99"],
+                    ["synthetic"],
+                    "synthetic_entity",
+                    "synthetic_entity",
+                    0.85,
+                    0.85,
+                    0,
+                    len(str(doc.get(text_column, ""))),
+                    [],
+                    [],
+                    False,
+                    f"test_synthetic_{0}",
+                    "Recent",
+                    0.9,
+                    "True",
+                    0.95,
+                    "Patient",
+                    0.98,
+                    np.nan,
+                    np.nan,
+                    document_guid_value,
+                ]
+            ]
+
+            columns = [
+                "client_idcode",
+                time_column,
+                "pretty_name",
+                "cui",
+                "type_ids",
+                "types",
+                "source_value",
+                "detected_name",
+                "acc",
+                "context_similarity",
+                "start",
+                "end",
+                "icd10",
+                "ontologies",
+                "snomed",
+                "id",
+                "Time_Value",
+                "Time_Confidence",
+                "Presence_Value",
+                "Presence_Confidence",
+                "Subject_Value",
+                "Subject_Confidence",
+                "text_sample",
+                "full_doc",
+                target_guid_column,
+            ]
+
+            df = pd.DataFrame(data, columns=columns)
+            return df
+        else:
+            # Standardize document identifier column name for empty DataFrames
+            target_guid_column = "document_guid" if guid_column == "id" else guid_column
+
+            columns = [
+                "client_idcode",
+                time_column,
+                "pretty_name",
+                "cui",
+                "type_ids",
+                "types",
+                "source_value",
+                "detected_name",
+                "acc",
+                "context_similarity",
+                "start",
+                "end",
+                "icd10",
+                "ontologies",
+                "snomed",
+                "id",
+                "Time_Value",
+                "Time_Confidence",
+                "Presence_Value",
+                "Presence_Confidence",
+                "Subject_Value",
+                "Subject_Confidence",
+                "text_sample",
+                "full_doc",
+                target_guid_column,
+            ]
+
+            empty_df = pd.DataFrame(data=None, columns=columns)
+            return empty_df
 
 
 def parse_meta_anns(meta_anns: Dict[str, Any]) -> Dict[str, Any]:

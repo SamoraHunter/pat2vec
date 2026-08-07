@@ -78,15 +78,18 @@ def get_pat_document_annotation_batch_epic_orders(
     )
 
     # create the file in its dir
+    testing = getattr(config_obj, "testing", False)
     pat_document_annotation_batch = multi_annots_to_df_epic_orders(
         current_pat_client_idcode,
         pat_batch,
         multi_annots,
         config_obj=config_obj,
         t=t,
+        text_column=text_column,
         time_column=time_column,
         guid_column=guid_column,
         include_text_sample=config_obj.include_text_sample_in_annots,
+        testing=testing,
     )
 
     return pat_document_annotation_batch
@@ -282,6 +285,7 @@ def get_pat_document_annotation_batch_epic_imaging_reports(
     )
 
     # create the file in its dir
+    testing = getattr(config_obj, "testing", False)
     pat_document_annotation_batch = multi_annots_to_df_epic_imaging_reports(
         current_pat_client_idcode,
         pat_batch,
@@ -292,6 +296,7 @@ def get_pat_document_annotation_batch_epic_imaging_reports(
         text_column=text_column,
         time_column=time_column,
         guid_column=guid_column,
+        testing=testing,
     )
 
     return pat_document_annotation_batch
@@ -356,6 +361,7 @@ def get_pat_document_annotation_batch_epic_clinical_notes(
     )
 
     # create the file in its dir
+    testing = getattr(config_obj, "testing", False)
     pat_document_annotation_batch = multi_annots_to_df_epic_clinical_notes(
         current_pat_client_idcode,
         pat_batch,
@@ -366,6 +372,7 @@ def get_pat_document_annotation_batch_epic_clinical_notes(
         text_column=text_column,
         time_column=time_column,
         guid_column=guid_column,
+        testing=testing,
     )
 
     return pat_document_annotation_batch
@@ -419,6 +426,7 @@ def get_pat_document_annotation_batch_epic_clinical_notes_appointments(
     )
 
     # create the file in its dir
+    testing = getattr(config_obj, "testing", False)
     pat_document_annotation_batch = multi_annots_to_df_epic_clinical_notes_appointments(
         current_pat_client_idcode,
         pat_batch,
@@ -429,6 +437,7 @@ def get_pat_document_annotation_batch_epic_clinical_notes_appointments(
         text_column=text_column,
         time_column=time_column,
         guid_column=guid_column,
+        testing=testing,
     )
 
     return pat_document_annotation_batch
@@ -482,6 +491,7 @@ def get_pat_document_annotation_batch_epic_medical_history(
     )
 
     # create the file in its dir
+    testing = getattr(config_obj, "testing", False)
     pat_document_annotation_batch = multi_annots_to_df_epic_medical_history(
         current_pat_client_idcode,
         pat_batch,
@@ -492,6 +502,7 @@ def get_pat_document_annotation_batch_epic_medical_history(
         text_column=text_column,
         time_column=time_column,
         guid_column=guid_column,
+        testing=testing,
     )
 
     return pat_document_annotation_batch
