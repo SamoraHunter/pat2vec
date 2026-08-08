@@ -1,18 +1,17 @@
+import logging
 import os
 from datetime import datetime, timezone
-from typing import Union, Optional, List
-import logging
 
 import numpy as np
 import pandas as pd
 from IPython.display import display
 
-from pat2vec.util.filter_dataframe_by_timestamp import filter_dataframe_by_timestamp
-from pat2vec.util.get_start_end_year_month import get_start_end_year_month
-from pat2vec.util.parse_date import validate_input_dates
 from pat2vec.pat2vec_get_methods.get_method_epic_lab_results import (
     search_epic_lab_results,
 )
+from pat2vec.util.filter_dataframe_by_timestamp import filter_dataframe_by_timestamp
+from pat2vec.util.get_start_end_year_month import get_start_end_year_month
+from pat2vec.util.parse_date import validate_input_dates
 
 logger = logging.getLogger(__name__)
 
@@ -31,18 +30,18 @@ def search_bloods_data(
     client_id_codes=None,
     client_idcode_name="client_idcode.keyword",
     bloods_time_field="basicobs_entered",
-    fields_override: Optional[List[str]] = None,
-    start_year: Union[int, str] = 1995,
-    start_month: Union[int, str] = 1,
-    start_day: Union[int, str] = 1,
-    end_year: Union[int, str] = 2025,
-    end_month: Union[int, str] = 12,
-    end_day: Union[int, str] = 12,
+    fields_override: list[str] | None = None,
+    start_year: int | str = 1995,
+    start_month: int | str = 1,
+    start_day: int | str = 1,
+    end_year: int | str = 2025,
+    end_month: int | str = 12,
+    end_day: int | str = 12,
     additional_custom_search_string=None,
     index_name: str = "basic_observations",
-    output_filename: Optional[str] = "bloods_search_results.csv",
+    output_filename: str | None = "bloods_search_results.csv",
     overwrite: bool = False,
-    config_obj: Optional[object] = None,
+    config_obj: object | None = None,
 ):
     """Searches for bloods data for patients within a date range.
 

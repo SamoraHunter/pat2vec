@@ -1,7 +1,9 @@
 import os
 import unittest
-import pandas as pd
 from unittest.mock import MagicMock, patch
+
+import pandas as pd
+
 from pat2vec.pat2vec_get_methods.get_method_demo import (
     get_demographics_data,
     search_demographics,

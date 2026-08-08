@@ -4,13 +4,11 @@ indices they query. This helps users understand the data sources for each
 feature extraction function.
 """
 
-from typing import Dict, Optional
-
 # This dictionary maps the name of the 'get' function to the default
 # Elasticsearch index it queries. For methods that operate on pre-fetched
 # data (like annotations), the index is the one from which the raw data
 # was originally sourced.
-GET_METHOD_INDEX_MAP: Dict[str, str] = {
+GET_METHOD_INDEX_MAP: dict[str, str] = {
     "get_appointments": "pims_apps*",
     "get_bed": "observations",
     "get_current_pat_bloods": "basic_observations",
@@ -42,7 +40,7 @@ GET_METHOD_INDEX_MAP: Dict[str, str] = {
 }
 
 
-def get_index_for_method(method_name: str) -> Optional[str]:
+def get_index_for_method(method_name: str) -> str | None:
     """
     Retrieves the default Elasticsearch index for a given `get` method.
 
@@ -56,7 +54,7 @@ def get_index_for_method(method_name: str) -> Optional[str]:
     return GET_METHOD_INDEX_MAP.get(method_name)
 
 
-def get_all_method_indices() -> Dict[str, str]:
+def get_all_method_indices() -> dict[str, str]:
     """
     Retrieves a dictionary of all `get` methods and their default indices.
 

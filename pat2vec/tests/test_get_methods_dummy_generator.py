@@ -1,12 +1,13 @@
-import unittest
 import os
 import tempfile
+import unittest
 from datetime import datetime
 from unittest.mock import patch
+
 import pandas as pd
 
-from pat2vec.util.config_pat2vec import config_class
 from pat2vec.main_pat2vec import main
+from pat2vec.util.config_pat2vec import config_class
 
 
 class TestGetMethodsDummyGenerator(unittest.TestCase):

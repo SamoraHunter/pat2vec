@@ -1,5 +1,7 @@
-import pandas as pd
 from datetime import timedelta
+
+import pandas as pd
+
 from pat2vec.pat2vec_get_methods.get_method_epic_clinical_notes_appointments import (
     get_epic_clinical_notes_appointments,
 )

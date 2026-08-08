@@ -1,4 +1,4 @@
-from typing import Callable, List, Optional, Tuple
+from collections.abc import Callable
 
 import numpy as np
 import pandas as pd
@@ -8,7 +8,6 @@ from pat2vec.pat2vec_get_methods.get_method_demo import search_demographics
 from pat2vec.pat2vec_search.data_helper_functions import append_age_at_record_series
 
 # from COGStats import EthnicityAbstractor
-
 # from COGStats import *
 from pat2vec.util.ethnicity_abstractor import EthnicityAbstractor
 from pat2vec.util.filter_dataframe_by_timestamp import filter_dataframe_by_timestamp
@@ -17,9 +16,9 @@ from pat2vec.util.get_start_end_year_month import get_start_end_year_month
 
 def get_demo(
     current_pat_client_id_code: str,
-    target_date_range: Tuple,
+    target_date_range: tuple,
     pat_batch: pd.DataFrame,
-    config_obj: Optional[object] = None,
+    config_obj: object | None = None,
 ) -> pd.DataFrame:
     """Retrieves and processes demographic features for a patient.
 
@@ -271,11 +270,11 @@ def _process_dead(demo_dataframe: pd.DataFrame) -> pd.DataFrame:
 
 
 def get_demographics3_batch(
-    patlist: List[str],
-    target_date_range: Tuple,
+    patlist: list[str],
+    target_date_range: tuple,
     pat_batch: pd.DataFrame,
-    config_obj: Optional[object] = None,
-    cohort_searcher_with_terms_and_search: Optional[Callable] = None,
+    config_obj: object | None = None,
+    cohort_searcher_with_terms_and_search: Callable | None = None,
 ) -> pd.DataFrame:
     """Retrieves the latest demographic record for patients within a date range.
 

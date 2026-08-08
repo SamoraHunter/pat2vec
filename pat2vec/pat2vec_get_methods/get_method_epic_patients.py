@@ -1,5 +1,4 @@
 import os
-from typing import Union, Optional, List
 
 import pandas as pd
 from IPython.display import display
@@ -31,19 +30,19 @@ def search_epic_patients(
     patient_durable_keys=None,
     id_field_name="patient_DurableKey",
     time_field="patient_BirthDate",
-    fields_override: Optional[List[str]] = None,
-    start_year: Union[int, str] = 1995,
-    start_month: Union[int, str] = 1,
-    start_day: Union[int, str] = 1,
-    end_year: Union[int, str] = 2025,
-    end_month: Union[int, str] = 12,
-    end_day: Union[int, str] = 12,
+    fields_override: list[str] | None = None,
+    start_year: int | str = 1995,
+    start_month: int | str = 1,
+    start_day: int | str = 1,
+    end_year: int | str = 2025,
+    end_month: int | str = 12,
+    end_day: int | str = 12,
     additional_custom_search_string=None,
     index_name: str = "epic_patients",
-    output_filename: Optional[str] = "epic_patients_results.csv",
+    output_filename: str | None = "epic_patients_results.csv",
     overwrite: bool = False,
-    config_obj: Optional[object] = None,
-    t: Optional[tqdm] = None,
+    config_obj: object | None = None,
+    t: tqdm | None = None,
 ):
     """Searches for Epic patient data for patients within a date range.
 

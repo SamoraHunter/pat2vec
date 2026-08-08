@@ -1,12 +1,14 @@
+from typing import Any
+
 import pandas as pd
-from typing import Any, Tuple
-from pat2vec.util.get_start_end_year_month import get_start_end_year_month
+
 from pat2vec.util.filter_dataframe_by_timestamp import filter_dataframe_by_timestamp
+from pat2vec.util.get_start_end_year_month import get_start_end_year_month
 
 
 def get_current_pat_problem_list(
     current_pat_client_id_code: str,
-    target_date_range: Tuple[Any, Any],
+    target_date_range: tuple[Any, Any],
     pat_batch: pd.DataFrame,
     config_obj: Any,
 ) -> pd.DataFrame:

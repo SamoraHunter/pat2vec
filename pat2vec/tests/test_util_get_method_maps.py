@@ -1,7 +1,8 @@
 import unittest
+
 from pat2vec.util.get_method_default_fields_map import (
-    get_default_fields_for_method,
     get_all_method_default_fields,
+    get_default_fields_for_method,
 )
 from pat2vec.util.get_method_index_map import get_index_for_method
 

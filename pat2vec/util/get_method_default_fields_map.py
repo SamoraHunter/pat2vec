@@ -4,8 +4,6 @@ they query. This helps users understand the data sources for each
 feature extraction function.
 """
 
-from typing import Dict, List, Optional
-
 from pat2vec.pat2vec_get_methods.get_method_appointments import APPOINTMENT_FIELDS
 from pat2vec.pat2vec_get_methods.get_method_bed import BED_FIELDS
 from pat2vec.pat2vec_get_methods.get_method_bloods import BLOODS_FIELDS
@@ -15,18 +13,6 @@ from pat2vec.pat2vec_get_methods.get_method_core_resus import CORE_RESUS_FIELDS
 from pat2vec.pat2vec_get_methods.get_method_demo import DEMOGRAPHICS_FIELDS
 from pat2vec.pat2vec_get_methods.get_method_diagnostics import DIAGNOSTICS_FIELDS
 from pat2vec.pat2vec_get_methods.get_method_drugs import DRUG_FIELDS
-from pat2vec.pat2vec_get_methods.get_method_hosp_site import HOSP_SITE_FIELDS
-from pat2vec.pat2vec_get_methods.get_method_smoking import SMOKING_FIELDS
-from pat2vec.pat2vec_get_methods.get_method_epic_encounters import EPIC_ENCOUNTER_FIELDS
-
-# epic_imaging_reports, epic_orders, epic_medical_history are now only available via annotations
-# from pat2vec.pat2vec_get_methods.get_method_epic_imaging_reports import (
-#     EPIC_IMAGING_REPORTS_FIELDS,
-# )
-from pat2vec.pat2vec_get_methods.get_method_epic_patients import EPIC_PATIENTS_FIELDS
-from pat2vec.pat2vec_get_methods.get_method_epic_lab_results import (
-    EPIC_LAB_RESULTS_FIELDS,
-)
 
 # epic_orders, epic_medical_history are now only available via annotations
 # from pat2vec.pat2vec_get_methods.get_method_epic_orders import EPIC_ORDERS_FIELDS
@@ -39,12 +25,24 @@ from pat2vec.pat2vec_get_methods.get_method_epic_lab_results import (
 from pat2vec.pat2vec_get_methods.get_method_epic_clinical_notes_appointments import (
     EPIC_CLINICAL_NOTES_APPOINTMENTS_FIELDS,
 )
-from pat2vec.util.post_processing_annotations import EMPTY_ANNOT_COLS
+from pat2vec.pat2vec_get_methods.get_method_epic_encounters import EPIC_ENCOUNTER_FIELDS
+from pat2vec.pat2vec_get_methods.get_method_epic_lab_results import (
+    EPIC_LAB_RESULTS_FIELDS,
+)
+
+# epic_imaging_reports, epic_orders, epic_medical_history are now only available via annotations
+# from pat2vec.pat2vec_get_methods.get_method_epic_imaging_reports import (
+#     EPIC_IMAGING_REPORTS_FIELDS,
+# )
+from pat2vec.pat2vec_get_methods.get_method_epic_patients import EPIC_PATIENTS_FIELDS
+from pat2vec.pat2vec_get_methods.get_method_hosp_site import HOSP_SITE_FIELDS
+from pat2vec.pat2vec_get_methods.get_method_smoking import SMOKING_FIELDS
 from pat2vec.pat2vec_get_methods.get_method_vte_status import VTE_FIELDS
+from pat2vec.util.post_processing_annotations import EMPTY_ANNOT_COLS
 
 # This dictionary maps the name of the 'get' function to the default
 # list of fields it queries.
-GET_METHOD_DEFAULT_FIELDS_MAP: Dict[str, List[str]] = {
+GET_METHOD_DEFAULT_FIELDS_MAP: dict[str, list[str]] = {
     "get_appointments": APPOINTMENT_FIELDS,
     "get_bed": BED_FIELDS,
     "get_current_pat_bloods": BLOODS_FIELDS,
@@ -77,7 +75,7 @@ GET_METHOD_DEFAULT_FIELDS_MAP: Dict[str, List[str]] = {
 }
 
 
-def get_default_fields_for_method(method_name: str) -> Optional[List[str]]:
+def get_default_fields_for_method(method_name: str) -> list[str] | None:
     """
     Retrieves the default list of fields for a given `get` method.
 
@@ -90,7 +88,7 @@ def get_default_fields_for_method(method_name: str) -> Optional[List[str]]:
     return GET_METHOD_DEFAULT_FIELDS_MAP.get(method_name)
 
 
-def get_all_method_default_fields() -> Dict[str, List[str]]:
+def get_all_method_default_fields() -> dict[str, list[str]]:
     """
     Retrieves a dictionary of all `get` methods and their default fields.
 

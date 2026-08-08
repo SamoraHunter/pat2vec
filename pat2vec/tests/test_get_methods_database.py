@@ -1,5 +1,7 @@
-import pandas as pd
 from unittest.mock import MagicMock, patch
+
+import pandas as pd
+
 from pat2vec.main_pat2vec import main
 
 

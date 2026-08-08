@@ -1,5 +1,7 @@
-import pandas as pd
 from datetime import timedelta
+
+import pandas as pd
+
 from pat2vec.pat2vec_get_methods.get_method_epic_encounters import get_epic_encounters
 from pat2vec.util.get_dummy_data_cohort_searcher import (
     cohort_searcher_with_terms_and_search_dummy,

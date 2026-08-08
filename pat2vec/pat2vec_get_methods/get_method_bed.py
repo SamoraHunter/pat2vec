@@ -1,5 +1,4 @@
 import os
-from typing import Union, Optional, List
 
 import pandas as pd
 
@@ -22,19 +21,19 @@ def search_bed_data(
     client_id_codes=None,
     client_idcode_name="client_idcode.keyword",
     bed_time_field="observationdocument_recordeddtm",
-    fields_override: Optional[List[str]] = None,
-    start_year: Union[int, str] = 1995,
-    start_month: Union[int, str] = 1,
-    start_day: Union[int, str] = 1,
-    end_year: Union[int, str] = 2025,
-    end_month: Union[int, str] = 12,
-    end_day: Union[int, str] = 12,
+    fields_override: list[str] | None = None,
+    start_year: int | str = 1995,
+    start_month: int | str = 1,
+    start_day: int | str = 1,
+    end_year: int | str = 2025,
+    end_month: int | str = 12,
+    end_day: int | str = 12,
     search_term="CORE_BedNumber3",
     additional_custom_search_string=None,
     index_name: str = "observations",
-    output_filename: Optional[str] = "bed_search_results.csv",
+    output_filename: str | None = "bed_search_results.csv",
     overwrite: bool = False,
-    config_obj: Optional[object] = None,
+    config_obj: object | None = None,
 ):
     """Searches for bed data for patients within a date range.
 
