@@ -1,16 +1,18 @@
-from pat2vec.util.methods_annotation_json_to_dataframe import json_to_dataframe
 import logging
-from pat2vec.util.post_processing_annotations import (
-    join_icd10_OPC4S_codes_to_annot,
-    join_icd10_codes_to_annot,
-)
-
-import pandas as pd
 import os
 import tempfile
+from collections.abc import Iterator
 from contextlib import contextmanager
-from typing import Any, Dict, Iterator, List
+from typing import Any
+
+import pandas as pd
+
 from pat2vec.util.helper_functions import save_annotations_to_db
+from pat2vec.util.methods_annotation_json_to_dataframe import json_to_dataframe
+from pat2vec.util.post_processing_annotations import (
+    join_icd10_codes_to_annot,
+    join_icd10_OPC4S_codes_to_annot,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +40,7 @@ def temporary_file(suffix: str = ".csv", delete: bool = True) -> Iterator[str]:
 def multi_annots_to_df(
     current_pat_client_idcode: str,
     pat_batch: pd.DataFrame,
-    multi_annots: List[Dict[str, Any]],
+    multi_annots: list[dict[str, Any]],
     config_obj: Any,
     t: Any,
     text_column: str = "body_analysed",
@@ -109,7 +111,7 @@ def multi_annots_to_df(
                     processed_dfs.append(doc_to_annot_df)
         except Exception as e:
             if config_obj.verbosity >= 1:
-                logger.warning(f"Error processing document {i}: {str(e)}")
+                logger.warning(f"Error processing document {i}: {e!s}")
             continue
 
     if processed_dfs:
@@ -158,7 +160,7 @@ def multi_annots_to_df(
                 final_df = join_icd10_OPC4S_codes_to_annot(df=final_df, inner=False)
     except Exception as e:
         if config_obj.verbosity >= 1:
-            logger.warning(f"Error joining ICD10/OPC4S codes: {str(e)}")
+            logger.warning(f"Error joining ICD10/OPC4S codes: {e!s}")
 
     # Write to file only if backend is 'file'
     if getattr(config_obj, "storage_backend", "file") != "database":

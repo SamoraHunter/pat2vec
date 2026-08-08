@@ -1,5 +1,7 @@
 import unittest
+
 import pandas as pd
+
 from pat2vec.util.methods_annotation_json_to_dataframe import (
     json_to_dataframe,
     parse_meta_anns,

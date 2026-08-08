@@ -1,18 +1,20 @@
-import os
 import logging
+import os
+from typing import Any
+
 import numpy as np
 import pandas as pd
-from typing import Any, Dict, List, Optional
 from sqlalchemy import text
+
 from pat2vec.util.helper_functions import save_annotations_to_db
 from pat2vec.util.methods_annotation_json_to_dataframe import (
     json_to_dataframe,
 )  # Keep for now, might move later
 from pat2vec.util.methods_get import exist_check, update_pbar
 from pat2vec.util.post_processing_annotations import (
+    EMPTY_ANNOT_COLS,
     join_icd10_codes_to_annot,
     join_icd10_OPC4S_codes_to_annot,
-    EMPTY_ANNOT_COLS,
 )
 
 logger = logging.getLogger(__name__)
@@ -174,7 +176,7 @@ def annot_pat_batch_docs(
     config_obj: Any,
     t: Any,
     text_column: str = "body_analysed",
-) -> List[Dict[str, Any]]:
+) -> list[dict[str, Any]]:
     """Annotates a batch of patient documents using a MedCAT model.
 
     Args:
@@ -220,7 +222,7 @@ def annot_pat_batch_docs(
 def multi_annots_to_df_textual_obs(
     current_pat_client_idcode: str,
     pat_batch: pd.DataFrame,
-    multi_annots: List[Dict[str, Any]],
+    multi_annots: list[dict[str, Any]],
     config_obj: Any,
     t: Any,
     text_column: str = "textualObs",
@@ -275,7 +277,7 @@ def multi_annots_to_df_textual_obs(
 
     all_annot_dfs = []
 
-    for i in range(0, len(pat_batch)):
+    for i in range(len(pat_batch)):
         doc_to_annot_df = json_to_dataframe(
             json_data=multi_annots[i],
             doc=pat_batch.iloc[i],
@@ -326,7 +328,7 @@ def multi_annots_to_df_textual_obs(
 def multi_annots_to_df_epr_docs(
     current_pat_client_idcode: str,
     pat_batch: pd.DataFrame,
-    multi_annots: List[Dict[str, Any]],
+    multi_annots: list[dict[str, Any]],
     config_obj: Any,
     t: Any,
     text_column: str = "body_analysed",
@@ -375,7 +377,7 @@ def multi_annots_to_df_epr_docs(
 
     all_annot_dfs = []
 
-    for i in range(0, len(pat_batch)):
+    for i in range(len(pat_batch)):
         doc_to_annot_df = json_to_dataframe(
             json_data=multi_annots[i],
             doc=pat_batch.iloc[i],
@@ -428,7 +430,7 @@ def multi_annots_to_df_epr_docs(
 def multi_annots_to_df_reports(
     current_pat_client_idcode: str,
     pat_batch: pd.DataFrame,
-    multi_annots: List[Dict[str, Any]],
+    multi_annots: list[dict[str, Any]],
     config_obj: Any,
     t: Any,
     text_column: str = "body_analysed",
@@ -483,7 +485,7 @@ def multi_annots_to_df_reports(
 
     all_annot_dfs = []
 
-    for i in range(0, len(pat_batch)):
+    for i in range(len(pat_batch)):
         doc_to_annot_df = json_to_dataframe(
             json_data=multi_annots[i],
             doc=pat_batch.iloc[i],
@@ -533,7 +535,7 @@ def multi_annots_to_df_reports(
 def multi_annots_to_df_epic_lab_results(
     current_pat_client_idcode: str,
     pat_batch: pd.DataFrame,
-    multi_annots: List[Dict[str, Any]],
+    multi_annots: list[dict[str, Any]],
     config_obj: Any,
     t: Any,
     text_column: str = "document_LabComponentValue",
@@ -575,7 +577,7 @@ def multi_annots_to_df_epic_lab_results(
     )
 
     all_annot_dfs = []
-    for i in range(0, len(pat_batch)):
+    for i in range(len(pat_batch)):
         doc_to_annot_df = json_to_dataframe(
             json_data=multi_annots[i],
             doc=pat_batch.iloc[i],
@@ -615,7 +617,7 @@ def multi_annots_to_df_epic_lab_results(
 def multi_annots_to_df_epic_orders(
     current_pat_client_idcode: str,
     pat_batch: pd.DataFrame,
-    multi_annots: List[Dict[str, Any]],
+    multi_annots: list[dict[str, Any]],
     config_obj: Any,
     t: Any,
     text_column: str = "document_Content",
@@ -666,7 +668,7 @@ def multi_annots_to_df_epic_orders(
 
     all_annot_dfs = []
 
-    for i in range(0, len(pat_batch)):
+    for i in range(len(pat_batch)):
         doc_to_annot_df = json_to_dataframe(
             json_data=multi_annots[i],
             doc=pat_batch.iloc[i],
@@ -713,7 +715,7 @@ def multi_annots_to_df_epic_orders(
 def multi_annots_to_df_epic_clinical_notes(
     current_pat_client_idcode: str,
     pat_batch: pd.DataFrame,
-    multi_annots: List[Dict[str, Any]],
+    multi_annots: list[dict[str, Any]],
     config_obj: Any,
     t: Any,
     text_column: str = "document_Content",
@@ -764,7 +766,7 @@ def multi_annots_to_df_epic_clinical_notes(
 
     all_annot_dfs = []
 
-    for i in range(0, len(pat_batch)):
+    for i in range(len(pat_batch)):
         doc_to_annot_df = json_to_dataframe(
             json_data=multi_annots[i],
             doc=pat_batch.iloc[i],
@@ -818,7 +820,7 @@ def multi_annots_to_df_epic_clinical_notes(
 def multi_annots_to_df_epic_clinical_notes_appointments(
     current_pat_client_idcode: str,
     pat_batch: pd.DataFrame,
-    multi_annots: List[Dict[str, Any]],
+    multi_annots: list[dict[str, Any]],
     config_obj: Any,
     t: Any,
     text_column: str = "document_Content",
@@ -869,7 +871,7 @@ def multi_annots_to_df_epic_clinical_notes_appointments(
 
     all_annot_dfs = []
 
-    for i in range(0, len(pat_batch)):
+    for i in range(len(pat_batch)):
         doc_to_annot_df = json_to_dataframe(
             json_data=multi_annots[i],
             doc=pat_batch.iloc[i],
@@ -926,7 +928,7 @@ def multi_annots_to_df_epic_clinical_notes_appointments(
 def multi_annots_to_df_epic_imaging_reports(
     current_pat_client_idcode: str,
     pat_batch: pd.DataFrame,
-    multi_annots: List[Dict[str, Any]],
+    multi_annots: list[dict[str, Any]],
     config_obj: Any,
     t: Any,
     text_column: str = "document_Content",
@@ -976,7 +978,7 @@ def multi_annots_to_df_epic_imaging_reports(
     )
 
     all_annot_dfs = []
-    for i in range(0, len(pat_batch)):
+    for i in range(len(pat_batch)):
         doc_to_annot_df = json_to_dataframe(
             json_data=multi_annots[i],
             doc=pat_batch.iloc[i],
@@ -1023,7 +1025,7 @@ def multi_annots_to_df_epic_imaging_reports(
 def multi_annots_to_df_epic_medical_history(
     current_pat_client_idcode: str,
     pat_batch: pd.DataFrame,
-    multi_annots: List[Dict[str, Any]],
+    multi_annots: list[dict[str, Any]],
     config_obj: Any,
     t: Any,
     text_column: str = "document_Comment",
@@ -1066,7 +1068,7 @@ def multi_annots_to_df_epic_medical_history(
 
     all_annot_dfs = []
 
-    for i in range(0, len(pat_batch)):
+    for i in range(len(pat_batch)):
         doc_to_annot_df = json_to_dataframe(
             json_data=multi_annots[i],
             doc=pat_batch.iloc[i],
@@ -1108,7 +1110,7 @@ def multi_annots_to_df_epic_medical_history(
 def multi_annots_to_df_mct(
     current_pat_client_idcode: str,
     pat_batch: pd.DataFrame,
-    multi_annots: List[Dict[str, Any]],
+    multi_annots: list[dict[str, Any]],
     config_obj: Any,
     t: Any,
     text_column: str = "observation_valuetext_analysed",
@@ -1163,7 +1165,7 @@ def multi_annots_to_df_mct(
 
     all_annot_dfs = []
 
-    for i in range(0, len(pat_batch)):
+    for i in range(len(pat_batch)):
         doc_to_annot_df = json_to_dataframe(
             json_data=multi_annots[i],
             doc=pat_batch.iloc[i],
@@ -1212,7 +1214,7 @@ def multi_annots_to_df_mct(
 
 def calculate_pretty_name_count_features(
     df_copy: pd.DataFrame, suffix: str = "epr"
-) -> Optional[pd.DataFrame]:
+) -> pd.DataFrame | None:
     """Calculates count-based features from the 'pretty_name' column.
 
     This function groups a DataFrame by 'pretty_name' and calculates the count

@@ -1,16 +1,17 @@
 import unittest
-import pandas as pd
-from unittest.mock import patch
 from datetime import datetime, timedelta
+from unittest.mock import patch
 
+import pandas as pd
+
+from pat2vec.pat2vec_get_methods.get_method_pat_annotations import (
+    get_current_pat_annotations,
+)
 from pat2vec.util.config_pat2vec import config_class
 from pat2vec.util.get_dummy_data_cohort_searcher import (
     generate_epr_documents_data,
 )
 from pat2vec.util.helper_functions import save_raw_patient_batch
-from pat2vec.pat2vec_get_methods.get_method_pat_annotations import (
-    get_current_pat_annotations,
-)
 
 
 class TestNegatedPresenceAnnotationsIntegration(unittest.TestCase):

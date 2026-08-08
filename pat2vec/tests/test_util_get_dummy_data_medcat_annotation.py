@@ -1,10 +1,11 @@
 import unittest
-from unittest.mock import patch, mock_open
+from unittest.mock import mock_open, patch
+
 from pat2vec.util.get_dummy_data_medcat_annotation import (
-    random_sample,
-    dummy_medcat_annotation_generator,
-    dummy_CAT,
     augment_dummy_annotations_file,
+    dummy_CAT,
+    dummy_medcat_annotation_generator,
+    random_sample,
 )
 
 

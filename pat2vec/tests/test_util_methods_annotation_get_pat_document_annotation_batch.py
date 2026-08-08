@@ -1,11 +1,13 @@
 import unittest
 from unittest.mock import MagicMock, patch
+
 import pandas as pd
+
 from pat2vec.util.methods_annotation_get_pat_document_annotation_batch import (
+    get_pat_batch_textual_obs_annotation_batch,
     get_pat_document_annotation_batch,
     get_pat_document_annotation_batch_mct,
     get_pat_document_annotation_batch_reports,
-    get_pat_batch_textual_obs_annotation_batch,
 )
 
 

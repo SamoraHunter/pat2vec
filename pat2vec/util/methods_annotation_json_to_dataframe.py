@@ -1,11 +1,12 @@
+import logging
+from typing import Any
+
 import numpy as np
 import pandas as pd
-import logging
-from typing import Any, Dict
 
 
 def json_to_dataframe(
-    json_data: Dict[str, Any],
+    json_data: dict[str, Any],
     doc: pd.Series,
     current_pat_client_id_code: str,
     full_doc: bool = False,
@@ -85,7 +86,7 @@ def json_to_dataframe(
             target_guid_column,
         ]
 
-        for i in range(0, len(keys)):
+        for i in range(len(keys)):
             entities_data = json_data["entities"][keys[i]]
             pretty_name = entities_data.get("pretty_name")
             cui = entities_data.get("cui")
@@ -284,7 +285,7 @@ def json_to_dataframe(
             return empty_df
 
 
-def parse_meta_anns(meta_anns: Dict[str, Any]) -> Dict[str, Any]:
+def parse_meta_anns(meta_anns: dict[str, Any]) -> dict[str, Any]:
     """Parses meta-annotations from a MedCAT entity dictionary.
 
     This function extracts the value and confidence for 'Time', 'Presence',

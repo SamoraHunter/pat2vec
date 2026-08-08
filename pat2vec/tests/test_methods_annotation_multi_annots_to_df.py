@@ -1,11 +1,12 @@
-import unittest
-import pandas as pd
-import os
-from unittest.mock import patch, MagicMock
-import tempfile
-from datetime import datetime
-import numpy as np
 import ast
+import os
+import tempfile
+import unittest
+from datetime import datetime
+from unittest.mock import MagicMock, patch
+
+import numpy as np
+import pandas as pd
 
 from pat2vec.util.methods_annotation_multi_annots_to_df import (
     multi_annots_to_df,

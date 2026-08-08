@@ -1,10 +1,11 @@
-import pandas as pd
-from typing import Any, Dict
 import ast
+from typing import Any
+
+import pandas as pd
 
 
 def filter_annot_dataframe(
-    dataframe: pd.DataFrame, filter_args: Dict[str, Any]
+    dataframe: pd.DataFrame, filter_args: dict[str, Any]
 ) -> pd.DataFrame:
     """Filters an annotation DataFrame based on specified criteria.
 
@@ -59,10 +60,7 @@ def filter_annot_dataframe(
                 "Time_Confidence",
                 "Presence_Confidence",
                 "Subject_Confidence",
-            ]:
-                # Include rows where the column is greater than or equal to the specified confidence threshold
-                mask &= dataframe[column] >= value
-            elif column in ["acc"]:
+            ] or column in ["acc"]:
                 # Include rows where the column is greater than or equal to the specified confidence threshold
                 mask &= dataframe[column] >= value
 

@@ -1,11 +1,12 @@
-import pandas as pd
+import logging
 import os
-from typing import Any, Dict, List, Optional
-from tqdm import tqdm
+from typing import Any
+
+import pandas as pd
 from sqlalchemy import text
+from tqdm import tqdm
 
 from pat2vec.util.helper_functions import get_df_from_db
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -42,7 +43,7 @@ EMPTY_ANNOT_COLS = [
 
 
 def filter_annot_dataframe2(
-    dataframe: pd.DataFrame, filter_args: Dict[str, Any]
+    dataframe: pd.DataFrame, filter_args: dict[str, Any]
 ) -> pd.DataFrame:
     """Filter a DataFrame based on specified filter arguments.
 
@@ -103,10 +104,10 @@ def filter_annot_dataframe2(
 def produce_filtered_annotation_dataframe(
     cui_filter: bool = False,
     meta_annot_filter: bool = False,
-    pat_list: Optional[List[str]] = None,
-    config_obj: Optional[Any] = None,
-    filter_custom_args: Optional[Dict[str, Any]] = None,
-    cui_code_list: Optional[List[int]] = None,
+    pat_list: list[str] | None = None,
+    config_obj: Any | None = None,
+    filter_custom_args: dict[str, Any] | None = None,
+    cui_code_list: list[int] | None = None,
     mct: bool = False,
 ) -> pd.DataFrame:
     """Filter annotation dataframe based on specified criteria.
@@ -247,7 +248,7 @@ def produce_filtered_annotation_dataframe(
     return super_result
 
 
-def extract_types_from_csv(directory: str) -> List[str]:
+def extract_types_from_csv(directory: str) -> list[str]:
     """Extracts all unique 'types' from CSV files within a given directory and its subdirectories.
 
     Args:
@@ -282,7 +283,7 @@ def extract_types_from_csv(directory: str) -> List[str]:
 def join_icd10_codes_to_annot(
     df: pd.DataFrame,
     inner: bool = False,
-    file_path: Optional[str] = None,
+    file_path: str | None = None,
 ) -> pd.DataFrame:
     """Joins ICD-10 codes to an annotation DataFrame.
 
@@ -375,7 +376,7 @@ def join_icd10_codes_to_annot(
 def join_icd10_OPC4S_codes_to_annot(
     df: pd.DataFrame,
     inner: bool = False,
-    file_path: Optional[str] = None,
+    file_path: str | None = None,
 ) -> pd.DataFrame:
     """Joins ICD-10 and OPCS-4 codes to an annotation DataFrame.
 
@@ -452,7 +453,7 @@ def join_icd10_OPC4S_codes_to_annot(
 
 def filter_and_select_rows(
     dataframe: pd.DataFrame,
-    filter_list: List[Any],
+    filter_list: list[Any],
     verbosity: int = 0,
     time_column: str = "updatetime",
     filter_column: str = "cui",
@@ -505,7 +506,7 @@ def filter_and_select_rows(
 
 def filter_dataframe_by_cui(
     dataframe: pd.DataFrame,
-    filter_list: List[int],
+    filter_list: list[int],
     filter_column: str = "cui",
     mode: str = "earliest",
     temporal: str = "before",
@@ -609,7 +610,7 @@ def check_list_presence(df, column, lst, annot_filter_arguments=None):
 
 
 def filter_dataframe_n_lists(
-    df: pd.DataFrame, column_name: str, n_lists: List[List[Any]]
+    df: pd.DataFrame, column_name: str, n_lists: list[list[Any]]
 ) -> pd.DataFrame:
     """Filters a DataFrame to include rows where the value in a specified column
     is present in *all* of the provided lists.
@@ -636,10 +637,10 @@ def filter_dataframe_n_lists(
 
 
 def get_all_target_annots(
-    all_pat_list: List[str],
-    n_lists: List[List[int]],
-    config_obj: Optional[Any] = None,
-    annot_filter_arguments: Optional[Dict[str, Any]] = None,
+    all_pat_list: list[str],
+    n_lists: list[list[int]],
+    config_obj: Any | None = None,
+    annot_filter_arguments: dict[str, Any] | None = None,
 ) -> pd.DataFrame:
     """Retrieves and filters target annotations for a list of patients.
 
@@ -663,7 +664,7 @@ def get_all_target_annots(
         for i, element in enumerate(sublist):
             sublist[i] = int(element)
 
-    for i in tqdm(range(0, len(all_pat_list)), total=len(all_pat_list)):
+    for i in tqdm(range(len(all_pat_list)), total=len(all_pat_list)):
         current_pat_idcode = all_pat_list[i]
 
         all_annots = retrieve_pat_annots_mct_epr(current_pat_idcode, config_obj)
@@ -690,15 +691,15 @@ def get_all_target_annots(
 def retrieve_pat_annots_mct_epr(
     client_idcode: str,
     config_obj: Any,
-    columns_epr: Optional[List[str]] = None,
-    columns_mct: Optional[List[str]] = None,
-    columns_to: Optional[List[str]] = None,
-    columns_report: Optional[List[str]] = None,
-    columns_epic_imaging_reports: Optional[List[str]] = None,
-    columns_epic_medical_history: Optional[List[str]] = None,
-    columns_epic_orders: Optional[List[str]] = None,
-    columns_epic_clinical_notes: Optional[List[str]] = None,
-    columns_epic_clinical_notes_appointments: Optional[List[str]] = None,
+    columns_epr: list[str] | None = None,
+    columns_mct: list[str] | None = None,
+    columns_to: list[str] | None = None,
+    columns_report: list[str] | None = None,
+    columns_epic_imaging_reports: list[str] | None = None,
+    columns_epic_medical_history: list[str] | None = None,
+    columns_epic_orders: list[str] | None = None,
+    columns_epic_clinical_notes: list[str] | None = None,
+    columns_epic_clinical_notes_appointments: list[str] | None = None,
     merge_columns: bool = True,
 ) -> pd.DataFrame:
     """Retrieves and merges annotation data for a single patient from multiple sources (files or database).
@@ -973,7 +974,7 @@ def remove_file_from_paths(
     current_pat_idcode: str,
     project_name: str = "new_project",
     verbosity: int = 0,
-    config_obj: Optional[Any] = None,
+    config_obj: Any | None = None,
 ) -> None:
     """Removes patient-specific data from various predefined project paths or database tables.
 

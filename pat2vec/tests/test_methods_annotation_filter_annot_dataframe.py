@@ -1,5 +1,7 @@
 import unittest
+
 import pandas as pd
+
 from pat2vec.util.methods_annotation_filter_annot_dataframe import (
     filter_annot_dataframe,
 )

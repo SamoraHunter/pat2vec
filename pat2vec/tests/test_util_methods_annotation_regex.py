@@ -1,5 +1,7 @@
 import unittest
+
 import pandas as pd
+
 from pat2vec.util.methods_annotation_regex import append_regex_term_counts
 
 

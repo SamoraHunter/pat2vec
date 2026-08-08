@@ -1,17 +1,19 @@
+from typing import Any
+
+import pandas as pd
+
 from pat2vec.util.methods_annotation import (
     annot_pat_batch_docs,
-    multi_annots_to_df_mct,
     multi_annots_to_df_epic_clinical_notes,
     multi_annots_to_df_epic_clinical_notes_appointments,
-    multi_annots_to_df_epic_medical_history,
-    multi_annots_to_df_reports,
     multi_annots_to_df_epic_imaging_reports,
-    multi_annots_to_df_textual_obs,
+    multi_annots_to_df_epic_medical_history,
     multi_annots_to_df_epic_orders,
+    multi_annots_to_df_mct,
+    multi_annots_to_df_reports,
+    multi_annots_to_df_textual_obs,
 )
 from pat2vec.util.methods_annotation_multi_annots_to_df import multi_annots_to_df
-import pandas as pd
-from typing import Any
 
 
 def get_pat_document_annotation_batch_epic_orders(

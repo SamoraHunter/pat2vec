@@ -1,19 +1,21 @@
-import unittest
-from unittest.mock import patch, MagicMock
-import pandas as pd
-import tempfile
 import os
 import shutil
+import tempfile
+import unittest
 from datetime import datetime
+from unittest.mock import MagicMock, patch
+
+import pandas as pd
+
 from pat2vec.util.post_processing_annotations import (
-    filter_annot_dataframe2,
-    produce_filtered_annotation_dataframe,
-    filter_and_select_rows,
-    retrieve_pat_annots_mct_epr,
+    EMPTY_ANNOT_COLS,
     check_list_presence,
+    filter_and_select_rows,
+    filter_annot_dataframe2,
     filter_dataframe_n_lists,
     get_all_target_annots,
-    EMPTY_ANNOT_COLS,
+    produce_filtered_annotation_dataframe,
+    retrieve_pat_annots_mct_epr,
 )
 
 
@@ -193,7 +195,7 @@ class TestPostProcessingAnnotations(unittest.TestCase):
 
         def side_effect_get_df_from_db(*args, **kwargs):
             args[1]
-            table = args[2]  # noqa: F841
+            table = args[2]
             if table == "ann_epr_docs":
                 return self.sample_annot_df_epr.copy()
             elif table == "ann_mct_docs":
@@ -231,7 +233,7 @@ class TestPostProcessingAnnotations(unittest.TestCase):
 
         def side_effect_get_df_from_db_nan_epr(*args, **kwargs):
             args[1]
-            table = args[2]  # noqa: F841
+            table = args[2]
             if table == "ann_epr_docs":
                 return df_epr_nan_updatetime.copy()
             elif table == "ann_mct_docs":

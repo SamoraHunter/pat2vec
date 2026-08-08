@@ -5,13 +5,14 @@ This module reproduces the issue where Epic clinical notes annotations
 are not generated properly when using database backend with dummy data.
 """
 
-import unittest
+import logging
 import os
+import shutil
 import sys
 import tempfile
-import shutil
+import unittest
+
 import pandas as pd
-import logging
 
 TESTS_DIR = os.path.dirname(os.path.abspath(__file__))
 PROJECT_ROOT = os.path.dirname(TESTS_DIR)
@@ -20,14 +21,15 @@ if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
 
 # SQLAlchemy must be imported after setting up paths
-from sqlalchemy import inspect as db_inspect  # noqa: E402
-from pat2vec.util.config_pat2vec import config_class  # noqa: E402
-from pat2vec.util.helper_functions import (  # noqa: E402
+from sqlalchemy import inspect as db_inspect
+
+from pat2vec.util.config_pat2vec import config_class
+from pat2vec.util.get_dummy_data_medcat_annotation import dummy_CAT
+from pat2vec.util.helper_functions import (
     get_df_from_db,
-    save_raw_patient_batch,
     save_annotations_to_db,
+    save_raw_patient_batch,
 )
-from pat2vec.util.get_dummy_data_medcat_annotation import dummy_CAT  # noqa: E402
 
 
 class TestEpicTablesCreation(unittest.TestCase):
@@ -292,8 +294,8 @@ class TestMedCATDummyAnnotations(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    import sys
     import logging
+    import sys
 
     logging.basicConfig(level=logging.WARNING)
 

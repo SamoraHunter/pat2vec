@@ -1,16 +1,18 @@
-import unittest
-from unittest.mock import MagicMock, patch
-import pandas as pd
-import uuid
 import os
 import shutil
 import tempfile
+import unittest
+import uuid
 from datetime import datetime, timedelta
+from unittest.mock import MagicMock, patch
+
+import pandas as pd
+
 from pat2vec.util.methods_annotation import (
-    check_pat_document_annotation_complete,
     annot_pat_batch_docs,
-    multi_annots_to_df_textual_obs,
     calculate_pretty_name_count_features,
+    check_pat_document_annotation_complete,
+    multi_annots_to_df_textual_obs,
 )
 
 

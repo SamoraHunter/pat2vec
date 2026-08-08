@@ -13,12 +13,13 @@ Test scenarios:
 2. Full integration lifecycle with actual annotations
 """
 
+import os
+import shutil
+import sys
+import tempfile
 import unittest
 import unittest.mock
-import sys
-import os
-import tempfile
-import shutil
+
 import pandas as pd
 
 TESTS_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -28,13 +29,14 @@ if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
 
 # SQLAlchemy must be imported after setting up paths
-from sqlalchemy import inspect as db_inspect  # noqa: E402
-from pat2vec.util.config_pat2vec import config_class  # noqa: E402
-from pat2vec.util.helper_functions import (  # noqa: E402
-    save_raw_patient_batch,
+from sqlalchemy import inspect as db_inspect
+
+from pat2vec.util.config_pat2vec import config_class
+from pat2vec.util.get_dummy_data_cohort_searcher import dummy_CAT
+from pat2vec.util.helper_functions import (
     save_annotations_to_db,
+    save_raw_patient_batch,
 )
-from pat2vec.util.get_dummy_data_cohort_searcher import dummy_CAT  # noqa: E402
 
 
 def _get_test_config(base_config, **kwargs):
