@@ -1,20 +1,20 @@
-import os
 import logging
-import pandas as pd
-from multiprocessing import Pool, cpu_count
+import os
 from functools import partial
-from typing import Any, List, Optional, Tuple
-from pat2vec.util.helper_functions import get_df_from_db
+from multiprocessing import Pool, cpu_count
+from typing import Any
+
+import pandas as pd
 
 from pat2vec.util.clinical_note_splitter import split_and_append_chunks
 from pat2vec.util.filter_dataframe_by_timestamp import filter_dataframe_by_timestamp
-from pat2vec.util.methods_annotation_regex import append_regex_term_counts
-
-from pat2vec.util.filter_methods import filter_dataframe_by_fuzzy_terms
 from pat2vec.util.filter_methods import (
     apply_bloods_data_type_filter,
     apply_data_type_mct_docs_filters,
+    filter_dataframe_by_fuzzy_terms,
 )
+from pat2vec.util.helper_functions import get_df_from_db
+from pat2vec.util.methods_annotation_regex import append_regex_term_counts
 
 
 def verify_split_data_concatenated(
@@ -105,7 +105,7 @@ def verify_split_data_individual(
     logging.info("Verification successful: All CSVs match the original DataFrame.")
 
 
-def save_group(client_idcode_group: Tuple[str, pd.DataFrame], save_folder: str) -> None:
+def save_group(client_idcode_group: tuple[str, pd.DataFrame], save_folder: str) -> None:
     """Saves a single patient's data group to a CSV file.
 
     Args:
@@ -127,7 +127,7 @@ def split_and_save_csv(
     df: pd.DataFrame,
     client_idcode_column: str,
     save_folder: str,
-    num_processes: Optional[int] = None,
+    num_processes: int | None = None,
 ) -> None:
     """Splits a DataFrame by a key and saves each subset as a CSV using multiprocessing.
 
@@ -167,7 +167,7 @@ def split_and_save_csv(
 
 
 def get_merged_pat_batch_bloods(
-    client_idcode_list: List[str],
+    client_idcode_list: list[str],
     search_term: str,
     config_obj: Any,
     cohort_searcher_with_terms_and_search: Any,
@@ -375,7 +375,7 @@ def get_merged_pat_batch_bloods(
 
 
 def get_merged_pat_batch_drugs(
-    client_idcode_list: List[str],
+    client_idcode_list: list[str],
     config_obj: Any,
     cohort_searcher_with_terms_and_search: Any,
 ) -> pd.DataFrame:
@@ -585,7 +585,7 @@ def get_merged_pat_batch_drugs(
 
 
 def get_merged_pat_batch_diagnostics(
-    client_idcode_list: List[str],
+    client_idcode_list: list[str],
     config_obj: Any,
     cohort_searcher_with_terms_and_search: Any,
 ) -> pd.DataFrame:
@@ -794,7 +794,7 @@ def get_merged_pat_batch_diagnostics(
 
 
 def get_merged_pat_batch_mct_docs(
-    client_idcode_list: List[str],
+    client_idcode_list: list[str],
     search_term: str,
     config_obj: Any,
     cohort_searcher_with_terms_and_search: Any,
@@ -859,9 +859,14 @@ def get_merged_pat_batch_mct_docs(
 
             batch_target = cohort_searcher_with_terms_and_search(
                 index_name="observations",
-                fields_list="""observation_guid client_idcode obscatalogmasteritem_displayname
-                                observation_valuetext_analysed observationdocument_recordeddtm
-                                clientvisit_visitidcode""".split(),
+                fields_list=[
+                    "observation_guid",
+                    "client_idcode",
+                    "obscatalogmasteritem_displayname",
+                    "observation_valuetext_analysed",
+                    "observationdocument_recordeddtm",
+                    "clientvisit_visitidcode",
+                ],
                 term_name=config_obj.client_idcode_term_name,
                 entered_list=client_idcode_list,
                 search_string=f'obscatalogmasteritem_displayname:("AoMRC_ClinicalSummary_FT") AND '
@@ -946,9 +951,14 @@ def get_merged_pat_batch_mct_docs(
         try:
             batch_target = cohort_searcher_with_terms_and_search(
                 index_name="observations",
-                fields_list="""observation_guid client_idcode obscatalogmasteritem_displayname
-                                observation_valuetext_analysed observationdocument_recordeddtm
-                                clientvisit_visitidcode""".split(),
+                fields_list=[
+                    "observation_guid",
+                    "client_idcode",
+                    "obscatalogmasteritem_displayname",
+                    "observation_valuetext_analysed",
+                    "observationdocument_recordeddtm",
+                    "clientvisit_visitidcode",
+                ],
                 term_name=config_obj.client_idcode_term_name,
                 entered_list=client_idcode_list,
                 search_string=f'obscatalogmasteritem_displayname:("AoMRC_ClinicalSummary_FT") AND '
@@ -980,7 +990,7 @@ def get_merged_pat_batch_mct_docs(
 
 
 def get_merged_pat_batch_epr_docs(
-    client_idcode_list: List[str],
+    client_idcode_list: list[str],
     search_term: str,
     config_obj: Any,
     cohort_searcher_with_terms_and_search: Any,
@@ -1043,7 +1053,14 @@ def get_merged_pat_batch_epr_docs(
 
             batch_target = cohort_searcher_with_terms_and_search(
                 index_name="epr_documents",
-                fields_list="""client_idcode document_guid document_description body_analysed updatetime clientvisit_visitidcode""".split(),
+                fields_list=[
+                    "client_idcode",
+                    "document_guid",
+                    "document_description",
+                    "body_analysed",
+                    "updatetime",
+                    "clientvisit_visitidcode",
+                ],
                 term_name=config_obj.client_idcode_term_name,
                 entered_list=client_idcode_list,
                 search_string=f"updatetime:[{global_start_year}-{global_start_month}-{global_start_day} TO {global_end_year}-{global_end_month}-{global_end_day}]",
@@ -1154,7 +1171,14 @@ def get_merged_pat_batch_epr_docs(
         try:
             batch_target = cohort_searcher_with_terms_and_search(
                 index_name="epr_documents",
-                fields_list="""client_idcode document_guid document_description body_analysed updatetime clientvisit_visitidcode""".split(),
+                fields_list=[
+                    "client_idcode",
+                    "document_guid",
+                    "document_description",
+                    "body_analysed",
+                    "updatetime",
+                    "clientvisit_visitidcode",
+                ],
                 term_name=config_obj.client_idcode_term_name,
                 entered_list=client_idcode_list,
                 search_string=f"updatetime:[{global_start_year}-{global_start_month}-{global_start_day} TO {global_end_year}-{global_end_month}-{global_end_day}]",
@@ -1220,7 +1244,7 @@ def get_merged_pat_batch_epr_docs(
 
 
 def get_merged_pat_batch_textual_obs_docs(
-    client_idcode_list: List[str],
+    client_idcode_list: list[str],
     search_term: str,
     config_obj: Any,
     cohort_searcher_with_terms_and_search: Any,
@@ -1397,7 +1421,7 @@ def get_merged_pat_batch_textual_obs_docs(
 
 
 def get_merged_pat_batch_appointments(
-    client_idcode_list: List[str],
+    client_idcode_list: list[str],
     search_term: str,
     config_obj: Any,
     cohort_searcher_with_terms_and_search: Any,
@@ -1615,7 +1639,7 @@ def get_merged_pat_batch_appointments(
 
 
 def get_merged_pat_batch_demo(
-    client_idcode_list: List[str],
+    client_idcode_list: list[str],
     search_term: str,
     config_obj: Any,
     cohort_searcher_with_terms_and_search: Any,
@@ -1781,7 +1805,7 @@ def get_merged_pat_batch_demo(
 
 
 def get_merged_pat_batch_bmi(
-    client_idcode_list: List[str],
+    client_idcode_list: list[str],
     search_term: str,
     config_obj: Any,
     cohort_searcher_with_terms_and_search: Any,
@@ -1842,9 +1866,14 @@ def get_merged_pat_batch_bmi(
 
             batch_target = cohort_searcher_with_terms_and_search(
                 index_name="observations",
-                fields_list="""observation_guid client_idcode obscatalogmasteritem_displayname
-                                observation_valuetext_analysed observationdocument_recordeddtm
-                                clientvisit_visitidcode""".split(),
+                fields_list=[
+                    "observation_guid",
+                    "client_idcode",
+                    "obscatalogmasteritem_displayname",
+                    "observation_valuetext_analysed",
+                    "observationdocument_recordeddtm",
+                    "clientvisit_visitidcode",
+                ],
                 term_name=config_obj.client_idcode_term_name,
                 entered_list=client_idcode_list,
                 search_string=f'obscatalogmasteritem_displayname:("OBS BMI" OR "OBS Weight" OR "OBS height") AND '
@@ -1910,9 +1939,14 @@ def get_merged_pat_batch_bmi(
         try:
             batch_target = cohort_searcher_with_terms_and_search(
                 index_name="observations",
-                fields_list="""observation_guid client_idcode obscatalogmasteritem_displayname
-                                observation_valuetext_analysed observationdocument_recordeddtm
-                                clientvisit_visitidcode""".split(),
+                fields_list=[
+                    "observation_guid",
+                    "client_idcode",
+                    "obscatalogmasteritem_displayname",
+                    "observation_valuetext_analysed",
+                    "observationdocument_recordeddtm",
+                    "clientvisit_visitidcode",
+                ],
                 term_name=config_obj.client_idcode_term_name,
                 entered_list=client_idcode_list,
                 search_string=f'obscatalogmasteritem_displayname:("OBS BMI" OR "OBS Weight" OR "OBS height") AND '
@@ -1935,7 +1969,7 @@ def get_merged_pat_batch_bmi(
 
 
 def get_merged_pat_batch_obs(
-    client_idcode_list: List[str],
+    client_idcode_list: list[str],
     search_term: str,
     config_obj: Any,
     cohort_searcher_with_terms_and_search: Any,
@@ -2000,9 +2034,14 @@ def get_merged_pat_batch_obs(
 
             batch_target = cohort_searcher_with_terms_and_search(
                 index_name="observations",
-                fields_list="""observation_guid client_idcode obscatalogmasteritem_displayname
-                                observation_valuetext_analysed observationdocument_recordeddtm
-                                clientvisit_visitidcode""".split(),
+                fields_list=[
+                    "observation_guid",
+                    "client_idcode",
+                    "obscatalogmasteritem_displayname",
+                    "observation_valuetext_analysed",
+                    "observationdocument_recordeddtm",
+                    "clientvisit_visitidcode",
+                ],
                 term_name=config_obj.client_idcode_term_name,
                 entered_list=client_idcode_list,
                 search_string=f'obscatalogmasteritem_displayname:("{search_term}") AND '
@@ -2072,9 +2111,14 @@ def get_merged_pat_batch_obs(
         try:
             batch_target = cohort_searcher_with_terms_and_search(
                 index_name="observations",
-                fields_list="""observation_guid client_idcode obscatalogmasteritem_displayname
-                                observation_valuetext_analysed observationdocument_recordeddtm
-                                clientvisit_visitidcode""".split(),
+                fields_list=[
+                    "observation_guid",
+                    "client_idcode",
+                    "obscatalogmasteritem_displayname",
+                    "observation_valuetext_analysed",
+                    "observationdocument_recordeddtm",
+                    "clientvisit_visitidcode",
+                ],
                 term_name=config_obj.client_idcode_term_name,
                 entered_list=client_idcode_list,
                 search_string=f'obscatalogmasteritem_displayname:("{search_term}") AND '
@@ -2097,7 +2141,7 @@ def get_merged_pat_batch_obs(
 
 
 def get_merged_pat_batch_news(
-    client_idcode_list: List[str],
+    client_idcode_list: list[str],
     search_term: str,
     config_obj: Any,
     cohort_searcher_with_terms_and_search: Any,
@@ -2158,9 +2202,14 @@ def get_merged_pat_batch_news(
 
             batch_target = cohort_searcher_with_terms_and_search(
                 index_name="observations",
-                fields_list="""observation_guid client_idcode obscatalogmasteritem_displayname
-                                observation_valuetext_analysed observationdocument_recordeddtm
-                                clientvisit_visitidcode""".split(),
+                fields_list=[
+                    "observation_guid",
+                    "client_idcode",
+                    "obscatalogmasteritem_displayname",
+                    "observation_valuetext_analysed",
+                    "observationdocument_recordeddtm",
+                    "clientvisit_visitidcode",
+                ],
                 term_name=config_obj.client_idcode_term_name,
                 entered_list=client_idcode_list,
                 search_string=f"obscatalogmasteritem_displayname:(NEWS*) AND "
@@ -2226,9 +2275,14 @@ def get_merged_pat_batch_news(
         try:
             batch_target = cohort_searcher_with_terms_and_search(
                 index_name="observations",
-                fields_list="""observation_guid client_idcode obscatalogmasteritem_displayname
-                                observation_valuetext_analysed observationdocument_recordeddtm
-                                clientvisit_visitidcode""".split(),
+                fields_list=[
+                    "observation_guid",
+                    "client_idcode",
+                    "obscatalogmasteritem_displayname",
+                    "observation_valuetext_analysed",
+                    "observationdocument_recordeddtm",
+                    "clientvisit_visitidcode",
+                ],
                 term_name=config_obj.client_idcode_term_name,
                 entered_list=client_idcode_list,
                 search_string=f"obscatalogmasteritem_displayname:(NEWS*) AND "
@@ -2251,7 +2305,7 @@ def get_merged_pat_batch_news(
 
 
 def get_merged_pat_batch_reports(
-    client_idcode_list: List[str],
+    client_idcode_list: list[str],
     search_term: str,
     config_obj: Any,
     cohort_searcher_with_terms_and_search: Any,

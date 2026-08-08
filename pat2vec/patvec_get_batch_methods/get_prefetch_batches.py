@@ -1,3 +1,8 @@
+from dataclasses import dataclass
+from typing import Any
+
+import tqdm
+
 from pat2vec.patvec_get_batch_methods.get_merged_batches import (
     get_merged_pat_batch_appointments,
     get_merged_pat_batch_bloods,
@@ -12,9 +17,6 @@ from pat2vec.patvec_get_batch_methods.get_merged_batches import (
     get_merged_pat_batch_textual_obs_docs,
     split_and_save_csv,
 )
-import tqdm
-from typing import Optional, List, Any
-from dataclasses import dataclass
 
 
 @dataclass
@@ -36,11 +38,11 @@ class BatchConfig:
     id_column: str = "client_idcode"
     """The name of the patient identifier column for this data type."""
 
-    search_term: Optional[str] = None
+    search_term: str | None = None
     """An optional search term required by the `get_function`."""
 
 
-def prefetch_batches(pat2vec_obj: Any) -> List[BatchConfig]:
+def prefetch_batches(pat2vec_obj: Any) -> list[BatchConfig]:
     """Prefetches and processes patient data batches with progress tracking.
 
     This function orchestrates the pre-fetching of data for multiple data types
@@ -226,6 +228,6 @@ def prefetch_batches(pat2vec_obj: Any) -> List[BatchConfig]:
 
         except Exception as e:
             # Always print errors regardless of verbosity
-            print(f"[ERROR] Error processing {config.name} batch: {str(e)}")
+            print(f"[ERROR] Error processing {config.name} batch: {e!s}")
 
     return enabled_configs

@@ -1,14 +1,12 @@
-from pat2vec.util.helper_functions import get_df_from_db
-from pat2vec.util.methods_get import exist_check
-
+import logging
+import os
+from typing import Any
 
 import pandas as pd
 from sqlalchemy import text
 
-
-import logging
-import os
-from typing import Any
+from pat2vec.util.helper_functions import get_df_from_db
+from pat2vec.util.methods_get import exist_check
 
 
 def get_pat_batch_drugs(
@@ -79,9 +77,7 @@ def get_pat_batch_drugs(
     existence_check = exist_check(batch_obs_target_path, config_obj)
 
     should_fetch = False
-    if config_obj.storage_backend == "database":
-        should_fetch = True
-    elif (
+    if config_obj.storage_backend == "database" or (
         config_obj.store_pat_batch_observations
         and not existence_check
         or existence_check is False
@@ -92,7 +88,17 @@ def get_pat_batch_drugs(
         if should_fetch:
             batch_target = cohort_searcher_with_terms_and_search(
                 index_name="order",
-                fields_list="""client_idcode order_guid order_name order_summaryline order_holdreasontext order_entered clientvisit_visitidcode order_performeddtm order_createdwhen""".split(),
+                fields_list=[
+                    "client_idcode",
+                    "order_guid",
+                    "order_name",
+                    "order_summaryline",
+                    "order_holdreasontext",
+                    "order_entered",
+                    "clientvisit_visitidcode",
+                    "order_performeddtm",
+                    "order_createdwhen",
+                ],
                 term_name=config_obj.client_idcode_term_name,
                 entered_list=[current_pat_client_id_code],
                 search_string=f'order_typecode:"medication" AND '

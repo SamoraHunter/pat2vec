@@ -1,19 +1,17 @@
+import logging
+import os
+from typing import Any
+
+import pandas as pd
+from IPython.display import display
+from sqlalchemy import text
+
 from pat2vec.util.clinical_note_splitter import split_and_append_chunks
 from pat2vec.util.filter_dataframe_by_timestamp import filter_dataframe_by_timestamp
 from pat2vec.util.filter_methods import filter_dataframe_by_fuzzy_terms
 from pat2vec.util.helper_functions import get_df_from_db
 from pat2vec.util.methods_annotation_regex import append_regex_term_counts
 from pat2vec.util.methods_get import exist_check
-
-
-import pandas as pd
-from IPython.display import display
-from sqlalchemy import text
-
-
-import logging
-import os
-from typing import Any
 
 
 def get_pat_batch_epr_docs(
@@ -101,16 +99,25 @@ def get_pat_batch_epr_docs(
     existence_check = exist_check(batch_epr_target_path, config_obj)
 
     should_fetch = False
-    if config_obj.storage_backend == "database":
-        should_fetch = True
-    elif overwrite_stored_pat_docs or not existence_check:
+    if (
+        config_obj.storage_backend == "database"
+        or overwrite_stored_pat_docs
+        or not existence_check
+    ):
         should_fetch = True
 
     try:
         if should_fetch:
             batch_target = cohort_searcher_with_terms_and_search(
                 index_name="epr_documents",
-                fields_list="""client_idcode document_guid document_description body_analysed updatetime clientvisit_visitidcode""".split(),
+                fields_list=[
+                    "client_idcode",
+                    "document_guid",
+                    "document_description",
+                    "body_analysed",
+                    "updatetime",
+                    "clientvisit_visitidcode",
+                ],
                 term_name=config_obj.client_idcode_term_name,
                 entered_list=[current_pat_client_id_code],
                 search_string=f"updatetime:[{global_start_year}-{global_start_month}-{global_start_day} TO {global_end_year}-{global_end_month}-{global_end_day}]",

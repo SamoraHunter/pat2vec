@@ -1,3 +1,10 @@
+import logging
+import os
+from typing import Any
+
+import pandas as pd
+from sqlalchemy import text
+
 from pat2vec.util.filter_methods import (
     apply_bloods_data_type_filter,
     filter_dataframe_by_fuzzy_terms,
@@ -7,15 +14,6 @@ from pat2vec.util.helper_functions import (
     get_df_from_db_with_temporal_filter,
 )
 from pat2vec.util.methods_get import exist_check
-
-
-import pandas as pd
-from sqlalchemy import text
-
-
-import logging
-import os
-from typing import Any
 
 
 def get_pat_batch_bloods(
@@ -125,9 +123,7 @@ def get_pat_batch_bloods(
     existence_check = exist_check(batch_obs_target_path, config_obj)
 
     should_fetch = False
-    if config_obj.storage_backend == "database":
-        should_fetch = True
-    elif (
+    if config_obj.storage_backend == "database" or (
         store_pat_batch_observations and not existence_check or existence_check is False
     ):
         should_fetch = True

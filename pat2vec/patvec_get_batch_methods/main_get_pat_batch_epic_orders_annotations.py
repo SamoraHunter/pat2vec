@@ -1,3 +1,11 @@
+import json
+import logging
+import os
+from typing import Any
+
+import pandas as pd
+from sqlalchemy import text
+
 from pat2vec.util.helper_functions import (
     get_df_from_db,
     save_annotations_to_db,
@@ -7,19 +15,11 @@ from pat2vec.util.methods_annotation_get_pat_document_annotation_batch import (
 )
 from pat2vec.util.methods_get import exist_check, update_pbar
 
-import pandas as pd
-from sqlalchemy import text
-
-import logging
-import json
-import os
-from typing import Any, Optional
-
 
 def _fetch_epic_orders_from_elasticsearch(
     current_pat_client_id_code: str,
     config_obj: Any,
-    cohort_searcher_with_terms_and_search: Optional[Any] = None,
+    cohort_searcher_with_terms_and_search: Any | None = None,
     t=None,
 ) -> pd.DataFrame:
     """Fetches Epic orders data from Elasticsearch.
@@ -118,8 +118,8 @@ def get_pat_batch_epic_orders_annotations(
     config_obj: Any,
     cat: Any,
     t: Any,
-    cohort_searcher_with_terms_and_search: Optional[Any] = None,
-) -> Optional[pd.DataFrame]:
+    cohort_searcher_with_terms_and_search: Any | None = None,
+) -> pd.DataFrame | None:
     """Retrieves or creates annotations for a patient's Epic orders batch.
 
     This function checks if an annotation file for the patient's Epic orders
@@ -213,6 +213,20 @@ def get_pat_batch_epic_orders_annotations(
             )
             if config_obj.verbosity >= 5:
                 print(f"DEBUG: Got {len(pat_batch)} rows from ES for epic_orders")
+
+            # Save raw batch to database after fetching from ES
+            if not pat_batch.empty and config_obj.storage_backend == "database":
+                try:
+                    save_raw_patient_batch(
+                        pat_batch,
+                        current_pat_client_id_code,
+                        "raw_epic_orders",
+                        config_obj,
+                    )
+                except Exception as e:
+                    logging.error(
+                        f"Failed to save raw epic orders batch for {current_pat_client_id_code}: {e}"
+                    )
 
         if config_obj.verbosity >= 6:
             print(f"DEBUG: Got {len(pat_batch)} rows from raw epic_orders source")

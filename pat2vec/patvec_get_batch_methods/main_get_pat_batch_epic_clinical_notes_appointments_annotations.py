@@ -1,24 +1,25 @@
+import json
+import logging
+import os
+from typing import Any
+
+import pandas as pd
+
 from pat2vec.util.helper_functions import (
     get_df_from_db,
-    save_raw_patient_batch,
     save_annotations_to_db,
+    save_raw_patient_batch,
 )
 from pat2vec.util.methods_annotation_get_pat_document_annotation_batch import (
     get_pat_document_annotation_batch_epic_clinical_notes_appointments,
 )
 from pat2vec.util.methods_get import exist_check, update_pbar
 
-import pandas as pd
-import logging
-import json
-import os
-from typing import Any, Optional
-
 
 def _fetch_epic_clinical_notes_from_elasticsearch(
     current_pat_client_id_code: str,
     config_obj: Any,
-    cohort_searcher_with_terms_and_search: Optional[Any] = None,
+    cohort_searcher_with_terms_and_search: Any | None = None,
     t=None,
 ) -> pd.DataFrame:
     """Fetches Epic clinical notes data from Elasticsearch.
@@ -60,11 +61,11 @@ def _fetch_epic_clinical_notes_from_elasticsearch(
         )
 
         results = search_func(
-            index_name="epic_clinical_notes",
+            index_name="epic_clinical_notes_appointments",
             fields_list=None,
             term_name="document_PatientDurableKey",
             entered_list=[current_pat_client_id_code],
-            search_string=f"document_UpdatedWhen:[{start_year}-{start_month}-{start_day} TO {end_year}-{end_month}-{end_day}]",
+            search_string=f"document_CreatedWhen:[{start_year}-{start_month}-{start_day} TO {end_year}-{end_month}-{end_day}]",
         )
         if results is not None and not results.empty:
             if "document_PatientDurableKey" in results.columns:
@@ -99,8 +100,8 @@ def get_pat_batch_epic_clinical_notes_appointments_annotations(
     config_obj: Any,
     cat: Any,
     t: Any,
-    cohort_searcher_with_terms_and_search: Optional[Any] = None,
-) -> Optional[pd.DataFrame]:
+    cohort_searcher_with_terms_and_search: Any | None = None,
+) -> pd.DataFrame | None:
     """Retrieves or creates annotations for a patient's Epic clinical notes appointments batch.
 
     This function checks if an annotation file for the patient's epic clinical notes
