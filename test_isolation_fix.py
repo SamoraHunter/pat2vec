@@ -1,9 +1,11 @@
 import unittest
+
 import pandas as pd
+
 from pat2vec.util.config_pat2vec import config_class
 from pat2vec.util.helper_functions import (
-    save_raw_patient_batch,
     get_df_from_db,
+    save_raw_patient_batch,
 )
 
 
@@ -45,7 +47,7 @@ class TestDatabaseBackendTestIsolation(unittest.TestCase):
         # Simulate disabled source - completely skip save call
         # (in actual code, the batch fetch returns empty but we need to distinguish)
         # For a disabled source, we should simply not call save functions at all
-        pass  # This is tested by checking config.option settings in main_pat2vec
+        # This is tested by checking config.option settings in main_pat2vec
 
     def test_get_df_from_db_returns_empty_for_enabled_sources(self):
         """Test that get_df_from_db can retrieve from tables created for empty enabled sources."""
