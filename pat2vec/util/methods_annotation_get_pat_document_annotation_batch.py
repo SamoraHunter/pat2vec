@@ -174,14 +174,17 @@ def get_pat_document_annotation_batch(
                 f"No time column found. Expected 'updatetime' or 'document_CreatedWhen'. Available columns: {list(pat_batch.columns)}"
             )
 
-        if "document_guid" in pat_batch.columns:
-            guid_col = "document_guid"
-        elif "id" in pat_batch.columns:
-            guid_col = "id"
-        else:
-            raise KeyError(
-                f"No GUID column found. Expected 'document_guid' or 'id'. Available columns: {list(pat_batch.columns)}"
-            )
+    if "document_guid" in pat_batch.columns:
+        guid_column = "document_guid"
+    elif "id" in pat_batch.columns:
+        guid_column = "id"
+    # Fallback for Epic clinical notes appointments and other sources that use different GUID fields
+    elif "document_SourceId" in pat_batch.columns:
+        guid_column = "document_SourceId"
+    else:
+        raise KeyError(
+            f"Neither 'document_guid' nor 'id' column found in DataFrame. Available columns: {list(pat_batch.columns)}"
+        )
 
     # Determine which multi_annots_to_df function to use based on source identifier
     if source_identifier == "epic_clinical_notes":
