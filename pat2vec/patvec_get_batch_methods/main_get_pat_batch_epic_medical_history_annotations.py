@@ -80,8 +80,13 @@ def _fetch_epic_medical_history_from_elasticsearch(
                 results.rename(
                     columns={"document_Comment": "body_analysed"}, inplace=True
                 )
+            # Handle id -> document_guid rename, with fallback for medical history index
             if "id" in results.columns:
                 results.rename(columns={"id": "document_guid"}, inplace=True)
+            elif "document_SourceId" in results.columns:
+                results.rename(
+                    columns={"document_SourceId": "document_guid"}, inplace=True
+                )
             if "document_Name" in results.columns:
                 results.rename(
                     columns={"document_Name": "document_description"}, inplace=True
