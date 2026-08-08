@@ -19,6 +19,7 @@ except ImportError:
         # Placeholder implementation - define locally if not available
         import random
         import uuid
+
         from .generator_helpers import create_random_date_from_globals
 
         if fields_list is None:

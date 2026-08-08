@@ -1,13 +1,14 @@
 import gc
 import logging
 from contextlib import contextmanager
-from typing import List, Union, Optional, Dict, Any, Tuple, Type
 from pathlib import Path
+from typing import Any
+
 import pandas as pd
 
 try:
-    from medcat.utils.ner.deid import DeIdModel
     import spacy
+    from medcat.utils.ner.deid import DeIdModel
 
     MEDCAT_AVAILABLE = True
 except ImportError:
@@ -91,10 +92,10 @@ class DeIdAnonymizer:
 
     def __init__(
         self,
-        model_path: Optional[Union[str, Path]] = None,
+        model_path: str | Path | None = None,
         log_level: str = "INFO",
         disable_chunking: bool = True,
-        chunking_overlap_window: Optional[int] = None,
+        chunking_overlap_window: int | None = None,
     ):
         """Initializes the DeIdAnonymizer.
 
@@ -124,11 +125,11 @@ class DeIdAnonymizer:
                 (e.g. 32-50) is a reasonable starting point. Ignored if
                 disable_chunking is True.
         """
-        self.model: Optional[Type[DeIdModel]] = None
+        self.model: type[DeIdModel] | None = None
         self.model_path = model_path
         self.is_loaded: bool = False
-        self.pii_labels: List[str] = []
-        self.anonymization_log: List[Dict[str, Any]] = []
+        self.pii_labels: list[str] = []
+        self.anonymization_log: list[dict[str, Any]] = []
         self.disable_chunking = disable_chunking
         self.chunking_overlap_window = chunking_overlap_window
 
@@ -146,7 +147,7 @@ class DeIdAnonymizer:
         if model_path:
             self.load_model(model_path)
 
-    def load_model(self, model_path: Union[str, Path]) -> bool:
+    def load_model(self, model_path: str | Path) -> bool:
         """Loads a pre-trained DeIdModel from a specified path.
 
         Args:
@@ -316,7 +317,7 @@ class DeIdAnonymizer:
             f"(medcat.utils.ner.deid logger set to {logging.getLevelName(level)})."
         )
 
-    def get_gpu_status(self) -> Dict[str, Any]:
+    def get_gpu_status(self) -> dict[str, Any]:
         """Reports whether the underlying transformer NER model is on GPU.
 
         Returns:
@@ -326,7 +327,7 @@ class DeIdAnonymizer:
         self._check_model_loaded()
         try:
             ner = self.model.cat._addl_ner[0]
-            info: Dict[str, Any] = {}
+            info: dict[str, Any] = {}
             if hasattr(ner, "ner_pipe"):
                 info["ner_pipe_device"] = str(ner.ner_pipe.device)
             try:
@@ -353,7 +354,7 @@ class DeIdAnonymizer:
                 "provide model_path during initialization."
             )
 
-    def _log_operation(self, operation: str, details: Dict[str, Any]) -> None:
+    def _log_operation(self, operation: str, details: dict[str, Any]) -> None:
         """Log an anonymization operation for audit purposes."""
         log_entry = {
             "operation": operation,
@@ -364,7 +365,7 @@ class DeIdAnonymizer:
 
     def anonymize_text(
         self, text: str, redact: bool = True, verify: bool = False
-    ) -> Union[str, Tuple[str, Dict[str, Any]]]:
+    ) -> str | tuple[str, dict[str, Any]]:
         r"""Anonymizes a single text string.
 
         Args:
@@ -404,14 +405,14 @@ class DeIdAnonymizer:
 
     def anonymize_texts(
         self,
-        texts: List[str],
+        texts: list[str],
         redact: bool = True,
         n_process: int = 1,
         batch_size: int = 100,
         verify_sample: bool = False,
         sample_size: int = 10,
         suppress_gc: bool = True,
-    ) -> Union[List[str], Tuple[List[str], Dict]]:
+    ) -> list[str] | tuple[list[str], dict]:
         """Anonymizes a list of text strings, with parallel processing support.
 
         Args:
@@ -442,7 +443,7 @@ class DeIdAnonymizer:
         try:
             ctx = suppress_gc_collect() if suppress_gc else _null_context()
             with ctx:
-                anonymized: List[str] = self.model.deid_multi_texts(
+                anonymized: list[str] = self.model.deid_multi_texts(
                     texts, redact=redact, n_process=n_process, batch_size=batch_size
                 )
 
@@ -472,7 +473,7 @@ class DeIdAnonymizer:
     def anonymize_dataframe(
         self,
         df: pd.DataFrame,
-        text_columns: Union[str, List[str]],
+        text_columns: str | list[str],
         redact: bool = True,
         inplace: bool = False,
         suffix: str = "_anonymized",
@@ -569,14 +570,14 @@ class DeIdAnonymizer:
     def anonymize_dataframe_chunked(
         self,
         df: pd.DataFrame,
-        text_columns: Union[str, List[str]],
+        text_columns: str | list[str],
         redact: bool = True,
         suffix: str = "_anonymized",
         n_process: int = 1,
         batch_size: int = 100,
         chunk_size: int = 500,
         suppress_gc: bool = True,
-        checkpoint_dir: Optional[Union[str, Path]] = None,
+        checkpoint_dir: str | Path | None = None,
         checkpoint_prefix: str = "deid_chunk",
         show_progress: bool = True,
         quiet_medcat_progress: bool = True,
@@ -770,7 +771,7 @@ class DeIdAnonymizer:
 
         return result_df
 
-    def inspect_text(self, text: str) -> List[Dict[str, Any]]:
+    def inspect_text(self, text: str) -> list[dict[str, Any]]:
         """Inspects text to find and log PII entities without anonymizing.
 
         Args:
@@ -796,7 +797,7 @@ class DeIdAnonymizer:
 
         return entities
 
-    def get_structured_annotations(self, text: str) -> List[Dict[str, Any]]:
+    def get_structured_annotations(self, text: str) -> list[dict[str, Any]]:
         """Gets structured annotations for PII entities in a text.
 
         Args:
@@ -829,7 +830,7 @@ class DeIdAnonymizer:
             self.logger.error(f"Error getting structured annotations: {e}")
             raise
 
-    def _verify_single_text(self, original: str, anonymized: str) -> Dict[str, Any]:
+    def _verify_single_text(self, original: str, anonymized: str) -> dict[str, Any]:
         """Verifies anonymization quality for a single text."""
         entities = self.get_structured_annotations(original)
 
@@ -842,8 +843,8 @@ class DeIdAnonymizer:
         }
 
     def _verify_multiple_texts(
-        self, original_texts: List[str], anonymized_texts: List[str], sample_size: int
-    ) -> Dict[str, Any]:
+        self, original_texts: list[str], anonymized_texts: list[str], sample_size: int
+    ) -> dict[str, Any]:
         """Verifies anonymization quality for a sample of multiple texts."""
         import random
 
@@ -869,7 +870,7 @@ class DeIdAnonymizer:
             "avg_entities_per_text": total_entities / len(indices) if indices else 0,
         }
 
-    def generate_report(self) -> Dict[str, Any]:
+    def generate_report(self) -> dict[str, Any]:
         """Generates a summary report of all operations performed.
 
         Returns:
@@ -879,7 +880,7 @@ class DeIdAnonymizer:
         if not self.anonymization_log:
             return {"message": "No anonymization operations performed yet"}
 
-        operation_counts: Dict[str, int] = {}
+        operation_counts: dict[str, int] = {}
         for log_entry in self.anonymization_log:
             op_type = log_entry["operation"]
             operation_counts[op_type] = operation_counts.get(op_type, 0) + 1
@@ -917,7 +918,7 @@ class DeIdAnonymizer:
             ),
         }
 
-    def save_log(self, filepath: Union[str, Path]) -> None:
+    def save_log(self, filepath: str | Path) -> None:
         """Saves the anonymization operation log to a JSON file.
 
         Args:
@@ -989,7 +990,7 @@ def _null_context():
 
 
 def anonymize_single_text(
-    text: str, model_path: Union[str, Path], redact: bool = True
+    text: str, model_path: str | Path, redact: bool = True
 ) -> str:
     """Quickly anonymize a single text string.
 
@@ -1007,8 +1008,8 @@ def anonymize_single_text(
 
 def anonymize_dataframe_quick(
     df: pd.DataFrame,
-    text_columns: Union[str, List[str]],
-    model_path: Union[str, Path],
+    text_columns: str | list[str],
+    model_path: str | Path,
     redact: bool = True,
     suffix: str = "_anonymized",
     inplace: bool = False,

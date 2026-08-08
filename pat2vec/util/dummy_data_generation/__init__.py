@@ -5,6 +5,36 @@ and development purposes. It includes generators for various Elasticsearch indic
 """
 
 # Import generator helpers
+# Import appointments and COVID (used via __all__)
+from .appointments import generate_appointments_data  # noqa: F401
+
+# Import basic observations
+from .basic_observations import (
+    generate_basic_observations_data,
+    generate_basic_observations_textual_obs_data,
+)
+from .covid import generate_covid_observations_data
+
+# Import elasticsearch population (used via __all__)
+from .elasticsearch_population import populate_elastic_with_dummy_data  # noqa: F401
+
+# Import epic modules for backward compatibility (used via __all__)
+from .epic import (
+    generate_epic_clinical_notes_appointments_data,  # noqa: F401
+    generate_epic_clinical_notes_data,  # noqa: F401
+    generate_epic_encounters_data,  # noqa: F401
+    generate_epic_imaging_reports_data,  # noqa: F401
+    generate_epic_lab_results_data,  # noqa: F401
+    generate_epic_medical_history_data,  # noqa: F401
+    generate_epic_orders_data,  # noqa: F401
+    generate_epic_patients_data,  # noqa: F401
+)
+
+# Import EPR documents
+from .epr_documents import (
+    generate_epr_documents_data,
+    generate_epr_documents_personal_data,
+)
 from .generator_helpers import (
     create_random_date_from_globals,
     extract_date_range,
@@ -16,18 +46,23 @@ from .generator_helpers import (
     random_state,
 )
 
-# Import sequence generators
-from .sequence_generators import (
-    generate_patient_timeline,
-    generate_patient_timeline_faker,
-    get_patient_timeline_dummy,
-    run_generate_patient_timeline_and_append,
+# Import observation router (used via __all__)
+from .observation_router import (
+    cohort_searcher_with_terms_and_search_dummy,  # noqa: F401
 )
 
-# Import EPR documents
-from .epr_documents import (
-    generate_epr_documents_data,
-    generate_epr_documents_personal_data,
+# Import observation modules
+from .observations import (
+    generate_bed_data,
+    generate_bmi_data,
+    generate_core_o2_data,
+    generate_core_resus_data,
+    generate_hospital_site_data,
+    generate_news_data,
+    generate_observations_MRC_text_data,
+    generate_observations_Reports_text_data,
+    generate_smoking_data,
+    generate_vte_data,
 )
 
 # Import orders
@@ -36,52 +71,16 @@ from .orders import (
     generate_drug_orders_data,
 )
 
-# Import basic observations
-from .basic_observations import (
-    generate_basic_observations_data,
-    generate_basic_observations_textual_obs_data,
-)
-
-# Import observation modules
-from .observations import (
-    generate_bmi_data,
-    generate_bed_data,
-    generate_core_o2_data,
-    generate_core_resus_data,
-    generate_hospital_site_data,
-    generate_news_data,
-    generate_smoking_data,
-    generate_observations_MRC_text_data,
-    generate_observations_Reports_text_data,
-    generate_vte_data,
-)
-
-# Import appointments and COVID (used via __all__)
-from .appointments import generate_appointments_data  # noqa: F401
-from .covid import generate_covid_observations_data
-
 # Import problem list (used via __all__)
 from .problem_list import generate_problem_list_data  # noqa: F401
 
-# Import observation router (used via __all__)
-from .observation_router import (
-    cohort_searcher_with_terms_and_search_dummy,  # noqa: F401
+# Import sequence generators
+from .sequence_generators import (
+    generate_patient_timeline,
+    generate_patient_timeline_faker,
+    get_patient_timeline_dummy,
+    run_generate_patient_timeline_and_append,
 )
-
-# Import epic modules for backward compatibility (used via __all__)
-from .epic import (
-    generate_epic_clinical_notes_appointments_data,  # noqa: F401
-    generate_epic_clinical_notes_data,  # noqa: F401
-    generate_epic_medical_history_data,  # noqa: F401
-    generate_epic_encounters_data,  # noqa: F401
-    generate_epic_imaging_reports_data,  # noqa: F401
-    generate_epic_lab_results_data,  # noqa: F401
-    generate_epic_orders_data,  # noqa: F401
-    generate_epic_patients_data,  # noqa: F401
-)
-
-# Import elasticsearch population (used via __all__)
-from .elasticsearch_population import populate_elastic_with_dummy_data  # noqa: F401
 
 __all__ = [
     # Generator helpers

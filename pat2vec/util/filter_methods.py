@@ -1,7 +1,9 @@
-import pandas as pd
-from typing import Any, List
 import logging
+from typing import Any
+
+import pandas as pd
 from fuzzywuzzy import process
+
 from pat2vec.util.methods_annotation_regex import append_regex_term_counts
 
 logger = logging.getLogger(__name__)
@@ -9,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 def filter_dataframe_by_fuzzy_terms(
     df: pd.DataFrame,
-    filter_term_list: List[str],
+    filter_term_list: list[str],
     column_name: str = "document_description",
     verbose: int = 0,
 ) -> pd.DataFrame:

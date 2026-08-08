@@ -1,13 +1,14 @@
-from multiprocessing import Pool, cpu_count
-from pat2vec.util.post_processing_dataframe import extract_datetime_to_column
-from pat2vec.util.post_processing_utils import process_chunk
-import logging
-import pandas as pd
-from tqdm import tqdm
 import csv
+import logging
 import os
 from datetime import datetime
-from typing import Optional, Union
+from multiprocessing import Pool, cpu_count
+
+import pandas as pd
+from tqdm import tqdm
+
+from pat2vec.util.post_processing_dataframe import extract_datetime_to_column
+from pat2vec.util.post_processing_utils import process_chunk
 
 logger = logging.getLogger(__name__)
 
@@ -17,7 +18,7 @@ def process_csv_files(
     out_folder: str = "outputs",
     output_filename_suffix: str = "concatenated_output",
     part_size: int = 336,
-    sample_size: Optional[Union[int, str]] = None,
+    sample_size: int | str | None = None,
     append_timestamp_column: bool = False,
 ) -> str:
     """Concatenates multiple CSV files from a directory into a single file.
@@ -181,9 +182,9 @@ def process_csv_files_multi(
     out_folder: str = "outputs",
     output_filename_suffix: str = "concatenated_output",
     part_size: int = 336,
-    sample_size: Optional[Union[int, str]] = None,
+    sample_size: int | str | None = None,
     append_timestamp_column: bool = False,
-    n_proc: Optional[Union[int, str]] = None,
+    n_proc: int | str | None = None,
 ) -> str:
     """Concatenates multiple CSV files using multiprocessing.
 

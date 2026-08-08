@@ -1,10 +1,9 @@
-from dateutil.relativedelta import relativedelta
-
-
 import logging
 from datetime import datetime
-from typing import Any, List, Tuple
+from typing import Any
 from zoneinfo import ZoneInfo
+
+from dateutil.relativedelta import relativedelta
 
 
 def generate_date_list(
@@ -14,7 +13,7 @@ def generate_date_list(
     days: int,
     time_window_interval_delta: relativedelta = relativedelta(days=1),
     config_obj: Any = None,
-) -> List[Tuple[int, int, int]]:
+) -> list[tuple[int, int, int]]:
     """Generates a list of dates within a range, constrained by global boundaries.
 
     This function calculates a date range based on a start date and a duration

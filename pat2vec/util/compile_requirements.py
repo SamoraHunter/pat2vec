@@ -1,8 +1,7 @@
-import subprocess
-from tqdm import tqdm
-from typing import List
-
 import logging
+import subprocess
+
+from tqdm import tqdm
 
 logger = logging.getLogger(__name__)
 
@@ -56,7 +55,7 @@ def process_requirements() -> None:
     open("requirements.in", "w").close()
 
     # Track failed requirements
-    failed_requirements: List[str] = []
+    failed_requirements: list[str] = []
 
     # Wrap the requirements in tqdm for progress tracking
     for requirement in tqdm(requirements, desc="Processing Requirements", unit="req"):
@@ -85,8 +84,7 @@ def process_requirements() -> None:
     # Write the failed requirements to a file
     if failed_requirements:
         with open("failed_requirements.txt", "w") as f:
-            for failed in failed_requirements:
-                f.write(failed + "\n")
+            f.writelines(failed + "\n" for failed in failed_requirements)
 
     logger.info("\nProcessing completed.")
     if failed_requirements:

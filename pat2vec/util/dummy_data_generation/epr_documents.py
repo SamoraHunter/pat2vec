@@ -7,11 +7,9 @@ Records) document data and related personal information for testing and developm
 import logging
 import random
 import uuid
-from typing import List, Optional
-
-from faker import Faker
 
 import pandas as pd
+from faker import Faker
 
 from pat2vec.util.dummy_data_files import dummy_lists
 from pat2vec.util.dummy_data_generation.generator_helpers import (
@@ -34,7 +32,7 @@ random.seed(random_state)
 
 def generate_epr_documents_data(
     num_rows: int,
-    entered_list: List[str],
+    entered_list: list[str],
     global_start_year: int,
     global_start_month: int,
     global_end_year: int,
@@ -42,7 +40,7 @@ def generate_epr_documents_data(
     use_GPT: bool = True,
     global_start_day: int = 1,
     global_end_day: int = 31,
-    fields_list: Optional[List[str]] = None,
+    fields_list: list[str] | None = None,
 ) -> pd.DataFrame:
     """Generates dummy EPR document data.
 
@@ -79,7 +77,7 @@ def generate_epr_documents_data(
         return pd.DataFrame(columns=fields_list)
 
     df_holder_list = []
-    for i in range(0, len(entered_list)):
+    for i in range(len(entered_list)):
         current_pat_client_id_code = entered_list[i]
         data = {
             "client_idcode": [current_pat_client_id_code for _ in range(num_rows)],
@@ -139,14 +137,14 @@ def generate_epr_documents_data(
 
 def generate_epr_documents_personal_data(
     num_rows: int,
-    entered_list: List[str],
+    entered_list: list[str],
     global_start_year: int,
     global_start_month: int,
     global_end_year: int,
     global_end_month: int,
     global_start_day: int = 1,
     global_end_day: int = 31,
-    fields_list: List[str] = [
+    fields_list: list[str] = [
         "client_idcode",
         "client_firstname",
         "client_lastname",
@@ -172,7 +170,7 @@ def generate_epr_documents_personal_data(
         A pandas DataFrame with generated dummy personal data.
     """
     df_holder_list = []
-    for i in range(0, len(entered_list)):
+    for i in range(len(entered_list)):
         current_pat_client_id_code = entered_list[i]
 
         ethnicity = faker.random_element(ethnicity_list)

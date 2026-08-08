@@ -1,15 +1,12 @@
-import os
 import logging
-import pandas as pd
+import os
 import time
-
-from sqlalchemy import create_engine
-from sqlalchemy.schema import CreateSchema
 from typing import Any
-from tqdm import tqdm
-from sqlalchemy import inspect
 
-from sqlalchemy import text
+import pandas as pd
+from sqlalchemy import create_engine, inspect, text
+from sqlalchemy.schema import CreateSchema
+from tqdm import tqdm
 
 logger = logging.getLogger(__name__)
 

@@ -1,20 +1,21 @@
-import pandas as pd
-import numpy as np
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any
+
+import numpy as np
+import pandas as pd
 
 try:
-    from .credentials import username, password, host_name, port, scheme, api_key
+    from .credentials import api_key, host_name, password, port, scheme, username
 except ImportError:
-    from .credentials import username, password, host_name, port, scheme
+    from .credentials import host_name, password, port, scheme, username
 
     api_key = None
 
-from elasticsearch import Elasticsearch
-from tqdm import tqdm
-from elasticsearch.helpers import BulkIndexError
-from elasticsearch import helpers
 import logging
+
+from elasticsearch import Elasticsearch, helpers
+from elasticsearch.helpers import BulkIndexError
+from tqdm import tqdm
 
 logger = logging.getLogger(__name__)
 
@@ -22,10 +23,10 @@ logger = logging.getLogger(__name__)
 def ingest_data_to_elasticsearch(
     temp_df: pd.DataFrame,
     index_name: str,
-    index_mapping: Optional[Dict[str, Any]] = None,
+    index_mapping: dict[str, Any] | None = None,
     replace_index: bool = False,
-    es_client: Optional[Elasticsearch] = None,
-) -> Dict[str, int]:
+    es_client: Elasticsearch | None = None,
+) -> dict[str, int]:
     """Ingests data from a DataFrame into Elasticsearch with error handling.
 
     Args:
@@ -283,7 +284,7 @@ def handle_inconsistent_dtypes(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-def guess_datetime_columns(df: pd.DataFrame, threshold: float = 0.5) -> List[str]:
+def guess_datetime_columns(df: pd.DataFrame, threshold: float = 0.5) -> list[str]:
     """Guesses which columns in a DataFrame are datetime columns.
 
     It iterates through each column and attempts to parse its values as datetimes.
@@ -320,9 +321,7 @@ def guess_datetime_columns(df: pd.DataFrame, threshold: float = 0.5) -> List[str
     return datetime_columns
 
 
-def get_guess_datetime_column(
-    df: pd.DataFrame, threshold: float = 0.2
-) -> Optional[str]:
+def get_guess_datetime_column(df: pd.DataFrame, threshold: float = 0.2) -> str | None:
     """Finds the single column most likely to be a datetime column.
 
     This function iterates through all columns and calculates the ratio of values
@@ -366,11 +365,11 @@ def get_guess_datetime_column(
 
 
 def check_patients_existence(
-    patient_ids: List[str],
-    index_name: Union[str, List[Tuple[str, str]]] = "epr_documents",
+    patient_ids: list[str],
+    index_name: str | list[tuple[str, str]] = "epr_documents",
     id_field: str = "client_idcode.keyword",
-    config_obj: Optional[Any] = None,
-) -> List[str]:
+    config_obj: Any | None = None,
+) -> list[str]:
     """Checks which patient IDs exist in Elasticsearch using terms aggregation.
     Supports checking multiple indices in a fallback manner.
 

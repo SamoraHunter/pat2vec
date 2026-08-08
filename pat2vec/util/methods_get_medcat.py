@@ -1,8 +1,7 @@
+import logging
 import os
 import sys
-import logging
-from typing import Any, Optional, Union
-from typing import TYPE_CHECKING
+from typing import Any, Union
 
 try:
     from medcat.cat import CAT
@@ -11,13 +10,10 @@ except ImportError:
 
 from pat2vec.util.get_dummy_data_medcat_annotation import dummy_CAT
 
-if TYPE_CHECKING:
-    pass
-
 logger = logging.getLogger(__name__)
 
 
-def get_cat(config_obj: Any) -> Optional[Union["CAT", dummy_CAT]]:  # type: ignore
+def get_cat(config_obj: Any) -> Union["CAT", dummy_CAT] | None:  # type: ignore
     """Loads and returns a MedCAT model instance based on configuration.
 
     This function determines which MedCAT model to load based on the provided

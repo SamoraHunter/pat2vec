@@ -1,7 +1,6 @@
 import csv
 import multiprocessing
 from multiprocessing import Pool
-from typing import List
 
 import pandas as pd
 from tqdm.notebook import tqdm
@@ -49,9 +48,9 @@ def pull_and_write(index_name, fields_list, term_name, entered_list, search_stri
 
 def cohort_searcher_with_terms_and_search_multi(
     index_name: str,
-    fields_list: List[str],
+    fields_list: list[str],
     term_name: str,
-    entered_list: List[str],
+    entered_list: list[str],
     search_string: str,
 ) -> pd.DataFrame:
     """Searches a cohort in parallel using multiple processes.

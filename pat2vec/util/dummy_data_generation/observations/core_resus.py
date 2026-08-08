@@ -1,10 +1,12 @@
-from ..generator_helpers import create_random_date_from_globals
-from pat2vec.pat2vec_get_methods.get_method_core_resus import CORE_RESUS_FIELDS
 import random
-from typing import List, Optional
-import pandas as pd
-import numpy as np
 from datetime import datetime
+
+import numpy as np
+import pandas as pd
+
+from pat2vec.pat2vec_get_methods.get_method_core_resus import CORE_RESUS_FIELDS
+
+from ..generator_helpers import create_random_date_from_globals
 
 try:
     from faker import Faker
@@ -87,14 +89,14 @@ def _determine_resuscitation_status(
 
 def generate_core_resus_data(
     num_rows: int,
-    entered_list: List[str],
+    entered_list: list[str],
     global_start_year: int,
     global_start_month: int,
     global_end_year: int,
     global_end_month: int,
     global_start_day: int = 1,
     global_end_day: int = 31,
-    fields_list: Optional[List[str]] = CORE_RESUS_FIELDS,
+    fields_list: list[str] | None = CORE_RESUS_FIELDS,
 ) -> pd.DataFrame:
     """Generates dummy data for CORE_RESUS_STATUS observations with realistic clinical patterns.
 

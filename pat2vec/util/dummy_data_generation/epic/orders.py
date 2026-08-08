@@ -1,6 +1,5 @@
 import random
 from datetime import timedelta
-from typing import List
 
 import numpy as np
 import pandas as pd
@@ -178,14 +177,14 @@ def _generate_order_content(order_class: str) -> str:
 
 def generate_epic_orders_data(
     num_rows: int,
-    entered_list: List[str],
+    entered_list: list[str],
     global_start_year: int,
     global_start_month: int,
     global_end_year: int = 2023,
     global_end_month: int = 12,
     global_start_day: int = 1,
     global_end_day: int = 31,
-    fields_list: List[str] = [
+    fields_list: list[str] = [
         "document_PatientDurableKey",
         "document_CreatedWhen",
         "document_UpdatedWhen",

@@ -1,13 +1,14 @@
+import random
+from collections import OrderedDict
+
+import numpy as np
+import pandas as pd
+
 from ..generator_helpers import (
     create_random_date_from_globals,
     maybe_nan,
     random_state,
 )
-import random
-from collections import OrderedDict
-from typing import List, Optional, Dict, Tuple
-import pandas as pd
-import numpy as np
 
 # Hospital probability distribution based on real-world admission patterns:
 # - District General Hospital (DH): Largest, ~40% of admissions
@@ -15,7 +16,7 @@ import numpy as np
 # - Local community hospitals: ~15-20% combined
 # - Specialist centers (St Thomas): ~15% (referrals)
 # - Queen Mary's: ~10% (geographic distribution)
-HOSPITAL_PROBABILITIES: Dict[str, float] = {
+HOSPITAL_PROBABILITIES: dict[str, float] = {
     "DH": 0.40,
     "PRUH": 0.25,
     "Orpington": 0.10,
@@ -24,7 +25,7 @@ HOSPITAL_PROBABILITIES: Dict[str, float] = {
 }
 
 # Hospital type classification for correlated patterns
-HOSPITAL_TYPES: Dict[str, str] = {
+HOSPITAL_TYPES: dict[str, str] = {
     "DH": "district_general",
     "PRUH": "royal_cough",
     "Orpington": "community",
@@ -34,20 +35,20 @@ HOSPITAL_TYPES: Dict[str, str] = {
 
 # Geographic zones - patients in each zone have higher probability of
 # attending hospitals in their local area
-GEO_ZONES: Dict[str, List[str]] = {
+GEO_ZONES: dict[str, list[str]] = {
     "north_west": ["DH", "Orpington"],
     "south_east": ["PRUH", "Queen Mary's"],
     "city_centre": ["St Thomas"],
 }
 
 # Emergency admission patterns - emergency more likely at night/weekends
-EMERGENCY_TIME_WINDOW: Tuple[int, int] = (18, 8)  # 6pm to 8am
+EMERGENCY_TIME_WINDOW: tuple[int, int] = (18, 8)  # 6pm to 8am
 
 
 def _get_hospital_admission_weights(
-    admission_type: Optional[str] = None,
-    hour_of_day: Optional[int] = None,
-) -> Dict[str, float]:
+    admission_type: str | None = None,
+    hour_of_day: int | None = None,
+) -> dict[str, float]:
     """Calculate adjusted hospital probabilities based on admission patterns.
 
     Args:
@@ -113,14 +114,14 @@ def _determine_geo_zone(hospital: str) -> str:
 
 def generate_hospital_site_data(
     num_rows: int,
-    entered_list: List[str],
+    entered_list: list[str],
     global_start_year: int,
     global_start_month: int,
     global_end_year: int = 2023,
     global_end_month: int = 12,
     global_start_day: int = 1,
     global_end_day: int = 31,
-    fields_list: Optional[List[str]] = None,
+    fields_list: list[str] | None = None,
 ) -> pd.DataFrame:
     """Generates dummy data for hospital site observations with realistic patterns.
 

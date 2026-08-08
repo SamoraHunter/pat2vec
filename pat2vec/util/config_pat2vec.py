@@ -1,11 +1,14 @@
-import os
 import logging
+import os
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, TypeVar, Union
+from typing import Any, TypeVar
+
 import pandas as pd
 import paramiko
 from dateutil.relativedelta import relativedelta
 from IPython.display import display
+from sqlalchemy import create_engine
+
 from pat2vec.util.calculate_interval import calculate_interval
 from pat2vec.util.current_pat_batch_path_methods import PathsClass
 from pat2vec.util.generate_date_list import generate_date_list
@@ -13,7 +16,6 @@ from pat2vec.util.methods_get import (
     add_offset_column,
     build_patient_dict,
 )
-from sqlalchemy import create_engine
 
 logger = logging.getLogger(__name__)
 
@@ -58,7 +60,7 @@ class config_class:
         treatment_control_ratio_n: int = 1,
         proj_name: str = "new_project",
         current_path_dir: str = ".",
-        main_options: Optional[Dict[str, bool]] = None,
+        main_options: dict[str, bool] | None = None,
         start_date: datetime = datetime(1995, 1, 1),
         years: int = 0,
         months: int = 0,
@@ -70,61 +72,61 @@ class config_class:
         strip_list: bool = True,
         verbosity: int = 3,
         random_seed_val: int = 42,
-        hostname: Optional[str] = None,
-        username: Optional[str] = None,
-        password: Optional[str] = None,
+        hostname: str | None = None,
+        username: str | None = None,
+        password: str | None = None,
         gpu_mem_threshold: int = 4000,
         testing: bool = False,
         dummy_medcat_model: bool = False,
         use_controls: bool = False,
         medcat: bool = False,
-        global_start_year: Optional[Union[int, str]] = None,
-        global_start_month: Optional[Union[int, str]] = None,
-        global_end_year: Optional[Union[int, str]] = None,
-        global_end_month: Optional[Union[int, str]] = None,
-        global_start_day: Optional[Union[int, str]] = None,
-        global_end_day: Optional[Union[int, str]] = None,
+        global_start_year: int | str | None = None,
+        global_start_month: int | str | None = None,
+        global_end_year: int | str | None = None,
+        global_end_month: int | str | None = None,
+        global_start_day: int | str | None = None,
+        global_end_day: int | str | None = None,
         skip_additional_listdir: bool = False,
-        start_time: Optional[datetime] = None,
-        root_path: Optional[str] = None,
+        start_time: datetime | None = None,
+        root_path: str | None = None,
         negate_biochem: bool = False,
         patient_id_column_name: str = "client_idcode",
         overwrite_stored_pat_docs: bool = False,
         overwrite_stored_pat_observations: bool = False,
         store_pat_batch_docs: bool = True,
         store_pat_batch_observations: bool = True,
-        annot_filter_options: Optional[Dict[str, Any]] = None,
+        annot_filter_options: dict[str, Any] | None = None,
         shuffle_pat_list: bool = False,
         individual_patient_window: bool = False,
-        individual_patient_window_df: Optional[pd.DataFrame] = None,
-        individual_patient_window_start_column_name: Optional[str] = None,
-        individual_patient_id_column_name: Optional[str] = None,
+        individual_patient_window_df: pd.DataFrame | None = None,
+        individual_patient_window_start_column_name: str | None = None,
+        individual_patient_id_column_name: str | None = None,
         individual_patient_window_controls_method: str = "full",  # full, random
         dropna_doc_timestamps: bool = True,
         time_window_interval_delta: relativedelta = relativedelta(days=1),
-        feature_engineering_arg_dict: Optional[Dict[str, Any]] = None,
+        feature_engineering_arg_dict: dict[str, Any] | None = None,
         split_clinical_notes: bool = True,
         lookback: bool = True,
         add_icd10: bool = False,
         add_opc4s: bool = False,
         all_epr_patient_list_path: str = "../../all_client_idcodes_epr_unique.csv",
-        override_medcat_model_path: Optional[str] = None,
-        data_type_filter_dict: Optional[Dict[str, Any]] = None,
+        override_medcat_model_path: str | None = None,
+        data_type_filter_dict: dict[str, Any] | None = None,
         filter_split_notes: bool = True,
-        client_idcode_term_name: Optional[str] = None,
+        client_idcode_term_name: str | None = None,
         sanitize_pat_list: bool = False,
         calculate_vectors: bool = True,
         prefetch_pat_batches: bool = False,
         sample_treatment_docs: int = 0,
-        test_data_path: Optional[str] = None,
-        test_schema_path: Optional[str] = None,
+        test_data_path: str | None = None,
+        test_schema_path: str | None = None,
         credentials_path: str = "../../../credentials.py",
         storage_backend: str = "database",
-        db_connection_string: Optional[str] = None,
+        db_connection_string: str | None = None,
         check_patient_existence: bool = True,
         testing_elastic: bool = False,
         include_text_sample_in_annots: bool = False,
-        all_patient_list: Optional[List[str]] = None,
+        all_patient_list: list[str] | None = None,
     ) -> None:
         """Initializes the configuration object for the pat2vec pipeline.
         This class holds all configuration parameters for a pat2vec run, including
@@ -960,7 +962,7 @@ class config_class:
                 try:
                     # Test if remote_path exists
                     self.sftp_client.chdir(self.root_path)
-                except IOError:
+                except OSError:
                     # Create remote_path
                     self.sftp_client.mkdir(self.root_path)
 
@@ -979,21 +981,21 @@ class config_class:
                 try:
                     # Test if remote_path exists
                     self.sftp_client.chdir(self.pre_annotation_path)
-                except IOError:
+                except OSError:
                     # Create remote_path
                     self.sftp_client.mkdir(self.pre_annotation_path)
 
                 try:
                     # Test if remote_path exists
                     self.sftp_client.chdir(self.pre_annotation_path_mrc)
-                except IOError:
+                except OSError:
                     # Create remote_path
                     self.sftp_client.mkdir(self.pre_annotation_path_mrc)
 
                 try:
                     # Test if remote_path exists
                     self.sftp_client.chdir(self.current_pat_lines_path)
-                except IOError:
+                except OSError:
                     # Create remote_path
                     self.sftp_client.mkdir(self.current_pat_lines_path)
 
@@ -1066,7 +1068,7 @@ class config_class:
 
         if not self.individual_patient_window:
             #: List of datetime objects for time window generation.
-            self.date_list: List[datetime] = generate_date_list(
+            self.date_list: list[datetime] = generate_date_list(
                 self.start_date,
                 self.years,
                 self.months,
@@ -1240,7 +1242,7 @@ class config_class:
                 logger.info(self.data_type_filter_dict)
                 logger.info(self.data_type_filter_dict.keys())
 
-    def _get_test_options_dict(self) -> Dict[str, bool]:
+    def _get_test_options_dict(self) -> dict[str, bool]:
         """Returns a dictionary of implemented testing functions.
 
         The dictionary contains boolean flags for various features that have a

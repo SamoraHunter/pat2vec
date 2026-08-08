@@ -1472,6 +1472,7 @@ class main:
                     config_obj=self.config_obj,
                     cat=self.cat,
                     t=self.t,
+                    cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search,
                 )
                 # Handle cases where annotation functions might return None
                 if batch_result is None:

@@ -11,7 +11,6 @@ Implements realistic clinical appointment patterns including:
 import calendar
 import random
 from datetime import datetime, timedelta
-from typing import List, Optional, Dict, Tuple
 
 import pandas as pd
 from faker import Faker
@@ -24,7 +23,7 @@ faker.seed_instance(random_state)
 random.seed(random_state)
 
 # Realistic appointment category distribution based on UK primary/secondary care patterns
-APPOINTMENT_DISTRIBUTION: Dict[str, float] = {
+APPOINTMENT_DISTRIBUTION: dict[str, float] = {
     "Outpatient Clinic": 0.40,
     "Emergency Department": 0.25,
     "Follow-up Visit": 0.20,
@@ -77,7 +76,7 @@ SPECIALTY_CODES = {
 # Age-based appointment frequency multipliers
 # Children (<18) and elderly (>=65) have more appointments
 AGE_APPOINTMENT_MULTIPLIERS = {
-    range(0, 18): 2.5,
+    range(18): 2.5,
     range(18, 45): 1.0,
     range(45, 65): 1.3,
     range(65, 120): 2.0,
@@ -110,8 +109,8 @@ def _get_age(date_of_birth: datetime, reference_date: datetime) -> int:
 
 def _select_appointment_type(
     patient_age: int,
-    hour: Optional[int] = None,
-    day_of_week: Optional[int] = None,
+    hour: int | None = None,
+    day_of_week: int | None = None,
 ) -> str:
     """Select appointment type based on patient demographics and timing.
 
@@ -163,7 +162,7 @@ def _select_appointment_type(
 
 
 def _generate_appointment_datetime(
-    base_date: Optional[datetime] = None,
+    base_date: datetime | None = None,
     min_days_offset: int = -365,
     max_days_offset: int = 0,
 ) -> datetime:
@@ -210,7 +209,7 @@ def _generate_appointment_datetime(
     return appointment_date
 
 
-def _get_clinical_correlation(appointment_type: str) -> Tuple[List[str], str]:
+def _get_clinical_correlation(appointment_type: str) -> tuple[list[str], str]:
     """Get clinical correlations for an appointment type.
 
     Returns:
@@ -225,9 +224,9 @@ def _get_clinical_correlation(appointment_type: str) -> Tuple[List[str], str]:
 
 def _generate_realistic_appointment_data(
     num_rows: int,
-    patient_dob: Optional[datetime] = None,
-    base_date: Optional[datetime] = None,
-) -> Dict[str, List]:
+    patient_dob: datetime | None = None,
+    base_date: datetime | None = None,
+) -> dict[str, list]:
     """Generate realistic appointment data for a single patient.
 
     Parameters:
@@ -249,7 +248,7 @@ def _generate_realistic_appointment_data(
 
     age = _get_age(patient_dob, base_date or datetime.now())
 
-    data: Dict[str, List] = {
+    data: dict[str, list] = {
         "Popular": [],
         "AppointmentType": [],
         "AttendanceReference": [],
@@ -359,14 +358,14 @@ def _generate_realistic_appointment_data(
 
 def generate_appointments_data(
     num_rows: int,
-    entered_list: List[str],
+    entered_list: list[str],
     global_start_year: int,
     global_start_month: int,
     global_end_year: int,
     global_end_month: int,
     global_start_day: int = 1,
     global_end_day: int = 31,
-    fields_list: List[str] = [
+    fields_list: list[str] = [
         "Popular",
         "AppointmentType",
         "AttendanceReference",
@@ -426,7 +425,7 @@ def generate_appointments_data(
     """
     df_holder_list = []
 
-    for i in range(0, len(entered_list)):
+    for i in range(len(entered_list)):
         current_pat_client_id_code = entered_list[i]
 
         # Generate a base date from the global range for relative appointments

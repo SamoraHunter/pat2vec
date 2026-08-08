@@ -7,24 +7,15 @@ import json
 import logging
 import os
 import random
-from typing import Any, List
+from typing import Any
 
 import pandas as pd
 
-from .epr_documents import (
-    generate_epr_documents_data,
-    generate_epr_documents_personal_data,
-)
+from .appointments import generate_appointments_data
 from .basic_observations import (
     generate_basic_observations_data,
     generate_basic_observations_textual_obs_data,
 )
-from .observations import (
-    generate_bmi_data,
-    generate_news_data,
-)
-from .orders import generate_diagnostic_orders_data, generate_drug_orders_data
-from .appointments import generate_appointments_data
 from .epic import (
     generate_epic_clinical_notes_data,
     generate_epic_encounters_data,
@@ -34,18 +25,27 @@ from .epic import (
     generate_epic_orders_data,
     generate_epic_patients_data,
 )
+from .epr_documents import (
+    generate_epr_documents_data,
+    generate_epr_documents_personal_data,
+)
 from .generator_helpers import (
     create_random_date_from_globals,
     generate_uuid,
     is_safe_host,
 )
+from .observations import (
+    generate_bmi_data,
+    generate_news_data,
+)
+from .orders import generate_diagnostic_orders_data, generate_drug_orders_data
 
 logger = logging.getLogger(__name__)
 
 
 def populate_elastic_with_dummy_data(
     config_obj: Any, n_patients: int = 10
-) -> List[str]:
+) -> list[str]:
     """Generates dummy data and ingests it into Elasticsearch.
 
     This function generates random patient IDs and creates dummy data for
@@ -60,8 +60,9 @@ def populate_elastic_with_dummy_data(
     Returns:
         A list of the generated dummy patient IDs.
     """
-    from .sequence_generators import generate_uuid_list
     from pat2vec.pat2vec_search.cogstack_search_methods import CogStack
+
+    from .sequence_generators import generate_uuid_list
 
     # Safeguard: Ensure testing flags are enabled in config
     if not getattr(config_obj, "testing", False) or not getattr(
@@ -513,7 +514,7 @@ def populate_elastic_with_dummy_data(
 
 def generate_observations_MRC_text_data(
     num_rows: int,
-    entered_list: List[str],
+    entered_list: list[str],
     global_start_year: int,
     global_start_month: int,
     global_end_year: int,
@@ -544,7 +545,7 @@ def generate_observations_MRC_text_data(
 
     df_holder_list = []
 
-    for i in range(0, len(entered_list)):
+    for i in range(len(entered_list)):
         current_pat_client_id_code = entered_list[i]
 
         timeline_generator = (
@@ -605,7 +606,7 @@ def generate_observations_MRC_text_data(
 
 def generate_observations_data_generic(
     num_rows: int,
-    entered_list: List[str],
+    entered_list: list[str],
     global_start_year: int,
     global_start_month: int,
     global_end_year: int,
@@ -632,7 +633,7 @@ def generate_observations_data_generic(
 
     df_holder_list = []
 
-    for i in range(0, len(entered_list)):
+    for i in range(len(entered_list)):
         current_pat_client_id_code = entered_list[i]
 
         data = {

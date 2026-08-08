@@ -1,7 +1,6 @@
 """Problem list generator."""
 
 import random
-from typing import List
 
 import pandas as pd
 from faker import Faker
@@ -16,14 +15,14 @@ random.seed(random_state)
 
 def generate_problem_list_data(
     num_rows: int,
-    entered_list: List[str],
+    entered_list: list[str],
     global_start_year: int,
     global_start_month: int,
     global_end_year: int = 2023,
     global_end_month: int = 12,
     global_start_day: int = 1,
     global_end_day: int = 31,
-    fields_list: List[str] = [
+    fields_list: list[str] = [
         "client_idcode",
         "problem_name",
         "problem_status",

@@ -2,7 +2,6 @@
 
 import random
 from datetime import timedelta
-from typing import Dict, List
 
 import numpy as np
 import pandas as pd
@@ -16,10 +15,10 @@ faker = Faker()
 np.random.seed(random_state)
 random.seed(random_state)
 
-REALISTIC_ADMISSION_TYPES: List[str] = ["Inpatient", "Outpatient", "Emergency"]
-ADMISSION_TYPE_WEIGHTS: List[float] = [0.30, 0.50, 0.20]
+REALISTIC_ADMISSION_TYPES: list[str] = ["Inpatient", "Outpatient", "Emergency"]
+ADMISSION_TYPE_WEIGHTS: list[float] = [0.30, 0.50, 0.20]
 
-DEPARTMENT_SERVICE_MAP: Dict[str, str] = {
+DEPARTMENT_SERVICE_MAP: dict[str, str] = {
     "Internal Medicine": "Medicine",
     "Surgery": "Surgical Services",
     "Cardiology": "Cardiology",
@@ -37,7 +36,7 @@ DEPARTMENT_SERVICE_MAP: Dict[str, str] = {
     "Pharmacy": "Pharmacy Services",
 }
 
-DEPARTMENT_MAJOR_CATEGORIES: List[str] = [
+DEPARTMENT_MAJOR_CATEGORIES: list[str] = [
     "Internal Medicine",
     "Surgery",
     "Cardiology",
@@ -46,7 +45,7 @@ DEPARTMENT_MAJOR_CATEGORIES: List[str] = [
     "Other Departments",
 ]
 
-MAJOR_CATEGORY_WEIGHTS: List[float] = [0.20, 0.18, 0.12, 0.10, 0.08, 0.32]
+MAJOR_CATEGORY_WEIGHTS: list[float] = [0.20, 0.18, 0.12, 0.10, 0.08, 0.32]
 
 EMERGENCY_LENGTH_ADJUSTMENT = 2
 ELDERLY_LENGTH_ADJUSTMENT = 1.5
@@ -125,14 +124,14 @@ def calculate_length_of_stay(
 
 def generate_epic_encounters_data(
     num_rows: int,
-    entered_list: List[str],
+    entered_list: list[str],
     global_start_year: int,
     global_start_month: int,
     global_end_year: int = 2023,
     global_end_month: int = 12,
     global_start_day: int = 1,
     global_end_day: int = 31,
-    fields_list: List[str] = [
+    fields_list: list[str] = [
         "activity_PatientDurableKey",
         "activity_AdmissionDate",
         "activity_DischargeDate",

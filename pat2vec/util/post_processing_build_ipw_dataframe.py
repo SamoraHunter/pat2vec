@@ -1,18 +1,20 @@
-from pat2vec.util.post_processing_get_pat_ipw_record import get_pat_ipw_record
-import pandas as pd
-import os
-from typing import Any, Dict, List, Optional
-from sqlalchemy import text, inspect
 import logging
+import os
+from typing import Any
+
+import pandas as pd
+from sqlalchemy import inspect, text
 from tqdm import tqdm
+
+from pat2vec.util.post_processing_get_pat_ipw_record import get_pat_ipw_record
 
 logger = logging.getLogger(__name__)
 
 
 def build_ipw_dataframe(
-    annot_filter_arguments: Optional[Dict[str, Any]] = None,
-    filter_codes: Optional[List[int]] = None,
-    config_obj: Optional[Any] = None,
+    annot_filter_arguments: dict[str, Any] | None = None,
+    filter_codes: list[int] | None = None,
+    config_obj: Any | None = None,
     mode: str = "earliest",
     include_mct: bool = True,
     include_textual_obs: bool = True,
@@ -20,7 +22,7 @@ def build_ipw_dataframe(
     include_epic_clinical_notes_appointments: bool = True,
     include_epic_imaging_reports: bool = True,
     include_epic_medical_history: bool = True,
-    custom_pat_list: Optional[List[str]] = None,
+    custom_pat_list: list[str] | None = None,
 ) -> pd.DataFrame:
     """Builds a DataFrame of Individual Patient Window (IPW) records.
 

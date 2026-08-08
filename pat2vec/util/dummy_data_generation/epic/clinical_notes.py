@@ -1,7 +1,6 @@
 import calendar
 import random
 from datetime import datetime, timedelta
-from typing import List, Optional
 
 import numpy as np
 import pandas as pd
@@ -292,7 +291,7 @@ NOTE_PREFIXES = {
 }
 
 
-def generate_age_appropriate_conditions(specialty: str, patient_age: int) -> List[str]:
+def generate_age_appropriate_conditions(specialty: str, patient_age: int) -> list[str]:
     """Generates age-appropriate medical conditions based on specialty and age bracket."""
     for age_range, conditions in AGE_MODIFIERS.items():
         if age_range[0] <= patient_age < age_range[1]:
@@ -371,7 +370,7 @@ def generate_generic_note(specialty: str, note_type: str) -> str:
 
 
 def determine_document_date(
-    admission_date: Optional[datetime],
+    admission_date: datetime | None,
     note_type: str,
     global_start_dt: datetime,
     global_end_dt: datetime,
@@ -443,7 +442,7 @@ def generate_document_name(specialty: str, note_type: str, patient_age: int) -> 
 
 
 def get_patient_timeline_dummy(
-    client_id_code: str, patient_age: Optional[int] = None
+    client_id_code: str, patient_age: int | None = None
 ) -> str:
     """Gets a realistic dummy patient timeline with clinical note content."""
     specialty = select_specialty_by_distribution()
@@ -463,7 +462,7 @@ def get_patient_timeline_dummy(
 
 def generate_epic_clinical_notes_data(
     num_rows: int,
-    entered_list: List[str],
+    entered_list: list[str],
     global_start_year: int,
     global_start_month: int,
     global_end_year: int = 2023,
@@ -471,8 +470,8 @@ def generate_epic_clinical_notes_data(
     global_start_day: int = 1,
     global_end_day: int = 31,
     use_GPT: bool = False,
-    patient_age_override: Optional[int] = None,
-    fields_list: List[str] = [
+    patient_age_override: int | None = None,
+    fields_list: list[str] = [
         "document_PatientDurableKey",
         "document_CreatedWhen",
         "document_Content",
@@ -576,14 +575,14 @@ def generate_epic_clinical_notes_data(
 
 def generate_epic_medical_history_data(
     num_rows: int,
-    entered_list: List[str],
+    entered_list: list[str],
     global_start_year: int,
     global_start_month: int,
     global_end_year: int = 2023,
     global_end_month: int = 12,
     global_start_day: int = 1,
     global_end_day: int = 31,
-    fields_list: List[str] = [
+    fields_list: list[str] = [
         "document_PatientDurableKey",
         "document_CreatedWhen",
         "document_Diagnosis",
@@ -657,14 +656,14 @@ def generate_epic_medical_history_data(
 
 def generate_epic_orders_data(
     num_rows: int,
-    entered_list: List[str],
+    entered_list: list[str],
     global_start_year: int,
     global_start_month: int,
     global_end_year: int = 2023,
     global_end_month: int = 12,
     global_start_day: int = 1,
     global_end_day: int = 31,
-    fields_list: List[str] = [
+    fields_list: list[str] = [
         "document_PatientDurableKey",
         "document_CreatedWhen",
         "document_UpdatedWhen",
@@ -752,6 +751,6 @@ def generate_epic_orders_data(
     return final_df[unique_fields]
 
 
-def generate_patient_timeline(client_id_code: str) -> Optional[str]:
+def generate_patient_timeline(client_id_code: str) -> str | None:
     """Generates a patient timeline using GPT."""
     return None

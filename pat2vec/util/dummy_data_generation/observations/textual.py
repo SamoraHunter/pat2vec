@@ -1,7 +1,6 @@
 """Textual observation generators for MRC clinical notes and Reports."""
 
 import random
-from typing import List
 
 import pandas as pd
 from faker import Faker
@@ -17,7 +16,7 @@ random.seed(random_state)
 
 def generate_observations_MRC_text_data(
     num_rows: int,
-    entered_list: List[str],
+    entered_list: list[str],
     global_start_year: int,
     global_start_month: int,
     global_end_year: int,
@@ -25,7 +24,7 @@ def generate_observations_MRC_text_data(
     global_start_day: int = 1,
     global_end_day: int = 31,
     use_GPT: bool = False,
-    fields_list: List[str] = [
+    fields_list: list[str] = [
         "observation_guid",
         "client_idcode",
         "obscatalogmasteritem_displayname",
@@ -40,7 +39,7 @@ def generate_observations_MRC_text_data(
     """Generates dummy data for the 'observations' index (MRC clinical notes)."""
     df_holder_list = []
 
-    for i in range(0, len(entered_list)):
+    for i in range(len(entered_list)):
         current_pat_client_id_code = entered_list[i]
 
         timeline_generator = (
@@ -98,7 +97,7 @@ def generate_observations_MRC_text_data(
 
 def generate_observations_Reports_text_data(
     num_rows: int,
-    entered_list: List[str],
+    entered_list: list[str],
     global_start_year: int,
     global_start_month: int,
     global_end_year: int,
@@ -106,7 +105,7 @@ def generate_observations_Reports_text_data(
     global_start_day: int = 1,
     global_end_day: int = 31,
     use_GPT: bool = False,
-    fields_list: List[str] = [
+    fields_list: list[str] = [
         "basicobs_guid",
         "client_idcode",
         "basicobs_itemname_analysed",
@@ -127,7 +126,7 @@ def generate_observations_Reports_text_data(
         generate_patient_timeline if use_GPT else get_patient_timeline_dummy
     )
 
-    for i in range(0, len(entered_list)):
+    for i in range(len(entered_list)):
         current_pat_client_id_code = entered_list[i]
 
         data = {

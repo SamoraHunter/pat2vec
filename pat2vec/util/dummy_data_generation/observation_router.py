@@ -3,10 +3,9 @@ This module provides the main entry point for generating dummy data based on
 Elasticsearch queries, routing requests to appropriate data generators.
 """
 
-from datetime import datetime
 import logging
 import random
-from typing import List
+from datetime import datetime
 
 import pandas as pd
 
@@ -20,9 +19,9 @@ logger = logging.getLogger(__name__)
 
 def cohort_searcher_with_terms_and_search_dummy(
     index_name: str,
-    fields_list: List[str],
+    fields_list: list[str],
     term_name: str,
-    entered_list: List[str],
+    entered_list: list[str],
     search_string: str,
 ) -> pd.DataFrame:
     """Generates dummy data based on simulated Elasticsearch query parameters.
@@ -71,40 +70,40 @@ def cohort_searcher_with_terms_and_search_dummy(
     df = pd.DataFrame(columns=fields_list)
 
     # Import generators locally to avoid circular imports
-    from .epr_documents import (
-        generate_epr_documents_data,
-        generate_epr_documents_personal_data,
-    )
+    from .appointments import generate_appointments_data
     from .basic_observations import (
         generate_basic_observations_data,
         generate_basic_observations_textual_obs_data,
         generate_observations_data,
     )
+    from .covid import generate_covid_observations_data
+    from .epic import (
+        generate_epic_clinical_notes_appointments_data,
+        generate_epic_clinical_notes_data,
+        generate_epic_encounters_data,
+        generate_epic_imaging_reports_data,
+        generate_epic_lab_results_data,
+        generate_epic_medical_history_data,
+        generate_epic_orders_data,
+        generate_epic_patients_data,
+    )
+    from .epr_documents import (
+        generate_epr_documents_data,
+        generate_epr_documents_personal_data,
+    )
     from .observations import (
-        generate_bmi_data,
         generate_bed_data,
+        generate_bmi_data,
         generate_core_o2_data,
         generate_core_resus_data,
         generate_hospital_site_data,
         generate_news_data,
-        generate_smoking_data,
         generate_observations_MRC_text_data,
         generate_observations_Reports_text_data,
+        generate_smoking_data,
         generate_vte_data,
     )
     from .orders import generate_diagnostic_orders_data, generate_drug_orders_data
-    from .appointments import generate_appointments_data
-    from .covid import generate_covid_observations_data
-    from .epic import (
-        generate_epic_encounters_data,
-        generate_epic_clinical_notes_data,
-        generate_epic_medical_history_data,
-        generate_epic_orders_data,
-        generate_epic_lab_results_data,
-        generate_epic_patients_data,
-        generate_epic_imaging_reports_data,
-        generate_epic_clinical_notes_appointments_data,
-    )
 
     if index_name == "epr_documents":
         if "client_firstname" in fields_list:

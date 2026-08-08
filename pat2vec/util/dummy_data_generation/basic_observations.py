@@ -3,16 +3,15 @@
 import random
 import uuid
 from datetime import datetime
-from typing import List, Optional
 
 import pandas as pd
 from faker import Faker
 
+from pat2vec.util.dummy_data_files import dummy_lists
 from pat2vec.util.dummy_data_generation.generator_helpers import (
     create_random_date_from_globals,
     maybe_nan,
 )
-from pat2vec.util.dummy_data_files import dummy_lists
 
 random_state = 42
 faker = Faker()
@@ -22,15 +21,15 @@ random.seed(random_state)
 
 def generate_basic_observations_data(
     num_rows: int,
-    entered_list: List[str],
+    entered_list: list[str],
     global_start_year: int,
     global_start_month: int,
     global_end_year: int,
     global_end_month: int,
     global_start_day: int = 1,
     global_end_day: int = 31,
-    fields_list: Optional[List[str]] = None,
-    base_date: Optional[datetime] = None,
+    fields_list: list[str] | None = None,
+    base_date: datetime | None = None,
 ) -> pd.DataFrame:
     """Generates dummy data for the 'basic_observations' index."""
     if fields_list is None:
@@ -58,7 +57,7 @@ def generate_basic_observations_data(
 
     blood_test_names = getattr(dummy_lists, "blood_test_names", [])
 
-    for i in range(0, len(entered_list)):
+    for i in range(len(entered_list)):
         current_pat_client_id_code = entered_list[i]
 
         if base_date is not None:
@@ -168,7 +167,7 @@ def generate_basic_observations_data(
 
 def generate_observations_data(
     num_rows: int,
-    entered_list: List[str],
+    entered_list: list[str],
     global_start_year: int,
     global_start_month: int,
     global_end_year: int = 2023,
@@ -176,7 +175,7 @@ def generate_observations_data(
     global_start_day: int = 1,
     global_end_day: int = 31,
     search_term: str = "Test",
-    fields_list: Optional[List[str]] = None,
+    fields_list: list[str] | None = None,
 ) -> pd.DataFrame:
     """Generates generic observation data for the 'observations' index.
 
@@ -209,7 +208,7 @@ def generate_observations_data(
     random.seed(random_state)
     df_holder_list = []
 
-    for i in range(0, len(entered_list)):
+    for i in range(len(entered_list)):
         current_pat_client_id_code = entered_list[i]
 
         data = {
@@ -255,14 +254,14 @@ def generate_observations_data(
 
 def generate_basic_observations_textual_obs_data(
     num_rows: int,
-    entered_list: List[str],
+    entered_list: list[str],
     global_start_year: int,
     global_start_month: int,
     global_end_year: int,
     global_end_month: int,
     global_start_day: int = 1,
     global_end_day: int = 31,
-    fields_list: Optional[List[str]] = None,
+    fields_list: list[str] | None = None,
 ) -> pd.DataFrame:
     """Generates dummy textual data for the 'basic_observations' index."""
     if fields_list is None:
@@ -286,7 +285,7 @@ def generate_basic_observations_textual_obs_data(
 
     blood_test_names = getattr(dummy_lists, "blood_test_names", [])
 
-    for i in range(0, len(entered_list)):
+    for i in range(len(entered_list)):
         current_pat_client_id_code = entered_list[i]
 
         data = {

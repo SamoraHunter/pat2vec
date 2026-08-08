@@ -1,4 +1,5 @@
 from datetime import date, datetime
+
 import pandas as pd
 
 
@@ -108,7 +109,7 @@ def df_column_uniquify(df: pd.DataFrame) -> pd.DataFrame:
         newitem = item
         while newitem in new_columns:
             counter += 1
-            newitem = "{}_{}".format(item, counter)
+            newitem = f"{item}_{counter}"
         new_columns.append(newitem)
     df.columns = new_columns
     return df

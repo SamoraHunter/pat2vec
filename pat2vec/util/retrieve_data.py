@@ -1,13 +1,15 @@
-import pandas as pd
 import logging
-from typing import Any, Dict, Optional
+from typing import Any
+
+import pandas as pd
+
 from pat2vec.util.helper_functions import get_df_from_db
 
 logger = logging.getLogger(__name__)
 
 # Configuration mapping for different data types
 # Keys correspond to the 'data_type' argument in retrieve_patient_data
-DATA_TYPE_CONFIG: Dict[str, Dict[str, str]] = {
+DATA_TYPE_CONFIG: dict[str, dict[str, str]] = {
     "epr_docs": {
         "db_table": "raw_epr_docs",
         "db_schema": "raw_data",
@@ -238,7 +240,7 @@ def retrieve_patient_data(
     client_idcode: str,
     data_type: str,
     config_obj: Any,
-    cohort_searcher_with_terms_and_search: Optional[Any] = None,
+    cohort_searcher_with_terms_and_search: Any | None = None,
 ) -> pd.DataFrame:
     """Retrieves patient data based on data type and storage backend configuration.
 
@@ -339,7 +341,7 @@ def _fetch_epic_data_from_es(
     client_idcode: str,
     data_type: str,
     config_obj: Any,
-    cohort_searcher_with_terms_and_search: Optional[Any] = None,
+    cohort_searcher_with_terms_and_search: Any | None = None,
 ) -> pd.DataFrame:
     """Fetches Epic data from Elasticsearch if not found in database/CSV.
 

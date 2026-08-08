@@ -2,7 +2,6 @@
 
 import random
 from datetime import timedelta
-from typing import Dict, List, Tuple
 
 import numpy as np
 import pandas as pd
@@ -16,7 +15,7 @@ faker = Faker()
 np.random.seed(random_state)
 random.seed(random_state)
 
-LAB_TEST_CATEGORIES: Dict[str, List[Dict]] = {
+LAB_TEST_CATEGORIES: dict[str, list[dict]] = {
     "CBC": [
         {"name": "WBC", "unit": "x10^9/L", "min": 3.0, "max": 12.0, "category": "CBC"},
         {"name": "RBC", "unit": "x10^12/L", "min": 3.8, "max": 5.8, "category": "CBC"},
@@ -164,7 +163,7 @@ LAB_TEST_CATEGORIES: Dict[str, List[Dict]] = {
     ],
 }
 
-LAB_CATEGORY_TEST_WEIGHTS: Dict[str, List[float]] = {
+LAB_CATEGORY_TEST_WEIGHTS: dict[str, list[float]] = {
     "CBC": [0.35, 0.20, 0.15, 0.10, 0.08, 0.05, 0.03, 0.02, 0.01, 0.01],
     "Chemistry": [
         0.25,
@@ -186,7 +185,7 @@ LAB_CATEGORY_TEST_WEIGHTS: Dict[str, List[float]] = {
 }
 
 
-def generate_lab_test_name(category: str) -> Dict:
+def generate_lab_test_name(category: str) -> dict:
     """Generates a realistic lab test with clinical correlation patterns.
 
     Args:
@@ -200,7 +199,7 @@ def generate_lab_test_name(category: str) -> Dict:
     return np.random.choice(tests, p=weights)
 
 
-def generate_lab_value(test_info: Dict) -> Tuple[float, str]:
+def generate_lab_value(test_info: dict) -> tuple[float, str]:
     """Generates a realistic lab value within clinically appropriate range.
 
     Args:
@@ -224,7 +223,7 @@ def generate_lab_value(test_info: Dict) -> Tuple[float, str]:
     return round(base_value, 2), test_info.get("unit", "")
 
 
-def generate_lab_panel(category: str, num_tests: int) -> List[Dict]:
+def generate_lab_panel(category: str, num_tests: int) -> list[dict]:
     """Generates a clinically coherent panel of related lab tests.
 
     Args:
@@ -290,14 +289,14 @@ def generate_lab_panel(category: str, num_tests: int) -> List[Dict]:
 
 def generate_epic_lab_results_data(
     num_rows: int,
-    entered_list: List[str],
+    entered_list: list[str],
     global_start_year: int,
     global_start_month: int,
     global_end_year: int = 2023,
     global_end_month: int = 12,
     global_start_day: int = 1,
     global_end_day: int = 31,
-    fields_list: List[str] = [
+    fields_list: list[str] = [
         "document_PatientDurableKey",
         "document_CreatedWhen",
         "document_Name",

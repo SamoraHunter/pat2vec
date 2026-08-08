@@ -1,11 +1,10 @@
-from datetime import datetime
 import calendar
 import random
-from typing import List, Optional
+from datetime import datetime
 
-from faker import Faker
 import numpy as np
 import pandas as pd
+from faker import Faker
 
 from pat2vec.pat2vec_get_methods.get_method_bmi import BMI_FIELDS
 
@@ -34,15 +33,15 @@ def generate_uuid_string(seed_val):
 
 def generate_bmi_data(
     num_rows: int,
-    entered_list: List[str],
+    entered_list: list[str],
     global_start_year: int,
     global_start_month: int,
     global_end_year: int,
     global_end_month: int,
     global_start_day: int = 1,
     global_end_day: int = 31,
-    fields_list: List[str] = BMI_FIELDS,
-    base_date: Optional[datetime] = None,
+    fields_list: list[str] = BMI_FIELDS,
+    base_date: datetime | None = None,
 ) -> pd.DataFrame:
     """Generates dummy data for BMI, Weight, and Height observations with realistic statistical distributions.
 

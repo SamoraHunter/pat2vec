@@ -1,15 +1,16 @@
 import ast
+import json
+import logging
+import os
 import re
 import warnings
-from typing import Any, List, Optional  # Keep typing imports together
-import os
-import psutil
-import logging
+from typing import Any  # Keep typing imports together
+
 import pandas as pd
-from sqlalchemy import text, inspect
+import psutil
+from sqlalchemy import inspect, text
 from sqlalchemy.schema import CreateSchema
 from tqdm import tqdm
-import json
 
 # Moved from pat2vec.util.post_processing_build_methods to break circular import
 logger = logging.getLogger(__name__)  # Ensure logger is defined at module level
@@ -35,7 +36,7 @@ def sanitize_for_path(text: str) -> str:
     return re.sub(r'[\\/*?:"<>|()\s]', "_", text)
 
 
-def get_expected_columns_for_table(table_name: str, schema: str) -> List[str]:
+def get_expected_columns_for_table(table_name: str, schema: str) -> list[str]:
     """Returns the expected columns for a given table based on MAPPINGS.
 
     This helper function looks up table definitions in the MAPPINGS list
@@ -67,7 +68,7 @@ def get_expected_columns_for_table(table_name: str, schema: str) -> List[str]:
     return ["client_idcode"]
 
 
-def extract_nhs_numbers(input_string: str) -> List[str]:
+def extract_nhs_numbers(input_string: str) -> list[str]:
     """Extracts all occurrences of "NHS" followed by a 10-digit number.
 
     The function searches for the pattern "NHS" followed by a 10-digit number,
@@ -94,8 +95,8 @@ def extract_nhs_numbers(input_string: str) -> List[str]:
 
 
 def get_search_client_idcode_list_from_nhs_number_list(
-    nhs_numbers: List[str], pat2vec_obj: Any
-) -> List[str]:
+    nhs_numbers: list[str], pat2vec_obj: Any
+) -> list[str]:
     """Retrieves a unique list of hospital IDs from a list of NHS numbers.
 
     This function uses a `pat2vec_obj` to perform a cohort search against an
@@ -137,7 +138,7 @@ def get_search_client_idcode_list_from_nhs_number_list(
 def ensure_index(
     connection: Any,
     table_name: str,
-    schema_name: Optional[str],
+    schema_name: str | None,
     column_name: str,
     engine_name: str,
 ) -> None:
@@ -762,9 +763,9 @@ def get_df_from_db(
     config_obj: Any,
     schema: str,
     table: str,
-    patient_ids: Optional[List[str]] = None,
+    patient_ids: list[str] | None = None,
     patient_id_column: str = "client_idcode",
-    columns: Optional[List[str]] = None,
+    columns: list[str] | None = None,
 ) -> pd.DataFrame:
     """
     Generic helper to retrieve a DataFrame from the database backend.
@@ -878,10 +879,10 @@ def get_df_from_db_with_temporal_filter(
     config_obj: Any,
     schema: str,
     table: str,
-    patient_ids: Optional[List[str]] = None,
+    patient_ids: list[str] | None = None,
     time_column: str = "updatetime",
-    start_date: Optional[Any] = None,
-    end_date: Optional[Any] = None,
+    start_date: Any | None = None,
+    end_date: Any | None = None,
     patient_id_column: str = "client_idcode",
 ) -> pd.DataFrame:
     """Retrieves DataFrame from database with optional temporal filtering.

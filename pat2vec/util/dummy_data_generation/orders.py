@@ -5,7 +5,6 @@ This module contains functions for generating synthetic diagnostic and drug orde
 
 import random
 from datetime import datetime, timedelta
-from typing import List, Optional
 
 import pandas as pd
 from faker import Faker
@@ -432,8 +431,8 @@ def _get_weighted_diagnostic_test(random_instance: random.Random) -> str:
 
 def _calculate_sequential_order_dates(
     base_date: datetime,
-    time_offsets: List[int],
-) -> List[datetime]:
+    time_offsets: list[int],
+) -> list[datetime]:
     """Calculate sequential dates with realistic clinical timing patterns.
 
     Args:
@@ -481,7 +480,7 @@ def _determine_patient_age_distribution(
     Returns:
         Patient age (0-100)
     """
-    ages = list(range(0, 101))
+    ages = list(range(101))
 
     weights = []
     for age in ages:
@@ -525,14 +524,14 @@ def _determine_admission_type(
 
 def generate_diagnostic_orders_data(
     num_rows: int,
-    entered_list: List[str],
+    entered_list: list[str],
     global_start_year: int,
     global_start_month: int,
     global_end_year: int,
     global_end_month: int,
     global_start_day: int = 1,
     global_end_day: int = 31,
-    fields_list: List[str] = [
+    fields_list: list[str] = [
         "order_guid",
         "client_idcode",
         "order_name",
@@ -677,14 +676,14 @@ def generate_diagnostic_orders_data(
 
 def generate_drug_orders_data(
     num_rows: int,
-    entered_list: List[str],
+    entered_list: list[str],
     global_start_year: int,
     global_start_month: int,
     global_end_year: int,
     global_end_month: int,
     global_start_day: int = 1,
     global_end_day: int = 31,
-    fields_list: List[str] = [
+    fields_list: list[str] = [
         "order_guid",
         "client_idcode",
         "order_name",
@@ -699,7 +698,7 @@ def generate_drug_orders_data(
         "order_performeddtm",
         "order_typecode",
     ],
-    base_date: Optional[datetime] = None,
+    base_date: datetime | None = None,
 ) -> pd.DataFrame:
     """Generates dummy data for the 'drug_orders' index.
 

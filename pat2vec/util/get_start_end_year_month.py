@@ -1,14 +1,13 @@
 import datetime
-from typing import Any, Tuple, Union, List
+from typing import Any
+
 import pandas as pd
 
 
 def get_start_end_year_month(
-    target_date_range: Union[
-        Tuple[int, int, int], Tuple[Any, Any], Tuple[Any], List[Any]
-    ],
+    target_date_range: tuple[int, int, int] | tuple[Any, Any] | tuple[Any] | list[Any],
     config_obj: Any = None,
-) -> Tuple[int, int, int, int, int, int]:
+) -> tuple[int, int, int, int, int, int]:
     """Calculates start and end date components based on a time interval.
 
     This function extracts date components from various input formats for target_date_range.

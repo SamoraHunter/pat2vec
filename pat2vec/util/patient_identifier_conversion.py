@@ -1,5 +1,4 @@
 import re
-from typing import List, Optional, Tuple
 
 import pandas as pd
 
@@ -26,7 +25,7 @@ def _get_column_case_insensitive(df: pd.DataFrame, column_name: str) -> pd.Serie
     )
 
 
-def extract_hospital_numbers(hospital_number_str: str) -> List[str]:
+def extract_hospital_numbers(hospital_number_str: str) -> list[str]:
     """Extract hospital numbers from a comma-separated string.
 
     Args:
@@ -49,7 +48,7 @@ def extract_hospital_numbers(hospital_number_str: str) -> List[str]:
     return numbers
 
 
-def extract_nhs_number(nhs_number_str: str) -> Optional[str]:
+def extract_nhs_number(nhs_number_str: str) -> str | None:
     """Extract NHS number from a formatted string.
 
     Args:
@@ -72,7 +71,7 @@ def extract_nhs_number(nhs_number_str: str) -> Optional[str]:
     return None
 
 
-def extract_mrn(mrn_str: str) -> Optional[str]:
+def extract_mrn(mrn_str: str) -> str | None:
     """Extract MRN (Medical Record Number) from a formatted string.
 
     Args:
@@ -95,8 +94,8 @@ def extract_mrn(mrn_str: str) -> Optional[str]:
 
 
 def convert_hospital_number_to_durable_key(
-    hospital_numbers: List[str], pat2vec_obj
-) -> Tuple[Optional[str], List[str]]:
+    hospital_numbers: list[str], pat2vec_obj
+) -> tuple[str | None, list[str]]:
     """Convert a list of hospital numbers to a single durable key.
 
     Args:
@@ -137,17 +136,15 @@ def convert_hospital_number_to_durable_key(
 
     durable_keys = df["patient_DurableKey"].dropna().unique()
 
-    if len(durable_keys) == 1:
-        return durable_keys[0], missing_hn
-    elif len(durable_keys) > 1:
+    if len(durable_keys) == 1 or len(durable_keys) > 1:
         return durable_keys[0], missing_hn
 
     return None, missing_hn
 
 
 def convert_hospital_numbers_to_durable_keys(
-    hospital_numbers: List[str], pat2vec_obj
-) -> Tuple[List[str], List[str]]:
+    hospital_numbers: list[str], pat2vec_obj
+) -> tuple[list[str], list[str]]:
     """Convert a list of hospital numbers to their corresponding durable keys.
 
     Args:
@@ -192,7 +189,7 @@ def convert_hospital_numbers_to_durable_keys(
 
 def convert_durable_key_to_hospital_numbers(
     durable_key: str, pat2vec_obj
-) -> Tuple[List[str], List[str]]:
+) -> tuple[list[str], list[str]]:
     """Convert a durable key to its corresponding hospital numbers.
 
     Args:
@@ -235,8 +232,8 @@ def convert_durable_key_to_hospital_numbers(
 
 
 def convert_nhs_number_to_durable_key(
-    nhs_numbers: List[str], pat2vec_obj
-) -> Tuple[Optional[str], List[str]]:
+    nhs_numbers: list[str], pat2vec_obj
+) -> tuple[str | None, list[str]]:
     """Convert a list of NHS numbers to a single durable key.
 
     Args:
@@ -277,9 +274,7 @@ def convert_nhs_number_to_durable_key(
 
     durable_keys = df["patient_DurableKey"].dropna().unique()
 
-    if len(durable_keys) == 1:
-        return durable_keys[0], missing_nhs
-    elif len(durable_keys) > 1:
+    if len(durable_keys) == 1 or len(durable_keys) > 1:
         return durable_keys[0], missing_nhs
 
     return None, missing_nhs
@@ -287,7 +282,7 @@ def convert_nhs_number_to_durable_key(
 
 def convert_durable_key_to_nhs_numbers(
     durable_key: str, pat2vec_obj
-) -> Tuple[List[str], List[str]]:
+) -> tuple[list[str], list[str]]:
     """Convert a durable key to its corresponding NHS numbers.
 
     Args:
@@ -329,8 +324,8 @@ def convert_durable_key_to_nhs_numbers(
 
 
 def convert_mrn_to_durable_key(
-    mrns: List[str], pat2vec_obj
-) -> Tuple[Optional[str], List[str]]:
+    mrns: list[str], pat2vec_obj
+) -> tuple[str | None, list[str]]:
     """Convert a list of MRNs to a single durable key.
 
     Args:
@@ -368,9 +363,7 @@ def convert_mrn_to_durable_key(
 
     durable_keys = df["patient_DurableKey"].dropna().unique()
 
-    if len(durable_keys) == 1:
-        return durable_keys[0], missing_mrn
-    elif len(durable_keys) > 1:
+    if len(durable_keys) == 1 or len(durable_keys) > 1:
         return durable_keys[0], missing_mrn
 
     return None, missing_mrn
@@ -378,7 +371,7 @@ def convert_mrn_to_durable_key(
 
 def convert_durable_key_to_mrn(
     durable_key: str, pat2vec_obj
-) -> Tuple[List[str], List[str]]:
+) -> tuple[list[str], list[str]]:
     """Convert a durable key to its corresponding MRNs.
 
     Args:
@@ -420,8 +413,8 @@ def convert_durable_key_to_mrn(
 
 
 def convert_durable_keys_to_hospital_numbers(
-    durable_keys: List[str], pat2vec_obj
-) -> Tuple[List[str], List[str]]:
+    durable_keys: list[str], pat2vec_obj
+) -> tuple[list[str], list[str]]:
     """Convert a list of durable keys to their corresponding hospital numbers.
 
     Args:
@@ -449,8 +442,8 @@ def convert_durable_keys_to_hospital_numbers(
 
 
 def convert_nhs_numbers_to_durable_keys(
-    nhs_numbers: List[str], pat2vec_obj
-) -> Tuple[List[str], List[str]]:
+    nhs_numbers: list[str], pat2vec_obj
+) -> tuple[list[str], list[str]]:
     """Convert a list of NHS numbers to their corresponding durable keys.
 
     Args:
@@ -494,8 +487,8 @@ def convert_nhs_numbers_to_durable_keys(
 
 
 def convert_durable_keys_to_nhs_numbers(
-    durable_keys: List[str], pat2vec_obj
-) -> Tuple[List[str], List[str]]:
+    durable_keys: list[str], pat2vec_obj
+) -> tuple[list[str], list[str]]:
     """Convert a list of durable keys to their corresponding NHS numbers.
 
     Args:
@@ -523,8 +516,8 @@ def convert_durable_keys_to_nhs_numbers(
 
 
 def convert_mrns_to_durable_keys(
-    mrns: List[str], pat2vec_obj
-) -> Tuple[List[str], List[str]]:
+    mrns: list[str], pat2vec_obj
+) -> tuple[list[str], list[str]]:
     """Convert a list of MRNs to their corresponding durable keys.
 
     Args:
@@ -565,8 +558,8 @@ def convert_mrns_to_durable_keys(
 
 
 def convert_durable_keys_to_mrns(
-    durable_keys: List[str], pat2vec_obj
-) -> Tuple[List[str], List[str]]:
+    durable_keys: list[str], pat2vec_obj
+) -> tuple[list[str], list[str]]:
     """Convert a list of durable keys to their corresponding MRNs.
 
     Args:
@@ -591,7 +584,7 @@ def convert_durable_keys_to_mrns(
     return list(dict.fromkeys(all_mrns)), missing_dk
 
 
-def extract_source_id(source_id_str: str) -> Optional[str]:
+def extract_source_id(source_id_str: str) -> str | None:
     """Extract Source ID from a formatted string.
 
     Args:
@@ -613,8 +606,8 @@ def extract_source_id(source_id_str: str) -> Optional[str]:
 
 
 def convert_source_id_to_durable_key(
-    source_ids: List[str], pat2vec_obj
-) -> Tuple[Optional[str], List[str]]:
+    source_ids: list[str], pat2vec_obj
+) -> tuple[str | None, list[str]]:
     """Convert a list of Source IDs to a single durable key.
 
     Args:
@@ -650,9 +643,7 @@ def convert_source_id_to_durable_key(
 
     durable_keys = df["patient_DurableKey"].dropna().unique()
 
-    if len(durable_keys) == 1:
-        return durable_keys[0], missing_sid
-    elif len(durable_keys) > 1:
+    if len(durable_keys) == 1 or len(durable_keys) > 1:
         return durable_keys[0], missing_sid
 
     return None, missing_sid
@@ -660,7 +651,7 @@ def convert_source_id_to_durable_key(
 
 def convert_durable_key_to_source_id(
     durable_key: str, pat2vec_obj
-) -> Tuple[List[str], List[str]]:
+) -> tuple[list[str], list[str]]:
     """Convert a durable key to its corresponding Source IDs.
 
     Args:
@@ -702,8 +693,8 @@ def convert_durable_key_to_source_id(
 
 
 def convert_source_ids_to_durable_keys(
-    source_ids: List[str], pat2vec_obj
-) -> Tuple[List[str], List[str]]:
+    source_ids: list[str], pat2vec_obj
+) -> tuple[list[str], list[str]]:
     """Convert a list of Source IDs to their corresponding durable keys.
 
     Args:
@@ -743,8 +734,8 @@ def convert_source_ids_to_durable_keys(
 
 
 def convert_durable_keys_to_source_ids(
-    durable_keys: List[str], pat2vec_obj
-) -> Tuple[List[str], List[str]]:
+    durable_keys: list[str], pat2vec_obj
+) -> tuple[list[str], list[str]]:
     """Convert a list of durable keys to their corresponding Source IDs.
 
     Args:
@@ -772,24 +763,24 @@ def convert_durable_keys_to_source_ids(
 
 
 __all__ = [
-    "extract_hospital_numbers",
-    "extract_nhs_number",
-    "extract_mrn",
-    "extract_source_id",
-    "convert_hospital_number_to_durable_key",
     "convert_durable_key_to_hospital_numbers",
-    "convert_nhs_number_to_durable_key",
-    "convert_durable_key_to_nhs_numbers",
-    "convert_mrn_to_durable_key",
     "convert_durable_key_to_mrn",
-    "convert_source_id_to_durable_key",
+    "convert_durable_key_to_nhs_numbers",
     "convert_durable_key_to_source_id",
-    "convert_hospital_numbers_to_durable_keys",
     "convert_durable_keys_to_hospital_numbers",
-    "convert_nhs_numbers_to_durable_keys",
-    "convert_durable_keys_to_nhs_numbers",
-    "convert_mrns_to_durable_keys",
     "convert_durable_keys_to_mrns",
-    "convert_source_ids_to_durable_keys",
+    "convert_durable_keys_to_nhs_numbers",
     "convert_durable_keys_to_source_ids",
+    "convert_hospital_number_to_durable_key",
+    "convert_hospital_numbers_to_durable_keys",
+    "convert_mrn_to_durable_key",
+    "convert_mrns_to_durable_keys",
+    "convert_nhs_number_to_durable_key",
+    "convert_nhs_numbers_to_durable_keys",
+    "convert_source_id_to_durable_key",
+    "convert_source_ids_to_durable_keys",
+    "extract_hospital_numbers",
+    "extract_mrn",
+    "extract_nhs_number",
+    "extract_source_id",
 ]

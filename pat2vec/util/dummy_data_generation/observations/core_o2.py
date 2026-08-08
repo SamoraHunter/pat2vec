@@ -1,10 +1,11 @@
-from datetime import datetime
 import calendar
-from pat2vec.pat2vec_get_methods.get_method_core02 import CORE_O2_FIELDS
 import random
-from typing import List, Optional
-import pandas as pd
+from datetime import datetime
+
 import numpy as np
+import pandas as pd
+
+from pat2vec.pat2vec_get_methods.get_method_core02 import CORE_O2_FIELDS
 
 random_state = 42
 np.random.seed(random_state)
@@ -93,14 +94,14 @@ def generate_clinically_coherent_spO2(
 
 def generate_core_o2_data(
     num_rows: int,
-    entered_list: List[str],
+    entered_list: list[str],
     global_start_year: int,
     global_start_month: int,
     global_end_year: int,
     global_end_month: int,
     global_start_day: int = 1,
     global_end_day: int = 31,
-    fields_list: Optional[List[str]] = CORE_O2_FIELDS,
+    fields_list: list[str] | None = CORE_O2_FIELDS,
 ) -> pd.DataFrame:
     """Generates dummy data for CORE_SpO2 (oxygen saturation) observations with clinically coherent patterns.
 

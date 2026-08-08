@@ -1,8 +1,9 @@
-import os
 import copy
+import os
 import pickle
 import random
-from typing import Any, Dict, List, Optional
+from typing import Any
+
 import numpy as np
 
 # from pat2vec.util.get_dummy_data_cohort_searcher import random_state
@@ -14,10 +15,10 @@ np.random.seed(random_state)
 random.seed(random_state)
 
 # Store documents with their annotations for realistic simulation
-_document_store: Dict[str, List[Dict[str, Any]]] = {}
+_document_store: dict[str, list[dict[str, Any]]] = {}
 
 
-def random_sample(pickled_dict: Dict[str, Any], sample_size: int) -> Dict[str, Any]:
+def random_sample(pickled_dict: dict[str, Any], sample_size: int) -> dict[str, Any]:
     """Selects a random sample of entities from a pickled dictionary.
 
     Args:
@@ -37,9 +38,9 @@ def random_sample(pickled_dict: Dict[str, Any], sample_size: int) -> Dict[str, A
 
 def get_or_create_annotations_for_text(
     text: str,
-    sample_annotations_data: Dict[str, Any],
-    document_id: Optional[int] = None,
-) -> Dict[str, Any]:
+    sample_annotations_data: dict[str, Any],
+    document_id: int | None = None,
+) -> dict[str, Any]:
     """Create annotations with correct positions within the given text.
 
     This function simulates realistic MedCAT annotation by:
@@ -307,9 +308,9 @@ def get_or_create_annotations_for_text(
 
 
 def dummy_medcat_annotation_generator(
-    text: Optional[str] = None,
-    document_id: Optional[int] = None,
-) -> Dict[str, Any]:
+    text: str | None = None,
+    document_id: int | None = None,
+) -> dict[str, Any]:
     """Loads a sample MedCAT annotation dictionary and returns annotations.
 
     This function reads a predefined pickle file containing sample annotations.
@@ -345,7 +346,7 @@ def dummy_medcat_annotation_generator(
     return dummy_annotations
 
 
-class dummy_CAT(object):
+class dummy_CAT:
     """A dummy MedCAT class for testing purposes.
 
     This class mimics the behavior of the MedCAT `CAT` object by providing
@@ -360,20 +361,20 @@ class dummy_CAT(object):
             super().__init__(*args, **kwargs)
             self.cuis = set()
 
-    class DummyLinkingConfig(object):
+    class DummyLinkingConfig:
         """Dummy linking configuration."""
 
         def __init__(self):
             self.filters = dummy_CAT.DummyFilters()
             self.filter_before_disamb = False
 
-    class DummyConfig(object):
+    class DummyConfig:
         """Dummy config object."""
 
         def __init__(self):
             self.linking = dummy_CAT.DummyLinkingConfig()
 
-    class DummyCDB(object):
+    class DummyCDB:
         """Dummy CDB (Concept Database) object."""
 
         def __init__(self):
@@ -397,7 +398,7 @@ class dummy_CAT(object):
             self.config.linking.filter_before_disamb = True
             self.cdb.config.linking.filters["cuis"] = {"C9999999"}
 
-    def get_entities(self, text: str) -> Dict[str, Any]:
+    def get_entities(self, text: str) -> dict[str, Any]:
         """Returns MedCAT annotations linked to the provided text.
 
         Args:
@@ -412,8 +413,8 @@ class dummy_CAT(object):
         return dummy_medcat_annotation_generator(text=text, document_id=doc_id)
 
     def get_entities_multi_texts(
-        self, texts: List[str], n_process: int = 1, batch_size: int = 100, **kwargs
-    ) -> List[Dict[str, Any]]:
+        self, texts: list[str], n_process: int = 1, batch_size: int = 100, **kwargs
+    ) -> list[dict[str, Any]]:
         """Returns a list of annotations linked to each text.
 
         For each text in the input list, it generates annotations with accurate
@@ -431,7 +432,7 @@ class dummy_CAT(object):
         """
         result = []
 
-        for i in range(0, len(texts)):
+        for i in range(len(texts)):
             doc_id = hash(texts[i]) % 10000 if texts[i] else None
             result.append(
                 dummy_medcat_annotation_generator(text=texts[i], document_id=doc_id)

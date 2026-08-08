@@ -1,10 +1,12 @@
-import warnings
-from typing import Any, List, Optional
-import os
 import logging
+import os
+import shutil
+import warnings
+from typing import Any
+
 import pandas as pd
 from tqdm import tqdm
-import shutil
+
 from pat2vec.util.post_processing_annotations import (
     remove_file_from_paths,
     retrieve_pat_annots_mct_epr,
@@ -40,7 +42,7 @@ def retrieve_pat_annotations(
 
 
 def copy_project_folders_with_substring_match(
-    pat2vec_obj: Any, substrings_to_match: Optional[List[str]] = None
+    pat2vec_obj: Any, substrings_to_match: list[str] | None = None
 ) -> str:
     """Copies project subfolders that match given substrings to a new versioned directory.
 

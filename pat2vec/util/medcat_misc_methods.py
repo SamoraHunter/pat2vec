@@ -1,16 +1,15 @@
 import json
-import pandas as pd
 import logging
-import numpy as np
-from tqdm import tqdm
-from typing import Optional
-import textwrap
-from IPython.display import clear_output
-from typing import List, Union
-from ast import literal_eval
-import matplotlib.pyplot as plt
-import seaborn as sns
 import os
+import textwrap
+from ast import literal_eval
+
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import seaborn as sns
+from IPython.display import clear_output
+from tqdm import tqdm
 
 logger = logging.getLogger(__name__)
 
@@ -109,7 +108,7 @@ def extract_labels_from_medcat_annotation_export(
     df: pd.DataFrame,
     human_labels: pd.DataFrame,
     window: int = 300,
-    output_file: Union[str, None] = None,
+    output_file: str | None = None,
 ) -> pd.DataFrame:
     """
     Extracts and validates labels from a MedCAT annotation export.
@@ -132,7 +131,7 @@ def extract_labels_from_medcat_annotation_export(
 
     human_labels["extracted_label"] = np.nan
 
-    for j in tqdm(range(0, len(df))):
+    for j in tqdm(range(len(df))):
         main_text = df.iloc[j]["text"]
         main_value = df.iloc[j]["value"]
         mapped_annot_doc_entity = main_text
@@ -143,7 +142,7 @@ def extract_labels_from_medcat_annotation_export(
         virtual_end = min(document_len, end + window)
         main_text_sample = mapped_annot_doc_entity[virtual_start:virtual_end]
 
-        for i in range(0, len(human_labels)):
+        for i in range(len(human_labels)):
             label_text = human_labels.iloc[i]["text_sample"]
             label_value = human_labels.iloc[i]["source_value"]
 
@@ -168,7 +167,7 @@ def extract_labels_from_medcat_annotation_export(
     return human_labels
 
 
-def recreate_json(df: pd.DataFrame, output_file: Optional[str] = None) -> str:
+def recreate_json(df: pd.DataFrame, output_file: str | None = None) -> str:
     """
     Converts an exported MedCAT trainer DataFrame back to a training JSON.
 
@@ -267,7 +266,7 @@ def manually_label_annotation_df(
     file_path: str = "human_labels.csv",
     confirmatory: bool = False,
     verbose: bool = False,
-    filter_codes_list: List[List[str]] = [],
+    filter_codes_list: list[list[str]] = [],
 ) -> None:
     """
     Interactively labels an annotation DataFrame.

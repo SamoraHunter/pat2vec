@@ -1,20 +1,14 @@
-import time
 import logging
+import time
 import traceback
+
 import pandas as pd
+
 from pat2vec.pat2vec_get_methods import (
     get_current_pat_epic_imaging_reports_annotations,
     get_current_pat_epic_medical_history_annotations,
 )
 from pat2vec.pat2vec_get_methods.get_method_appointments import get_appointments
-from pat2vec.pat2vec_get_methods.get_method_report_annotations import (
-    get_current_pat_report_annotations,
-)
-from pat2vec.pat2vec_get_methods.get_method_textual_obs_annotations import (
-    get_current_pat_textual_obs_annotations,
-)
-from pat2vec.util.methods_get import exist_check
-
 from pat2vec.pat2vec_get_methods.get_method_bed import get_bed
 from pat2vec.pat2vec_get_methods.get_method_bloods import get_current_pat_bloods
 from pat2vec.pat2vec_get_methods.get_method_bmi import get_bmi_features
@@ -28,19 +22,9 @@ from pat2vec.pat2vec_get_methods.get_method_diagnostics import (
     get_current_pat_diagnostics,
 )
 from pat2vec.pat2vec_get_methods.get_method_drugs import get_current_pat_drugs
-from pat2vec.pat2vec_get_methods.get_method_hosp_site import get_hosp_site
-from pat2vec.pat2vec_get_methods.get_method_news import get_news
-from pat2vec.pat2vec_get_methods.get_method_pat_annotations import (
-    get_current_pat_annotations,
+from pat2vec.pat2vec_get_methods.get_method_epic_clinical_notes_annotations import (
+    get_current_pat_epic_clinical_notes_annotations,
 )
-from pat2vec.pat2vec_get_methods.get_method_epic_encounters import get_epic_encounters
-
-# Note: epic_clinical_notes (via epic_clinical_notes_annotations option with get_current_pat_epic_clinical_notes_annotations), epic_medical_history, epic_orders are now only available as annotations
-from pat2vec.pat2vec_get_methods.get_method_epic_orders_annotations import (
-    get_current_pat_epic_orders_annotations,
-)
-from pat2vec.pat2vec_get_methods.get_method_epic_lab_results import get_epic_lab_results
-from pat2vec.pat2vec_get_methods.get_method_epic_patients import get_epic_patients
 
 # epic_imaging_reports is now only available via annotations - commented out
 # from pat2vec.pat2vec_get_methods.get_method_epic_imaging_reports import (
@@ -49,17 +33,34 @@ from pat2vec.pat2vec_get_methods.get_method_epic_patients import get_epic_patien
 from pat2vec.pat2vec_get_methods.get_method_epic_clinical_notes_appointments import (
     get_epic_clinical_notes_appointments,
 )
-from pat2vec.pat2vec_get_methods.get_method_epic_clinical_notes_annotations import (
-    get_current_pat_epic_clinical_notes_annotations,
-)
 from pat2vec.pat2vec_get_methods.get_method_epic_clinical_notes_appointments_annotations import (
     get_current_pat_epic_clinical_notes_appointments_annotations,
 )
+from pat2vec.pat2vec_get_methods.get_method_epic_encounters import get_epic_encounters
+from pat2vec.pat2vec_get_methods.get_method_epic_lab_results import get_epic_lab_results
+
+# Note: epic_clinical_notes (via epic_clinical_notes_annotations option with get_current_pat_epic_clinical_notes_annotations), epic_medical_history, epic_orders are now only available as annotations
+from pat2vec.pat2vec_get_methods.get_method_epic_orders_annotations import (
+    get_current_pat_epic_orders_annotations,
+)
+from pat2vec.pat2vec_get_methods.get_method_epic_patients import get_epic_patients
+from pat2vec.pat2vec_get_methods.get_method_hosp_site import get_hosp_site
+from pat2vec.pat2vec_get_methods.get_method_news import get_news
+from pat2vec.pat2vec_get_methods.get_method_pat_annotations import (
+    get_current_pat_annotations,
+)
+from pat2vec.pat2vec_get_methods.get_method_report_annotations import (
+    get_current_pat_report_annotations,
+)
 from pat2vec.pat2vec_get_methods.get_method_smoking import get_smoking
+from pat2vec.pat2vec_get_methods.get_method_textual_obs_annotations import (
+    get_current_pat_textual_obs_annotations,
+)
 from pat2vec.pat2vec_get_methods.get_method_vte_status import get_vte_status
 from pat2vec.util.methods_get import (
-    enum_target_date_vector,
     enum_exact_target_date_vector,
+    enum_target_date_vector,
+    exist_check,
     list_dir_wrapper,
     update_pbar,
     write_remote,
@@ -587,7 +588,6 @@ def main_batch(
                         t,
                         config_obj,
                     )
-                    pass
 
                 if config_obj.verbosity >= 9:
                     logging.debug("Reached end main batch")
@@ -616,4 +616,3 @@ def main_batch(
             else:
                 with skipped_counter.get_lock():
                     skipped_counter.value += 1
-            pass

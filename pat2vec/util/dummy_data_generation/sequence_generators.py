@@ -9,11 +9,10 @@ import os
 import random
 import string
 from datetime import datetime, timedelta
-from typing import cast, Optional
+from typing import cast
 
 import pandas as pd
 from faker import Faker
-
 from transformers import pipeline
 
 random_state = 42
@@ -123,7 +122,7 @@ def generate_patient_timeline_faker(client_idcode: str) -> str:
 def get_patient_timeline_dummy(
     client_idcode: str,
     output_path: str = os.path.join("test_files", "dummy_timeline.csv"),
-) -> Optional[str]:
+) -> str | None:
     """Retrieves a random patient timeline from a pre-generated CSV file.
 
     Args:

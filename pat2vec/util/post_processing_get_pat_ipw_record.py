@@ -1,7 +1,8 @@
+import logging
 import os
 from datetime import datetime
-from typing import Any, Dict, List, Optional
-import logging
+from typing import Any
+
 import pandas as pd
 
 from pat2vec.util.helper_functions import (
@@ -19,13 +20,13 @@ def _get_source_record(
     pat_id: str,
     base_path: str,
     time_column: str,
-    necessary_columns: List[str],
-    annot_filter_arguments: Optional[Dict[str, Any]],
-    filter_codes: Optional[List[Any]],
+    necessary_columns: list[str],
+    annot_filter_arguments: dict[str, Any] | None,
+    filter_codes: list[Any] | None,
     mode: str,
     verbose: int,
-    config_obj: Optional[Any] = None,
-    table_name: Optional[str] = None,
+    config_obj: Any | None = None,
+    table_name: str | None = None,
 ) -> pd.DataFrame:
     """Reads, cleans, and filters records from a single data source file.
 
@@ -200,9 +201,9 @@ def _get_source_record(
 
 def get_pat_ipw_record(
     current_pat_idcode: str,
-    config_obj: Optional[Any] = None,
-    annot_filter_arguments: Optional[Dict[str, Any]] = None,
-    filter_codes: Optional[List[Any]] = None,
+    config_obj: Any | None = None,
+    annot_filter_arguments: dict[str, Any] | None = None,
+    filter_codes: list[Any] | None = None,
     mode: str = "earliest",
     verbose: int = 0,
     include_mct: bool = True,

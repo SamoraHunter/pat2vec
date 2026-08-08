@@ -1,8 +1,7 @@
-import pandas as pd
-
-
 from datetime import datetime, timedelta
-from typing import Any, Optional
+from typing import Any
+
+import pandas as pd
 
 
 def nearest(
@@ -12,7 +11,7 @@ def nearest(
     value_col: str,
     max_time_before: timedelta = timedelta(weeks=6),
     max_time_after: timedelta = timedelta(weeks=50),
-) -> Optional[Any]:
+) -> Any | None:
     """Finds the nearest date and its corresponding value within a time range.
 
     This function searches a DataFrame for the row with a date closest to a

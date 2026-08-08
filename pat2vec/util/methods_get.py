@@ -1,3 +1,5 @@
+# Use the modern standard library for timezones
+import logging
 import os
 import pickle
 import subprocess
@@ -5,18 +7,14 @@ from datetime import datetime, timedelta
 from io import StringIO
 from os.path import exists
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any
 
 import numpy as np
+import pandas as pd
 import paramiko
 from colorama import Fore, Style
 from dateutil.parser import parse
 from tqdm import tqdm
-
-import pandas as pd
-
-# Use the modern standard library for timezones
-import logging
 
 from pat2vec.util.generate_date_list import generate_date_list
 
@@ -25,7 +23,7 @@ logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 
 
-def list_dir_wrapper(path: str, config_obj: Any = None) -> List[str]:
+def list_dir_wrapper(path: str, config_obj: Any = None) -> list[str]:
     """Lists the contents of a directory, either locally or remotely via SFTP.
 
     This function acts as a wrapper around `os.listdir` and `sftp.listdir`
@@ -64,7 +62,7 @@ def list_dir_wrapper(path: str, config_obj: Any = None) -> List[str]:
 
         try:
             res = sftp_obj.listdir(path)
-        except (FileNotFoundError, IOError):
+        except (OSError, FileNotFoundError):
             res = []
 
         if not share_sftp:
@@ -80,7 +78,7 @@ def list_dir_wrapper(path: str, config_obj: Any = None) -> List[str]:
         return []
 
 
-def convert_timestamp_to_tuple(timestamp: str) -> Tuple[int, int]:
+def convert_timestamp_to_tuple(timestamp: str) -> tuple[int, int]:
     """Converts a timestamp string to a (year, month) tuple.
 
     Args:
@@ -96,7 +94,7 @@ def convert_timestamp_to_tuple(timestamp: str) -> Tuple[int, int]:
 
 
 def enum_target_date_vector(
-    target_date_range: Tuple[int, int, int],
+    target_date_range: tuple[int, int, int],
     current_pat_client_id_code: str,
     config_obj: Any,
 ) -> pd.DataFrame:
@@ -120,7 +118,7 @@ def enum_target_date_vector(
 
 
 def enum_exact_target_date_vector(
-    target_date_range: Tuple[int, int, int],
+    target_date_range: tuple[int, int, int],
     current_pat_client_id_code: str,
     config_obj: Any,
 ) -> pd.DataFrame:
@@ -204,7 +202,7 @@ def update_pbar(
     stage_str: str,
     t: tqdm,
     config_obj: Any,
-    skipped_counter: Optional[Union[int, Any]] = None,
+    skipped_counter: int | Any | None = None,
     **n_docs_to_annotate: Any,
 ) -> None:
     """Updates a tqdm progress bar with formatted information about the current processing state.
@@ -276,7 +274,7 @@ def update_pbar(
     t.refresh()
 
 
-def get_free_gpu() -> Tuple[int, str]:
+def get_free_gpu() -> tuple[int, str]:
     """Identifies and returns the GPU with the most available free memory.
 
     This function executes the `nvidia-smi` command-line utility to query the
@@ -300,7 +298,7 @@ def get_free_gpu() -> Tuple[int, str]:
         names=["memory.used", "memory.free"],
         skiprows=1,
     )
-    logger.info("GPU usage:\n{}".format(gpu_df))
+    logger.info(f"GPU usage:\n{gpu_df}")
 
     gpu_df["memory.free"] = gpu_df["memory.free"].map(lambda x: x.rstrip(" [MiB]"))
     idx = gpu_df["memory.free"].astype(int).idxmax()  # type: ignore
@@ -326,7 +324,7 @@ def convert_date(date_string: str) -> datetime:
 
 
 def write_csv_wrapper(
-    path: str, csv_file_data: Optional[pd.DataFrame] = None, config_obj: Any = None
+    path: str, csv_file_data: pd.DataFrame | None = None, config_obj: Any = None
 ) -> None:
     """Writes CSV data to a file either locally or remotely.
 
@@ -615,8 +613,8 @@ def exist_check(path: str, config_obj: Any = None) -> bool:
 
 
 def filter_stripped_list(
-    stripped_list: List[str], config_obj: Any = None
-) -> Tuple[List[str], List[str]]:
+    stripped_list: list[str], config_obj: Any = None
+) -> tuple[list[str], list[str]]:
     """Filters a list of patients to exclude those already processed.
 
     Checks if a patient's output directory contains at least `n_pat_lines`
@@ -665,7 +663,7 @@ def filter_stripped_list(
     return stripped_list, stripped_list_start
 
 
-def create_folders(all_patient_list: List[str], config_obj: Any = None) -> None:
+def create_folders(all_patient_list: list[str], config_obj: Any = None) -> None:
     """Creates folders for each patient in the specified paths.
 
     If `storage_backend` is set to 'database' in `config_obj`, this function returns without creating folders.
@@ -723,7 +721,7 @@ def create_folders(all_patient_list: List[str], config_obj: Any = None) -> None:
                 folder_path = (path + "/" + str(patient_id)).replace("//", "/")
                 try:
                     sftp_obj.stat(folder_path)
-                except (FileNotFoundError, IOError):
+                except (OSError, FileNotFoundError):
                     sftp_obj.mkdir(folder_path)
 
         if not share_sftp:
@@ -802,7 +800,7 @@ def create_folders_for_pat(patient_id: str, config_obj: Any = None) -> None:
             folder_path = (path + "/" + str(patient_id)).replace("//", "/")
             try:
                 sftp_obj.stat(folder_path)
-            except (FileNotFoundError, IOError):
+            except (OSError, FileNotFoundError):
                 sftp_obj.mkdir(folder_path)
 
         if not share_sftp:
@@ -821,7 +819,7 @@ def add_offset_column(
     dataframe: pd.DataFrame,
     start_column_name: str,
     offset_column_name: str,
-    time_offset: Union[timedelta, Any],
+    time_offset: timedelta | Any,
     verbose: int = 1,
 ) -> pd.DataFrame:
     """Adds a new column with a time offset from a starting datetime column.
@@ -1024,7 +1022,7 @@ def build_patient_dict(
     patient_id_column: str,
     start_column: str,
     end_column: str,
-) -> Dict[str, Tuple[datetime, datetime]]:
+) -> dict[str, tuple[datetime, datetime]]:
     """Builds a dictionary mapping patient IDs to (start, end) datetime tuples.
 
     Args:

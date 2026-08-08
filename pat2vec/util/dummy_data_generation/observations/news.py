@@ -1,7 +1,6 @@
 """NEWS observation generator."""
 
 import random
-from typing import List
 
 import numpy as np
 import pandas as pd
@@ -154,14 +153,14 @@ def generate_clinically_coherent_value(
 
 def generate_news_data(
     num_rows: int,
-    entered_list: List[str],
+    entered_list: list[str],
     global_start_year: int,
     global_start_month: int,
     global_end_year: int = 2023,
     global_end_month: int = 12,
     global_start_day: int = 1,
     global_end_day: int = 31,
-    fields_list: List[str] = [
+    fields_list: list[str] = [
         "observation_guid",
         "client_idcode",
         "obscatalogmasteritem_displayname",

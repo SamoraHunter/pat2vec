@@ -1,14 +1,13 @@
+import logging
 import os
-from typing import Dict, List
 
 from pptx import Presentation
 from pptx.util import Inches
-import logging
 
 logger = logging.getLogger(__name__)
 
 
-def group_images_by_suffix(folder_path: str) -> Dict[str, List[str]]:
+def group_images_by_suffix(folder_path: str) -> dict[str, list[str]]:
     """Groups image files in a folder based on their filename suffix.
 
     For example, 'image_A_client1.png' and 'image_B_client1.png' would both
@@ -36,7 +35,7 @@ def group_images_by_suffix(folder_path: str) -> Dict[str, List[str]]:
 
 
 def create_powerpoint_slides_client_idcode_groups(
-    image_groups: Dict[str, List[str]], output_path: str
+    image_groups: dict[str, list[str]], output_path: str
 ) -> None:
     """Creates a PowerPoint presentation from grouped images.
 
@@ -82,7 +81,7 @@ def create_powerpoint_from_images_group(folder_path: str) -> None:
 
 
 def create_powerpoint_slides(
-    images: List[str], folder_path: str, output_path: str
+    images: list[str], folder_path: str, output_path: str
 ) -> None:
     """Creates a PowerPoint presentation with one image per slide.
 

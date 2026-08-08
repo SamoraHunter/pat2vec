@@ -1,18 +1,16 @@
-import pandas as pd
-
-
 from datetime import datetime
-from typing import Union, Optional
+
+import pandas as pd
 
 
 def filter_dataframe_by_timestamp(
     df: pd.DataFrame,
-    start_year: Optional[Union[int, str]],
-    start_month: Optional[Union[int, str]],
-    end_year: Optional[Union[int, str]],
-    end_month: Optional[Union[int, str]],
-    start_day: Optional[Union[int, str]],
-    end_day: Optional[Union[int, str]],
+    start_year: int | str | None,
+    start_month: int | str | None,
+    end_year: int | str | None,
+    end_month: int | str | None,
+    start_day: int | str | None,
+    end_day: int | str | None,
     timestamp_string: str,
     dropna: bool = False,
 ) -> pd.DataFrame:

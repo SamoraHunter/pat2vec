@@ -1,14 +1,13 @@
 import datetime
-from typing import Union
 
 
 def validate_input_dates(
-    start_year: Union[int, str],
-    start_month: Union[int, str],
-    start_day: Union[int, str],
-    end_year: Union[int, str],
-    end_month: Union[int, str],
-    end_day: Union[int, str],
+    start_year: int | str,
+    start_month: int | str,
+    start_day: int | str,
+    end_year: int | str,
+    end_month: int | str,
+    end_day: int | str,
 ) -> tuple[str, str, str, str, str, str]:
     """
     Validates start and end date components, accepting ints or strings.

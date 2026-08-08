@@ -1,8 +1,9 @@
 import random
-from typing import List
-from faker import Faker
-import pandas as pd
+
 import numpy as np
+import pandas as pd
+from faker import Faker
+
 from .generator_helpers import create_random_date_from_globals
 
 random_state = 42
@@ -12,10 +13,10 @@ faker = Faker()
 
 def generate_covid_observations_data(
     num_rows: int,
-    entered_list: List[str],
+    entered_list: list[str],
     global_start_year: int,
     global_start_month: int,
-    fields_list: List[str] = [],
+    fields_list: list[str] = [],
     global_end_year: int = 2023,
     global_end_month: int = 12,
     global_start_day: int = 1,

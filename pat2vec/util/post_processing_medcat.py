@@ -1,9 +1,8 @@
+import logging
+import random
+
 import pandas as pd
 from rapidfuzz import fuzz
-import random
-from typing import List
-
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -11,7 +10,7 @@ logger = logging.getLogger(__name__)
 def sample_by_terms(
     df: pd.DataFrame,
     column: str,
-    term_groups: List[List[str]],
+    term_groups: list[list[str]],
     min_samples_per_term: int,
     total_sample_size: int,
     threshold: int = 75,

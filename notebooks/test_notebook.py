@@ -1,6 +1,7 @@
+import os
+
 import nbformat
 from nbconvert.preprocessors import ExecutePreprocessor
-import os
 
 
 def test_notebook():

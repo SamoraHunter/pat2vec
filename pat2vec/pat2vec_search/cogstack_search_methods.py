@@ -1,28 +1,27 @@
+import getpass
+import importlib.util
+import logging
 import os
+import random
+import sys
+import warnings
+from collections.abc import Generator
 from os.path import exists
 from pathlib import Path
-import sys
-from tqdm.notebook import tqdm
+from typing import Any, Optional
 
 import eland as ed
 import elasticsearch
 import elasticsearch.helpers
 import pandas as pd
-import importlib.util
-from typing import Any, Dict, Generator, List, Optional, Tuple, Union
-
-import getpass
 import urllib3.exceptions
+from tqdm.notebook import tqdm
 
 from pat2vec.util.get_dummy_data_cohort_searcher import (
     cohort_searcher_with_terms_and_search_dummy,
     generate_uuid_list,
 )
 from pat2vec.util.get_method_index_map import get_index_for_method
-
-import random
-import warnings
-import logging
 
 warnings.filterwarnings("ignore", category=DeprecationWarning)  # Keep this line
 
@@ -90,16 +89,16 @@ password = "your_real_password"
     logging.info("Please update the file with your actual credentials.")
 
 
-class CogStack(object):
+class CogStack:
     logging.debug("CogStack class refreshed.")
 
     def __init__(
         self,
-        hosts: List[str],
-        username: Optional[str] = None,
-        password: Optional[str] = None,
+        hosts: list[str],
+        username: str | None = None,
+        password: str | None = None,
         api: bool = True,
-        api_key: Optional[str] = None,
+        api_key: str | None = None,
     ):
         """Initializes the CogStack client for Elasticsearch interaction.
 
@@ -134,8 +133,8 @@ class CogStack(object):
             )
 
     def _check_api_auth_details(
-        self, api_username: Optional[str] = None, api_password: Optional[str] = None
-    ) -> Tuple[str, str]:
+        self, api_username: str | None = None, api_password: str | None = None
+    ) -> tuple[str, str]:
         """Prompts for API credentials if they are not provided.
 
         Args:
@@ -154,8 +153,8 @@ class CogStack(object):
         return api_username, api_password  # type: ignore
 
     def _check_auth_details(
-        self, username: Optional[str] = None, password: Optional[str] = None
-    ) -> Tuple[str, str]:
+        self, username: str | None = None, password: str | None = None
+    ) -> tuple[str, str]:
         """Prompts for basic authentication credentials if they are not provided.
 
         Args:
@@ -175,11 +174,11 @@ class CogStack(object):
 
     def get_docs_generator(
         self,
-        index: List[str],
-        query: Dict[str, Any],
+        index: list[str],
+        query: dict[str, Any],
         es_gen_size: int = 800,
         request_timeout: int = 300,
-    ) -> Generator[Dict[str, Any], None, None]:
+    ) -> Generator[dict[str, Any], None, None]:
         """Returns a generator that yields documents from an Elasticsearch search.
 
         This method uses `elasticsearch.helpers.scan` to efficiently scroll
@@ -210,9 +209,9 @@ class CogStack(object):
 
     def cogstack2df(
         self,
-        query: Dict[str, Any],
+        query: dict[str, Any],
         index: str,
-        column_headers: Optional[List[str]] = None,
+        column_headers: list[str] | None = None,
         es_gen_size: int = 800,
         request_timeout: int = 300,
     ) -> pd.DataFrame:
@@ -266,7 +265,7 @@ class CogStack(object):
             df = pd.DataFrame(temp_results)
         return df
 
-    def get_index_fields(self, index_name: str) -> List[str]:
+    def get_index_fields(self, index_name: str) -> list[str]:
         """Retrieves a list of all unique field names for a given
         Elasticsearch index or index pattern.
 
@@ -303,7 +302,7 @@ class CogStack(object):
             )
             return []
 
-    def get_available_indices(self) -> List[str]:
+    def get_available_indices(self) -> list[str]:
         """Retrieves a list of all available index names from Elasticsearch.
 
         Uses the cat.indices API to fetch a list of indices.
@@ -343,7 +342,7 @@ class CogStack(object):
 
 def get_all_fields_for_method(
     method_name: str, cs: Optional["CogStack"] = None
-) -> List[str]:
+) -> list[str]:
     """Retrieves all available fields from the Elasticsearch index
     associated with a given `get` method.
 
@@ -373,7 +372,7 @@ def get_all_fields_for_method(
     return cs.get_index_fields(index_name)
 
 
-def list_chunker(entered_list: List[Any]) -> List[List[Any]]:
+def list_chunker(entered_list: list[Any]) -> list[list[Any]]:
     """Splits a list into smaller chunks of up to 10,000 elements.
 
     Useful for processing large lists in batches to avoid overwhelming
@@ -390,7 +389,7 @@ def list_chunker(entered_list: List[Any]) -> List[List[Any]]:
 
 
 def dataframe_generator(
-    list_of_dfs: List[pd.DataFrame],
+    list_of_dfs: list[pd.DataFrame],
 ) -> Generator[pd.DataFrame, None, None]:
     """A generator that yields DataFrames from a list of DataFrames.
 
@@ -410,9 +409,9 @@ def dataframe_generator(
 
 def cohort_searcher_with_terms_and_search(
     index_name: str,
-    fields_list: List[str],
+    fields_list: list[str],
     term_name: str,
-    entered_list: List[str],
+    entered_list: list[str],
     search_string: str,
 ) -> pd.DataFrame:
     """Searches a cohort using a term filter and a query string.
@@ -524,9 +523,9 @@ def set_index_safe_wrapper(df: pd.DataFrame) -> pd.DataFrame:
 
 def cohort_searcher_with_terms_no_search(
     index_name: str,
-    fields_list: List[str],
+    fields_list: list[str],
     term_name: str,
-    entered_list: List[str],
+    entered_list: list[str],
 ) -> pd.DataFrame:
     """Searches a cohort using only a term-level filter.
 
@@ -584,7 +583,7 @@ def cohort_searcher_with_terms_no_search(
 
 
 def cohort_searcher_no_terms(
-    index_name: str, fields_list: List[str], search_string: str
+    index_name: str, fields_list: list[str], search_string: str
 ) -> pd.DataFrame:
     """Searches an index using only a query string.
 
@@ -617,7 +616,7 @@ def cohort_searcher_no_terms(
 
 def cohort_searcher_no_terms_fuzzy(
     index_name: str,
-    fields_list: List[str],
+    fields_list: list[str],
     search_string: str,
     method: str = "fuzzy",
     fuzzy: int = 2,
@@ -724,7 +723,7 @@ def cohort_searcher_no_terms_fuzzy(
 
 
 def iterative_multi_term_cohort_searcher_no_terms_fuzzy(
-    terms_list: List[str],
+    terms_list: list[str],
     treatment_doc_filename: str,
     start_year: str,
     start_month: str,
@@ -735,7 +734,7 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy(
     append: bool = True,
     debug: bool = False,
     uuid_column_name: str = "client_idcode",
-    additional_filters: Optional[List[str]] = None,
+    additional_filters: list[str] | None = None,
     all_fields: bool = False,
     method: str = "fuzzy",
     fuzzy: int = 2,
@@ -911,7 +910,14 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy(
             if all_fields:
                 field_list = all_field_list
             else:
-                field_list = "client_idcode document_guid document_description body_analysed updatetime clientvisit_visitidcode".split()
+                field_list = [
+                    "client_idcode",
+                    "document_guid",
+                    "document_description",
+                    "body_analysed",
+                    "updatetime",
+                    "clientvisit_visitidcode",
+                ]
 
             # method="fuzzy", fuzzy=2, slop=1
             # Perform the search
@@ -980,7 +986,7 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy(
 
 
 def iterative_multi_term_cohort_searcher_no_terms_fuzzy_mct(
-    terms_list: List[str],
+    terms_list: list[str],
     treatment_doc_filename: str,
     start_year: str,
     start_month: str,
@@ -991,7 +997,7 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy_mct(
     append: bool = True,
     debug: bool = True,
     uuid_column_name: str = "client_idcode",
-    additional_filters: Optional[List[str]] = None,
+    additional_filters: list[str] | None = None,
     all_fields: bool = False,
     method: str = "fuzzy",
     fuzzy: int = 2,
@@ -1299,7 +1305,7 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy_mct(
 
 
 def iterative_multi_term_cohort_searcher_no_terms_fuzzy_epic_imaging_reports(
-    terms_list: List[str],
+    terms_list: list[str],
     treatment_doc_filename: str,
     start_year: str,
     start_month: str,
@@ -1310,7 +1316,7 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy_epic_imaging_reports(
     append: bool = True,
     debug: bool = True,
     uuid_column_name: str = "document_PatientDurableKey",
-    additional_filters: Optional[List[str]] = None,
+    additional_filters: list[str] | None = None,
     all_fields: bool = False,
     method: str = "fuzzy",
     fuzzy: int = 2,
@@ -1478,7 +1484,7 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy_epic_imaging_reports(
 
 
 def iterative_multi_term_cohort_searcher_no_terms_fuzzy_epic_medical_history(
-    terms_list: List[str],
+    terms_list: list[str],
     treatment_doc_filename: str,
     start_year: str,
     start_month: str,
@@ -1489,7 +1495,7 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy_epic_medical_history(
     append: bool = True,
     debug: bool = True,
     uuid_column_name: str = "document_PatientDurableKey",
-    additional_filters: Optional[List[str]] = None,
+    additional_filters: list[str] | None = None,
     all_fields: bool = False,
     method: str = "fuzzy",
     fuzzy: int = 2,
@@ -1659,7 +1665,7 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy_epic_medical_history(
 
 
 def iterative_multi_term_cohort_searcher_no_terms_fuzzy_epic_clinical_notes(
-    terms_list: List[str],
+    terms_list: list[str],
     treatment_doc_filename: str,
     start_year: str,
     start_month: str,
@@ -1670,7 +1676,7 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy_epic_clinical_notes(
     append: bool = True,
     debug: bool = True,
     uuid_column_name: str = "document_PatientDurableKey",
-    additional_filters: Optional[List[str]] = None,
+    additional_filters: list[str] | None = None,
     all_fields: bool = False,
     method: str = "fuzzy",
     fuzzy: int = 2,
@@ -1838,7 +1844,7 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy_epic_clinical_notes(
 
 
 def iterative_multi_term_cohort_searcher_no_terms_fuzzy_epic_clinical_notes_appointments(
-    terms_list: List[str],
+    terms_list: list[str],
     treatment_doc_filename: str,
     start_year: str,
     start_month: str,
@@ -1849,7 +1855,7 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy_epic_clinical_notes_appo
     append: bool = True,
     debug: bool = True,
     uuid_column_name: str = "document_PatientDurableKey",
-    additional_filters: Optional[List[str]] = None,
+    additional_filters: list[str] | None = None,
     all_fields: bool = False,
     method: str = "fuzzy",
     fuzzy: int = 2,
@@ -2018,7 +2024,7 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy_epic_clinical_notes_appo
 
 
 def iterative_multi_term_cohort_searcher_no_terms_fuzzy_drugs(
-    terms_list: List[str],
+    terms_list: list[str],
     treatment_doc_filename: str,
     start_year: str,
     start_month: str,
@@ -2029,7 +2035,7 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy_drugs(
     append: bool = True,
     debug: bool = True,
     uuid_column_name: str = "client_idcode",
-    additional_filters: Optional[List[str]] = None,
+    additional_filters: list[str] | None = None,
     all_fields: bool = False,
     method: str = "fuzzy",
     fuzzy: int = 2,
@@ -2156,7 +2162,7 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy_drugs(
 
 
 def iterative_multi_term_cohort_searcher_no_terms_fuzzy_diagnostics(
-    terms_list: List[str],
+    terms_list: list[str],
     treatment_doc_filename: str,
     start_year: str,
     start_month: str,
@@ -2167,7 +2173,7 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy_diagnostics(
     append: bool = True,
     debug: bool = True,
     uuid_column_name: str = "client_idcode",
-    additional_filters: Optional[List[str]] = None,
+    additional_filters: list[str] | None = None,
     all_fields: bool = False,
     method: str = "fuzzy",
     fuzzy: int = 2,
@@ -2294,7 +2300,7 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy_diagnostics(
 
 
 def iterative_multi_term_cohort_searcher_no_terms_fuzzy_reports(
-    terms_list: List[str],
+    terms_list: list[str],
     treatment_doc_filename: str,
     start_year: str,
     start_month: str,
@@ -2305,7 +2311,7 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy_reports(
     append: bool = True,
     debug: bool = True,
     uuid_column_name: str = "client_idcode",
-    additional_filters: Optional[List[str]] = None,
+    additional_filters: list[str] | None = None,
     all_fields: bool = False,
     method: str = "fuzzy",
     fuzzy: int = 2,
@@ -2430,7 +2436,7 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy_reports(
 
 
 def iterative_multi_term_cohort_searcher_no_terms_fuzzy_epic_encounters(
-    terms_list: List[str],
+    terms_list: list[str],
     treatment_doc_filename: str,
     start_year: str,
     start_month: str,
@@ -2441,7 +2447,7 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy_epic_encounters(
     append: bool = True,
     debug: bool = True,
     uuid_column_name: str = "activity_PatientDurableKey",
-    additional_filters: Optional[List[str]] = None,
+    additional_filters: list[str] | None = None,
     all_fields: bool = False,
     method: str = "fuzzy",
     fuzzy: int = 2,
@@ -2575,7 +2581,7 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy_epic_encounters(
 
 
 def iterative_multi_term_cohort_searcher_no_terms_fuzzy_epic_orders(
-    terms_list: List[str],
+    terms_list: list[str],
     treatment_doc_filename: str,
     start_year: str,
     start_month: str,
@@ -2586,7 +2592,7 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy_epic_orders(
     append: bool = True,
     debug: bool = True,
     uuid_column_name: str = "document_PatientDurableKey",
-    additional_filters: Optional[List[str]] = None,
+    additional_filters: list[str] | None = None,
     all_fields: bool = False,
     method: str = "fuzzy",
     fuzzy: int = 2,
@@ -2729,7 +2735,7 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy_epic_orders(
 
 
 def iterative_multi_term_cohort_searcher_no_terms_fuzzy_epic_lab_results(
-    terms_list: List[str],
+    terms_list: list[str],
     treatment_doc_filename: str,
     start_year: str,
     start_month: str,
@@ -2740,7 +2746,7 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy_epic_lab_results(
     append: bool = True,
     debug: bool = True,
     uuid_column_name: str = "document_PatientDurableKey",
-    additional_filters: Optional[List[str]] = None,
+    additional_filters: list[str] | None = None,
     all_fields: bool = False,
     method: str = "fuzzy",
     fuzzy: int = 2,
@@ -2882,7 +2888,7 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy_epic_lab_results(
 
 
 def iterative_multi_term_cohort_searcher_no_terms_fuzzy_obs(
-    terms_list: List[str],
+    terms_list: list[str],
     treatment_doc_filename: str,
     start_year: str,
     start_month: str,
@@ -2893,7 +2899,7 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy_obs(
     append: bool = True,
     debug: bool = True,
     uuid_column_name: str = "client_idcode",
-    additional_filters: Optional[List[str]] = None,
+    additional_filters: list[str] | None = None,
     all_fields: bool = False,
     method: str = "fuzzy",
     fuzzy: int = 2,
@@ -3020,7 +3026,7 @@ def initialize_cogstack_client(config_obj=None):
 
     if not creds:
         try:
-            from credentials import username, password, api_key, hosts
+            from credentials import api_key, hosts, password, username
 
             creds = {
                 "username": username,
@@ -3032,7 +3038,7 @@ def initialize_cogstack_client(config_obj=None):
             logging.warning("No credentials file found. Attempting to create one.")
             try:
                 create_credentials_file()
-                from credentials import username, password, api_key, hosts
+                from credentials import api_key, hosts, password, username
 
                 importlib.reload(sys.modules["credentials"])
                 creds = {
@@ -3069,11 +3075,11 @@ def initialize_cogstack_client(config_obj=None):
 
 
 def check_patients_existence(
-    patient_ids: List[str],
-    index_name: Union[str, List[Tuple[str, str]]] = "epr_documents",
+    patient_ids: list[str],
+    index_name: str | list[tuple[str, str]] = "epr_documents",
     id_field: str = "client_idcode.keyword",
-    config_obj: Optional[Any] = None,
-) -> List[str]:
+    config_obj: Any | None = None,
+) -> list[str]:
     """Checks which patient IDs exist in Elasticsearch using terms aggregation.
 
     Performs efficient existence checks by batching patient IDs and using
@@ -3191,7 +3197,7 @@ def check_patients_existence(
 
 
 def iterative_multi_term_cohort_searcher_no_terms_fuzzy_textual_obs(
-    terms_list: List[str],
+    terms_list: list[str],
     treatment_doc_filename: str,
     start_year: str,
     start_month: str,
@@ -3203,7 +3209,7 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy_textual_obs(
     debug: bool = True,
     uuid_column_name: str = "client_idcode",
     bloods_time_field: str = "basicobs_entered",
-    additional_filters: Optional[List[str]] = None,
+    additional_filters: list[str] | None = None,
     all_fields: bool = False,
     method: str = "fuzzy",
     fuzzy: int = 2,

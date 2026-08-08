@@ -8,6 +8,7 @@ from sqlalchemy import text
 
 from pat2vec.util.helper_functions import (
     get_df_from_db,
+    save_raw_patient_batch,
     save_annotations_to_db,
 )
 from pat2vec.util.methods_annotation_get_pat_document_annotation_batch import (
@@ -94,8 +95,18 @@ def _fetch_epic_orders_from_elasticsearch(
                 results.rename(
                     columns={"document_Content": "body_analysed"}, inplace=True
                 )
+            # Handle id -> document_guid rename, with fallback for order-specific indices
             if "id" in results.columns:
                 results.rename(columns={"id": "document_guid"}, inplace=True)
+            elif "document_ProcedureOrderEpicId" in results.columns:
+                results.rename(
+                    columns={"document_ProcedureOrderEpicId": "document_guid"},
+                    inplace=True,
+                )
+            elif "document_SourceId" in results.columns:
+                results.rename(
+                    columns={"document_SourceId": "document_guid"}, inplace=True
+                )
             if "document_Name" in results.columns:
                 results.rename(
                     columns={"document_Name": "document_description"}, inplace=True

@@ -1,5 +1,6 @@
 import re
-from typing import Any, Dict, Iterable, List
+from collections.abc import Iterable
+from typing import Any
 
 import pandas as pd
 
@@ -21,7 +22,7 @@ def stringlist2searchlist(string_list: str, output_name: str) -> None:
     print("List processed!")
 
 
-def pylist2searchlist(list_name: List[str], output_name: str) -> None:
+def pylist2searchlist(list_name: list[str], output_name: str) -> None:
     """Converts a Python list into an Elasticsearch OR-separated search string.
 
     The resulting string is saved to a text file. For example, a list
@@ -52,7 +53,7 @@ def stringlist2pylist(string_list: str, var_name: str) -> None:
     print("List generated!")
 
 
-def date_cleaner(df: pd.DataFrame, cols: List[str], date_format: str) -> None:
+def date_cleaner(df: pd.DataFrame, cols: list[str], date_format: str) -> None:
     """Formats specified datetime columns in a DataFrame to a given string format.
 
     This function modifies the DataFrame in-place.
@@ -68,7 +69,7 @@ def date_cleaner(df: pd.DataFrame, cols: List[str], date_format: str) -> None:
 
 
 def bulk_str_findall(
-    target_colname_regex_pairs: Dict[str, str],
+    target_colname_regex_pairs: dict[str, str],
     source_colname: str,
     df_name: pd.DataFrame,
 ) -> None:
@@ -90,7 +91,7 @@ def bulk_str_findall(
         )
 
 
-def without_keys(d: Dict[Any, Any], keys: Iterable[Any]) -> Dict[Any, Any]:
+def without_keys(d: dict[Any, Any], keys: Iterable[Any]) -> dict[Any, Any]:
     """Returns a new dictionary excluding the specified keys.
 
     Args:
@@ -104,7 +105,7 @@ def without_keys(d: Dict[Any, Any], keys: Iterable[Any]) -> Dict[Any, Any]:
 
 
 def bulk_str_extract(
-    target_colname_regex_pairs: Dict[str, str],
+    target_colname_regex_pairs: dict[str, str],
     source_colname: str,
     df_name: pd.DataFrame,
     expand: bool,
@@ -131,7 +132,7 @@ def bulk_str_extract(
 
 
 def bulk_str_extract_round_robin(
-    target_dict: Dict[str, str],
+    target_dict: dict[str, str],
     df_name: pd.DataFrame,
     source_colname: str,
     expand: bool,

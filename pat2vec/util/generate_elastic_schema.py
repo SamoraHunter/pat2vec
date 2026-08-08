@@ -1,8 +1,9 @@
 import json
 import logging
-import pandas as pd
 import os
-from typing import Any, Dict, List, Optional
+from typing import Any
+
+import pandas as pd
 
 # Attempt to import cs, but don't fail if it's not initialized yet
 # (it will be initialized by the user or main script)
@@ -18,7 +19,7 @@ except ImportError:
 logger = logging.getLogger(__name__)
 
 
-def generate_mapping_for_dataframe(df: pd.DataFrame) -> Dict[str, Any]:
+def generate_mapping_for_dataframe(df: pd.DataFrame) -> dict[str, Any]:
     """Infers Elasticsearch field mappings from a pandas DataFrame."""
     mapping = {}
     for col, dtype in df.dtypes.items():
@@ -75,7 +76,7 @@ def generate_mapping_for_dataframe(df: pd.DataFrame) -> Dict[str, Any]:
     return mapping
 
 
-def generate_elastic_schema(df: pd.DataFrame, index_name: str) -> Dict[str, Any]:
+def generate_elastic_schema(df: pd.DataFrame, index_name: str) -> dict[str, Any]:
     """Generates a complete Elasticsearch schema dictionary for an index."""
     return {
         index_name: {"mappings": {"properties": generate_mapping_for_dataframe(df)}}
@@ -111,8 +112,8 @@ def create_schema_from_dataframe(
 
 
 def generate_schema_from_cluster(
-    indices: Optional[List[str]] = None, output_file: str = "elastic_schemas.json"
-) -> Dict[str, Any]:
+    indices: list[str] | None = None, output_file: str = "elastic_schemas.json"
+) -> dict[str, Any]:
     """
     Generates index schemas (mappings and settings) from the connected Elasticsearch cluster.
 
