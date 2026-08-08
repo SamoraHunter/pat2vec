@@ -73,9 +73,7 @@ def _fetch_epic_imaging_reports_from_elasticsearch(
                     inplace=True,
                 )
             if "document_CreatedWhen" in results.columns:
-                results.rename(
-                    # Note: document_CreatedWhen is NOT renamed - it matches the DB schema (MAPPINGS) directly
-                )
+                pass  # Not renamed - matches MAPPINGS schema
             if "document_Content" in results.columns:
                 results.rename(
                     columns={"document_Content": "body_analysed"}, inplace=True

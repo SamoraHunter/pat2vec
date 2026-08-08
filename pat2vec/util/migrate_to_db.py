@@ -179,7 +179,7 @@ MAPPINGS = [
         "raw_data",
         "raw_epic_clinical_notes",
         "client_idcode",
-        ["client_idcode", "document_CreatedWhen"],
+        ["client_idcode", "updatetime"],
         None,
     ),
     (
@@ -187,7 +187,7 @@ MAPPINGS = [
         "raw_data",
         "raw_epic_medical_history",
         "client_idcode",
-        ["client_idcode", "document_CreatedWhen"],
+        ["client_idcode", "updatetime"],
         None,
     ),
     (
@@ -227,7 +227,7 @@ MAPPINGS = [
         "raw_data",
         "raw_epic_clinical_notes_appointments",
         "client_idcode",
-        ["client_idcode", "document_CreatedWhen"],
+        ["client_idcode", "updatetime"],
         None,
     ),
     # Annotations
