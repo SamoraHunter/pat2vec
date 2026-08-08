@@ -1,8 +1,10 @@
-import unittest
-import pandas as pd
 import os
-import tempfile
 import shutil
+import tempfile
+import unittest
+
+import pandas as pd
+
 from pat2vec.util.testing_helpers import read_test_data
 
 

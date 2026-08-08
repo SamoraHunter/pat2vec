@@ -1,8 +1,10 @@
 import unittest
+
 import pandas as pd
+
 from pat2vec.util.dummy_data_generation.observations.core_o2 import (
-    generate_core_o2_data,
     generate_clinically_coherent_spO2,
+    generate_core_o2_data,
 )
 
 

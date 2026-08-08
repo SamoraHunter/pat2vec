@@ -1,10 +1,12 @@
 import unittest
+
 import pandas as pd
+
 from pat2vec.util.config_pat2vec import config_class
 from pat2vec.util.helper_functions import (
-    save_patient_features,
-    get_df_from_db,
     get_all_features,
+    get_df_from_db,
+    save_patient_features,
 )
 from pat2vec.util.post_processing_build_ipw_dataframe import build_ipw_dataframe
 

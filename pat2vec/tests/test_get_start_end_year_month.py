@@ -1,4 +1,5 @@
 import unittest
+
 from dateutil.relativedelta import relativedelta
 
 from pat2vec.util.get_start_end_year_month import get_start_end_year_month

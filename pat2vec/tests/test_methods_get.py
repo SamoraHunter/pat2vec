@@ -1,4 +1,5 @@
 import unittest
+
 import pandas as pd
 
 from pat2vec.util.filter_dataframe_by_timestamp import filter_dataframe_by_timestamp

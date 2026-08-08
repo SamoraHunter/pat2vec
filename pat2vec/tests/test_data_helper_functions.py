@@ -1,10 +1,12 @@
 import unittest
-import pandas as pd
 from datetime import date
+
+import pandas as pd
+
 from pat2vec.pat2vec_search.data_helper_functions import (
+    append_age_at_record_series,
     appendAge,
     appendAgeAtRecord,
-    append_age_at_record_series,
     df_column_uniquify,
 )
 

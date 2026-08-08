@@ -1,12 +1,14 @@
-import unittest
 import os
 import shutil
 import tempfile
-import pandas as pd
+import unittest
 from unittest.mock import patch
+
+import pandas as pd
+
 from pat2vec.util.post_processing_utils import (
-    count_files,
     copy_files_and_dirs,
+    count_files,
     filter_and_update_csv,
 )
 

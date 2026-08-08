@@ -1,9 +1,10 @@
 """Extended tests for evaluation_methods.py."""
 
-import tempfile
 import shutil
-import pandas as pd
+import tempfile
 from unittest.mock import patch
+
+import pandas as pd
 import pytest
 
 try:

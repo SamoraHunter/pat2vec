@@ -1,6 +1,7 @@
+import calendar
 import unittest
 from datetime import datetime
-import calendar
+
 from pat2vec.util.get_dummy_data_cohort_searcher import (
     create_random_date_from_globals,
 )

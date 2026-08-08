@@ -1,11 +1,13 @@
 import unittest
 from unittest.mock import MagicMock
+
 import pandas as pd
+
 from pat2vec.util.filter_methods import (
-    filter_dataframe_by_fuzzy_terms,
-    apply_data_type_epr_docs_filters,
     apply_bloods_data_type_filter,
+    apply_data_type_epr_docs_filters,
     apply_data_type_mct_docs_filters,
+    filter_dataframe_by_fuzzy_terms,
 )
 
 

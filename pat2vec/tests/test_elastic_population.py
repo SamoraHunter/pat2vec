@@ -1,6 +1,7 @@
-import unittest
 import os
+import unittest
 from unittest.mock import MagicMock, patch
+
 from pat2vec.util.config_pat2vec import config_class
 from pat2vec.util.get_dummy_data_cohort_searcher import populate_elastic_with_dummy_data
 

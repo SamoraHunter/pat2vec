@@ -1,5 +1,6 @@
 import unittest
-from pat2vec.pat2vec_search.matcher import match_terms_in_text, find_all_matches
+
+from pat2vec.pat2vec_search.matcher import find_all_matches, match_terms_in_text
 
 
 class TestMatcher(unittest.TestCase):

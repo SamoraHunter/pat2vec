@@ -1,18 +1,19 @@
-import unittest
 import json
 import os
+import unittest
+
 from pat2vec.util.get_dummy_data_cohort_searcher import (
-    generate_epr_documents_data,
-    generate_epr_documents_personal_data,
+    generate_appointments_data,
     generate_basic_observations_data,
     generate_basic_observations_textual_obs_data,
-    generate_observations_data,
     generate_bmi_data,
-    generate_news_data,
-    generate_observations_MRC_text_data,
     generate_diagnostic_orders_data,
     generate_drug_orders_data,
-    generate_appointments_data,
+    generate_epr_documents_data,
+    generate_epr_documents_personal_data,
+    generate_news_data,
+    generate_observations_data,
+    generate_observations_MRC_text_data,
 )
 
 

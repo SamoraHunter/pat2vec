@@ -1,8 +1,9 @@
 import unittest
-from unittest.mock import MagicMock
 from datetime import datetime
-from dateutil.relativedelta import relativedelta
+from unittest.mock import MagicMock
 from zoneinfo import ZoneInfo
+
+from dateutil.relativedelta import relativedelta
 
 from pat2vec.util.generate_date_list import generate_date_list
 

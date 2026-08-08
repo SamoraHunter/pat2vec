@@ -4,12 +4,12 @@ import os
 from unittest.mock import patch
 
 from pat2vec.util.credentials import (
-    hosts,
-    username,
-    password,
     host_name,
+    hosts,
+    password,
     port,
     scheme,
+    username,
 )
 
 
@@ -186,6 +186,7 @@ class TestCredentialsIntegration:
     def test_credentials_modules_are_singleton_safe(self):
         """Verify credentials can be reimported safely."""
         import importlib
+
         import pat2vec.util.credentials
 
         # Module should be reloadable

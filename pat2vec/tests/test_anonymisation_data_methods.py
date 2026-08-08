@@ -1,5 +1,7 @@
 import unittest
+
 import pandas as pd
+
 from pat2vec.util.anonymisation_data_methods import (
     anonymize_feature_names,
     deanonymize_feature_names,

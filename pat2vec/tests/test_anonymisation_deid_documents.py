@@ -1,8 +1,9 @@
-import unittest
-from unittest.mock import MagicMock, patch, mock_open
-import pandas as pd
-from pathlib import Path
 import json
+import unittest
+from pathlib import Path
+from unittest.mock import MagicMock, mock_open, patch
+
+import pandas as pd
 
 # Import the class and functions to test
 from pat2vec.util.anonymisation_deid_documents import (

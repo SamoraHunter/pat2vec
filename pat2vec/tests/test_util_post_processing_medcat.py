@@ -1,8 +1,10 @@
 import unittest
+
 import pandas as pd
+
 from pat2vec.util.post_processing_medcat import (
-    sample_by_terms,
     coerce_document_df_to_medcat_trainer_input,
+    sample_by_terms,
 )
 
 

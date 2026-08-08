@@ -1,15 +1,17 @@
 import unittest
 from unittest.mock import MagicMock, patch
+
 import pandas as pd
 import urllib3.exceptions
+
 from pat2vec.pat2vec_search.cogstack_search_methods import (
     CogStack,
     check_patients_existence,
-    list_chunker,
-    set_index_safe_wrapper,
+    get_all_fields_for_method,
     initialize_cogstack_client,
     iterative_multi_term_cohort_searcher_no_terms_fuzzy_epic_clinical_notes,
-    get_all_fields_for_method,
+    list_chunker,
+    set_index_safe_wrapper,
 )
 from pat2vec.util.get_method_index_map import GET_METHOD_INDEX_MAP
 

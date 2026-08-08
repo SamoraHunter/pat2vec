@@ -1,11 +1,12 @@
-import unittest
-import os
 import datetime
-from pat2vec.util.docker_elastic import ElasticContainer
-from pat2vec.util.config_pat2vec import config_class
-from pat2vec.util.get_dummy_data_cohort_searcher import populate_elastic_with_dummy_data
-from pat2vec.pat2vec_search.cogstack_search_methods import initialize_cogstack_client
+import os
+import unittest
+
 import pat2vec.pat2vec_search.cogstack_search_methods as csm
+from pat2vec.pat2vec_search.cogstack_search_methods import initialize_cogstack_client
+from pat2vec.util.config_pat2vec import config_class
+from pat2vec.util.docker_elastic import ElasticContainer
+from pat2vec.util.get_dummy_data_cohort_searcher import populate_elastic_with_dummy_data
 
 
 class TestIntegrationElastic(unittest.TestCase):

@@ -1,17 +1,19 @@
-import unittest
-from unittest.mock import patch, mock_open
-import pandas as pd
 import json
-import tempfile
 import os
+import tempfile
+import unittest
+from unittest.mock import mock_open, patch
+
+import pandas as pd
+
 from pat2vec.util.medcat_misc_methods import (
-    medcat_trainer_export_to_df,
-    extract_labels_from_medcat_annotation_export,
-    recreate_json,
     create_ner_results_dataframe,
-    parse_medcat_trainer_project_json,
+    extract_labels_from_medcat_annotation_export,
     manually_label_annotation_df,
+    medcat_trainer_export_to_df,
+    parse_medcat_trainer_project_json,
     plot_ner_results,
+    recreate_json,
 )
 
 

@@ -2,21 +2,23 @@
 
 import unittest
 from unittest.mock import MagicMock
+
 import pandas as pd
+
 from pat2vec.util.filter_methods import (
-    apply_data_type_epic_clinical_notes_filters,
+    apply_data_type_diagnostics_filters,
+    apply_data_type_drugs_filters,
     apply_data_type_epic_clinical_notes_appointments_filters,
-    apply_data_type_epic_patients_filters,
+    apply_data_type_epic_clinical_notes_filters,
+    apply_data_type_epic_imaging_reports_filters,
+    apply_data_type_epic_lab_results_filters,
     apply_data_type_epic_medical_history_filters,
     apply_data_type_epic_orders_filters,
-    apply_data_type_epic_lab_results_filters,
-    apply_data_type_epic_imaging_reports_filters,
-    apply_data_type_drugs_filters,
-    apply_data_type_diagnostics_filters,
+    apply_data_type_epic_patients_filters,
     apply_data_type_news_filters,
-    apply_data_type_textual_obs_filters,
-    apply_data_type_reports_filters,
     apply_data_type_obs_filters,
+    apply_data_type_reports_filters,
+    apply_data_type_textual_obs_filters,
 )
 
 

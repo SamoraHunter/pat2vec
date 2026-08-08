@@ -12,12 +12,12 @@ The expected behavior after fix:
 - Annotations can be generated from dummy data for annotation sources
 """
 
-import unittest
+import logging
 import os
+import shutil
 import sys
 import tempfile
-import shutil
-import logging
+import unittest
 
 PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
 
@@ -25,14 +25,14 @@ if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
 
 # SQLAlchemy must be imported after setting up paths
-from sqlalchemy import inspect as db_inspect  # noqa: E402
+import pandas as pd
+from sqlalchemy import inspect as db_inspect
 
-import pandas as pd  # noqa: E402
-from pat2vec.util.config_pat2vec import config_class  # noqa: E402
-from pat2vec.util.helper_functions import (  # noqa: E402
+from pat2vec.util.config_pat2vec import config_class
+from pat2vec.util.helper_functions import (
     get_df_from_db,
-    save_raw_patient_batch,
     save_annotations_to_db,
+    save_raw_patient_batch,
 )
 
 
@@ -539,6 +539,7 @@ class TestEpicFullPipelineIntegration(unittest.TestCase):
 
 if __name__ == "__main__":
     import logging
+
     import pandas as pd
 
     logging.basicConfig(level=logging.WARNING)

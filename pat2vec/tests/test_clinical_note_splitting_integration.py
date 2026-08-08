@@ -1,12 +1,13 @@
 import unittest
-import pandas as pd
 from datetime import datetime, timedelta
 
-from pat2vec.util.config_pat2vec import config_class  # type: ignore
-from pat2vec.util.clinical_note_splitter import split_clinical_notes
+import pandas as pd
+
 from pat2vec.pat2vec_get_methods.get_method_pat_annotations import (
     get_current_pat_annotations,
 )
+from pat2vec.util.clinical_note_splitter import split_clinical_notes
+from pat2vec.util.config_pat2vec import config_class  # type: ignore
 
 
 class TestClinicalNoteSplittingIntegration(unittest.TestCase):

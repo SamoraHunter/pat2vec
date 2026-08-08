@@ -1,14 +1,16 @@
-import unittest
-import pandas as pd
 import os
-import tempfile
 import shutil
-from unittest.mock import MagicMock, patch
+import tempfile
+import unittest
 from datetime import datetime
+from unittest.mock import MagicMock, patch
+
+import pandas as pd
+
 from pat2vec.util.pre_processing import (
-    draw_document_samples,
-    demo_to_latest,
     calculate_age_append,
+    demo_to_latest,
+    draw_document_samples,
     get_all_patient_list,
 )
 

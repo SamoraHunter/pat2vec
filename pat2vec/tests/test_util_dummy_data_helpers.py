@@ -1,12 +1,14 @@
-import unittest
 import os
 import tempfile
-from unittest.mock import patch, MagicMock
+import unittest
+from unittest.mock import MagicMock, patch
+
 import pandas as pd
+
 from pat2vec.util.get_dummy_data_cohort_searcher import (
+    extract_search_term_obscatalogmasteritem_displayname,
     generate_uuid,
     generate_uuid_list,
-    extract_search_term_obscatalogmasteritem_displayname,
     run_generate_patient_timeline_and_append,
 )
 

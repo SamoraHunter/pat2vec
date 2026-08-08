@@ -1,19 +1,20 @@
 import os
 import unittest
-import pandas as pd
-from unittest.mock import MagicMock, patch
 from datetime import datetime
+from unittest.mock import MagicMock, patch
+
+import pandas as pd
 
 from pat2vec.util.config_pat2vec import config_class
-from pat2vec.util.methods_get_medcat import get_cat
 from pat2vec.util.get_dummy_data_cohort_searcher import (
     generate_epr_documents_data,
 )
-from pat2vec.util.helper_functions import save_raw_patient_batch, get_df_from_db
+from pat2vec.util.helper_functions import get_df_from_db, save_raw_patient_batch
 from pat2vec.util.methods_annotation import (
     annot_pat_batch_docs,
     multi_annots_to_df_reports,
 )
+from pat2vec.util.methods_get_medcat import get_cat
 
 original_read_csv = pd.read_csv
 

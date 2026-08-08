@@ -1,11 +1,13 @@
-import unittest
-import pandas as pd
+import importlib.util
 import os
 import shutil
 import tempfile
-import importlib.util
+import unittest
 from unittest.mock import patch
-from pat2vec.util.evaluation_methods import compare_ipw_annotation_rows, CsvProfiler
+
+import pandas as pd
+
+from pat2vec.util.evaluation_methods import CsvProfiler, compare_ipw_annotation_rows
 
 HAS_YDATA = importlib.util.find_spec("ydata_profiling") is not None
 

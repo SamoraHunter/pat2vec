@@ -1,21 +1,23 @@
 import unittest
-import pandas as pd
-from unittest.mock import MagicMock, patch
 from datetime import datetime
+from unittest.mock import MagicMock, patch
+
+import pandas as pd
+
 from pat2vec.util.helper_functions import (
+    clear_patient_features,
+    ensure_index,
+    extract_nhs_numbers,
+    get_all_features,
     get_df_from_db,
     get_df_from_db_with_temporal_filter,
     get_ram_usage,
-    sanitize_for_path,
-    extract_nhs_numbers,
     get_search_client_idcode_list_from_nhs_number_list,
-    clear_patient_features,
-    try_parse_list_string,
-    ensure_index,
+    sanitize_for_path,
+    save_annotations_to_db,
     save_patient_features,
     save_raw_patient_batch,
-    get_all_features,
-    save_annotations_to_db,
+    try_parse_list_string,
 )
 
 

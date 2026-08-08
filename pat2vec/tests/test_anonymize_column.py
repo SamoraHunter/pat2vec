@@ -3,6 +3,7 @@ import os
 import numpy as np
 import pandas as pd
 import pytest
+
 from pat2vec.util.anonymize_column import (
     ColumnAnonymizer,
     anonymize_column,

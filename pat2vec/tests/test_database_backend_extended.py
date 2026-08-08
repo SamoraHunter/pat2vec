@@ -1,5 +1,7 @@
 import unittest
+
 import pandas as pd
+
 from pat2vec.util.config_pat2vec import config_class
 from pat2vec.util.helper_functions import get_df_from_db
 

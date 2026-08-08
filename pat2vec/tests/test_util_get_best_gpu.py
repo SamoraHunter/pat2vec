@@ -1,6 +1,7 @@
+import os
 import unittest
 from unittest.mock import patch
-import os
+
 from pat2vec.util.get_best_gpu import set_best_gpu
 
 

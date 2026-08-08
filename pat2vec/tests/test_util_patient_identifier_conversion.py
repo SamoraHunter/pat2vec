@@ -1,23 +1,24 @@
 import unittest
-import pandas as pd
 from unittest.mock import MagicMock
 
+import pandas as pd
+
 from pat2vec.util.patient_identifier_conversion import (
-    extract_hospital_numbers,
-    extract_nhs_number,
-    extract_mrn,
-    convert_hospital_number_to_durable_key,
     convert_durable_key_to_hospital_numbers,
-    convert_nhs_number_to_durable_key,
-    convert_durable_key_to_nhs_numbers,
-    convert_mrn_to_durable_key,
     convert_durable_key_to_mrn,
-    convert_hospital_numbers_to_durable_keys,
+    convert_durable_key_to_nhs_numbers,
     convert_durable_keys_to_hospital_numbers,
-    convert_nhs_numbers_to_durable_keys,
-    convert_durable_keys_to_nhs_numbers,
-    convert_mrns_to_durable_keys,
     convert_durable_keys_to_mrns,
+    convert_durable_keys_to_nhs_numbers,
+    convert_hospital_number_to_durable_key,
+    convert_hospital_numbers_to_durable_keys,
+    convert_mrn_to_durable_key,
+    convert_mrns_to_durable_keys,
+    convert_nhs_number_to_durable_key,
+    convert_nhs_numbers_to_durable_keys,
+    extract_hospital_numbers,
+    extract_mrn,
+    extract_nhs_number,
 )
 
 

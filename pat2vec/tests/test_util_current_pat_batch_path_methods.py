@@ -1,7 +1,8 @@
-import unittest
 import os
 import shutil
 import tempfile
+import unittest
+
 from pat2vec.util.current_pat_batch_path_methods import PathsClass
 
 

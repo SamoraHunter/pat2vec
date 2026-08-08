@@ -1,7 +1,8 @@
 import unittest
-from unittest.mock import patch, MagicMock
-import pandas as pd
 from datetime import datetime
+from unittest.mock import MagicMock, patch
+
+import pandas as pd
 
 # The class to be tested
 from pat2vec.util.config_pat2vec import config_class
@@ -238,29 +239,27 @@ class TestIndividualPatientWindow(unittest.TestCase):
     def test_ipw_with_missing_column_raises_error(self):
         """Test that a missing start_date or patient_id column raises an error."""
         mock_df_no_date = pd.DataFrame({"patient_id": ["P001"]})
-        with self.assertRaises(ValueError) as cm:
-            with patch("builtins.print"):
-                config_class(
-                    years=1,
-                    individual_patient_window=True,
-                    individual_patient_window_df=mock_df_no_date,
-                    individual_patient_window_start_column_name="start_date",
-                    individual_patient_id_column_name="patient_id",
-                    testing=True,
-                )
+        with self.assertRaises(ValueError) as cm, patch("builtins.print"):
+            config_class(
+                years=1,
+                individual_patient_window=True,
+                individual_patient_window_df=mock_df_no_date,
+                individual_patient_window_start_column_name="start_date",
+                individual_patient_id_column_name="patient_id",
+                testing=True,
+            )
         self.assertIn("Column 'start_date' does not exist.", str(cm.exception))
 
         mock_df_no_id = pd.DataFrame({"start_date": ["2020-01-01"]})
-        with self.assertRaises(ValueError) as cm:
-            with patch("builtins.print"):
-                config_class(
-                    years=1,
-                    individual_patient_window=True,
-                    individual_patient_window_df=mock_df_no_id,
-                    individual_patient_window_start_column_name="start_date",
-                    individual_patient_id_column_name="patient_id",
-                    testing=True,
-                )
+        with self.assertRaises(ValueError) as cm, patch("builtins.print"):
+            config_class(
+                years=1,
+                individual_patient_window=True,
+                individual_patient_window_df=mock_df_no_id,
+                individual_patient_window_start_column_name="start_date",
+                individual_patient_id_column_name="patient_id",
+                testing=True,
+            )
         self.assertIn("Column 'patient_id' does not exist.", str(cm.exception))
 
     def test_ipw_with_duplicate_patient_ids(self):

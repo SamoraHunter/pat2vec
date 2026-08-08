@@ -1,13 +1,15 @@
-import unittest
 import os
 import shutil
 import tempfile
-import pandas as pd
+import unittest
 import warnings
-from unittest.mock import MagicMock, patch, ANY
+from unittest.mock import ANY, MagicMock, patch
+
+import pandas as pd
+
 from pat2vec.util.methods_post_get import (
-    check_csv_integrity,
     check_csv_files_in_directory,
+    check_csv_integrity,
     copy_project_folders_with_substring_match,
     retrieve_pat_annotations,
 )

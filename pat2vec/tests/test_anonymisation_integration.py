@@ -1,11 +1,13 @@
 import unittest
+
 import pandas as pd
-from pat2vec.util.config_pat2vec import config_class
-from pat2vec.util.helper_functions import save_patient_features, get_all_features
+
 from pat2vec.util.anonymisation_data_methods import (
     anonymize_feature_names,
     deanonymize_feature_names,
 )
+from pat2vec.util.config_pat2vec import config_class
+from pat2vec.util.helper_functions import get_all_features, save_patient_features
 
 
 class TestAnonymisationIntegration(unittest.TestCase):

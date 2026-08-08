@@ -1,5 +1,6 @@
 import unittest
 from datetime import datetime
+
 from dateutil.relativedelta import relativedelta
 
 from pat2vec.util.calculate_interval import calculate_interval

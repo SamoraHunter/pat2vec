@@ -1,5 +1,7 @@
 import unittest
+
 import pandas as pd
+
 from pat2vec.util.ethnicity_abstractor import EthnicityAbstractor
 
 

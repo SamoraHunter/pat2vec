@@ -1,12 +1,13 @@
 import unittest
-from unittest.mock import patch, MagicMock
-import pandas as pd
+from unittest.mock import MagicMock, patch
+
 import numpy as np
+import pandas as pd
 
 from pat2vec.util.elasticsearch_methods import (
-    handle_inconsistent_dtypes,
     get_guess_datetime_column,
     guess_datetime_columns,
+    handle_inconsistent_dtypes,
     ingest_data_to_elasticsearch,
 )
 

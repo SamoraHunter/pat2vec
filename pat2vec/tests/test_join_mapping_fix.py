@@ -1,8 +1,10 @@
 """Unit tests for ICD-10 and OPCS-4 code joining with actual mapping files."""
 
-import unittest
-import pandas as pd
 import os
+import unittest
+
+import pandas as pd
+
 from pat2vec.util.post_processing_annotations import (
     join_icd10_codes_to_annot,
     join_icd10_OPC4S_codes_to_annot,

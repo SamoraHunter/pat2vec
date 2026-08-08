@@ -1,7 +1,9 @@
-import unittest
-from unittest.mock import patch, MagicMock, mock_open
 import subprocess
+import unittest
+from unittest.mock import MagicMock, mock_open, patch
+
 import requests
+
 from pat2vec.util.docker_elastic import ElasticContainer
 
 

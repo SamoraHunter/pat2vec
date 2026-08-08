@@ -1,15 +1,16 @@
-import unittest
-from unittest.mock import patch, MagicMock, mock_open
-import pandas as pd
 import os
 import shutil
 import tempfile
+import unittest
+from unittest.mock import MagicMock, mock_open, patch
+
+import pandas as pd
 
 # Import functions to be tested
 from pat2vec.util.generate_elastic_schema import (
+    create_schema_from_dataframe,
     generate_elastic_schema,
     generate_mapping_for_dataframe,
-    create_schema_from_dataframe,
 )
 
 

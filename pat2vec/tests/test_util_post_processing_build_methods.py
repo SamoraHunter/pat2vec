@@ -1,15 +1,17 @@
-import unittest
 import os
-import pandas as pd
-import tempfile
 import shutil
+import tempfile
+import unittest
 from unittest.mock import MagicMock, patch
+
+import pandas as pd
+
 from pat2vec.util.post_processing_build_methods import (
-    optimize_dtypes,
-    build_merged_epr_mct_annot_df,
     build_merged_bloods,
-    merge_demographics_csv,
+    build_merged_epr_mct_annot_df,
     join_docs_to_annots,
+    merge_demographics_csv,
+    optimize_dtypes,
     retrieve_pat_bloods,
 )
 

@@ -1,10 +1,12 @@
 import unittest
+
 import pandas as pd
 from pandas import Timestamp
+
 from pat2vec.util.clinical_note_splitter import (
     find_date,
-    split_clinical_notes,
     split_and_append_chunks,
+    split_clinical_notes,
 )
 
 

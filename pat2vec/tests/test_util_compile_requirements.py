@@ -1,10 +1,11 @@
-import unittest
-from unittest.mock import patch, MagicMock, mock_open
 import subprocess
+import unittest
+from unittest.mock import MagicMock, mock_open, patch
+
 from pat2vec.util.compile_requirements import (
-    run_pip_compile,
     append_to_file,
     process_requirements,
+    run_pip_compile,
 )
 
 

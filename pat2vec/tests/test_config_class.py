@@ -1,8 +1,9 @@
 import unittest
-from unittest.mock import patch, MagicMock
 from datetime import datetime
-from dateutil.relativedelta import relativedelta
+from unittest.mock import MagicMock, patch
+
 import pandas as pd
+from dateutil.relativedelta import relativedelta
 
 # The class to be tested
 from pat2vec.util.config_pat2vec import config_class
@@ -208,15 +209,17 @@ class TestConfigClass(unittest.TestCase):
 
     def test_remote_dump_true_without_credentials_raises_error(self):
         """Test ValueError is raised if remote_dump is True but credentials are missing."""
-        with self.assertRaisesRegex(
-            ValueError,
-            "Hostname, username, and password must be provided for remote dump.",
+        with (
+            self.assertRaisesRegex(
+                ValueError,
+                "Hostname, username, and password must be provided for remote dump.",
+            ),
+            patch("builtins.print"),
         ):
-            with patch("builtins.print"):
-                config_class(
-                    remote_dump=True,
-                    hostname=None,  # Missing credential
-                    username="user",
-                    password="pw",
-                    testing=True,
-                )
+            config_class(
+                remote_dump=True,
+                hostname=None,  # Missing credential
+                username="user",
+                password="pw",
+                testing=True,
+            )

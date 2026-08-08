@@ -1,6 +1,8 @@
 import unittest
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
+
 import pandas as pd
+
 from pat2vec.util.retrieve_data import retrieve_patient_data
 
 

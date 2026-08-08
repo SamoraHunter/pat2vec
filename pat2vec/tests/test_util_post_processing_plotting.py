@@ -1,6 +1,8 @@
 import unittest
-import pandas as pd
 from unittest.mock import patch
+
+import pandas as pd
+
 from pat2vec.util.post_processing_plotting import plot_missing_pattern_bloods
 
 

@@ -1,25 +1,27 @@
-import unittest
-import pandas as pd
-from sqlalchemy import text, inspect
-from unittest.mock import MagicMock, patch
-from pat2vec.util.config_pat2vec import config_class
-from pat2vec.main_pat2vec import main
 import logging
+import unittest
 from datetime import datetime
+from unittest.mock import MagicMock, patch
+
+import pandas as pd
+from sqlalchemy import inspect, text
+
+from pat2vec.main_pat2vec import main
 from pat2vec.patvec_get_batch_methods.get_merged_batches import (
-    get_merged_pat_batch_bloods,
-    get_merged_pat_batch_epr_docs,
-    get_merged_pat_batch_reports,
     get_merged_pat_batch_appointments,
-    get_merged_pat_batch_drugs,
-    get_merged_pat_batch_diagnostics,
-    get_merged_pat_batch_mct_docs,
-    get_merged_pat_batch_textual_obs_docs,
-    get_merged_pat_batch_demo,
+    get_merged_pat_batch_bloods,
     get_merged_pat_batch_bmi,
-    get_merged_pat_batch_obs,
+    get_merged_pat_batch_demo,
+    get_merged_pat_batch_diagnostics,
+    get_merged_pat_batch_drugs,
+    get_merged_pat_batch_epr_docs,
+    get_merged_pat_batch_mct_docs,
     get_merged_pat_batch_news,
+    get_merged_pat_batch_obs,
+    get_merged_pat_batch_reports,
+    get_merged_pat_batch_textual_obs_docs,
 )
+from pat2vec.util.config_pat2vec import config_class
 from pat2vec.util.helper_functions import get_df_from_db
 
 
@@ -689,7 +691,7 @@ class TestPatMakerLogic(unittest.TestCase):
                     conn.commit()
 
                 # 2. Configure: Disable all, enable ONLY the current option
-                for k in source_map.keys():
+                for k in source_map:
                     self.config.main_options[k] = False
                 self.config.main_options[option] = True
 

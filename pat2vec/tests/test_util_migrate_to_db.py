@@ -1,11 +1,13 @@
-import unittest
 import os
 import shutil
 import tempfile
-import pandas as pd
+import unittest
 from unittest.mock import MagicMock, patch
-from pat2vec.util.migrate_to_db import migrate_csv_to_db, create_indexes
+
+import pandas as pd
 from sqlalchemy import create_engine, inspect, text
+
+from pat2vec.util.migrate_to_db import create_indexes, migrate_csv_to_db
 
 
 class TestMigrateToDb(unittest.TestCase):

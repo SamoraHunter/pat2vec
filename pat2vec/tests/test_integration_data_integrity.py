@@ -1,14 +1,16 @@
-import unittest
-import shutil
-from unittest.mock import patch
 import os
-import pandas as pd
+import shutil
 import tempfile
-from pat2vec.util.config_pat2vec import config_class
+import unittest
+from unittest.mock import patch
+
+import pandas as pd
+
 from pat2vec.main_pat2vec import main
-from pat2vec.util.post_processing_build_methods import merge_bmi_csv, merge_news_csv
-from pat2vec.util.helper_functions import get_df_from_db
+from pat2vec.util.config_pat2vec import config_class
 from pat2vec.util.get_dummy_data_cohort_searcher import generate_patient_timeline_faker
+from pat2vec.util.helper_functions import get_df_from_db
+from pat2vec.util.post_processing_build_methods import merge_bmi_csv, merge_news_csv
 
 
 class TestIntegrationDataIntegrity(unittest.TestCase):

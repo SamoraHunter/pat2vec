@@ -1,11 +1,12 @@
-import unittest
 import os
 import shutil
 import tempfile
+import unittest
+from unittest.mock import MagicMock, patch
 
 import pandas as pd
-from unittest.mock import MagicMock, patch
-from pat2vec.util.retrieve_data import retrieve_patient_data, DATA_TYPE_CONFIG
+
+from pat2vec.util.retrieve_data import DATA_TYPE_CONFIG, retrieve_patient_data
 
 
 class TestRetrieveData(unittest.TestCase):

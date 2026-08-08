@@ -1,19 +1,20 @@
-import unittest
-import inspect
 import importlib
+import inspect
+import unittest
+
+import pat2vec.pat2vec_search.cogstack_search_methods as search_mod
 import pat2vec.util.config_pat2vec as config_mod
-import pat2vec.util.retrieve_data as retrieve_mod
+import pat2vec.util.filter_methods as filter_mod
+import pat2vec.util.get_method_default_fields_map as fields_map_mod
+import pat2vec.util.get_method_index_map as index_map_mod
+import pat2vec.util.methods_annotation as annot_mod
+import pat2vec.util.methods_annotation_multi_annots_to_df as multi_annots_to_df_mod
 import pat2vec.util.migrate_to_db as migrate_mod
 import pat2vec.util.post_processing_build_methods as build_mod
-import pat2vec.pat2vec_search.cogstack_search_methods as search_mod
-import pat2vec.util.methods_annotation as annot_mod
 import pat2vec.util.post_processing_get_pat_ipw_record as ipw_mod
-import pat2vec.util.pre_processing as pre_mod
-import pat2vec.util.methods_annotation_multi_annots_to_df as multi_annots_to_df_mod
-import pat2vec.util.get_method_index_map as index_map_mod
-import pat2vec.util.get_method_default_fields_map as fields_map_mod
 import pat2vec.util.post_processing_utils as post_utils_mod
-import pat2vec.util.filter_methods as filter_mod
+import pat2vec.util.pre_processing as pre_mod
+import pat2vec.util.retrieve_data as retrieve_mod
 
 
 class TestIndexIntegrationCompleteness(unittest.TestCase):

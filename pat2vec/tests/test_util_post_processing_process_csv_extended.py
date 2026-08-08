@@ -1,10 +1,11 @@
 """Extended tests for post_processing_process_csv_files.py."""
 
 import os
-import tempfile
 import shutil
-import pandas as pd
+import tempfile
 from unittest.mock import MagicMock, patch
+
+import pandas as pd
 
 from pat2vec.util.post_processing_process_csv_files import (
     process_csv_files,

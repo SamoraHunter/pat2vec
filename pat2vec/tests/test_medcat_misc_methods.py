@@ -1,13 +1,15 @@
-import unittest
-import pandas as pd
 import json
 import os
 import tempfile
+import unittest
+
+import pandas as pd
+
 from pat2vec.util.medcat_misc_methods import (
-    medcat_trainer_export_to_df,
-    extract_labels_from_medcat_annotation_export,
-    recreate_json,
     create_ner_results_dataframe,
+    extract_labels_from_medcat_annotation_export,
+    medcat_trainer_export_to_df,
+    recreate_json,
 )
 
 

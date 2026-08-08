@@ -1,5 +1,6 @@
-import unittest
 import logging
+import unittest
+
 from pat2vec.util.logger_setup import setup_logger
 
 

@@ -1,18 +1,19 @@
 """Extended tests for post_processing_build_methods.py."""
 
 import os
-import tempfile
 import shutil
-import pandas as pd
+import tempfile
 from unittest.mock import MagicMock, patch
+
+import pandas as pd
 
 from pat2vec.util.post_processing_build_methods import (
     build_merged_epr_mct_annot_df,
-    optimize_dtypes,
     join_docs_to_annots,
+    optimize_dtypes,
     retrieve_pat_bloods,
-    retrieve_pat_epr_docs,
     retrieve_pat_docs_mct_epr,
+    retrieve_pat_epr_docs,
 )
 
 
@@ -303,8 +304,8 @@ class TestPostProcessingBuildMethodsExtended:
 
         The fix ensures that even with empty results, the CSV is created with proper headers.
         """
-        import tempfile
         import shutil
+        import tempfile
 
         # Create temp directory for this test
         test_dir = tempfile.mkdtemp()
@@ -343,8 +344,8 @@ class TestPostProcessingBuildMethodsExtended:
 
         The merged file should contain data from non-empty tables.
         """
-        import tempfile
         import shutil
+        import tempfile
 
         test_dir = tempfile.mkdtemp()
         try:

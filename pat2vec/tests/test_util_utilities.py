@@ -1,22 +1,23 @@
 import unittest
 from datetime import datetime, timedelta
-import pandas as pd
-import numpy as np
 from unittest.mock import MagicMock, patch
 
-from pat2vec.util.methods_get import (
-    convert_timestamp_to_tuple,
-    convert_date,
-    build_patient_dict,
-    add_offset_column,
-    get_empty_date_vector,
-    enum_target_date_vector,
-    enum_exact_target_date_vector,
-)
+import numpy as np
+import pandas as pd
+
 from pat2vec.util.get_dummy_data_cohort_searcher import (
+    extract_date_range,
     is_safe_host,
     maybe_nan,
-    extract_date_range,
+)
+from pat2vec.util.methods_get import (
+    add_offset_column,
+    build_patient_dict,
+    convert_date,
+    convert_timestamp_to_tuple,
+    enum_exact_target_date_vector,
+    enum_target_date_vector,
+    get_empty_date_vector,
 )
 
 

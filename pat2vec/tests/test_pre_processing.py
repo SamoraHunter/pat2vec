@@ -1,15 +1,16 @@
-import unittest
-from unittest.mock import patch, MagicMock
-import pandas as pd
 import os
+import unittest
 from datetime import datetime
-from pat2vec.util.pre_processing import get_all_patient_list
+from unittest.mock import MagicMock, patch
+
+import pandas as pd
 
 from pat2vec.util.pre_processing import (
-    get_treatment_docs_by_iterative_multi_term_cohort_searcher_no_terms_fuzzy,
-    draw_document_samples,
-    demo_to_latest,
     calculate_age_append,
+    demo_to_latest,
+    draw_document_samples,
+    get_all_patient_list,
+    get_treatment_docs_by_iterative_multi_term_cohort_searcher_no_terms_fuzzy,
     search_cohort,
 )
 

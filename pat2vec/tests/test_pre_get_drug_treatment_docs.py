@@ -1,7 +1,9 @@
+import os
 import unittest
 from unittest.mock import MagicMock, patch
+
 import pandas as pd
-import os
+
 from pat2vec.util.pre_get_drug_treatment_docs import (
     get_treatment_records_by_drug_order_name,
     get_treatment_records_by_drug_order_name_epic,
@@ -177,7 +179,6 @@ class TestPreGetDrugTreatmentDocs(unittest.TestCase):
                     )
                     # Check that the concat'd then dedup'd df was what it tried to handle
                     # (Logic in the function actually groups and aggregates)
-                    pass
         finally:
             if os.path.exists(out_file):
                 os.remove(out_file)

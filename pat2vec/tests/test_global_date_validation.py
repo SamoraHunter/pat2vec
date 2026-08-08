@@ -1,16 +1,15 @@
 import unittest
-from unittest.mock import patch, MagicMock
 from datetime import datetime
+from unittest.mock import MagicMock, patch
 
 # Mock the imports that might not be available in test environment
 # sys.modules["pat2vec.util.current_pat_batch_path_methods"] = MagicMock()
 # sys.modules["pat2vec.util.methods_get"] = MagicMock()
 # sys.modules["paramiko"] = MagicMock()
 # sys.modules["IPython.display"] = MagicMock()
-
 from pat2vec.util.config_pat2vec import (
-    validate_and_fix_global_dates,
     update_global_start_date,
+    validate_and_fix_global_dates,
 )
 
 

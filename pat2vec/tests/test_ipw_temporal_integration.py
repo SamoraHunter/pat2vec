@@ -1,15 +1,16 @@
-import unittest
-import pandas as pd
 import os
 import shutil
 import tempfile
+import unittest
 from datetime import datetime
-from dateutil.relativedelta import relativedelta
 from unittest.mock import MagicMock, patch
 
-from pat2vec.util.config_pat2vec import config_class
+import pandas as pd
+from dateutil.relativedelta import relativedelta
+
 from pat2vec.main_pat2vec import main
-from pat2vec.util.helper_functions import save_raw_patient_batch, get_all_features
+from pat2vec.util.config_pat2vec import config_class
+from pat2vec.util.helper_functions import get_all_features, save_raw_patient_batch
 
 
 class TestIPWTemporalIntegration(unittest.TestCase):

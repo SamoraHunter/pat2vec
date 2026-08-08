@@ -1,7 +1,8 @@
 import unittest
-from unittest.mock import patch, Mock
-import pandas as pd
 from datetime import datetime
+from unittest.mock import Mock, patch
+
+import pandas as pd
 
 # The function to be tested
 from pat2vec.util.post_processing_get_pat_ipw_record import get_pat_ipw_record
