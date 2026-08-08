@@ -1,23 +1,47 @@
+import logging
 import random
 import time
-import logging
 import traceback
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import pandas as pd
-from sqlalchemy import text, inspect
+from sqlalchemy import inspect, text
 
 # from pat2vec.pat2vec_search.cogstack_search_methods import *
 from tqdm import trange
 
+from pat2vec.pat2vec_get_methods.get_method_covid import SEARCH_TERM_ES
+
+# epic_imaging_reports is now only available via annotations - commented out
+# from pat2vec.pat2vec_get_methods.get_method_epic_imaging_reports import (
+#     search_epic_imaging_reports,
+# )
+from pat2vec.pat2vec_get_methods.get_method_epic_clinical_notes_appointments import (
+    search_epic_clinical_notes_appointments,
+)
+from pat2vec.pat2vec_get_methods.get_method_epic_encounters import (
+    search_epic_encounters,
+)
+
+# epic_clinical_notes, epic_medical_history, epic_orders are now only available via annotations
+# from pat2vec.pat2vec_get_methods.get_method_epic_clinical_notes import (
+#     search_epic_clinical_notes,
+# )
+# from pat2vec.pat2vec_get_methods.get_method_epic_medical_history import (
+#     search_epic_medical_history,
+# )
+# from pat2vec.pat2vec_get_methods.get_method_epic_orders import search_epic_orders
+from pat2vec.pat2vec_get_methods.get_method_epic_lab_results import (
+    search_epic_lab_results,
+)
+from pat2vec.pat2vec_get_methods.get_method_epic_patients import search_epic_patients
 from pat2vec.pat2vec_main_methods.main_batch import main_batch
 from pat2vec.pat2vec_pat_list.get_patient_treatment_list import get_all_patients_list
 from pat2vec.pat2vec_search.cogstack_search_methods import (
     cohort_searcher_with_terms_and_search,
     initialize_cogstack_client,
 )
-from pat2vec.pat2vec_get_methods.get_method_covid import SEARCH_TERM_ES
 from pat2vec.patvec_get_batch_methods.get_prefetch_batches import prefetch_batches
 from pat2vec.patvec_get_batch_methods.main_get_pat_batch_appointments import (
     get_pat_batch_appointments,
@@ -32,6 +56,21 @@ from pat2vec.patvec_get_batch_methods.main_get_pat_batch_diagnostics import (
 )
 from pat2vec.patvec_get_batch_methods.main_get_pat_batch_drugs import (
     get_pat_batch_drugs,
+)
+from pat2vec.patvec_get_batch_methods.main_get_pat_batch_epic_clinical_notes_annotations import (
+    get_pat_batch_epic_clinical_notes_annotations,
+)
+from pat2vec.patvec_get_batch_methods.main_get_pat_batch_epic_clinical_notes_appointments_annotations import (
+    get_pat_batch_epic_clinical_notes_appointments_annotations,
+)
+from pat2vec.patvec_get_batch_methods.main_get_pat_batch_epic_imaging_reports_annotations import (
+    get_pat_batch_epic_imaging_reports_annotations,
+)
+from pat2vec.patvec_get_batch_methods.main_get_pat_batch_epic_medical_history_annotations import (
+    get_pat_batch_epic_medical_history_annotations,
+)
+from pat2vec.patvec_get_batch_methods.main_get_pat_batch_epic_orders_annotations import (
+    get_pat_batch_epic_orders_annotations,
 )
 from pat2vec.patvec_get_batch_methods.main_get_pat_batch_epr_docs import (
     get_pat_batch_epr_docs,
@@ -53,63 +92,18 @@ from pat2vec.patvec_get_batch_methods.main_get_pat_batch_reports import (
 from pat2vec.patvec_get_batch_methods.main_get_pat_batch_reports_docs_annotations import (
     get_pat_batch_reports_docs_annotations,
 )
-from pat2vec.patvec_get_batch_methods.main_get_pat_batch_epic_clinical_notes_annotations import (
-    get_pat_batch_epic_clinical_notes_annotations,
-)
-from pat2vec.patvec_get_batch_methods.main_get_pat_batch_epic_clinical_notes_appointments_annotations import (
-    get_pat_batch_epic_clinical_notes_appointments_annotations,
-)
-from pat2vec.patvec_get_batch_methods.main_get_pat_batch_epic_imaging_reports_annotations import (
-    get_pat_batch_epic_imaging_reports_annotations,
-)
-from pat2vec.patvec_get_batch_methods.main_get_pat_batch_epic_medical_history_annotations import (
-    get_pat_batch_epic_medical_history_annotations,
-)
-from pat2vec.patvec_get_batch_methods.main_get_pat_batch_epic_orders_annotations import (
-    get_pat_batch_epic_orders_annotations,
-)
 from pat2vec.patvec_get_batch_methods.main_get_pat_batch_textual_obs_annotations import (
     get_pat_batch_textual_obs_annotations,
 )
 from pat2vec.patvec_get_batch_methods.main_get_pat_batch_textual_obs_docs import (
     get_pat_batch_textual_obs_docs,
 )
-
-from pat2vec.pat2vec_get_methods.get_method_epic_encounters import (
-    search_epic_encounters,
-)
-
-# epic_clinical_notes, epic_medical_history, epic_orders are now only available via annotations
-# from pat2vec.pat2vec_get_methods.get_method_epic_clinical_notes import (
-#     search_epic_clinical_notes,
-# )
-# from pat2vec.pat2vec_get_methods.get_method_epic_medical_history import (
-#     search_epic_medical_history,
-# )
-# from pat2vec.pat2vec_get_methods.get_method_epic_orders import search_epic_orders
-from pat2vec.pat2vec_get_methods.get_method_epic_lab_results import (
-    search_epic_lab_results,
-)
-from pat2vec.pat2vec_get_methods.get_method_epic_patients import search_epic_patients
-
-# epic_imaging_reports is now only available via annotations - commented out
-# from pat2vec.pat2vec_get_methods.get_method_epic_imaging_reports import (
-#     search_epic_imaging_reports,
-# )
-from pat2vec.pat2vec_get_methods.get_method_epic_clinical_notes_appointments import (
-    search_epic_clinical_notes_appointments,
-)
-from pat2vec.util.retrieve_data import retrieve_patient_data
-from pat2vec.util import config_pat2vec
+from pat2vec.util import config_pat2vec, helper_functions
 from pat2vec.util.generate_date_list import generate_date_list
 from pat2vec.util.get_best_gpu import set_best_gpu
 from pat2vec.util.get_dummy_data_cohort_searcher import (
     cohort_searcher_with_terms_and_search_dummy,
 )
-
-from pat2vec.util.methods_get import update_pbar
-import pat2vec.util.helper_functions as helper_functions
-
 from pat2vec.util.helper_functions import (
     clear_patient_features,
     save_patient_features,
@@ -118,8 +112,10 @@ from pat2vec.util.helper_functions import (
 from pat2vec.util.methods_get import (
     create_folders_for_pat,
     list_dir_wrapper,
+    update_pbar,
 )
 from pat2vec.util.methods_get_medcat import get_cat
+from pat2vec.util.retrieve_data import retrieve_patient_data
 
 
 class main:
@@ -165,10 +161,10 @@ class main:
         self,
         cogstack: bool = True,
         use_filter: bool = False,
-        json_filter_path: Optional[str] = None,
+        json_filter_path: str | None = None,
         random_seed_val: int = 42,
-        hostname: Optional[str] = None,
-        config_obj: Optional[Any] = None,
+        hostname: str | None = None,
+        config_obj: Any | None = None,
     ):
         """Initializes the main pat2vec pipeline orchestrator.
 
@@ -1146,7 +1142,7 @@ class main:
 
     def _get_patient_data_batches(
         self, current_pat_client_id_code: str
-    ) -> Dict[str, pd.DataFrame]:
+    ) -> dict[str, pd.DataFrame]:
         """Fetches and organizes all data batches for a single patient.
 
         This method uses a configuration-driven approach to retrieve various
@@ -1492,7 +1488,7 @@ class main:
         return batches
 
     def _save_batches_to_db(
-        self, patient_id: str, batches: Dict[str, pd.DataFrame]
+        self, patient_id: str, batches: dict[str, pd.DataFrame]
     ) -> None:
         """Saves fetched batches to the database if backend is enabled."""
         if self.config_obj.storage_backend != "database":
@@ -1613,7 +1609,7 @@ class main:
             )
 
     def _save_annotation_batches_to_db(
-        self, patient_id: str, batches: Dict[str, pd.DataFrame]
+        self, patient_id: str, batches: dict[str, pd.DataFrame]
     ) -> None:
         """Saves annotation batches to the database if backend is enabled.
 
@@ -1623,8 +1619,8 @@ class main:
         if self.config_obj.storage_backend != "database":
             return
 
-        from pat2vec.util.post_processing_annotations import EMPTY_ANNOT_COLS
         from pat2vec.util.helper_functions import save_annotations_to_db
+        from pat2vec.util.post_processing_annotations import EMPTY_ANNOT_COLS
 
         # Define table names and their corresponding option keys for ALL annotation sources
         annotation_configs = [
@@ -1696,7 +1692,7 @@ class main:
 
     def _setup_patient_time_window(
         self, current_pat_client_id_code: str
-    ) -> Optional[List[tuple]]:
+    ) -> list[tuple] | None:
         """Sets up and returns the date list for a patient, handling IPW logic.
 
         If `individual_patient_window` is enabled, this method calculates a
@@ -1823,8 +1819,8 @@ class main:
         return date_list
 
     def _clean_document_batches(
-        self, batches: Dict[str, pd.DataFrame]
-    ) -> Dict[str, pd.DataFrame]:
+        self, batches: dict[str, pd.DataFrame]
+    ) -> dict[str, pd.DataFrame]:
         """Cleans timestamp columns for all document-related batches.
 
         Args:
@@ -1955,8 +1951,8 @@ class main:
     def _process_patient_slices(
         self,
         current_pat_client_id_code: str,
-        date_list: List[tuple],
-        batches: Dict[str, pd.DataFrame],
+        date_list: list[tuple],
+        batches: dict[str, pd.DataFrame],
     ) -> None:
         """Iterates through time slices and calls main_batch to generate feature vectors.
 
