@@ -81,8 +81,13 @@ def _fetch_epic_clinical_notes_from_elasticsearch(
                 results.rename(
                     columns={"document_Content": "body_analysed"}, inplace=True
                 )
+            # Handle id -> document_guid rename, with fallback for appointments index
             if "id" in results.columns:
                 results.rename(columns={"id": "document_guid"}, inplace=True)
+            elif "document_SourceId" in results.columns:
+                results.rename(
+                    columns={"document_SourceId": "document_guid"}, inplace=True
+                )
             if "document_Name" in results.columns:
                 results.rename(
                     columns={"document_Name": "document_description"}, inplace=True
