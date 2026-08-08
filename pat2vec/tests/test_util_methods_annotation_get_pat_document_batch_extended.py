@@ -1,16 +1,17 @@
 """Extended tests for methods_annotation_get_pat_document_annotation_batch.py."""
 
 from unittest.mock import MagicMock, patch
+
 import pandas as pd
 
 from pat2vec.util.methods_annotation_get_pat_document_annotation_batch import (
-    get_pat_document_annotation_batch_mct,
-    get_pat_document_annotation_batch_reports,
     get_pat_batch_textual_obs_annotation_batch,
     get_pat_document_annotation_batch_epic_clinical_notes,
     get_pat_document_annotation_batch_epic_clinical_notes_appointments,
-    get_pat_document_annotation_batch_epic_medical_history,
     get_pat_document_annotation_batch_epic_imaging_reports,
+    get_pat_document_annotation_batch_epic_medical_history,
+    get_pat_document_annotation_batch_mct,
+    get_pat_document_annotation_batch_reports,
 )
 
 
@@ -25,7 +26,7 @@ class TestAnnotationBatchOrchestrationExtended:
 
         # Set main_options to trigger different branches
         self.config.main_options = {
-            "epic_clinical_notes": True,
+            "epic_clinical_notes_annotations": True,
             "epic_clinical_notes_appointments": False,
             "epic_imaging_reports": False,
             "epic_medical_history": False,
@@ -37,7 +38,6 @@ class TestAnnotationBatchOrchestrationExtended:
 
     def teardown_method(self):
         """Clean up."""
-        pass
 
     @patch(
         "pat2vec.util.methods_annotation_get_pat_document_annotation_batch.annot_pat_batch_docs"
@@ -53,7 +53,7 @@ class TestAnnotationBatchOrchestrationExtended:
         """Test annotation batch for Epic clinical notes."""
         # Set up config to trigger epic_clinical_notes path
         self.config.main_options = {
-            "epic_clinical_notes": True,
+            "epic_clinical_notes_annotations": True,
         }
 
         pat_batch = pd.DataFrame(
@@ -342,7 +342,7 @@ class TestAnnotationBatchOrchestrationExtended:
     ):
         """Test that progress bar is updated."""
         self.config.main_options = {
-            "epic_clinical_notes": True,
+            "epic_clinical_notes_annotations": True,
         }
 
         pat_batch = pd.DataFrame(

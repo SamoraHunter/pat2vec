@@ -1,12 +1,12 @@
-import hmac
 import hashlib
+import hmac
 import json
+import logging
 import os
-from typing import Dict, Mapping, Optional, Tuple
+from collections.abc import Mapping
+from pathlib import Path
 
 import pandas as pd
-from pathlib import Path
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -30,7 +30,7 @@ class ColumnAnonymizer:
         >>> df_deanon = anonymizer.deanonymize(df_anon, mapping)
     """
 
-    def __init__(self, key: Optional[str] = None):
+    def __init__(self, key: str | None = None):
         """Initialize the ColumnAnonymizer.
 
         Args:
@@ -60,7 +60,7 @@ class ColumnAnonymizer:
             hashlib.sha256,
         ).hexdigest()[:32]
 
-    def _create_mapping(self, values: pd.Series) -> Dict[str, str]:
+    def _create_mapping(self, values: pd.Series) -> dict[str, str]:
         """Create a mapping from original values to anonymized values.
 
         Args:
@@ -82,7 +82,7 @@ class ColumnAnonymizer:
 
     def anonymize(
         self, df: pd.DataFrame, column_name: str = "client_idcode"
-    ) -> Tuple[pd.DataFrame, Dict[str, str]]:
+    ) -> tuple[pd.DataFrame, dict[str, str]]:
         """Anonymizes the values in a specified column using deterministic hashing.
 
         Args:
@@ -188,7 +188,7 @@ class ColumnAnonymizer:
 
         logger.info("Anonymization mapping saved to: %s", filepath)
 
-    def load_mapping(self, filepath: str) -> Dict[str, str]:
+    def load_mapping(self, filepath: str) -> dict[str, str]:
         """Load an anonymization mapping from a file.
 
         Args:
@@ -204,8 +204,8 @@ class ColumnAnonymizer:
 def anonymize_column(
     df: pd.DataFrame,
     column_name: str = "client_idcode",
-    key: Optional[str] = None,
-) -> Tuple[pd.DataFrame, Dict[str, str]]:
+    key: str | None = None,
+) -> tuple[pd.DataFrame, dict[str, str]]:
     """Convenience function to anonymize a DataFrame column with deterministic hashing.
 
     This is a wrapper around ColumnAnonymizer that provides a simple interface

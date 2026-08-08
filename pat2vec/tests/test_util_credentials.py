@@ -1,12 +1,12 @@
 """Tests for pat2vec/util/credentials.py - security and configuration validation."""
 
 from pat2vec.util.credentials import (
-    hosts,
-    username,
-    password,
     host_name,
+    hosts,
+    password,
     port,
     scheme,
+    username,
 )
 
 

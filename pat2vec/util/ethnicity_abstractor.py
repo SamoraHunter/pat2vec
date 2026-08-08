@@ -565,7 +565,7 @@ class EthnicityAbstractor:
         other_diff = all_eth_set.difference(set(otherList))
         mixed_diff = all_eth_set.difference(set(mixedList))
 
-        for i in range(0, len(racecodeEntries)):
+        for i in range(len(racecodeEntries)):
             entry = racecodeEntries[targetColumnString][i].lower()
             res = "other_ethnic_group"
             count = 0

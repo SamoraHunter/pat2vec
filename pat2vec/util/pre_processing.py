@@ -2,28 +2,28 @@
 # create function that takes a list of terms, runs iterative_multi_term_cohort_searcher_no_terms_fuzzy and returns terms
 # takes pat2vec_obj
 
+import logging
 import os
 import random
 from datetime import datetime
-import logging
-from typing import Any, List, Optional
+from typing import Any
 
 import numpy as np
 import pandas as pd
 
 from pat2vec.pat2vec_search.cogstack_search_methods import (
     iterative_multi_term_cohort_searcher_no_terms_fuzzy,
-    iterative_multi_term_cohort_searcher_no_terms_fuzzy_mct,
-    iterative_multi_term_cohort_searcher_no_terms_fuzzy_textual_obs,
-    iterative_multi_term_cohort_searcher_no_terms_fuzzy_epic_imaging_reports,
-    iterative_multi_term_cohort_searcher_no_terms_fuzzy_epic_medical_history,
     iterative_multi_term_cohort_searcher_no_terms_fuzzy_epic_clinical_notes,
     iterative_multi_term_cohort_searcher_no_terms_fuzzy_epic_clinical_notes_appointments,
-    iterative_multi_term_cohort_searcher_no_terms_fuzzy_reports,
-    iterative_multi_term_cohort_searcher_no_terms_fuzzy_epic_orders,  # Corrected import
     iterative_multi_term_cohort_searcher_no_terms_fuzzy_epic_encounters,
+    iterative_multi_term_cohort_searcher_no_terms_fuzzy_epic_imaging_reports,
     iterative_multi_term_cohort_searcher_no_terms_fuzzy_epic_lab_results,
+    iterative_multi_term_cohort_searcher_no_terms_fuzzy_epic_medical_history,
+    iterative_multi_term_cohort_searcher_no_terms_fuzzy_epic_orders,  # Corrected import
+    iterative_multi_term_cohort_searcher_no_terms_fuzzy_mct,
     iterative_multi_term_cohort_searcher_no_terms_fuzzy_obs,
+    iterative_multi_term_cohort_searcher_no_terms_fuzzy_reports,
+    iterative_multi_term_cohort_searcher_no_terms_fuzzy_textual_obs,
 )
 from pat2vec.util.get_dummy_data_cohort_searcher import (
     cohort_searcher_with_terms_and_search_dummy,
@@ -40,9 +40,9 @@ random.seed(random_state)
 
 def get_treatment_docs_by_iterative_multi_term_cohort_searcher_no_terms_fuzzy(
     pat2vec_obj: Any,
-    term_list: List[str],
+    term_list: list[str],
     overwrite: bool = False,
-    overwrite_search_term: Optional[str] = None,
+    overwrite_search_term: str | None = None,
     append: bool = False,
     verbose: int = 0,
     mct: bool = True,
@@ -51,7 +51,7 @@ def get_treatment_docs_by_iterative_multi_term_cohort_searcher_no_terms_fuzzy(
     epic_clinical_notes: bool = True,
     epic_clinical_notes_appointments: bool = True,
     textual_obs: bool = True,
-    additional_filters: Optional[List[str]] = None,
+    additional_filters: list[str] | None = None,
     all_fields: bool = False,
     method: str = "fuzzy",
     fuzzy: int = 2,
@@ -442,7 +442,7 @@ def calculate_age_append(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def search_cohort(
-    patlist: List[str],
+    patlist: list[str],
     pat2vec_obj: Any,
     start_year: str,
     start_month: str,
@@ -450,7 +450,7 @@ def search_cohort(
     end_year: str,
     end_month: str,
     end_day: str,
-    additional_filters: Optional[List[str]] = None,
+    additional_filters: list[str] | None = None,
 ) -> pd.DataFrame:
     """Searches for a cohort of patients' demographic data within a date range.
 
@@ -510,7 +510,7 @@ def search_cohort(
 # demo_df = search_cohort(patlist, start_year, start_month, start_day, end_year, end_month, end_day, additional_filters)
 
 
-def get_all_patient_list(config_obj: Any) -> List[str]:
+def get_all_patient_list(config_obj: Any) -> list[str]:
     """
     Retrieves a list of all patient IDs based on the provided configuration.
 

@@ -1,16 +1,16 @@
 import os
+
 import matplotlib.pyplot as plt
-import seaborn as sns
 import pandas as pd
-from typing import List, Optional
+import seaborn as sns
+from sklearn.calibration import calibration_curve
 from sklearn.metrics import (
-    roc_curve,
     auc,
-    precision_recall_curve,
     average_precision_score,
     confusion_matrix,
+    precision_recall_curve,
+    roc_curve,
 )
-from sklearn.calibration import calibration_curve
 
 
 def plot_roc_curve(y_true, y_score, model_name, config) -> None:
@@ -93,7 +93,7 @@ def plot_missing_data_patterns(df, model_name, config) -> None:
 def generate_pie_charts(
     all_batch_annots: pd.DataFrame,
     save_plots: bool = True,
-    types: Optional[List[str]] = None,
+    types: list[str] | None = None,
     output_folder: str = "plot_outputs_folder_piechart",
 ) -> None:
     """Generates and saves pie charts of annotation distributions for each client.

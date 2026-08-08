@@ -1,7 +1,7 @@
-import unittest
 import os
 import shutil  # type: ignore
 import tempfile
+import unittest
 from unittest.mock import MagicMock
 
 from pat2vec.util.config_pat2vec import config_class

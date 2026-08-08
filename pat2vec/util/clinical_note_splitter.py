@@ -1,20 +1,20 @@
-from typing import Any, Dict, List, Optional, Tuple
+import logging
+from typing import Any
 
 import pandas as pd
 import regex
 from pandas import Timestamp
-import logging
 
 logger = logging.getLogger(__name__)
 
 
 def find_date(
     txt: str,
-    original_update_time_value: Optional[Timestamp] = None,
+    original_update_time_value: Timestamp | None = None,
     reg: str = r"Entered on -",
     window: int = 50,
     verbosity: int = 0,
-) -> List[Dict[str, Any]]:
+) -> list[dict[str, Any]]:
     """Finds and extracts date-stamped text chunks from a larger text body.
 
     This function scans through a given text for a specific regular expression
@@ -36,10 +36,10 @@ def find_date(
     """
 
     m = regex.finditer(reg, txt)
-    chunks: List[Dict[str, Any]] = []
+    chunks: list[dict[str, Any]] = []
 
     # Store all found date entry points and their parsed dates
-    date_entries: List[Tuple[int, int, pd.Timestamp]] = []
+    date_entries: list[tuple[int, int, pd.Timestamp]] = []
 
     for match_reg in m:
         # The actual date string is expected right after the 'reg' match
@@ -111,7 +111,7 @@ def find_date(
 
 def split_clinical_notes(
     clin_note: pd.DataFrame, verbosity_val: int = 0
-) -> Tuple[pd.DataFrame, pd.DataFrame]:
+) -> tuple[pd.DataFrame, pd.DataFrame]:
     """Splits clinical notes from an EPR schema DataFrame into date-stamped chunks.
 
     This function iterates through a DataFrame of clinical notes (assuming an
@@ -206,7 +206,7 @@ def split_clinical_notes(
 
 def split_clinical_notes_mct(
     clin_note: pd.DataFrame, verbosity_val: int = 0
-) -> Tuple[pd.DataFrame, pd.DataFrame]:
+) -> tuple[pd.DataFrame, pd.DataFrame]:
     """Splits clinical notes from an MCT schema DataFrame into date-stamped chunks.
 
     This function is similar to `split_clinical_notes` but is tailored for an
@@ -318,7 +318,7 @@ def split_clinical_notes_mct(
 
 def split_epic_clinical_notes(
     clin_note: pd.DataFrame, verbosity_val: int = 0
-) -> Tuple[pd.DataFrame, pd.DataFrame]:
+) -> tuple[pd.DataFrame, pd.DataFrame]:
     """Splits clinical notes from Epic schema DataFrame into date-stamped chunks.
 
     This function iterates through a DataFrame of Epic clinical notes (assuming an

@@ -1,19 +1,19 @@
-import unittest
 import os
 import shutil
 import tempfile
+import unittest
 from unittest.mock import MagicMock, patch
 
 from pat2vec.util.config_pat2vec import config_class
 from pat2vec.util.get_dummy_data_cohort_searcher import (
+    generate_basic_observations_textual_obs_data,
     generate_epr_documents_data,
     generate_observations_MRC_text_data,
-    generate_basic_observations_textual_obs_data,
 )
 from pat2vec.util.helper_functions import save_raw_patient_batch
 from pat2vec.util.pre_processing import (
-    get_treatment_docs_by_iterative_multi_term_cohort_searcher_no_terms_fuzzy,
     draw_document_samples,
+    get_treatment_docs_by_iterative_multi_term_cohort_searcher_no_terms_fuzzy,
 )
 
 

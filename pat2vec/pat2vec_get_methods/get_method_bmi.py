@@ -1,7 +1,7 @@
 import os
+
 import numpy as np
 import pandas as pd
-from typing import List, Optional
 from IPython.display import display
 
 from pat2vec.util.filter_dataframe_by_timestamp import filter_dataframe_by_timestamp
@@ -22,7 +22,7 @@ def search_bmi_observations(
     cohort_searcher_with_terms_and_search=None,
     client_id_codes=None,
     observations_time_field="observationdocument_recordeddtm",
-    fields_override: Optional[List[str]] = None,
+    fields_override: list[str] | None = None,
     start_year="1995",
     start_month="01",
     start_day="01",
@@ -31,9 +31,9 @@ def search_bmi_observations(
     end_day="12",
     additional_custom_search_string=None,
     index_name: str = "observations",
-    output_filename: Optional[str] = "bmi_search_results.csv",
+    output_filename: str | None = "bmi_search_results.csv",
     overwrite: bool = False,
-    config_obj: Optional[object] = None,
+    config_obj: object | None = None,
 ):
     """Searches for BMI-related observation data within a date range.
 

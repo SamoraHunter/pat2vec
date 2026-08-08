@@ -1,7 +1,7 @@
+import logging
 import os
 import traceback
-import logging
-from typing import List, Optional
+
 import pandas as pd
 from IPython.display import clear_output
 from tqdm import tqdm
@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 
 def compare_ipw_annotation_rows(
-    dataframes: List[pd.DataFrame], columns_to_print: Optional[List[str]] = None
+    dataframes: list[pd.DataFrame], columns_to_print: list[str] | None = None
 ) -> None:
     """Compares and prints differing rows from multiple annotation DataFrames.
 
@@ -83,8 +83,8 @@ class CsvProfiler:
     @staticmethod
     def create_profile_reports(
         epr_batchs_fp: str,
-        prefix: Optional[str] = None,
-        cols: Optional[List[str]] = None,
+        prefix: str | None = None,
+        cols: list[str] | None = None,
         icd10_opc4s: bool = False,
         output_dir: str = "profile_reports",
     ) -> None:

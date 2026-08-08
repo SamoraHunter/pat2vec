@@ -1,16 +1,16 @@
 import os
+from collections.abc import Callable
 from datetime import datetime, timezone
-from typing import Callable, Dict, List, Optional, Tuple, Union
 
-import pandas as pd
 import numpy as np
+import pandas as pd
 from IPython.display import display
 
+from pat2vec.pat2vec_get_methods.get_method_epic_orders import search_epic_orders
 from pat2vec.util.filter_dataframe_by_timestamp import filter_dataframe_by_timestamp
 from pat2vec.util.get_start_end_year_month import get_start_end_year_month
 from pat2vec.util.methods_get import convert_date
 from pat2vec.util.parse_date import validate_input_dates
-from pat2vec.pat2vec_get_methods.get_method_epic_orders import search_epic_orders
 
 DIAGNOSTICS_FIELDS = [
     "client_idcode",
@@ -42,21 +42,21 @@ COLUMNS_TO_DROP = [
 
 
 def search_diagnostic_orders(
-    cohort_searcher_with_terms_and_search: Optional[Callable] = None,
-    client_id_codes: Optional[Union[str, List[str]]] = None,
+    cohort_searcher_with_terms_and_search: Callable | None = None,
+    client_id_codes: str | list[str] | None = None,
     diagnostic_time_field: str = "order_createdwhen",
-    fields_override: Optional[List[str]] = None,
+    fields_override: list[str] | None = None,
     start_year: str = "1995",
     start_month: str = "01",
     start_day: str = "01",
     end_year: str = "2025",
     end_month: str = "12",
     end_day: str = "12",
-    additional_custom_search_string: Optional[str] = None,
+    additional_custom_search_string: str | None = None,
     index_name: str = "order",
-    output_filename: Optional[str] = "diagnostics_search_results.csv",
+    output_filename: str | None = "diagnostics_search_results.csv",
     overwrite: bool = False,
-    config_obj: Optional[object] = None,
+    config_obj: object | None = None,
 ) -> pd.DataFrame:
     """Searches for diagnostic order data for patients within a date range.
 
@@ -191,10 +191,10 @@ def prepare_diagnostic_datetime(
 
 
 def calculate_diagnostic_features(
-    order_name_df_dict: Dict[str, pd.DataFrame],
-    order_name_list: List[str],
+    order_name_df_dict: dict[str, pd.DataFrame],
+    order_name_list: list[str],
     batch_mode: bool = False,
-) -> Dict:
+) -> dict:
     """Calculates diagnostic features for each order type.
 
     Computes features like the number of orders, days since the last order,
@@ -263,7 +263,7 @@ def calculate_diagnostic_features(
 
 def create_diagnostic_features_dataframe(
     current_pat_client_id_code: str,
-    diagnostic_features: Dict,
+    diagnostic_features: dict,
     original_data: pd.DataFrame,
 ) -> pd.DataFrame:
     """Creates the final diagnostic features DataFrame.
@@ -290,7 +290,7 @@ def create_diagnostic_features_dataframe(
         columns_to_keep = [
             col
             for col in sample_row.columns
-            if col not in COLUMNS_TO_DROP and col not in diagnostic_features.keys()
+            if col not in COLUMNS_TO_DROP and col not in diagnostic_features
         ]
 
         for col in columns_to_keep:
@@ -306,10 +306,10 @@ def create_diagnostic_features_dataframe(
 
 def get_current_pat_diagnostics(
     current_pat_client_id_code: str,
-    target_date_range: Tuple,
+    target_date_range: tuple,
     pat_batch: pd.DataFrame,
-    config_obj: Optional[object] = None,
-    cohort_searcher_with_terms_and_search: Optional[Callable] = None,
+    config_obj: object | None = None,
+    cohort_searcher_with_terms_and_search: Callable | None = None,
 ) -> pd.DataFrame:
     """Retrieves diagnostic test features for a patient within a date range.
 

@@ -9,9 +9,9 @@ This module generates dummy EPIC imaging reports with realistic patterns:
 
 import random
 
-from faker import Faker
 import numpy as np
 import pandas as pd
+from faker import Faker
 
 from ..generator_helpers import create_random_date_from_globals
 

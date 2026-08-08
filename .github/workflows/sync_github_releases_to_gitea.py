@@ -15,14 +15,15 @@ GITEA_REPO_NAME="pat2vec" # e.g., 'pat2vec'
 REQUESTS_CA_BUNDLE="/etc/ssl/certs/ca-certificates.crt"
 """
 
+import json
+import os
+import shutil
 import subprocess
 import sys
-import os
-import requests
-import json
 import tempfile
-import shutil
 from urllib.parse import urlparse
+
+import requests
 from dotenv import load_dotenv
 
 load_dotenv()  # Load environment variables from .env file
@@ -172,8 +173,7 @@ def download_github_asset(asset_url, gh_token, output_path):
         )
         response.raise_for_status()
         with open(output_path, "wb") as f:
-            for chunk in response.iter_content(chunk_size=8192):
-                f.write(chunk)
+            f.writelines(response.iter_content(chunk_size=8192))
         print(f"  - Downloaded to {output_path}")
         return True
     except requests.exceptions.RequestException as e:

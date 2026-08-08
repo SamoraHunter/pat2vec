@@ -152,5 +152,5 @@ if __name__ == "__main__":
         with open(output_path, "w", encoding="utf-8") as f:
             f.write(init_content)
         print("Done.")
-    except IOError as e:
+    except OSError as e:
         print(f"Error writing to file: {e}", file=sys.stderr)

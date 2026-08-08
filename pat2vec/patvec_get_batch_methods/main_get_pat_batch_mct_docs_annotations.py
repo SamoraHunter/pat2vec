@@ -1,16 +1,16 @@
+import json
+import logging
+import os
+from typing import Any
+
+import pandas as pd
+from sqlalchemy import text
+
 from pat2vec.util.helper_functions import get_df_from_db
 from pat2vec.util.methods_annotation_get_pat_document_annotation_batch import (
     get_pat_document_annotation_batch_mct,
 )
 from pat2vec.util.methods_get import exist_check
-
-import pandas as pd
-from sqlalchemy import text
-
-import logging
-import json
-import os
-from typing import Any, Optional
 
 
 def get_pat_batch_mct_docs_annotations(
@@ -18,8 +18,8 @@ def get_pat_batch_mct_docs_annotations(
     config_obj: Any,
     cat: Any,
     t: Any,
-    cohort_searcher_with_terms_and_search: Optional[Any] = None,
-) -> Optional[pd.DataFrame]:
+    cohort_searcher_with_terms_and_search: Any | None = None,
+) -> pd.DataFrame | None:
     """Retrieves or creates annotations for a patient's MCT document batch.
 
     This function checks if an annotation file for the patient's MCT documents

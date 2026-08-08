@@ -1,5 +1,5 @@
-import os
 import ast
+import os
 
 
 def find_all_functions(package_path="pat2vec"):
@@ -33,7 +33,7 @@ def find_all_functions(package_path="pat2vec"):
 if __name__ == "__main__":
     all_funcs = find_all_functions()
 
-    print("Found {} public functions.".format(len(all_funcs)))
+    print(f"Found {len(all_funcs)} public functions.")
     print("-" * 20)
     print("Copy this list into your pat2vec/__init__.py file:")
     print("-" * 20)

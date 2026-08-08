@@ -1,7 +1,7 @@
 import os
+
 import pandas as pd
 from IPython.display import display
-from typing import List, Optional
 
 from pat2vec.util.filter_dataframe_by_timestamp import filter_dataframe_by_timestamp
 from pat2vec.util.get_start_end_year_month import get_start_end_year_month
@@ -21,7 +21,7 @@ def search_core_resus_observations(
     cohort_searcher_with_terms_and_search=None,
     client_id_codes=None,
     observations_time_field="observationdocument_recordeddtm",
-    fields_override: Optional[List[str]] = None,
+    fields_override: list[str] | None = None,
     start_year="1995",
     start_month="01",
     start_day="01",
@@ -30,9 +30,9 @@ def search_core_resus_observations(
     end_day="12",
     additional_custom_search_string=None,
     index_name: str = "observations",
-    output_filename: Optional[str] = "core_resus_search_results.csv",
+    output_filename: str | None = "core_resus_search_results.csv",
     overwrite: bool = False,
-    config_obj: Optional[object] = None,
+    config_obj: object | None = None,
 ) -> pd.DataFrame:
     """Searches for CORE_RESUS_STATUS observation data within a date range.
 

@@ -1,5 +1,5 @@
 import os
-from typing import Callable, Optional, Tuple, List
+from collections.abc import Callable
 
 import numpy as np
 import pandas as pd
@@ -25,7 +25,7 @@ def search_hospital_site(
     cohort_searcher_with_terms_and_search=None,
     client_id_codes=None,
     observations_time_field="observationdocument_recordeddtm",
-    fields_override: Optional[List[str]] = None,
+    fields_override: list[str] | None = None,
     start_year="1995",
     start_month="01",
     start_day="01",
@@ -35,9 +35,9 @@ def search_hospital_site(
     additional_custom_search_string=None,
     client_idcode_term_name="client_idcode.keyword",
     index_name: str = "observations",
-    output_filename: Optional[str] = "hosp_site_search_results.csv",
+    output_filename: str | None = "hosp_site_search_results.csv",
     overwrite: bool = False,
-    config_obj: Optional[object] = None,
+    config_obj: object | None = None,
 ):
     """Search hospital site observations via cohort search API.
 
@@ -187,10 +187,10 @@ def calculate_hospital_site_features(
 
 def get_hosp_site(
     current_pat_client_id_code: str,
-    target_date_range: Tuple,
+    target_date_range: tuple,
     pat_batch: pd.DataFrame,
-    config_obj: Optional[object] = None,
-    cohort_searcher_with_terms_and_search: Optional[Callable] = None,
+    config_obj: object | None = None,
+    cohort_searcher_with_terms_and_search: Callable | None = None,
 ) -> pd.DataFrame:
     """Retrieves CORE_HospitalSite features for a patient within a date range.
 

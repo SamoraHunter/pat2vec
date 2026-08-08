@@ -1,10 +1,10 @@
-import unittest
-from unittest.mock import patch, MagicMock
-import sys
 import os
+import sys
+import unittest
+from unittest.mock import MagicMock, patch
 
-from pat2vec.util.methods_get_medcat import get_cat
 from pat2vec.util.get_dummy_data_medcat_annotation import dummy_CAT
+from pat2vec.util.methods_get_medcat import get_cat
 
 
 class TestMethodsGetMedcat(unittest.TestCase):

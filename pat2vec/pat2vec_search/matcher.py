@@ -1,7 +1,7 @@
+import re
 from collections import defaultdict
 from datetime import timedelta
 
-import re
 import pandas as pd
 
 from pat2vec.pat2vec_search.nearest import nearest
@@ -81,7 +81,7 @@ def matcher(
                 max_time_before,
                 max_time_after,
             )
-        missing_blood_types = [k for k in bloods_filter if k not in vals.keys()]
+        missing_blood_types = [k for k in bloods_filter if k not in vals]
         for k in missing_blood_types:
             vals[k] = None
         for k, v in vals.items():

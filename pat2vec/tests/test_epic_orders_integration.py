@@ -1,15 +1,15 @@
 import unittest
 from datetime import datetime, timedelta
 
+from pat2vec.pat2vec_get_methods.get_method_epic_orders import get_epic_orders
 from pat2vec.util.config_pat2vec import config_class
 from pat2vec.util.get_dummy_data_cohort_searcher import generate_epic_orders_data
 from pat2vec.util.helper_functions import (
-    save_raw_patient_batch,
+    get_all_features,
     get_df_from_db,
     save_patient_features,
-    get_all_features,
+    save_raw_patient_batch,
 )
-from pat2vec.pat2vec_get_methods.get_method_epic_orders import get_epic_orders
 
 
 class TestEpicOrdersIntegration(unittest.TestCase):
@@ -45,7 +45,7 @@ class TestEpicOrdersIntegration(unittest.TestCase):
             all_patient_list=[self.test_patient_id],  # type: ignore
             batch_mode=True,  # type: ignore
             main_options={
-                "epic_orders": True,
+                "epic_orders_annotations": True,
             },
         )
         self.config.epic_orders_time_field = (

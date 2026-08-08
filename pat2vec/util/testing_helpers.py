@@ -1,11 +1,11 @@
-import pandas as pd
-from typing import Optional
 import logging
+
+import pandas as pd
 
 logger = logging.getLogger(__name__)
 
 
-def read_test_data(file_path: str) -> Optional[pd.DataFrame]:
+def read_test_data(file_path: str) -> pd.DataFrame | None:
     """Reads data from a CSV file into a pandas DataFrame.
 
     This function is a simple wrapper around `pd.read_csv` with added

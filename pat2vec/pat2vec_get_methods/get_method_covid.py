@@ -1,5 +1,5 @@
 import os
-from typing import Callable, List, Optional, Tuple, Union
+from collections.abc import Callable
 
 import numpy as np
 import pandas as pd
@@ -23,22 +23,22 @@ SEARCH_TERM_PLAIN = "SARS CoV-2 (COVID-19) RNA"
 
 
 def search_covid(
-    cohort_searcher_with_terms_and_search: Optional[Callable] = None,
-    client_id_codes: Optional[Union[str, List[str]]] = None,
+    cohort_searcher_with_terms_and_search: Callable | None = None,
+    client_id_codes: str | list[str] | None = None,
     observations_time_field: str = "basicobs_entered",
-    fields_override: Optional[List[str]] = None,
+    fields_override: list[str] | None = None,
     start_year: str = "1995",
     start_month: str = "01",
     start_day: str = "01",
     end_year: str = "2025",
     end_month: str = "12",
     end_day: str = "12",
-    additional_custom_search_string: Optional[str] = None,
+    additional_custom_search_string: str | None = None,
     client_idcode_term_name: str = "client_idcode.keyword",
     index_name: str = "basic_observations",
-    output_filename: Optional[str] = "covid_search_results.csv",
+    output_filename: str | None = "covid_search_results.csv",
     overwrite: bool = False,
-    config_obj: Optional[object] = None,
+    config_obj: object | None = None,
 ) -> pd.DataFrame:
     """Searches for COVID-19 test observations.
 
@@ -177,10 +177,10 @@ def calculate_covid_features(
 
 def get_covid(
     current_pat_client_id_code: str,
-    target_date_range: Tuple,
+    target_date_range: tuple,
     pat_batch: pd.DataFrame,
-    config_obj: Optional[object] = None,
-    cohort_searcher_with_terms_and_search: Optional[Callable] = None,
+    config_obj: object | None = None,
+    cohort_searcher_with_terms_and_search: Callable | None = None,
 ) -> dict:
     """Retrieves COVID-19 test features for a patient within a date range.
 

@@ -1,5 +1,5 @@
 import os
-from typing import Callable, Dict, Optional, Tuple, List
+from collections.abc import Callable
 
 import numpy as np
 import pandas as pd
@@ -12,7 +12,7 @@ from pat2vec.util.parse_date import validate_input_dates
 
 def compute_feature_stats(
     data: pd.DataFrame, column: str, feature_name: str, config_obj: object
-) -> Dict:
+) -> dict:
     """Computes summary statistics for a feature column in the NEWS dataset.
 
     Args:
@@ -48,7 +48,7 @@ def search_news_observations(
     cohort_searcher_with_terms_and_search=None,
     client_id_codes=None,
     observations_time_field="observationdocument_recordeddtm",
-    fields_override: Optional[List[str]] = None,
+    fields_override: list[str] | None = None,
     start_year="1995",
     start_month="01",
     start_day="01",
@@ -57,9 +57,9 @@ def search_news_observations(
     end_day="12",
     additional_custom_search_string=None,
     index_name: str = "observations",
-    output_filename: Optional[str] = "news_search_results.csv",
+    output_filename: str | None = "news_search_results.csv",
     overwrite: bool = False,
-    config_obj: Optional[object] = None,
+    config_obj: object | None = None,
 ):
     """Searches for NEWS/NEWS2 observation data within a date range.
 
@@ -168,11 +168,11 @@ def search_news_observations(
 
 def get_news(
     current_pat_client_id_code: str,
-    target_date_range: Tuple,
+    target_date_range: tuple,
     pat_batch: pd.DataFrame,
-    config_obj: Optional[object] = None,
-    cohort_searcher_with_terms_and_search: Optional[Callable] = None,
-    fields_override: Optional[List[str]] = None,
+    config_obj: object | None = None,
+    cohort_searcher_with_terms_and_search: Callable | None = None,
+    fields_override: list[str] | None = None,
 ) -> pd.DataFrame:
     """Retrieves NEWS/NEWS2 features for a patient within a date range.
 

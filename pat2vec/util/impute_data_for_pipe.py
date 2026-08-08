@@ -1,18 +1,18 @@
+import logging
+import pickle
+import random
+
+import numpy as np
+import pandas as pd
 from sklearn.impute import SimpleImputer
 from sklearn.model_selection import train_test_split
-import pandas as pd
-import numpy as np
-import random
-import pickle
-from typing import Dict, List, Union
-import logging
 
 logger = logging.getLogger(__name__)
 
 
 def mean_impute_dataframe(
     data: pd.DataFrame,
-    y_vars: Union[str, List[str]],
+    y_vars: str | list[str],
     test_size: float = 0.25,
     val_size: float = 0.25,
     random_state: int = 1,
@@ -137,7 +137,7 @@ def mean_impute_dataframe(
 
 def save_missing_percentage(
     df: pd.DataFrame, output_file: str = "percent_missing.pkl"
-) -> Dict[str, float]:
+) -> dict[str, float]:
     """Calculates and saves the percentage of missing values for each column.
 
     Args:

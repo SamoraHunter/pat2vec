@@ -1,8 +1,8 @@
 import random
 
-from faker import Faker
 import numpy as np
 import pandas as pd
+from faker import Faker
 
 random_state = 42
 Faker.seed(random_state)

@@ -1,20 +1,20 @@
+import os
 import pickle
 import random
 import re
-import os
-from typing import Any, Dict, List
+from collections import Counter
+from typing import Any
 
 import numpy as np
-from collections import Counter
 import pandas as pd
 from sklearn.cluster import KMeans
 from sklearn.feature_extraction.text import CountVectorizer
 
-from pat2vec.util.testing_helpers import read_test_data
 from pat2vec.util.elasticsearch_methods import check_patients_existence
+from pat2vec.util.testing_helpers import read_test_data
 
 
-def extract_treatment_id_list_from_docs(config_obj: Any) -> List[str]:
+def extract_treatment_id_list_from_docs(config_obj: Any) -> list[str]:
     """Retrieves a list of unique client IDs from a treatment document.
 
     This function reads a CSV or XLSX file specified in the configuration,
@@ -186,12 +186,12 @@ def extract_treatment_id_list_from_docs(config_obj: Any) -> List[str]:
 
 
 def generate_control_list(
-    treatment_client_id_list: List[str],
+    treatment_client_id_list: list[str],
     treatment_control_ratio_n: int,
     control_list_path: str = "control_list.pkl",
     all_epr_patient_list_path: str = "none",
     verbosity: int = 0,
-) -> List[str]:
+) -> list[str]:
     """Generates and saves a list of control patients.
 
     This function creates a control group by taking a master list of all
@@ -242,7 +242,7 @@ def generate_control_list(
     return all_patient_list_control
 
 
-def sanitize_hospital_ids(hospital_ids: List[str], config_obj: Any) -> List[str]:
+def sanitize_hospital_ids(hospital_ids: list[str], config_obj: Any) -> list[str]:
     """Sanitizes a list of hospital IDs by converting them to uppercase.
 
     This function iterates through a list of hospital IDs, converts each to
@@ -323,7 +323,7 @@ def sanitize_hospital_ids(hospital_ids: List[str], config_obj: Any) -> List[str]
         return hospital_ids
 
 
-def get_all_patients_list(config_obj: Any) -> List[str]:
+def get_all_patients_list(config_obj: Any) -> list[str]:
     """Extracts and prepares the final list of all patient IDs for the pipeline.
 
     This function serves as the main entry point for generating the patient cohort.
@@ -592,8 +592,8 @@ def get_all_patients_list(config_obj: Any) -> List[str]:
 
 
 def analyze_client_codes(
-    client_idcode_list: List[str], min_val: int = 3
-) -> Dict[str, Any]:
+    client_idcode_list: list[str], min_val: int = 3
+) -> dict[str, Any]:
     """Analyzes and clusters client ID codes based on their structure.
 
     This function separates a list of client IDs into valid and invalid groups

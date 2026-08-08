@@ -1,5 +1,5 @@
 import os
-from typing import Callable, List, Optional, Tuple, Union
+from collections.abc import Callable
 
 import pandas as pd
 from IPython.display import display
@@ -25,21 +25,21 @@ DEMOGRAPHICS_FIELDS = [
 
 
 def search_demographics(
-    cohort_searcher_with_terms_and_search: Optional[Callable] = None,
-    client_id_codes: Optional[Union[str, List[str]]] = None,
+    cohort_searcher_with_terms_and_search: Callable | None = None,
+    client_id_codes: str | list[str] | None = None,
     demographics_time_field: str = "updatetime",
-    fields_override: Optional[List[str]] = None,
+    fields_override: list[str] | None = None,
     start_year: str = "1995",
     start_month: str = "01",
     start_day: str = "01",
     end_year: str = "2025",
     end_month: str = "12",
     end_day: str = "12",
-    additional_custom_search_string: Optional[str] = None,
+    additional_custom_search_string: str | None = None,
     index_name: str = "epr_documents",
-    output_filename: Optional[str] = "demographics_search_results.csv",
+    output_filename: str | None = "demographics_search_results.csv",
     overwrite: bool = False,
-    config_obj: Optional[object] = None,
+    config_obj: object | None = None,
 ) -> pd.DataFrame:
     """Searches for demographics data for patients within a date range.
 
@@ -139,7 +139,7 @@ def search_demographics(
     return results
 
 
-def get_demographics_data(pat2vec_obj: object, pat_list: List[str]) -> pd.DataFrame:
+def get_demographics_data(pat2vec_obj: object, pat_list: list[str]) -> pd.DataFrame:
     """Retrieves and processes demographics data for a list of patients.
 
     Args:
@@ -186,7 +186,7 @@ def get_demographics_data(pat2vec_obj: object, pat_list: List[str]) -> pd.DataFr
 
 
 def process_demographics_data(
-    demo_data: pd.DataFrame, patlist: List[str]
+    demo_data: pd.DataFrame, patlist: list[str]
 ) -> pd.DataFrame:
     """Processes raw demographics data to return the most recent record per patient.
 
@@ -227,10 +227,10 @@ def process_demographics_data(
 
 
 def get_demographics3(
-    patlist: List[str],
-    target_date_range: Tuple,
+    patlist: list[str],
+    target_date_range: tuple,
     cohort_searcher_with_terms_and_search: Callable,
-    config_obj: Optional[object] = None,
+    config_obj: object | None = None,
 ) -> pd.DataFrame:
     """Gets demographics information for patients within a specified date range.
 

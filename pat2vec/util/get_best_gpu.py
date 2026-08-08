@@ -1,9 +1,9 @@
+import logging
 import os
+
 import torch
 
 from pat2vec.util.methods_get import get_free_gpu
-
-import logging
 
 logger = logging.getLogger(__name__)
 

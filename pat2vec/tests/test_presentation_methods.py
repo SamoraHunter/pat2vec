@@ -1,12 +1,12 @@
-import unittest
-from unittest.mock import patch, MagicMock
 import os
-import tempfile
 import shutil
+import tempfile
+import unittest
+from unittest.mock import MagicMock, patch
 
 from pat2vec.util.presentation_methods import (
-    group_images_by_suffix,
     create_powerpoint_slides,
+    group_images_by_suffix,
 )
 
 

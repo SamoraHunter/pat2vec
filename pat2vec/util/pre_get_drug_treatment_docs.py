@@ -1,7 +1,7 @@
+import logging
 import os
 import random
-import logging
-from typing import Any, List
+from typing import Any
 
 import pandas as pd
 from fuzzywuzzy import fuzz
@@ -25,7 +25,7 @@ def get_treatment_records_by_drug_order_name(
     term: str,  # Single search term
     verbose: int = 0,
     all_fields: bool = False,
-    column_fields_to_match: List[str] = [
+    column_fields_to_match: list[str] = [
         "order_summaryline",
         "order_name",
         "order_holdreasontext",
@@ -310,7 +310,7 @@ def get_treatment_records_by_drug_order_name_epic(
     pat2vec_obj: Any,
     term: str,
     verbose: int = 0,
-    column_fields_to_match: List[str] = ["document_Name", "document_Content"],
+    column_fields_to_match: list[str] = ["document_Name", "document_Content"],
 ) -> pd.DataFrame:
     """Retrieves drug order records from the 'epic_orders' index matching a search term."""
     if pat2vec_obj is None:
@@ -432,11 +432,11 @@ def get_treatment_records_by_drug_order_name_epic(
 
 def iterative_drug_treatment_search(
     pat2vec_obj: Any,
-    search_terms: List[str],
+    search_terms: list[str],
     output_file_path: str,
     verbose: int = 0,
     all_fields: bool = False,
-    column_fields_to_match: List[str] = [
+    column_fields_to_match: list[str] = [
         "order_summaryline",
         "order_name",
         "order_holdreasontext",

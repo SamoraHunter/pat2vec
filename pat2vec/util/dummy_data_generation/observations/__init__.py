@@ -1,5 +1,5 @@
-from .bmi import generate_bmi_data
 from .bed import generate_bed_data
+from .bmi import generate_bmi_data
 from .core_o2 import generate_core_o2_data
 from .core_resus import generate_core_resus_data
 from .hospital_site import generate_hospital_site_data
@@ -12,14 +12,14 @@ from .textual import (
 from .vte_status import generate_vte_data
 
 __all__ = [
-    "generate_bmi_data",
     "generate_bed_data",
+    "generate_bmi_data",
     "generate_core_o2_data",
     "generate_core_resus_data",
     "generate_hospital_site_data",
     "generate_news_data",
-    "generate_smoking_data",
     "generate_observations_MRC_text_data",
     "generate_observations_Reports_text_data",
+    "generate_smoking_data",
     "generate_vte_data",
 ]

@@ -1,8 +1,8 @@
 import csv
+import logging
 import os
 import shutil
-import logging
-from typing import List, Optional, Dict
+
 import pandas as pd
 from tqdm import tqdm
 
@@ -17,7 +17,7 @@ def count_files(path: str) -> int:
     return count
 
 
-def process_chunk(args: tuple) -> Dict[str, List[str]]:
+def process_chunk(args: tuple) -> dict[str, list[str]]:
     """Processes a chunk of CSV files, concatenating their data into a dictionary.
 
     This helper function is designed for multiprocessing. It reads a specified
@@ -47,8 +47,8 @@ def copy_files_and_dirs(
     source_root: str,
     source_name: str,
     destination: str,
-    items_to_copy: Optional[List[str]] = None,
-    loose_files: Optional[List[str]] = None,
+    items_to_copy: list[str] | None = None,
+    loose_files: list[str] | None = None,
 ) -> None:
     """Copies specified directories and files from a source location to a new destination."""
     source_dir = os.path.join(source_root, source_name)

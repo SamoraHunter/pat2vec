@@ -1,16 +1,16 @@
-import unittest
 import os
 import shutil
 import tempfile
-from unittest.mock import MagicMock, patch
+import unittest
 from datetime import datetime
+from unittest.mock import MagicMock, patch
 
-from pat2vec.util.config_pat2vec import config_class
 from pat2vec.main_pat2vec import main
-from pat2vec.util.helper_functions import get_all_features
+from pat2vec.util.config_pat2vec import config_class
 from pat2vec.util.get_dummy_data_cohort_searcher import (
     generate_patient_timeline_faker,
 )
+from pat2vec.util.helper_functions import get_all_features
 
 
 class TestMultiPatientIsolationIntegration(unittest.TestCase):

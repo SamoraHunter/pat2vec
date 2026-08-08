@@ -1,7 +1,7 @@
 import os
+
 import pandas as pd
 from IPython.display import display
-from typing import List, Optional
 
 from pat2vec.util.filter_dataframe_by_timestamp import filter_dataframe_by_timestamp
 from pat2vec.util.get_start_end_year_month import get_start_end_year_month
@@ -45,7 +45,7 @@ def search_appointments(
     cohort_searcher_with_terms_and_search=None,
     client_id_codes=None,
     appointments_time_field="AppointmentDateTime",
-    fields_override: Optional[List[str]] = None,
+    fields_override: list[str] | None = None,
     start_year="1995",
     start_month="01",
     start_day="01",
@@ -55,9 +55,9 @@ def search_appointments(
     additional_custom_search_string=None,
     index_name: str = "pims_apps*",
     term_name: str = "HospitalID.keyword",
-    output_filename: Optional[str] = "appointments_search_results.csv",
+    output_filename: str | None = "appointments_search_results.csv",
     overwrite: bool = False,
-    config_obj: Optional[object] = None,
+    config_obj: object | None = None,
 ):
     """Searches for appointment data for a specific patient within a date range.
 

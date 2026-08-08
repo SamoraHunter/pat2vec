@@ -1,13 +1,13 @@
-import subprocess
-import socket
-import os
-import time
-import logging
-import uuid
-import requests
 import atexit
+import logging
+import os
+import socket
 import struct
-from typing import Optional, Tuple
+import subprocess
+import time
+import uuid
+
+import requests
 
 logger = logging.getLogger(__name__)
 
@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 class ElasticContainer:
     """Manages a transient Elasticsearch Docker container for testing."""
 
-    def __init__(self, image: Optional[str] = None, port: int = 19200):
+    def __init__(self, image: str | None = None, port: int = 19200):
         # Use env var if set, otherwise argument, otherwise default
         # Note: We default to Docker Hub (elasticsearch:8.17.0) instead of docker.elastic.co
         # because corporate proxies often block the redirects to Cloudflare R2 used by
@@ -26,7 +26,7 @@ class ElasticContainer:
         self.port = port
         self.container_name = f"pat2vec-test-elastic-{uuid.uuid4().hex[:8]}"
         self.password = "test_password_123"
-        self.container_id: Optional[str] = None
+        self.container_id: str | None = None
         self.host = "127.0.0.1"
 
     def __enter__(self):
@@ -127,7 +127,7 @@ class ElasticContainer:
             logger.warning(f"Could not retrieve mapped port: {e}")
         return self.port
 
-    def _get_container_ip(self) -> Optional[str]:
+    def _get_container_ip(self) -> str | None:
         """Retrieves the internal IP address of the container."""
         if not self.container_id:
             return None
@@ -325,6 +325,6 @@ class ElasticContainer:
 
         raise TimeoutError("Elasticsearch container failed to start within timeout.")
 
-    def get_credentials(self) -> Tuple[str, str, str]:
+    def get_credentials(self) -> tuple[str, str, str]:
         """Returns (host_url, username, password)."""
         return f"http://{self.host}:{self.port}", "elastic", self.password

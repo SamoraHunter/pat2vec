@@ -1,11 +1,11 @@
-import pandas as pd  # Import pandas
-from typing import Dict, List, Optional, Tuple
 import logging
+
+import pandas as pd  # Import pandas
 
 logger = logging.getLogger(__name__)
 
 
-def anonymize_feature_names(df: pd.DataFrame) -> Tuple[pd.DataFrame, Dict[str, str]]:
+def anonymize_feature_names(df: pd.DataFrame) -> tuple[pd.DataFrame, dict[str, str]]:
     """Anonymizes DataFrame column names, preserving prefixes and suffixes.
 
     The 'core' part of each feature name is replaced with a unique, generic
@@ -26,15 +26,15 @@ def anonymize_feature_names(df: pd.DataFrame) -> Tuple[pd.DataFrame, Dict[str, s
             - dict: A dictionary mapping anonymized names to their original
               names, for de-anonymization. Format: {anonymized_name: original_name}.
     """
-    original_feature_names: List[str] = (
+    original_feature_names: list[str] = (
         df.columns.tolist()
     )  # Extract column names from the DataFrame
 
-    anonymized_names_list: List[str] = []
-    anonymization_key: Dict[str, str] = {}
+    anonymized_names_list: list[str] = []
+    anonymization_key: dict[str, str] = {}
 
     # Mapping to keep core concepts consistently anonymized if they appear multiple times
-    core_concept_map: Dict[str, str] = {}
+    core_concept_map: dict[str, str] = {}
     next_concept_id: int = 0
 
     # Define prefixes and suffixes strictly based on the provided get_pertubation_columns function
@@ -168,8 +168,8 @@ def anonymize_feature_names(df: pd.DataFrame) -> Tuple[pd.DataFrame, Dict[str, s
 
 
 def deanonymize_feature_names(
-    anonymized_feature_names: List[str], anonymization_key: Dict[str, str]
-) -> List[Optional[str]]:
+    anonymized_feature_names: list[str], anonymization_key: dict[str, str]
+) -> list[str | None]:
     """De-anonymizes a list of feature names using a provided key.
 
     Args:
@@ -181,7 +181,7 @@ def deanonymize_feature_names(
         A list of the original feature names. If an anonymized name is not
         found in the key, the corresponding item in the list will be None.
     """
-    deanonymized_names: List[Optional[str]] = []
+    deanonymized_names: list[str | None] = []
     for anonymized_name in anonymized_feature_names:
         original_name = anonymization_key.get(anonymized_name, None)
         if original_name is None:

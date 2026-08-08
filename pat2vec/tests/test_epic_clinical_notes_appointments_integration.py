@@ -2,18 +2,18 @@ import unittest
 from datetime import datetime, timedelta
 from unittest.mock import MagicMock, patch
 
+from pat2vec.pat2vec_get_methods.get_method_epic_clinical_notes_appointments import (
+    get_epic_clinical_notes_appointments,
+)
 from pat2vec.util.config_pat2vec import config_class
 from pat2vec.util.get_dummy_data_cohort_searcher import (
     generate_epic_clinical_notes_appointments_data,
 )
 from pat2vec.util.helper_functions import (
-    save_raw_patient_batch,
+    get_all_features,
     get_df_from_db,
     save_patient_features,
-    get_all_features,
-)
-from pat2vec.pat2vec_get_methods.get_method_epic_clinical_notes_appointments import (
-    get_epic_clinical_notes_appointments,
+    save_raw_patient_batch,
 )
 
 

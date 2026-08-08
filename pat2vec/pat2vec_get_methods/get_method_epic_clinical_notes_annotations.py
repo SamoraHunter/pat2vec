@@ -1,4 +1,4 @@
-from typing import Callable, Optional, Tuple
+from collections.abc import Callable
 
 import pandas as pd
 
@@ -10,12 +10,12 @@ from pat2vec.util.methods_get import update_pbar
 
 def get_current_pat_epic_clinical_notes_annotations(
     current_pat_client_id_code: str,
-    target_date_range: Tuple,
-    epic_clinical_notes_annotations: Optional[pd.DataFrame],
-    config_obj: Optional[object] = None,
-    t: Optional[object] = None,
-    cohort_searcher_with_terms_and_search: Optional[Callable] = None,
-    cat: Optional[object] = None,
+    target_date_range: tuple,
+    epic_clinical_notes_annotations: pd.DataFrame | None,
+    config_obj: object | None = None,
+    t: object | None = None,
+    cohort_searcher_with_terms_and_search: Callable | None = None,
+    cat: object | None = None,
 ) -> pd.DataFrame:
     """Retrieves and processes Epic clinical notes annotations for a patient.
 

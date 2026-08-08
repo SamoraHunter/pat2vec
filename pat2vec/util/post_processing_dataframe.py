@@ -1,9 +1,9 @@
-import pandas as pd
+import logging
 import os
 import pickle
-import logging
 from datetime import datetime
-from typing import List
+
+import pandas as pd
 from tqdm import tqdm
 
 logger = logging.getLogger(__name__)
@@ -78,7 +78,7 @@ def save_missing_values_pickle(
             pickle.dump(missing_dict, f)
 
 
-def convert_true_to_float(df: pd.DataFrame, columns: List[str] = None) -> pd.DataFrame:
+def convert_true_to_float(df: pd.DataFrame, columns: list[str] = None) -> pd.DataFrame:
     """Converts 'True' strings to 1.0 and ensures columns are float."""
     if columns is None:
         columns = [

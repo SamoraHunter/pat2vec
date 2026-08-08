@@ -1,14 +1,14 @@
-import re
-import pandas as pd
-from typing import List
 import logging
+import re
+
+import pandas as pd
 
 logger = logging.getLogger(__name__)
 
 
 def append_regex_term_counts(
     df: pd.DataFrame,
-    terms: List[str],
+    terms: list[str],
     text_column: str = "body_analysed",
     debug: bool = False,
 ) -> pd.DataFrame:

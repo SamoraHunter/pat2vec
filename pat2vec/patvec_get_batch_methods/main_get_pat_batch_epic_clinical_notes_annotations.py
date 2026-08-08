@@ -72,7 +72,7 @@ def _fetch_epic_clinical_notes_from_elasticsearch(
                 )
             if "document_CreatedWhen" in results.columns:
                 results.rename(
-                    columns={"document_CreatedWhen": "updatetime"}, inplace=True
+                    # Note: document_CreatedWhen is NOT renamed - it matches the DB schema (MAPPINGS) directly
                 )
             if "document_Content" in results.columns:
                 results.rename(
@@ -82,7 +82,7 @@ def _fetch_epic_clinical_notes_from_elasticsearch(
                 results.rename(columns={"id": "document_guid"}, inplace=True)
             if "document_Name" in results.columns:
                 results.rename(
-                    columns={"document_Name": "document_description"}, inplace=True
+                    # Note: document_Name removed from ES field_map to avoid schema mismatch
                 )
         return results if results is not None else pd.DataFrame()
     except Exception as e:

@@ -1,15 +1,15 @@
 import unittest
 from datetime import datetime, timedelta
 
+from pat2vec.pat2vec_get_methods.get_method_epic_lab_results import get_epic_lab_results
 from pat2vec.util.config_pat2vec import config_class
 from pat2vec.util.get_dummy_data_cohort_searcher import generate_epic_lab_results_data
 from pat2vec.util.helper_functions import (
-    save_raw_patient_batch,
+    get_all_features,
     get_df_from_db,
     save_patient_features,
-    get_all_features,
+    save_raw_patient_batch,
 )
-from pat2vec.pat2vec_get_methods.get_method_epic_lab_results import get_epic_lab_results
 
 
 class TestEpicLabResultsIntegration(unittest.TestCase):

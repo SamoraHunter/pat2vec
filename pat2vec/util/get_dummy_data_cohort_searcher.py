@@ -1,22 +1,25 @@
-from datetime import datetime, timedelta
+import calendar
+import json
 import logging
 import os
+import random
 import re
 import string
-import json
-from typing import Any, Dict, List, Optional, Tuple, Union, cast
 import uuid
+from datetime import datetime, timedelta
+from typing import Any, cast
+
+import numpy as np
 import pandas as pd
 from faker import Faker
+from transformers import pipeline
+
+from pat2vec.pat2vec_get_methods.get_method_bed import BED_FIELDS
 from pat2vec.pat2vec_get_methods.get_method_bmi import BMI_FIELDS
 from pat2vec.pat2vec_get_methods.get_method_core02 import CORE_O2_FIELDS
-from pat2vec.pat2vec_get_methods.get_method_bed import BED_FIELDS
-from pat2vec.pat2vec_get_methods.get_method_vte_status import VTE_FIELDS
-from pat2vec.pat2vec_get_methods.get_method_smoking import SMOKING_FIELDS
 from pat2vec.pat2vec_get_methods.get_method_core_resus import CORE_RESUS_FIELDS
-from pat2vec.util.elasticsearch_methods import ingest_data_to_elasticsearch
-from transformers import pipeline
-import random
+from pat2vec.pat2vec_get_methods.get_method_smoking import SMOKING_FIELDS
+from pat2vec.pat2vec_get_methods.get_method_vte_status import VTE_FIELDS
 from pat2vec.util.dummy_data_files.dummy_lists import (
     blood_test_names,
     diagnostic_names,
@@ -28,8 +31,7 @@ from pat2vec.util.dummy_data_files.dummy_lists import (
 from pat2vec.util.dummy_data_generation.generator_helpers import (
     create_random_date_from_globals,
 )
-import numpy as np
-import calendar
+from pat2vec.util.elasticsearch_methods import ingest_data_to_elasticsearch
 
 random_state = 42
 Faker.seed(random_state)
@@ -73,7 +75,7 @@ def is_safe_host(h: str) -> bool:
     )
 
 
-def maybe_nan(value: Any, probability: float = 0.2) -> Union[Any, float]:
+def maybe_nan(value: Any, probability: float = 0.2) -> Any | float:
     """Returns a value or NaN based on a probability.
 
     Args:
@@ -92,7 +94,7 @@ def maybe_nan(value: Any, probability: float = 0.2) -> Union[Any, float]:
 
 def generate_epr_documents_data(
     num_rows: int,
-    entered_list: List[str],
+    entered_list: list[str],
     global_start_year: int,
     global_start_month: int,
     global_start_day: int = 1,
@@ -100,7 +102,7 @@ def generate_epr_documents_data(
     global_end_month: int = 12,
     global_end_day: int = 31,
     use_GPT: bool = True,
-    fields_list: Optional[List[str]] = None,
+    fields_list: list[str] | None = None,
 ) -> pd.DataFrame:
     """Generates dummy EPR document data.
 
@@ -142,7 +144,7 @@ def generate_epr_documents_data(
 
     df_holder_list = []
 
-    for i in range(0, len(entered_list)):
+    for i in range(len(entered_list)):
         current_pat_client_id_code = entered_list[i]
 
         data = {
@@ -210,14 +212,14 @@ def generate_epr_documents_data(
 
 def generate_epr_documents_personal_data(
     num_rows: int,
-    entered_list: List[str],
+    entered_list: list[str],
     global_start_year: int,
     global_start_month: int,
     global_start_day: int = 1,
     global_end_year: int = 2023,
     global_end_month: int = 12,
     global_end_day: int = 31,
-    fields_list: List[str] = [
+    fields_list: list[str] = [
         "client_idcode",
         "client_firstname",
         "client_lastname",
@@ -249,7 +251,7 @@ def generate_epr_documents_personal_data(
     """
     df_holder_list = []
 
-    for i in range(0, len(entered_list)):
+    for i in range(len(entered_list)):
         current_pat_client_id_code = entered_list[i]
 
         ethnicity = faker.random_element(ethnicity_list)
@@ -314,14 +316,14 @@ def generate_epr_documents_personal_data(
 
 def generate_diagnostic_orders_data(
     num_rows: int,
-    entered_list: List[str],
+    entered_list: list[str],
     global_start_year: int,
     global_start_month: int,
     global_start_day: int = 1,
     global_end_year: int = 2023,
     global_end_month: int = 12,
     global_end_day: int = 31,
-    fields_list: List[str] = [
+    fields_list: list[str] = [
         "order_guid",
         "client_idcode",
         "order_name",
@@ -359,7 +361,7 @@ def generate_diagnostic_orders_data(
 
     df_holder_list = []
 
-    for i in range(0, len(entered_list)):
+    for i in range(len(entered_list)):
         current_pat_client_id_code = entered_list[i]
 
         data = {
@@ -431,14 +433,14 @@ def generate_diagnostic_orders_data(
 
 def generate_drug_orders_data(
     num_rows: int,
-    entered_list: List[str],
+    entered_list: list[str],
     global_start_year: int,
     global_start_month: int,
     global_start_day: int = 1,
     global_end_year: int = 2023,
     global_end_month: int = 12,
     global_end_day: int = 31,
-    fields_list: List[str] = [
+    fields_list: list[str] = [
         "order_guid",
         "client_idcode",
         "order_name",
@@ -453,7 +455,7 @@ def generate_drug_orders_data(
         "order_performeddtm",
         "order_typecode",
     ],
-    base_date: Optional[datetime] = None,
+    base_date: datetime | None = None,
 ) -> pd.DataFrame:
     """Generates dummy data for the 'drug_orders' index.
 
@@ -477,7 +479,7 @@ def generate_drug_orders_data(
     """
     df_holder_list = []
 
-    for i in range(0, len(entered_list)):
+    for i in range(len(entered_list)):
         current_pat_client_id_code = entered_list[i]
 
         if base_date is not None:
@@ -575,7 +577,7 @@ def generate_drug_orders_data(
 
 def generate_observations_MRC_text_data(
     num_rows: int,
-    entered_list: List[str],
+    entered_list: list[str],
     global_start_year: int,
     global_start_month: int,
     global_start_day: int = 1,
@@ -584,7 +586,7 @@ def generate_observations_MRC_text_data(
     global_end_day: int = 31,
     use_GPT: bool = False,
     *,
-    fields_list: List[str] = [
+    fields_list: list[str] = [
         "observation_guid",
         "client_idcode",
         "obscatalogmasteritem_displayname",
@@ -619,7 +621,7 @@ def generate_observations_MRC_text_data(
 
     df_holder_list = []
 
-    for i in range(0, len(entered_list)):
+    for i in range(len(entered_list)):
         current_pat_client_id_code = entered_list[i]
 
         data = {
@@ -676,7 +678,7 @@ def generate_observations_MRC_text_data(
 
 def generate_observations_Reports_text_data(
     num_rows: int,
-    entered_list: List[str],
+    entered_list: list[str],
     global_start_year: int,
     global_start_month: int,
     global_start_day: int = 1,
@@ -684,7 +686,7 @@ def generate_observations_Reports_text_data(
     global_end_month: int = 12,
     global_end_day: int = 31,
     use_GPT: bool = False,
-    fields_list: List[str] = [
+    fields_list: list[str] = [
         "basicobs_guid",
         "client_idcode",
         "basicobs_itemname_analysed",
@@ -720,7 +722,7 @@ def generate_observations_Reports_text_data(
     random.seed(random_state)
     df_holder_list = []
 
-    for i in range(0, len(entered_list)):
+    for i in range(len(entered_list)):
         current_pat_client_id_code = entered_list[i]
 
         data = {
@@ -776,14 +778,14 @@ def generate_observations_Reports_text_data(
 
 def generate_appointments_data(
     num_rows: int,
-    entered_list: List[str],
+    entered_list: list[str],
     global_start_year: int,
     global_start_month: int,
     global_start_day: int = 1,
     global_end_year: int = 2023,
     global_end_month: int = 12,
     global_end_day: int = 31,
-    fields_list: List[str] = [
+    fields_list: list[str] = [
         "Popular",
         "AppointmentType",
         "AttendanceReference",
@@ -840,7 +842,7 @@ def generate_appointments_data(
     """
     df_holder_list = []
 
-    for i in range(0, len(entered_list)):
+    for i in range(len(entered_list)):
         current_pat_client_id_code = entered_list[i]
 
         data = {
@@ -943,7 +945,7 @@ def generate_appointments_data(
 
 def generate_observations_data(
     num_rows: int,
-    entered_list: List[str],
+    entered_list: list[str],
     global_start_year: int,
     global_start_month: int,
     global_start_day: int = 1,
@@ -952,7 +954,7 @@ def generate_observations_data(
     global_end_day: int = 31,
     search_term: str = "Test",
     use_GPT: bool = False,
-    fields_list: Optional[List[str]] = None,
+    fields_list: list[str] | None = None,
 ) -> pd.DataFrame:
     """Generates dummy data for the 'observations' index.
 
@@ -990,7 +992,7 @@ def generate_observations_data(
 
     df_holder_list = []
 
-    for i in range(0, len(entered_list)):
+    for i in range(len(entered_list)):
         current_pat_client_id_code = entered_list[i]
 
         data = {
@@ -1034,15 +1036,15 @@ def generate_observations_data(
 
 def generate_basic_observations_data(
     num_rows: int,
-    entered_list: List[str],
+    entered_list: list[str],
     global_start_year: int,
     global_start_month: int,
     global_start_day: int = 1,
     global_end_year: int = 2023,
     global_end_month: int = 12,
     global_end_day: int = 31,
-    fields_list: Optional[List[str]] = None,
-    base_date: Optional[datetime] = None,
+    fields_list: list[str] | None = None,
+    base_date: datetime | None = None,
 ) -> pd.DataFrame:
     """Generates dummy data for the 'basic_observations' index.
 
@@ -1088,7 +1090,7 @@ def generate_basic_observations_data(
     random.seed(random_state)
     df_holder_list = []
 
-    for i in range(0, len(entered_list)):
+    for i in range(len(entered_list)):
         current_pat_client_id_code = entered_list[i]
 
         if base_date is not None:
@@ -1194,14 +1196,14 @@ def generate_basic_observations_data(
 
 def generate_basic_observations_textual_obs_data(
     num_rows: int,
-    entered_list: List[str],
+    entered_list: list[str],
     global_start_year: int,
     global_start_month: int,
     global_start_day: int = 1,
     global_end_year: int = 2023,
     global_end_month: int = 12,
     global_end_day: int = 31,
-    fields_list: Optional[List[str]] = None,
+    fields_list: list[str] | None = None,
 ) -> pd.DataFrame:
     # logger.debug("generate_basic_observations_textual_obs_data")
     """
@@ -1238,7 +1240,7 @@ def generate_basic_observations_textual_obs_data(
 
     df_holder_list = []
 
-    for i in range(0, len(entered_list)):
+    for i in range(len(entered_list)):
         current_pat_client_id_code = entered_list[i]
 
         data = {
@@ -1304,7 +1306,7 @@ def generate_basic_observations_textual_obs_data(
 
 def extract_date_range(
     date_string: str,
-) -> Optional[Tuple[int, int, int, int, int, int]]:
+) -> tuple[int, int, int, int, int, int] | None:
     """Extracts a date range from a string.
 
     The expected format is "YYYY-MM-DD TO YYYY-MM-DD".
@@ -1348,14 +1350,14 @@ def extract_date_range(
 
 def generate_epic_encounters_data(
     num_rows: int,
-    entered_list: List[str],
+    entered_list: list[str],
     global_start_year: int,
     global_start_month: int,
     global_start_day: int = 1,
     global_end_year: int = 2023,
     global_end_month: int = 12,
     global_end_day: int = 31,
-    fields_list: List[str] = [
+    fields_list: list[str] = [
         "activity_PatientDurableKey",
         "activity_AdmissionDate",
         "activity_DischargeDate",
@@ -1443,7 +1445,7 @@ def generate_epic_encounters_data(
 
 def generate_epic_clinical_notes_data(
     num_rows: int,
-    entered_list: List[str],
+    entered_list: list[str],
     global_start_year: int,
     global_start_month: int,
     global_start_day: int = 1,
@@ -1451,7 +1453,7 @@ def generate_epic_clinical_notes_data(
     global_end_month: int = 12,
     global_end_day: int = 31,
     use_GPT: bool = False,
-    fields_list: List[str] = [
+    fields_list: list[str] = [
         "document_PatientDurableKey",
         "document_CreatedWhen",
         "document_Content",
@@ -1540,14 +1542,14 @@ def generate_epic_clinical_notes_data(
 
 def generate_epic_medical_history_data(
     num_rows: int,
-    entered_list: List[str],
+    entered_list: list[str],
     global_start_year: int,
     global_start_month: int,
     global_start_day: int = 1,
     global_end_year: int = 2023,
     global_end_month: int = 12,
     global_end_day: int = 31,
-    fields_list: List[str] = [
+    fields_list: list[str] = [
         "document_PatientDurableKey",
         "document_CreatedWhen",
         "document_Diagnosis",
@@ -1617,14 +1619,14 @@ def generate_epic_medical_history_data(
 
 def generate_epic_orders_data(
     num_rows: int,
-    entered_list: List[str],
+    entered_list: list[str],
     global_start_year: int,
     global_start_month: int,
     global_start_day: int = 1,
     global_end_year: int = 2023,
     global_end_month: int = 12,
     global_end_day: int = 31,
-    fields_list: List[str] = [
+    fields_list: list[str] = [
         "document_PatientDurableKey",
         "document_CreatedWhen",
         "document_UpdatedWhen",
@@ -1724,14 +1726,14 @@ def generate_epic_orders_data(
 
 def generate_epic_lab_results_data(
     num_rows: int,
-    entered_list: List[str],
+    entered_list: list[str],
     global_start_year: int,
     global_start_month: int,
     global_start_day: int = 1,
     global_end_year: int = 2023,
     global_end_month: int = 12,
     global_end_day: int = 31,
-    fields_list: List[str] = [
+    fields_list: list[str] = [
         "document_PatientDurableKey",
         "document_CreatedWhen",
         "document_Name",
@@ -1816,14 +1818,14 @@ def generate_epic_lab_results_data(
 
 def generate_epic_patients_data(
     num_rows: int,
-    entered_list: List[str],
+    entered_list: list[str],
     global_start_year: int,
     global_start_month: int,
     global_start_day: int = 1,
     global_end_year: int = 2023,
     global_end_month: int = 12,
     global_end_day: int = 31,
-    fields_list: List[str] = [
+    fields_list: list[str] = [
         "patient_DurableKey",
         "patient_BirthDate",
         "patient_Gender",
@@ -1880,14 +1882,14 @@ def generate_epic_patients_data(
 
 def generate_epic_imaging_reports_data(
     num_rows: int,
-    entered_list: List[str],
+    entered_list: list[str],
     global_start_year: int,
     global_start_month: int,
     global_start_day: int = 1,
     global_end_year: int = 2023,
     global_end_month: int = 12,
     global_end_day: int = 31,
-    fields_list: List[str] = [
+    fields_list: list[str] = [
         "document_PatientDurableKey",
         "document_CreatedWhen",
         "document_Name",
@@ -1959,14 +1961,14 @@ def generate_epic_imaging_reports_data(
 
 def generate_epic_clinical_notes_appointments_data(
     num_rows: int,
-    entered_list: List[str],
+    entered_list: list[str],
     global_start_year: int,
     global_start_month: int,
     global_start_day: int = 1,
     global_end_year: int = 2023,
     global_end_month: int = 12,
     global_end_day: int = 31,
-    fields_list: List[str] = [
+    fields_list: list[str] = [
         "document_PatientDurableKey",
         "document_CreatedWhen",
         "document_UpdatedWhen",
@@ -2017,12 +2019,12 @@ def generate_epic_clinical_notes_appointments_data(
 
 def cohort_searcher_with_terms_and_search_dummy(
     index_name: str,
-    fields_list: List[str],
+    fields_list: list[str],
     term_name: str,
-    entered_list: List[str],
+    entered_list: list[str],
     search_string: str,
-    global_start_day: Optional[int] = None,
-    global_end_day: Optional[int] = None,
+    global_start_day: int | None = None,
+    global_end_day: int | None = None,
 ) -> pd.DataFrame:
     """Generates dummy data based on simulated Elasticsearch query parameters.
     This function acts as a stand-in for a real CogStack/Elasticsearch query,
@@ -2842,7 +2844,7 @@ def run_generate_patient_timeline_and_append(
 def get_patient_timeline_dummy(
     client_idcode: str,
     output_path: str = os.path.join("test_files", "dummy_timeline.csv"),
-) -> Optional[str]:
+) -> str | None:
     """Retrieves a random patient timeline from a pre-generated CSV file.
 
     Args:
@@ -2917,7 +2919,7 @@ def generate_uuid(prefix: str, length: int = 7) -> str:
     return f"{prefix}{random_chars}"
 
 
-def generate_uuid_list(n: int, prefix: str, length: int = 7) -> List[str]:
+def generate_uuid_list(n: int, prefix: str, length: int = 7) -> list[str]:
     """Generates a list of n UUID-like strings.
 
     Args:
@@ -2937,10 +2939,10 @@ def generate_uuid_list(n: int, prefix: str, length: int = 7) -> List[str]:
 
 def generate_covid_observations_data(
     num_rows: int,
-    entered_list: List[str],
+    entered_list: list[str],
     global_start_year: int,
     global_start_month: int,
-    fields_list: List[str] = [],
+    fields_list: list[str] = [],
     global_start_day: int = 1,
     global_end_year: int = 2023,
     global_end_month: int = 12,
@@ -3016,14 +3018,14 @@ def generate_covid_observations_data(
 
 def generate_hospital_site_data(
     num_rows: int,
-    entered_list: List[str],
+    entered_list: list[str],
     global_start_year: int,
     global_start_month: int,
     global_start_day: int = 1,
     global_end_year: int = 2023,
     global_end_month: int = 12,
     global_end_day: int = 31,
-    fields_list: List[str] = [
+    fields_list: list[str] = [
         "observation_guid",
         "client_idcode",
         "obscatalogmasteritem_displayname",
@@ -3112,14 +3114,14 @@ def generate_hospital_site_data(
 
 def generate_news_data(
     num_rows: int,
-    entered_list: List[str],
+    entered_list: list[str],
     global_start_year: int,
     global_start_month: int,
     global_start_day: int = 1,
     global_end_year: int = 2023,
     global_end_month: int = 12,
     global_end_day: int = 31,
-    fields_list: List[str] = [
+    fields_list: list[str] = [
         "observation_guid",
         "client_idcode",
         "obscatalogmasteritem_displayname",
@@ -3208,15 +3210,15 @@ def generate_news_data(
 
 def generate_bmi_data(
     num_rows: int,
-    entered_list: List[str],
+    entered_list: list[str],
     global_start_year: int,
     global_start_month: int,
     global_start_day: int = 1,
     global_end_year: int = 2023,
     global_end_month: int = 12,
     global_end_day: int = 31,
-    fields_list: List[str] = BMI_FIELDS,
-    base_date: Optional[datetime] = None,
+    fields_list: list[str] = BMI_FIELDS,
+    base_date: datetime | None = None,
 ) -> pd.DataFrame:
     """Generates dummy data for BMI, Weight, and Height observations.
 
@@ -3349,7 +3351,7 @@ def generate_bmi_data(
 
 def populate_elastic_with_dummy_data(
     config_obj: Any, n_patients: int = 10
-) -> List[str]:
+) -> list[str]:
     """Generates dummy data and ingests it into Elasticsearch.
 
     This function generates random patient IDs and creates dummy data for
@@ -3379,8 +3381,9 @@ def populate_elastic_with_dummy_data(
     # Initialize CogStack client to interact with Elastic
     # We avoid initialize_cogstack_client to prevent accidental usage of global/live clients
     # We strictly require a specific credentials file in the root directory
-    from pat2vec.pat2vec_search.cogstack_search_methods import CogStack
     import importlib.util
+
+    from pat2vec.pat2vec_search.cogstack_search_methods import CogStack
 
     creds_filename = "test_elastic_credentials.py"
     creds_path = os.path.abspath(creds_filename)
@@ -3493,10 +3496,7 @@ def populate_elastic_with_dummy_data(
                     index=index_name, mappings=mappings, settings=settings
                 )
                 logger.info(f"Created index: {index_name} with custom schema")
-            else:
-                logger.warning(
-                    "Could not initialize CogStack client for schema creation."
-                )
+            logger.warning("Could not initialize CogStack client for schema creation.")
         except Exception as e:
             logger.error(f"Failed to apply Elastic schemas: {e}")
 
@@ -3900,14 +3900,14 @@ def populate_elastic_with_dummy_data(
 
 def generate_bed_data(
     num_rows: int,
-    entered_list: List[str],
+    entered_list: list[str],
     global_start_year: int,
     global_start_month: int,
     global_start_day: int = 1,
     global_end_year: int = 2023,
     global_end_month: int = 12,
     global_end_day: int = 31,
-    fields_list: List[str] = BED_FIELDS,
+    fields_list: list[str] = BED_FIELDS,
 ) -> pd.DataFrame:
     """Generates dummy data for bed number observations.
 
@@ -3982,14 +3982,14 @@ def generate_bed_data(
 
 def generate_vte_data(
     num_rows: int,
-    entered_list: List[str],
+    entered_list: list[str],
     global_start_year: int,
     global_start_month: int,
     global_start_day: int = 1,
     global_end_year: int = 2023,
     global_end_month: int = 12,
     global_end_day: int = 31,
-    fields_list: List[str] = VTE_FIELDS,
+    fields_list: list[str] = VTE_FIELDS,
 ) -> pd.DataFrame:
     """Generates dummy data for VTE status observations.
 
@@ -4055,14 +4055,14 @@ def generate_vte_data(
 
 def generate_smoking_data(
     num_rows: int,
-    entered_list: List[str],
+    entered_list: list[str],
     global_start_year: int,
     global_start_month: int,
     global_start_day: int = 1,
     global_end_year: int = 2023,
     global_end_month: int = 12,
     global_end_day: int = 31,
-    fields_list: List[str] = SMOKING_FIELDS,
+    fields_list: list[str] = SMOKING_FIELDS,
 ) -> pd.DataFrame:
     """Generates dummy data for smoking status observations.
 
@@ -4125,14 +4125,14 @@ def generate_smoking_data(
 
 def generate_core_o2_data(
     num_rows: int,
-    entered_list: List[str],
+    entered_list: list[str],
     global_start_year: int,
     global_start_month: int,
     global_start_day: int = 1,
     global_end_year: int = 2023,
     global_end_month: int = 12,
     global_end_day: int = 31,
-    fields_list: List[str] = CORE_O2_FIELDS,
+    fields_list: list[str] = CORE_O2_FIELDS,
 ) -> pd.DataFrame:
     """Generates dummy data for CORE_SpO2 (oxygen saturation) observations.
 
@@ -4275,14 +4275,14 @@ def _determine_resuscitation_status(
 
 def generate_core_resus_data(
     num_rows: int,
-    entered_list: List[str],
+    entered_list: list[str],
     global_start_year: int,
     global_start_month: int,
     global_start_day: int = 1,
     global_end_year: int = 2023,
     global_end_month: int = 12,
     global_end_day: int = 31,
-    fields_list: List[str] = CORE_RESUS_FIELDS,
+    fields_list: list[str] = CORE_RESUS_FIELDS,
 ) -> pd.DataFrame:
     """Generates dummy data for CORE_RESUS_STATUS observations with realistic clinical patterns.
 
@@ -4406,8 +4406,8 @@ class dummy_CAT:
         return self(text)["entities"]
 
     def get_entities_multi_texts(
-        self, texts: List[str], n_process: int = 1, batch_size: int = 100, **kwargs
-    ) -> List[Dict[str, Any]]:
+        self, texts: list[str], n_process: int = 1, batch_size: int = 100, **kwargs
+    ) -> list[dict[str, Any]]:
         """Returns a list of dummy annotations for a list of texts.
 
         For each text in the input list, it generates a separate dummy annotation.
@@ -4417,14 +4417,14 @@ class dummy_CAT:
 
 def generate_problem_list_data(
     num_rows: int,
-    entered_list: List[str],
+    entered_list: list[str],
     global_start_year: int,
     global_start_month: int,
     global_start_day: int = 1,
     global_end_year: int = 2023,
     global_end_month: int = 12,
     global_end_day: int = 31,
-    fields_list: List[str] = [
+    fields_list: list[str] = [
         "client_idcode",
         "problem_name",
         "problem_status",

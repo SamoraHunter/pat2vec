@@ -8,7 +8,7 @@ import random
 import re
 import string
 from datetime import datetime, timedelta
-from typing import Any, List, Optional, Tuple
+from typing import Any
 
 import numpy as np
 
@@ -63,8 +63,8 @@ def create_random_date_from_globals(
     start_month: int,
     end_year: int,
     end_month: int,
-    start_day: Optional[int] = None,
-    end_day: Optional[int] = None,
+    start_day: int | None = None,
+    end_day: int | None = None,
 ) -> datetime:
     """Generates a random datetime within a given month-level range.
 
@@ -111,7 +111,7 @@ def generate_uuid(prefix: str, length: int = 7) -> str:
     return f"{prefix}{random_chars}"
 
 
-def generate_uuid_list(n: int, prefix: str, length: int = 7) -> List[str]:
+def generate_uuid_list(n: int, prefix: str, length: int = 7) -> list[str]:
     """Generates a list of n UUID-like strings.
 
     Args:
@@ -127,7 +127,7 @@ def generate_uuid_list(n: int, prefix: str, length: int = 7) -> List[str]:
 
 def extract_date_range(
     date_string: str,
-) -> Optional[Tuple[int, int, int, int, int, int]]:
+) -> tuple[int, int, int, int, int, int] | None:
     """Extracts a date range from a string.
 
     The expected format is "YYYY-MM-DD TO YYYY-MM-DD".
