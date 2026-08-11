@@ -16,7 +16,7 @@ def generate_covid_observations_data(
     entered_list: list[str],
     global_start_year: int,
     global_start_month: int,
-    fields_list: list[str] = [],
+    fields_list: list[str] | None = None,
     global_end_year: int = 2023,
     global_end_month: int = 12,
     global_start_day: int = 1,
@@ -48,7 +48,7 @@ def generate_covid_observations_data(
     df_holder_list = []
     for client_id_code in entered_list:
         data = {
-            "basicobs_guid": [faker.uuid4() for _ in range(num_rows)],
+            "observation_guid": [faker.uuid4() for _ in range(num_rows)],
             "client_idcode": [client_id_code for _ in range(num_rows)],
             "basicobs_itemname_analysed": [SEARCH_TERM_PLAIN for _ in range(num_rows)],
             "basicobs_value_analysed": [

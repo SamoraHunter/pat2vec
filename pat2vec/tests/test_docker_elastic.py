@@ -1,4 +1,3 @@
-import subprocess
 import unittest
 from unittest.mock import MagicMock, mock_open, patch
 
@@ -22,8 +21,8 @@ class TestElasticContainer(unittest.TestCase):
         self.assertEqual(mock_run.call_count, 2)
         mock_run.assert_any_call(
             ["docker", "rm", "-f", "cid1", "cid2"],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
+            capture_output=True,
+            check=False,
         )
 
     @patch("subprocess.run")
@@ -42,8 +41,8 @@ class TestElasticContainer(unittest.TestCase):
         self.assertTrue(self.container._ensure_image())
         mock_run.assert_called_with(
             ["docker", "image", "inspect", self.container.image],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
+            capture_output=True,
+            check=False,
         )
 
     @patch("subprocess.run")
@@ -143,8 +142,8 @@ class TestElasticContainer(unittest.TestCase):
         self.container.stop()
         mock_run.assert_called_with(
             ["docker", "rm", "-f", "test_id"],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
+            capture_output=True,
+            check=False,
         )
         self.assertIsNone(self.container.container_id)
 

@@ -8,8 +8,8 @@ from sqlalchemy import text
 
 from pat2vec.util.helper_functions import (
     get_df_from_db,
-    save_raw_patient_batch,
     save_annotations_to_db,
+    save_raw_patient_batch,
 )
 from pat2vec.util.methods_annotation_get_pat_document_annotation_batch import (
     get_pat_document_annotation_batch_epic_orders,

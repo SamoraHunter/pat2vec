@@ -71,8 +71,8 @@ class ElasticContainer:
             # Remove them
             subprocess.run(
                 ["docker", "rm", "-f"] + container_ids,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
+                capture_output=True,
+                check=False,
             )
         except FileNotFoundError:
             logger.warning(
@@ -86,8 +86,8 @@ class ElasticContainer:
         # Check if image exists
         check = subprocess.run(
             ["docker", "image", "inspect", self.image],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
+            capture_output=True,
+            check=False,
         )
         if check.returncode == 0:
             return True
@@ -181,11 +181,10 @@ class ElasticContainer:
         try:
             subprocess.run(
                 ["docker", "--version"],
-                check=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
+                capture_output=True,
+                check=False,
             )
-        except (subprocess.CalledProcessError, FileNotFoundError):
+        except FileNotFoundError:
             logger.warning("Docker not found. Skipping Elasticsearch container start.")
             return False
 
@@ -265,8 +264,8 @@ class ElasticContainer:
             logger.info(f"Stopping container: {target}")
             subprocess.run(
                 ["docker", "rm", "-f", target],
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
+                capture_output=True,
+                check=False,
             )
             self.container_id = None
 

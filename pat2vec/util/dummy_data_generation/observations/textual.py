@@ -49,7 +49,9 @@ def generate_observations_MRC_text_data(
         data = {
             "observation_guid": [faker.uuid4() for _ in range(num_rows)],
             "client_idcode": [current_pat_client_id_code for _ in range(num_rows)],
-            "obscatalogmasteritem_displayname": ["AoMRC_ClinicalSummary_FT"],
+            "obscatalogmasteritem_displayname": [
+                "AoMRC_ClinicalSummary_FT" for _ in range(num_rows)
+            ],
             "observation_valuetext_analysed": [
                 (
                     timeline_generator(current_pat_client_id_code)
@@ -70,27 +72,25 @@ def generate_observations_MRC_text_data(
                 for _ in range(num_rows)
             ],
             "clientvisit_visitidcode": [f"visit_{i}" for i in range(num_rows)],
-            "_id": [f"{i}" for i in range(num_rows)],
-            "_index": [None for _ in range(num_rows)],
-            "_score": [None for _ in range(num_rows)],
         }
 
         df = pd.DataFrame(data)
         df_holder_list.append(df)
 
-    df = pd.concat(df_holder_list)
+    if not df_holder_list:
+        return pd.DataFrame(columns=fields_list)
 
-    unique_fields = list(dict.fromkeys(fields_list + ["_id", "_index", "_score"]))
+    df = pd.concat(df_holder_list, ignore_index=True)
 
     target_col = "observation_valuetext_analysed"
-    if target_col in df.columns and target_col not in unique_fields:
-        unique_fields.append(target_col)
+    if target_col in df.columns and target_col not in fields_list:
+        fields_list.append(target_col)
 
-    for field in unique_fields:
+    for field in fields_list:
         if field not in df.columns:
             df[field] = None
 
-    df = df[unique_fields]
+    df = df[fields_list]
     df.reset_index(drop=True, inplace=True)
     return df
 
@@ -132,8 +132,8 @@ def generate_observations_Reports_text_data(
         data = {
             "basicobs_guid": [faker.uuid4() for _ in range(num_rows)],
             "client_idcode": [current_pat_client_id_code for _ in range(num_rows)],
-            "basicobs_itemname_analysed": ["Report"],
-            "basicobs_value_analysed": [""],
+            "basicobs_itemname_analysed": ["Report" for _ in range(num_rows)],
+            "basicobs_value_analysed": [""] * num_rows,
             "textualObs": [
                 (
                     timeline_generator(current_pat_client_id_code)
@@ -154,26 +154,24 @@ def generate_observations_Reports_text_data(
                 for _ in range(num_rows)
             ],
             "clientvisit_visitidcode": [f"visit_{i}" for i in range(num_rows)],
-            "_id": [f"{i}" for i in range(num_rows)],
-            "_index": [None for _ in range(num_rows)],
-            "_score": [None for _ in range(num_rows)],
         }
 
         df = pd.DataFrame(data)
         df_holder_list.append(df)
 
-    df = pd.concat(df_holder_list)
+    if not df_holder_list:
+        return pd.DataFrame(columns=fields_list)
 
-    unique_fields = list(dict.fromkeys(fields_list + ["_id", "_index", "_score"]))
+    df = pd.concat(df_holder_list, ignore_index=True)
 
     target_col = "textualObs"
-    if target_col in df.columns and target_col not in unique_fields:
-        unique_fields.append(target_col)
+    if target_col in df.columns and target_col not in fields_list:
+        fields_list.append(target_col)
 
-    for field in unique_fields:
+    for field in fields_list:
         if field not in df.columns:
             df[field] = None
 
-    df = df[unique_fields]
+    df = df[fields_list]
     df.reset_index(drop=True, inplace=True)
     return df
