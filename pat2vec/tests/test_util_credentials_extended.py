@@ -61,9 +61,9 @@ class TestCredentialsSecurity:
 
         combined = f"{username}{password}{host_name}".lower()
         for pattern in dangerous_patterns:
-            assert (
-                pattern not in combined
-            ), f"Found potential production value: {pattern}"
+            assert pattern not in combined, (
+                f"Found potential production value: {pattern}"
+            )
 
 
 class TestCredentialsEnvironmentHandling:

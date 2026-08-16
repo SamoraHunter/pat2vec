@@ -188,7 +188,6 @@ class TestSearchMultiprocess(unittest.TestCase):
             ) as mock_searcher,
             patch("pandas.read_csv", return_value=mock_df),
         ):
-
             mock_searcher.return_value = mock_df
 
             result = cohort_searcher_with_terms_and_search_multi(
@@ -220,7 +219,6 @@ class TestSearchMultiprocess(unittest.TestCase):
             ) as mock_searcher,
             patch("pandas.read_csv", return_value=mock_df),
         ):
-
             mock_searcher.return_value = mock_df
 
             result = cohort_searcher_with_terms_and_search_multi(
@@ -255,7 +253,6 @@ class TestSearchMultiprocess(unittest.TestCase):
             ) as mock_searcher,
             patch("pandas.read_csv", return_value=mock_df),
         ):
-
             mock_searcher.return_value = mock_df
 
             result = cohort_searcher_with_terms_and_search_multi(
@@ -292,7 +289,6 @@ class TestSearchMultiprocess(unittest.TestCase):
             ) as mock_searcher,
             patch("pandas.read_csv", return_value=pd.concat([mock_df] * num_items)),
         ):
-
             mock_searcher.return_value = mock_df
 
             result = cohort_searcher_with_terms_and_search_multi(
@@ -329,7 +325,6 @@ class TestSearchMultiprocess(unittest.TestCase):
             ) as mock_searcher,
             patch("pandas.read_csv", return_value=pd.concat([mock_df] * 5)),
         ):
-
             mock_searcher.return_value = mock_df
 
             result = cohort_searcher_with_terms_and_search_multi(

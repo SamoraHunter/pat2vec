@@ -174,15 +174,15 @@ def test_epic_clinical_notes_get_workflow(elastic_setup, cleanup_files):
     all_features = get_all_features(config_obj)
 
     assert not all_features.empty, "Features DataFrame should not be empty"
-    assert (
-        len(all_features) > 0
-    ), "Should have extracted features for at least one patient"
+    assert len(all_features) > 0, (
+        "Should have extracted features for at least one patient"
+    )
 
     all_features_alt = pat2vec_obj.get_all_features()
 
-    assert (
-        not all_features_alt.empty
-    ), "Alternative features extraction should not be empty"
+    assert not all_features_alt.empty, (
+        "Alternative features extraction should not be empty"
+    )
 
     df_with_datetime = extract_datetime_to_column(all_features)
 

@@ -1,0 +1,7 @@
+Refactoring with improvements to error handling and code quality
+
+- Extract error messages to variables before raising exceptions (PEP 678)
+- Replace in-place df.drop() with reassignment pattern for clarity  
+- Add stacklevel=2 to warnings.warn() for proper call site reporting
+- Update test credential file structure
+- Fix ruff.toml compatibility issues

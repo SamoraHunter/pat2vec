@@ -861,14 +861,13 @@ class main:
 
         """
         try:
-            result = search_epic_encounters(
+            return search_epic_encounters(
                 cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search,
                 patient_durable_keys=patient_id,
                 id_field_name="activity_PatientDurableKey",
                 config_obj=self.config_obj,
                 t=self.t if hasattr(self, "t") else None,
             )
-            return result
         except Exception:
             if self.config_obj.testing and not self.config_obj.testing_elastic:
                 empty_df = pd.DataFrame(
@@ -993,14 +992,13 @@ class main:
 
         """
         try:
-            result = search_epic_lab_results(
+            return search_epic_lab_results(
                 cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search,
                 patient_durable_keys=patient_id,
                 id_field_name="document_PatientDurableKey",
                 config_obj=self.config_obj,
                 t=self.t if hasattr(self, "t") else None,
             )
-            return result
         except Exception:
             if self.config_obj.testing and not self.config_obj.testing_elastic:
                 empty_df = pd.DataFrame(
@@ -1105,14 +1103,13 @@ class main:
 
         """
         try:
-            result = search_epic_patients(
+            return search_epic_patients(
                 cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search,
                 patient_durable_keys=patient_id,
                 id_field_name="patient_DurableKey",
                 config_obj=self.config_obj,
                 t=self.t if hasattr(self, "t") else None,
             )
-            return result
         except Exception:
             if self.config_obj.testing and not self.config_obj.testing_elastic:
                 empty_df = pd.DataFrame(
@@ -1501,7 +1498,7 @@ class main:
                     and id_col in res.columns
                     and id_col != "client_idcode"
                 ):
-                    res.rename(columns={id_col: "client_idcode"}, inplace=True)
+                    res = res.rename(columns={id_col: "client_idcode"})
                 batches[config["var"]] = res
             else:
                 batches[config["var"]] = config["empty"]
@@ -1821,10 +1818,13 @@ class main:
             return None
 
         # Determine anchor date for generation and clamping boundaries
-        p_real_start, p_real_end = min(
-            current_pat_start_date,
-            current_pat_end_date,
-        ), max(current_pat_start_date, current_pat_end_date)
+        p_real_start, p_real_end = (
+            min(
+                current_pat_start_date,
+                current_pat_end_date,
+            ),
+            max(current_pat_start_date, current_pat_end_date),
+        )
         date_for_generate = p_real_end if self.config_obj.lookback else p_real_start
 
         # Override global dates as a workaround for generate_date_list
@@ -1963,10 +1963,10 @@ class main:
                             errors="coerce",
                             utc=True,
                         )
-                        batch.dropna(subset=[time_col], inplace=True)
+                        batch = batch.dropna(subset=[time_col])
 
                         if text_col and text_col in batch.columns:
-                            batch.dropna(subset=[text_col], inplace=True)
+                            batch = batch.dropna(subset=[text_col])
                             batch = batch[
                                 batch[text_col].apply(lambda x: isinstance(x, str))
                             ]
@@ -2068,7 +2068,7 @@ class main:
                     f"Exception in patmaker on {current_pat_client_id_code, date_slice}",
                 )
                 logging.error(traceback.format_exc())
-                raise e
+                raise
 
     def pat_maker(self, i: int) -> None:
         """Orchestrates the entire feature extraction process for a single patient.
@@ -2185,7 +2185,7 @@ class main:
             current_pat_client_id_code,
             start_time,
             0,
-            f"Done batches in {time.time()-start_time}",
+            f"Done batches in {time.time() - start_time}",
             self.t,
             self.config_obj,
             self.config_obj.skipped_counter,
