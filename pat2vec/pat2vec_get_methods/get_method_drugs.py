@@ -122,11 +122,14 @@ def search_drug_orders(
         return pd.read_csv(output_filename)
 
     if cohort_searcher_with_terms_and_search is None:
-        raise ValueError("cohort_searcher_with_terms_and_search cannot be None.")
+        msg = "cohort_searcher_with_terms_and_search cannot be None."
+        raise ValueError(msg)
     if client_id_codes is None:
-        raise ValueError("client_id_codes cannot be None.")
+        msg = "client_id_codes cannot be None."
+        raise ValueError(msg)
     if drug_time_field is None:
-        raise ValueError("drug_time_field cannot be None.")
+        msg = "drug_time_field cannot be None."
+        raise ValueError(msg)
 
     if isinstance(client_id_codes, str):
         client_id_codes = [client_id_codes]
@@ -238,10 +241,7 @@ def calculate_drug_features(
         TypeError: If order_name_list is not a list.
 
     """
-    if batch_mode:
-        today = datetime.now(timezone.utc)
-    else:
-        today = datetime.today()
+    today = datetime.now(timezone.utc) if batch_mode else datetime.today()
 
     features = {}
 
@@ -445,7 +445,7 @@ def get_current_pat_drugs(
 
         if not epic_order_data.empty:
             # Standardize column names to match 'order' schema
-            epic_order_data.rename(
+            epic_order_data = epic_order_data.rename(
                 columns={
                     "document_PatientDurableKey": "client_idcode",
                     "document_UpdatedWhen": "order_createdwhen",  # Map to createdwhen for consistency
@@ -453,7 +453,6 @@ def get_current_pat_drugs(
                     "document_Content": "order_summaryline",
                     "id": "order_guid",
                 },
-                inplace=True,
             )
 
             # Add/ensure other expected columns from 'order', filling with NaN if not present

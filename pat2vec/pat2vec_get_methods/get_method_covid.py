@@ -95,9 +95,11 @@ def search_covid(
         return pd.read_csv(output_filename)
 
     if cohort_searcher_with_terms_and_search is None:
-        raise ValueError("cohort_searcher_with_terms_and_search cannot be None.")
+        msg = "cohort_searcher_with_terms_and_search cannot be None."
+        raise ValueError(msg)
     if client_id_codes is None:
-        raise ValueError("client_id_codes cannot be None.")
+        msg = "client_id_codes cannot be None."
+        raise ValueError(msg)
 
     if isinstance(client_id_codes, str):
         client_id_codes = [client_id_codes]
@@ -206,7 +208,8 @@ def get_covid(
 
     """
     if config_obj is None:
-        raise ValueError("config_obj cannot be None. Provide a valid configuration.")
+        msg = "config_obj cannot be None. Provide a valid configuration."
+        raise ValueError(msg)
 
     batch_mode = config_obj.batch_mode
     start_year, start_month, end_year, end_month, start_day, end_day = (

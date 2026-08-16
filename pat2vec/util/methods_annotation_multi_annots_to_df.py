@@ -90,7 +90,8 @@ def multi_annots_to_df(
 
     """
     if config_obj is None:
-        raise ValueError("config_obj is required")
+        msg = "config_obj is required"
+        raise ValueError(msg)
 
     processed_dfs = []
     for i in range(len(pat_batch)):
@@ -106,9 +107,8 @@ def multi_annots_to_df(
             )
 
             if not doc_to_annot_df.empty:
-                doc_to_annot_df.dropna(
+                doc_to_annot_df = doc_to_annot_df.dropna(
                     subset=["client_idcode", time_column],
-                    inplace=True,
                 )
                 if not doc_to_annot_df.empty:
                     processed_dfs.append(doc_to_annot_df)

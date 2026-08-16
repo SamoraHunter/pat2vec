@@ -38,11 +38,15 @@ def get_start_end_year_month(
 
     """
     if config_obj is None:
-        raise ValueError("config_obj cannot be None")
+        msg = "config_obj cannot be None"
+        raise ValueError(msg)
 
     if not isinstance(target_date_range, (tuple, list)):
+        msg = (
+            f"target_date_range must be a tuple or list, got {type(target_date_range)}"
+        )
         raise TypeError(
-            f"target_date_range must be a tuple or list, got {type(target_date_range)}",
+            msg,
         )
 
     time_window_interval_delta = config_obj.time_window_interval_delta
@@ -92,12 +96,16 @@ def get_start_end_year_month(
                 )
                 end_date = start_date + time_window_interval_delta
         except (ValueError, TypeError, IndexError) as e:
-            raise ValueError(f"Invalid date components in {target_date_range}: {e}")
+            msg = f"Invalid date components in {target_date_range}: {e}"
+            raise ValueError(msg)
 
     else:
-        raise ValueError(
+        msg = (
             f"target_date_range must have at least 3 components (Y, M, D) or contain date objects. "
-            f"Got length {len(target_date_range)}: {target_date_range}",
+            f"Got length {len(target_date_range)}: {target_date_range}"
+        )
+        raise ValueError(
+            msg,
         )
 
     if isinstance(start_date, (datetime.datetime, pd.Timestamp)):

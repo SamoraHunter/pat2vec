@@ -36,7 +36,8 @@ def get_pat_batch_demo(
             "global_end_month",
         ]
     ):
-        raise ValueError("Invalid or missing configuration object.")
+        msg = "Invalid or missing configuration object."
+        raise ValueError(msg)
 
     global_start_year = config_obj.global_start_year
     global_start_month = config_obj.global_start_month

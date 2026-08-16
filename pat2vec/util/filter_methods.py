@@ -47,8 +47,7 @@ def filter_dataframe_by_fuzzy_terms(
     if verbose >= 1:
         logger.info("Filtering complete.")
 
-    filtered_df = df[df.index.isin(matched_indices)].copy()
-    return filtered_df
+    return df[df.index.isin(matched_indices)].copy()
 
 
 def apply_data_type_epr_docs_filters(

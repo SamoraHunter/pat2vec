@@ -263,8 +263,9 @@ class config_class:
         #: Validate IPW configuration early to prevent TypeErrors
         if individual_patient_window:
             if individual_patient_window_df is None:
+                msg = "individual_patient_window_df must be provided when individual_patient_window is True."
                 raise ValueError(
-                    "individual_patient_window_df must be provided when individual_patient_window is True.",
+                    msg,
                 )
             # Resolve and set the ID column name early to satisfy downstream checks
             if individual_patient_id_column_name is None:
@@ -973,8 +974,11 @@ class config_class:
             self.ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
             if not all([self.hostname, self.username, self.password]):
+                msg = (
+                    "Hostname, username, and password must be provided for remote dump."
+                )
                 raise ValueError(
-                    "Hostname, username, and password must be provided for remote dump.",
+                    msg,
                 )
 
             self.ssh_client.connect(
@@ -1124,9 +1128,11 @@ class config_class:
 
             # Print a warning if the start column name is not in the dataframe
             if start_column_name not in self.individual_patient_window_df.columns:
-                raise ValueError(f"Column '{start_column_name}' does not exist.")
+                msg = f"Column '{start_column_name}' does not exist."
+                raise ValueError(msg)
             if id_column_name not in self.individual_patient_window_df.columns:
-                raise ValueError(f"Column '{id_column_name}' does not exist.")
+                msg = f"Column '{id_column_name}' does not exist."
+                raise ValueError(msg)
             # print debug message about start column name, offset column name, end date column name, median time between start and end date
             if self.verbosity >= 1:
                 logger.info(f"Start column name: {start_column_name}")

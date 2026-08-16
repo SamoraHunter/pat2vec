@@ -25,11 +25,7 @@ def get_treatment_records_by_drug_order_name(
     term: str,  # Single search term
     verbose: int = 0,
     all_fields: bool = False,
-    column_fields_to_match: list[str] = [
-        "order_summaryline",
-        "order_name",
-        "order_holdreasontext",
-    ],
+    column_fields_to_match: list[str] | None = None,
 ) -> pd.DataFrame:
     """Retrieves drug order records from Elasticsearch that match a search term.
 
@@ -56,11 +52,19 @@ def get_treatment_records_by_drug_order_name(
         ValueError: If `pat2vec_obj` is None or `term` is not a string.
 
     """
+    if column_fields_to_match is None:
+        column_fields_to_match = [
+            "order_summaryline",
+            "order_name",
+            "order_holdreasontext",
+        ]
     if pat2vec_obj is None:
-        raise ValueError("pat2vec_obj cannot be None")
+        msg = "pat2vec_obj cannot be None"
+        raise ValueError(msg)
 
     if not isinstance(term, str):
-        raise ValueError("term must be a string")
+        msg = "term must be a string"
+        raise ValueError(msg)
 
     # Extract configuration settings from pat2vec_obj
     config_obj = pat2vec_obj.config_obj
@@ -313,11 +317,14 @@ def get_treatment_records_by_drug_order_name_epic(
     pat2vec_obj: Any,
     term: str,
     verbose: int = 0,
-    column_fields_to_match: list[str] = ["document_Name", "document_Content"],
+    column_fields_to_match: list[str] | None = None,
 ) -> pd.DataFrame:
     """Retrieves drug order records from the 'epic_orders' index matching a search term."""
+    if column_fields_to_match is None:
+        column_fields_to_match = ["document_Name", "document_Content"]
     if pat2vec_obj is None:
-        raise ValueError("pat2vec_obj cannot be None")
+        msg = "pat2vec_obj cannot be None"
+        raise ValueError(msg)
 
     config_obj = pat2vec_obj.config_obj
     start_date = f"{config_obj.global_start_year}-{config_obj.global_start_month}-{config_obj.global_start_day}"
@@ -371,12 +378,11 @@ def get_treatment_records_by_drug_order_name_epic(
 
     # Standardize column name for fuzzy matching logic compatibility
     if "document_PatientDurableKey" in drug_treatment_docs.columns:
-        drug_treatment_docs.rename(
+        drug_treatment_docs = drug_treatment_docs.rename(
             columns={"document_PatientDurableKey": "client_idcode"},
-            inplace=True,
         )
     if "id" in drug_treatment_docs.columns:
-        drug_treatment_docs.rename(columns={"id": "order_guid"}, inplace=True)
+        drug_treatment_docs = drug_treatment_docs.rename(columns={"id": "order_guid"})
 
     def find_matching_columns(row, search_term):
         matched_cols = []
@@ -443,11 +449,7 @@ def iterative_drug_treatment_search(
     output_file_path: str,
     verbose: int = 0,
     all_fields: bool = False,
-    column_fields_to_match: list[str] = [
-        "order_summaryline",
-        "order_name",
-        "order_holdreasontext",
-    ],
+    column_fields_to_match: list[str] | None = None,
     drop_duplicates: bool = True,
     overwrite: bool = False,
 ) -> pd.DataFrame:
@@ -473,6 +475,12 @@ def iterative_drug_treatment_search(
         A merged DataFrame of the search results.
 
     """
+    if column_fields_to_match is None:
+        column_fields_to_match = [
+            "order_summaryline",
+            "order_name",
+            "order_holdreasontext",
+        ]
     if overwrite:
         # check output_file_path exists:
 
@@ -562,7 +570,7 @@ def iterative_drug_treatment_search(
                 },
                 "searched_term": lambda x: ", ".join(sorted(set(x))),
                 "matched_fields": lambda x: list(
-                    set(field for fields in x for field in fields),
+                    {field for fields in x for field in fields},
                 ),
             },
         )
@@ -587,9 +595,7 @@ def iterative_drug_treatment_search(
             f"[INFO] Final dataset contains {len(final_results)} records. Appended to {output_file_path}",
         )
 
-    merged_df = pd.read_csv(output_file_path)
-
-    return merged_df
+    return pd.read_csv(output_file_path)
 
 
 # # Example usage

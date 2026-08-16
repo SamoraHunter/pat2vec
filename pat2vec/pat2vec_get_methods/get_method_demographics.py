@@ -49,7 +49,7 @@ def get_demo(
         pat_batch,
         config_obj=config_obj,
     )
-    current_pat_demo.reset_index(inplace=True)
+    current_pat_demo = current_pat_demo.reset_index()
     if config_obj.verbosity >= 1:
         print("Get demo: get_demographics3_batch:")
 
@@ -83,7 +83,7 @@ def get_demo(
             current_pat_demo["census_mixed_or_multiple_ethnic_groups"] = np.nan
             current_pat_demo["census_other_ethnic_group"] = np.nan
 
-        current_pat_demo.reset_index(inplace=True)
+        current_pat_demo = current_pat_demo.reset_index()
 
         # Select necessary columns
         current_pat_demo = current_pat_demo[
@@ -109,7 +109,8 @@ def get_demo(
     if len(current_pat_demo) > 1:
         display("error")
         display(current_pat_demo)
-        raise Exception("more than one row process ethnicity")
+        msg = "more than one row process ethnicity"
+        raise Exception(msg)
 
     exclude_column = "client_idcode"
     current_pat_demo = current_pat_demo.astype(
@@ -139,7 +140,8 @@ def _process_age(demo_dataframe: pd.DataFrame) -> pd.DataFrame:
     if len(demo_dataframe) > 1:
         display("error")
         display(demo_dataframe)
-        raise Exception("more than one row process _process_age")
+        msg = "more than one row process _process_age"
+        raise Exception(msg)
 
     return demo_dataframe
 
@@ -162,7 +164,8 @@ def _process_ethnicity(demo_dataframe: pd.DataFrame) -> pd.DataFrame:
 
     """
     if len(demo_dataframe) > 1:
-        raise Exception("more than one row process ethnicity")
+        msg = "more than one row process ethnicity"
+        raise Exception(msg)
 
     # Define the columns to ensure
     target_columns = [
@@ -221,7 +224,8 @@ def _process_ethnicity(demo_dataframe: pd.DataFrame) -> pd.DataFrame:
 
     if len(processed_df) > 1:
         print("error")
-        raise Exception("more than one row process ethnicity")
+        msg = "more than one row process ethnicity"
+        raise Exception(msg)
 
     return processed_df
 
@@ -246,7 +250,8 @@ def _process_sex(demo_dataframe: pd.DataFrame) -> pd.DataFrame:
     if len(demo_dataframe) > 1:
         display("error")
         display(demo_dataframe)
-        raise Exception("more than one row process _process_sex")
+        msg = "more than one row process _process_sex"
+        raise Exception(msg)
     return demo_dataframe
 
 
@@ -270,7 +275,8 @@ def _process_dead(demo_dataframe: pd.DataFrame) -> pd.DataFrame:
     if len(demo_dataframe) > 1:
         display("error")
         display(demo_dataframe)
-        raise Exception("more than one row process _process_dead")
+        msg = "more than one row process _process_dead"
+        raise Exception(msg)
     return demo_dataframe
 
 
@@ -356,7 +362,7 @@ def get_demographics3_batch(
         .copy()
     )
 
-    pat_batch.reset_index(drop=True, inplace=True)
+    pat_batch = pat_batch.reset_index(drop=True)
 
     if batch_mode:
         demo = filter_dataframe_by_timestamp(

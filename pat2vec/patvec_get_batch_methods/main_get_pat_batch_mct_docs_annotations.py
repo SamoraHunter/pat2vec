@@ -85,10 +85,9 @@ def get_pat_batch_mct_docs_annotations(
         if pat_batch.empty:
             return None
 
-        pat_batch.dropna(
+        pat_batch = pat_batch.dropna(
             subset=["observation_valuetext_analysed"],
             axis=0,
-            inplace=True,
         )
 
         batch_target = get_pat_document_annotation_batch_mct(
@@ -131,7 +130,7 @@ def get_pat_batch_mct_docs_annotations(
 
                 for col in cols_to_drop:
                     if col in batch_target.columns:
-                        batch_target.drop(columns=col, inplace=True)
+                        batch_target = batch_target.drop(columns=col)
 
                 # Create a copy and serialize lists to strings for SQL compatibility
                 batch_to_save = batch_target.copy()

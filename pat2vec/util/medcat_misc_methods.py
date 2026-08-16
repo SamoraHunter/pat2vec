@@ -94,8 +94,7 @@ def medcat_trainer_export_to_df(file_path: str) -> pd.DataFrame:
                 annotations_data.append(row_dict)
 
     # Create a DataFrame from the extracted data
-    df = pd.DataFrame(annotations_data)
-    return df
+    return pd.DataFrame(annotations_data)
 
 
 # Example usage:
@@ -265,7 +264,7 @@ def manually_label_annotation_df(
     file_path: str = "human_labels.csv",
     confirmatory: bool = False,
     verbose: bool = False,
-    filter_codes_list: list[list[str]] = [],
+    filter_codes_list: list[list[str]] | None = None,
 ) -> None:
     """Interactively labels an annotation DataFrame.
 
@@ -285,6 +284,8 @@ def manually_label_annotation_df(
             "done" when they have a correct annotation for each list of codes.
 
     """
+    if filter_codes_list is None:
+        filter_codes_list = []
     counter = 0
     if os.path.exists(file_path):
         if verbose:
@@ -356,8 +357,9 @@ def manually_label_annotation_df(
             )
             if label == "":
                 label = 1
-            elif label == "quit" or label == "end":
-                raise ValueError("User ended the labeling process.")
+            elif label in {"quit", "end"}:
+                msg = "User ended the labeling process."
+                raise ValueError(msg)
             elif label != "":
                 label = 0
 
@@ -579,9 +581,7 @@ def create_ner_results_dataframe(
 
     if cat:
         df["cui_name"] = (
-            pd.Series(df.index)
-            .apply(lambda cui: cat.cdb.cui2preferred_name.get(cui))
-            .values
+            pd.Series(df.index).apply(cat.cdb.cui2preferred_name.get).values
         )
 
     return df

@@ -116,8 +116,7 @@ def _ensure_synthetic_annotation_row(
         target_guid_column,
     ]
 
-    df = pd.DataFrame(data, columns=columns)
-    return df
+    return pd.DataFrame(data, columns=columns)
 
 
 def check_pat_document_annotation_complete(
@@ -169,9 +168,7 @@ def check_pat_document_annotation_complete(
         current_pat_client_id_code + ".csv",
     )
 
-    bool1 = exist_check(current_pat_batch_annot_path, config_obj=config_obj)
-
-    return bool1
+    return exist_check(current_pat_batch_annot_path, config_obj=config_obj)
 
 
 def annot_pat_batch_docs(
@@ -220,9 +217,7 @@ def annot_pat_batch_docs(
     texts = pat_batch[text_column].fillna("").tolist()
 
     # Call MedCAT on the aligned list
-    multi_annots = cat.get_entities_multi_texts(texts)
-
-    return multi_annots
+    return cat.get_entities_multi_texts(texts)
 
 
 def multi_annots_to_df_textual_obs(
@@ -1302,7 +1297,7 @@ def calculate_pretty_name_count_features(
             f"pretty_name_count_{suffix}_{col}" for col in result_vector.columns
         ]
 
-        result_vector.reset_index(drop=True, inplace=True)
+        result_vector = result_vector.reset_index(drop=True)
 
         # Convert all values to float
         result_vector = result_vector.astype(float)

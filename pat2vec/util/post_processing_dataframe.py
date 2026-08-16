@@ -67,7 +67,7 @@ def extract_datetime_from_binary_columns_chunk_reader(
 def drop_columns_with_all_nan(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.Index]:
     """Drops columns where all values are NaN."""
     nan_columns = df.columns[df.isna().all()]
-    df.drop(columns=nan_columns, inplace=True)
+    df = df.drop(columns=nan_columns)
     return df, nan_columns
 
 
@@ -84,7 +84,9 @@ def save_missing_values_pickle(
             pickle.dump(missing_dict, f)
 
 
-def convert_true_to_float(df: pd.DataFrame, columns: list[str] = None) -> pd.DataFrame:
+def convert_true_to_float(
+    df: pd.DataFrame, columns: list[str] | None = None
+) -> pd.DataFrame:
     """Converts 'True' strings to 1.0 and ensures columns are float."""
     if columns is None:
         columns = [

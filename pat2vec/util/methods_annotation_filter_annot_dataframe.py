@@ -58,11 +58,15 @@ def filter_annot_dataframe(
                     if isinstance(value, list)
                     else (dataframe[column] == value)
                 )
-            elif column in [
-                "Time_Confidence",
-                "Presence_Confidence",
-                "Subject_Confidence",
-            ] or column in ["acc"]:
+            elif (
+                column
+                in [
+                    "Time_Confidence",
+                    "Presence_Confidence",
+                    "Subject_Confidence",
+                ]
+                or column == "acc"
+            ):
                 # Include rows where the column is greater than or equal to the specified confidence threshold
                 mask &= dataframe[column] >= value
 

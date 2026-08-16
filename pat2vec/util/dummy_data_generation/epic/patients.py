@@ -70,12 +70,7 @@ def generate_epic_patients_data(
     global_start_month: int,
     global_end_year: int = 2023,
     global_end_month: int = 12,
-    fields_list: list[str] = [
-        "patient_DurableKey",
-        "patient_BirthDate",
-        "patient_Gender",
-        "id",
-    ],
+    fields_list: list[str] | None = None,
 ) -> pd.DataFrame:
     """Generates dummy data for the 'epic_patients' index.
 
@@ -95,6 +90,13 @@ def generate_epic_patients_data(
         None
 
     """
+    if fields_list is None:
+        fields_list = [
+            "patient_DurableKey",
+            "patient_BirthDate",
+            "patient_Gender",
+            "id",
+        ]
     df_holder_list = []
 
     random_state_base = random_state

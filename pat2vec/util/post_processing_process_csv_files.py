@@ -54,7 +54,8 @@ def process_csv_files(
     ]
 
     if not all_file_paths:
-        raise ValueError(f"No CSV files found in {input_path}")
+        msg = f"No CSV files found in {input_path}"
+        raise ValueError(msg)
 
     # Handle sample_size parameter
     if isinstance(sample_size, str):
@@ -64,8 +65,9 @@ def process_csv_files(
             try:
                 sample_size = int(sample_size)
             except ValueError:
+                msg = f"Invalid sample_size: {sample_size}. Must be an integer or 'all'"
                 raise ValueError(
-                    f"Invalid sample_size: {sample_size}. Must be an integer or 'all'",
+                    msg,
                 )
 
     if sample_size is None:
@@ -110,10 +112,11 @@ def process_csv_files(
             logger.warning(f"Could not read file {file}: {e}")
 
     if not unique_columns:
-        raise ValueError("No valid columns found in any CSV files")
+        msg = "No valid columns found in any CSV files"
+        raise ValueError(msg)
 
     # Convert to sorted list for consistent ordering
-    unique_columns = sorted(list(unique_columns))
+    unique_columns = sorted(unique_columns)
 
     # Create output file with header
     with open(output_file, "w", newline="", encoding="utf-8") as outfile:

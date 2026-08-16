@@ -33,8 +33,7 @@ def random_sample(pickled_dict: dict[str, Any], sample_size: int) -> dict[str, A
     random.seed(random_state)
     keys = list(pickled_dict["entities"].keys())
     sample_keys = random.sample(keys, min(sample_size, len(keys)))
-    sample = {"entities": {key: pickled_dict["entities"][key] for key in sample_keys}}
-    return sample
+    return {"entities": {key: pickled_dict["entities"][key] for key in sample_keys}}
 
 
 def get_or_create_annotations_for_text(
@@ -456,8 +455,9 @@ class dummy_CAT:
 
         # raise error if there are texts but no results
         if len(texts) > 0 and len(result) == 0:
+            msg = "No results returned from dummy_medcat_annotation_generator"
             raise ValueError(
-                "No results returned from dummy_medcat_annotation_generator",
+                msg,
             )
         return result
 

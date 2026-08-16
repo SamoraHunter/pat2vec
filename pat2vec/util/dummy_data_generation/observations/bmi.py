@@ -151,7 +151,7 @@ def generate_bmi_data(
                 if total_computed < bmi_count:
                     obs_type = "OBS BMI Calculation"
                     total_computed += 1
-                elif len([o for o in observation_type_counts.values()]) < 3:
+                elif len(list(observation_type_counts.values())) < 3:
                     remaining_types = [
                         t
                         for t in observation_types

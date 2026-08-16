@@ -36,7 +36,8 @@ def generate_date_list(
     """
     # Handle missing config_obj gracefully
     if not config_obj:
-        raise ValueError("A valid config_obj must be provided.")
+        msg = "A valid config_obj must be provided."
+        raise ValueError(msg)
 
     lookback = config_obj.lookback
     time_delta = relativedelta(years=years, months=months, days=days)
@@ -114,7 +115,8 @@ def generate_date_list(
 
     # Validate that the time_window_interval_delta is a positive duration
     if final_start_date + time_window_interval_delta <= final_start_date:
-        raise ValueError("The time interval delta must be a positive duration.")
+        msg = "The time interval delta must be a positive duration."
+        raise ValueError(msg)
 
     # Generate dates with proper bounds checking
     date_list = []

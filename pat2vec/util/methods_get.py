@@ -327,8 +327,7 @@ def convert_date(date_string: str) -> datetime:
 
     """
     date_string = date_string.split("T", maxsplit=1)[0]
-    date_object = datetime.strptime(date_string, "%Y-%m-%d")
-    return date_object
+    return datetime.strptime(date_string, "%Y-%m-%d")
 
 
 def write_csv_wrapper(
@@ -373,7 +372,8 @@ def read_remote(path: str, config_obj: Any = None) -> pd.DataFrame:
 
     """
     if config_obj is None:
-        raise ValueError("Config object cannot be None.")
+        msg = "Config object cannot be None."
+        raise ValueError(msg)
 
     hostname = config_obj.hostname
     username = config_obj.username
@@ -392,8 +392,7 @@ def read_remote(path: str, config_obj: Any = None) -> pd.DataFrame:
         with sftp_obj.open(path, "r") as file:
             # Read CSV content into a Pandas DataFrame
             csv_content = file.read().decode("utf-8")
-            df = pd.read_csv(StringIO(csv_content))
-        return df
+            return pd.read_csv(StringIO(csv_content))
     finally:
         if not share_sftp and sftp_client:
             sftp_client.close()
@@ -475,7 +474,8 @@ def create_remote_folders(config_obj: Any = None) -> None:
     project_name = config_obj.proj_name
 
     if config_obj is None:
-        raise ValueError("Config object cannot be None.")
+        msg = "Config object cannot be None."
+        raise ValueError(msg)
 
     if config_obj.storage_backend == "database":
         return
@@ -866,7 +866,8 @@ def add_offset_column(
 
     """
     if start_column_name not in dataframe.columns:
-        raise ValueError(f"Column '{start_column_name}' does not exist.")
+        msg = f"Column '{start_column_name}' does not exist."
+        raise ValueError(msg)
 
     # Create a copy to avoid modifying the original
     df = dataframe.copy()
@@ -1066,13 +1067,16 @@ def build_patient_dict(
 
     """
     if patient_id_column not in dataframe.columns:
-        raise ValueError(f"Column '{patient_id_column}' does not exist.")
+        msg = f"Column '{patient_id_column}' does not exist."
+        raise ValueError(msg)
 
     if start_column not in dataframe.columns:
-        raise ValueError(f"Column '{start_column}' does not exist.")
+        msg = f"Column '{start_column}' does not exist."
+        raise ValueError(msg)
 
     if end_column not in dataframe.columns:
-        raise ValueError(f"Column '{end_column}' does not exist.")
+        msg = f"Column '{end_column}' does not exist."
+        raise ValueError(msg)
 
     patient_dict = {}
 
@@ -1107,7 +1111,8 @@ def write_remote(path, csv_file, config_obj=None):
 
     """
     if config_obj is None:
-        raise ValueError("Config object cannot be None.")
+        msg = "Config object cannot be None."
+        raise ValueError(msg)
 
     share_sftp = config_obj.share_sftp
     sftp_client = None

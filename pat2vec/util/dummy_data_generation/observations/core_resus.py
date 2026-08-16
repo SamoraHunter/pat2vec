@@ -5,8 +5,9 @@ import numpy as np
 import pandas as pd
 
 from pat2vec.pat2vec_get_methods.get_method_core_resus import CORE_RESUS_FIELDS
-
-from ..generator_helpers import create_random_date_from_globals
+from pat2vec.util.dummy_data_generation.generator_helpers import (
+    create_random_date_from_globals,
+)
 
 try:
     from faker import Faker

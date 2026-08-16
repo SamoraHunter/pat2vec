@@ -355,7 +355,7 @@ def _write_batch(dfs, engine, schema, table):
     try:
         combined = pd.concat(dfs, ignore_index=True)
         if "Unnamed: 0" in combined.columns:
-            combined.drop(columns=["Unnamed: 0"], inplace=True)
+            combined = combined.drop(columns=["Unnamed: 0"])
 
         # Handle SQLite flattening
         if engine.name == "sqlite":
@@ -384,7 +384,8 @@ def migrate_csv_to_db(config_obj: Any):
     It iterates over known directories in the config, reads CSVs and pushes them to the DB.
     """
     if not config_obj.db_connection_string:
-        raise ValueError("db_connection_string not set in config object.")
+        msg = "db_connection_string not set in config object."
+        raise ValueError(msg)
 
     engine = create_engine(config_obj.db_connection_string)
 

@@ -133,7 +133,7 @@ def generate_epr_documents_data(
         return df
     except Exception as e:
         logger.error(e)
-        raise e
+        raise
 
 
 def generate_epr_documents_personal_data(
@@ -145,16 +145,7 @@ def generate_epr_documents_personal_data(
     global_end_month: int,
     global_start_day: int = 1,
     global_end_day: int = 31,
-    fields_list: list[str] = [
-        "client_idcode",
-        "client_firstname",
-        "client_lastname",
-        "client_dob",
-        "client_gendercode",
-        "client_racecode",
-        "client_deceaseddtm",
-        "updatetime",
-    ],
+    fields_list: list[str] | None = None,
 ) -> pd.DataFrame:
     """Generates dummy personal data for the 'epr_documents' index (demographics).
 
@@ -171,6 +162,21 @@ def generate_epr_documents_personal_data(
         A pandas DataFrame with generated dummy personal data.
 
     """
+    if fields_list is None:
+        fields_list = [
+            "client_idcode",
+            "client_firstname",
+            "client_lastname",
+            "client_dob",
+            "client_gendercode",
+            "client_racecode",
+            "client_deceaseddtm",
+            "updatetime",
+        ]
+
+    if len(entered_list) == 0:
+        return pd.DataFrame(columns=fields_list)
+
     df_holder_list = []
     for i in range(len(entered_list)):
         current_pat_client_id_code = entered_list[i]
@@ -229,6 +235,4 @@ def generate_epr_documents_personal_data(
             df[field] = pd.np.nan
 
     df = df[unique_fields]
-    df.reset_index(drop=True, inplace=True)
-
-    return df
+    return df.reset_index(drop=True)

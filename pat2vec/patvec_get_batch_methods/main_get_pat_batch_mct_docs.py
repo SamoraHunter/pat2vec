@@ -39,7 +39,8 @@ def get_pat_batch_mct_docs(
             "global_end_month",
         ]
     ):
-        raise ValueError("Invalid or missing configuration object.")
+        msg = "Invalid or missing configuration object."
+        raise ValueError(msg)
 
     global_start_year = config_obj.global_start_year
     global_start_month = config_obj.global_start_month
@@ -132,7 +133,7 @@ def get_pat_batch_mct_docs(
 
                     for col in cols_to_drop:
                         if col in batch_target.columns:
-                            batch_target.drop(columns=col, inplace=True)
+                            batch_target = batch_target.drop(columns=col)
 
                     try:
                         engine = config_obj.db_engine
@@ -146,9 +147,8 @@ def get_pat_batch_mct_docs(
                                 "index",
                             ]
                             for col in cols_to_drop:
-                                batch_target.drop(
+                                batch_target = batch_target.drop(
                                     columns=col,
-                                    inplace=True,
                                     errors="ignore",
                                 )
 

@@ -69,32 +69,27 @@ def _fetch_epic_medical_history_from_elasticsearch(
         )
         if results is not None and not results.empty:
             if "document_PatientDurableKey" in results.columns:
-                results.rename(
+                results = results.rename(
                     columns={"document_PatientDurableKey": "client_idcode"},
-                    inplace=True,
                 )
             if "document_CreatedWhen" in results.columns:
-                results.rename(
+                results = results.rename(
                     columns={"document_CreatedWhen": "updatetime"},
-                    inplace=True,
                 )
             if "document_Comment" in results.columns:
-                results.rename(
+                results = results.rename(
                     columns={"document_Comment": "body_analysed"},
-                    inplace=True,
                 )
             # Handle id -> document_guid rename, with fallback for medical history index
             if "id" in results.columns:
-                results.rename(columns={"id": "document_guid"}, inplace=True)
+                results = results.rename(columns={"id": "document_guid"})
             elif "document_SourceId" in results.columns:
-                results.rename(
+                results = results.rename(
                     columns={"document_SourceId": "document_guid"},
-                    inplace=True,
                 )
             if "document_Name" in results.columns:
-                results.rename(
+                results = results.rename(
                     columns={"document_Name": "document_description"},
-                    inplace=True,
                 )
         return results if results is not None else pd.DataFrame()
     except Exception as e:
@@ -289,7 +284,7 @@ def get_pat_batch_epic_medical_history_annotations(
 
                 for col in cols_to_drop:
                     if col in batch_target.columns:
-                        batch_target.drop(columns=col, inplace=True)
+                        batch_target = batch_target.drop(columns=col)
 
                 batch_to_save = batch_target.copy()
                 for col in batch_to_save.columns:

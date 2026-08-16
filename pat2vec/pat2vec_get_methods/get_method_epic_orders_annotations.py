@@ -61,8 +61,9 @@ def get_current_pat_epic_orders_annotations(
 
     """
     if config_obj is None:
+        msg = "config_obj cannot be None. (get_current_pat_epic_orders_annotations)"
         raise ValueError(
-            "config_obj cannot be None. (get_current_pat_epic_orders_annotations)",
+            msg,
         )
 
     start_time = config_obj.start_time
@@ -89,11 +90,10 @@ def get_current_pat_epic_orders_annotations(
             and "document_CreatedWhen" not in epic_orders_annotations.columns
         ):
             # Empty or missing required columns - return just client_idcode
-            df_pat_target = pd.DataFrame(
+            return pd.DataFrame(
                 data=[current_pat_client_id_code],
                 columns=["client_idcode"],
             )
-            return df_pat_target
 
         # Handle column name mismatch: annotations use 'updatetime' but we check for 'document_CreatedWhen'
         time_column = "document_CreatedWhen"
@@ -111,11 +111,10 @@ def get_current_pat_epic_orders_annotations(
 
         # If no timestamp column found, return empty result
         if not found_col:
-            df_pat_target = pd.DataFrame(
+            return pd.DataFrame(
                 data=[current_pat_client_id_code],
                 columns=["client_idcode"],
             )
-            return df_pat_target
 
         if found_col and found_col != time_column:
             epic_orders_annotations = epic_orders_annotations.rename(

@@ -114,23 +114,27 @@ def main_batch(
 
     """
     if config_obj is None:
+        msg = "config_obj cannot be None. Please provide a valid configuration. (main_batch)"
         raise ValueError(
-            "config_obj cannot be None. Please provide a valid configuration. (main_batch)",
+            msg,
         )
 
     if batches is None:
+        msg = "batches cannot be None. Please provide a valid dictionary of dataframes. (main_batch)"
         raise ValueError(
-            "batches cannot be None. Please provide a valid dictionary of dataframes. (main_batch)",
+            msg,
         )
 
     if cohort_searcher_with_terms_and_search is None:
+        msg = "cohort_searcher_with_terms_and_search cannot be None. Please provide a valid configuration. (main_batch)"
         raise ValueError(
-            "cohort_searcher_with_terms_and_search cannot be None. Please provide a valid configuration. (main_batch)",
+            msg,
         )
 
     if t is None:
+        msg = "t cannot be None. Please provide a valid configuration. (main_batch)"
         raise ValueError(
-            "t cannot be None. Please provide a valid configuration. (main_batch)",
+            msg,
         )
 
     if (
@@ -140,8 +144,9 @@ def main_batch(
         or config_obj.main_options.get("textual_obs")
     ):
         if cat is None:
+            msg = "cat cannot be None with annotations or annotations_mrc or annotations_reports or textual_obs. Please provide a valid configuration. (main_batch)"
             raise ValueError(
-                "cat cannot be None with annotations or annotations_mrc or annotations_reports or textual_obs. Please provide a valid configuration. (main_batch)",
+                msg,
             )
 
     current_pat_client_id_code = str(current_pat_client_id_code)
@@ -538,7 +543,7 @@ def main_batch(
                 pat_concatted = pd.concat(patient_vector, axis=1)
 
                 if "client_idcode" in pat_concatted.columns:
-                    pat_concatted.drop("client_idcode", axis=1, inplace=True)
+                    pat_concatted = pat_concatted.drop("client_idcode", axis=1)
 
                 if pat_concatted.columns.duplicated().any():
                     pat_concatted = pat_concatted.groupby(
@@ -626,3 +631,4 @@ def main_batch(
             else:
                 with skipped_counter.get_lock():
                     skipped_counter.value += 1
+    return None

@@ -62,7 +62,8 @@ def filter_dataframe_by_timestamp(
             errors="coerce",
         )
     else:
-        raise KeyError(f"Column '{timestamp_string}' not found in DataFrame.")
+        msg = f"Column '{timestamp_string}' not found in DataFrame."
+        raise KeyError(msg)
 
     # Drop NaN timestamps only if dropna is True
     if dropna:
@@ -100,9 +101,7 @@ def filter_dataframe_by_timestamp(
         start_datetime, end_datetime = start_temp, end_temp
 
     # Filter based on datetime range (this will automatically exclude NaN values)
-    filtered_df = df_copy[
+    return df_copy[
         (df_copy[timestamp_string] >= start_datetime)
         & (df_copy[timestamp_string] <= end_datetime)
     ]
-
-    return filtered_df

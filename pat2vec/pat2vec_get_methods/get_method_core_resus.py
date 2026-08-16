@@ -89,16 +89,20 @@ def search_core_resus_observations(
         return pd.read_csv(output_filename)
 
     if cohort_searcher_with_terms_and_search is None:
-        raise ValueError("cohort_searcher_with_terms_and_search cannot be None.")
+        msg = "cohort_searcher_with_terms_and_search cannot be None."
+        raise ValueError(msg)
     if client_id_codes is None:
-        raise ValueError("client_id_codes cannot be None.")
+        msg = "client_id_codes cannot be None."
+        raise ValueError(msg)
     if observations_time_field is None:
-        raise ValueError("observations_time_field cannot be None.")
+        msg = "observations_time_field cannot be None."
+        raise ValueError(msg)
     if any(
         x is None
         for x in [start_year, start_month, start_day, end_year, end_month, end_day]
     ):
-        raise ValueError("Date components cannot be None.")
+        msg = "Date components cannot be None."
+        raise ValueError(msg)
 
     # Ensure client_id_codes is a list for the search function
     if isinstance(client_id_codes, str):
@@ -224,8 +228,9 @@ def get_core_resus(
 
     """
     if config_obj is None:
+        msg = "config_obj cannot be None. Please provide a valid configuration object."
         raise ValueError(
-            "config_obj cannot be None. Please provide a valid configuration object.",
+            msg,
         )
 
     batch_mode = config_obj.batch_mode

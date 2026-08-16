@@ -7,7 +7,9 @@ import numpy as np
 import pandas as pd
 from faker import Faker
 
-from ..generator_helpers import create_random_date_from_globals
+from pat2vec.util.dummy_data_generation.generator_helpers import (
+    create_random_date_from_globals,
+)
 
 random_state = 42
 Faker.seed(random_state)
@@ -281,9 +283,7 @@ def generate_lab_panel(category: str, num_tests: int) -> list[dict]:
                 "description": description,
                 "value": value,
                 "unit": unit,
-                "category": (
-                    test_info["category"] if "category" in test_info else category
-                ),
+                "category": (test_info.get("category", category)),
             },
         )
 
@@ -299,17 +299,7 @@ def generate_epic_lab_results_data(
     global_end_month: int = 12,
     global_start_day: int = 1,
     global_end_day: int = 31,
-    fields_list: list[str] = [
-        "document_PatientDurableKey",
-        "document_CreatedWhen",
-        "document_Name",
-        "document_Content",
-        "document_LabComponentValue",
-        "document_CollectedDate",
-        "document_LabResultEpicId",
-        "document_Fields.valueText",
-        "id",
-    ],
+    fields_list: list[str] | None = None,
 ) -> pd.DataFrame:
     """Generates dummy data for the 'epic_lab_results' index with realistic clinical patterns.
 
@@ -325,6 +315,18 @@ def generate_epic_lab_results_data(
     - 15% of values are clinically abnormal
     - Created dates precede collected dates by realistic lab processing time
     """
+    if fields_list is None:
+        fields_list = [
+            "document_PatientDurableKey",
+            "document_CreatedWhen",
+            "document_Name",
+            "document_Content",
+            "document_LabComponentValue",
+            "document_CollectedDate",
+            "document_LabResultEpicId",
+            "document_Fields.valueText",
+            "id",
+        ]
     df_holder_list = []
     category_order = ["CBC", "Chemistry", "Coagulation", "Microbiology"]
 

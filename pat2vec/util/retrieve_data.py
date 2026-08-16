@@ -272,13 +272,12 @@ def retrieve_patient_data(
     ):
         # Import for potential future use (currently not required)
         try:
-            df = _fetch_data_from_dummy_generator(
+            return _fetch_data_from_dummy_generator(
                 client_idcode,
                 data_type,
                 config_obj,
                 cohort_searcher_with_terms_and_search,
             )
-            return df
         except Exception as e:
             logger.error(f"Error fetching {data_type} from dummy generator: {e}")
             return pd.DataFrame()
@@ -324,13 +323,12 @@ def retrieve_patient_data(
             data_type.startswith("epic_")
             and cohort_searcher_with_terms_and_search is not None
         ):
-            df = _fetch_epic_data_from_es(
+            return _fetch_epic_data_from_es(
                 client_idcode,
                 data_type.replace("_annotations", ""),
                 config_obj,
                 cohort_searcher_with_terms_and_search,
             )
-            return df
         return pd.DataFrame()
     except Exception as e:
         logger.error(f"Error reading file {file_path}: {e}")
@@ -475,33 +473,28 @@ def _fetch_epic_data_from_es(
             # Rename ES columns to match database schema
             # Handle document_PatientDurableKey -> client_idcode
             if "document_PatientDurableKey" in results.columns:
-                results.rename(
+                results = results.rename(
                     columns={"document_PatientDurableKey": "client_idcode"},
-                    inplace=True,
                 )
             # Handle patient_DurableKey -> client_idcode (for epic_patients)
             elif "patient_DurableKey" in results.columns:
-                results.rename(
+                results = results.rename(
                     columns={"patient_DurableKey": "client_idcode"},
-                    inplace=True,
                 )
             # Handle activity_PatientDurableKey -> client_idcode (for epic_encounters)
             elif "activity_PatientDurableKey" in results.columns:
-                results.rename(
+                results = results.rename(
                     columns={"activity_PatientDurableKey": "client_idcode"},
-                    inplace=True,
                 )
 
             # Rename time fields to updatetime
             if "document_CreatedWhen" in results.columns:
-                results.rename(
+                results = results.rename(
                     columns={"document_CreatedWhen": "updatetime"},
-                    inplace=True,
                 )
             elif "activity_AdmissionDate" in results.columns:
-                results.rename(
+                results = results.rename(
                     columns={"activity_AdmissionDate": "updatetime"},
-                    inplace=True,
                 )
 
             # Ensure client_idcode is present for db storage

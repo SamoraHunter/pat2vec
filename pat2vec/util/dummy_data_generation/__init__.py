@@ -87,36 +87,36 @@ __all__ = [
     "create_random_date_from_globals",
     "extract_date_range",
     "extract_search_term_obscatalogmasteritem_displayname",
-    "generate_uuid",
-    "generate_uuid_list",
-    "is_safe_host",
-    "maybe_nan",
-    "random_state",
-    # Sequence generators
-    "generate_patient_timeline",
-    "generate_patient_timeline_faker",
-    "get_patient_timeline_dummy",
-    "run_generate_patient_timeline_and_append",
-    # EPR documents
-    "generate_epr_documents_data",
-    "generate_epr_documents_personal_data",
-    # Orders
-    "generate_diagnostic_orders_data",
-    "generate_drug_orders_data",
     # Basic observations
     "generate_basic_observations_data",
     "generate_basic_observations_textual_obs_data",
+    "generate_bed_data",
     # Observation types
     "generate_bmi_data",
-    "generate_bed_data",
     "generate_core_o2_data",
     "generate_core_resus_data",
+    # Orders
+    "generate_diagnostic_orders_data",
+    "generate_drug_orders_data",
+    # EPR documents
+    "generate_epr_documents_data",
+    "generate_epr_documents_personal_data",
     "generate_hospital_site_data",
     "generate_news_data",
-    "generate_smoking_data",
     "generate_observations_MRC_text_data",
     "generate_observations_Reports_text_data",
+    # Sequence generators
+    "generate_patient_timeline",
+    "generate_patient_timeline_faker",
+    "generate_smoking_data",
+    "generate_uuid",
+    "generate_uuid_list",
     "generate_vte_data",
+    "get_patient_timeline_dummy",
+    "is_safe_host",
+    "maybe_nan",
+    "random_state",
+    "run_generate_patient_timeline_and_append",
 ]
 
 # Backward compatibility aliases
@@ -131,30 +131,30 @@ generate_vte_status_data = generate_vte_data
 # Re-export all for backward compatibility via __all__
 __all__.extend(
     [
+        # Router and population
+        "cohort_searcher_with_terms_and_search_dummy",
+        # Appointments
+        "generate_appointments_data",
         "generate_core_02_data",
         "generate_covid_data",
+        # COVID
+        "generate_covid_observations_data",
         "generate_demographics_data",
         "generate_diagnostics_data",
         "generate_drugs_data",
-        "generate_reports_data",
-        "generate_vte_status_data",
         # Epic modules
         "generate_epic_clinical_notes_appointments_data",
         "generate_epic_clinical_notes_data",
-        "generate_epic_medical_history_data",
         "generate_epic_encounters_data",
         "generate_epic_imaging_reports_data",
         "generate_epic_lab_results_data",
+        "generate_epic_medical_history_data",
         "generate_epic_orders_data",
         "generate_epic_patients_data",
-        # Appointments
-        "generate_appointments_data",
-        # COVID
-        "generate_covid_observations_data",
         # Problem list
         "generate_problem_list_data",
-        # Router and population
-        "cohort_searcher_with_terms_and_search_dummy",
+        "generate_reports_data",
+        "generate_vte_status_data",
         "populate_elastic_with_dummy_data",
     ],
 )

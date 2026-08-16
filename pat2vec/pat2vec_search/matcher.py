@@ -90,8 +90,7 @@ def matcher(
         for k, v in vals.items():
             bloods_values[k].append(v)
 
-    out_file = pd.concat([data_template, pd.DataFrame(bloods_values)], axis=1)
-    return out_file
+    return pd.concat([data_template, pd.DataFrame(bloods_values)], axis=1)
 
 
 def match_terms_in_text(text: str, terms: list[str]) -> list[str]:

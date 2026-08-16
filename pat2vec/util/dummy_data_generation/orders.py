@@ -499,9 +499,7 @@ def _determine_patient_age_distribution(
     total = sum(weights)
     normalized_weights = [w / total for w in weights]
 
-    selected_age = random_instance.choices(ages, weights=normalized_weights, k=1)[0]
-
-    return selected_age
+    return random_instance.choices(ages, weights=normalized_weights, k=1)[0]
 
 
 def _determine_admission_type(
@@ -535,21 +533,7 @@ def generate_diagnostic_orders_data(
     global_end_month: int,
     global_start_day: int = 1,
     global_end_day: int = 31,
-    fields_list: list[str] = [
-        "order_guid",
-        "client_idcode",
-        "order_name",
-        "order_summaryline",
-        "order_holdreasontext",
-        "order_entered",
-        "order_createdwhen",
-        "clientvisit_visitidcode",
-        "_id",
-        "_index",
-        "_score",
-        "order_performeddtm",
-        "order_typecode",
-    ],
+    fields_list: list[str] | None = None,
 ) -> pd.DataFrame:
     """Generates dummy data for the 'diagnostic_orders' index.
 
@@ -574,6 +558,22 @@ def generate_diagnostic_orders_data(
         A pandas DataFrame with generated dummy diagnostic order data.
 
     """
+    if fields_list is None:
+        fields_list = [
+            "order_guid",
+            "client_idcode",
+            "order_name",
+            "order_summaryline",
+            "order_holdreasontext",
+            "order_entered",
+            "order_createdwhen",
+            "clientvisit_visitidcode",
+            "_id",
+            "_index",
+            "_score",
+            "order_performeddtm",
+            "order_typecode",
+        ]
     df_holder_list = []
 
     # Initialize per-client random instance for reproducibility
@@ -667,16 +667,14 @@ def generate_diagnostic_orders_data(
         df_holder_list.append(df)
 
     df = pd.concat(df_holder_list)
-    unique_fields = list(dict.fromkeys(fields_list + ["_id", "_index", "_score"]))
+    unique_fields = list(dict.fromkeys([*fields_list, "_id", "_index", "_score"]))
 
     for field in unique_fields:
         if field not in df.columns:
             df[field] = None
 
     df = df[unique_fields]
-    df.reset_index(drop=True, inplace=True)
-
-    return df
+    return df.reset_index(drop=True)
 
 
 def generate_drug_orders_data(
@@ -688,21 +686,7 @@ def generate_drug_orders_data(
     global_end_month: int,
     global_start_day: int = 1,
     global_end_day: int = 31,
-    fields_list: list[str] = [
-        "order_guid",
-        "client_idcode",
-        "order_name",
-        "order_summaryline",
-        "order_holdreasontext",
-        "order_entered",
-        "order_createdwhen",
-        "clientvisit_visitidcode",
-        "_id",
-        "_index",
-        "_score",
-        "order_performeddtm",
-        "order_typecode",
-    ],
+    fields_list: list[str] | None = None,
     base_date: datetime | None = None,
 ) -> pd.DataFrame:
     """Generates dummy data for the 'drug_orders' index.
@@ -730,6 +714,22 @@ def generate_drug_orders_data(
         A pandas DataFrame with generated dummy drug order data.
 
     """
+    if fields_list is None:
+        fields_list = [
+            "order_guid",
+            "client_idcode",
+            "order_name",
+            "order_summaryline",
+            "order_holdreasontext",
+            "order_entered",
+            "order_createdwhen",
+            "clientvisit_visitidcode",
+            "_id",
+            "_index",
+            "_score",
+            "order_performeddtm",
+            "order_typecode",
+        ]
     df_holder_list = []
 
     local_faker = Faker()
@@ -818,13 +818,11 @@ def generate_drug_orders_data(
         df_holder_list.append(df)
 
     df = pd.concat(df_holder_list)
-    unique_fields = list(dict.fromkeys(fields_list + ["_id", "_index", "_score"]))
+    unique_fields = list(dict.fromkeys([*fields_list, "_id", "_index", "_score"]))
 
     for field in unique_fields:
         if field not in df.columns:
             df[field] = None
 
     df = df[unique_fields]
-    df.reset_index(drop=True, inplace=True)
-
-    return df
+    return df.reset_index(drop=True)

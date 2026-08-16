@@ -82,20 +82,24 @@ def get_current_pat_epic_medical_history_annotations(
 
     """
     if config_obj is None:
+        msg = "config_obj cannot be None. Please provide a valid configuration."
         raise ValueError(
-            "config_obj cannot be None. Please provide a valid configuration.",
+            msg,
         )
     if epic_medical_history_annotations is None:
+        msg = "epic_medical_history_annotations cannot be None. Please provide a valid DataFrame."
         raise ValueError(
-            "epic_medical_history_annotations cannot be None. Please provide a valid DataFrame.",
+            msg,
         )
     if current_pat_client_id_code is None:
+        msg = "current_pat_client_id_code cannot be None. Please provide a valid client ID code."
         raise ValueError(
-            "current_pat_client_id_code cannot be None. Please provide a valid client ID code.",
+            msg,
         )
     if target_date_range is None:
+        msg = "target_date_range cannot be None. Please provide a valid target date range."
         raise ValueError(
-            "target_date_range cannot be None. Please provide a valid target date range.",
+            msg,
         )
 
     start_time = config_obj.start_time

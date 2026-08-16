@@ -338,11 +338,10 @@ def get_treatment_docs_by_iterative_multi_term_cohort_searcher_no_terms_fuzzy(
                         and new_col in docs.columns
                         and old_col != new_col
                     ):
-                        docs.drop(columns=[new_col], inplace=True)
+                        docs = docs.drop(columns=[new_col])
 
-                docs.rename(
+                docs = docs.rename(
                     columns={k: v for k, v in col_map.items() if k in docs.columns},
-                    inplace=True,
                 )
                 # Standardize and accumulate results from all sources.
                 if search_results.empty:
@@ -352,7 +351,7 @@ def get_treatment_docs_by_iterative_multi_term_cohort_searcher_no_terms_fuzzy(
                         [search_results, docs],
                         ignore_index=True,
                     )
-                search_results.drop_duplicates(inplace=True)
+                search_results = search_results.drop_duplicates()
 
     # Save results to file in testing modes to satisfy assertion requirements
     # and ensure standardized columns are persisted to disk.
@@ -415,10 +414,7 @@ def demo_to_latest(demo_df: pd.DataFrame) -> pd.DataFrame:
 
     """
     demo_df["updatetime"] = pd.to_datetime(demo_df["updatetime"], utc=True)
-    latest_demo_df = demo_df.loc[
-        demo_df.groupby("client_idcode")["updatetime"].idxmax()
-    ]
-    return latest_demo_df
+    return demo_df.loc[demo_df.groupby("client_idcode")["updatetime"].idxmax()]
 
 
 def calculate_age_append(df: pd.DataFrame) -> pd.DataFrame:
@@ -436,11 +432,11 @@ def calculate_age_append(df: pd.DataFrame) -> pd.DataFrame:
 
     """
     # Drop rows with missing 'client_dob' values
-    df.dropna(subset=["client_dob"], inplace=True)
+    df = df.dropna(subset=["client_dob"])
 
     # Ensure 'client_dob' is in datetime format and remove timezone
     df["client_dob"] = pd.to_datetime(df["client_dob"], errors="coerce", utc=True)
-    df.dropna(subset=["client_dob"], inplace=True)
+    df = df.dropna(subset=["client_dob"])
     df["client_dob"] = df["client_dob"].dt.tz_localize(None)
 
     # Drop duplicates based on 'client_idcode'
@@ -494,7 +490,7 @@ def search_cohort(
 
     logger.info(f"search_string: {search_string}")
 
-    demo_df = pat2vec_obj.cohort_searcher_with_terms_and_search(
+    return pat2vec_obj.cohort_searcher_with_terms_and_search(
         index_name="epr_documents",
         fields_list=[
             "client_idcode",
@@ -510,7 +506,6 @@ def search_cohort(
         entered_list=patlist,
         search_string=search_string,
     )
-    return demo_df
 
 
 # start_year = '1995'

@@ -44,9 +44,11 @@ def verify_split_data_concatenated(
     extra = saved_clients - expected_clients
 
     if missing:
-        raise ValueError(f"Missing CSV files for clients: {missing}")
+        msg = f"Missing CSV files for clients: {missing}"
+        raise ValueError(msg)
     if extra:
-        raise ValueError(f"Extra CSV files with no matching clients: {extra}")
+        msg = f"Extra CSV files with no matching clients: {extra}"
+        raise ValueError(msg)
 
     # Read and concatenate all CSVs in sorted order (adjust sorting logic as needed)
     csv_files = sorted(
@@ -61,7 +63,8 @@ def verify_split_data_concatenated(
 
     # Compare with original DataFrame
     if not concatenated_df.equals(original_df):
-        raise ValueError("Concatenated CSV data does not match the original DataFrame.")
+        msg = "Concatenated CSV data does not match the original DataFrame."
+        raise ValueError(msg)
     logging.info("Verification successful: All CSVs match the original DataFrame.")
 
 
@@ -91,9 +94,11 @@ def verify_split_data_individual(
     extra = saved_clients - expected_clients
 
     if missing:
-        raise ValueError(f"Missing CSV files for clients: {missing}")
+        msg = f"Missing CSV files for clients: {missing}"
+        raise ValueError(msg)
     if extra:
-        raise ValueError(f"Extra CSV files with no matching clients: {extra}")
+        msg = f"Extra CSV files with no matching clients: {extra}"
+        raise ValueError(msg)
 
     # Check each CSV's data matches the original group
     for client in expected_clients:
@@ -107,7 +112,8 @@ def verify_split_data_individual(
         if not original_data.sort_values(by=original_data.columns.tolist()).equals(
             csv_data.sort_values(by=csv_data.columns.tolist()),
         ):
-            raise ValueError(f"Data mismatch for client: {client}")
+            msg = f"Data mismatch for client: {client}"
+            raise ValueError(msg)
     logging.info("Verification successful: All CSVs match the original DataFrame.")
 
 
@@ -205,7 +211,8 @@ def get_merged_pat_batch_bloods(
             "storage_backend",
         ]
     ):
-        raise ValueError("Invalid or missing configuration object.")
+        msg = "Invalid or missing configuration object."
+        raise ValueError(msg)
 
     overwrite_stored_pat_observations = config_obj.overwrite_stored_pat_observations
     store_pat_batch_observations = config_obj.store_pat_batch_observations
@@ -384,6 +391,7 @@ def get_merged_pat_batch_bloods(
                 f"Error retrieving batch blood test-related observations: {e}",
             )
             return pd.DataFrame()
+    return None
 
 
 def get_merged_pat_batch_drugs(
@@ -415,7 +423,8 @@ def get_merged_pat_batch_drugs(
             "storage_backend",
         ]
     ):
-        raise ValueError("Invalid or missing configuration object.")
+        msg = "Invalid or missing configuration object."
+        raise ValueError(msg)
 
     overwrite_stored_pat_observations = config_obj.overwrite_stored_pat_observations
     store_pat_batch_observations = config_obj.store_pat_batch_observations
@@ -512,7 +521,7 @@ def get_merged_pat_batch_drugs(
                 cols_to_drop = ["_id", "_index", "_score"]
                 for col in cols_to_drop:
                     if col in batch_target.columns:
-                        batch_target.drop(columns=col, inplace=True)
+                        batch_target = batch_target.drop(columns=col)
 
                 logging.info(
                     f"Writing {len(batch_target)} records to database table '{db_schema}.{db_table_name}'...",
@@ -597,6 +606,7 @@ def get_merged_pat_batch_drugs(
         except Exception as e:
             logging.error(f"Error retrieving batch drug orders: {e}")
             return pd.DataFrame()
+    return None
 
 
 def get_merged_pat_batch_diagnostics(
@@ -628,7 +638,8 @@ def get_merged_pat_batch_diagnostics(
             "storage_backend",
         ]
     ):
-        raise ValueError("Invalid or missing configuration object.")
+        msg = "Invalid or missing configuration object."
+        raise ValueError(msg)
 
     overwrite_stored_pat_observations = config_obj.overwrite_stored_pat_observations
     store_pat_batch_observations = config_obj.store_pat_batch_observations
@@ -722,7 +733,7 @@ def get_merged_pat_batch_diagnostics(
                 cols_to_drop = ["_id", "_index", "_score"]
                 for col in cols_to_drop:
                     if col in batch_target.columns:
-                        batch_target.drop(columns=col, inplace=True)
+                        batch_target = batch_target.drop(columns=col)
 
                 logging.info(
                     f"Writing {len(batch_target)} records to database table '{db_schema}.{db_table_name}'...",
@@ -810,6 +821,7 @@ def get_merged_pat_batch_diagnostics(
         except Exception as e:
             logging.error(f"Error retrieving batch diagnostic orders: {e}")
             return pd.DataFrame()
+    return None
 
 
 def get_merged_pat_batch_mct_docs(
@@ -843,7 +855,8 @@ def get_merged_pat_batch_mct_docs(
             "storage_backend",
         ]
     ):
-        raise ValueError("Invalid or missing configuration object.")
+        msg = "Invalid or missing configuration object."
+        raise ValueError(msg)
 
     overwrite_stored_pat_docs = config_obj.overwrite_stored_pat_docs
     store_pat_batch_docs = config_obj.store_pat_batch_docs
@@ -938,7 +951,7 @@ def get_merged_pat_batch_mct_docs(
                 cols_to_drop = ["_id", "_index", "_score"]
                 for col in cols_to_drop:
                     if col in batch_target.columns:
-                        batch_target.drop(columns=col, inplace=True)
+                        batch_target = batch_target.drop(columns=col)
 
                 logging.info(
                     f"Writing {len(batch_target)} records to database table '{db_schema}.{db_table_name}'...",
@@ -1014,6 +1027,7 @@ def get_merged_pat_batch_mct_docs(
         except Exception as e:
             logging.error(f"Error retrieving batch MCT documents: {e}")
             return pd.DataFrame()
+    return None
 
 
 def get_merged_pat_batch_epr_docs(
@@ -1047,7 +1061,8 @@ def get_merged_pat_batch_epr_docs(
             "storage_backend",
         ]
     ):
-        raise ValueError("Invalid or missing configuration object.")
+        msg = "Invalid or missing configuration object."
+        raise ValueError(msg)
 
     overwrite_stored_pat_docs = config_obj.overwrite_stored_pat_docs
     store_pat_batch_docs = config_obj.store_pat_batch_docs
@@ -1164,7 +1179,7 @@ def get_merged_pat_batch_epr_docs(
                 cols_to_drop = ["_id", "_index", "_score"]
                 for col in cols_to_drop:
                     if col in batch_target.columns:
-                        batch_target.drop(columns=col, inplace=True)
+                        batch_target = batch_target.drop(columns=col)
 
                 logging.info(
                     f"Writing {len(batch_target)} records to database table '{db_schema}.{db_table_name}'...",
@@ -1271,7 +1286,9 @@ def get_merged_pat_batch_epr_docs(
 
         except Exception as e:
             logging.error(f"Error retrieving batch EPR documents: {e}")
-            raise UnboundLocalError("Error retrieving batch EPR documents.")
+            msg = "Error retrieving batch EPR documents."
+            raise UnboundLocalError(msg)
+    return None
 
 
 def get_merged_pat_batch_textual_obs_docs(
@@ -1306,7 +1323,8 @@ def get_merged_pat_batch_textual_obs_docs(
             "proj_name",  # Ensure proj_name is available in config_obj
         ]
     ):
-        raise ValueError("Invalid or missing configuration object.")
+        msg = "Invalid or missing configuration object."
+        raise ValueError(msg)
 
     overwrite_stored_pat_observations = config_obj.overwrite_stored_pat_observations
     store_pat_batch_observations = config_obj.store_pat_batch_observations
@@ -1383,7 +1401,7 @@ def get_merged_pat_batch_textual_obs_docs(
                 cols_to_drop = ["_id", "_index", "_score"]
                 for col in cols_to_drop:
                     if col in batch_target.columns:
-                        batch_target.drop(columns=col, inplace=True)
+                        batch_target = batch_target.drop(columns=col)
 
                 logging.info(
                     f"Writing {len(batch_target)} records to database table '{db_schema}.{db_table_name}'...",
@@ -1453,6 +1471,7 @@ def get_merged_pat_batch_textual_obs_docs(
         except Exception as e:
             logging.error(f"Error retrieving batch textual observations: {e}")
             return pd.DataFrame()
+    return None
 
 
 def get_merged_pat_batch_appointments(
@@ -1487,7 +1506,8 @@ def get_merged_pat_batch_appointments(
             "proj_name",  # Ensure proj_name is available in config_obj
         ]
     ):
-        raise ValueError("Invalid or missing configuration object.")
+        msg = "Invalid or missing configuration object."
+        raise ValueError(msg)
 
     global_start_year = config_obj.global_start_year
     global_start_month = config_obj.global_start_month
@@ -1582,7 +1602,7 @@ def get_merged_pat_batch_appointments(
                 cols_to_drop = ["_id", "_index", "_score"]
                 for col in cols_to_drop:
                     if col in batch_target.columns:
-                        batch_target.drop(columns=col, inplace=True)
+                        batch_target = batch_target.drop(columns=col)
 
                 logging.info(
                     f"Writing {len(batch_target)} records to database table '{db_schema}.{db_table_name}'...",
@@ -1672,6 +1692,7 @@ def get_merged_pat_batch_appointments(
         except Exception as e:
             logging.error(f"Error retrieving batch appointments: {e}")
             return pd.DataFrame()
+    return None
 
 
 def get_merged_pat_batch_demo(
@@ -1706,7 +1727,8 @@ def get_merged_pat_batch_demo(
             "proj_name",  # Ensure proj_name is available in config_obj
         ]
     ):
-        raise ValueError("Invalid or missing configuration object.")
+        msg = "Invalid or missing configuration object."
+        raise ValueError(msg)
 
     global_start_year = config_obj.global_start_year
     global_start_month = config_obj.global_start_month
@@ -1776,7 +1798,7 @@ def get_merged_pat_batch_demo(
                 cols_to_drop = ["_id", "_index", "_score"]
                 for col in cols_to_drop:
                     if col in batch_target.columns:
-                        batch_target.drop(columns=col, inplace=True)
+                        batch_target = batch_target.drop(columns=col)
 
                 logging.info(
                     f"Writing {len(batch_target)} records to database table '{db_schema}.{db_table_name}'...",
@@ -1841,6 +1863,7 @@ def get_merged_pat_batch_demo(
         except Exception as e:
             logging.error(f"Error retrieving batch demographic information: {e}")
             return pd.DataFrame()
+    return None
 
 
 def get_merged_pat_batch_bmi(
@@ -1874,7 +1897,8 @@ def get_merged_pat_batch_bmi(
             "storage_backend",
         ]
     ):
-        raise ValueError("Invalid or missing configuration object.")
+        msg = "Invalid or missing configuration object."
+        raise ValueError(msg)
 
     overwrite_stored_pat_observations = config_obj.overwrite_stored_pat_observations
     global_start_year = config_obj.global_start_year
@@ -1944,7 +1968,7 @@ def get_merged_pat_batch_bmi(
                 cols_to_drop = ["_id", "_index", "_score"]
                 for col in cols_to_drop:
                     if col in batch_target.columns:
-                        batch_target.drop(columns=col, inplace=True)
+                        batch_target = batch_target.drop(columns=col)
 
                 logging.info(
                     f"Writing {len(batch_target)} records to database table '{db_schema}.{db_table_name}'...",
@@ -2008,6 +2032,7 @@ def get_merged_pat_batch_bmi(
         except Exception as e:
             logging.error(f"Error retrieving batch BMI-related observations: {e}")
             return pd.DataFrame()
+    return None
 
 
 def get_merged_pat_batch_obs(
@@ -2041,7 +2066,8 @@ def get_merged_pat_batch_obs(
             "storage_backend",
         ]
     ):
-        raise ValueError("Invalid or missing configuration object.")
+        msg = "Invalid or missing configuration object."
+        raise ValueError(msg)
 
     overwrite_stored_pat_observations = config_obj.overwrite_stored_pat_observations
     global_start_year = config_obj.global_start_year
@@ -2115,7 +2141,7 @@ def get_merged_pat_batch_obs(
                 cols_to_drop = ["_id", "_index", "_score"]
                 for col in cols_to_drop:
                     if col in batch_target.columns:
-                        batch_target.drop(columns=col, inplace=True)
+                        batch_target = batch_target.drop(columns=col)
 
                 logging.info(
                     f"Writing {len(batch_target)} records to database table '{db_schema}.{db_table_name}'...",
@@ -2184,6 +2210,7 @@ def get_merged_pat_batch_obs(
         except Exception as e:
             logging.error(f"Error retrieving batch observations: {e}")
             return pd.DataFrame()
+    return None
 
 
 def get_merged_pat_batch_news(
@@ -2217,7 +2244,8 @@ def get_merged_pat_batch_news(
             "storage_backend",
         ]
     ):
-        raise ValueError("Invalid or missing configuration object.")
+        msg = "Invalid or missing configuration object."
+        raise ValueError(msg)
 
     overwrite_stored_pat_observations = config_obj.overwrite_stored_pat_observations
     global_start_year = config_obj.global_start_year
@@ -2287,7 +2315,7 @@ def get_merged_pat_batch_news(
                 cols_to_drop = ["_id", "_index", "_score"]
                 for col in cols_to_drop:
                     if col in batch_target.columns:
-                        batch_target.drop(columns=col, inplace=True)
+                        batch_target = batch_target.drop(columns=col)
 
                 logging.info(
                     f"Writing {len(batch_target)} records to database table '{db_schema}.{db_table_name}'...",
@@ -2351,6 +2379,7 @@ def get_merged_pat_batch_news(
         except Exception as e:
             logging.error(f"Error retrieving batch NEWS observations: {e}")
             return pd.DataFrame()
+    return None
 
 
 def get_merged_pat_batch_reports(
@@ -2385,7 +2414,8 @@ def get_merged_pat_batch_reports(
             "proj_name",  # Ensure proj_name is available in config_obj
         ]
     ):
-        raise ValueError("Invalid or missing configuration object.")
+        msg = "Invalid or missing configuration object."
+        raise ValueError(msg)
 
     overwrite_stored_pat_observations = config_obj.overwrite_stored_pat_observations
     store_pat_batch_observations = config_obj.store_pat_batch_observations
@@ -2461,7 +2491,7 @@ def get_merged_pat_batch_reports(
                 cols_to_drop = ["_id", "_index", "_score"]
                 for col in cols_to_drop:
                     if col in batch_target.columns:
-                        batch_target.drop(columns=col, inplace=True)
+                        batch_target = batch_target.drop(columns=col)
 
                 logging.info(
                     f"Writing {len(batch_target)} records to database table '{db_schema}.{db_table_name}'...",
@@ -2530,3 +2560,4 @@ def get_merged_pat_batch_reports(
         except Exception as e:
             logging.error(f"Error retrieving batch reports: {e}")
             return pd.DataFrame()
+    return None

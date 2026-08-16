@@ -94,9 +94,11 @@ def search_vte(
         return pd.read_csv(output_filename)
 
     if cohort_searcher_with_terms_and_search is None:
-        raise ValueError("cohort_searcher_with_terms_and_search cannot be None.")
+        msg = "cohort_searcher_with_terms_and_search cannot be None."
+        raise ValueError(msg)
     if client_id_codes is None:
-        raise ValueError("client_id_codes cannot be None.")
+        msg = "client_id_codes cannot be None."
+        raise ValueError(msg)
 
     if isinstance(client_id_codes, str):
         client_id_codes = [client_id_codes]
@@ -155,8 +157,7 @@ def prepare_vte_data(raw_data: pd.DataFrame) -> pd.DataFrame:
 
     """
     data = raw_data[raw_data["obscatalogmasteritem_displayname"] == SEARCH_TERM].copy()
-    data.dropna(inplace=True)
-    return data
+    return data.dropna()
 
 
 def calculate_vte_features(
@@ -241,7 +242,8 @@ def get_vte_status(
 
     """
     if config_obj is None:
-        raise ValueError("config_obj cannot be None. Provide a valid configuration.")
+        msg = "config_obj cannot be None. Provide a valid configuration."
+        raise ValueError(msg)
 
     batch_mode = config_obj.batch_mode
     start_year, start_month, end_year, end_month, start_day, end_day = (

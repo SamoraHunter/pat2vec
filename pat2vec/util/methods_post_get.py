@@ -136,7 +136,7 @@ def check_csv_integrity(
 
     def _delete_and_log(reason: str):
         """Helper to remove a file and log the action."""
-        warnings.warn(f"{reason}: {file_path}", UserWarning)
+        warnings.warn(f"{reason}: {file_path}", UserWarning, stacklevel=2)
         _, filename_ext = os.path.split(file_path)
         filename, _ = os.path.splitext(filename_ext)
         remove_file_from_paths(filename, config_obj=config_obj)
@@ -153,7 +153,7 @@ def check_csv_integrity(
                 warning_message = (
                     f"Column {column} contains missing values in CSV: {file_path}"
                 )
-                warnings.warn(warning_message, UserWarning)
+                warnings.warn(warning_message, UserWarning, stacklevel=2)
                 if delete_broken:
                     _delete_and_log(f"Column {column} contains missing values")
                     return
@@ -161,26 +161,26 @@ def check_csv_integrity(
                 warning_message = (
                     f"Column {column} in CSV file has no missing values: {file_path}"
                 )
-                warnings.warn(warning_message, UserWarning)
+                warnings.warn(warning_message, UserWarning, stacklevel=2)
 
         if verbosity == 2:
             logger.info("CSV file integrity is good.")
 
     except pd.errors.EmptyDataError:
         warning_message = f"CSV file is empty: {file_path}"
-        warnings.warn(warning_message, UserWarning)
+        warnings.warn(warning_message, UserWarning, stacklevel=2)
         if delete_broken:
             _delete_and_log("CSV file is empty")
 
     except pd.errors.ParserError:
         warning_message = f"Error parsing CSV file: {file_path}"
-        warnings.warn(warning_message, UserWarning)
+        warnings.warn(warning_message, UserWarning, stacklevel=2)
         if delete_broken:
             _delete_and_log("Error parsing CSV file")
 
     except FileNotFoundError:
         warning_message = f"File not found: {file_path}"
-        warnings.warn(warning_message, UserWarning)
+        warnings.warn(warning_message, UserWarning, stacklevel=2)
 
 
 def check_csv_files_in_directory(

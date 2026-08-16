@@ -210,14 +210,13 @@ class CogStack:
             elasticsearch.ElasticsearchException: If the Elasticsearch query fails.
 
         """
-        docs_generator = elasticsearch.helpers.scan(
+        return elasticsearch.helpers.scan(
             self.elastic,
             query=query,
             index=index,
             size=es_gen_size,
             request_timeout=request_timeout,
         )
-        return docs_generator
 
     def cogstack2df(
         self,
@@ -259,7 +258,7 @@ class CogStack:
         temp_results = []
         self.elastic.count(index=index, query=query["query"], request_timeout=30)
         for hit in docs_generator:
-            row = dict()
+            row = {}
             row["_index"] = hit["_index"]
             # row['_type'] = hit['_type']
             row["_id"] = hit["_id"]
@@ -305,7 +304,7 @@ class CogStack:
                 properties = index_data.get("mappings", {}).get("properties", {})
                 all_fields.update(properties.keys())
 
-            return sorted(list(all_fields))
+            return sorted(all_fields)
 
         except elasticsearch.exceptions.NotFoundError:
             logging.error(f"Index or pattern '{index_name}' not found.")
@@ -334,7 +333,7 @@ class CogStack:
             index_names = [index["index"] for index in indices]
 
             # Return a sorted list of unique index names
-            return sorted(list(set(index_names)))
+            return sorted(set(index_names))
 
         except Exception as e:
             logging.error(f"An error occurred while fetching indices: {e}")
@@ -423,8 +422,7 @@ def dataframe_generator(
         pd.DataFrame: The next DataFrame in the list.
 
     """
-    for df in list_of_dfs:
-        yield df
+    yield from list_of_dfs
 
 
 def cohort_searcher_with_terms_and_search(
@@ -491,15 +489,15 @@ def cohort_searcher_with_terms_and_search(
             merged_df = [df.set_index("_id") for df in results]
         except Exception as e:
             logging.error(e)
-            raise e
+            raise
             return results
 
         try:
             # Concatenate DataFrames using the generator
             merged_df = pd.concat(dataframe_generator(results), ignore_index=True)
             merged_df = merged_df.set_index("_id")
-        except Exception as e:
-            raise e
+        except Exception:
+            raise
 
         return merged_df
     query = {
@@ -513,8 +511,7 @@ def cohort_searcher_with_terms_and_search(
         },
         "_source": fields_list,
     }
-    df = cs.cogstack2df(query=query, index=index_name, column_headers=fields_list)
-    return df
+    return cs.cogstack2df(query=query, index=index_name, column_headers=fields_list)
 
 
 def set_index_safe_wrapper(df: pd.DataFrame) -> pd.DataFrame:
@@ -595,16 +592,14 @@ def cohort_searcher_with_terms_no_search(
                 column_headers=fields_list,
             )
             results.append(df)
-        merged_df = [set_index_safe_wrapper(df) for df in results]
-        return merged_df
+        return [set_index_safe_wrapper(df) for df in results]
     query = {
         "from": 0,
         "size": 10000,
         "query": {"bool": {"filter": {"terms": {term_name: entered_list}}}},
         "_source": fields_list,
     }
-    df = cs.cogstack2df(query=query, index=index_name, column_headers=fields_list)
-    return df
+    return cs.cogstack2df(query=query, index=index_name, column_headers=fields_list)
 
 
 def cohort_searcher_no_terms(
@@ -638,8 +633,7 @@ def cohort_searcher_no_terms(
         "query": {"bool": {"must": [{"query_string": {"query": search_string}}]}},
         "_source": fields_list,
     }
-    df = cs.cogstack2df(query=query, index=index_name, column_headers=fields_list)
-    return df
+    return cs.cogstack2df(query=query, index=index_name, column_headers=fields_list)
 
 
 def cohort_searcher_no_terms_fuzzy(
@@ -744,11 +738,11 @@ def cohort_searcher_no_terms_fuzzy(
             "_source": fields_list,
         }
     else:
-        raise ValueError("Invalid method. Choose from 'fuzzy', 'exact', or 'phrase'.")
+        msg = "Invalid method. Choose from 'fuzzy', 'exact', or 'phrase'."
+        raise ValueError(msg)
 
     # Execute the query and return the results as a DataFrame
-    df = cs.cogstack2df(query=query, index=index_name, column_headers=fields_list)
-    return df
+    return cs.cogstack2df(query=query, index=index_name, column_headers=fields_list)
 
 
 def iterative_multi_term_cohort_searcher_no_terms_fuzzy(
@@ -1462,20 +1456,19 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy_epic_imaging_reports(
     docs = docs.drop_duplicates()
 
     if "document_PatientDurableKey" in docs.columns:
-        docs.rename(
+        docs = docs.rename(
             columns={"document_PatientDurableKey": "client_idcode"},
-            inplace=True,
         )
         if uuid_column_name == "document_PatientDurableKey":
             uuid_column_name = "client_idcode"
     if "document_CreatedWhen" in docs.columns:
-        docs.rename(columns={"document_CreatedWhen": "updatetime"}, inplace=True)
+        docs = docs.rename(columns={"document_CreatedWhen": "updatetime"})
     if "document_Content" in docs.columns:
-        docs.rename(columns={"document_Content": "body_analysed"}, inplace=True)
+        docs = docs.rename(columns={"document_Content": "body_analysed"})
     if "id" in docs.columns:
-        docs.rename(columns={"id": "document_guid"}, inplace=True)
+        docs = docs.rename(columns={"id": "document_guid"})
     if "document_Name" in docs.columns:
-        docs.rename(columns={"document_Name": "document_description"}, inplace=True)
+        docs = docs.rename(columns={"document_Name": "document_description"})
 
     if treatment_doc_filename and os.path.exists(treatment_doc_filename) and append:
         existing_data = pd.read_csv(treatment_doc_filename)
@@ -1642,23 +1635,21 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy_epic_medical_history(
     docs = docs.drop_duplicates()
 
     if "document_PatientDurableKey" in docs.columns:
-        docs.rename(
+        docs = docs.rename(
             columns={"document_PatientDurableKey": "client_idcode"},
-            inplace=True,
         )
         if uuid_column_name == "document_PatientDurableKey":
             uuid_column_name = "client_idcode"
     if "document_CreatedWhen" in docs.columns:
-        docs.rename(columns={"document_CreatedWhen": "updatetime"}, inplace=True)
+        docs = docs.rename(columns={"document_CreatedWhen": "updatetime"})
     if "document_Comment" in docs.columns:
-        docs.rename(
+        docs = docs.rename(
             columns={"document_Comment": "body_analysed"},
-            inplace=True,
         )  # Use comment as primary text
     if "id" in docs.columns:
-        docs.rename(columns={"id": "document_guid"}, inplace=True)
+        docs = docs.rename(columns={"id": "document_guid"})
     if "document_Name" in docs.columns:
-        docs.rename(columns={"document_Name": "document_description"}, inplace=True)
+        docs = docs.rename(columns={"document_Name": "document_description"})
 
     if treatment_doc_filename and os.path.exists(treatment_doc_filename) and append:
         existing_data = pd.read_csv(treatment_doc_filename)
@@ -1825,20 +1816,19 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy_epic_clinical_notes(
     docs = docs.drop_duplicates()
 
     if "document_PatientDurableKey" in docs.columns:
-        docs.rename(
+        docs = docs.rename(
             columns={"document_PatientDurableKey": "client_idcode"},
-            inplace=True,
         )
         if uuid_column_name == "document_PatientDurableKey":
             uuid_column_name = "client_idcode"
     if "document_CreatedWhen" in docs.columns:
-        docs.rename(columns={"document_CreatedWhen": "updatetime"}, inplace=True)
+        docs = docs.rename(columns={"document_CreatedWhen": "updatetime"})
     if "document_Content" in docs.columns:
-        docs.rename(columns={"document_Content": "body_analysed"}, inplace=True)
+        docs = docs.rename(columns={"document_Content": "body_analysed"})
     if "id" in docs.columns:
-        docs.rename(columns={"id": "document_guid"}, inplace=True)
+        docs = docs.rename(columns={"id": "document_guid"})
     if "document_Name" in docs.columns:
-        docs.rename(columns={"document_Name": "document_description"}, inplace=True)
+        docs = docs.rename(columns={"document_Name": "document_description"})
 
     if treatment_doc_filename and os.path.exists(treatment_doc_filename) and append:
         existing_data = pd.read_csv(treatment_doc_filename)
@@ -2006,20 +1996,19 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy_epic_clinical_notes_appo
     docs = docs.drop_duplicates()
 
     if "document_PatientDurableKey" in docs.columns:
-        docs.rename(
+        docs = docs.rename(
             columns={"document_PatientDurableKey": "client_idcode"},
-            inplace=True,
         )
         if uuid_column_name == "document_PatientDurableKey":
             uuid_column_name = "client_idcode"
     if "document_CreatedWhen" in docs.columns:
-        docs.rename(columns={"document_CreatedWhen": "updatetime"}, inplace=True)
+        docs = docs.rename(columns={"document_CreatedWhen": "updatetime"})
     if "document_Content" in docs.columns:
-        docs.rename(columns={"document_Content": "body_analysed"}, inplace=True)
+        docs = docs.rename(columns={"document_Content": "body_analysed"})
     if "id" in docs.columns:
-        docs.rename(columns={"id": "document_guid"}, inplace=True)
+        docs = docs.rename(columns={"id": "document_guid"})
     if "document_Name" in docs.columns:
-        docs.rename(columns={"document_Name": "document_description"}, inplace=True)
+        docs = docs.rename(columns={"document_Name": "document_description"})
 
     if treatment_doc_filename and os.path.exists(treatment_doc_filename) and append:
         existing_data = pd.read_csv(treatment_doc_filename)
@@ -2572,14 +2561,13 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy_epic_encounters(
     docs = docs.drop_duplicates()
 
     if "activity_PatientDurableKey" in docs.columns:
-        docs.rename(
+        docs = docs.rename(
             columns={"activity_PatientDurableKey": "client_idcode"},
-            inplace=True,
         )
         if uuid_column_name == "activity_PatientDurableKey":
             uuid_column_name = "client_idcode"
     if "activity_AdmissionDate" in docs.columns:
-        docs.rename(columns={"activity_AdmissionDate": "updatetime"}, inplace=True)
+        docs = docs.rename(columns={"activity_AdmissionDate": "updatetime"})
 
     if treatment_doc_filename and os.path.exists(treatment_doc_filename) and append:
         existing_data = pd.read_csv(treatment_doc_filename)
@@ -2721,20 +2709,19 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy_epic_orders(
     docs = docs.drop_duplicates()
 
     if "document_PatientDurableKey" in docs.columns:
-        docs.rename(
+        docs = docs.rename(
             columns={"document_PatientDurableKey": "client_idcode"},
-            inplace=True,
         )
         if uuid_column_name == "document_PatientDurableKey":
             uuid_column_name = "client_idcode"
     if "document_CreatedWhen" in docs.columns:
-        docs.rename(columns={"document_CreatedWhen": "updatetime"}, inplace=True)
+        docs = docs.rename(columns={"document_CreatedWhen": "updatetime"})
     if "document_Content" in docs.columns:
-        docs.rename(columns={"document_Content": "body_analysed"}, inplace=True)
+        docs = docs.rename(columns={"document_Content": "body_analysed"})
     if "id" in docs.columns:
-        docs.rename(columns={"id": "document_guid"}, inplace=True)
+        docs = docs.rename(columns={"id": "document_guid"})
     if "document_Name" in docs.columns:
-        docs.rename(columns={"document_Name": "document_description"}, inplace=True)
+        docs = docs.rename(columns={"document_Name": "document_description"})
 
     if treatment_doc_filename and os.path.exists(treatment_doc_filename) and append:
         existing_data = pd.read_csv(treatment_doc_filename)
@@ -2874,20 +2861,19 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy_epic_lab_results(
     docs = docs.drop_duplicates()
 
     if "document_PatientDurableKey" in docs.columns:
-        docs.rename(
+        docs = docs.rename(
             columns={"document_PatientDurableKey": "client_idcode"},
-            inplace=True,
         )
         if uuid_column_name == "document_PatientDurableKey":
             uuid_column_name = "client_idcode"
     if "document_CollectedDate" in docs.columns:
-        docs.rename(columns={"document_CollectedDate": "updatetime"}, inplace=True)
+        docs = docs.rename(columns={"document_CollectedDate": "updatetime"})
     if "document_Content" in docs.columns:
-        docs.rename(columns={"document_Content": "body_analysed"}, inplace=True)
+        docs = docs.rename(columns={"document_Content": "body_analysed"})
     if "id" in docs.columns:
-        docs.rename(columns={"id": "document_guid"}, inplace=True)
+        docs = docs.rename(columns={"id": "document_guid"})
     if "document_Name" in docs.columns:
-        docs.rename(columns={"document_Name": "document_description"}, inplace=True)
+        docs = docs.rename(columns={"document_Name": "document_description"})
 
     if treatment_doc_filename and os.path.exists(treatment_doc_filename) and append:
         existing_data = pd.read_csv(treatment_doc_filename)
@@ -3204,8 +3190,7 @@ def check_patients_existence(
                 for bucket in buckets:
                     found_id = str(bucket["key"])
                     existing_ids.add(found_id)
-                    if found_id in ids_to_check:
-                        ids_to_check.remove(found_id)
+                    ids_to_check.discard(found_id)
             except Exception as e:
                 # Handle fielddata error for text fields where aggregations are disabled.
                 if "fielddata" in str(e).lower():
@@ -3222,8 +3207,7 @@ def check_patients_existence(
                             if val:
                                 found_id = str(val)
                                 existing_ids.add(found_id)
-                                if found_id in ids_to_check:
-                                    ids_to_check.remove(found_id)
+                                ids_to_check.discard(found_id)
                     except Exception as e_inner:
                         logging.error(
                             f"Fallback existence check failed for {idx_name}: {e_inner}",
@@ -3327,8 +3311,10 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy_textual_obs(
         search_string = f"textualObs:({term})"
 
         search_string = (
-            f"textualObs:({term}) AND "
-            f"{bloods_time_field}:[{start_year}-{start_month}-{start_day} TO {end_year}-{end_month}-{end_day}]",
+            (
+                f"textualObs:({term}) AND "
+                f"{bloods_time_field}:[{start_year}-{start_month}-{start_day} TO {end_year}-{end_month}-{end_day}]"
+            ),
         )
         search_string = str(search_string)
 

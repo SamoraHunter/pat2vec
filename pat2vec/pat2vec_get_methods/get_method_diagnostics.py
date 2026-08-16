@@ -112,16 +112,20 @@ def search_diagnostic_orders(
         return pd.read_csv(output_filename)
 
     if cohort_searcher_with_terms_and_search is None:
-        raise ValueError("cohort_searcher_with_terms_and_search cannot be None.")
+        msg = "cohort_searcher_with_terms_and_search cannot be None."
+        raise ValueError(msg)
     if client_id_codes is None:
-        raise ValueError("client_id_codes cannot be None.")
+        msg = "client_id_codes cannot be None."
+        raise ValueError(msg)
     if diagnostic_time_field is None:
-        raise ValueError("diagnostic_time_field cannot be None.")
+        msg = "diagnostic_time_field cannot be None."
+        raise ValueError(msg)
     if any(
         x is None
         for x in [start_year, start_month, start_day, end_year, end_month, end_day]
     ):
-        raise ValueError("Date components cannot be None.")
+        msg = "Date components cannot be None."
+        raise ValueError(msg)
 
     # Ensure client_id_codes is a list for the search function
     if isinstance(client_id_codes, str):
@@ -223,10 +227,7 @@ def calculate_diagnostic_features(
         Dict: A dictionary of calculated features.
 
     """
-    if batch_mode:
-        today = datetime.now(timezone.utc)
-    else:
-        today = datetime.today()
+    today = datetime.now(timezone.utc) if batch_mode else datetime.today()
 
     features = {}
 
@@ -345,8 +346,9 @@ def get_current_pat_diagnostics(
 
     """
     if config_obj is None:
+        msg = "config_obj cannot be None. Please provide a valid configuration."
         raise ValueError(
-            "config_obj cannot be None. Please provide a valid configuration.",
+            msg,
         )
 
     batch_mode = config_obj.batch_mode
@@ -420,7 +422,7 @@ def get_current_pat_diagnostics(
 
         if not epic_order_data.empty:
             # Standardize column names to match 'order' schema
-            epic_order_data.rename(
+            epic_order_data = epic_order_data.rename(
                 columns={
                     "document_PatientDurableKey": "client_idcode",
                     "document_UpdatedWhen": "order_createdwhen",  # Map to createdwhen for consistency
@@ -428,7 +430,6 @@ def get_current_pat_diagnostics(
                     "document_Content": "order_summaryline",
                     "id": "order_guid",
                 },
-                inplace=True,
             )
 
             # Add/ensure other expected columns from 'order', filling with NaN if not present

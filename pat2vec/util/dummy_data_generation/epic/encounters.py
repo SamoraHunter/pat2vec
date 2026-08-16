@@ -7,7 +7,9 @@ import numpy as np
 import pandas as pd
 from faker import Faker
 
-from ..generator_helpers import create_random_date_from_globals
+from pat2vec.util.dummy_data_generation.generator_helpers import (
+    create_random_date_from_globals,
+)
 
 random_state = 42
 Faker.seed(random_state)
@@ -132,16 +134,7 @@ def generate_epic_encounters_data(
     global_end_month: int = 12,
     global_start_day: int = 1,
     global_end_day: int = 31,
-    fields_list: list[str] = [
-        "activity_PatientDurableKey",
-        "activity_AdmissionDate",
-        "activity_DischargeDate",
-        "activity_Department",
-        "activity_Type",
-        "activity_VisitClass",
-        "activity_HospitalService",
-        "id",
-    ],
+    fields_list: list[str] | None = None,
 ) -> pd.DataFrame:
     """Generates dummy data for the 'epic_encounters' index with realistic patterns.
 
@@ -153,6 +146,17 @@ def generate_epic_encounters_data(
     Department distribution follows real hospital utilization patterns.
     Length of stay correlates with admission type, patient age, and department.
     """
+    if fields_list is None:
+        fields_list = [
+            "activity_PatientDurableKey",
+            "activity_AdmissionDate",
+            "activity_DischargeDate",
+            "activity_Department",
+            "activity_Type",
+            "activity_VisitClass",
+            "activity_HospitalService",
+            "id",
+        ]
     df_holder_list = []
 
     for client_id_code in entered_list:

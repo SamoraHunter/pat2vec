@@ -92,8 +92,7 @@ def extract_nhs_numbers(input_string: str) -> list[str]:
     # Find all occurrences of "NHS" followed by a 10-digit number
     matches = re.findall(r"NHS\s*(\d{3}\s*\d{3}\s*\d{4})", input_string)
     # Remove spaces from each extracted number
-    cleaned_numbers = [re.sub(r"\s+", "", number) for number in matches]
-    return cleaned_numbers
+    return [re.sub(r"\s+", "", number) for number in matches]
 
 
 def get_search_client_idcode_list_from_nhs_number_list(
@@ -134,6 +133,7 @@ def get_search_client_idcode_list_from_nhs_number_list(
     if missing_ids:
         warnings.warn(
             f"The following NHS numbers do not have associated Hospital IDs: {missing_ids}",
+            stacklevel=2,
         )
 
     return unique_hospital_ids
@@ -201,7 +201,7 @@ def clear_patient_features(patient_id: str, config_obj: Any) -> None:
 
 
 def try_parse_list_string(val: Any) -> Any:
-    """Handles stringified list types like \"['procedure']\" or actual Python lists."""
+    r"""Handles stringified list types like \"['procedure']\" or actual Python lists."""
     if isinstance(val, list):
         return str(val[0]) if len(val) > 0 else "Unknown"
 
@@ -249,7 +249,8 @@ def save_patient_features(
         try:
             engine = config_obj.db_engine
             if not engine:
-                raise ValueError("Database engine not initialized in config_obj.")
+                msg = "Database engine not initialized in config_obj."
+                raise ValueError(msg)
 
             table_name = "features"
             schema_name = "features"
@@ -346,7 +347,7 @@ def save_patient_features(
                                     logging.error(
                                         f"Failed to add column {col} to table: {e}",
                                     )
-                                    raise e
+                                    raise
 
                 if use_json_packing:
                     # Pack all features (except patient ID) into a JSON column
@@ -454,7 +455,8 @@ def save_patient_features(
         )
         logging.debug(f"Saved features for patient {patient_id} to {output_file}")
     else:
-        raise ValueError(f"Unknown storage_backend: {config_obj.storage_backend}")
+        msg = f"Unknown storage_backend: {config_obj.storage_backend}"
+        raise ValueError(msg)
 
 
 def save_raw_patient_batch(
@@ -520,7 +522,7 @@ def save_raw_patient_batch(
             for col in cols_to_drop:
                 if col in df.columns:
                     print(f"DEBUG helper_functions: Dropping column {col}")
-                    df.drop(columns=col, inplace=True)
+                    df = df.drop(columns=col)
 
             print(
                 f"DEBUG helper_functions: After drop - columns: {df.columns.tolist()}",
@@ -786,7 +788,8 @@ def get_all_features(config_obj: Any) -> pd.DataFrame:
         )
         return pd.concat(df_from_each_file, ignore_index=True)
 
-    raise ValueError(f"Unknown storage_backend: {config_obj.storage_backend}")
+    msg = f"Unknown storage_backend: {config_obj.storage_backend}"
+    raise ValueError(msg)
 
 
 def get_df_from_db(
@@ -833,9 +836,12 @@ def get_df_from_db(
             if not inspector.has_table(target_table, schema=target_schema):
                 error_msg = f"Table '{target_table}' not found in database."
                 if config_obj.testing:
-                    raise RuntimeError(
+                    msg = (
                         f"{error_msg} This likely means dummy data was never generated during testing mode. "
-                        "Please ensure the pat2vec initialization successfully saved batch data.",
+                        "Please ensure the pat2vec initialization successfully saved batch data."
+                    )
+                    raise RuntimeError(
+                        msg,
                     )
                 logger.warning(f"{error_msg} Returning empty DataFrame.")
                 return pd.DataFrame()
@@ -861,8 +867,7 @@ def get_df_from_db(
 
             if patient_ids is None:
                 query_str = f"SELECT {', '.join(columns_to_use) if columns_to_use else '*'} FROM {target_table}"
-                df = pd.read_sql(text(query_str), connection, params={})
-                return df
+                return pd.read_sql(text(query_str), connection, params={})
 
             if len(patient_ids) == 0:
                 return pd.DataFrame()
@@ -1046,10 +1051,9 @@ def get_df_from_db_with_temporal_filter(
 
                 all_data.append(df_chunk)
 
-            result_df = (
+            return (
                 pd.concat(all_data, ignore_index=True) if all_data else pd.DataFrame()
             )
-            return result_df
 
     except Exception as e:
         logging.error(f"Error with temporal database filter for {table}: {e}")

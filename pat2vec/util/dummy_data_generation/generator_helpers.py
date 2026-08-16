@@ -187,6 +187,5 @@ def extract_search_term_obscatalogmasteritem_displayname(
     match = re.search(r"obscatalogmasteritem_displayname:\((.*?)\)", search_string)
     if match:
         search_term = match.group(1).replace('"', "").replace("'", "").strip()
-        search_term = search_term.split("AND", 1)[0].split("OR", 1)[0].strip()
-        return search_term
+        return search_term.split("AND", 1)[0].split("OR", 1)[0].strip()
     return search_string

@@ -86,7 +86,7 @@ def get_pat_batch_textual_obs_annotations(
         if pat_batch.empty:
             return None
 
-        pat_batch.dropna(subset=["textualObs"], axis=0, inplace=True)
+        pat_batch = pat_batch.dropna(subset=["textualObs"], axis=0)
 
         pat_batch = pat_batch[pat_batch["textualObs"] != ""]
 
@@ -131,7 +131,7 @@ def get_pat_batch_textual_obs_annotations(
 
                 for col in cols_to_drop:
                     if col in batch_target.columns:
-                        batch_target.drop(columns=col, inplace=True)
+                        batch_target = batch_target.drop(columns=col)
 
                 # Create a copy and serialize lists to strings for SQL compatibility
                 batch_to_save = batch_target.copy()

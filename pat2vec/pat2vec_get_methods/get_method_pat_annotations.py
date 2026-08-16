@@ -64,15 +64,17 @@ def get_current_pat_annotations(
 
     """
     if config_obj is None:
+        msg = "config_obj cannot be None. Please provide a valid configuration. (get_current_pat_annotations)"
         raise ValueError(
-            "config_obj cannot be None. Please provide a valid configuration. (get_current_pat_annotations)",
+            msg,
         )
 
     if batch_epr_docs_annotations is not None and not isinstance(
         batch_epr_docs_annotations,
         pd.DataFrame,
     ):
-        raise TypeError("batch_epr_docs_annotations must be a pd.DataFrame.")
+        msg = "batch_epr_docs_annotations must be a pd.DataFrame."
+        raise TypeError(msg)
 
     start_time = config_obj.start_time
 

@@ -103,9 +103,11 @@ def search_bloods_data(
         return pd.read_csv(output_filename)
 
     if cohort_searcher_with_terms_and_search is None:
-        raise ValueError("cohort_searcher_with_terms_and_search cannot be None.")
+        msg = "cohort_searcher_with_terms_and_search cannot be None."
+        raise ValueError(msg)
     if client_id_codes is None:
-        raise ValueError("client_id_codes cannot be None.")
+        msg = "client_id_codes cannot be None."
+        raise ValueError(msg)
 
     if isinstance(client_id_codes, str):
         client_id_codes = [client_id_codes]
@@ -267,7 +269,7 @@ def get_current_pat_bloods(
 
         if not epic_lab_data.empty:
             # Standardize column names to match basic_observations for bloods processing
-            epic_lab_data.rename(
+            epic_lab_data = epic_lab_data.rename(
                 columns={
                     "document_PatientDurableKey": "client_idcode",
                     "document_CollectedDate": "basicobs_entered",
@@ -275,7 +277,6 @@ def get_current_pat_bloods(
                     "document_Fields.valueText": "basicobs_value_numeric",
                     "id": "basicobs_guid",  # Use Epic's 'id' as the guid
                 },
-                inplace=True,
             )
 
             # Add/ensure other expected columns from basic_observations, filling with NaN if not present

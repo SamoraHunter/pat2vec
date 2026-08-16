@@ -91,7 +91,8 @@ def populate_elastic_with_dummy_data(
 
         spec = importlib.util.spec_from_file_location("test_creds_module", creds_path)
         if spec is None or spec.loader is None:
-            raise ImportError(f"Could not load specs from {creds_path}")
+            msg = f"Could not load specs from {creds_path}"
+            raise ImportError(msg)
         test_creds = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(test_creds)
         hosts = getattr(test_creds, "hosts", [])
@@ -616,7 +617,7 @@ def generate_observations_MRC_text_data(
 
     df = pd.concat(df_holder_list, ignore_index=True)
 
-    unique_fields = list(dict.fromkeys(fields_list + ["_id", "_index", "_score"]))
+    unique_fields = list(dict.fromkeys([*fields_list, "_id", "_index", "_score"]))
 
     target_col = "observation_valuetext_analysed"
     if target_col in df.columns and target_col not in unique_fields:
@@ -627,8 +628,7 @@ def generate_observations_MRC_text_data(
             df[field] = None
 
     df = df[unique_fields]
-    df.reset_index(drop=True, inplace=True)
-    return df
+    return df.reset_index(drop=True)
 
 
 def generate_observations_data_generic(
@@ -694,12 +694,11 @@ def generate_observations_data_generic(
 
     final_df = pd.concat(df_holder_list, ignore_index=True)
 
-    unique_fields = list(dict.fromkeys(fields_list + ["_id", "_index", "_score"]))
+    unique_fields = list(dict.fromkeys([*fields_list, "_id", "_index", "_score"]))
 
     for field in unique_fields:
         if field not in final_df.columns:
             final_df[field] = None
 
     df = final_df[unique_fields]
-    df.reset_index(drop=True, inplace=True)
-    return df
+    return df.reset_index(drop=True)

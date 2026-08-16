@@ -4,8 +4,10 @@ import numpy as np
 import pandas as pd
 
 from pat2vec.pat2vec_get_methods.get_method_smoking import SMOKING_FIELDS
-
-from ..generator_helpers import create_random_date_from_globals, maybe_nan
+from pat2vec.util.dummy_data_generation.generator_helpers import (
+    create_random_date_from_globals,
+    maybe_nan,
+)
 
 try:
     from faker import Faker

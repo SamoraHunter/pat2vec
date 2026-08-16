@@ -103,7 +103,8 @@ def _api_request(
                 verify=VERIFY_SSL,
             )
         else:
-            raise ValueError(f"Unsupported HTTP method: {method}")
+            msg = f"Unsupported HTTP method: {method}"
+            raise ValueError(msg)
 
         response.raise_for_status()  # Raise an exception for HTTP errors
         return response

@@ -188,20 +188,22 @@ def coerce_document_df_to_medcat_trainer_input(
 
     # Check for the existence of required columns
     if name_value not in df.columns or text_column_value not in df.columns:
+        msg = f"Expected columns '{name_value}' or '{text_column_value}' are missing from the DataFrame"
         raise KeyError(
-            f"Expected columns '{name_value}' or '{text_column_value}' are missing from the DataFrame",
+            msg,
         )
 
     logger.debug(f"Columns before renaming: {df.columns.tolist()}")
 
     # Rename columns
     rename_mapping = {name_value: "name", text_column_value: "text"}
-    df.rename(columns=rename_mapping, inplace=True)
+    df = df.rename(columns=rename_mapping)
 
     # Check if renaming succeeded
     if "name" not in df.columns or "text" not in df.columns:
+        msg = "Renaming failed: 'name' or 'text' column is missing after rename"
         raise KeyError(
-            "Renaming failed: 'name' or 'text' column is missing after rename",
+            msg,
         )
 
     # Ensure unique values in the 'name' column

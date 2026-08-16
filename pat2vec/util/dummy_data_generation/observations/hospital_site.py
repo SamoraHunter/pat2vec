@@ -4,7 +4,7 @@ from collections import OrderedDict
 import numpy as np
 import pandas as pd
 
-from ..generator_helpers import (
+from pat2vec.util.dummy_data_generation.generator_helpers import (
     create_random_date_from_globals,
     maybe_nan,
     random_state,
@@ -192,7 +192,9 @@ def generate_hospital_site_data(
             )
 
             probabilities = [weights[h] for h in hospital_sites]
-            weighted_elements = OrderedDict(zip(hospital_sites, probabilities))
+            weighted_elements = OrderedDict(
+                zip(hospital_sites, probabilities, strict=False)
+            )
             hospital = faker_inst.random_element(elements=weighted_elements)
 
             value = maybe_nan(hospital, probability=0.03)
@@ -222,5 +224,4 @@ def generate_hospital_site_data(
         if field not in final_df.columns:
             final_df[field] = np.nan
 
-    final_df = final_df[fields_list]
-    return final_df
+    return final_df[fields_list]

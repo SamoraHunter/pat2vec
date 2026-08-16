@@ -173,7 +173,7 @@ class CsvProfiler:
                 else:
                     df = pd.read_csv(file_path, usecols=final_cols)
                     if "targetId" in df.columns:
-                        df.dropna(subset=["targetId"], inplace=True)
+                        df = df.dropna(subset=["targetId"])
 
                 # IMPORTANT: ProfileReport is now called as a class attribute
                 profile = ProfileReport(

@@ -21,8 +21,9 @@ def _get_column_case_insensitive(df: pd.DataFrame, column_name: str) -> pd.Serie
     if column_name.lower() in lower_columns:
         return df[lower_columns[column_name.lower()]]
 
+    msg = f"Column '{column_name}' not found (case-insensitive check also failed)"
     raise KeyError(
-        f"Column '{column_name}' not found (case-insensitive check also failed)",
+        msg,
     )
 
 
@@ -46,8 +47,7 @@ def extract_hospital_numbers(hospital_number_str: str) -> list[str]:
         return []
 
     parts = str(hospital_number_str).split(",")
-    numbers = [part.strip() for part in parts if part.strip()]
-    return numbers
+    return [part.strip() for part in parts if part.strip()]
 
 
 def extract_nhs_number(nhs_number_str: str) -> str | None:

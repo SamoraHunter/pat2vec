@@ -5,7 +5,9 @@ import numpy as np
 import pandas as pd
 from faker import Faker
 
-from ..generator_helpers import create_random_date_from_globals
+from pat2vec.util.dummy_data_generation.generator_helpers import (
+    create_random_date_from_globals,
+)
 
 random_state = 42
 Faker.seed(random_state)
@@ -125,7 +127,9 @@ def _generate_realistic_timestamps(
         tuple: (CreatedWhen, UpdatedWhen) as ISO-formatted strings.
 
     """
-    from ..generator_helpers import create_random_date_from_globals
+    from pat2vec.util.dummy_data_generation.generator_helpers import (
+        create_random_date_from_globals,
+    )
 
     created_when = create_random_date_from_globals(
         base_date.year,
@@ -187,17 +191,7 @@ def generate_epic_orders_data(
     global_end_month: int = 12,
     global_start_day: int = 1,
     global_end_day: int = 31,
-    fields_list: list[str] = [
-        "document_PatientDurableKey",
-        "document_CreatedWhen",
-        "document_UpdatedWhen",
-        "document_Name",
-        "document_Content",
-        "document_OrderClass",
-        "document_OrderDate",
-        "document_OrderStatus",
-        "id",
-    ],
+    fields_list: list[str] | None = None,
 ) -> pd.DataFrame:
     """Generates realistic dummy data for the 'epic_orders' index with clinical patterns.
 
@@ -216,6 +210,18 @@ def generate_epic_orders_data(
         A pandas DataFrame with generated realistic orders data following Epic patterns.
 
     """
+    if fields_list is None:
+        fields_list = [
+            "document_PatientDurableKey",
+            "document_CreatedWhen",
+            "document_UpdatedWhen",
+            "document_Name",
+            "document_Content",
+            "document_OrderClass",
+            "document_OrderDate",
+            "document_OrderStatus",
+            "id",
+        ]
     df_holder_list = []
 
     for client_id_code in entered_list:

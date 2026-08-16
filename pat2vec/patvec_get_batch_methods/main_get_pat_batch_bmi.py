@@ -13,7 +13,7 @@ def get_pat_batch_bmi(
     current_pat_client_id_code: str,
     config_obj: Any,
     cohort_searcher_with_terms_and_search: Any,
-    search_term: str = None,
+    search_term: str | None = None,
 ) -> pd.DataFrame:
     """Retrieves a batch of BMI-related observations for a patient.
 
@@ -36,7 +36,8 @@ def get_pat_batch_bmi(
             "global_end_month",
         ]
     ):
-        raise ValueError("Invalid or missing configuration object.")
+        msg = "Invalid or missing configuration object."
+        raise ValueError(msg)
 
     global_start_year = str(config_obj.global_start_year).zfill(4)
     global_start_month = str(config_obj.global_start_month).zfill(2)

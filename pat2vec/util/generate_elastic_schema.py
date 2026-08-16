@@ -179,7 +179,7 @@ def generate_schema_from_cluster(
                 continue
 
             # Pick the first concrete index found for this pattern
-            concrete_index = list(mappings_response.keys())[0]
+            concrete_index = next(iter(mappings_response.keys()))
             logger.info(
                 f"Using concrete index '{concrete_index}' as template for '{index_pattern}'",
             )

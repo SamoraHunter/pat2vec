@@ -58,7 +58,7 @@ except ImportError:
             return __import__("pandas").DataFrame(columns=fields_list)
 
         df = __import__("pandas").concat(df_holder, ignore_index=True)
-        unique_fields = list(dict.fromkeys(fields_list + ["id"]))
+        unique_fields = list(dict.fromkeys([*fields_list, "id"]))
         for f in unique_fields:
             if f not in df.columns:
                 df[f] = None

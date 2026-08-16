@@ -358,7 +358,7 @@ def cohort_searcher_with_terms_and_search_dummy(
             if verbose:
                 logger.debug("Generating data for 'orders' with medication")
             num_rows = random.randint(1, 10)
-            df = generate_drug_orders_data(
+            return generate_drug_orders_data(
                 num_rows,
                 entered_list,
                 global_start_year,
@@ -367,12 +367,11 @@ def cohort_searcher_with_terms_and_search_dummy(
                 global_end_month,
                 fields_list=fields_list,
             )
-            return df
         if "diagnostic" in search_string:
             if verbose:
                 logger.debug("Generating data for 'orders' with diagnostic")
             num_rows = random.randint(1, 10)
-            df = generate_diagnostic_orders_data(
+            return generate_diagnostic_orders_data(
                 num_rows,
                 entered_list,
                 global_start_year,
@@ -381,7 +380,6 @@ def cohort_searcher_with_terms_and_search_dummy(
                 global_end_month,
                 fields_list=fields_list,
             )
-            return df
     elif index_name == "pims_apps*":
         if verbose:
             logger.debug("Generating data for 'pims_apps'")
@@ -508,7 +506,7 @@ def cohort_searcher_with_terms_and_search_dummy(
             )
         if verbose:
             logger.debug("Generating data for 'epic_clinical_notes_appointments'")
-        df = generate_epic_clinical_notes_appointments_data(
+        return generate_epic_clinical_notes_appointments_data(
             num_rows=random.randint(1, 5),
             entered_list=entered_list,
             global_start_year=global_start_year,
@@ -517,7 +515,6 @@ def cohort_searcher_with_terms_and_search_dummy(
             global_end_month=global_end_month,
             fields_list=fields_list,
         )
-        return df
     else:
         if verbose:
             logger.warning(

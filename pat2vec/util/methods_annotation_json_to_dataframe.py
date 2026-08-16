@@ -172,15 +172,14 @@ def json_to_dataframe(
 
         try:
             super_df = pd.concat(df_parts)
-            super_df.reset_index(drop=True, inplace=True)
-            return super_df
+            return super_df.reset_index(drop=True)
 
         except Exception as e:
             logger.error(e)
             logger.error(f"json_date: {json_data}")
             logger.error(f"type(json_data): {type(json_data)}")
             logger.error(f"len(json_data): {len(json_data)}")
-            raise e
+            raise
 
     else:
         if testing:
@@ -248,8 +247,7 @@ def json_to_dataframe(
                 target_guid_column,
             ]
 
-            df = pd.DataFrame(data, columns=columns)
-            return df
+            return pd.DataFrame(data, columns=columns)
         # Standardize document identifier column name for empty DataFrames
         target_guid_column = "document_guid" if guid_column == "id" else guid_column
 
@@ -281,8 +279,7 @@ def json_to_dataframe(
             target_guid_column,
         ]
 
-        empty_df = pd.DataFrame(data=None, columns=columns)
-        return empty_df
+        return pd.DataFrame(data=None, columns=columns)
 
 
 def parse_meta_anns(meta_anns: dict[str, Any]) -> dict[str, Any]:

@@ -282,7 +282,7 @@ def get_pat_ipw_record(
         current_pat_idcode,
         config_obj.pre_document_annotation_batch_path,
         "updatetime",
-        ["updatetime"] + base_necessary_columns,
+        ["updatetime", *base_necessary_columns],
         annot_filter_arguments,
         filter_codes,
         mode,
@@ -298,7 +298,7 @@ def get_pat_ipw_record(
             current_pat_idcode,
             config_obj.pre_document_annotation_batch_path_mct,
             "observationdocument_recordeddtm",
-            ["observationdocument_recordeddtm"] + base_necessary_columns,
+            ["observationdocument_recordeddtm", *base_necessary_columns],
             annot_filter_arguments,
             filter_codes,
             mode,
@@ -314,7 +314,7 @@ def get_pat_ipw_record(
             current_pat_idcode,
             config_obj.pre_textual_obs_annotation_batch_path,
             "basicobs_entered",
-            ["basicobs_entered"] + base_necessary_columns,
+            ["basicobs_entered", *base_necessary_columns],
             annot_filter_arguments,
             filter_codes,
             mode,
@@ -330,7 +330,7 @@ def get_pat_ipw_record(
             current_pat_idcode,
             config_obj.pre_epic_clinical_notes_annotation_batch_path,
             "document_CreatedWhen",
-            ["document_CreatedWhen"] + base_necessary_columns,
+            ["document_CreatedWhen", *base_necessary_columns],
             annot_filter_arguments,
             filter_codes,
             mode,
@@ -346,7 +346,7 @@ def get_pat_ipw_record(
             current_pat_idcode,
             config_obj.pre_epic_medical_history_annotation_batch_path,
             "document_CreatedWhen",
-            ["document_CreatedWhen"] + base_necessary_columns,
+            ["document_CreatedWhen", *base_necessary_columns],
             annot_filter_arguments,
             filter_codes,
             mode,
@@ -362,7 +362,7 @@ def get_pat_ipw_record(
             current_pat_idcode,
             config_obj.pre_epic_clinical_notes_appointments_annotation_batch_path,
             "document_CreatedWhen",
-            ["document_CreatedWhen"] + base_necessary_columns,
+            ["document_CreatedWhen", *base_necessary_columns],
             annot_filter_arguments,
             filter_codes,
             mode,
@@ -378,7 +378,7 @@ def get_pat_ipw_record(
             current_pat_idcode,
             config_obj.pre_epic_imaging_reports_annotation_batch_path,
             "document_CreatedWhen",
-            ["document_CreatedWhen"] + base_necessary_columns,
+            ["document_CreatedWhen", *base_necessary_columns],
             annot_filter_arguments,
             filter_codes,
             mode,
@@ -394,7 +394,7 @@ def get_pat_ipw_record(
             current_pat_idcode,
             config_obj.pre_epic_orders_annotation_batch_path,
             "document_CreatedWhen",
-            ["document_CreatedWhen"] + base_necessary_columns,
+            ["document_CreatedWhen", *base_necessary_columns],
             annot_filter_arguments,
             filter_codes,
             mode,
@@ -410,7 +410,7 @@ def get_pat_ipw_record(
         current_pat_idcode,
         config_obj.pre_document_annotation_batch_path_reports,
         "updatetime",
-        ["updatetime"] + base_necessary_columns,
+        ["updatetime", *base_necessary_columns],
         annot_filter_arguments,
         filter_codes,
         mode,
@@ -468,35 +468,37 @@ def get_pat_ipw_record(
         dfs_to_compare.append(fsr_reports)
 
     # Standardize timestamp column names
-    for df in dfs_to_compare:
+    for i, df in enumerate(dfs_to_compare):
         if "observationdocument_recordeddtm" in df.columns:
-            df.rename(
+            dfs_to_compare[i] = df.rename(
                 columns={"observationdocument_recordeddtm": "updatetime"},
-                inplace=True,
             )
         elif "basicobs_entered" in df.columns:
             # Drop existing updatetime column if it exists
             if "updatetime" in df.columns:
-                df.drop(columns=["updatetime"], inplace=True)
-            df.rename(columns={"basicobs_entered": "updatetime"}, inplace=True)
+                dfs_to_compare[i] = df.drop(columns=["updatetime"])
+            dfs_to_compare[i] = dfs_to_compare[i].rename(
+                columns={"basicobs_entered": "updatetime"},
+            )
         elif "document_CreatedWhen" in df.columns:
             # Epic timestamp field
             if "updatetime" in df.columns:
-                df.drop(columns=["updatetime"], inplace=True)
-            df.rename(columns={"document_CreatedWhen": "updatetime"}, inplace=True)
+                dfs_to_compare[i] = df.drop(columns=["updatetime"])
+            dfs_to_compare[i] = dfs_to_compare[i].rename(
+                columns={"document_CreatedWhen": "updatetime"},
+            )
         elif "updatetime" not in df.columns:
             if verbose > 10:
                 logger.warning(
                     f"No timestamp column found in DataFrame with source {df.iloc[0].get('source', 'unknown')}",
                 )
-            continue
 
     # Convert 'updatetime' to datetime objects before comparison
-    for df in dfs_to_compare:
+    for i, df in enumerate(dfs_to_compare):
         if "updatetime" in df.columns:
-            # Use errors='coerce' to turn unparseable dates into NaT (Not a Time)
-            df["updatetime"] = pd.to_datetime(
-                df["updatetime"],
+            dfs_to_compare[i] = df.copy()
+            dfs_to_compare[i]["updatetime"] = pd.to_datetime(
+                dfs_to_compare[i]["updatetime"],
                 errors="coerce",
                 utc=True,
             )
@@ -542,7 +544,7 @@ def get_pat_ipw_record(
 
         # Set other required columns with appropriate defaults
         for col in base_necessary_columns:
-            if col not in ["client_idcode"]:
+            if col != "client_idcode":
                 earliest_df[col] = [None]  # or appropriate default values
 
         # Set timestamp based on config

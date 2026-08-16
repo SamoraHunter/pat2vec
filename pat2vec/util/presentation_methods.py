@@ -24,11 +24,7 @@ def group_images_by_suffix(folder_path: str) -> dict[str, list[str]]:
     image_groups = {}
 
     for file_name in os.listdir(folder_path):
-        if (
-            file_name.endswith(".png")
-            or file_name.endswith(".jpg")
-            or file_name.endswith(".jpeg")
-        ):
+        if file_name.endswith((".png", ".jpg", ".jpeg")):
             suffix = file_name.split("_")[-1].split(".")[0]
             image_groups.setdefault(suffix, []).append(file_name)
 
@@ -52,7 +48,7 @@ def create_powerpoint_slides_client_idcode_groups(
     """
     presentation = Presentation()
 
-    for suffix, images in image_groups.items():
+    for images in image_groups.values():
         for image in images:
             image_path = os.path.join(os.path.dirname(output_path), image)
             slide_layout = presentation.slide_layouts[

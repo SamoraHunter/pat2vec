@@ -51,9 +51,7 @@ def get_cat(config_obj: Any) -> Union["CAT", dummy_CAT] | None:  # type: ignore
         if config_obj.dummy_medcat_model:
             logger.info("Returning dummy_CAT for testing.")
 
-            cat = dummy_CAT()
-
-            return cat
+            return dummy_CAT()
 
     model_path = None
 
@@ -121,8 +119,8 @@ def get_cat(config_obj: Any) -> Union["CAT", dummy_CAT] | None:  # type: ignore
             if config_obj.verbosity > 0:
                 logger.info(f"Loading MedCAT model from: {model_path}")
 
-            cat = CAT.load_model_pack(model_path)
-            return cat
+            return CAT.load_model_pack(model_path)
         # Handle the case where none of the conditions matched
-        raise ValueError("No valid model path found in the configuration.")
+        msg = "No valid model path found in the configuration."
+        raise ValueError(msg)
     return None

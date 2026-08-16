@@ -211,7 +211,7 @@ def generate_epr_documents_data(
         return df
     except Exception as e:
         logger.error(e)
-        raise e
+        raise
 
 
 def generate_epr_documents_personal_data(
@@ -223,16 +223,7 @@ def generate_epr_documents_personal_data(
     global_end_year: int = 2023,
     global_end_month: int = 12,
     global_end_day: int = 31,
-    fields_list: list[str] = [
-        "client_idcode",
-        "client_firstname",
-        "client_lastname",
-        "client_dob",
-        "client_gendercode",
-        "client_racecode",
-        "client_deceaseddtm",
-        "updatetime",
-    ],
+    fields_list: list[str] | None = None,
 ) -> pd.DataFrame:
     """Generates dummy personal data for the 'epr_documents' index (demographics).
 
@@ -254,6 +245,17 @@ def generate_epr_documents_personal_data(
         None
 
     """
+    if fields_list is None:
+        fields_list = [
+            "client_idcode",
+            "client_firstname",
+            "client_lastname",
+            "client_dob",
+            "client_gendercode",
+            "client_racecode",
+            "client_deceaseddtm",
+            "updatetime",
+        ]
     df_holder_list = []
 
     for i in range(len(entered_list)):
@@ -314,9 +316,7 @@ def generate_epr_documents_personal_data(
             df[field] = np.nan
 
     df = df[unique_fields]
-    df.reset_index(drop=True, inplace=True)
-
-    return df
+    return df.reset_index(drop=True)
 
 
 def generate_diagnostic_orders_data(
@@ -328,21 +328,7 @@ def generate_diagnostic_orders_data(
     global_end_year: int = 2023,
     global_end_month: int = 12,
     global_end_day: int = 31,
-    fields_list: list[str] = [
-        "order_guid",
-        "client_idcode",
-        "order_name",
-        "order_summaryline",
-        "order_holdreasontext",
-        "order_entered",
-        "order_createdwhen",
-        "clientvisit_visitidcode",
-        "_id",
-        "_index",
-        "_score",
-        "order_performeddtm",
-        "order_typecode",
-    ],
+    fields_list: list[str] | None = None,
 ) -> pd.DataFrame:
     """Generates dummy data for the 'diagnostic_orders' index.
 
@@ -364,6 +350,22 @@ def generate_diagnostic_orders_data(
         None
 
     """
+    if fields_list is None:
+        fields_list = [
+            "order_guid",
+            "client_idcode",
+            "order_name",
+            "order_summaryline",
+            "order_holdreasontext",
+            "order_entered",
+            "order_createdwhen",
+            "clientvisit_visitidcode",
+            "_id",
+            "_index",
+            "_score",
+            "order_performeddtm",
+            "order_typecode",
+        ]
     df_holder_list = []
 
     for i in range(len(entered_list)):
@@ -426,14 +428,13 @@ def generate_diagnostic_orders_data(
         df_holder_list.append(df)
 
     df = pd.concat(df_holder_list)
-    unique_fields = list(dict.fromkeys(fields_list + ["_id", "_index", "_score"]))
+    unique_fields = list(dict.fromkeys([*fields_list, "_id", "_index", "_score"]))
 
     for field in unique_fields:
         if field not in df.columns:
             df[field] = np.nan
     df = df[unique_fields]
-    df.reset_index(drop=True, inplace=True)
-    return df
+    return df.reset_index(drop=True)
 
 
 def generate_drug_orders_data(
@@ -445,21 +446,7 @@ def generate_drug_orders_data(
     global_end_year: int = 2023,
     global_end_month: int = 12,
     global_end_day: int = 31,
-    fields_list: list[str] = [
-        "order_guid",
-        "client_idcode",
-        "order_name",
-        "order_summaryline",
-        "order_holdreasontext",
-        "order_entered",
-        "order_createdwhen",
-        "clientvisit_visitidcode",
-        "_id",
-        "_index",
-        "_score",
-        "order_performeddtm",
-        "order_typecode",
-    ],
+    fields_list: list[str] | None = None,
     base_date: datetime | None = None,
 ) -> pd.DataFrame:
     """Generates dummy data for the 'drug_orders' index.
@@ -483,6 +470,22 @@ def generate_drug_orders_data(
         None
 
     """
+    if fields_list is None:
+        fields_list = [
+            "order_guid",
+            "client_idcode",
+            "order_name",
+            "order_summaryline",
+            "order_holdreasontext",
+            "order_entered",
+            "order_createdwhen",
+            "clientvisit_visitidcode",
+            "_id",
+            "_index",
+            "_score",
+            "order_performeddtm",
+            "order_typecode",
+        ]
     df_holder_list = []
 
     for i in range(len(entered_list)):
@@ -570,15 +573,14 @@ def generate_drug_orders_data(
         df_holder_list.append(df)
 
     df = pd.concat(df_holder_list)
-    unique_fields = list(dict.fromkeys(fields_list + ["_id", "_index", "_score"]))
+    unique_fields = list(dict.fromkeys([*fields_list, "_id", "_index", "_score"]))
     for field in unique_fields:
         if field not in df.columns:
             df[field] = np.nan
 
     # Ensure only target columns are present. Useful if source data isn't directly from ES.
     df = df[unique_fields]
-    df.reset_index(drop=True, inplace=True)
-    return df
+    return df.reset_index(drop=True)
 
 
 def generate_observations_MRC_text_data(
@@ -592,17 +594,7 @@ def generate_observations_MRC_text_data(
     global_end_day: int = 31,
     use_GPT: bool = False,
     *,
-    fields_list: list[str] = [
-        "observation_guid",
-        "client_idcode",
-        "obscatalogmasteritem_displayname",
-        "observation_valuetext_analysed",
-        "observationdocument_recordeddtm",
-        "clientvisit_visitidcode",
-        "_id",
-        "_index",
-        "_score",
-    ],
+    fields_list: list[str] | None = None,
 ) -> pd.DataFrame:
     """Generates dummy data for the 'observations' index (MRC clinical notes).
 
@@ -625,6 +617,18 @@ def generate_observations_MRC_text_data(
         None
 
     """
+    if fields_list is None:
+        fields_list = [
+            "observation_guid",
+            "client_idcode",
+            "obscatalogmasteritem_displayname",
+            "observation_valuetext_analysed",
+            "observationdocument_recordeddtm",
+            "clientvisit_visitidcode",
+            "_id",
+            "_index",
+            "_score",
+        ]
     df_holder_list = []
 
     for i in range(len(entered_list)):
@@ -666,7 +670,7 @@ def generate_observations_MRC_text_data(
     df = pd.concat(df_holder_list)
     # filter df by fields list except ['_id', '_index', '_score']
 
-    unique_fields = list(dict.fromkeys(fields_list + ["_id", "_index", "_score"]))
+    unique_fields = list(dict.fromkeys([*fields_list, "_id", "_index", "_score"]))
     # Ensure observation_valuetext_analysed is present if generated
     target_col = "observation_valuetext_analysed"
     if target_col in df.columns and target_col not in unique_fields:
@@ -678,8 +682,7 @@ def generate_observations_MRC_text_data(
 
     df = df[unique_fields]
 
-    df.reset_index(drop=True, inplace=True)
-    return df
+    return df.reset_index(drop=True)
 
 
 def generate_observations_Reports_text_data(
@@ -692,18 +695,7 @@ def generate_observations_Reports_text_data(
     global_end_month: int = 12,
     global_end_day: int = 31,
     use_GPT: bool = False,
-    fields_list: list[str] = [
-        "basicobs_guid",
-        "client_idcode",
-        "basicobs_itemname_analysed",
-        "basicobs_value_analysed",
-        "textualObs",
-        "updatetime",
-        "clientvisit_visitidcode",
-        "_id",
-        "_index",
-        "_score",
-    ],
+    fields_list: list[str] | None = None,
 ) -> pd.DataFrame:
     """Generates dummy data for the 'basic_observations' index (Reports).
 
@@ -726,6 +718,19 @@ def generate_observations_Reports_text_data(
         None
 
     """
+    if fields_list is None:
+        fields_list = [
+            "basicobs_guid",
+            "client_idcode",
+            "basicobs_itemname_analysed",
+            "basicobs_value_analysed",
+            "textualObs",
+            "updatetime",
+            "clientvisit_visitidcode",
+            "_id",
+            "_index",
+            "_score",
+        ]
     random.seed(random_state)
     df_holder_list = []
 
@@ -768,7 +773,7 @@ def generate_observations_Reports_text_data(
         df_holder_list.append(df)
 
     df = pd.concat(df_holder_list)
-    unique_fields = list(dict.fromkeys(fields_list + ["_id", "_index", "_score"]))
+    unique_fields = list(dict.fromkeys([*fields_list, "_id", "_index", "_score"]))
     # Ensure textualObs is present if generated
     target_col = "textualObs"
     if target_col in df.columns and target_col not in unique_fields:
@@ -778,9 +783,7 @@ def generate_observations_Reports_text_data(
         if field not in df.columns:
             df[field] = np.nan
     df = df[unique_fields]
-    df.reset_index(drop=True, inplace=True)
-
-    return df
+    return df.reset_index(drop=True)
 
 
 def generate_appointments_data(
@@ -792,41 +795,7 @@ def generate_appointments_data(
     global_end_year: int = 2023,
     global_end_month: int = 12,
     global_end_day: int = 31,
-    fields_list: list[str] = [
-        "Popular",
-        "AppointmentType",
-        "AttendanceReference",
-        "ClinicCode",
-        "ClinicDesc",
-        "Consultant",
-        "DateModified",
-        "DNA",
-        "HospitalID",
-        "PatNHSNo",
-        "Specialty",
-        "_id",
-        "_index",
-        "_score",
-        "AppointmentDateTime",
-        "Attended",
-        "CancDesc",
-        "CancRefNo",
-        "ConsultantCode",
-        "DateCreated",
-        "Ethnicity",
-        "Gender",
-        "NHSNoStatusCode",
-        "NotSpec",
-        "PatDateOfBirth",
-        "PatForename",
-        "PatPostCode",
-        "PatSurname",
-        "PiMsPatRefNo",
-        "Primarykeyfieldname",
-        "Primarykeyfieldvalue",
-        "SessionCode",
-        "SpecialtyCode",
-    ],
+    fields_list: list[str] | None = None,
 ) -> pd.DataFrame:
     """Generates dummy data for the 'pims_apps' index.
 
@@ -848,6 +817,42 @@ def generate_appointments_data(
         None
 
     """
+    if fields_list is None:
+        fields_list = [
+            "Popular",
+            "AppointmentType",
+            "AttendanceReference",
+            "ClinicCode",
+            "ClinicDesc",
+            "Consultant",
+            "DateModified",
+            "DNA",
+            "HospitalID",
+            "PatNHSNo",
+            "Specialty",
+            "_id",
+            "_index",
+            "_score",
+            "AppointmentDateTime",
+            "Attended",
+            "CancDesc",
+            "CancRefNo",
+            "ConsultantCode",
+            "DateCreated",
+            "Ethnicity",
+            "Gender",
+            "NHSNoStatusCode",
+            "NotSpec",
+            "PatDateOfBirth",
+            "PatForename",
+            "PatPostCode",
+            "PatSurname",
+            "PiMsPatRefNo",
+            "Primarykeyfieldname",
+            "Primarykeyfieldvalue",
+            "SessionCode",
+            "SpecialtyCode",
+        ]
     df_holder_list = []
 
     for i in range(len(entered_list)):
@@ -942,13 +947,11 @@ def generate_appointments_data(
         df_holder_list.append(df)
 
     df = pd.concat(df_holder_list, ignore_index=True)
-    unique_fields = list(dict.fromkeys(fields_list + ["_id", "_index", "_score"]))
+    unique_fields = list(dict.fromkeys([*fields_list, "_id", "_index", "_score"]))
 
     # Ensure only target columns are present. Useful if source data isn't directly from ES.
     df = df[unique_fields]
-    df.reset_index(drop=True, inplace=True)
-
-    return df
+    return df.reset_index(drop=True)
 
 
 def generate_observations_data(
@@ -1032,15 +1035,13 @@ def generate_observations_data(
         df_holder_list.append(df)
 
     final_df = pd.concat(df_holder_list, ignore_index=True)
-    unique_fields = list(dict.fromkeys(fields_list + ["_id", "_index", "_score"]))
+    unique_fields = list(dict.fromkeys([*fields_list, "_id", "_index", "_score"]))
 
     for field in unique_fields:
         if field not in final_df.columns:
             final_df[field] = np.nan
     df = final_df[unique_fields]
-    df.reset_index(drop=True, inplace=True)
-
-    return df
+    return df.reset_index(drop=True)
 
 
 def generate_basic_observations_data(
@@ -1193,15 +1194,13 @@ def generate_basic_observations_data(
         return pd.DataFrame(columns=fields_list)
 
     df = pd.concat(df_holder_list, ignore_index=True)
-    unique_fields = list(dict.fromkeys(fields_list + ["_id", "_index", "_score"]))
+    unique_fields = list(dict.fromkeys([*fields_list, "_id", "_index", "_score"]))
 
     for field in unique_fields:
         if field not in df.columns:
             df[field] = np.nan
     df = df[unique_fields]
-    df.reset_index(drop=True, inplace=True)
-
-    return df
+    return df.reset_index(drop=True)
 
 
 def generate_basic_observations_textual_obs_data(
@@ -1305,13 +1304,12 @@ def generate_basic_observations_textual_obs_data(
         return pd.DataFrame(columns=fields_list)
 
     df = pd.concat(df_holder_list, ignore_index=True)
-    unique_fields = list(dict.fromkeys(fields_list + ["_id", "_index", "_score"]))
+    unique_fields = list(dict.fromkeys([*fields_list, "_id", "_index", "_score"]))
 
     for field in unique_fields:
         if field not in df.columns:
             df[field] = np.nan
-    df = df[unique_fields]
-    return df
+    return df[unique_fields]
 
 
 def extract_date_range(
@@ -1368,16 +1366,7 @@ def generate_epic_encounters_data(
     global_end_year: int = 2023,
     global_end_month: int = 12,
     global_end_day: int = 31,
-    fields_list: list[str] = [
-        "activity_PatientDurableKey",
-        "activity_AdmissionDate",
-        "activity_DischargeDate",
-        "activity_Department",
-        "activity_Type",
-        "activity_VisitClass",
-        "activity_HospitalService",
-        "id",
-    ],
+    fields_list: list[str] | None = None,
 ) -> pd.DataFrame:
     """Generates dummy data for the 'epic_encounters' index.
 
@@ -1399,6 +1388,17 @@ def generate_epic_encounters_data(
         None
 
     """
+    if fields_list is None:
+        fields_list = [
+            "activity_PatientDurableKey",
+            "activity_AdmissionDate",
+            "activity_DischargeDate",
+            "activity_Department",
+            "activity_Type",
+            "activity_VisitClass",
+            "activity_HospitalService",
+            "id",
+        ]
     df_holder_list = []
 
     for client_id_code in entered_list:
@@ -1465,14 +1465,7 @@ def generate_epic_clinical_notes_data(
     global_end_month: int = 12,
     global_end_day: int = 31,
     use_GPT: bool = False,
-    fields_list: list[str] = [
-        "document_PatientDurableKey",
-        "document_CreatedWhen",
-        "document_Content",
-        "document_Name",
-        "document_EncounterEpicCsn",
-        "id",
-    ],
+    fields_list: list[str] | None = None,
 ) -> pd.DataFrame:
     """Generates dummy data for the 'epic_clinical_notes' index.
 
@@ -1496,6 +1489,15 @@ def generate_epic_clinical_notes_data(
 
     """
     # Provide default fields if not specified (for compatibility with annotation functions)
+    if fields_list is None:
+        fields_list = [
+            "document_PatientDurableKey",
+            "document_CreatedWhen",
+            "document_Content",
+            "document_Name",
+            "document_EncounterEpicCsn",
+            "id",
+        ]
     if fields_list is None:
         fields_list = [
             "document_PatientDurableKey",
@@ -1562,15 +1564,7 @@ def generate_epic_medical_history_data(
     global_end_year: int = 2023,
     global_end_month: int = 12,
     global_end_day: int = 31,
-    fields_list: list[str] = [
-        "document_PatientDurableKey",
-        "document_CreatedWhen",
-        "document_Diagnosis",
-        "document_DiagnosisConcepts",
-        "document_Name",
-        "document_Comment",
-        "id",
-    ],
+    fields_list: list[str] | None = None,
 ) -> pd.DataFrame:
     """Generates dummy data for the 'epic_medical_history' index.
 
@@ -1592,6 +1586,16 @@ def generate_epic_medical_history_data(
         None
 
     """
+    if fields_list is None:
+        fields_list = [
+            "document_PatientDurableKey",
+            "document_CreatedWhen",
+            "document_Diagnosis",
+            "document_DiagnosisConcepts",
+            "document_Name",
+            "document_Comment",
+            "id",
+        ]
     df_holder_list = []
 
     for client_id_code in entered_list:
@@ -1640,17 +1644,7 @@ def generate_epic_orders_data(
     global_end_year: int = 2023,
     global_end_month: int = 12,
     global_end_day: int = 31,
-    fields_list: list[str] = [
-        "document_PatientDurableKey",
-        "document_CreatedWhen",
-        "document_UpdatedWhen",
-        "document_Name",
-        "document_Content",
-        "document_OrderClass",
-        "document_OrderDate",
-        "document_OrderStatus",
-        "id",
-    ],
+    fields_list: list[str] | None = None,
 ) -> pd.DataFrame:
     """Generates dummy data for the 'epic_orders' index.
 
@@ -1672,6 +1666,18 @@ def generate_epic_orders_data(
         None
 
     """
+    if fields_list is None:
+        fields_list = [
+            "document_PatientDurableKey",
+            "document_CreatedWhen",
+            "document_UpdatedWhen",
+            "document_Name",
+            "document_Content",
+            "document_OrderClass",
+            "document_OrderDate",
+            "document_OrderStatus",
+            "id",
+        ]
     df_holder_list = []
 
     for client_id_code in entered_list:
@@ -1748,17 +1754,7 @@ def generate_epic_lab_results_data(
     global_end_year: int = 2023,
     global_end_month: int = 12,
     global_end_day: int = 31,
-    fields_list: list[str] = [
-        "document_PatientDurableKey",
-        "document_CreatedWhen",
-        "document_Name",
-        "document_Content",
-        "document_LabComponentValue",
-        "document_CollectedDate",
-        "document_LabResultEpicId",
-        "document_Fields.valueText",
-        "id",
-    ],
+    fields_list: list[str] | None = None,
 ) -> pd.DataFrame:
     """Generates dummy data for the 'epic_lab_results' index.
 
@@ -1780,6 +1776,18 @@ def generate_epic_lab_results_data(
         None
 
     """
+    if fields_list is None:
+        fields_list = [
+            "document_PatientDurableKey",
+            "document_CreatedWhen",
+            "document_Name",
+            "document_Content",
+            "document_LabComponentValue",
+            "document_CollectedDate",
+            "document_LabResultEpicId",
+            "document_Fields.valueText",
+            "id",
+        ]
     df_holder_list = []
 
     for client_id_code in entered_list:
@@ -1841,12 +1849,7 @@ def generate_epic_patients_data(
     global_end_year: int = 2023,
     global_end_month: int = 12,
     global_end_day: int = 31,
-    fields_list: list[str] = [
-        "patient_DurableKey",
-        "patient_BirthDate",
-        "patient_Gender",
-        "id",
-    ],
+    fields_list: list[str] | None = None,
 ) -> pd.DataFrame:
     """Generates dummy data for the 'epic_patients' index.
 
@@ -1868,6 +1871,13 @@ def generate_epic_patients_data(
         None
 
     """
+    if fields_list is None:
+        fields_list = [
+            "patient_DurableKey",
+            "patient_BirthDate",
+            "patient_Gender",
+            "id",
+        ]
     df_holder_list = []
     for client_id_code in entered_list:
         dob = faker.date_of_birth(minimum_age=18, maximum_age=90)
@@ -1906,15 +1916,7 @@ def generate_epic_imaging_reports_data(
     global_end_year: int = 2023,
     global_end_month: int = 12,
     global_end_day: int = 31,
-    fields_list: list[str] = [
-        "document_PatientDurableKey",
-        "document_CreatedWhen",
-        "document_Name",
-        "document_Content",
-        "document_ImagingModality",
-        "document_StudyStatus",
-        "id",
-    ],
+    fields_list: list[str] | None = None,
 ) -> pd.DataFrame:
     """Generates dummy data for the 'epic_imaging_reports' index.
 
@@ -1936,6 +1938,16 @@ def generate_epic_imaging_reports_data(
         None
 
     """
+    if fields_list is None:
+        fields_list = [
+            "document_PatientDurableKey",
+            "document_CreatedWhen",
+            "document_Name",
+            "document_Content",
+            "document_ImagingModality",
+            "document_StudyStatus",
+            "id",
+        ]
     df_holder_list = []
     for client_id_code in entered_list:
         data = {
@@ -1986,18 +1998,20 @@ def generate_epic_clinical_notes_appointments_data(
     global_end_year: int = 2023,
     global_end_month: int = 12,
     global_end_day: int = 31,
-    fields_list: list[str] = [
-        "document_PatientDurableKey",
-        "document_CreatedWhen",
-        "document_UpdatedWhen",
-        "document_Name",
-        "document_Content",
-        "document_EncounterEpicCsn",
-        "document_EncounterKey",
-        "id",
-    ],
+    fields_list: list[str] | None = None,
 ) -> pd.DataFrame:
     """Generates dummy data for the 'epic_clinical_notes_appointments' index."""
+    if fields_list is None:
+        fields_list = [
+            "document_PatientDurableKey",
+            "document_CreatedWhen",
+            "document_UpdatedWhen",
+            "document_Name",
+            "document_Content",
+            "document_EncounterEpicCsn",
+            "document_EncounterKey",
+            "id",
+        ]
     df_holder_list = []
     for client_id_code in entered_list:
         created_when = create_random_date_from_globals(
@@ -2412,7 +2426,7 @@ def cohort_searcher_with_terms_and_search_dummy(
             if verbose:
                 logger.debug("Generating data for 'orders' with medication")
             num_rows = random.randint(1, 10)  # Ensure at least 1 row for drugs
-            df = generate_drug_orders_data(
+            return generate_drug_orders_data(
                 num_rows,
                 entered_list,
                 global_start_year,
@@ -2423,13 +2437,12 @@ def cohort_searcher_with_terms_and_search_dummy(
                 final_global_end_day,
                 fields_list=fields_list,
             )
-            return df
 
         if "diagnostic" in search_string:
             if verbose:
                 logger.debug("Generating data for 'orders' with diagnostic")
             num_rows = random.randint(1, 10)  # Ensure at least 1 row for diagnostics
-            df = generate_diagnostic_orders_data(
+            return generate_diagnostic_orders_data(
                 num_rows,
                 entered_list,
                 global_start_year,
@@ -2440,7 +2453,6 @@ def cohort_searcher_with_terms_and_search_dummy(
                 final_global_end_day,
                 fields_list=fields_list,
             )
-            return df
 
     elif index_name == "pims_apps*":
         if verbose:
@@ -2594,7 +2606,7 @@ def cohort_searcher_with_terms_and_search_dummy(
             )
         if verbose:
             logger.debug("Generating data for 'epic_clinical_notes_appointments'")
-        df = generate_epic_clinical_notes_appointments_data(
+        return generate_epic_clinical_notes_appointments_data(
             num_rows=random.randint(1, 5),
             entered_list=entered_list,
             global_start_year=global_start_year,
@@ -2605,7 +2617,6 @@ def cohort_searcher_with_terms_and_search_dummy(
             global_end_day=final_global_end_day,
             fields_list=fields_list,
         )
-        return df
     else:
         # If no specific generator matched (index_name unknown), ensure it has the expected columns.
         logger.warning(
@@ -2614,12 +2625,17 @@ def cohort_searcher_with_terms_and_search_dummy(
         )
         cols = list(
             dict.fromkeys(
-                ["updatetime", "_index", "_id", "_score", "client_idcode"]
-                + fields_list,
+                [
+                    "updatetime",
+                    "_index",
+                    "_id",
+                    "_score",
+                    "client_idcode",
+                    *fields_list,
+                ],
             ),
         )
-        df = pd.DataFrame(columns=cols)
-        return df
+        return pd.DataFrame(columns=cols)
     # Remove duplicate columns if any were introduced by branch logic or hardcoded lists
     df = df.loc[:, ~df.columns.duplicated()]
 
@@ -2706,9 +2722,7 @@ def generate_patient_timeline(client_idcode: str) -> str:
     # Construct the final timeline
     patient_demographics = f"Patient Demographics:\nClient ID: {patient_info['client_idcode']}\nAge: {patient_info['Age']:.1f}\nGender: {patient_info['Gender']}\nDOB: {patient_info['DOB'].strftime('%Y-%m-%d')}"
     timeline.insert(0, f"{patient_demographics}\n\nClinical Note Timeline:\n")
-    patient_timeline = "\n".join(timeline)
-
-    return patient_timeline
+    return "\n".join(timeline)
 
 
 def generate_patient_timeline_faker(client_idcode: str) -> str:
@@ -2766,9 +2780,7 @@ def generate_patient_timeline_faker(client_idcode: str) -> str:
     # Construct the final timeline
     patient_demographics = f"Patient Demographics:\nclient_idcode: {patient_info['client_idcode']}\nAge: {patient_info['Age']:.1f}\nGender: {patient_info['Gender']}\nDOB: {patient_info['DOB'].strftime('%Y-%m-%d')}"
     timeline.insert(0, f"{patient_demographics}\n\nClinical Note Timeline:\n")
-    patient_timeline = "\n".join(timeline)
-
-    return patient_timeline
+    return "\n".join(timeline)
 
 
 def extract_search_term_obscatalogmasteritem_displayname(search_string: str) -> str:
@@ -2793,8 +2805,7 @@ def extract_search_term_obscatalogmasteritem_displayname(search_string: str) -> 
         # Get the matched group and remove punctuation
         search_term = match.group(1).replace('"', "").replace("'", "").strip()
         # Ignore anything after 'AND' or 'OR'
-        search_term = search_term.split("AND", 1)[0].split("OR", 1)[0].strip()
-        return search_term
+        return search_term.split("AND", 1)[0].split("OR", 1)[0].strip()
     return search_string
 
 
@@ -2942,7 +2953,8 @@ def generate_uuid(prefix: str, length: int = 7) -> str:
 
     """
     if prefix not in ("P", "V"):
-        raise ValueError("Prefix must be 'P' or 'V'")
+        msg = "Prefix must be 'P' or 'V'"
+        raise ValueError(msg)
 
     # Generate random characters for the rest of the string
     chars = string.ascii_uppercase + string.digits
@@ -2966,8 +2978,7 @@ def generate_uuid_list(n: int, prefix: str, length: int = 7) -> list[str]:
         None
 
     """
-    uuid_list = [generate_uuid(prefix, length) for _ in range(n)]
-    return uuid_list
+    return [generate_uuid(prefix, length) for _ in range(n)]
 
 
 def generate_covid_observations_data(
@@ -2975,7 +2986,7 @@ def generate_covid_observations_data(
     entered_list: list[str],
     global_start_year: int,
     global_start_month: int,
-    fields_list: list[str] = [],
+    fields_list: list[str] | None = None,
     global_start_day: int = 1,
     global_end_year: int = 2023,
     global_end_month: int = 12,
@@ -3006,11 +3017,10 @@ def generate_covid_observations_data(
         SEARCH_TERM_PLAIN,
     )
 
-    if SEARCH_TERM_PLAIN is None:
-        SEARCH_TERM_PLAIN = "SARS CoV-2 (COVID-19) RNA"
-
     if fields_list is None:
         fields_list = COVID_FIELDS
+    if SEARCH_TERM_PLAIN is None:
+        SEARCH_TERM_PLAIN = "SARS CoV-2 (COVID-19) RNA"
 
     df_holder_list = []
 
@@ -3059,14 +3069,7 @@ def generate_hospital_site_data(
     global_end_year: int = 2023,
     global_end_month: int = 12,
     global_end_day: int = 31,
-    fields_list: list[str] = [
-        "observation_guid",
-        "client_idcode",
-        "obscatalogmasteritem_displayname",
-        "observation_valuetext_analysed",
-        "observationdocument_recordeddtm",
-        "clientvisit_visitidcode",
-    ],
+    fields_list: list[str] | None = None,
 ) -> pd.DataFrame:
     """Generates dummy data for hospital site observations.
 
@@ -3088,6 +3091,15 @@ def generate_hospital_site_data(
         None
 
     """
+    if fields_list is None:
+        fields_list = [
+            "observation_guid",
+            "client_idcode",
+            "obscatalogmasteritem_displayname",
+            "observation_valuetext_analysed",
+            "observationdocument_recordeddtm",
+            "clientvisit_visitidcode",
+        ]
     df_holder_list = []
 
     # Define possible values for hospital sites, including key terms 'DH' and 'PRUH'
@@ -3142,9 +3154,7 @@ def generate_hospital_site_data(
         if field not in final_df.columns:
             final_df[field] = np.nan
 
-    final_df = final_df[fields_list]
-
-    return final_df
+    return final_df[fields_list]
 
 
 def generate_news_data(
@@ -3156,14 +3166,7 @@ def generate_news_data(
     global_end_year: int = 2023,
     global_end_month: int = 12,
     global_end_day: int = 31,
-    fields_list: list[str] = [
-        "observation_guid",
-        "client_idcode",
-        "obscatalogmasteritem_displayname",
-        "observation_valuetext_analysed",
-        "observationdocument_recordeddtm",
-        "clientvisit_visitidcode",
-    ],
+    fields_list: list[str] | None = None,
 ) -> pd.DataFrame:
     """Generates dummy data for NEWS observations.
 
@@ -3185,6 +3188,15 @@ def generate_news_data(
         None
 
     """
+    if fields_list is None:
+        fields_list = [
+            "observation_guid",
+            "client_idcode",
+            "obscatalogmasteritem_displayname",
+            "observation_valuetext_analysed",
+            "observationdocument_recordeddtm",
+            "clientvisit_visitidcode",
+        ]
     df_holder_list = []
 
     # List of NEWS component names expected by get_method_news.py
@@ -3438,7 +3450,8 @@ def populate_elastic_with_dummy_data(
     try:
         spec = importlib.util.spec_from_file_location("test_creds_module", creds_path)
         if spec is None or spec.loader is None:
-            raise ImportError(f"Could not load specs from {creds_path}")
+            msg = f"Could not load specs from {creds_path}"
+            raise ImportError(msg)
         test_creds = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(test_creds)
 
@@ -4505,13 +4518,7 @@ def generate_problem_list_data(
     global_end_year: int = 2023,
     global_end_month: int = 12,
     global_end_day: int = 31,
-    fields_list: list[str] = [
-        "client_idcode",
-        "problem_name",
-        "problem_status",
-        "updatetime",
-        "id",
-    ],
+    fields_list: list[str] | None = None,
 ) -> pd.DataFrame:
     """Generates dummy data for the 'problem_list' index.
 
@@ -4533,6 +4540,14 @@ def generate_problem_list_data(
         None
 
     """
+    if fields_list is None:
+        fields_list = [
+            "client_idcode",
+            "problem_name",
+            "problem_status",
+            "updatetime",
+            "id",
+        ]
     df_holder_list = []
     for client_id_code in entered_list:
         data = {
@@ -4611,6 +4626,4 @@ def generate_synthetic_clinical_note(client_idcode: str) -> str:
     num_mentions = min(random.randint(2, 4), len(sample_conditions))
     selected_mentions = random.sample(sample_conditions, num_mentions)
 
-    clinical_note = " ".join(selected_mentions) + " Clinical evaluation completed."
-
-    return clinical_note
+    return " ".join(selected_mentions) + " Clinical evaluation completed."

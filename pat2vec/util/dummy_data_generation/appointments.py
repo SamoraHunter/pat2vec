@@ -208,9 +208,7 @@ def _generate_appointment_datetime(
     minute = random.randint(0, 59)
     second = random.randint(0, 59)
 
-    appointment_date = appointment_date.replace(hour=hour, minute=minute, second=second)
-
-    return appointment_date
+    return appointment_date.replace(hour=hour, minute=minute, second=second)
 
 
 def _get_clinical_correlation(appointment_type: str) -> tuple[list[str], str]:
@@ -375,41 +373,7 @@ def generate_appointments_data(
     global_end_month: int,
     global_start_day: int = 1,
     global_end_day: int = 31,
-    fields_list: list[str] = [
-        "Popular",
-        "AppointmentType",
-        "AttendanceReference",
-        "ClinicCode",
-        "ClinicDesc",
-        "Consultant",
-        "DateModified",
-        "DNA",
-        "HospitalID",
-        "PatNHSNo",
-        "Specialty",
-        "_id",
-        "_index",
-        "_score",
-        "AppointmentDateTime",
-        "Attended",
-        "CancDesc",
-        "CancRefNo",
-        "ConsultantCode",
-        "DateCreated",
-        "Ethnicity",
-        "Gender",
-        "NHSNoStatusCode",
-        "NotSpec",
-        "PatDateOfBirth",
-        "PatForename",
-        "PatPostCode",
-        "PatSurname",
-        "PiMsPatRefNo",
-        "Primarykeyfieldname",
-        "Primarykeyfieldvalue",
-        "SessionCode",
-        "SpecialtyCode",
-    ],
+    fields_list: list[str] | None = None,
 ) -> pd.DataFrame:
     """Generates dummy data for the 'pims_apps' index.
 
@@ -434,6 +398,42 @@ def generate_appointments_data(
         pandas DataFrame with appointment data
 
     """
+    if fields_list is None:
+        fields_list = [
+            "Popular",
+            "AppointmentType",
+            "AttendanceReference",
+            "ClinicCode",
+            "ClinicDesc",
+            "Consultant",
+            "DateModified",
+            "DNA",
+            "HospitalID",
+            "PatNHSNo",
+            "Specialty",
+            "_id",
+            "_index",
+            "_score",
+            "AppointmentDateTime",
+            "Attended",
+            "CancDesc",
+            "CancRefNo",
+            "ConsultantCode",
+            "DateCreated",
+            "Ethnicity",
+            "Gender",
+            "NHSNoStatusCode",
+            "NotSpec",
+            "PatDateOfBirth",
+            "PatForename",
+            "PatPostCode",
+            "PatSurname",
+            "PiMsPatRefNo",
+            "Primarykeyfieldname",
+            "Primarykeyfieldvalue",
+            "SessionCode",
+            "SpecialtyCode",
+        ]
     df_holder_list = []
 
     for i in range(len(entered_list)):
@@ -460,14 +460,14 @@ def generate_appointments_data(
 
     if not df_holder_list:
         # Return empty DataFrame with all required columns
-        df = pd.DataFrame(columns=fields_list + ["HospitalID"])
+        df = pd.DataFrame(columns=[*fields_list, "HospitalID"])
     else:
         df = pd.concat(df_holder_list, ignore_index=True)
 
         unique_fields = list(
-            dict.fromkeys(fields_list + ["HospitalID", "_id", "_index", "_score"]),
+            dict.fromkeys([*fields_list, "HospitalID", "_id", "_index", "_score"]),
         )
 
         df = df[unique_fields]
-        df.reset_index(drop=True, inplace=True)
+        df = df.reset_index(drop=True)
     return df

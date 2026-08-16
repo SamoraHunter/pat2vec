@@ -269,7 +269,7 @@ def build_merged_epr_mct_annot_df(
 
         found_text = [c for c in text_cols if c in df.columns]
         if found_text:
-            df.drop(columns=found_text, inplace=True)
+            df = df.drop(columns=found_text)
 
         # Drop source columns not in final output schema to save memory
         allowed_cols = EMPTY_ANNOT_COLS + (
@@ -277,7 +277,7 @@ def build_merged_epr_mct_annot_df(
         )
         cols_to_drop = [c for c in df.columns if c not in allowed_cols]
         if cols_to_drop:
-            df.drop(columns=cols_to_drop, inplace=True)
+            df = df.drop(columns=cols_to_drop)
         df = optimize_dtypes(df)
         return df
 
@@ -476,8 +476,7 @@ def build_merged_epr_mct_doc_df(
         ]:
             if col1 in df.columns and col2 in df.columns:
                 df[col1] = df[col1].fillna(df[col2])
-        df = optimize_dtypes(df)
-        return df
+        return optimize_dtypes(df)
 
     DOC_STANDARD_COLS = [
         "client_idcode",
@@ -902,9 +901,7 @@ def join_docs_to_annots(
             docs_temp_dropped = docs_temp
 
     # Merge the DataFrames on 'document_guid' column
-    merged_df = pd.merge(annots_df, docs_temp_dropped, on="document_guid", how="left")
-
-    return merged_df
+    return pd.merge(annots_df, docs_temp_dropped, on="document_guid", how="left")
 
 
 def get_annots_joined_to_docs(

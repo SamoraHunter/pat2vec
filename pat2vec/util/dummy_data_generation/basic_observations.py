@@ -156,7 +156,7 @@ def generate_basic_observations_data(
 
     df = pd.concat(df_holder_list, ignore_index=True)
 
-    unique_fields = list(dict.fromkeys(fields_list + ["_id", "_index", "_score"]))
+    unique_fields = list(dict.fromkeys([*fields_list, "_id", "_index", "_score"]))
 
     for field in unique_fields:
         if field not in df.columns:
@@ -244,7 +244,7 @@ def generate_observations_data(
 
     final_df = pd.concat(df_holder_list, ignore_index=True)
 
-    unique_fields = list(dict.fromkeys(fields_list + ["_id", "_index", "_score"]))
+    unique_fields = list(dict.fromkeys([*fields_list, "_id", "_index", "_score"]))
 
     for field in unique_fields:
         if field not in final_df.columns:
@@ -346,11 +346,10 @@ def generate_basic_observations_textual_obs_data(
 
     df = pd.concat(df_holder_list, ignore_index=True)
 
-    unique_fields = list(dict.fromkeys(fields_list + ["_id", "_index", "_score"]))
+    unique_fields = list(dict.fromkeys([*fields_list, "_id", "_index", "_score"]))
 
     for field in unique_fields:
         if field not in df.columns:
             df[field] = None
 
-    df = df[unique_fields]
-    return df
+    return df[unique_fields]

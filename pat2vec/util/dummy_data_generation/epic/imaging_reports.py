@@ -13,7 +13,9 @@ import numpy as np
 import pandas as pd
 from faker import Faker
 
-from ..generator_helpers import create_random_date_from_globals
+from pat2vec.util.dummy_data_generation.generator_helpers import (
+    create_random_date_from_globals,
+)
 
 random_state = 42
 Faker.seed(random_state)
@@ -174,7 +176,7 @@ def _select_modality(clinical_indication=None, patient_age="adults"):
             ):
                 return modality
 
-    modalities, weights = zip(*REALISTIC_MODALITY_DIST)
+    modalities, weights = zip(*REALISTIC_MODALITY_DIST, strict=False)
     return np.random.choice(modalities, p=weights)
 
 
@@ -379,15 +381,7 @@ def generate_epic_imaging_reports_data(
     global_end_month: int = 12,
     global_start_day: int = 1,
     global_end_day: int = 31,
-    fields_list: list[str] = [
-        "document_PatientDurableKey",
-        "document_CreatedWhen",
-        "document_Name",
-        "document_Content",
-        "document_ImagingModality",
-        "document_StudyStatus",
-        "id",
-    ],
+    fields_list: list[str] | None = None,
 ) -> pd.DataFrame:
     """Generates dummy data for the 'epic_imaging_reports' index with realistic clinical correlations.
 
@@ -406,6 +400,16 @@ def generate_epic_imaging_reports_data(
         A pandas DataFrame with generated dummy imaging report data.
 
     """
+    if fields_list is None:
+        fields_list = [
+            "document_PatientDurableKey",
+            "document_CreatedWhen",
+            "document_Name",
+            "document_Content",
+            "document_ImagingModality",
+            "document_StudyStatus",
+            "id",
+        ]
     df_holder_list = []
     for client_id_code in entered_list:
         rows_data = []

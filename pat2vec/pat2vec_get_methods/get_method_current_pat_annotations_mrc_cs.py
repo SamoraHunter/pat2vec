@@ -52,8 +52,9 @@ def get_current_pat_annotations_mrc_cs(
 
     """
     if config_obj is None:
+        msg = "config_obj cannot be None. Please provide a valid configuration. (get_current_pat_annotations_mrc_cs)"
         raise ValueError(
-            "config_obj cannot be None. Please provide a valid configuration. (get_current_pat_annotations_mrc_cs)",
+            msg,
         )
 
     start_time = config_obj.start_time

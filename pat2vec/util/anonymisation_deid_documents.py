@@ -143,7 +143,8 @@ class DeIdAnonymizer:
             self.logger.error(
                 "MedCAT is not installed. Please install it using: pip install medcat",
             )
-            raise ImportError("MedCAT is required but not installed")
+            msg = "MedCAT is required but not installed"
+            raise ImportError(msg)
 
         # Auto-load model if path provided
         if model_path:
@@ -358,9 +359,12 @@ class DeIdAnonymizer:
     def _check_model_loaded(self) -> None:
         """Checks if a model is loaded, raising a RuntimeError if not."""
         if not self.is_loaded or self.model is None:
-            raise RuntimeError(
+            msg = (
                 "DeIdModel not loaded. Please call load_model() first or "
-                "provide model_path during initialization.",
+                "provide model_path during initialization."
+            )
+            raise RuntimeError(
+                msg,
             )
 
     def _log_operation(self, operation: str, details: dict[str, Any]) -> None:
@@ -545,7 +549,8 @@ class DeIdAnonymizer:
         # Validate columns exist
         missing_cols = [col for col in text_columns if col not in df.columns]
         if missing_cols:
-            raise ValueError(f"Columns not found in DataFrame: {missing_cols}")
+            msg = f"Columns not found in DataFrame: {missing_cols}"
+            raise ValueError(msg)
 
         result_df = df if inplace else df.copy()
         total_texts_processed = 0
@@ -669,7 +674,8 @@ class DeIdAnonymizer:
 
         missing_cols = [col for col in text_columns if col not in df.columns]
         if missing_cols:
-            raise ValueError(f"Columns not found in DataFrame: {missing_cols}")
+            msg = f"Columns not found in DataFrame: {missing_cols}"
+            raise ValueError(msg)
 
         if checkpoint_dir is not None:
             checkpoint_dir = Path(checkpoint_dir)
@@ -858,7 +864,7 @@ class DeIdAnonymizer:
 
         return {
             "entities_found": len(entities),
-            "entity_types": list(set(ent["label"] for ent in entities)),
+            "entity_types": list({ent["label"] for ent in entities}),
             "original_length": len(original),
             "anonymized_length": len(anonymized),
             "entities": entities,

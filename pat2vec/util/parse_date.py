@@ -42,7 +42,8 @@ def validate_input_dates(
         start_date_obj = datetime.date(s_year, s_month, s_day)
     except (ValueError, TypeError) as e:
         # Catches errors from both int() conversion and datetime.date()
-        raise ValueError(f"Invalid start date component: {e}") from e
+        msg = f"Invalid start date component: {e}"
+        raise ValueError(msg) from e
 
     try:
         # Step 1: Coerce all end date inputs to integers.
@@ -53,7 +54,8 @@ def validate_input_dates(
         # Step 2: Validate by creating a datetime object.
         end_date_obj = datetime.date(e_year, e_month, e_day)
     except (ValueError, TypeError) as e:
-        raise ValueError(f"Invalid end date component: {e}") from e
+        msg = f"Invalid end date component: {e}"
+        raise ValueError(msg) from e
 
     # Step 3: Format components into strings. strftime handles the zfill.
     s_year_str = start_date_obj.strftime("%Y")

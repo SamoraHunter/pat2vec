@@ -41,7 +41,8 @@ def get_pat_batch_epr_docs(
             "global_end_month",
         ]
     ):
-        raise ValueError("Invalid or missing configuration object.")
+        msg = "Invalid or missing configuration object."
+        raise ValueError(msg)
 
     overwrite_stored_pat_docs = config_obj.overwrite_stored_pat_docs
 
@@ -174,7 +175,7 @@ def get_pat_batch_epr_docs(
                 cols_to_drop = ["_id", "_index", "_score"]
                 for col in cols_to_drop:
                     if col in batch_target.columns:
-                        batch_target.drop(columns=col, inplace=True)
+                        batch_target = batch_target.drop(columns=col)
 
             if config_obj.store_pat_batch_docs or overwrite_stored_pat_docs:
                 # batch_target.dropna(subset='body_analysed', inplace=True)
@@ -225,7 +226,7 @@ def get_pat_batch_epr_docs(
                     cols_to_drop = ["_id", "_index", "_score", "source_file"]
                     for col in cols_to_drop:
                         if col in batch_target.columns:
-                            batch_target.drop(columns=col, inplace=True)
+                            batch_target = batch_target.drop(columns=col)
 
                 if config_obj.storage_backend == "database" and not batch_target.empty:
                     try:

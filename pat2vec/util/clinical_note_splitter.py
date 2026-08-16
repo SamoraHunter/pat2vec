@@ -529,7 +529,7 @@ def split_and_append_chunks(
 
     # Rename the '_id' column to 'id' if it exists and is not already 'id'
     if "_id" in clinical_notes.columns and "id" not in clinical_notes.columns:
-        clinical_notes.rename(columns={"_id": "id"}, inplace=True)
+        clinical_notes = clinical_notes.rename(columns={"_id": "id"})
 
     if split_function:
         split_clinical_notes_result, none_found = split_function(
@@ -544,23 +544,20 @@ def split_and_append_chunks(
 
     # Rename id back to _id in none_found to match existing schema and avoid "no column named id" errors
     if not none_found.empty and "id" in none_found.columns:
-        none_found.rename(columns={"id": "_id"}, inplace=True)
+        none_found = none_found.rename(columns={"id": "_id"})
 
     # Standardize Epic patient ID column to client_idcode for concatenation
     if "document_PatientDurableKey" in split_clinical_notes_result.columns:
-        split_clinical_notes_result.rename(
+        split_clinical_notes_result = split_clinical_notes_result.rename(
             columns={"document_PatientDurableKey": "client_idcode"},
-            inplace=True,
         )
     if "document_PatientDurableKey" in none_found.columns:
-        none_found.rename(
+        none_found = none_found.rename(
             columns={"document_PatientDurableKey": "client_idcode"},
-            inplace=True,
         )
     if "document_PatientDurableKey" in non_clinical_notes.columns:
-        non_clinical_notes.rename(
+        non_clinical_notes = non_clinical_notes.rename(
             columns={"document_PatientDurableKey": "client_idcode"},
-            inplace=True,
         )
 
     # Concatenate non-clinical and split clinical notes
@@ -575,6 +572,4 @@ def split_and_append_chunks(
     ]
 
     # Reset index, dropping the old index to avoid "index" column with SQL databases
-    concatenated_notes.reset_index(drop=True, inplace=True)
-
-    return concatenated_notes
+    return concatenated_notes.reset_index(drop=True)

@@ -67,7 +67,7 @@ ignore = [
     "S110",  # Hardcoded file path
     "D104",  # Missing docstring in package
     "TRY301",  # Consider raising exception class directly
-  "PLW1510",  # Exception not specified
+        "PLW1510",  # Exception not specified
     "SLF001",  # Private member access
     "PD011",  # pandas.to_numeric
     "PLE1205",  # Ineffective format 1st arg
@@ -130,7 +130,6 @@ ignore = [
     "D400",  # First line should end with period
     "D415",  # Docstring should be imperative mood
     "E721",  # Type comparison
-    "A004",  # Shadowed builtin
     "F821",  # Undefined name
     "EXE003",  # Shebang not executable
     "EXE001",  # shebang not first line

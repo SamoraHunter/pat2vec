@@ -6,7 +6,7 @@ import pandas as pd
 
 
 def stringlist2searchlist(string_list: str, output_name: str) -> None:
-    """Converts a newline-separated string into an Elasticsearch OR-separated search string.
+    r"""Converts a newline-separated string into an Elasticsearch OR-separated search string.
 
     The resulting string is saved to a text file. For example, a string
     "term1\nterm2" becomes ""term1" OR "term2"".

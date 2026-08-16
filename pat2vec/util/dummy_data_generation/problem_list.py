@@ -22,15 +22,17 @@ def generate_problem_list_data(
     global_end_month: int = 12,
     global_start_day: int = 1,
     global_end_day: int = 31,
-    fields_list: list[str] = [
-        "client_idcode",
-        "problem_name",
-        "problem_status",
-        "updatetime",
-        "id",
-    ],
+    fields_list: list[str] | None = None,
 ) -> pd.DataFrame:
     """Generates dummy data for the 'problem_list' index."""
+    if fields_list is None:
+        fields_list = [
+            "client_idcode",
+            "problem_name",
+            "problem_status",
+            "updatetime",
+            "id",
+        ]
     df_holder_list = []
 
     for client_id_code in entered_list:

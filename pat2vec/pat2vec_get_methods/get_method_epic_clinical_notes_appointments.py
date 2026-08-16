@@ -117,9 +117,11 @@ def search_epic_clinical_notes_appointments(
         return pd.read_csv(output_filename)
 
     if cohort_searcher_with_terms_and_search is None:
-        raise ValueError("cohort_searcher_with_terms_and_search cannot be None.")
+        msg = "cohort_searcher_with_terms_and_search cannot be None."
+        raise ValueError(msg)
     if patient_durable_keys is None:
-        raise ValueError("patient_durable_keys cannot be None.")
+        msg = "patient_durable_keys cannot be None."
+        raise ValueError(msg)
 
     if isinstance(patient_durable_keys, str):
         patient_durable_keys = [patient_durable_keys]
@@ -199,7 +201,8 @@ def get_epic_clinical_notes_appointments(
 
     """
     if config_obj is None:
-        raise ValueError("config_obj cannot be None.")
+        msg = "config_obj cannot be None."
+        raise ValueError(msg)
 
     batch_mode = config_obj.batch_mode
     start_year, start_month, end_year, end_month, start_day, end_day = (
@@ -235,7 +238,9 @@ def get_epic_clinical_notes_appointments(
         )
 
     if id_field_name in current_pat_raw.columns:
-        current_pat_raw.rename(columns={id_field_name: "client_idcode"}, inplace=True)
+        current_pat_raw = current_pat_raw.rename(
+            columns={id_field_name: "client_idcode"}
+        )
 
     features = pd.DataFrame(
         data=[current_pat_client_id_code],

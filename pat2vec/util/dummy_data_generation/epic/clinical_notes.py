@@ -6,7 +6,9 @@ import numpy as np
 import pandas as pd
 from faker import Faker
 
-from ..generator_helpers import create_random_date_from_globals
+from pat2vec.util.dummy_data_generation.generator_helpers import (
+    create_random_date_from_globals,
+)
 
 random_state = 42
 Faker.seed(random_state)
@@ -104,144 +106,204 @@ MEDICAL_CONDITIONS = {
 
 CLINICAL_TEMPLATES_PROGRESS = {
     "General Medicine": [
-        "Patient presents with stable chronic conditions. Hypertension managed with medication. "
-        "Type 2 diabetes under control with diet and metformin. Patient reports mild back pain "
-        "but mobility remains good. Recommend continue current medications and follow up in 3 months.",
-        "Chronic condition follow-up. Patient reports blood pressure control at home. "
-        "Lipid levels improved. No new symptoms. Advise maintain exercise program and annual flu shot.",
+        (
+            "Patient presents with stable chronic conditions. Hypertension managed with medication. "
+            "Type 2 diabetes under control with diet and metformin. Patient reports mild back pain "
+            "but mobility remains good. Recommend continue current medications and follow up in 3 months."
+        ),
+        (
+            "Chronic condition follow-up. Patient reports blood pressure control at home. "
+            "Lipid levels improved. No new symptoms. Advise maintain exercise program and annual flu shot."
+        ),
     ],
     "Cardiology": [
-        "Patient reports intermittent chest pain, described as pressure-like, lasting 5-10 minutes. "
-        "Pain occurs with exertion and relieved by rest. ECG shows non-specific ST changes. "
-        "Scheduled for stress echo. Patient advised to avoid strenuous activity until further testing.",
-        "Heart failure follow-up. Patient reports improved dyspnea on exertion. Weight stable at 75 kg. "
-        "Current meds: lisinopril, carvedilol, furosemide. No orthopnea or PND. Recommend continue "
-        "current regimen and monitor sodium intake.",
+        (
+            "Patient reports intermittent chest pain, described as pressure-like, lasting 5-10 minutes. "
+            "Pain occurs with exertion and relieved by rest. ECG shows non-specific ST changes. "
+            "Scheduled for stress echo. Patient advised to avoid strenuous activity until further testing."
+        ),
+        (
+            "Heart failure follow-up. Patient reports improved dyspnea on exertion. Weight stable at 75 kg. "
+            "Current meds: lisinopril, carvedilol, furosemide. No orthopnea or PND. Recommend continue "
+            "current regimen and monitor sodium intake."
+        ),
     ],
     "Surgery": [
-        "Post-operative day 3 following appendectomy. Patient tolerating oral diet without nausea. "
-        "Wound site clean with minimal drainage. Vital signs stable. Discharge planning initiated. "
-        "Patient to follow up with surgical clinic in 1 week.",
-        "Pre-operative assessment for elective knee arthroscopy. Patient has mild osteoarthritis "
-        "documented on recent MRI. Cardiac clearance obtained. Patient advised to stop NSAIDs "
-        "5 days pre-op and arrange post-op care.",
+        (
+            "Post-operative day 3 following appendectomy. Patient tolerating oral diet without nausea. "
+            "Wound site clean with minimal drainage. Vital signs stable. Discharge planning initiated. "
+            "Patient to follow up with surgical clinic in 1 week."
+        ),
+        (
+            "Pre-operative assessment for elective knee arthroscopy. Patient has mild osteoarthritis "
+            "documented on recent MRI. Cardiac clearance obtained. Patient advised to stop NSAIDs "
+            "5 days pre-op and arrange post-op care."
+        ),
     ],
     "Neurology": [
-        "Patient presents with recurrent headache, pattern consistent with migraine without aura. "
-        "Last episode lasted 48 hours. Medication: sumatriptan provided partial relief. Patient "
-        "reports frequency has decreased with topiramate. Counselled on trigger avoidance.",
-        "Follow-up for stroke patient. Left-sided weakness improved with therapy. Patient now ambulates "
-        "with cane. Speech therapist reports progress. Continue aspirin, statin, and rehab exercises.",
+        (
+            "Patient presents with recurrent headache, pattern consistent with migraine without aura. "
+            "Last episode lasted 48 hours. Medication: sumatriptan provided partial relief. Patient "
+            "reports frequency has decreased with topiramate. Counselled on trigger avoidance."
+        ),
+        (
+            "Follow-up for stroke patient. Left-sided weakness improved with therapy. Patient now ambulates "
+            "with cane. Speech therapist reports progress. Continue aspirin, statin, and rehab exercises."
+        ),
     ],
     "Orthopedics": [
-        "Patient presents with acute knee injury following fall. Physical exam reveals swelling and "
-        "tenderness medially. X-ray negative for fracture. Diagnosis: medial collateral strain. "
-        "RICE protocol prescribed. Follow up in 2 weeks.",
-        "Post-operative day 7 following ACL reconstruction. Surgical site healing well without infection. "
-        "Patient began physical therapy yesterday, progressing well. Weight-bearing as tolerated. "
-        "Continue crutches with partial weight bearing.",
+        (
+            "Patient presents with acute knee injury following fall. Physical exam reveals swelling and "
+            "tenderness medially. X-ray negative for fracture. Diagnosis: medial collateral strain. "
+            "RICE protocol prescribed. Follow up in 2 weeks."
+        ),
+        (
+            "Post-operative day 7 following ACL reconstruction. Surgical site healing well without infection. "
+            "Patient began physical therapy yesterday, progressing well. Weight-bearing as tolerated. "
+            "Continue crutches with partial weight bearing."
+        ),
     ],
     "Psychiatry": [
-        "Patient reports worsening depressive symptoms over past 2 weeks. Sleep disturbed, anhedonia, "
-        "low energy. Started on sertraline 50mg daily. Patient agrees to weekly therapy. Follow up in 1 week.",
-        "Anxiety assessment. Patient reports panic attacks occurring 2-3 times per week, triggered by work stress. "
-        "Previously on alprazolam, transitioned to escitalopram. Cognitive behavioral therapy recommended. "
-        "Patient to practice relaxation techniques.",
+        (
+            "Patient reports worsening depressive symptoms over past 2 weeks. Sleep disturbed, anhedonia, "
+            "low energy. Started on sertraline 50mg daily. Patient agrees to weekly therapy. Follow up in 1 week."
+        ),
+        (
+            "Anxiety assessment. Patient reports panic attacks occurring 2-3 times per week, triggered by work stress. "
+            "Previously on alprazolam, transitioned to escitalopram. Cognitive behavioral therapy recommended. "
+            "Patient to practice relaxation techniques."
+        ),
     ],
 }
 
 CLINICAL_TEMPLATES_CONSULTATION = {
     "General Medicine": [
-        "Consultation requested for management of hypertension. Patient has had multiple elevated readings "
-        "at home. Started on amlodipine 5mg daily. Recommend home monitoring twice daily. Return in 2 weeks.",
+        (
+            "Consultation requested for management of hypertension. Patient has had multiple elevated readings "
+            "at home. Started on amlodipine 5mg daily. Recommend home monitoring twice daily. Return in 2 weeks."
+        ),
     ],
     "Cardiology": [
-        "Patient presents with palpitations and dizziness. Holter monitor reveals occasional PVCs and "
-        "nonsustained VT. Patient reports symptoms correlate with device readings. Recommended continue "
-        "metoprolol and schedule echocardiogram.",
+        (
+            "Patient presents with palpitations and dizziness. Holter monitor reveals occasional PVCs and "
+            "nonsustained VT. Patient reports symptoms correlate with device readings. Recommended continue "
+            "metoprolol and schedule echocardiogram."
+        ),
     ],
     "Surgery": [
-        "Pre-operative evaluation for total hip replacement. Patient has moderate osteoarthritis. "
-        "Cardiac risk assessment completed. Anesthesia consult favorable. Patient optimized with weight loss "
-        "and smoking cessation. Surgery scheduled in 2 weeks.",
-        "Post-operative evaluation for cholecystectomy. Patient recovered well from procedure. No bile leak. "
-        "Issues identified. Tolerating diet, discharge planned for next day. Follow up with primary care.",
+        (
+            "Pre-operative evaluation for total hip replacement. Patient has moderate osteoarthritis. "
+            "Cardiac risk assessment completed. Anesthesia consult favorable. Patient optimized with weight loss "
+            "and smoking cessation. Surgery scheduled in 2 weeks."
+        ),
+        (
+            "Post-operative evaluation for cholecystectomy. Patient recovered well from procedure. No bile leak. "
+            "Issues identified. Tolerating diet, discharge planned for next day. Follow up with primary care."
+        ),
     ],
     "Neurology": [
-        "Consultation requested for acute onset right-sided weakness and aphasia. MRI confirms left cerebral "
-        "artery territory infarct. Patient presents with expressive aphasia and mild receptive impairment. "
-        "Thrombectomy not eligible due to time window. Started on antiplatelet therapy and rehab evaluation.",
+        (
+            "Consultation requested for acute onset right-sided weakness and aphasia. MRI confirms left cerebral "
+            "artery territory infarct. Patient presents with expressive aphasia and mild receptive impairment. "
+            "Thrombectomy not eligible due to time window. Started on antiplatelet therapy and rehab evaluation."
+        ),
     ],
     "Orthopedics": [
-        "Patient reports chronic low back pain radiating to bilateral lower extremities. MRI shows L4-L5 "
-        "disc herniation with nerve root impingement. Patient has failed conservative management. "
-        "Recommended epidural steroid injection for pain relief.",
+        (
+            "Patient reports chronic low back pain radiating to bilateral lower extremities. MRI shows L4-L5 "
+            "disc herniation with nerve root impingement. Patient has failed conservative management. "
+            "Recommended epidural steroid injection for pain relief."
+        ),
     ],
     "Psychiatry": [
-        "Evaluation requested for depression and anxiety symptoms. Patient reports persistent sad mood, "
-        "decreased interest, and sleep disturbance x 6 months. Diagnoses: Major Depressive Disorder, "
-        "Generalized Anxiety Disorder. Recommends SSRI therapy and psychotherapy referral.",
+        (
+            "Evaluation requested for depression and anxiety symptoms. Patient reports persistent sad mood, "
+            "decreased interest, and sleep disturbance x 6 months. Diagnoses: Major Depressive Disorder, "
+            "Generalized Anxiety Disorder. Recommends SSRI therapy and psychotherapy referral."
+        ),
     ],
 }
 
 CLINICAL_TEMPLATES_DISCHARGE_SUMMARY = {
     "General Medicine": [
-        "Discharge Summary: Hospital course uneventful. Patient diagnosed with pneumonia, treated with "
-        "antibiotics. Discharged home in stable condition. Follow up with PCP in 1 week. Continue "
-        "antibiotics for full course.",
+        (
+            "Discharge Summary: Hospital course uneventful. Patient diagnosed with pneumonia, treated with "
+            "antibiotics. Discharged home in stable condition. Follow up with PCP in 1 week. Continue "
+            "antibiotics for full course."
+        ),
     ],
     "Cardiology": [
-        "Discharge Summary following admission for acute myocardial infarction. Cardiac catheterization "
-        "revealed 70% stenosis of LCX. Stent placed successfully. Patient discharged on aspirin, clopidogrel, "
-        "beta-blocker, and statin. Cardiology follow up in 2 weeks.",
+        (
+            "Discharge Summary following admission for acute myocardial infarction. Cardiac catheterization "
+            "revealed 70% stenosis of LCX. Stent placed successfully. Patient discharged on aspirin, clopidogrel, "
+            "beta-blocker, and statin. Cardiology follow up in 2 weeks."
+        ),
     ],
     "Surgery": [
-        "Discharge Summary: Patient underwent laparoscopic cholecystectomy for symptomatic cholelithiasis. "
-        "Procedure uncomplicated. Tolerating regular diet. Discharged home on post-operative day 2. "
-        "Follow up with surgery clinic in 10 days.",
+        (
+            "Discharge Summary: Patient underwent laparoscopic cholecystectomy for symptomatic cholelithiasis. "
+            "Procedure uncomplicated. Tolerating regular diet. Discharged home on post-operative day 2. "
+            "Follow up with surgery clinic in 10 days."
+        ),
     ],
     "Neurology": [
-        "Discharge Summary: Patient admitted for bacterial meningitis. Started on antibiotics and dexamethasone. "
-        "CSF culture pending but clinical improvement noted. Continue IV antibiotics. Neurology follow up in 1 week "
-        "for outpatient testing.",
+        (
+            "Discharge Summary: Patient admitted for bacterial meningitis. Started on antibiotics and dexamethasone. "
+            "CSF culture pending but clinical improvement noted. Continue IV antibiotics. Neurology follow up in 1 week "
+            "for outpatient testing."
+        ),
     ],
     "Orthopedics": [
-        "Discharge Summary following admission for hip fracture with surgical repair. Intraoperative "
-        "complications none. Patient mobilized with physical therapy. Discharged to skilled nursing facility "
-        "for rehab. Ortho follow up in 2 weeks.",
+        (
+            "Discharge Summary following admission for hip fracture with surgical repair. Intraoperative "
+            "complications none. Patient mobilized with physical therapy. Discharged to skilled nursing facility "
+            "for rehab. Ortho follow up in 2 weeks."
+        ),
     ],
     "Psychiatry": [
-        "Discharge Summary: Patient admitted for psychotic episode. Medications stabilized on risperidone. "
-        "Patient now cooperative and oriented. Safe for discharge with outpatient psychiatry follow up in 3 days.",
+        (
+            "Discharge Summary: Patient admitted for psychotic episode. Medications stabilized on risperidone. "
+            "Patient now cooperative and oriented. Safe for discharge with outpatient psychiatry follow up in 3 days."
+        ),
     ],
 }
 
 CLINICAL_TEMPLATES_EMERGENCY = {
     "General Medicine": [
-        "Emergency Department note: Patient arrived via ambulance with acute respiratory distress. "
-        "Oxygen saturation 88% on room air. Chest x-ray shows infiltrate consistent with pneumonia. "
-        "Started on antibiotics, steroids, and oxygen therapy. Admitted to hospital.",
+        (
+            "Emergency Department note: Patient arrived via ambulance with acute respiratory distress. "
+            "Oxygen saturation 88% on room air. Chest x-ray shows infiltrate consistent with pneumonia. "
+            "Started on antibiotics, steroids, and oxygen therapy. Admitted to hospital."
+        ),
     ],
     "Cardiology": [
-        "Emergency Note: Patient presents with severe substernal chest pain radiating to left arm. "
-        "ECG demonstrates ST elevation in inferior leads. Cardiac enzymes elevated. Activated STEMI "
-        "protocol. Transferred to cath lab for primary PCI.",
+        (
+            "Emergency Note: Patient presents with severe substernal chest pain radiating to left arm. "
+            "ECG demonstrates ST elevation in inferior leads. Cardiac enzymes elevated. Activated STEMI "
+            "protocol. Transferred to cath lab for primary PCI."
+        ),
     ],
     "Neurology": [
-        "Emergency Department evaluation for acute onset right facial droop and left-sided weakness. "
-        "Symptoms started approximately 2 hours prior to arrival. NIHSS score 8. CT head without contrast "
-        "non-revealing hemorrhage. Stroke alert activated, patient eligible for thrombectomy.",
+        (
+            "Emergency Department evaluation for acute onset right facial droop and left-sided weakness. "
+            "Symptoms started approximately 2 hours prior to arrival. NIHSS score 8. CT head without contrast "
+            "non-revealing hemorrhage. Stroke alert activated, patient eligible for thrombectomy."
+        ),
     ],
 }
 
 CLINICAL_TEMPLATES_ADMISSION_NOTE = {
     "General Medicine": [
-        "Admission Note: Patient presents with acute exacerbation of asthma. PEF 50% predicted. Started on "
-        "nebulizers and oral steroids. Monitor for improvement. Rule out pneumonia with chest x-ray.",
+        (
+            "Admission Note: Patient presents with acute exacerbation of asthma. PEF 50% predicted. Started on "
+            "nebulizers and oral steroids. Monitor for improvement. Rule out pneumonia with chest x-ray."
+        ),
     ],
     "Cardiology": [
-        "Admission Note: Patient admitted for unstable angina. Chest pain occurs at rest. ECG shows ST depression. "
-        "Cardiac enzymes pending. Held anticoagulation, started on heparin. Cardiology consultation obtained.",
+        (
+            "Admission Note: Patient admitted for unstable angina. Chest pain occurs at rest. ECG shows ST depression. "
+            "Cardiac enzymes pending. Held anticoagulation, started on heparin. Cardiology consultation obtained."
+        ),
     ],
 }
 
@@ -472,14 +534,7 @@ def generate_epic_clinical_notes_data(
     global_end_day: int = 31,
     use_GPT: bool = False,
     patient_age_override: int | None = None,
-    fields_list: list[str] = [
-        "document_PatientDurableKey",
-        "document_CreatedWhen",
-        "document_Content",
-        "document_Name",
-        "document_EncounterEpicCsn",
-        "id",
-    ],
+    fields_list: list[str] | None = None,
 ) -> pd.DataFrame:
     """Generates dummy data for the 'epic_clinical_notes' index.
 
@@ -501,6 +556,15 @@ def generate_epic_clinical_notes_data(
         None
 
     """
+    if fields_list is None:
+        fields_list = [
+            "document_PatientDurableKey",
+            "document_CreatedWhen",
+            "document_Content",
+            "document_Name",
+            "document_EncounterEpicCsn",
+            "id",
+        ]
     df_holder_list = []
 
     patient_age = patient_age_override
@@ -595,15 +659,7 @@ def generate_epic_medical_history_data(
     global_end_month: int = 12,
     global_start_day: int = 1,
     global_end_day: int = 31,
-    fields_list: list[str] = [
-        "document_PatientDurableKey",
-        "document_CreatedWhen",
-        "document_Diagnosis",
-        "document_DiagnosisConcepts",
-        "document_Name",
-        "document_Comment",
-        "id",
-    ],
+    fields_list: list[str] | None = None,
 ) -> pd.DataFrame:
     """Generates dummy data for the 'epic_medical_history' index.
 
@@ -623,6 +679,16 @@ def generate_epic_medical_history_data(
         None
 
     """
+    if fields_list is None:
+        fields_list = [
+            "document_PatientDurableKey",
+            "document_CreatedWhen",
+            "document_Diagnosis",
+            "document_DiagnosisConcepts",
+            "document_Name",
+            "document_Comment",
+            "id",
+        ]
     df_holder_list = []
     for client_id_code in entered_list:
         data = {
@@ -680,17 +746,7 @@ def generate_epic_orders_data(
     global_end_month: int = 12,
     global_start_day: int = 1,
     global_end_day: int = 31,
-    fields_list: list[str] = [
-        "document_PatientDurableKey",
-        "document_CreatedWhen",
-        "document_UpdatedWhen",
-        "document_Name",
-        "document_Content",
-        "document_OrderClass",
-        "document_OrderDate",
-        "document_OrderStatus",
-        "id",
-    ],
+    fields_list: list[str] | None = None,
 ) -> pd.DataFrame:
     """Generates dummy data for the 'epic_orders' index.
 
@@ -710,6 +766,18 @@ def generate_epic_orders_data(
         None
 
     """
+    if fields_list is None:
+        fields_list = [
+            "document_PatientDurableKey",
+            "document_CreatedWhen",
+            "document_UpdatedWhen",
+            "document_Name",
+            "document_Content",
+            "document_OrderClass",
+            "document_OrderDate",
+            "document_OrderStatus",
+            "id",
+        ]
     df_holder_list = []
     for client_id_code in entered_list:
         order_date = create_random_date_from_globals(

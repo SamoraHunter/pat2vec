@@ -5,8 +5,13 @@ import random
 import pandas as pd
 from faker import Faker
 
-from ..generator_helpers import create_random_date_from_globals
-from ..sequence_generators import generate_patient_timeline, get_patient_timeline_dummy
+from pat2vec.util.dummy_data_generation.generator_helpers import (
+    create_random_date_from_globals,
+)
+from pat2vec.util.dummy_data_generation.sequence_generators import (
+    generate_patient_timeline,
+    get_patient_timeline_dummy,
+)
 
 random_state = 42
 faker = Faker()
@@ -24,19 +29,21 @@ def generate_observations_MRC_text_data(
     global_start_day: int = 1,
     global_end_day: int = 31,
     use_GPT: bool = False,
-    fields_list: list[str] = [
-        "observation_guid",
-        "client_idcode",
-        "obscatalogmasteritem_displayname",
-        "observation_valuetext_analysed",
-        "observationdocument_recordeddtm",
-        "clientvisit_visitidcode",
-        "_id",
-        "_index",
-        "_score",
-    ],
+    fields_list: list[str] | None = None,
 ) -> pd.DataFrame:
     """Generates dummy data for the 'observations' index (MRC clinical notes)."""
+    if fields_list is None:
+        fields_list = [
+            "observation_guid",
+            "client_idcode",
+            "obscatalogmasteritem_displayname",
+            "observation_valuetext_analysed",
+            "observationdocument_recordeddtm",
+            "clientvisit_visitidcode",
+            "_id",
+            "_index",
+            "_score",
+        ]
     df_holder_list = []
 
     for i in range(len(entered_list)):
@@ -91,8 +98,7 @@ def generate_observations_MRC_text_data(
             df[field] = None
 
     df = df[fields_list]
-    df.reset_index(drop=True, inplace=True)
-    return df
+    return df.reset_index(drop=True)
 
 
 def generate_observations_Reports_text_data(
@@ -105,20 +111,22 @@ def generate_observations_Reports_text_data(
     global_start_day: int = 1,
     global_end_day: int = 31,
     use_GPT: bool = False,
-    fields_list: list[str] = [
-        "basicobs_guid",
-        "client_idcode",
-        "basicobs_itemname_analysed",
-        "basicobs_value_analysed",
-        "textualObs",
-        "updatetime",
-        "clientvisit_visitidcode",
-        "_id",
-        "_index",
-        "_score",
-    ],
+    fields_list: list[str] | None = None,
 ) -> pd.DataFrame:
     """Generates dummy data for the 'basic_observations' index (Reports)."""
+    if fields_list is None:
+        fields_list = [
+            "basicobs_guid",
+            "client_idcode",
+            "basicobs_itemname_analysed",
+            "basicobs_value_analysed",
+            "textualObs",
+            "updatetime",
+            "clientvisit_visitidcode",
+            "_id",
+            "_index",
+            "_score",
+        ]
     random.seed(random_state)
     df_holder_list = []
 
@@ -173,5 +181,4 @@ def generate_observations_Reports_text_data(
             df[field] = None
 
     df = df[fields_list]
-    df.reset_index(drop=True, inplace=True)
-    return df
+    return df.reset_index(drop=True)

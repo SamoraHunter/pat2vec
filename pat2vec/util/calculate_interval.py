@@ -28,7 +28,8 @@ def calculate_interval(
     """
     # Check for a zero-length interval to prevent an infinite loop.
     if start_date + interval_delta <= start_date:
-        raise ValueError("The time interval delta must be a positive duration.")
+        msg = "The time interval delta must be a positive duration."
+        raise ValueError(msg)
 
     end_date = start_date + total_delta
     current_date = start_date

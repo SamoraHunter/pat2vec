@@ -86,7 +86,7 @@ def filter_annot_dataframe2(
                 # Ensure column is numeric before comparison to avoid string comparison issues
                 dataframe[column] = pd.to_numeric(dataframe[column], errors="coerce")
                 mask &= dataframe[column] >= value
-            elif column in ["acc"]:
+            elif column == "acc":
                 # Include rows where the column is greater than or equal to the specified confidence threshold
                 dataframe[column] = pd.to_numeric(dataframe[column], errors="coerce")
                 mask &= dataframe[column] >= value
@@ -494,12 +494,14 @@ def filter_and_select_rows(
 
     """
     if not all(arg is not None for arg in [dataframe, filter_list, filter_column]):
+        msg = "Please provide a valid dataframe, filter_list, and filter_column."
         raise ValueError(
-            "Please provide a valid dataframe, filter_list, and filter_column.",
+            msg,
         )
 
     if filter_column not in dataframe.columns:
-        raise ValueError(f"{filter_column} not found in the dataframe columns.")
+        msg = f"{filter_column} not found in the dataframe columns."
+        raise ValueError(msg)
 
     filtered_df = dataframe[dataframe[filter_column].isin(filter_list)]
 
@@ -511,7 +513,8 @@ def filter_and_select_rows(
     elif mode == "latest":
         selected_rows = filtered_df.tail(n_rows)
     else:
-        raise ValueError("Invalid mode. Please choose 'earliest' or 'latest'.")
+        msg = "Invalid mode. Please choose 'earliest' or 'latest'."
+        raise ValueError(msg)
 
     if verbosity > 10:
         logger.debug("Filtered DataFrame:")
@@ -570,7 +573,8 @@ def filter_dataframe_by_cui(
             time_column
         ].max()
     else:
-        raise ValueError("Invalid mode. Use 'earliest' or 'latest'")
+        msg = "Invalid mode. Use 'earliest' or 'latest'"
+        raise ValueError(msg)
 
     filter_row = result_df.copy()  # preserve row used for filter
     # Debug statement for verbosity
@@ -596,7 +600,8 @@ def filter_dataframe_by_cui(
             dataframe[time_column] >= result_df[time_column].max()
         ]
     else:
-        raise ValueError("Invalid temporal value. Use 'before' or 'after'")
+        msg = "Invalid temporal value. Use 'before' or 'after'"
+        raise ValueError(msg)
 
     # Debug statement for verbosity
     if verbosity > 0:
@@ -655,9 +660,7 @@ def filter_dataframe_n_lists(
     final_mask = pd.concat(masks, axis=1).all(axis=1)
 
     # Apply the mask to the DataFrame
-    filtered_df = df[final_mask]
-
-    return filtered_df
+    return df[final_mask]
 
 
 def get_all_target_annots(
@@ -694,7 +697,7 @@ def get_all_target_annots(
 
         all_annots = retrieve_pat_annots_mct_epr(current_pat_idcode, config_obj)
 
-        all_annots.dropna(subset="acc", inplace=True)
+        all_annots = all_annots.dropna(subset="acc")
 
         if annot_filter_arguments is not None:
             all_annots = filter_annot_dataframe2(all_annots, annot_filter_arguments)

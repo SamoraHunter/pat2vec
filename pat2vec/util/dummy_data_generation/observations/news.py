@@ -6,7 +6,9 @@ import numpy as np
 import pandas as pd
 from faker import Faker
 
-from ..generator_helpers import create_random_date_from_globals
+from pat2vec.util.dummy_data_generation.generator_helpers import (
+    create_random_date_from_globals,
+)
 
 random_state = 42
 faker = Faker()
@@ -53,11 +55,11 @@ SP02_SCALE_VALUES = ["Standard", "High"]
 
 def generate_clinically_coherent_value(
     component: str,
-    respiration_rate: float = None,
-    heart_rate: float = None,
-    temp_celsius: float = None,
-    pain_score: int = None,
-    avpu: str = None,
+    respiration_rate: float | None = None,
+    heart_rate: float | None = None,
+    temp_celsius: float | None = None,
+    pain_score: int | None = None,
+    avpu: str | None = None,
 ) -> str:
     """Generate a clinically coherent value for a NEWS component based on other vital signs."""
     if component == "NEWS_Systolic_BP":
@@ -150,16 +152,18 @@ def generate_news_data(
     global_end_month: int = 12,
     global_start_day: int = 1,
     global_end_day: int = 31,
-    fields_list: list[str] = [
-        "observation_guid",
-        "client_idcode",
-        "obscatalogmasteritem_displayname",
-        "observation_valuetext_analysed",
-        "observationdocument_recordddtm",
-        "clientvisit_visitidcode",
-    ],
+    fields_list: list[str] | None = None,
 ) -> pd.DataFrame:
     """Generates dummy data for NEWS observations."""
+    if fields_list is None:
+        fields_list = [
+            "observation_guid",
+            "client_idcode",
+            "obscatalogmasteritem_displayname",
+            "observation_valuetext_analysed",
+            "observationdocument_recordddtm",
+            "clientvisit_visitidcode",
+        ]
     news_components = [
         "NEWS2_Score",
         "NEWS_Systolic_BP",

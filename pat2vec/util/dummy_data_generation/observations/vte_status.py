@@ -4,8 +4,10 @@ import numpy as np
 import pandas as pd
 
 from pat2vec.pat2vec_get_methods.get_method_vte_status import VTE_FIELDS
-
-from ..generator_helpers import create_random_date_from_globals, maybe_nan
+from pat2vec.util.dummy_data_generation.generator_helpers import (
+    create_random_date_from_globals,
+    maybe_nan,
+)
 
 random_state = 42
 random.seed(random_state)
@@ -117,9 +119,7 @@ def _calculate_vte_risk_probability(age: int, risk_factors: dict) -> float:
     if risk_factors.get("immobilization", False):
         base_prob *= 2.0
 
-    base_prob = min(base_prob, 0.85)
-
-    return base_prob
+    return min(base_prob, 0.85)
 
 
 def _determine_vte_status(age: int, risk_factors: dict) -> str:
@@ -148,13 +148,12 @@ def _determine_vte_status(age: int, risk_factors: dict) -> str:
         return "Low risk of VTE"
     if random.random() < (1 - vte_prob * 0.2):
         return "Moderate risk of VTE"
-    high_risk_type = random.choice(
+    return random.choice(
         [
             "High risk of VTE Low risk of bleeding",
             "High risk of VTE High risk of bleeding",
         ],
     )
-    return high_risk_type
 
 
 def generate_vte_data(

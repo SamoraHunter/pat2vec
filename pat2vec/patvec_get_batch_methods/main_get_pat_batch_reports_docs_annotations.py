@@ -102,7 +102,7 @@ def get_pat_batch_reports_docs_annotations(
             c for c in ["body_analysed", "updatetime"] if c in pat_batch.columns
         ]
         if valid_columns:
-            pat_batch.dropna(subset=valid_columns, axis=0, inplace=True)
+            pat_batch = pat_batch.dropna(subset=valid_columns, axis=0)
         batch_target = get_pat_document_annotation_batch_reports(
             current_pat_client_idcode=current_pat_client_id_code,
             pat_batch=pat_batch,
@@ -143,7 +143,7 @@ def get_pat_batch_reports_docs_annotations(
 
                 for col in cols_to_drop:
                     if col in batch_target.columns:
-                        batch_target.drop(columns=col, inplace=True)
+                        batch_target = batch_target.drop(columns=col)
 
                 # Create a copy and serialize lists to strings for SQL compatibility
                 batch_to_save = batch_target.copy()

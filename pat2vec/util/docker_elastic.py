@@ -32,14 +32,15 @@ class ElasticContainer:
 
     def __enter__(self):
         if not self.start():
-            raise RuntimeError("Failed to start Elasticsearch container")
+            msg = "Failed to start Elasticsearch container"
+            raise RuntimeError(msg)
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.stop()
 
     @staticmethod
-    def cleanup_orphans():
+    def cleanup_orphans() -> None:
         """Finds and removes any orphaned pat2vec test containers."""
         logger.info("Cleaning up any orphaned test containers...")
         try:
@@ -71,7 +72,7 @@ class ElasticContainer:
             )
             # Remove them
             subprocess.run(
-                ["docker", "rm", "-f"] + container_ids,
+                ["docker", "rm", "-f", *container_ids],
                 capture_output=True,
                 check=False,
             )
@@ -327,7 +328,8 @@ class ElasticContainer:
 
             time.sleep(5)
 
-        raise TimeoutError("Elasticsearch container failed to start within timeout.")
+        msg = "Elasticsearch container failed to start within timeout."
+        raise TimeoutError(msg)
 
     def get_credentials(self) -> tuple[str, str, str]:
         """Returns (host_url, username, password)."""

@@ -67,15 +67,17 @@ def ingest_data_to_elasticsearch(
         ]
 
         if host_name not in safe_hosts:
+            msg = f"Safety Block: Ingestion to '{host_name}' denied. Only local/test clusters allowed."
             raise ConnectionError(
-                f"Safety Block: Ingestion to '{host_name}' denied. Only local/test clusters allowed.",
+                msg,
             )
 
         # Safeguard: Block ingestion with non-test users
         safe_users = ["elastic", "test_user"]
         if not api_key and username not in safe_users:
+            msg = f"Safety Block: Ingestion with user '{username}' denied. Only test users {safe_users} allowed."
             raise ConnectionError(
-                f"Safety Block: Ingestion with user '{username}' denied. Only test users {safe_users} allowed.",
+                msg,
             )
 
         # Initialize Elasticsearch client
@@ -95,7 +97,8 @@ def ingest_data_to_elasticsearch(
     # Check connection
     try:
         if not es.ping():
-            raise ConnectionError("Elasticsearch server not reachable.")
+            msg = "Elasticsearch server not reachable."
+            raise ConnectionError(msg)
 
         # Disable disk watermarks for local/test environments to prevent RED status on low disk
         # This is necessary because 91% disk usage (your current state) triggers a write block.

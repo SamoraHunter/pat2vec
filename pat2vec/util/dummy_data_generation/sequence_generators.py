@@ -70,8 +70,7 @@ def generate_patient_timeline(client_idcode: str) -> str:
 
     patient_demographics = f"Patient Demographics:\nClient ID: {patient_info['client_idcode']}\nAge: {patient_info['Age']:.1f}\nGender: {patient_info['Gender']}\nDOB: {patient_info['DOB'].strftime('%Y-%m-%d')}"
     timeline.insert(0, f"{patient_demographics}\n\nClinical Note Timeline:\n")
-    patient_timeline = "\n".join(timeline)
-    return patient_timeline
+    return "\n".join(timeline)
 
 
 # Export generate_uuid_list and create_random_date_from_globals for backward compatibility
@@ -119,8 +118,7 @@ def generate_patient_timeline_faker(client_idcode: str) -> str:
 
     patient_demographics = f"Patient Demographics:\nclient_idcode: {patient_info['client_idcode']}\nAge: {patient_info['Age']:.1f}\nGender: {patient_info['Gender']}\nDOB: {patient_info['DOB'].strftime('%Y-%m-%d')}"
     timeline.insert(0, f"{patient_demographics}\n\nClinical Note Timeline:\n")
-    patient_timeline = "\n".join(timeline)
-    return patient_timeline
+    return "\n".join(timeline)
 
 
 def get_patient_timeline_dummy(

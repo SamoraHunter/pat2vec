@@ -80,8 +80,9 @@ def extract_treatment_id_list_from_docs(config_obj: Any) -> list[str]:
     elif file_extension in ["xlsx", "xls"]:
         docs = pd.read_excel(treatment_doc_path)
     else:
+        msg = f"Unsupported file format: {file_extension}. Please provide a CSV or XLSX file."
         raise ValueError(
-            f"Unsupported file format: {file_extension}. Please provide a CSV or XLSX file.",
+            msg,
         )
 
     # If patient_id_column_name is 'auto', use regex to find the most likely column
@@ -167,7 +168,7 @@ def extract_treatment_id_list_from_docs(config_obj: Any) -> list[str]:
                     print("best_match_column:", best_match_column)
 
     # drop the nan in column
-    docs.dropna(subset=[config_obj.patient_id_column_name], inplace=True)
+    docs = docs.dropna(subset=[config_obj.patient_id_column_name])
 
     if config_obj.sample_treatment_docs > 0:
         # Determine the number of samples by taking the smaller of the requested
@@ -182,9 +183,7 @@ def extract_treatment_id_list_from_docs(config_obj: Any) -> list[str]:
         docs = docs.sample(n_samples)
 
     # Extract the unique client IDs from the document
-    treatment_client_id_list = list(docs[config_obj.patient_id_column_name].unique())
-
-    return treatment_client_id_list
+    return list(docs[config_obj.patient_id_column_name].unique())
 
 
 def generate_control_list(
@@ -367,13 +366,15 @@ def get_all_patients_list(config_obj: Any) -> list[str]:
         id_column = config_obj.individual_patient_id_column_name
 
         if ipw_df is None or id_column is None:
+            msg = "For individual_patient_window, both 'individual_patient_window_df' and 'individual_patient_id_column_name' must be provided in config."
             raise ValueError(
-                "For individual_patient_window, both 'individual_patient_window_df' and 'individual_patient_id_column_name' must be provided in config.",
+                msg,
             )
 
         if id_column not in ipw_df.columns:
+            msg = f"Column '{id_column}' not found in individual_patient_window_df."
             raise ValueError(
-                f"Column '{id_column}' not found in individual_patient_window_df.",
+                msg,
             )
 
         patient_ids = ipw_df[id_column].unique().tolist()
@@ -406,8 +407,9 @@ def get_all_patients_list(config_obj: Any) -> list[str]:
 
     else:  # This is now only for static testing
         if not hasattr(config_obj, "test_data_path") or not config_obj.test_data_path:
+            msg = "In testing mode, 'test_data_path' must be set in the config object."
             raise ValueError(
-                "In testing mode, 'test_data_path' must be set in the config object.",
+                msg,
             )
 
         test_df = read_test_data(config_obj.test_data_path)
