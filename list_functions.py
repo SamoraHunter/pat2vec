@@ -25,7 +25,7 @@ def find_all_functions(package_path="pat2vec"):
                     except SyntaxError as e:
                         print(f"Could not parse {file_path}: {e}")
 
-    return sorted(list(function_names))  # Return a sorted list
+    return sorted(function_names)  # Return a sorted list
 
 
 if __name__ == "__main__":

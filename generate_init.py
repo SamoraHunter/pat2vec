@@ -106,7 +106,7 @@ def generate_init_file_content(package_path="pat2vec"):
     output_lines.append("# Define the public API of the package")
 
     output_lines.append("__all__ = [")
-    for name in sorted(list(all_import_names)):
+    for name in sorted(all_import_names):
         output_lines.append(f'    "{name}",')
     output_lines.append("]")
 

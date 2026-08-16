@@ -55,7 +55,6 @@ ignore = [
     "D205",  # Blank line after summary - style preference
     "ARG002",  # Unused argument - sometimes needed for interface
     "N802",  # Typo in test name
-    "PTH208",  # Path.is_dir() vs os.path.isdir()
     "S603",  # subprocess calls
     "PERF401",  # List comprehension optimization
     "DTZ007",  # Naive datetime - sometimes intentional
@@ -72,7 +71,7 @@ ignore = [
     "SLF001",  # Private member access
     "PD011",  # pandas.to_numeric
     "PLE1205",  # Ineffective format 1st arg
-    "B007",  # Loop variable undefined
+  
     "SIM113",  # Use enumerate
     "S301",  # Pickle imports
     "TRY002",  # Caught specific exception

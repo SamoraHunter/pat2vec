@@ -96,12 +96,6 @@ include-package-data = true
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["pat2vec*"]
-
-[tool.ruff]
-extend-exclude = ["legacy",
-"legacy/Main-Pat2Vec v4.4.6-Time-Batch-Dev-lookback-Publish (1).ipynb"]
-extend-ignore = ["E402"]
-
 [tool.coverage.run]
 source = ["pat2vec"]
 omit = ["pat2vec/util/credentials.py", "*/tests/*"]
@@ -114,3 +108,37 @@ sigterm = true
 [tool.coverage.report]
 show_missing = true
 fail_under = 0
+
+[tool.ruff]
+line-length = 88
+
+[tool.ruff.lint]
+select = ["ALL"]
+ignore = [
+    "LOG015", "BLE001", "G004", "TRY400", "E501", "D401", "T201",
+    "D203", "CPY001", "E402", "ANN001", "ANN002", "ANN003", "ANN201",
+    "ANN401", "D417", "S101", "PLR2004", "FBT001", "FBT002", "PTH118",
+    "PTH110", "ERA001", "S311", "PLR0913", "PLR0917", "C901", "D100",
+    "PLR0912", "TRY401", "ARG001", "NPY002", "PLR0915", "PTH120",
+    "PTH103", "N806", "PLC0415", "TRY300", "S608", "PTH123", "DTZ001",
+    "PD004", "PGH003", "ANN202", "PTH113", "PLR0911", "PD008", "PLW0602",
+    "N803", "D205", "ARG002", "N802", "PTH208", "S603", "PERF401",
+    "DTZ007", "INP001", "PTH122", "B018", "N816", "PD015", "PD003",
+    "S110", "D104", "TRY301", "PLW1510", "SLF001", "PD011", "PLE1205",
+    "B007", "SIM113", "S301", "TRY002", "PLW2901", "D107", "SIM115",
+    "DTZ002", "PLW0642", "SIM105", "PYI056", "D404", "ARG004", "TD002",
+    "TD003", "FIX001", "FIX002", "D102", "G001", "S112", "PTH119",
+    "TRY004", "RUF001", "ISC001", "N801", "S104", "DTZ003", "B904",
+    "PTH107", "PTH100", "D103", "PTH109", "F405", "S108", "E701",
+    "PERF203", "PLW0603", "S507", "DTZ005", "SIM102", "S607", "DTZ004",
+    "B023", "PTH112", "S105", "A001", "F403", "COM819", "D101", "F701",
+    "PLR5501", "E722", "ARG005", "B008", "ANN204", "D105", "FBT003",
+    "PTH104", "D400", "D415", "E721", "A004", "F821", "EXE003", "EXE001",
+    "EXE005", "G003", "PLW0127", "TRY203", "DTZ011",
+]
+exclude = [
+    "**/__pycache__", "**/*.egg", "*.egg-info", "pat2vec/tests/",
+    ".ai/", ".skills/", "notebooks/", "test_files/", "legacy/", "docs/",
+    "test_*.py", "*_test.py", "test_isolation_fix.py",
+    "test_elastic_credentials_textual_obs_get.py", "*.ipynb",
+]
