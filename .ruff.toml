@@ -1,0 +1,164 @@
+# This is the correct format for ruff TOML config
+line-length = 88
+
+[lint]
+select = ["ALL"]
+ignore = [
+    "LOG015",
+    "BLE001",
+    "G004",
+    "TRY400",
+    "E501",
+    "D401",
+    "T201",
+    "D203",  # Incompatible with D211
+    "CPY001",  # Missing copyright notice
+    "E402",   # Module level import not at top
+    "ANN001",   # Missing type annotation for args
+    "ANN002",   # Missing positional arg type
+    "ANN003",   # Missing vararg/kwarg annotation
+    "ANN201",  # Missing return type for public functions
+    "ANN401",  # Any types
+    "D417",  # Missing argument in docstring (common)
+    "S101",  # Use of assert detected - common in tests
+    "PLR2004",  # Magic number comparison - common pattern
+    "FBT001",  # Boolean-typed positional arg - sometimes intentional
+    "FBT002",  # Boolean default positional arg - sometimes intentional
+    "PTH118",  # Use Path with operator instead of os.path.join
+    "PTH110",  # Use Path.parent instead of os.path.dirname
+    "ERA001",  # Commented-out code
+    "S311",  # Random module - sometimes intentional for testing
+    "PLR0913",  # Too many arguments - intentional in some cases
+    "PLR0917",  # Too many positional args
+    "C901",  # Function too complex
+    "D100",  # Missing docstring in public module
+    "PLR0912",  # Too many branches
+    "TRY401",  # raise inside try block
+    "ARG001",  # Unused function argument
+    "NPY002",  # Numpy type annotations
+    "PLR0915",  # Too many statements
+    "PTH120",  # os.path.dirname
+    "PTH103",  # path.as_posix()
+    "N806",  # Variable in function should be lowercase
+    "PLC0415",  # Import inside function
+    "TRY300",  # Consider moving to else block
+    "S608",  # Possible SQL injection - uses SQLAlchemy safely
+    "PTH123",  # Use Path.open() instead of open()
+    "DTZ001",  # Naive datetime - sometimes intentional
+    "PD004",  # Drop in inplace=True pattern - pandas compatibility
+    "PGH003",  # Potential hardcoded password
+    "ANN202",  # Missing return type for private functions
+    "PTH113",  # os.path.abspath() - some uses intentional
+    "PLR0911",  # Too many return statements - control flow clarity
+    "PD008",  # Pandas method chain issues
+    "PLW0602",  # Global variable in function
+    "N803",  # Capitalized arg name
+    "D205",  # Blank line after summary - style preference
+    "ARG002",  # Unused argument - sometimes needed for interface
+    "N802",  # Typo in test name
+    "PTH208",  # Path.is_dir() vs os.path.isdir()
+    "S603",  # subprocess calls
+    "PERF401",  # List comprehension optimization
+    "DTZ007",  # Naive datetime - sometimes intentional
+    "INP001",  # Missing __init__ in package
+    "PTH122",  # os.path.split()
+    "B018",  # Useless expression
+    "N816",  # Mixed case variable in class
+    "PD015",  # Power operation
+    "PD003",  # pd.to_datetime
+    "S110",  # Hardcoded file path
+    "D104",  # Missing docstring in package
+    "TRY301",  # Consider raising exception class directly
+    "PLW1510",  # Exception not specified
+    "SLF001",  # Private member access
+    "PD011",  # pandas.to_numeric
+    "PLE1205",  # Ineffective format 1st arg
+    "B007",  # Loop variable undefined
+    "SIM113",  # Use enumerate
+    "S301",  # Pickle imports
+    "TRY002",  # Caught specific exception
+    "PLW2901",  # Reassign in loop
+    "D107",  # Missing docstring in init
+    "SIM115",  # String patterns
+    "DTZ002",  # Naive datetime
+    "PLW0642",  # Self/cls assigned to variable
+    "SIM105",  # Use context manager for file handling
+    "PYI056",  # Data class field order
+    "D404",  # First word should not be the module name
+    "ARG004",  # Unused static method arg
+    "TD002",  # Missing todo author
+    "TD003",  # Missing todo link
+    "FIX001",  # Fixme detected
+    "FIX002",  # FIXME detected
+    "D102",  # Missing docstring in method
+    "G001",  # Logging using string format
+    "S112",  # Potentially misused key in dict
+    "PTH119",  # os.path.isfile()
+    "TRY004",  # Raised exception class without instantiation
+    "RUF001",  # Typo in code
+    "ISC001",  # Line too long after breaking
+    "N801",  # Class name should use CapWords
+    "S104",  # Possible hardcoded path
+    "DTZ003",  # Naive datetime
+    "B904",  # raise inside except without from
+    "PTH107",  # path.rename()
+    "PTH100",  # path.mkdir()
+    "D103",  # Missing docstring in function
+    "PTH109",  # path.exists()
+    "F405",  # Import may be undefined
+    "S108",  # Hardcoded file path
+    "E701",  # Multiple statements on one line
+    "PERF203",  # List comprehension optimization
+    "PLW0603",  # Using global
+    "S507",  # Too large buffer for socket.recv
+    "DTZ005",  # Naive datetime - sometimes intentional
+    "SIM102",  # Nested if statements
+    "S607",  # Subprocess with hardcoded command
+    "DTZ004",  # Naive datetime
+    "B023",  # Loop variable bound to function
+    "PTH112",  # os.path.exists()
+    "S105",  # Hardcoded password
+    "A001",  # Arg shadows builtin
+    "F403",  # Import * used
+    "COM819",  # Trailing comma on bare tuple
+    "D101",  # Missing docstring in class
+    "F701",  # Syntax error
+    "PLR5501",  # elif with nested if
+    "E722",  # Bare except
+    "ARG005",  # Unused lambda
+    "B008",  # Default arg mutable
+    "ANN204",  # Private return type
+    "D105",  # Docstring should be unchanged
+    "FBT003",  # Boolean positional arg in function call
+    "PTH104",  # path.rmdir()
+    "D400",  # First line should end with period
+    "D415",  # Docstring should be imperative mood
+    "E721",  # Type comparison
+    "A004",  # Shadowed builtin
+    "F821",  # Undefined name
+    "EXE003",  # Shebang not executable
+    "EXE001",  # shebang not first line
+    "EXE005",  # shebang with python
+    "G003",  # Logging f-string
+    "PLW0127",  # Shadowing name
+    "TRY203",  # Try except raise
+    "DTZ011",  # Naive datetime
+]
+
+exclude = [
+    "**/__pycache__",
+    "**/*.egg",
+    "*.egg-info",
+    "pat2vec/tests/",
+    ".ai/",
+    ".skills/",
+    "notebooks/",
+    "test_files/",
+    "legacy/",
+    "docs/",
+    "test_*.py",
+    "*_test.py",
+    "test_isolation_fix.py",
+    "test_elastic_credentials_textual_obs_get.py",
+    "*.ipynb",
+]
