@@ -1,3 +1,6 @@
+import glob
+import os
+import shutil
 import sys
 
 import pytest
@@ -119,6 +122,9 @@ def pytest_configure(config):
 
 def pytest_unconfigure(config):
     """Clean up mocks when pytest ends."""
+    # Perform final cleanup of test artifacts
+    _cleanup_test_artifacts()
+
     if "transformers" in sys.modules:
         try:
             import transformers as tf
@@ -139,3 +145,46 @@ def pytest_unconfigure(config):
             ed.generate_epr_documents_data = _original_generate_epr_documents_data
         except (ImportError, AttributeError):
             pass
+
+
+def _cleanup_test_artifacts():
+    """Clean up test artifacts including temp directories and credential files."""
+
+    # Clean up temp directories matching pattern /tmp/*_test_project
+    tmp_dir = "/tmp"
+    for item in os.listdir(tmp_dir):
+        if item.endswith("_test_project") and os.path.isdir(
+            os.path.join(tmp_dir, item)
+        ):
+            try:
+                shutil.rmtree(os.path.join(tmp_dir, item))
+            except Exception:
+                pass
+
+    # Clean up temp directories matching pattern /workspaces/pat2vec/tmp/*_test_project
+    tmp_proj_dir = "/workspaces/pat2vec/tmp"
+    if os.path.exists(tmp_proj_dir):
+        for item in os.listdir(tmp_proj_dir):
+            if item.endswith("_test_project") and os.path.isdir(
+                os.path.join(tmp_proj_dir, item)
+            ):
+                try:
+                    shutil.rmtree(os.path.join(tmp_proj_dir, item))
+                except Exception:
+                    pass
+
+    # Clean up credential files matching pattern test_elastic_credentials_*_get.py
+    cred_pattern = "/workspaces/pat2vec/test_elastic_credentials_*_get.py"
+    for cred_file in glob.glob(cred_pattern):
+        try:
+            os.remove(cred_file)
+        except Exception:
+            pass
+
+    # Also clean up the legacy test_elastic_credentials.py if it exists
+    legacy_cred = "/workspaces/pat2vec/test_elastic_credentials.py"
+    try:
+        if os.path.exists(legacy_cred):
+            os.remove(legacy_cred)
+    except Exception:
+        pass

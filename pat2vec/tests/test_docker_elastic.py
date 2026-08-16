@@ -195,10 +195,10 @@ class TestElasticContainer(unittest.TestCase):
             self.assertEqual(mock_session.return_value.get.call_count, 5)
 
     @patch("requests.Session")
-    @patch("time.time", return_value=100)
+    @patch("time.time")
     def test_wait_for_ready_timeout(self, mock_time, mock_session):
-        # Advance time immediately to trigger timeout
-        mock_time.side_effect = [100, 200]
+        # Advance time to trigger timeout: start at 100, then increment
+        mock_time.side_effect = [100, 101, 105, 106, 111]  # Exceeds timeout of 10
         mock_session.return_value.get.side_effect = (
             requests.exceptions.RequestException()
         )

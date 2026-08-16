@@ -74,6 +74,18 @@ hosts = ["{host}"]
     if os.path.exists(creds_filename):
         os.remove(creds_filename)
 
+    # Clean up temp directories created during testing
+    temp_dirs_to_remove = [
+        "/tmp/epic_clinical_notes_test_project",
+        "epic_clinical_notes_test_project",
+    ]
+    for dir_path in temp_dirs_to_remove:
+        try:
+            if os.path.exists(dir_path):
+                shutil.rmtree(dir_path, ignore_errors=True)
+        except Exception:
+            pass
+
 
 @pytest.fixture
 def cleanup_files():

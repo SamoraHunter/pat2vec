@@ -67,11 +67,10 @@ ignore = [
     "S110",  # Hardcoded file path
     "D104",  # Missing docstring in package
     "TRY301",  # Consider raising exception class directly
-    "PLW1510",  # Exception not specified
+  "PLW1510",  # Exception not specified
     "SLF001",  # Private member access
     "PD011",  # pandas.to_numeric
     "PLE1205",  # Ineffective format 1st arg
-  
     "SIM113",  # Use enumerate
     "S301",  # Pickle imports
     "TRY002",  # Caught specific exception
@@ -79,7 +78,6 @@ ignore = [
     "D107",  # Missing docstring in init
     "SIM115",  # String patterns
     "DTZ002",  # Naive datetime
-    "PLW0642",  # Self/cls assigned to variable
     "SIM105",  # Use context manager for file handling
     "PYI056",  # Data class field order
     "D404",  # First word should not be the module name
