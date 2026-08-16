@@ -149,12 +149,11 @@ def pytest_unconfigure(config):
 
 def _cleanup_test_artifacts():
     """Clean up test artifacts including temp directories and credential files."""
-
     # Clean up temp directories matching pattern /tmp/*_test_project
     tmp_dir = "/tmp"
     for item in os.listdir(tmp_dir):
         if item.endswith("_test_project") and os.path.isdir(
-            os.path.join(tmp_dir, item)
+            os.path.join(tmp_dir, item),
         ):
             try:
                 shutil.rmtree(os.path.join(tmp_dir, item))
@@ -166,7 +165,7 @@ def _cleanup_test_artifacts():
     if os.path.exists(tmp_proj_dir):
         for item in os.listdir(tmp_proj_dir):
             if item.endswith("_test_project") and os.path.isdir(
-                os.path.join(tmp_proj_dir, item)
+                os.path.join(tmp_proj_dir, item),
             ):
                 try:
                     shutil.rmtree(os.path.join(tmp_proj_dir, item))

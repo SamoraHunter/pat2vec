@@ -246,7 +246,7 @@ def get_appointments(
 
     if "HospitalID" in current_pat_raw.columns:
         current_pat_raw = current_pat_raw.rename(
-            columns={"HospitalID": "client_idcode"}
+            columns={"HospitalID": "client_idcode"},
         )
 
     # Ensure client_idcode is present for grouping

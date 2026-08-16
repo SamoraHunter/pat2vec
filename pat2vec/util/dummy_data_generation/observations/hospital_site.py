@@ -193,7 +193,7 @@ def generate_hospital_site_data(
 
             probabilities = [weights[h] for h in hospital_sites]
             weighted_elements = OrderedDict(
-                zip(hospital_sites, probabilities, strict=False)
+                zip(hospital_sites, probabilities, strict=False),
             )
             hospital = faker_inst.random_element(elements=weighted_elements)
 

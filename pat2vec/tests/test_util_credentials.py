@@ -72,6 +72,6 @@ def test_credentials_structure_valid():
 def test_credentials_for_development_only():
     """Verify credentials are set to dummy values (security check)."""
     # In production, these should be changed via environment variables or config
-    assert "dummy" in username.lower() or "change_me" in password.lower(), (
-        "Production deployment must override default credentials"
-    )
+    assert (
+        "dummy" in username.lower() or "change_me" in password.lower()
+    ), "Production deployment must override default credentials"

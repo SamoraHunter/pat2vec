@@ -85,7 +85,8 @@ def save_missing_values_pickle(
 
 
 def convert_true_to_float(
-    df: pd.DataFrame, columns: list[str] | None = None
+    df: pd.DataFrame,
+    columns: list[str] | None = None,
 ) -> pd.DataFrame:
     """Converts 'True' strings to 1.0 and ensures columns are float."""
     if columns is None:

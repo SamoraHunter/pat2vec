@@ -239,7 +239,7 @@ def get_epic_clinical_notes_appointments(
 
     if id_field_name in current_pat_raw.columns:
         current_pat_raw = current_pat_raw.rename(
-            columns={id_field_name: "client_idcode"}
+            columns={id_field_name: "client_idcode"},
         )
 
     features = pd.DataFrame(

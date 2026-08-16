@@ -1,2 +1,6 @@
-test_elastic_credentials.py
-test_elastic_credentials_bmi_get.py
+# Temporary and generated files not to be committed
+tests/
+tmp/
+*.pyc
+__pycache__/
+.gitignore.local.bak
