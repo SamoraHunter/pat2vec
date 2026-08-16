@@ -32,6 +32,7 @@ def _fetch_epic_imaging_reports_from_elasticsearch(
 
     Returns:
         A DataFrame containing the raw Epic imaging reports for the patient.
+
     """
     try:
         start_time = config_obj.start_time
@@ -76,14 +77,16 @@ def _fetch_epic_imaging_reports_from_elasticsearch(
                 pass  # Not renamed - matches MAPPINGS schema
             if "document_Content" in results.columns:
                 results.rename(
-                    columns={"document_Content": "body_analysed"}, inplace=True
+                    columns={"document_Content": "body_analysed"},
+                    inplace=True,
                 )
             # Handle id -> document_guid rename, with fallback for imaging reports index
             if "id" in results.columns:
                 results.rename(columns={"id": "document_guid"}, inplace=True)
             elif "document_SourceId" in results.columns:
                 results.rename(
-                    columns={"document_SourceId": "document_guid"}, inplace=True
+                    columns={"document_SourceId": "document_guid"},
+                    inplace=True,
                 )
             if "document_Name" in results.columns:
                 results.rename(
@@ -92,7 +95,7 @@ def _fetch_epic_imaging_reports_from_elasticsearch(
         return results if results is not None else pd.DataFrame()
     except Exception as e:
         logging.error(
-            f"Error fetching epic imaging reports from ES for {current_pat_client_id_code}: {e}"
+            f"Error fetching epic imaging reports from ES for {current_pat_client_id_code}: {e}",
         )
         return pd.DataFrame()
 
@@ -121,6 +124,7 @@ def get_pat_batch_epic_imaging_reports_annotations(
 
     Returns:
         A DataFrame containing the annotations for the patient's Epic imaging reports.
+
     """
     if config_obj.storage_backend == "database":
         table_name = "ann_epic_imaging_reports"
@@ -146,7 +150,8 @@ def get_pat_batch_epic_imaging_reports_annotations(
     )
 
     current_pat_document_annotation_batch_path = os.path.join(
-        pre_document_annotation_batch_path, current_pat_client_id_code + ".csv"
+        pre_document_annotation_batch_path,
+        current_pat_client_id_code + ".csv",
     )
 
     if exist_check(current_pat_document_annotation_batch_path, config_obj=config_obj):
@@ -190,17 +195,17 @@ def get_pat_batch_epic_imaging_reports_annotations(
                     )
                 except Exception as e:
                     logging.error(
-                        f"Failed to save raw epic imaging reports batch for {current_pat_client_id_code}: {e}"
+                        f"Failed to save raw epic imaging reports batch for {current_pat_client_id_code}: {e}",
                     )
 
         if config_obj.verbosity >= 6:
             print(
-                f"DEBUG: Got {len(pat_batch)} rows from raw epic_imaging_reports source"
+                f"DEBUG: Got {len(pat_batch)} rows from raw epic_imaging_reports source",
             )
 
         if pat_batch.empty:
             logging.info(
-                f"No raw imaging reports found for patient {current_pat_client_id_code}, ensuring annotation table exists"
+                f"No raw imaging reports found for patient {current_pat_client_id_code}, ensuring annotation table exists",
             )
             if (
                 config_obj.storage_backend == "database"
@@ -220,11 +225,13 @@ def get_pat_batch_epic_imaging_reports_annotations(
                     )
                 except Exception as e:
                     logging.warning(
-                        f"Could not create annotation table for epic_imaging_reports: {e}"
+                        f"Could not create annotation table for epic_imaging_reports: {e}",
                     )
 
             if getattr(config_obj, "testing", False) and getattr(
-                config_obj, "dummy_medcat_model", False
+                config_obj,
+                "dummy_medcat_model",
+                False,
             ):
                 pat_batch = pd.DataFrame(
                     {
@@ -232,7 +239,7 @@ def get_pat_batch_epic_imaging_reports_annotations(
                         "body_analysed": ["Patient imaging report"],
                         "updatetime": [config_obj.start_time],
                         "document_guid": ["dummy_doc_" + current_pat_client_id_code],
-                    }
+                    },
                 )
             else:
                 from pat2vec.util.post_processing_annotations import EMPTY_ANNOT_COLS
@@ -260,7 +267,7 @@ def get_pat_batch_epic_imaging_reports_annotations(
             engine = config_obj.db_engine
             if not engine:
                 logging.error(
-                    "Database engine not initialized in config_obj for epic imaging reports annotations."
+                    "Database engine not initialized in config_obj for epic imaging reports annotations.",
                 )
                 return batch_target
 
@@ -289,7 +296,7 @@ def get_pat_batch_epic_imaging_reports_annotations(
                             .any()
                         ):
                             batch_to_save[col] = batch_to_save[col].apply(
-                                lambda x: str(x) if isinstance(x, (list, dict)) else x
+                                lambda x: str(x) if isinstance(x, (list, dict)) else x,
                             )
 
                 if config_obj.overwrite_stored_pat_docs:
@@ -306,6 +313,6 @@ def get_pat_batch_epic_imaging_reports_annotations(
                 )
         except Exception as e:
             logging.error(
-                f"Could not write epic imaging reports annotations to DB for patient {current_pat_client_id_code}: {e}"
+                f"Could not write epic imaging reports annotations to DB for patient {current_pat_client_id_code}: {e}",
             )
     return batch_target

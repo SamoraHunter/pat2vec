@@ -61,15 +61,16 @@ def get_current_pat_annotations(
         ...     batch_epr_docs_annotations=batch_df,
         ...     config_obj=config
         ... )
-    """
 
+    """
     if config_obj is None:
         raise ValueError(
-            "config_obj cannot be None. Please provide a valid configuration. (get_current_pat_annotations)"
+            "config_obj cannot be None. Please provide a valid configuration. (get_current_pat_annotations)",
         )
 
     if batch_epr_docs_annotations is not None and not isinstance(
-        batch_epr_docs_annotations, pd.DataFrame
+        batch_epr_docs_annotations,
+        pd.DataFrame,
     ):
         raise TypeError("batch_epr_docs_annotations must be a pd.DataFrame.")
 
@@ -80,7 +81,8 @@ def get_current_pat_annotations(
         from pat2vec.util.post_processing_annotations import filter_annot_dataframe2
 
         batch_epr_docs_annotations = filter_annot_dataframe2(
-            batch_epr_docs_annotations, config_obj.filter_arguments
+            batch_epr_docs_annotations,
+            config_obj.filter_arguments,
         )
 
     p_bar_entry = "annotations_epr"
@@ -114,7 +116,7 @@ def get_current_pat_annotations(
             for old_col, new_col in time_columns_to_check:
                 if old_col in batch_epr_docs_annotations.columns:
                     batch_epr_docs_annotations = batch_epr_docs_annotations.rename(
-                        columns={old_col: new_col}
+                        columns={old_col: new_col},
                     )
 
         # Filter the dataframe based on the target date range
@@ -133,7 +135,8 @@ def get_current_pat_annotations(
         if len(filtered_batch_epr_docs_annotations) > 0:
             # Calculate pretty name count features for the filtered dataframe
             df_pat_target = calculate_pretty_name_count_features(
-                filtered_batch_epr_docs_annotations, suffix="epr"
+                filtered_batch_epr_docs_annotations,
+                suffix="epr",
             )
 
         else:
@@ -144,13 +147,15 @@ def get_current_pat_annotations(
                     len(filtered_batch_epr_docs_annotations) > 0,
                 )
             df_pat_target = pd.DataFrame(
-                data=[current_pat_client_id_code], columns=["client_idcode"]
+                data=[current_pat_client_id_code],
+                columns=["client_idcode"],
             )
 
     else:
         # If the batch_epr_docs_annotations DataFrame is None, create a DataFrame with the client_idcode
         df_pat_target = pd.DataFrame(
-            data=[current_pat_client_id_code], columns=["client_idcode"]
+            data=[current_pat_client_id_code],
+            columns=["client_idcode"],
         )
 
     if config_obj.verbosity >= 6:

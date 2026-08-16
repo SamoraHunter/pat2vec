@@ -31,6 +31,7 @@ def _calculate_patient_age(base_year: int, observation_month: int) -> int:
 
     Returns:
         Patient age in years (18-90 range with realistic distribution).
+
     """
     np.random.seed(random_state + hash(base_year) % 1000)
 
@@ -66,6 +67,7 @@ def _get_smoking_probabilities(age: int) -> dict:
 
     Returns:
         Dictionary with probabilities for each smoking status category.
+
     """
     if age < 20:
         return {
@@ -75,7 +77,7 @@ def _get_smoking_probabilities(age: int) -> dict:
             "Smoker": 0.00,
         }
 
-    elif age < 30:
+    if age < 30:
         return {
             "Never smoked": 0.72,
             "Ex-smoker": 0.08,
@@ -83,7 +85,7 @@ def _get_smoking_probabilities(age: int) -> dict:
             "Smoker": 0.00,
         }
 
-    elif age < 45:
+    if age < 45:
         return {
             "Never smoked": 0.65,
             "Ex-smoker": 0.12,
@@ -91,7 +93,7 @@ def _get_smoking_probabilities(age: int) -> dict:
             "Smoker": 0.05,
         }
 
-    elif age < 60:
+    if age < 60:
         return {
             "Never smoked": 0.60,
             "Ex-smoker": 0.18,
@@ -99,7 +101,7 @@ def _get_smoking_probabilities(age: int) -> dict:
             "Smoker": 0.02,
         }
 
-    elif age < 80:
+    if age < 80:
         return {
             "Never smoked": 0.55,
             "Ex-smoker": 0.30,
@@ -107,13 +109,12 @@ def _get_smoking_probabilities(age: int) -> dict:
             "Smoker": 0.01,
         }
 
-    else:
-        return {
-            "Never smoked": 0.62,
-            "Ex-smoker": 0.35,
-            "Current smoker": 0.03,
-            "Smoker": 0.00,
-        }
+    return {
+        "Never smoked": 0.62,
+        "Ex-smoker": 0.35,
+        "Current smoker": 0.03,
+        "Smoker": 0.00,
+    }
 
 
 def _select_smoking_status(age: int) -> str:
@@ -124,6 +125,7 @@ def _select_smoking_status(age: int) -> str:
 
     Returns:
         Smoking status string selected according to realistic clinical patterns.
+
     """
     probabilities = _get_smoking_probabilities(age)
 
@@ -178,6 +180,7 @@ def generate_smoking_data(
 
     Raises:
         None
+
     """
     df_holder_list = []
 

@@ -57,8 +57,10 @@ def generate_bmi_data(
 
     Returns:
         A pandas DataFrame with generated dummy BMI-related data.
+
     Raises:
         None
+
     """
     df_holder_list = []
     observation_types = ["OBS BMI Calculation", "OBS Weight", "OBS Height"]
@@ -100,7 +102,8 @@ def generate_bmi_data(
 
             date_range_days = (max_date - min_date).total_seconds()
             time_spread_factor = min(
-                max(date_range_days / (365 * 24 * 3600), 1.0), 10.0
+                max(date_range_days / (365 * 24 * 3600), 1.0),
+                10.0,
             )
             decay_rate = max(0.1, 1.0 / time_spread_factor)
 
@@ -120,7 +123,7 @@ def generate_bmi_data(
             else:
                 year_range = global_end_year - global_start_year + 1
                 target_year = int(
-                    global_start_year + (random.random() ** 2) * year_range
+                    global_start_year + (random.random() ** 2) * year_range,
                 )
                 target_year = min(max(target_year, global_start_year), global_end_year)
                 target_month = random.randint(1, 12)
@@ -160,7 +163,9 @@ def generate_bmi_data(
                         obs_type = random.choice(observation_types)
                 else:
                     obs_type = random.choices(
-                        observation_types, weights=[0.4, 0.3, 0.3], k=1
+                        observation_types,
+                        weights=[0.4, 0.3, 0.3],
+                        k=1,
                     )[0]
 
                 observation_type_counts[obs_type] = (
@@ -184,19 +189,22 @@ def generate_bmi_data(
                 np.random.seed(bmi_seed)
 
                 actual_bmi = max(
-                    12.0, min(50.0, np.random.normal(mean_bmi, 4.5 * variance_factor))
+                    12.0,
+                    min(50.0, np.random.normal(mean_bmi, 4.5 * variance_factor)),
                 )
 
                 mean_weight_kg = 70.0 if not is_male else 80.0
                 weight_variance = 15.0 + (age / 100) * 5
                 actual_weight = max(
-                    35.0, min(200.0, np.random.normal(mean_weight_kg, weight_variance))
+                    35.0,
+                    min(200.0, np.random.normal(mean_weight_kg, weight_variance)),
                 )
 
                 mean_height_cm = 165.0 if is_male else 160.0
                 height_variance = 8.0 + (age / 100) * 3
                 actual_height = max(
-                    120.0, min(230.0, np.random.normal(mean_height_cm, height_variance))
+                    120.0,
+                    min(230.0, np.random.normal(mean_height_cm, height_variance)),
                 )
 
                 bmi_values.append(actual_bmi)

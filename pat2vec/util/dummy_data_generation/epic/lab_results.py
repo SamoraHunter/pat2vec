@@ -193,6 +193,7 @@ def generate_lab_test_name(category: str) -> dict:
 
     Returns:
         A dict containing name, unit, and value range for the test.
+
     """
     tests = LAB_TEST_CATEGORIES[category]
     weights = LAB_CATEGORY_TEST_WEIGHTS[category]
@@ -207,6 +208,7 @@ def generate_lab_value(test_info: dict) -> tuple[float, str]:
 
     Returns:
         Tuple of (value, unit).
+
     """
     if "min" not in test_info or "max" not in test_info:
         return None, test_info.get("unit", "")
@@ -232,6 +234,7 @@ def generate_lab_panel(category: str, num_tests: int) -> list[dict]:
 
     Returns:
         List of test records with correlated values.
+
     """
     samples = LAB_TEST_CATEGORIES[category][:]
     np.random.shuffle(samples)
@@ -269,7 +272,7 @@ def generate_lab_panel(category: str, num_tests: int) -> list[dict]:
         }
 
         description = np.random.choice(
-            description_templates.get(category, ["Lab Test"])
+            description_templates.get(category, ["Lab Test"]),
         )
 
         panel.append(
@@ -281,7 +284,7 @@ def generate_lab_panel(category: str, num_tests: int) -> list[dict]:
                 "category": (
                     test_info["category"] if "category" in test_info else category
                 ),
-            }
+            },
         )
 
     return panel
@@ -380,7 +383,7 @@ def generate_epic_lab_results_data(
                         + str(faker.random_number(digits=2)),
                         "document_Fields.valueText": value_text,
                         "id": faker.uuid4(),
-                    }
+                    },
                 )
 
             lab_test_count += len(panel)

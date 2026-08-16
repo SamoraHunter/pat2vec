@@ -43,7 +43,8 @@ EMPTY_ANNOT_COLS = [
 
 
 def filter_annot_dataframe2(
-    dataframe: pd.DataFrame, filter_args: dict[str, Any]
+    dataframe: pd.DataFrame,
+    filter_args: dict[str, Any],
 ) -> pd.DataFrame:
     """Filter a DataFrame based on specified filter arguments.
 
@@ -56,8 +57,8 @@ def filter_annot_dataframe2(
 
     Returns:
         The filtered DataFrame.
-    """
 
+    """
     # Initialize a boolean mask with True values for all rows
     mask = pd.Series(True, index=dataframe.index)  # Keep this line
 
@@ -67,7 +68,7 @@ def filter_annot_dataframe2(
             # Special case for 'types' column
             if column == "types":
                 mask &= dataframe[column].apply(
-                    lambda x: any(item.lower() in str(x).lower() for item in value)
+                    lambda x: any(item.lower() in str(x).lower() for item in value),
                 )
             elif column in ["Time_Value", "Presence_Value", "Subject_Value"]:
                 # Include rows where the column is in the specified list of values
@@ -93,7 +94,8 @@ def filter_annot_dataframe2(
                 # Attempt to convert to numeric if the value is numeric, to handle mixed types in CSV chunks
                 if isinstance(value, (int, float)):
                     dataframe[column] = pd.to_numeric(
-                        dataframe[column], errors="ignore"
+                        dataframe[column],
+                        errors="ignore",
                     )
                 mask &= dataframe[column] >= value
 
@@ -123,8 +125,8 @@ def produce_filtered_annotation_dataframe(
 
     Returns:
         pd.DataFrame: Filtered annotation dataframe.
-    """
 
+    """
     if meta_annot_filter:
         if filter_custom_args is None:
             logger.info("Using config obj filter arguments..")
@@ -151,7 +153,10 @@ def produce_filtered_annotation_dataframe(
 
             logger.info(f"Reading from annotations.{table_name}")
             super_result = get_df_from_db(
-                config_obj, "annotations", table_name, patient_ids=pat_list
+                config_obj,
+                "annotations",
+                table_name,
+                patient_ids=pat_list,
             )
 
         except Exception as e:
@@ -163,12 +168,12 @@ def produce_filtered_annotation_dataframe(
         if pat_list is None:
             if hasattr(config_obj, "all_patient_list"):
                 logger.info(
-                    f"Using all patient list of length {len(config_obj.all_patient_list)}"
+                    f"Using all patient list of length {len(config_obj.all_patient_list)}",
                 )
                 pat_list = config_obj.all_patient_list
             else:
                 logger.error(
-                    "pat_list is None and config_obj.all_patient_list is not available."
+                    "pat_list is None and config_obj.all_patient_list is not available.",
                 )
                 return pd.DataFrame(columns=EMPTY_ANNOT_COLS)
 
@@ -182,7 +187,8 @@ def produce_filtered_annotation_dataframe(
             )
             base_path = getattr(config_obj, path_attr)
             current_pat_annot_batch_path = os.path.join(
-                base_path, f"{current_pat_client_idcode}.csv"
+                base_path,
+                f"{current_pat_client_idcode}.csv",
             )
 
             if os.path.exists(current_pat_annot_batch_path):
@@ -191,7 +197,7 @@ def produce_filtered_annotation_dataframe(
                     results.append(current_pat_annot_batch)
                 except Exception as e:
                     logger.warning(
-                        f"Could not read or process {current_pat_annot_batch_path}: {e}"
+                        f"Could not read or process {current_pat_annot_batch_path}: {e}",
                     )
 
         if not results:
@@ -209,7 +215,7 @@ def produce_filtered_annotation_dataframe(
 
     if pat_list is None:
         logger.info(
-            f"Using all patient list of length {len(config_obj.all_patient_list)}"
+            f"Using all patient list of length {len(config_obj.all_patient_list)}",
         )
         pat_list = config_obj.all_patient_list
 
@@ -236,7 +242,7 @@ def produce_filtered_annotation_dataframe(
         necessary_columns.append(time_col)
 
     super_result = super_result.dropna(
-        subset=[col for col in necessary_columns if col in super_result.columns]
+        subset=[col for col in necessary_columns if col in super_result.columns],
     )
 
     if meta_annot_filter:
@@ -256,8 +262,8 @@ def extract_types_from_csv(directory: str) -> list[str]:
 
     Returns:
         A list of all unique 'types' found in the 'types' column of the CSV files.
-    """
 
+    """
     all_types = set()
 
     # Traverse the directory and its subdirectories
@@ -298,8 +304,8 @@ def join_icd10_codes_to_annot(
 
     Returns:
         The DataFrame with ICD-10 codes joined.
-    """
 
+    """
     if file_path is None:
         mfp = os.path.join(
             os.path.dirname(os.path.abspath(__file__)),
@@ -319,7 +325,7 @@ def join_icd10_codes_to_annot(
                     "..",
                     "test_files",
                     "tls_Icd10_test_sample.tsv",
-                )
+                ),
             )
     else:
         mfp = file_path
@@ -340,7 +346,7 @@ def join_icd10_codes_to_annot(
     df_copy["cui"] = df_copy["cui"].astype(str)
     mdf_renamed = mdf_renamed.copy()
     mdf_renamed["referencedComponentId"] = mdf_renamed["referencedComponentId"].astype(
-        str
+        str,
     )
 
     # Prevent column clashing by dropping existing placeholders from the annotation DataFrame
@@ -391,8 +397,8 @@ def join_icd10_OPC4S_codes_to_annot(
 
     Returns:
         The DataFrame with ICD-10 and OPCS-4 codes joined.
-    """
 
+    """
     if file_path is None:
         mfp = os.path.join(
             os.path.dirname(os.path.abspath(__file__)),
@@ -406,8 +412,12 @@ def join_icd10_OPC4S_codes_to_annot(
         if not os.path.exists(mfp):
             mfp = os.path.abspath(
                 os.path.join(
-                    os.path.dirname(__file__), "..", "..", "test_files", "test_map.csv"
-                )
+                    os.path.dirname(__file__),
+                    "..",
+                    "..",
+                    "test_files",
+                    "test_map.csv",
+                ),
             )
     else:
         mfp = file_path
@@ -440,12 +450,20 @@ def join_icd10_OPC4S_codes_to_annot(
 
     if inner:
         result = pd.merge(
-            df_copy, mdf_renamed, left_on="cui", right_on="conceptId", how="inner"
+            df_copy,
+            mdf_renamed,
+            left_on="cui",
+            right_on="conceptId",
+            how="inner",
         )
 
     else:
         result = pd.merge(
-            df_copy, mdf_renamed, left_on="cui", right_on="conceptId", how="left"
+            df_copy,
+            mdf_renamed,
+            left_on="cui",
+            right_on="conceptId",
+            how="left",
         )
 
     return result
@@ -477,7 +495,7 @@ def filter_and_select_rows(
     """
     if not all(arg is not None for arg in [dataframe, filter_list, filter_column]):
         raise ValueError(
-            "Please provide a valid dataframe, filter_list, and filter_column."
+            "Please provide a valid dataframe, filter_list, and filter_column.",
         )
 
     if filter_column not in dataframe.columns:
@@ -526,8 +544,8 @@ def filter_dataframe_by_cui(
 
     Returns:
         pd.DataFrame: Filtered DataFrame based on the specified criteria.
-    """
 
+    """
     # Ensure the time column is in datetime format
     dataframe[time_column] = pd.to_datetime(dataframe[time_column], utc=True)
 
@@ -562,7 +580,10 @@ def filter_dataframe_by_cui(
 
     # Merge with the original DataFrame to get the full rows
     result_df = pd.merge(
-        result_df, dataframe, on=[filter_column, time_column], how="inner"
+        result_df,
+        dataframe,
+        on=[filter_column, time_column],
+        how="inner",
     )
 
     # Filter the original DataFrame based on the earliest or latest entry
@@ -598,19 +619,21 @@ def check_list_presence(df, column, lst, annot_filter_arguments=None):
 
     Returns:
         bool: True if any string from `lst` is found in `column` (case-insensitive), False otherwise.
-    """
 
+    """
     if annot_filter_arguments is not None:
         df = filter_annot_dataframe2(df, annot_filter_arguments)
 
     str_lst = list(map(str, lst))  # Convert elements to strings
     return any(
-        df[column].astype(str).str.contains("|".join(str_lst), case=False, na=False)
+        df[column].astype(str).str.contains("|".join(str_lst), case=False, na=False),
     )
 
 
 def filter_dataframe_n_lists(
-    df: pd.DataFrame, column_name: str, n_lists: list[list[Any]]
+    df: pd.DataFrame,
+    column_name: str,
+    n_lists: list[list[Any]],
 ) -> pd.DataFrame:
     """Filters a DataFrame to include rows where the value in a specified column
     is present in *all* of the provided lists.
@@ -623,6 +646,7 @@ def filter_dataframe_n_lists(
 
     Returns:
         The filtered DataFrame.
+
     """
     # Create a mask for each list in n_lists
     masks = [df[column_name].isin(lst) for lst in n_lists]
@@ -657,6 +681,7 @@ def get_all_target_annots(
 
     Returns:
         pd.DataFrame: A DataFrame containing all target annotations.
+
     """
     results_df = pd.DataFrame()
 
@@ -730,6 +755,7 @@ def retrieve_pat_annots_mct_epr(
         pd.DataFrame: A DataFrame containing the concatenated and optionally
             merged annotation data for the patient. Returns an empty
             DataFrame if no data is found for the patient in any of the sources.
+
     """
     all_annots_dfs = []
 
@@ -741,39 +767,23 @@ def retrieve_pat_annots_mct_epr(
             "ann_reports": ("report", columns_report),
             "ann_epic_clinical_notes": (
                 "epic_clinical_notes",
-                (
-                    columns_epic_clinical_notes
-                    if columns_epic_clinical_notes
-                    else columns_epr
-                ),
+                (columns_epic_clinical_notes or columns_epr),
             ),
             "ann_epic_clinical_notes_appointments": (
                 "epic_clinical_notes_appointments",
-                (
-                    columns_epic_clinical_notes_appointments
-                    if columns_epic_clinical_notes_appointments
-                    else columns_epr
-                ),
+                (columns_epic_clinical_notes_appointments or columns_epr),
             ),
             "ann_epic_imaging_reports": (
                 "epic_imaging_reports",
-                (
-                    columns_epic_imaging_reports
-                    if columns_epic_imaging_reports
-                    else columns_epr
-                ),
+                (columns_epic_imaging_reports or columns_epr),
             ),
             "ann_epic_medical_history": (
                 "epic_medical_history",
-                (
-                    columns_epic_medical_history
-                    if columns_epic_medical_history
-                    else columns_epr
-                ),
+                (columns_epic_medical_history or columns_epr),
             ),
             "ann_epic_orders": (
                 "epic_orders",
-                columns_epic_orders if columns_epic_orders else columns_epr,
+                columns_epic_orders or columns_epr,
             ),
         }
         for table, (source_name, cols) in source_map.items():
@@ -839,39 +849,23 @@ def retrieve_pat_annots_mct_epr(
             ),
             "epic_clinical_notes": (
                 config_obj.pre_epic_clinical_notes_annotation_batch_path,
-                (
-                    columns_epic_clinical_notes
-                    if columns_epic_clinical_notes
-                    else columns_epr
-                ),
+                (columns_epic_clinical_notes or columns_epr),
             ),
             "epic_clinical_notes_appointments": (
                 config_obj.pre_epic_clinical_notes_appointments_annotation_batch_path,
-                (
-                    columns_epic_clinical_notes_appointments
-                    if columns_epic_clinical_notes_appointments
-                    else columns_epr
-                ),
+                (columns_epic_clinical_notes_appointments or columns_epr),
             ),
             "epic_imaging_reports": (
                 config_obj.pre_epic_imaging_reports_annotation_batch_path,
-                (
-                    columns_epic_imaging_reports
-                    if columns_epic_imaging_reports
-                    else columns_epr
-                ),
+                (columns_epic_imaging_reports or columns_epr),
             ),
             "epic_medical_history": (
                 config_obj.pre_epic_medical_history_annotation_batch_path,
-                (
-                    columns_epic_medical_history
-                    if columns_epic_medical_history
-                    else columns_epr
-                ),
+                (columns_epic_medical_history or columns_epr),
             ),
             "epic_orders": (
                 config_obj.pre_epic_orders_annotation_batch_path,
-                columns_epic_orders if columns_epic_orders else columns_epr,
+                columns_epic_orders or columns_epr,
             ),
             "report": (
                 config_obj.pre_document_annotation_batch_path_reports,
@@ -902,7 +896,7 @@ def retrieve_pat_annots_mct_epr(
         # Load data if files exist
         if "observationannotation_recordeddtm" in all_annots.columns:
             all_annots["updatetime"] = all_annots["updatetime"].fillna(
-                all_annots["observationannotation_recordeddtm"]
+                all_annots["observationannotation_recordeddtm"],
             )
 
             all_annots["observationannotation_recordeddtm"] = all_annots[
@@ -911,26 +905,26 @@ def retrieve_pat_annots_mct_epr(
 
         if "basicobs_entered" in all_annots.columns:
             all_annots["updatetime"] = all_annots["updatetime"].fillna(
-                all_annots["basicobs_entered"]
+                all_annots["basicobs_entered"],
             )
 
         if "observationdocument_recordeddtm" in all_annots.columns:
             all_annots["updatetime"] = all_annots["updatetime"].fillna(
-                all_annots["observationdocument_recordeddtm"]
+                all_annots["observationdocument_recordeddtm"],
             )
 
         if "basicobs_guid" in all_annots.columns:
             if "document_guid" in all_annots.columns:
                 # Merge observation_guid to document_guid
                 all_annots["document_guid"] = all_annots["document_guid"].fillna(
-                    all_annots["basicobs_guid"]
+                    all_annots["basicobs_guid"],
                 )
             else:
                 all_annots["document_guid"] = all_annots["basicobs_guid"]
 
         if "observation_guid" in all_annots.columns:
             all_annots["document_guid"] = all_annots["document_guid"].fillna(
-                all_annots["observation_guid"]
+                all_annots["observation_guid"],
             )
 
         if "obscatalogmasteritem_displayname" in all_annots.columns:
@@ -941,28 +935,28 @@ def retrieve_pat_annots_mct_epr(
 
         if "observation_valuetext_analysed" in all_annots.columns:
             all_annots["body_analysed"] = all_annots["body_analysed"].fillna(
-                all_annots["observation_valuetext_analysed"]
+                all_annots["observation_valuetext_analysed"],
             )
 
         if "document_Content" in all_annots.columns:
             all_annots["body_analysed"] = all_annots["body_analysed"].fillna(
-                all_annots["document_Content"]
+                all_annots["document_Content"],
             )
 
         if "document_Comment" in all_annots.columns:
             all_annots["body_analysed"] = all_annots["body_analysed"].fillna(
-                all_annots["document_Comment"]
+                all_annots["document_Comment"],
             )
 
         if "document_CreatedWhen" in all_annots.columns:
             all_annots["updatetime"] = all_annots["updatetime"].fillna(
-                all_annots["document_CreatedWhen"]
+                all_annots["document_CreatedWhen"],
             )
 
         if "id" in all_annots.columns:
             if "document_guid" in all_annots.columns:
                 all_annots["document_guid"] = all_annots["document_guid"].fillna(
-                    all_annots["id"]
+                    all_annots["id"],
                 )
             else:
                 all_annots["document_guid"] = all_annots["id"]
@@ -987,13 +981,14 @@ def remove_file_from_paths(
         verbosity: Verbosity level for printing messages.
         config_obj: A configuration object containing project paths.
             If provided, `project_name` is overridden by `config_obj.proj_name`. Defaults to None.
+
     """
     if config_obj and getattr(config_obj, "storage_backend", "file") == "database":
         try:
             effective_verbosity = max(verbosity, getattr(config_obj, "verbosity", 0))
             if effective_verbosity > 0:
                 logger.info(
-                    f"Removing data for patient {current_pat_idcode} from database..."
+                    f"Removing data for patient {current_pat_idcode} from database...",
                 )
 
             engine = config_obj.db_engine
@@ -1010,7 +1005,7 @@ def remove_file_from_paths(
                 try:
                     connection.execute(
                         text(
-                            f'DELETE FROM {t_features} WHERE "client_idcode" = :pat_id'
+                            f'DELETE FROM {t_features} WHERE "client_idcode" = :pat_id',
                         ),
                         {"pat_id": current_pat_idcode},
                     )
@@ -1050,7 +1045,7 @@ def remove_file_from_paths(
                     try:
                         connection.execute(
                             text(
-                                f'DELETE FROM {t_name} WHERE "client_idcode" = :pat_id'
+                                f'DELETE FROM {t_name} WHERE "client_idcode" = :pat_id',
                             ),
                             {"pat_id": current_pat_idcode},
                         )
@@ -1088,7 +1083,7 @@ def remove_file_from_paths(
                     try:
                         connection.execute(
                             text(
-                                f'DELETE FROM {t_ann} WHERE "client_idcode" = :pat_id'
+                                f'DELETE FROM {t_ann} WHERE "client_idcode" = :pat_id',
                             ),
                             {"pat_id": current_pat_idcode},
                         )

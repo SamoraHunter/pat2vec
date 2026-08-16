@@ -123,6 +123,7 @@ def _generate_realistic_timestamps(
 
     Returns:
         tuple: (CreatedWhen, UpdatedWhen) as ISO-formatted strings.
+
     """
     from ..generator_helpers import create_random_date_from_globals
 
@@ -142,7 +143,7 @@ def _generate_realistic_timestamps(
         updated_when = created_when
 
     return created_when.strftime("%Y-%m-%dT%H:%M:%S"), updated_when.strftime(
-        "%Y-%m-%dT%H:%M:%S"
+        "%Y-%m-%dT%H:%M:%S",
     )
 
 
@@ -154,6 +155,7 @@ def _generate_order_name(order_class: str) -> str:
 
     Returns:
         Realistic order name string.
+
     """
     if order_class in CLINICAL_ORDER_NAMES:
         return np.random.choice(CLINICAL_ORDER_NAMES[order_class])
@@ -168,6 +170,7 @@ def _generate_order_content(order_class: str) -> str:
 
     Returns:
         Realistic clinical content string.
+
     """
     if order_class in ORDER_CONTENT_TEMPLATES:
         template = np.random.choice(ORDER_CONTENT_TEMPLATES[order_class])
@@ -211,6 +214,7 @@ def generate_epic_orders_data(
 
     Returns:
         A pandas DataFrame with generated realistic orders data following Epic patterns.
+
     """
     df_holder_list = []
 

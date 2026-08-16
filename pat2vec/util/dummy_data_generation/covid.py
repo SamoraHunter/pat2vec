@@ -23,6 +23,7 @@ def generate_covid_observations_data(
     global_end_day: int = 31,
 ) -> pd.DataFrame:
     """Generates dummy data for COVID-19 test observations.
+
     Args:
         num_rows: Number of rows to generate per client.
         entered_list: List of client IDs to generate data for.
@@ -31,10 +32,13 @@ def generate_covid_observations_data(
         global_end_year: End year for the random date range.
         global_end_month: End month for the random date range.
     fields_list: List of columns to include in the DataFrame.
+
     Returns:
         A pandas DataFrame with generated dummy COVID-19 observation data.
+
     Raises:
         None
+
     """
     from pat2vec.pat2vec_get_methods.get_method_covid import (
         COVID_FIELDS,

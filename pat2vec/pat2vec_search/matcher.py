@@ -42,21 +42,24 @@ def matcher(
     Returns:
         The template DataFrame with added columns for each unique lab test,
         populated with the nearest result value.
+
     """
     data_template = data_template_df.copy()
     lab_results = lab_results_df.copy()
 
     # Prepare template dataframe
     data_template = data_template.dropna(subset=[source_date_colname]).reset_index(
-        drop=True
+        drop=True,
     )
     data_template[source_date_colname] = pd.to_datetime(
-        data_template[source_date_colname], utc=True
+        data_template[source_date_colname],
+        utc=True,
     )
 
     # Prepare lab results dataframe
     lab_results[result_date_colname] = pd.to_datetime(
-        lab_results[result_date_colname], utc=True
+        lab_results[result_date_colname],
+        utc=True,
     )
 
     bloods_filter = list(lab_results[result_testname].unique())
@@ -92,8 +95,7 @@ def matcher(
 
 
 def match_terms_in_text(text: str, terms: list[str]) -> list[str]:
-    """
-    Finds whole word, case-insensitive matches of a list of terms within a given text.
+    """Finds whole word, case-insensitive matches of a list of terms within a given text.
 
     Args:
         text (str): The text to search within.
@@ -101,6 +103,7 @@ def match_terms_in_text(text: str, terms: list[str]) -> list[str]:
 
     Returns:
         list[str]: A list of terms that were found in the text.
+
     """
     found_terms = []
     if not text or not terms:
@@ -116,8 +119,7 @@ def match_terms_in_text(text: str, terms: list[str]) -> list[str]:
 
 
 def find_all_matches(text: str, patterns: dict[str, str]) -> dict[str, list[str]]:
-    """
-    Finds all matches for a dictionary of regex patterns within a given text.
+    """Finds all matches for a dictionary of regex patterns within a given text.
 
     Args:
         text (str): The text to search within.
@@ -125,6 +127,7 @@ def find_all_matches(text: str, patterns: dict[str, str]) -> dict[str, list[str]
 
     Returns:
         dict[str, list[str]]: A dictionary of lists of all matches found for each pattern.
+
     """
     matches = {}
     for name, pattern in patterns.items():

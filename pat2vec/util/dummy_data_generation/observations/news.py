@@ -60,95 +60,85 @@ def generate_clinically_coherent_value(
     avpu: str = None,
 ) -> str:
     """Generate a clinically coherent value for a NEWS component based on other vital signs."""
-
     if component == "NEWS_Systolic_BP":
         if respiration_rate is not None and respiration_rate > 20:
             return str(int(random.uniform(130, 250)))
-        elif heart_rate is not None and heart_rate > 100:
+        if heart_rate is not None and heart_rate > 100:
             return str(int(random.uniform(140, 250)))
-        else:
-            return str(int(random.uniform(70, 250)))
+        return str(int(random.uniform(70, 250)))
 
-    elif component == "NEWS_Diastolic_BP":
+    if component == "NEWS_Diastolic_BP":
         if respiration_rate is not None and respiration_rate > 20:
             return str(int(random.uniform(85, 150)))
-        elif heart_rate is not None and heart_rate > 100:
+        if heart_rate is not None and heart_rate > 100:
             return str(int(random.uniform(90, 150)))
-        else:
-            return str(int(random.uniform(40, 150)))
+        return str(int(random.uniform(40, 150)))
 
-    elif component == "NEWS_Respiration_Rate":
+    if component == "NEWS_Respiration_Rate":
         if temp_celsius is not None and temp_celsius > 38.0:
             return str(int(random.uniform(20, 35)))
-        else:
-            return str(int(random.uniform(8, 50)))
+        return str(int(random.uniform(8, 50)))
 
-    elif component == "NEWS_Heart_Rate":
+    if component == "NEWS_Heart_Rate":
         if respiration_rate is not None and respiration_rate > 24:
             return str(int(random.uniform(100, 160)))
-        elif temp_celsius is not None and temp_celsius > 38.5:
+        if temp_celsius is not None and temp_celsius > 38.5:
             return str(int(random.uniform(90, 150)))
-        else:
-            return str(int(random.uniform(40, 200)))
+        return str(int(random.uniform(40, 200)))
 
-    elif component == "NEWS_Oxygen_Saturation":
+    if component == "NEWS_Oxygen_Saturation":
         if respiration_rate is not None and respiration_rate > 20:
             return str(int(random.uniform(89, 96)))
-        elif heart_rate is not None and heart_rate > 110:
+        if heart_rate is not None and heart_rate > 110:
             return str(int(random.uniform(88, 97)))
-        else:
-            return str(int(random.uniform(85, 100)))
+        return str(int(random.uniform(85, 100)))
 
-    elif component == "NEWS Temperature":
+    if component == "NEWS Temperature":
         if pain_score is not None and pain_score >= 7:
             return f"{random.uniform(36.5, 39.5):.1f}"
-        else:
-            return f"{random.uniform(35.0, 42.0):.1f}"
+        return f"{random.uniform(35.0, 42.0):.1f}"
 
-    elif component == "NEWS_AVPU":
+    if component == "NEWS_AVPU":
         if temp_celsius is not None and temp_celsius > 39.0:
             return random.choices(AVPU_VALUES, weights=AVPU_WEIGHTS)[0]
-        else:
-            return random.choices(AVPU_VALUES, weights=AVPU_WEIGHTS)[0]
+        return random.choices(AVPU_VALUES, weights=AVPU_WEIGHTS)[0]
 
-    elif component == "NEWS_Supplemental_Oxygen":
+    if component == "NEWS_Supplemental_Oxygen":
         if pain_score is not None and pain_score >= 7:
             return random.choices(
-                SUPPLEMENTAL_OXYGEN_VALUES, weights=SUPPLEMENTAL_OXYGEN_WEIGHTS
+                SUPPLEMENTAL_OXYGEN_VALUES,
+                weights=SUPPLEMENTAL_OXYGEN_WEIGHTS,
             )[0]
-        else:
-            return random.choices(
-                SUPPLEMENTAL_OXYGEN_VALUES, weights=SUPPLEMENTAL_OXYGEN_WEIGHTS
-            )[0]
+        return random.choices(
+            SUPPLEMENTAL_OXYGEN_VALUES,
+            weights=SUPPLEMENTAL_OXYGEN_WEIGHTS,
+        )[0]
 
-    elif component == "NEWS2_Sp02_Target":
+    if component == "NEWS2_Sp02_Target":
         return random.choice(SP02_TARGET_VALUES)
 
-    elif component == "NEWS2_Sp02_Scale":
+    if component == "NEWS2_Sp02_Scale":
         return random.choice(SP02_SCALE_VALUES)
 
-    elif component == "NEWS_Pulse_Type":
+    if component == "NEWS_Pulse_Type":
         return random.choices(PULSE_TYPE_VALUES, weights=PULSE_TYPE_WEIGHTS)[0]
 
-    elif component == "NEWS_Pain_Score":
+    if component == "NEWS_Pain_Score":
         if temp_celsius is not None and temp_celsius > 38.5:
             return str(int(random.uniform(4, 10)))
-        else:
-            return str(int(random.uniform(0, 10)))
+        return str(int(random.uniform(0, 10)))
 
-    elif component == "NEWS Oxygen Litres":
+    if component == "NEWS Oxygen Litres":
         if pain_score is not None and pain_score >= 7:
             return f"{random.uniform(5, 15):.1f}"
-        else:
-            return f"{random.uniform(0, 15):.1f}"
+        return f"{random.uniform(0, 15):.1f}"
 
-    elif component == "NEWS Oxygen Delivery":
+    if component == "NEWS Oxygen Delivery":
         return random.choices(OXYGEN_DELIVERY_VALUES, weights=OXYGEN_DELIVERY_WEIGHTS)[
             0
         ]
 
-    else:
-        return str(random.randint(0, 15))
+    return str(random.randint(0, 15))
 
 
 def generate_news_data(
@@ -231,7 +221,7 @@ def generate_news_data(
                     "observation_valuetext_analysed": value_text,
                     "observationdocument_recordddtm": obs_datetime_str,
                     "clientvisit_visitidcode": f"visit_{faker.random_number(digits=8)}",
-                }
+                },
             )
 
         df_holder_list.append(pd.DataFrame(observation_data))

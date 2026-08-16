@@ -58,6 +58,7 @@ def _get_hospital_admission_weights(
 
     Returns:
         Dictionary mapping hospital codes to adjusted probability weights
+
     """
     # Start with base probabilities
     weights = dict(HOSPITAL_PROBABILITIES.copy())
@@ -95,6 +96,7 @@ def _determine_admission_type(hour: int, day_of_week: int) -> str:
 
     Returns:
         'emergency' or 'elective'
+
     """
     weekend = day_of_week in (5, 6)  # Saturday, Sunday
     off_hours = hour >= EMERGENCY_TIME_WINDOW[0] or hour < EMERGENCY_TIME_WINDOW[1]
@@ -147,6 +149,7 @@ def generate_hospital_site_data(
 
     Raises:
         None
+
     """
     if fields_list is None:
         fields_list = [
@@ -201,10 +204,10 @@ def generate_hospital_site_data(
                     "obscatalogmasteritem_displayname": "CORE_HospitalSite",
                     "observation_valuetext_analysed": value,
                     "observationdocument_recordeddtm": admission_date.strftime(
-                        "%Y-%m-%dT%H:%M:%S"
+                        "%Y-%m-%dT%H:%M:%S",
                     ),
                     "clientvisit_visitidcode": f"visit_{faker_inst.random_number(digits=8, fix_len=True)}",
-                }
+                },
             )
 
         df = pd.DataFrame(admissions)

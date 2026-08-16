@@ -441,6 +441,7 @@ def _calculate_sequential_order_dates(
 
     Returns:
         List of calculated datetime objects with proper sequencing
+
     """
     result_dates = []
 
@@ -458,6 +459,7 @@ def _get_weighted_drug(random_instance: random.Random) -> str:
 
     Returns:
         Drug name as string
+
     """
     categories = list(DRUG_CATEGORIES.keys())
     weights = [DRUG_CATEGORIES[cat]["weight"] for cat in categories]
@@ -479,6 +481,7 @@ def _determine_patient_age_distribution(
 
     Returns:
         Patient age (0-100)
+
     """
     ages = list(range(101))
 
@@ -511,6 +514,7 @@ def _determine_admission_type(
 
     Returns:
         'emergency' or 'elective'
+
     """
     hour = base_date.hour
     day_of_week = base_date.weekday()
@@ -568,6 +572,7 @@ def generate_diagnostic_orders_data(
 
     Returns:
         A pandas DataFrame with generated dummy diagnostic order data.
+
     """
     df_holder_list = []
 
@@ -723,6 +728,7 @@ def generate_drug_orders_data(
 
     Returns:
         A pandas DataFrame with generated dummy drug order data.
+
     """
     df_holder_list = []
 
@@ -795,7 +801,7 @@ def generate_drug_orders_data(
                 0,  # entered: 0 minutes
                 random.randint(*entered_to_created_range),  # created: +5-60 minutes
                 random.randint(
-                    *created_to_performed_range
+                    *created_to_performed_range,
                 ),  # performed: +15 min - 12 hours
             ]
 

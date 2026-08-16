@@ -83,6 +83,7 @@ def search_epic_orders(
     Raises:
         ValueError: When `cohort_searcher_with_terms_and_search` or `patient_durable_keys`
             is None, or when date components are invalid.
+
     """
     if (
         output_filename
@@ -91,7 +92,9 @@ def search_epic_orders(
         and hasattr(config_obj, "proj_name")
     ):
         output_filename = os.path.join(
-            config_obj.root_path, config_obj.proj_name, output_filename
+            config_obj.root_path,
+            config_obj.proj_name,
+            output_filename,
         )
 
     start_time = config_obj.start_time
@@ -119,7 +122,12 @@ def search_epic_orders(
 
     start_year, start_month, start_day, end_year, end_month, end_day = (
         validate_input_dates(
-            start_year, start_month, start_day, end_year, end_month, end_day
+            start_year,
+            start_month,
+            start_day,
+            end_year,
+            end_month,
+            end_day,
         )
     )
 
@@ -181,6 +189,7 @@ def get_epic_orders(
 
     Raises:
         ValueError: If `config_obj` is None.
+
     """
     if config_obj is None:
         raise ValueError("config_obj cannot be None.")
@@ -223,7 +232,8 @@ def get_epic_orders(
         current_pat_raw.rename(columns={id_field_name: "client_idcode"}, inplace=True)
 
     features = pd.DataFrame(
-        data=[current_pat_client_id_code], columns=["client_idcode"]
+        data=[current_pat_client_id_code],
+        columns=["client_idcode"],
     )
 
     if len(current_pat_raw) == 0:

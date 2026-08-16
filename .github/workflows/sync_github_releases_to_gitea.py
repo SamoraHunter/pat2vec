@@ -1,5 +1,4 @@
-"""
-Recommended .env file structure:
+"""Recommended .env file structure:
 
 # .env
 # This file stores environment variables for local development.
@@ -53,12 +52,11 @@ def run_command(command, check_output=False, suppress_output=False):
                     file=sys.stderr,
                 )
             return result.stdout.strip()
-        else:
-            result = subprocess.run(command, capture_output=True, text=True, check=True)
-            print(result.stdout.strip())
-            if result.stderr:
-                print(f"Warning: {result.stderr.strip()}", file=sys.stderr)
-            return result.stdout.strip()
+        result = subprocess.run(command, capture_output=True, text=True, check=True)
+        print(result.stdout.strip())
+        if result.stderr:
+            print(f"Warning: {result.stderr.strip()}", file=sys.stderr)
+        return result.stdout.strip()
     except subprocess.CalledProcessError as e:
         print(f"Error running command: {' '.join(command)}", file=sys.stderr)
         print(f"Stderr: {e.stderr.strip()}", file=sys.stderr)
@@ -73,7 +71,13 @@ def run_command(command, check_output=False, suppress_output=False):
 
 
 def _api_request(
-    url, method, token, headers=None, data=None, json_data=None, files=None
+    url,
+    method,
+    token,
+    headers=None,
+    data=None,
+    json_data=None,
+    files=None,
 ):
     """Helper for making authenticated API requests."""
     _headers = {"Authorization": f"token {token}"}
@@ -83,7 +87,10 @@ def _api_request(
     try:
         if method == "GET":
             response = requests.get(
-                url, headers=_headers, timeout=30, verify=VERIFY_SSL
+                url,
+                headers=_headers,
+                timeout=30,
+                verify=VERIFY_SSL,
             )
         elif method == "POST":
             response = requests.post(
@@ -129,7 +136,15 @@ def get_gitea_releases_data(gitea_url, owner, repo, token):
 
 
 def create_gitea_release(
-    gitea_url, owner, repo, token, tag_name, name, body, draft, prerelease
+    gitea_url,
+    owner,
+    repo,
+    token,
+    tag_name,
+    name,
+    body,
+    draft,
+    prerelease,
 ):
     """Creates a new release on Gitea."""
     api_base = _get_gitea_api_base(gitea_url)
@@ -169,7 +184,11 @@ def download_github_asset(asset_url, gh_token, output_path):
     print(f"  - Downloading asset from GitHub: {asset_url}...")
     try:
         response = requests.get(
-            asset_url, headers=headers, stream=True, timeout=120, verify=VERIFY_SSL
+            asset_url,
+            headers=headers,
+            stream=True,
+            timeout=120,
+            verify=VERIFY_SSL,
         )
         response.raise_for_status()
         with open(output_path, "wb") as f:
@@ -182,7 +201,14 @@ def download_github_asset(asset_url, gh_token, output_path):
 
 
 def upload_gitea_release_asset(
-    gitea_url, owner, repo, release_id, token, asset_name, file_path, content_type
+    gitea_url,
+    owner,
+    repo,
+    release_id,
+    token,
+    asset_name,
+    file_path,
+    content_type,
 ):
     """Uploads an asset to a Gitea release."""
     api_base = _get_gitea_api_base(gitea_url)
@@ -211,9 +237,7 @@ def sync_releases_to_gitea(
     github_remote_name="origin",
     gitea_remote_name="gitea",
 ):
-    """
-    Synchronizes Git tags and GitHub releases (including assets) to Gitea.
-    """
+    """Synchronizes Git tags and GitHub releases (including assets) to Gitea."""
     print("--- Starting Git Tag Synchronization ---")
     run_command(["git", "fetch", github_remote_name, "--tags"])
     print(f"Tags from {github_remote_name} fetched successfully.")
@@ -226,14 +250,19 @@ def sync_releases_to_gitea(
 
     # 1. Get GitHub releases
     github_releases = get_github_releases_data(
-        github_repo_owner, github_repo_name, github_token
+        github_repo_owner,
+        github_repo_name,
+        github_token,
     )
     github_releases_by_tag = {r["tag_name"]: r for r in github_releases}
     print(f"Found {len(github_releases)} releases on GitHub.")
 
     # 2. Get Gitea releases
     gitea_releases = get_gitea_releases_data(
-        gitea_url, gitea_repo_owner, gitea_repo_name, gitea_token
+        gitea_url,
+        gitea_repo_owner,
+        gitea_repo_name,
+        gitea_token,
     )
     gitea_releases_by_tag = {r["tag_name"]: r for r in gitea_releases}
     print(f"Found {len(gitea_releases)} releases on Gitea.")
@@ -266,13 +295,13 @@ def sync_releases_to_gitea(
                 print(f"  Release '{tag_name}' created on Gitea (ID: {release_id}).")
             else:
                 print(
-                    f"  Release '{tag_name}' already exists on Gitea. Checking for missing assets..."
+                    f"  Release '{tag_name}' already exists on Gitea. Checking for missing assets...",
                 )
 
             release_id = gitea_release.get("id")
             if release_id is None:
                 print(
-                    f"  Warning: Could not determine Gitea ID for {tag_name}. Skipping asset sync."
+                    f"  Warning: Could not determine Gitea ID for {tag_name}. Skipping asset sync.",
                 )
                 continue
 
@@ -284,7 +313,7 @@ def sync_releases_to_gitea(
 
             if gh_assets_to_sync:
                 print(
-                    f"  Syncing {len(gh_assets_to_sync)} missing assets for '{tag_name}'..."
+                    f"  Syncing {len(gh_assets_to_sync)} missing assets for '{tag_name}'...",
                 )
                 for gh_asset in gh_assets_to_sync:
                     asset_name = gh_asset["name"]
@@ -326,7 +355,8 @@ if __name__ == "__main__":
     GITEA_REPO_OWNER = os.getenv("GITEA_REPO_OWNER")
     GITEA_REPO_NAME = os.getenv("GITEA_REPO_NAME")
     GITHUB_REMOTE_NAME = os.getenv(
-        "GITHUB_REMOTE_NAME", "origin"
+        "GITHUB_REMOTE_NAME",
+        "origin",
     )  # Default to 'origin'
     GITEA_REMOTE_NAME = os.getenv("GITEA_REMOTE_NAME", "gitea")  # Default to 'gitea'
 

@@ -57,23 +57,23 @@ def get_current_pat_epic_clinical_notes_appointments_annotations(
         ValueError: If `epic_clinical_notes_appointments_annotations` is None.
         ValueError: If `current_pat_client_id_code` is None.
         ValueError: If `target_date_range` is None.
-    """
 
+    """
     if config_obj is None:
         raise ValueError(
-            "config_obj cannot be None. Please provide a valid configuration."
+            "config_obj cannot be None. Please provide a valid configuration.",
         )
     if epic_clinical_notes_appointments_annotations is None:
         raise ValueError(
-            "epic_clinical_notes_appointments_annotations cannot be None. Please provide a valid DataFrame."
+            "epic_clinical_notes_appointments_annotations cannot be None. Please provide a valid DataFrame.",
         )
     if current_pat_client_id_code is None:
         raise ValueError(
-            "current_pat_client_id_code cannot be None. Please provide a valid client ID code."
+            "current_pat_client_id_code cannot be None. Please provide a valid client ID code.",
         )
     if target_date_range is None:
         raise ValueError(
-            "target_date_range cannot be None. Please provide a valid target date range."
+            "target_date_range cannot be None. Please provide a valid target date range.",
         )
 
     start_time = config_obj.start_time
@@ -119,7 +119,7 @@ def get_current_pat_epic_clinical_notes_appointments_annotations(
             if found_col and found_col != time_column:
                 epic_clinical_notes_appointments_annotations = (
                     epic_clinical_notes_appointments_annotations.rename(
-                        columns={found_col: time_column}
+                        columns={found_col: time_column},
                     )
                 )
 
@@ -151,12 +151,14 @@ def get_current_pat_epic_clinical_notes_appointments_annotations(
                     len(filtered_epic_clinical_notes_appointments_annotations) > 0,
                 )
             processed_annotations = pd.DataFrame(
-                data=[current_pat_client_id_code], columns=["client_idcode"]
+                data=[current_pat_client_id_code],
+                columns=["client_idcode"],
             )
 
     else:
         processed_annotations = pd.DataFrame(
-            data=[current_pat_client_id_code], columns=["client_idcode"]
+            data=[current_pat_client_id_code],
+            columns=["client_idcode"],
         )
 
     if config_obj.verbosity >= 6:

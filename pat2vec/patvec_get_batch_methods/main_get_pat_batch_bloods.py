@@ -32,8 +32,8 @@ def get_pat_batch_bloods(
 
     Returns:
         A DataFrame containing the batch of blood test observations.
-    """
 
+    """
     overwrite_stored_pat_observations = config_obj.overwrite_stored_pat_observations
     store_pat_batch_observations = config_obj.store_pat_batch_observations
 
@@ -86,7 +86,7 @@ def get_pat_batch_bloods(
                     end_date = pd.to_datetime(end_date_str)
                 except (ValueError, TypeError) as e:
                     logging.warning(
-                        f"Could not parse dates for IPW temporal filter: {e}"
+                        f"Could not parse dates for IPW temporal filter: {e}",
                     )
 
             if not overwrite_stored_pat_observations:
@@ -112,19 +112,21 @@ def get_pat_batch_bloods(
                     return df
         except Exception as e:
             logging.error(
-                f"Error with database backend for bloods for patient {current_pat_client_id_code}: {e}"
+                f"Error with database backend for bloods for patient {current_pat_client_id_code}: {e}",
             )
             return pd.DataFrame()
 
     batch_obs_target_path = os.path.join(
-        config_obj.pre_bloods_batch_path, str(current_pat_client_id_code) + ".csv"
+        config_obj.pre_bloods_batch_path,
+        str(current_pat_client_id_code) + ".csv",
     )
 
     existence_check = exist_check(batch_obs_target_path, config_obj)
 
     should_fetch = False
     if config_obj.storage_backend == "database" or (
-        store_pat_batch_observations and not existence_check or existence_check is False
+        (store_pat_batch_observations and not existence_check)
+        or existence_check is False
     ):
         should_fetch = True
 
@@ -148,7 +150,7 @@ def get_pat_batch_bloods(
             if config_obj.data_type_filter_dict is not None:
                 if (
                     config_obj.data_type_filter_dict.get("filter_term_lists").get(
-                        "bloods"
+                        "bloods",
                     )
                     is not None
                 ):
@@ -159,7 +161,7 @@ def get_pat_batch_bloods(
                         )
 
                         filter_term_list = config_obj.data_type_filter_dict.get(
-                            "filter_term_lists"
+                            "filter_term_lists",
                         ).get("bloods")
 
                         batch_target = filter_dataframe_by_fuzzy_terms(
@@ -200,7 +202,7 @@ def get_pat_batch_bloods(
                                 )
                                 if overwrite_stored_pat_observations:
                                     del_query = text(
-                                        f"DELETE FROM {db_table if engine.name == 'sqlite' else f'{schema_name}.{table_name}'} WHERE client_idcode = :pat_id"
+                                        f"DELETE FROM {db_table if engine.name == 'sqlite' else f'{schema_name}.{table_name}'} WHERE client_idcode = :pat_id",
                                     )
                                     connection.execute(
                                         del_query,

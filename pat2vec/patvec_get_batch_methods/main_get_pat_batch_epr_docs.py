@@ -30,6 +30,7 @@ def get_pat_batch_epr_docs(
 
     Returns:
         A DataFrame containing the batch of EPR documents.
+
     """
     if config_obj is None or not all(
         hasattr(config_obj, attr)
@@ -59,7 +60,8 @@ def get_pat_batch_epr_docs(
     split_clinical_notes_bool = config_obj.split_clinical_notes
 
     batch_epr_target_path = os.path.join(
-        config_obj.pre_document_batch_path, str(current_pat_client_id_code) + ".csv"
+        config_obj.pre_document_batch_path,
+        str(current_pat_client_id_code) + ".csv",
     )
 
     batch_target = pd.DataFrame()
@@ -80,7 +82,7 @@ def get_pat_batch_epr_docs(
                     return df
         except Exception as e:
             logging.error(
-                f"Error with database backend for EPR docs for patient {current_pat_client_id_code}: {e}"
+                f"Error with database backend for EPR docs for patient {current_pat_client_id_code}: {e}",
             )
             return pd.DataFrame()
 
@@ -126,7 +128,7 @@ def get_pat_batch_epr_docs(
             if config_obj.data_type_filter_dict is not None and not batch_target.empty:
                 if (
                     config_obj.data_type_filter_dict.get("filter_term_lists").get(
-                        "epr_docs"
+                        "epr_docs",
                     )
                     is not None
                 ):
@@ -137,7 +139,7 @@ def get_pat_batch_epr_docs(
                         )
 
                         filter_term_list = config_obj.data_type_filter_dict.get(
-                            "filter_term_lists"
+                            "filter_term_lists",
                         ).get("epr_docs")
 
                         batch_target = filter_dataframe_by_fuzzy_terms(
@@ -149,7 +151,7 @@ def get_pat_batch_epr_docs(
 
                 if (
                     config_obj.data_type_filter_dict.get("filter_term_lists").get(
-                        "epr_docs_term_regex"
+                        "epr_docs_term_regex",
                     )
                     is not None
                 ):
@@ -159,7 +161,7 @@ def get_pat_batch_epr_docs(
                     batch_target = append_regex_term_counts(
                         df=batch_target,
                         terms=config_obj.data_type_filter_dict.get(
-                            "filter_term_lists"
+                            "filter_term_lists",
                         ).get("epr_docs_term_regex"),
                         text_column="body_analysed",
                         debug=config_obj.verbosity > 5,
@@ -212,10 +214,10 @@ def get_pat_batch_epr_docs(
                         )
                         if config_obj.verbosity > 2:
                             logging.debug(
-                                f"pre_filter_split_notes_len: {pre_filter_split_notes_len}"
+                                f"pre_filter_split_notes_len: {pre_filter_split_notes_len}",
                             )
                             logging.debug(
-                                f"post_filter_split_notes_len: {len(batch_target)}"
+                                f"post_filter_split_notes_len: {len(batch_target)}",
                             )
 
                 # Drop Elasticsearch metadata columns and source_file before saving to database
@@ -242,7 +244,7 @@ def get_pat_batch_epr_docs(
                                 )
                                 if overwrite_stored_pat_docs:
                                     del_query = text(
-                                        f"DELETE FROM {db_table if engine.name == 'sqlite' else f'{schema_name}.{table_name}'} WHERE client_idcode = :pat_id"
+                                        f"DELETE FROM {db_table if engine.name == 'sqlite' else f'{schema_name}.{table_name}'} WHERE client_idcode = :pat_id",
                                     )
                                     connection.execute(
                                         del_query,
@@ -267,6 +269,6 @@ def get_pat_batch_epr_docs(
         return batch_target
     except Exception as e:
         logging.error(
-            f"Error retrieving batch EPR documents: {e}"
+            f"Error retrieving batch EPR documents: {e}",
         )  # Log the original error
         raise  # Re-raise the original exception

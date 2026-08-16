@@ -79,12 +79,14 @@ def generate_mapping_for_dataframe(df: pd.DataFrame) -> dict[str, Any]:
 def generate_elastic_schema(df: pd.DataFrame, index_name: str) -> dict[str, Any]:
     """Generates a complete Elasticsearch schema dictionary for an index."""
     return {
-        index_name: {"mappings": {"properties": generate_mapping_for_dataframe(df)}}
+        index_name: {"mappings": {"properties": generate_mapping_for_dataframe(df)}},
     }
 
 
 def create_schema_from_dataframe(
-    df: pd.DataFrame, index_name: str, config: Any
+    df: pd.DataFrame,
+    index_name: str,
+    config: Any,
 ) -> None:
     """Creates or updates an Elasticsearch schema file based on a DataFrame."""
     new_schema = generate_elastic_schema(df, index_name)
@@ -93,7 +95,7 @@ def create_schema_from_dataframe(
     existing_schemas = {}
     if os.path.exists(schema_path):
         try:
-            with open(schema_path, "r") as f:
+            with open(schema_path) as f:
                 existing_schemas = json.load(f)
         except Exception as e:
             logger.error(f"Failed to load existing schema at {schema_path}: {e}")
@@ -112,10 +114,10 @@ def create_schema_from_dataframe(
 
 
 def generate_schema_from_cluster(
-    indices: list[str] | None = None, output_file: str = "elastic_schemas.json"
+    indices: list[str] | None = None,
+    output_file: str = "elastic_schemas.json",
 ) -> dict[str, Any]:
-    """
-    Generates index schemas (mappings and settings) from the connected Elasticsearch cluster.
+    """Generates index schemas (mappings and settings) from the connected Elasticsearch cluster.
 
     This function retrieves the mappings and settings for specified indices from the
     live Elasticsearch instance connected via `pat2vec.cs`. It cleans the settings
@@ -132,6 +134,7 @@ def generate_schema_from_cluster(
         A dictionary where keys are the simplified index names (e.g., 'pims_apps'
         instead of 'pims_apps*') and values are dictionaries containing "mappings"
         and "settings".
+
     """
     if indices is None:
         indices = [
@@ -178,7 +181,7 @@ def generate_schema_from_cluster(
             # Pick the first concrete index found for this pattern
             concrete_index = list(mappings_response.keys())[0]
             logger.info(
-                f"Using concrete index '{concrete_index}' as template for '{index_pattern}'"
+                f"Using concrete index '{concrete_index}' as template for '{index_pattern}'",
             )
 
             mapping = mappings_response[concrete_index].get("mappings", {})

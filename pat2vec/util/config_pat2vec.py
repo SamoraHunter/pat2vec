@@ -50,6 +50,7 @@ class config_class:
     Example:
         >>> config = config_class(proj_name="my_project", start_date=(2020, 1, 1))
         >>> # Use config with FeatureExtractionPipeline
+
     """
 
     def __init__(
@@ -236,17 +237,17 @@ class config_class:
             testing_elastic: If `True`, testing mode will interact with a real (mocked/test)
                 Elasticsearch instance instead of using dummy data generators.
             all_patient_list: An optional list of patient IDs to process.
-        """
 
+        """
         if prefetch_pat_batches and individual_patient_window:
             logger.warning(
-                "Warning: 'prefetch_pat_batches' is not compatible with 'individual_patient_window'."
+                "Warning: 'prefetch_pat_batches' is not compatible with 'individual_patient_window'.",
             )
             logger.warning(
-                "The prefetch mechanism uses a global time window, while IPW requires patient-specific windows."
+                "The prefetch mechanism uses a global time window, while IPW requires patient-specific windows.",
             )
             logger.warning(
-                "Disabling 'prefetch_pat_batches' to ensure correct time windows are used for each patient."
+                "Disabling 'prefetch_pat_batches' to ensure correct time windows are used for each patient.",
             )
             prefetch_pat_batches = False
 
@@ -263,7 +264,7 @@ class config_class:
         if individual_patient_window:
             if individual_patient_window_df is None:
                 raise ValueError(
-                    "individual_patient_window_df must be provided when individual_patient_window is True."
+                    "individual_patient_window_df must be provided when individual_patient_window is True.",
                 )
             # Resolve and set the ID column name early to satisfy downstream checks
             if individual_patient_id_column_name is None:
@@ -303,7 +304,7 @@ class config_class:
                     logger.warning(
                         # This warning is now removed in helper_functions.py
                         # but keeping it here for context.
-                        "`storage_backend` is 'database' but no `db_connection_string` provided during testing. Using in-memory SQLite."
+                        "`storage_backend` is 'database' but no `db_connection_string` provided during testing. Using in-memory SQLite.",
                     )
                     self.db_connection_string = "sqlite:///:memory:"
                 else:
@@ -311,17 +312,17 @@ class config_class:
                     db_path = os.path.join(self.root_path, f"{self.proj_name}.db")
                     self.db_connection_string = f"sqlite:///{db_path}"
                     logger.info(
-                        f"No `db_connection_string` provided. Using default SQLite database at: {self.db_connection_string}"
+                        f"No `db_connection_string` provided. Using default SQLite database at: {self.db_connection_string}",
                     )
 
             # Ensure SQLite connection strings for absolute paths are correctly formatted.
             # SQLAlchemy requires 4 slashes for absolute Unix paths (sqlite:////path/to/db).
             if self.db_connection_string and self.db_connection_string.startswith(
-                "sqlite:///"
+                "sqlite:///",
             ):
                 path_part = self.db_connection_string[10:]
                 if path_part.startswith(
-                    "/"
+                    "/",
                 ) and not self.db_connection_string.startswith("sqlite:////"):
                     self.db_connection_string = "sqlite:////" + path_part.lstrip("/")
 
@@ -593,7 +594,7 @@ class config_class:
         #: If `True` and in testing mode, simulates a MedCAT model.
         if self.client_idcode_term_name == "client_idcode.keyword":
             logger.warning(
-                "Warning: client_idcode_term_name 'client_idcode.keyword' is not case inclusive."
+                "Warning: client_idcode_term_name 'client_idcode.keyword' is not case inclusive.",
             )
 
         if self.verbosity >= 1:
@@ -675,20 +676,21 @@ class config_class:
                     "_num-drug-order": True,
                     "_days-since-last-drug-order": True,
                     "_days-between-first-last-drug": True,
-                }
+                },
             }
         else:
             self.feature_engineering_arg_dict = feature_engineering_arg_dict
 
         #: Flag for handling negated presence annotations.
         self.negated_presence_annotations = self.main_options.get(
-            "negated_presence_annotations"
+            "negated_presence_annotations",
         )
 
         if not remote_dump:
             #: Path to the patient lines parts directory for final outputs.
             self.current_pat_lines_path = os.path.join(
-                self.root_path, f"current_pat_lines_parts{self.suffix}/"
+                self.root_path,
+                f"current_pat_lines_parts{self.suffix}/",
             )
             if self.storage_backend == "file":
                 os.makedirs(self.current_pat_lines_path, exist_ok=True)
@@ -696,10 +698,12 @@ class config_class:
         if not remote_dump:
             #: Path to the pre-annotation parts directory.
             self.pre_annotation_path = os.path.join(
-                self.root_path, f"current_pat_annots_parts{self.suffix}/"
+                self.root_path,
+                f"current_pat_annots_parts{self.suffix}/",
             )
             self.pre_annotation_path_mrc = os.path.join(
-                self.root_path, f"current_pat_annots_mrc_parts{self.suffix}/"
+                self.root_path,
+                f"current_pat_annots_mrc_parts{self.suffix}/",
             )
 
             #: Path to the document annotation batches directory.
@@ -748,15 +752,18 @@ class config_class:
 
             #: Path to the document batches directory.
             self.pre_document_batch_path = os.path.join(
-                self.root_path, f"current_pat_document_batches{self.suffix}/"
+                self.root_path,
+                f"current_pat_document_batches{self.suffix}/",
             )
             self.pre_document_batch_path_mct = os.path.join(
-                self.root_path, f"current_pat_document_batches_mct{self.suffix}/"
+                self.root_path,
+                f"current_pat_document_batches_mct{self.suffix}/",
             )
 
             #: Path to the report document batches directory.
             self.pre_document_batch_path_reports = os.path.join(
-                self.root_path, f"current_pat_document_batches_reports{self.suffix}/"
+                self.root_path,
+                f"current_pat_document_batches_reports{self.suffix}/",
             )
 
             self.pre_document_annotation_batch_path_reports = os.path.join(
@@ -766,63 +773,77 @@ class config_class:
 
             #: Path to the bloods batches directory.
             self.pre_bloods_batch_path = os.path.join(
-                self.root_path, f"current_pat_bloods_batches{self.suffix}/"
+                self.root_path,
+                f"current_pat_bloods_batches{self.suffix}/",
             )
 
             self.pre_drugs_batch_path = os.path.join(
-                self.root_path, f"current_pat_drugs_batches{self.suffix}/"
+                self.root_path,
+                f"current_pat_drugs_batches{self.suffix}/",
             )
 
             #: Path to the diagnostics batches directory.
             self.pre_diagnostics_batch_path = os.path.join(
-                self.root_path, f"current_pat_diagnostics_batches{self.suffix}/"
+                self.root_path,
+                f"current_pat_diagnostics_batches{self.suffix}/",
             )
 
             self.pre_news_batch_path = os.path.join(
-                self.root_path, f"current_pat_news_batches{self.suffix}/"
+                self.root_path,
+                f"current_pat_news_batches{self.suffix}/",
             )
 
             #: Path to the observations batches directory.
             self.pre_obs_batch_path = os.path.join(
-                self.root_path, f"current_pat_obs_batches{self.suffix}/"
+                self.root_path,
+                f"current_pat_obs_batches{self.suffix}/",
             )
 
             self.pre_bmi_batch_path = os.path.join(
-                self.root_path, f"current_pat_bmi_batches{self.suffix}/"
+                self.root_path,
+                f"current_pat_bmi_batches{self.suffix}/",
             )
 
             #: Path to the demographics batches directory.
             self.pre_report_batch_path = os.path.join(
-                self.root_path, f"current_pat_document_batches_reports{self.suffix}/"
+                self.root_path,
+                f"current_pat_document_batches_reports{self.suffix}/",
             )
 
             self.pre_misc_batch_path = os.path.join(
-                self.root_path, f"current_pat_misc_batches{self.suffix}/"
+                self.root_path,
+                f"current_pat_misc_batches{self.suffix}/",
             )
 
             self.pre_appointments_batch_path = os.path.join(
-                self.root_path, f"current_pat_appointments_batches{self.suffix}/"
+                self.root_path,
+                f"current_pat_appointments_batches{self.suffix}/",
             )
 
             # Epic Batch Paths
             self.pre_epic_encounters_batch_path = os.path.join(
-                self.root_path, f"current_pat_epic_encounters_batches{self.suffix}/"
+                self.root_path,
+                f"current_pat_epic_encounters_batches{self.suffix}/",
             )
             self.pre_epic_clinical_notes_batch_path = os.path.join(
-                self.root_path, f"current_pat_epic_clinical_notes_batches{self.suffix}/"
+                self.root_path,
+                f"current_pat_epic_clinical_notes_batches{self.suffix}/",
             )
             self.pre_epic_medical_history_batch_path = os.path.join(
                 self.root_path,
                 f"current_pat_epic_medical_history_batches{self.suffix}/",
             )
             self.pre_epic_orders_batch_path = os.path.join(
-                self.root_path, f"current_pat_epic_orders_batches{self.suffix}/"
+                self.root_path,
+                f"current_pat_epic_orders_batches{self.suffix}/",
             )
             self.pre_epic_lab_results_batch_path = os.path.join(
-                self.root_path, f"current_pat_epic_lab_results_batches{self.suffix}/"
+                self.root_path,
+                f"current_pat_epic_lab_results_batches{self.suffix}/",
             )
             self.pre_epic_patients_batch_path = os.path.join(
-                self.root_path, f"current_pat_epic_patients_batches{self.suffix}/"
+                self.root_path,
+                f"current_pat_epic_patients_batches{self.suffix}/",
             )
             self.pre_epic_imaging_reports_batch_path = os.path.join(
                 self.root_path,
@@ -835,7 +856,8 @@ class config_class:
 
             #: Path to the merged input batches directory.
             self.pre_merged_input_batches_path = os.path.join(
-                self.root_path, f"merged_input_pat_batches{self.suffix}/"
+                self.root_path,
+                f"merged_input_pat_batches{self.suffix}/",
             )
 
             #: The name of the output folder.
@@ -875,12 +897,12 @@ class config_class:
         )
 
         logger.info(
-            f"Number of {time_window_interval_delta} intervals in {self.time_delta}: {num}"
+            f"Number of {time_window_interval_delta} intervals in {self.time_delta}: {num}",
         )
         logger.info(f"Expected time interval vectors per patient: {num}")
 
         logger.info(
-            f"Time interval vectors will span the following dates: {start_date} to {start_date + self.time_delta}"
+            f"Time interval vectors will span the following dates: {start_date} to {start_date + self.time_delta}",
         )
 
         #: Threshold for low slow execution warning.
@@ -906,10 +928,13 @@ class config_class:
                     # Resolve path relative to the package installation to support installed environments
                     # Current file is in pat2vec/util/, moving up to pat2vec/
                     _pkg_dir = os.path.dirname(
-                        os.path.dirname(os.path.abspath(__file__))
+                        os.path.dirname(os.path.abspath(__file__)),
                     )
                     _internal_test_path = os.path.join(
-                        _pkg_dir, "tests", "test_files", "treatment_docs.csv"
+                        _pkg_dir,
+                        "tests",
+                        "test_files",
+                        "treatment_docs.csv",
                     )
 
                     if os.path.exists(_internal_test_path):
@@ -921,10 +946,11 @@ class config_class:
                     logger.info(f"Defaulting test_data_path to: {self.test_data_path}")
                 else:
                     self.test_data_path = os.path.join(
-                        self.root_path, self.treatment_doc_filename
+                        self.root_path,
+                        self.treatment_doc_filename,
                     )
                     logger.info(
-                        f"Defaulting test_data_path to treatment_doc_filename: {self.test_data_path}"
+                        f"Defaulting test_data_path to treatment_doc_filename: {self.test_data_path}",
                     )
 
             if not self.testing_elastic:
@@ -948,11 +974,13 @@ class config_class:
 
             if not all([self.hostname, self.username, self.password]):
                 raise ValueError(
-                    "Hostname, username, and password must be provided for remote dump."
+                    "Hostname, username, and password must be provided for remote dump.",
                 )
 
             self.ssh_client.connect(
-                hostname=self.hostname, username=self.username, password=self.password
+                hostname=self.hostname,
+                username=self.username,
+                password=self.password,
             )
 
             #: SFTP client for remote file operations.
@@ -1017,22 +1045,22 @@ class config_class:
             ) = ("1995", "01", "2023", "11", "01", "01")
         else:
             self.global_start_year = str(
-                global_start_year if global_start_year is not None else "1995"
+                global_start_year if global_start_year is not None else "1995",
             ).zfill(4)
             self.global_start_month = str(
-                global_start_month if global_start_month is not None else "01"
+                global_start_month if global_start_month is not None else "01",
             ).zfill(2)
             self.global_end_year = str(
-                global_end_year if global_end_year is not None else "2023"
+                global_end_year if global_end_year is not None else "2023",
             ).zfill(4)
             self.global_end_month = str(
-                global_end_month if global_end_month is not None else "12"
+                global_end_month if global_end_month is not None else "12",
             ).zfill(2)
             self.global_start_day = str(
-                global_start_day if global_start_day is not None else "01"
+                global_start_day if global_start_day is not None else "01",
             ).zfill(2)
             self.global_end_day = str(
-                global_end_day if global_end_day is not None else "01"
+                global_end_day if global_end_day is not None else "01",
             ).zfill(2)
 
         self.initial_global_start_year = self.global_start_year
@@ -1122,7 +1150,7 @@ class config_class:
                         .days
                     )
                     logger.info(
-                        f"Median time between {start_column_name} and {end_date_column_name}: {median_days} days"
+                        f"Median time between {start_column_name} and {end_date_column_name}: {median_days} days",
                     )
 
             # For IPW+lookback mode, exclude days from the offset calculation
@@ -1139,7 +1167,7 @@ class config_class:
                 logger.info("individual_patient_window already contains offset column")
                 logger.info("skipping offset computation, using existing offset column")
                 logger.info(
-                    "if you want to recompute offset, delete offset column from dataframe"
+                    "if you want to recompute offset, delete offset column from dataframe",
                 )
                 logger.info(f'using existing offset column: "{offset_column_name}"')
                 self.individual_patient_window_df[
@@ -1217,7 +1245,7 @@ class config_class:
                 )
 
             logger.info(
-                f"Built patient_dict with {len(self.patient_dict)} patients from {len(self.individual_patient_window_df)} rows."
+                f"Built patient_dict with {len(self.patient_dict)} patients from {len(self.individual_patient_window_df)} rows.",
             )
 
             self.n_pat_lines = None
@@ -1226,7 +1254,7 @@ class config_class:
         if self.verbosity > 1:
             logger.debug(f"Debug message: global_start_year = {self.global_start_year}")
             logger.debug(
-                f"Debug message: global_start_month = {self.global_start_month}"
+                f"Debug message: global_start_month = {self.global_start_month}",
             )
             logger.debug(f"Debug message: global_end_year = {self.global_end_year}")
             logger.debug(f"Debug message: global_end_month = {self.global_end_month}")
@@ -1251,6 +1279,7 @@ class config_class:
         Returns:
             A dictionary with feature names as keys and a boolean indicating
             if a test implementation exists.
+
         """
         return {
             "demo": True,
@@ -1326,10 +1355,10 @@ class config_class:
             ):
                 logger.warning(
                     f"Warning: Global start date ({global_start.date()}) is after "
-                    f"global end date ({global_end.date()})."
+                    f"global end date ({global_end.date()}).",
                 )
                 logger.warning(
-                    "Swapping dates to ensure Elasticsearch compatibility..."
+                    "Swapping dates to ensure Elasticsearch compatibility...",
                 )
 
                 # Swap the date attributes
@@ -1356,7 +1385,7 @@ class config_class:
 
         except (ValueError, TypeError) as e:
             logger.warning(
-                f"Warning: Could not validate global dates due to invalid values: {e}"
+                f"Warning: Could not validate global dates due to invalid values: {e}",
             )
 
 
@@ -1371,6 +1400,7 @@ def update_global_start_date(self: T_config, start_date: datetime) -> T_config:
 
     Returns:
         The configuration object instance.
+
     """
     # This function is now defined outside the class but operates on an instance.
     # It's kept for compatibility but would be better as a private method.
@@ -1382,7 +1412,7 @@ def update_global_start_date(self: T_config, start_date: datetime) -> T_config:
         if self.global_start_date and start_date > self.global_start_date:
             logger.warning(
                 "Warning: Updating global start date because the provided "
-                "start_date is later."
+                "start_date is later.",
             )
             self.global_start_year = str(start_date.year)
             self.global_start_month = str(start_date.month).zfill(2)
@@ -1391,7 +1421,7 @@ def update_global_start_date(self: T_config, start_date: datetime) -> T_config:
             self.global_start_date = start_date
     except (ValueError, TypeError):
         logger.warning(
-            "Warning: Invalid global date attributes in config. Cannot update."
+            "Warning: Invalid global date attributes in config. Cannot update.",
         )
 
     return self
@@ -1408,6 +1438,7 @@ def validate_and_fix_global_dates(config: T_config) -> T_config:
 
     Returns:
         The modified configuration object.
+
     """
     try:
         global_start = datetime(
@@ -1424,7 +1455,7 @@ def validate_and_fix_global_dates(config: T_config) -> T_config:
         if global_start > global_end:
             logger.warning(
                 f"Warning: Global start date ({global_start.date()}) is after "
-                f"global end date ({global_end.date()})."
+                f"global end date ({global_end.date()}).",
             )
             logger.warning("Swapping dates to ensure Elasticsearch compatibility...")
 
@@ -1446,7 +1477,8 @@ def validate_and_fix_global_dates(config: T_config) -> T_config:
             )
             # Also swap the datetime objects if they exist
             if hasattr(config, "global_start_date") and hasattr(
-                config, "global_end_date"
+                config,
+                "global_end_date",
             ):
                 config.global_start_date, config.global_end_date = (
                     config.global_end_date,
@@ -1455,7 +1487,7 @@ def validate_and_fix_global_dates(config: T_config) -> T_config:
 
     except (ValueError, TypeError) as e:
         logger.warning(
-            f"Warning: Could not validate global dates due to invalid values: {e}"
+            f"Warning: Could not validate global dates due to invalid values: {e}",
         )
 
     return config

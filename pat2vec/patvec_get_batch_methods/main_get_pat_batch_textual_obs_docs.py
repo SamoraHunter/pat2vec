@@ -25,8 +25,8 @@ def get_pat_batch_textual_obs_docs(
 
     Returns:
         A DataFrame containing the batch of textual observation documents.
-    """
 
+    """
     overwrite_stored_pat_observations = config_obj.overwrite_stored_pat_observations
     store_pat_batch_observations = config_obj.store_pat_batch_observations
 
@@ -73,7 +73,7 @@ def get_pat_batch_textual_obs_docs(
                     return df
         except Exception as e:
             logging.error(
-                f"Error with database backend for textual obs for patient {current_pat_client_id_code}: {e}"
+                f"Error with database backend for textual obs for patient {current_pat_client_id_code}: {e}",
             )
             return pd.DataFrame()
 
@@ -81,7 +81,8 @@ def get_pat_batch_textual_obs_docs(
 
     should_fetch = False
     if config_obj.storage_backend == "database" or (
-        store_pat_batch_observations and not existence_check or existence_check is False
+        (store_pat_batch_observations and not existence_check)
+        or existence_check is False
     ):
         should_fetch = True
 
@@ -103,7 +104,7 @@ def get_pat_batch_textual_obs_docs(
                 term_name=config_obj.client_idcode_term_name,
                 entered_list=[current_pat_client_id_code],
                 search_string=""
-                + f"{bloods_time_field}:[{global_start_year}-{global_start_month}-{global_start_day} TO {global_end_year}-{global_end_month}-{global_end_day}]",
+                f"{bloods_time_field}:[{global_start_year}-{global_start_month}-{global_start_day} TO {global_end_year}-{global_end_month}-{global_end_day}]",
             )
 
             if not batch_target.empty and "textualObs" in batch_target.columns:
@@ -135,7 +136,7 @@ def get_pat_batch_textual_obs_docs(
                                 )
                                 if overwrite_stored_pat_observations:
                                     del_query = text(
-                                        f"DELETE FROM {db_table if engine.name == 'sqlite' else f'{schema_name}.{table_name}'} WHERE client_idcode = :pat_id"
+                                        f"DELETE FROM {db_table if engine.name == 'sqlite' else f'{schema_name}.{table_name}'} WHERE client_idcode = :pat_id",
                                     )
                                     connection.execute(
                                         del_query,

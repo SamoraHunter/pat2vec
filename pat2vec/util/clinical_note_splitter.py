@@ -33,8 +33,8 @@ def find_date(
     Returns:
         A list of dictionaries, where each dictionary represents a text chunk
         and contains the text, the parsed date, and metadata about the match.
-    """
 
+    """
     m = regex.finditer(reg, txt)
     chunks: list[dict[str, Any]] = []
 
@@ -59,7 +59,7 @@ def find_date(
                 parsed_date = pd.to_datetime(date_str, utc=True, errors="coerce")
                 end_of_date_string_in_text = date_window_start_idx + ts_match.end()
                 date_entries.append(
-                    (match_reg.span()[0], end_of_date_string_in_text, parsed_date)
+                    (match_reg.span()[0], end_of_date_string_in_text, parsed_date),
                 )
             except Exception as e:
                 if verbosity > 1:
@@ -75,7 +75,7 @@ def find_date(
                 "date_found": False,
                 "text_start": 0,
                 "text_end": len(txt),
-            }
+            },
         ]
 
     # Handle text before the first date entry
@@ -87,7 +87,7 @@ def find_date(
                 "date_found": False,
                 "text_start": 0,
                 "text_end": date_entries[0][0],
-            }
+            },
         )
 
     for i in range(len(date_entries)):
@@ -103,14 +103,15 @@ def find_date(
                 "date_found": True,
                 "text_start": start_idx,
                 "text_end": end_idx,
-            }
+            },
         )
 
     return chunks
 
 
 def split_clinical_notes(
-    clin_note: pd.DataFrame, verbosity_val: int = 0
+    clin_note: pd.DataFrame,
+    verbosity_val: int = 0,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     """Splits clinical notes from an EPR schema DataFrame into date-stamped chunks.
 
@@ -127,8 +128,8 @@ def split_clinical_notes(
         A tuple containing two DataFrames:
         - pd.DataFrame: The processed notes, split into smaller chunks.
         - pd.DataFrame: The original rows of notes that could not be split.
-    """
 
+    """
     extracted = []
     none_found = []
     document_description_list = []
@@ -150,16 +151,16 @@ def split_clinical_notes(
                 )
                 row_id = row.get("id", row.get("_id", "unknown"))
                 extracted.append(
-                    {"id": row_id, "client_idcode": row["client_idcode"], "chunks": ch}
+                    {"id": row_id, "client_idcode": row["client_idcode"], "chunks": ch},
                 )
 
                 document_description_list.append(
-                    row.get("document_description", "Unknown")
+                    row.get("document_description", "Unknown"),
                 )
                 id_list.append(row_id)
                 document_guid_list.append(row.get("document_guid", "Unknown"))
                 clientvisit_visitidcode_list.append(
-                    row.get("clientvisit_visitidcode", "Unknown")
+                    row.get("clientvisit_visitidcode", "Unknown"),
                 )
                 index_list.append(row.get("_index", "Unknown"))
         except Exception:
@@ -194,8 +195,10 @@ def split_clinical_notes(
     processed = (
         pd.DataFrame(new_docs).assign(
             updatetime=lambda x: pd.to_datetime(
-                x["updatetime"], utc=True, errors="coerce"
-            )
+                x["updatetime"],
+                utc=True,
+                errors="coerce",
+            ),
         )
         if new_docs
         else pd.DataFrame()
@@ -205,7 +208,8 @@ def split_clinical_notes(
 
 
 def split_clinical_notes_mct(
-    clin_note: pd.DataFrame, verbosity_val: int = 0
+    clin_note: pd.DataFrame,
+    verbosity_val: int = 0,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     """Splits clinical notes from an MCT schema DataFrame into date-stamped chunks.
 
@@ -222,8 +226,8 @@ def split_clinical_notes_mct(
         A tuple containing two DataFrames:
         - pd.DataFrame: The processed notes, split into smaller chunks.
         - pd.DataFrame: The original rows of notes that could not be split.
-    """
 
+    """
     # n.b possibly redundant, no split ever needed?
 
     extracted = []
@@ -240,20 +244,22 @@ def split_clinical_notes_mct(
         ch = []
         try:
             ch = find_date(
-                d, row["observationdocument_recordeddtm"], verbosity=verbosity_val
+                d,
+                row["observationdocument_recordeddtm"],
+                verbosity=verbosity_val,
             )
             row_id = row.get("id", row.get("_id", "unknown"))
             extracted.append(
-                {"id": row_id, "client_idcode": row["client_idcode"], "chunks": ch}
+                {"id": row_id, "client_idcode": row["client_idcode"], "chunks": ch},
             )
 
             document_description_list.append(
-                row.get("obscatalogmasteritem_displayname", "Unknown")
+                row.get("obscatalogmasteritem_displayname", "Unknown"),
             )
             id_list.append(row_id)
             document_guid_list.append(row.get("observation_guid", "Unknown"))
             clientvisit_visitidcode_list.append(
-                row.get("clientvisit_visitidcode", "Unknown")
+                row.get("clientvisit_visitidcode", "Unknown"),
             )
             index_list.append(row.get("_index", "Unknown"))
 
@@ -290,12 +296,16 @@ def split_clinical_notes_mct(
     if new_docs:
         processed = pd.DataFrame(new_docs).assign(
             updatetime=lambda x: pd.to_datetime(
-                x["updatetime"], utc=True, errors="coerce"
-            )
+                x["updatetime"],
+                utc=True,
+                errors="coerce",
+            ),
         )
         # Explicitly convert updatetime to avoid FutureWarning in pandas
         processed["updatetime"] = pd.to_datetime(
-            processed["updatetime"], utc=True, errors="coerce"
+            processed["updatetime"],
+            utc=True,
+            errors="coerce",
         )
     else:
         processed = pd.DataFrame(
@@ -309,7 +319,7 @@ def split_clinical_notes_mct(
                 "clientvisit_visitidcode",
                 "_index",
                 "source_file",
-            ]
+            ],
         )
 
     none_rows = pd.DataFrame(none_rows)
@@ -317,7 +327,8 @@ def split_clinical_notes_mct(
 
 
 def split_epic_clinical_notes(
-    clin_note: pd.DataFrame, verbosity_val: int = 0
+    clin_note: pd.DataFrame,
+    verbosity_val: int = 0,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     """Splits clinical notes from Epic schema DataFrame into date-stamped chunks.
 
@@ -334,6 +345,7 @@ def split_epic_clinical_notes(
         A tuple containing two DataFrames:
         - pd.DataFrame: The processed notes, split into smaller chunks.
         - pd.DataFrame: The original rows of notes that could not be split.
+
     """
     extracted = []
     none_found = []
@@ -369,7 +381,7 @@ def split_epic_clinical_notes(
                     guid_col: row_id,
                     "client_idcode": row["document_PatientDurableKey"],
                     "chunks": ch,
-                }
+                },
             )
 
             name_col = (
@@ -380,7 +392,7 @@ def split_epic_clinical_notes(
             document_name_list.append(row.get(name_col, "Unknown"))
             id_list.append(row_id)
             document_guid_list.append(
-                row_id
+                row_id,
             )  # Using 'id' as document_guid for Epic notes
             encounter_epic_csn_list.append(row.get("document_EncounterEpicCsn"))
             encounter_key_list.append(row.get("document_EncounterKey"))
@@ -414,8 +426,10 @@ def split_epic_clinical_notes(
     processed = (
         pd.DataFrame(new_docs).assign(
             document_CreatedWhen=lambda x: pd.to_datetime(
-                x["document_CreatedWhen"], utc=True, errors="coerce"
-            )
+                x["document_CreatedWhen"],
+                utc=True,
+                errors="coerce",
+            ),
         )
         if new_docs
         else pd.DataFrame()
@@ -425,7 +439,10 @@ def split_epic_clinical_notes(
 
 
 def split_and_append_chunks(
-    docs: pd.DataFrame, epr: bool = True, mct: bool = False, verbosity: int = 0
+    docs: pd.DataFrame,
+    epr: bool = True,
+    mct: bool = False,
+    verbosity: int = 0,
 ) -> pd.DataFrame:
     """Filters, splits, and re-appends clinical notes within a DataFrame.
 
@@ -444,8 +461,8 @@ def split_and_append_chunks(
     Returns:
         A new DataFrame containing the original non-clinical notes plus the
         newly created smaller chunks from the split clinical notes.
-    """
 
+    """
     # Filter clinical and non-clinical notes
     clinical_notes = pd.DataFrame()
     non_clinical_notes = docs.copy()
@@ -484,7 +501,9 @@ def split_and_append_chunks(
         )
 
         is_epic_clinical_note = docs[name_col].str.contains(
-            "note", case=False, na=False
+            "note",
+            case=False,
+            na=False,
         ) | docs[name_col].str.contains("summary", case=False, na=False)
 
         clinical_notes = docs[is_epic_clinical_note].copy()
@@ -495,7 +514,7 @@ def split_and_append_chunks(
     else:
         if verbosity > 1:
             logger.debug(
-                "No identifiable clinical notes for splitting based on known patterns."
+                "No identifiable clinical notes for splitting based on known patterns.",
             )
         # If no clinical notes are identified, return the original DataFrame
         return docs
@@ -514,7 +533,8 @@ def split_and_append_chunks(
 
     if split_function:
         split_clinical_notes_result, none_found = split_function(
-            clinical_notes, verbosity_val=verbosity
+            clinical_notes,
+            verbosity_val=verbosity,
         )
     else:
         split_clinical_notes_result = pd.DataFrame()
@@ -529,15 +549,18 @@ def split_and_append_chunks(
     # Standardize Epic patient ID column to client_idcode for concatenation
     if "document_PatientDurableKey" in split_clinical_notes_result.columns:
         split_clinical_notes_result.rename(
-            columns={"document_PatientDurableKey": "client_idcode"}, inplace=True
+            columns={"document_PatientDurableKey": "client_idcode"},
+            inplace=True,
         )
     if "document_PatientDurableKey" in none_found.columns:
         none_found.rename(
-            columns={"document_PatientDurableKey": "client_idcode"}, inplace=True
+            columns={"document_PatientDurableKey": "client_idcode"},
+            inplace=True,
         )
     if "document_PatientDurableKey" in non_clinical_notes.columns:
         non_clinical_notes.rename(
-            columns={"document_PatientDurableKey": "client_idcode"}, inplace=True
+            columns={"document_PatientDurableKey": "client_idcode"},
+            inplace=True,
         )
 
     # Concatenate non-clinical and split clinical notes
@@ -547,7 +570,8 @@ def split_and_append_chunks(
 
     # Ensure unique columns before returning to prevent ValueError in subsequent operations
     concatenated_notes = concatenated_notes.loc[
-        :, ~concatenated_notes.columns.duplicated()
+        :,
+        ~concatenated_notes.columns.duplicated(),
     ]
 
     # Reset index, dropping the old index to avoid "index" column with SQL databases

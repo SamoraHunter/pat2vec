@@ -54,8 +54,8 @@ def get_treatment_records_by_drug_order_name(
 
     Raises:
         ValueError: If `pat2vec_obj` is None or `term` is not a string.
-    """
 
+    """
     if pat2vec_obj is None:
         raise ValueError("pat2vec_obj cannot be None")
 
@@ -252,7 +252,8 @@ def get_treatment_records_by_drug_order_name(
             fields_list=field_list,
             term_name=pat2vec_obj.config_obj.client_idcode_term_name,
             entered_list=generate_uuid_list(
-                random.randint(0, 10), random.choice(["P", "V"])
+                random.randint(0, 10),
+                random.choice(["P", "V"]),
             ),
             search_string=f'order_typecode:"medication" AND "{term}" '
             f"AND {drug_time_field}:[{start_date} TO {end_date}]",
@@ -265,7 +266,7 @@ def get_treatment_records_by_drug_order_name(
 
     if verbose >= 9:
         logger.debug(
-            f"[DEBUG] Retrieved {len(drug_treatment_docs)} records from database."
+            f"[DEBUG] Retrieved {len(drug_treatment_docs)} records from database.",
         )
 
     # Function to find matching columns for the search term
@@ -274,20 +275,22 @@ def get_treatment_records_by_drug_order_name(
         for field in column_fields_to_match:
             if field in row and pd.notna(row[field]):
                 match_score = fuzz.partial_ratio(
-                    str(row[field]).lower(), search_term.lower()
+                    str(row[field]).lower(),
+                    search_term.lower(),
                 )
                 if match_score >= 80:
                     matched_cols.append(field)
                     if verbose >= 20:
                         logger.debug(
-                            f"[DEBUG] Match found! Term: '{search_term}' | Column: '{field}' | Score: {match_score}"
+                            f"[DEBUG] Match found! Term: '{search_term}' | Column: '{field}' | Score: {match_score}",
                         )
-        return matched_cols if matched_cols else None
+        return matched_cols or None
 
     # Apply fuzzy matching and store results
     column_name = f"matched_{term.lower().replace(' ', '_')}"
     drug_treatment_docs[column_name] = drug_treatment_docs.apply(
-        lambda row: find_matching_columns(row, term), axis=1
+        lambda row: find_matching_columns(row, term),
+        axis=1,
     )
 
     if verbose >= 5:
@@ -300,7 +303,7 @@ def get_treatment_records_by_drug_order_name(
 
     if verbose >= 5:
         logger.info(
-            f"[INFO] Filtered dataset contains {len(filtered_drug_records)} records after fuzzy matching."
+            f"[INFO] Filtered dataset contains {len(filtered_drug_records)} records after fuzzy matching.",
         )
 
     return filtered_drug_records
@@ -354,7 +357,8 @@ def get_treatment_records_by_drug_order_name_epic(
             fields_list=field_list,
             term_name="document_PatientDurableKey",
             entered_list=generate_uuid_list(
-                random.randint(0, 10), random.choice(["P", "V"])
+                random.randint(0, 10),
+                random.choice(["P", "V"]),
             ),
             search_string=search_string,
         )
@@ -368,7 +372,8 @@ def get_treatment_records_by_drug_order_name_epic(
     # Standardize column name for fuzzy matching logic compatibility
     if "document_PatientDurableKey" in drug_treatment_docs.columns:
         drug_treatment_docs.rename(
-            columns={"document_PatientDurableKey": "client_idcode"}, inplace=True
+            columns={"document_PatientDurableKey": "client_idcode"},
+            inplace=True,
         )
     if "id" in drug_treatment_docs.columns:
         drug_treatment_docs.rename(columns={"id": "order_guid"}, inplace=True)
@@ -378,15 +383,17 @@ def get_treatment_records_by_drug_order_name_epic(
         for field in column_fields_to_match:
             if field in row and pd.notna(row[field]):
                 match_score = fuzz.partial_ratio(
-                    str(row[field]).lower(), search_term.lower()
+                    str(row[field]).lower(),
+                    search_term.lower(),
                 )
                 if match_score >= 80:
                     matched_cols.append(field)
-        return matched_cols if matched_cols else None
+        return matched_cols or None
 
     column_name = f"matched_{term.lower().replace(' ', '_')}"
     drug_treatment_docs[column_name] = drug_treatment_docs.apply(
-        lambda row: find_matching_columns(row, term), axis=1
+        lambda row: find_matching_columns(row, term),
+        axis=1,
     )
 
     filtered_drug_records = drug_treatment_docs[
@@ -464,8 +471,8 @@ def iterative_drug_treatment_search(
 
     Returns:
         A merged DataFrame of the search results.
-    """
 
+    """
     if overwrite:
         # check output_file_path exists:
 
@@ -502,7 +509,8 @@ def iterative_drug_treatment_search(
             )
         if not epr_records.empty and not epic_records.empty:
             treatment_records = pd.concat(
-                [epr_records, epic_records], ignore_index=True
+                [epr_records, epic_records],
+                ignore_index=True,
             )
         else:
             treatment_records = epr_records if not epr_records.empty else epic_records
@@ -530,13 +538,13 @@ def iterative_drug_treatment_search(
 
         if verbose >= 1:
             logger.info(
-                f"[INFO] Retrieved {len(treatment_records)} records for term: {term}"
+                f"[INFO] Retrieved {len(treatment_records)} records for term: {term}",
             )
 
     if not all_results:
         if verbose >= 1:
             logger.warning("No records found for any search terms.")
-        return
+        return None
 
     # Combine all results into a single DataFrame
     final_results = pd.concat(all_results, ignore_index=True)
@@ -554,16 +562,16 @@ def iterative_drug_treatment_search(
                 },
                 "searched_term": lambda x: ", ".join(sorted(set(x))),
                 "matched_fields": lambda x: list(
-                    set(field for fields in x for field in fields)
+                    set(field for fields in x for field in fields),
                 ),
-            }
+            },
         )
 
         after_dedup = len(final_results)
 
         if verbose >= 1:
             logger.info(
-                f"[INFO] Dropped {before_dedup - after_dedup} duplicate records by order_guid."
+                f"[INFO] Dropped {before_dedup - after_dedup} duplicate records by order_guid.",
             )
 
     # Append to CSV
@@ -576,7 +584,7 @@ def iterative_drug_treatment_search(
 
     if verbose >= 1:
         logger.info(
-            f"[INFO] Final dataset contains {len(final_results)} records. Appended to {output_file_path}"
+            f"[INFO] Final dataset contains {len(final_results)} records. Appended to {output_file_path}",
         )
 
     merged_df = pd.read_csv(output_file_path)

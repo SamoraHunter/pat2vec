@@ -3,9 +3,7 @@ import os
 
 
 def find_all_functions(package_path="pat2vec"):
-    """
-    Walks through a package directory and finds all function definitions.
-    """
+    """Walks through a package directory and finds all function definitions."""
     function_names = set()  # Use a set to automatically handle duplicates
 
     for root, _, files in os.walk(package_path):
@@ -13,7 +11,7 @@ def find_all_functions(package_path="pat2vec"):
             if file_name.endswith(".py") and not file_name.startswith("__"):
                 file_path = os.path.join(root, file_name)
 
-                with open(file_path, "r", encoding="utf-8") as f:
+                with open(file_path, encoding="utf-8") as f:
                     try:
                         # Parse the file content into an abstract syntax tree
                         tree = ast.parse(f.read(), filename=file_path)

@@ -114,6 +114,7 @@ def generate_pie_charts(
         output_folder: Directory to save plots in. Defaults to 'plot_outputs_folder_piechart'.
         types: A list of annotation types (e.g., "['disorder']") to generate
             separate pie charts for. Defaults to a predefined list of common types.
+
     """
     # Create a folder for saving the plots
     os.makedirs(output_folder, exist_ok=True)
@@ -150,13 +151,14 @@ def generate_pie_charts(
         cui_counts.plot(kind="pie", autopct="%1.1f%%", startangle=90)
         plt.title(f"Pie Chart for Client ID: {client_id} - All Types")
         plt.axis(
-            "equal"
+            "equal",
         )  # Equal aspect ratio ensures that the pie is drawn as a circle.
 
         # Save the plot if specified
         if save_plots:
             output_filename_all_types = os.path.join(
-                output_folder, f"pie_chart_all_types_client_{client_id}.png"
+                output_folder,
+                f"pie_chart_all_types_client_{client_id}.png",
             )
             plt.savefig(output_filename_all_types, bbox_inches="tight")
 
@@ -189,13 +191,14 @@ def generate_pie_charts(
             type_counts.plot(kind="pie", autopct="%1.1f%%", startangle=90)
             plt.title(f"Pie Chart for Client ID: {client_id} - Type: {ctype}")
             plt.axis(
-                "equal"
+                "equal",
             )  # Equal aspect ratio ensures that the pie is drawn as a circle.
 
             # Save the plot if specified
             if save_plots:
                 output_filename_type = os.path.join(
-                    output_folder, f"pie_chart_type_{ctype}_client_{client_id}.png"
+                    output_folder,
+                    f"pie_chart_type_{ctype}_client_{client_id}.png",
                 )
                 plt.savefig(output_filename_type, bbox_inches="tight")
 

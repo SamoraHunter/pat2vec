@@ -44,7 +44,8 @@ logger = logging.getLogger(__name__)
 
 
 def populate_elastic_with_dummy_data(
-    config_obj: Any, n_patients: int = 10
+    config_obj: Any,
+    n_patients: int = 10,
 ) -> list[str]:
     """Generates dummy data and ingests it into Elasticsearch.
 
@@ -59,6 +60,7 @@ def populate_elastic_with_dummy_data(
 
     Returns:
         A list of the generated dummy patient IDs.
+
     """
     from pat2vec.pat2vec_search.cogstack_search_methods import CogStack
 
@@ -66,10 +68,12 @@ def populate_elastic_with_dummy_data(
 
     # Safeguard: Ensure testing flags are enabled in config
     if not getattr(config_obj, "testing", False) or not getattr(
-        config_obj, "testing_elastic", False
+        config_obj,
+        "testing_elastic",
+        False,
     ):
         logger.error(
-            "Safety Block: 'testing' and 'testing_elastic' must both be True to populate dummy data. Aborting."
+            "Safety Block: 'testing' and 'testing_elastic' must both be True to populate dummy data. Aborting.",
         )
         return []
 
@@ -78,7 +82,7 @@ def populate_elastic_with_dummy_data(
     creds_path = os.path.abspath(creds_filename)
     if not os.path.exists(creds_path):
         logger.error(
-            f"Safety Block: Test credentials file '{creds_filename}' not found at {creds_path}. Aborting dummy data population."
+            f"Safety Block: Test credentials file '{creds_filename}' not found at {creds_path}. Aborting dummy data population.",
         )
         return []
 
@@ -101,7 +105,7 @@ def populate_elastic_with_dummy_data(
         logger.info(f"Loaded isolated test credentials from {creds_path}")
     except Exception as e:
         logger.error(
-            f"Failed to initialize CogStack client from credentials file {creds_path}: {e}"
+            f"Failed to initialize CogStack client from credentials file {creds_path}: {e}",
         )
         return []
 
@@ -112,7 +116,7 @@ def populate_elastic_with_dummy_data(
             hosts = [node.host for node in nodes]
             if not all(is_safe_host(h) for h in hosts):
                 logger.error(
-                    f"Unsafe operation: Attempting to populate dummy data on non-local host(s): {hosts}. Aborting."
+                    f"Unsafe operation: Attempting to populate dummy data on non-local host(s): {hosts}. Aborting.",
                 )
                 return []
 
@@ -121,7 +125,7 @@ def populate_elastic_with_dummy_data(
             current_user = getattr(config_obj, "username", None)
             if current_user and current_user not in safe_users:
                 logger.error(
-                    f"Unsafe operation: Attempting to populate dummy data with non-test user '{current_user}'. Aborting."
+                    f"Unsafe operation: Attempting to populate dummy data with non-test user '{current_user}'. Aborting.",
                 )
                 return []
 
@@ -129,7 +133,7 @@ def populate_elastic_with_dummy_data(
             cluster_info = cs.elastic.info()
             cluster_name = cluster_info.get("cluster_name")
             logger.info(
-                f"Populating dummy data on cluster: {cluster_name} (version {cluster_info.get('version', {}).get('number')})"
+                f"Populating dummy data on cluster: {cluster_name} (version {cluster_info.get('version', {}).get('number')})",
             )
 
             # Safeguard: Verify cluster is empty or allowed to proceed
@@ -139,7 +143,7 @@ def populate_elastic_with_dummy_data(
             ]
             if user_indices and not getattr(config_obj, "testing_elastic", False):
                 logger.error(
-                    f"Unsafe operation: Target cluster is not empty. Found indices: {user_indices}. Aborting."
+                    f"Unsafe operation: Target cluster is not empty. Found indices: {user_indices}. Aborting.",
                 )
                 return []
         except Exception as e:
@@ -157,12 +161,13 @@ def populate_elastic_with_dummy_data(
 
     # Load schema and create indices if schema file exists
     schema_path = getattr(config_obj, "test_schema_path", None) or os.path.join(
-        "test_files", "elastic_schemas.json"
+        "test_files",
+        "elastic_schemas.json",
     )
 
     if os.path.exists(schema_path):
         try:
-            with open(schema_path, "r") as f:
+            with open(schema_path) as f:
                 schemas = json.load(f)
             logger.info(f"Applying schemas from {schema_path}...")
             for index_name, schema_data in schemas.items():
@@ -177,7 +182,9 @@ def populate_elastic_with_dummy_data(
 
                 # Create index
                 cs.elastic.indices.create(
-                    index=index_name, mappings=mappings, settings=settings
+                    index=index_name,
+                    mappings=mappings,
+                    settings=settings,
                 )
                 logger.info(f"Created index: {index_name} with custom schema")
         except Exception as e:
@@ -188,12 +195,12 @@ def populate_elastic_with_dummy_data(
     if config_patient_list is not None and len(config_patient_list) > 0:
         patient_ids = list(config_patient_list)
         logger.info(
-            f"Using {len(patient_ids)} patients from config_obj.all_patient_list"
+            f"Using {len(patient_ids)} patients from config_obj.all_patient_list",
         )
     elif getattr(config_obj, "testing_elastic", False):
         patient_ids = generate_uuid_list(n_patients, "P")
         logger.info(
-            f"Generated {n_patients} dummy patient IDs for testing_elastic: {patient_ids[:5]}..."
+            f"Generated {n_patients} dummy patient IDs for testing_elastic: {patient_ids[:5]}...",
         )
     else:
         try:
@@ -206,14 +213,14 @@ def populate_elastic_with_dummy_data(
             logger.debug(f"Could not load existing patient list: {e}")
         if patient_ids:
             logger.info(
-                f"Using {len(patient_ids)} existing patient IDs from treatment doc: {patient_ids[:5]}..."
+                f"Using {len(patient_ids)} existing patient IDs from treatment doc: {patient_ids[:5]}...",
             )
             if len(patient_ids) > n_patients:
                 patient_ids = patient_ids[:n_patients]
         else:
             patient_ids = generate_uuid_list(n_patients, "P")
             logger.info(
-                f"Generated {n_patients} dummy patient IDs (fallback): {patient_ids[:5]}..."
+                f"Generated {n_patients} dummy patient IDs (fallback): {patient_ids[:5]}...",
             )
 
     # 2. Generate and Ingest Data for Each Index
@@ -255,7 +262,9 @@ def populate_elastic_with_dummy_data(
     if getattr(config_obj, "testing_elastic", False):
         try:
             filename = getattr(
-                config_obj, "treatment_doc_filename", "treatment_docs.csv"
+                config_obj,
+                "treatment_doc_filename",
+                "treatment_docs.csv",
             )
             root_path = getattr(config_obj, "root_path", "")
             if root_path:
@@ -264,7 +273,7 @@ def populate_elastic_with_dummy_data(
             else:
                 output_path = filename
             logger.info(
-                f"Saving generated cohort to {output_path} for testing_elastic workflow."
+                f"Saving generated cohort to {output_path} for testing_elastic workflow.",
             )
             df_epr.to_csv(output_path, index=False)
         except Exception as e:
@@ -293,7 +302,9 @@ def populate_elastic_with_dummy_data(
     df_basic_all = df_basic_all.where(pd.notnull(df_basic_all), None)
 
     ingest_data_to_elasticsearch(
-        df_basic_all, "basic_observations", es_client=cs.elastic
+        df_basic_all,
+        "basic_observations",
+        es_client=cs.elastic,
     )
     cs.elastic.indices.refresh(index="basic_observations")
 
@@ -308,7 +319,7 @@ def populate_elastic_with_dummy_data(
             global_start_month=global_start_month,
             global_end_year=global_end_year,
             global_end_month=global_end_month,
-        )
+        ),
     )
 
     obs_dfs.append(
@@ -319,7 +330,7 @@ def populate_elastic_with_dummy_data(
             global_start_month=global_start_month,
             global_end_year=global_end_year,
             global_end_month=global_end_month,
-        )
+        ),
     )
 
     obs_dfs.append(
@@ -331,7 +342,7 @@ def populate_elastic_with_dummy_data(
             global_end_year=global_end_year,
             global_end_month=global_end_month,
             use_GPT=False,
-        )
+        ),
     )
 
     obs_dfs.append(
@@ -343,7 +354,7 @@ def populate_elastic_with_dummy_data(
             global_end_year=global_end_year,
             global_end_month=global_end_month,
             search_term="Generic Observation",
-        )
+        ),
     )
 
     df_obs = pd.concat(obs_dfs, ignore_index=True)
@@ -362,7 +373,7 @@ def populate_elastic_with_dummy_data(
             global_start_month=global_start_month,
             global_end_year=global_end_year,
             global_end_month=global_end_month,
-        )
+        ),
     )
     order_dfs.append(
         generate_diagnostic_orders_data(
@@ -372,7 +383,7 @@ def populate_elastic_with_dummy_data(
             global_start_month=global_start_month,
             global_end_year=global_end_year,
             global_end_month=global_end_month,
-        )
+        ),
     )
 
     df_orders = pd.concat(order_dfs, ignore_index=True)
@@ -405,11 +416,14 @@ def populate_elastic_with_dummy_data(
         global_end_month=global_end_month,
     )
     df_epic_imaging_reports = df_epic_imaging_reports.where(
-        pd.notnull(df_epic_imaging_reports), None
+        pd.notnull(df_epic_imaging_reports),
+        None,
     )
 
     ingest_data_to_elasticsearch(
-        df_epic_imaging_reports, "epic_imaging_reports", es_client=cs.elastic
+        df_epic_imaging_reports,
+        "epic_imaging_reports",
+        es_client=cs.elastic,
     )
     cs.elastic.indices.refresh(index="epic_imaging_reports")
 
@@ -437,7 +451,9 @@ def populate_elastic_with_dummy_data(
     df_epic_patients = df_epic_patients.where(pd.notnull(df_epic_patients), None)
 
     ingest_data_to_elasticsearch(
-        df_epic_patients, "epic_patients", es_client=cs.elastic
+        df_epic_patients,
+        "epic_patients",
+        es_client=cs.elastic,
     )
     cs.elastic.indices.refresh(index="epic_patients")
 
@@ -452,7 +468,9 @@ def populate_elastic_with_dummy_data(
     df_epic_encounters = df_epic_encounters.where(pd.notnull(df_epic_encounters), None)
 
     ingest_data_to_elasticsearch(
-        df_epic_encounters, "epic_encounters", es_client=cs.elastic
+        df_epic_encounters,
+        "epic_encounters",
+        es_client=cs.elastic,
     )
     cs.elastic.indices.refresh(index="epic_encounters")
 
@@ -466,11 +484,14 @@ def populate_elastic_with_dummy_data(
         use_GPT=False,
     )
     df_epic_clinical_notes = df_epic_clinical_notes.where(
-        pd.notnull(df_epic_clinical_notes), None
+        pd.notnull(df_epic_clinical_notes),
+        None,
     )
 
     ingest_data_to_elasticsearch(
-        df_epic_clinical_notes, "epic_clinical_notes", es_client=cs.elastic
+        df_epic_clinical_notes,
+        "epic_clinical_notes",
+        es_client=cs.elastic,
     )
     cs.elastic.indices.refresh(index="epic_clinical_notes")
 
@@ -483,11 +504,14 @@ def populate_elastic_with_dummy_data(
         global_end_month=global_end_month,
     )
     df_epic_medical_history = df_epic_medical_history.where(
-        pd.notnull(df_epic_medical_history), None
+        pd.notnull(df_epic_medical_history),
+        None,
     )
 
     ingest_data_to_elasticsearch(
-        df_epic_medical_history, "epic_medical_history", es_client=cs.elastic
+        df_epic_medical_history,
+        "epic_medical_history",
+        es_client=cs.elastic,
     )
     cs.elastic.indices.refresh(index="epic_medical_history")
 
@@ -500,11 +524,14 @@ def populate_elastic_with_dummy_data(
         global_end_month=global_end_month,
     )
     df_epic_lab_results = df_epic_lab_results.where(
-        pd.notnull(df_epic_lab_results), None
+        pd.notnull(df_epic_lab_results),
+        None,
     )
 
     ingest_data_to_elasticsearch(
-        df_epic_lab_results, "epic_lab_results", es_client=cs.elastic
+        df_epic_lab_results,
+        "epic_lab_results",
+        es_client=cs.elastic,
     )
     cs.elastic.indices.refresh(index="epic_lab_results")
 
@@ -617,7 +644,6 @@ def generate_observations_data_generic(
     fields_list=None,
 ) -> pd.DataFrame:
     """Generates dummy data for the 'observations' index (generic fallback)."""
-
     if fields_list is None:
         fields_list = [
             "observation_guid",

@@ -59,8 +59,8 @@ def build_ipw_dataframe(
     Returns:
         pd.DataFrame: A DataFrame where each row represents the IPW record for a
             patient, containing details of the index event.
-    """
 
+    """
     df = pd.DataFrame()
 
     if custom_pat_list is not None:
@@ -92,7 +92,7 @@ def build_ipw_dataframe(
                             else f'"{s_docs}"."{t_docs}"'
                         )
                         result = connection.execute(
-                            text(f'SELECT DISTINCT "client_idcode" FROM {full_t}')
+                            text(f'SELECT DISTINCT "client_idcode" FROM {full_t}'),
                         )
                         pat_list_stripped = [
                             str(row[0]) for row in result if row[0] is not None
@@ -101,7 +101,7 @@ def build_ipw_dataframe(
                 # If no patients found in docs, try demographics
                 if not pat_list_stripped:
                     logger.info(
-                        "No patients found in raw_epr_docs, trying raw_demographics."
+                        "No patients found in raw_epr_docs, trying raw_demographics.",
                     )
                     t_demo = (
                         "raw_data_raw_demographics"
@@ -117,7 +117,7 @@ def build_ipw_dataframe(
                                 else f'"{s_demo}"."{t_demo}"'
                             )
                             result = connection.execute(
-                                text(f'SELECT DISTINCT "client_idcode" FROM {full_t}')
+                                text(f'SELECT DISTINCT "client_idcode" FROM {full_t}'),
                             )
                             pat_list_stripped = [
                                 str(row[0]) for row in result if row[0] is not None
@@ -126,7 +126,7 @@ def build_ipw_dataframe(
                 # As a last resort, if raw data tables are empty, check the features table
                 if not pat_list_stripped:
                     logger.warning(
-                        "Could not find patients in raw data tables, trying features table."
+                        "Could not find patients in raw data tables, trying features table.",
                     )
                     t_feat = (
                         "features_features" if engine.name == "sqlite" else "features"
@@ -140,7 +140,7 @@ def build_ipw_dataframe(
                                 else f'"{s_feat}"."{t_feat}"'
                             )
                             result = connection.execute(
-                                text(f'SELECT DISTINCT "client_idcode" FROM {full_t}')
+                                text(f'SELECT DISTINCT "client_idcode" FROM {full_t}'),
                             )
                             pat_list_stripped = [
                                 str(row[0]) for row in result if row[0] is not None
@@ -180,7 +180,7 @@ def build_ipw_dataframe(
             df["updatetime"] = pd.NaT
 
         df["updatetime"] = df["updatetime"].fillna(
-            df["observationdocument_recordeddtm"]
+            df["observationdocument_recordeddtm"],
         )
         df["observationdocument_recordeddtm"] = df[
             "observationdocument_recordeddtm"

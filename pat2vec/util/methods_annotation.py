@@ -43,6 +43,7 @@ def _ensure_synthetic_annotation_row(
 
     Returns:
         pd.DataFrame: A single-row DataFrame with valid synthetic annotation data
+
     """
     target_guid_column = "document_guid" if guid_column == "id" else guid_column
 
@@ -84,7 +85,7 @@ def _ensure_synthetic_annotation_row(
             np.nan,
             np.nan,
             document_guid_value,
-        ]
+        ],
     ]
 
     columns = [
@@ -120,7 +121,8 @@ def _ensure_synthetic_annotation_row(
 
 
 def check_pat_document_annotation_complete(
-    current_pat_client_id_code: str, config_obj: Any = None
+    current_pat_client_id_code: str,
+    config_obj: Any = None,
 ) -> bool:
     """Checks if a patient's document annotation data already exists (file or database).
 
@@ -128,11 +130,12 @@ def check_pat_document_annotation_complete(
         current_pat_client_id_code: The patient's ID code.
         config_obj: The configuration object containing file paths.
 
-      Returns:
+    Returns:
         bool: True if the annotation data exists, False otherwise.
 
     Raises:
         Exception: Propagates exceptions from database operations.
+
     """
     if getattr(config_obj, "storage_backend", "file") == "database":
         try:
@@ -144,15 +147,16 @@ def check_pat_document_annotation_complete(
             with engine.connect() as connection:
                 if engine.name == "sqlite":
                     query = text(
-                        'SELECT 1 FROM "annotations_ann_epr_docs" WHERE "client_idcode" = :pat_id LIMIT 1'
+                        'SELECT 1 FROM "annotations_ann_epr_docs" WHERE "client_idcode" = :pat_id LIMIT 1',
                     )
                 else:
                     query = text(
-                        'SELECT 1 FROM "annotations"."ann_epr_docs" WHERE "client_idcode" = :pat_id LIMIT 1'
+                        'SELECT 1 FROM "annotations"."ann_epr_docs" WHERE "client_idcode" = :pat_id LIMIT 1',
                     )
 
                 result = connection.execute(
-                    query, {"pat_id": current_pat_client_id_code}
+                    query,
+                    {"pat_id": current_pat_client_id_code},
                 ).scalar()
                 return result is not None
         except Exception:
@@ -161,7 +165,8 @@ def check_pat_document_annotation_complete(
     pre_document_annotation_batch_path = config_obj.pre_document_annotation_batch_path
 
     current_pat_batch_annot_path = os.path.join(
-        pre_document_annotation_batch_path, current_pat_client_id_code + ".csv"
+        pre_document_annotation_batch_path,
+        current_pat_client_id_code + ".csv",
     )
 
     bool1 = exist_check(current_pat_batch_annot_path, config_obj=config_obj)
@@ -194,6 +199,7 @@ def annot_pat_batch_docs(
 
     Raises:
         Exception: Propagates exceptions from MedCAT annotation operations.
+
     """
     start_time = config_obj.start_time
 
@@ -252,6 +258,7 @@ def multi_annots_to_df_textual_obs(
 
     Raises:
         Exception: Propagates exceptions from database operations or file I/O.
+
     """
     n_docs_to_annotate = len(pat_batch)
 
@@ -262,7 +269,8 @@ def multi_annots_to_df_textual_obs(
     )
 
     current_pat_document_annotation_batch_path = os.path.join(
-        pre_document_annotation_batch_path, current_pat_client_idcode + ".csv"
+        pre_document_annotation_batch_path,
+        current_pat_client_idcode + ".csv",
     )
 
     update_pbar(
@@ -319,7 +327,10 @@ def multi_annots_to_df_textual_obs(
         final_df.to_csv(current_pat_document_annotation_batch_path, index=False)
 
     save_annotations_to_db(
-        final_df, current_pat_client_idcode, "ann_textual_obs", config_obj
+        final_df,
+        current_pat_client_idcode,
+        "ann_textual_obs",
+        config_obj,
     )
 
     return final_df
@@ -354,6 +365,7 @@ def multi_annots_to_df_epr_docs(
 
     Raises:
         Exception: Propagates exceptions from database operations or file I/O.
+
     """
     n_docs_to_annotate = len(pat_batch)
 
@@ -362,7 +374,8 @@ def multi_annots_to_df_epr_docs(
     pre_document_annotation_batch_path = config_obj.pre_document_annotation_batch_path
 
     current_pat_document_annotation_batch_path = os.path.join(
-        pre_document_annotation_batch_path, current_pat_client_idcode + ".csv"
+        pre_document_annotation_batch_path,
+        current_pat_client_idcode + ".csv",
     )
 
     update_pbar(
@@ -416,12 +429,16 @@ def multi_annots_to_df_epr_docs(
 
     if getattr(config_obj, "storage_backend", "file") == "file":
         os.makedirs(
-            os.path.dirname(current_pat_document_annotation_batch_path), exist_ok=True
+            os.path.dirname(current_pat_document_annotation_batch_path),
+            exist_ok=True,
         )
         final_df.to_csv(current_pat_document_annotation_batch_path, index=False)
 
     save_annotations_to_db(
-        final_df, current_pat_client_idcode, "ann_epr_docs", config_obj
+        final_df,
+        current_pat_client_idcode,
+        "ann_epr_docs",
+        config_obj,
     )
 
     return final_df
@@ -460,6 +477,7 @@ def multi_annots_to_df_reports(
 
     Raises:
         Exception: Propagates exceptions from database operations or file I/O.
+
     """
     n_docs_to_annotate = len(pat_batch)
 
@@ -470,7 +488,8 @@ def multi_annots_to_df_reports(
     )
 
     current_pat_document_annotation_batch_path = os.path.join(
-        pre_document_annotation_batch_path, current_pat_client_idcode + ".csv"
+        pre_document_annotation_batch_path,
+        current_pat_client_idcode + ".csv",
     )
 
     update_pbar(
@@ -526,7 +545,10 @@ def multi_annots_to_df_reports(
         final_df.to_csv(current_pat_document_annotation_batch_path, index=False)
 
     save_annotations_to_db(
-        final_df, current_pat_client_idcode, "ann_reports", config_obj
+        final_df,
+        current_pat_client_idcode,
+        "ann_reports",
+        config_obj,
     )
 
     return final_df
@@ -562,6 +584,7 @@ def multi_annots_to_df_epic_lab_results(
 
     Raises:
         Exception: Propagates exceptions from database operations or file I/O.
+
     """
     n_docs_to_annotate = len(pat_batch)
     start_time = config_obj.start_time
@@ -609,7 +632,10 @@ def multi_annots_to_df_epic_lab_results(
         else pd.DataFrame(columns=EMPTY_ANNOT_COLS)
     )
     save_annotations_to_db(
-        final_df, current_pat_client_idcode, "ann_epic_lab_results", config_obj
+        final_df,
+        current_pat_client_idcode,
+        "ann_epic_lab_results",
+        config_obj,
     )
     return final_df
 
@@ -644,6 +670,7 @@ def multi_annots_to_df_epic_orders(
 
     Raises:
         Exception: Propagates exceptions from database operations or file I/O.
+
     """
     n_docs_to_annotate = len(pat_batch)
     start_time = config_obj.start_time
@@ -653,7 +680,8 @@ def multi_annots_to_df_epic_orders(
     )
 
     current_pat_document_annotation_batch_path = os.path.join(
-        pre_document_annotation_batch_path, current_pat_client_idcode + ".csv"
+        pre_document_annotation_batch_path,
+        current_pat_client_idcode + ".csv",
     )
 
     update_pbar(
@@ -702,12 +730,16 @@ def multi_annots_to_df_epic_orders(
 
     if getattr(config_obj, "storage_backend", "file") == "file":
         os.makedirs(
-            os.path.dirname(current_pat_document_annotation_batch_path), exist_ok=True
+            os.path.dirname(current_pat_document_annotation_batch_path),
+            exist_ok=True,
         )
         final_df.to_csv(current_pat_document_annotation_batch_path, index=False)
 
     save_annotations_to_db(
-        final_df, current_pat_client_idcode, "ann_epic_orders", config_obj
+        final_df,
+        current_pat_client_idcode,
+        "ann_epic_orders",
+        config_obj,
     )
     return final_df
 
@@ -742,6 +774,7 @@ def multi_annots_to_df_epic_clinical_notes(
 
     Raises:
         Exception: Propagates exceptions from database operations or file I/O.
+
     """
     n_docs_to_annotate = len(pat_batch)
     start_time = config_obj.start_time
@@ -751,7 +784,8 @@ def multi_annots_to_df_epic_clinical_notes(
     )
 
     current_pat_document_annotation_batch_path = os.path.join(
-        pre_document_annotation_batch_path, current_pat_client_idcode + ".csv"
+        pre_document_annotation_batch_path,
+        current_pat_client_idcode + ".csv",
     )
 
     update_pbar(
@@ -806,12 +840,16 @@ def multi_annots_to_df_epic_clinical_notes(
 
     if getattr(config_obj, "storage_backend", "file") == "file":
         os.makedirs(
-            os.path.dirname(current_pat_document_annotation_batch_path), exist_ok=True
+            os.path.dirname(current_pat_document_annotation_batch_path),
+            exist_ok=True,
         )
         final_df.to_csv(current_pat_document_annotation_batch_path, index=False)
 
     save_annotations_to_db(
-        final_df, current_pat_client_idcode, "ann_epic_clinical_notes", config_obj
+        final_df,
+        current_pat_client_idcode,
+        "ann_epic_clinical_notes",
+        config_obj,
     )
 
     return final_df
@@ -847,6 +885,7 @@ def multi_annots_to_df_epic_clinical_notes_appointments(
 
     Raises:
         Exception: Propagates exceptions from database operations or file I/O.
+
     """
     n_docs_to_annotate = len(pat_batch)
     start_time = config_obj.start_time
@@ -856,7 +895,8 @@ def multi_annots_to_df_epic_clinical_notes_appointments(
     )
 
     current_pat_document_annotation_batch_path = os.path.join(
-        pre_document_annotation_batch_path, current_pat_client_idcode + ".csv"
+        pre_document_annotation_batch_path,
+        current_pat_client_idcode + ".csv",
     )
 
     update_pbar(
@@ -911,7 +951,8 @@ def multi_annots_to_df_epic_clinical_notes_appointments(
 
     if getattr(config_obj, "storage_backend", "file") == "file":
         os.makedirs(
-            os.path.dirname(current_pat_document_annotation_batch_path), exist_ok=True
+            os.path.dirname(current_pat_document_annotation_batch_path),
+            exist_ok=True,
         )
         final_df.to_csv(current_pat_document_annotation_batch_path, index=False)
 
@@ -955,6 +996,7 @@ def multi_annots_to_df_epic_imaging_reports(
 
     Raises:
         Exception: Propagates exceptions from database operations or file I/O.
+
     """
     n_docs_to_annotate = len(pat_batch)
     start_time = config_obj.start_time
@@ -964,7 +1006,8 @@ def multi_annots_to_df_epic_imaging_reports(
     )
 
     current_pat_document_annotation_batch_path = os.path.join(
-        pre_document_annotation_batch_path, current_pat_client_idcode + ".csv"
+        pre_document_annotation_batch_path,
+        current_pat_client_idcode + ".csv",
     )
 
     update_pbar(
@@ -1012,12 +1055,16 @@ def multi_annots_to_df_epic_imaging_reports(
 
     if getattr(config_obj, "storage_backend", "file") == "file":
         os.makedirs(
-            os.path.dirname(current_pat_document_annotation_batch_path), exist_ok=True
+            os.path.dirname(current_pat_document_annotation_batch_path),
+            exist_ok=True,
         )
         final_df.to_csv(current_pat_document_annotation_batch_path, index=False)
 
     save_annotations_to_db(
-        final_df, current_pat_client_idcode, "ann_epic_imaging_reports", config_obj
+        final_df,
+        current_pat_client_idcode,
+        "ann_epic_imaging_reports",
+        config_obj,
     )
     return final_df
 
@@ -1052,6 +1099,7 @@ def multi_annots_to_df_epic_medical_history(
 
     Raises:
         Exception: Propagates exceptions from database operations or file I/O.
+
     """
     n_docs_to_annotate = len(pat_batch)
     start_time = config_obj.start_time
@@ -1101,7 +1149,10 @@ def multi_annots_to_df_epic_medical_history(
     )
 
     save_annotations_to_db(
-        final_df, current_pat_client_idcode, "ann_epic_medical_history", config_obj
+        final_df,
+        current_pat_client_idcode,
+        "ann_epic_medical_history",
+        config_obj,
     )
 
     return final_df
@@ -1140,6 +1191,7 @@ def multi_annots_to_df_mct(
 
     Raises:
         Exception: Propagates exceptions from database operations or file I/O.
+
     """
     n_docs_to_annotate = len(pat_batch)
 
@@ -1150,7 +1202,8 @@ def multi_annots_to_df_mct(
     )
 
     current_pat_document_annotation_batch_path = os.path.join(
-        pre_document_annotation_batch_path, current_pat_client_idcode + ".csv"
+        pre_document_annotation_batch_path,
+        current_pat_client_idcode + ".csv",
     )
 
     update_pbar(
@@ -1206,14 +1259,18 @@ def multi_annots_to_df_mct(
         final_df.to_csv(current_pat_document_annotation_batch_path, index=False)
 
     save_annotations_to_db(
-        final_df, current_pat_client_idcode, "ann_mct_docs", config_obj
+        final_df,
+        current_pat_client_idcode,
+        "ann_mct_docs",
+        config_obj,
     )
 
     return final_df
 
 
 def calculate_pretty_name_count_features(
-    df_copy: pd.DataFrame, suffix: str = "epr"
+    df_copy: pd.DataFrame,
+    suffix: str = "epr",
 ) -> pd.DataFrame | None:
     """Calculates count-based features from the 'pretty_name' column.
 
@@ -1230,6 +1287,7 @@ def calculate_pretty_name_count_features(
 
     Raises:
         Exception: Propagates exceptions from groupby operations.
+
     """
     if len(df_copy) > 0:
         # Group by 'pretty_name' and calculate counts

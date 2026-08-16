@@ -26,6 +26,7 @@ def append_regex_term_counts(
 
     Returns:
         The original DataFrame with new columns for the counts of each term.
+
     """
     if debug:
         logger.debug("append_regex_term_counts df:")

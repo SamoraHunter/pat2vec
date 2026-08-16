@@ -84,6 +84,7 @@ def search_bloods_data(
     Raises:
         ValueError: If `cohort_searcher_with_terms_and_search` or `client_id_codes`
             is None.
+
     """
     if (
         output_filename
@@ -92,7 +93,9 @@ def search_bloods_data(
         and hasattr(config_obj, "proj_name")
     ):
         output_filename = os.path.join(
-            config_obj.root_path, config_obj.proj_name, output_filename
+            config_obj.root_path,
+            config_obj.proj_name,
+            output_filename,
         )
 
     if output_filename and os.path.exists(output_filename) and not overwrite:
@@ -109,7 +112,12 @@ def search_bloods_data(
 
     start_year, start_month, start_day, end_year, end_month, end_day = (
         validate_input_dates(
-            start_year, start_month, start_day, end_year, end_month, end_day
+            start_year,
+            start_month,
+            start_day,
+            end_year,
+            end_month,
+            end_day,
         )
     )
 
@@ -178,6 +186,7 @@ def get_current_pat_bloods(
         AttributeError: If `config_obj` is None or missing required attributes
             (e.g., `batch_mode`, `bloods_time_field`, `client_idcode_term_name`,
             `main_options`).
+
     """
     batch_mode = config_obj.batch_mode
 
@@ -190,7 +199,7 @@ def get_current_pat_bloods(
     if pat_batch.empty and batch_mode:
         if config_obj.verbosity >= 1:
             logger.info(
-                f"pat_batch is empty for {current_pat_client_id_code}. Returning empty DataFrame."
+                f"pat_batch is empty for {current_pat_client_id_code}. Returning empty DataFrame.",
             )
         return pd.DataFrame({"client_idcode": [current_pat_client_id_code]})
 
@@ -207,7 +216,7 @@ def get_current_pat_bloods(
         )
         if config_obj.verbosity >= 1:
             logger.info(
-                f"After filter_dataframe_by_timestamp (batch_mode): {len(current_pat_bloods)} rows for {current_pat_client_id_code}"
+                f"After filter_dataframe_by_timestamp (batch_mode): {len(current_pat_bloods)} rows for {current_pat_client_id_code}",
             )
     else:
         current_pat_bloods = search_bloods_data(
@@ -226,7 +235,7 @@ def get_current_pat_bloods(
         )
         if config_obj.verbosity >= 1:
             logger.info(
-                f"After search_bloods_data (non-batch_mode): {len(current_pat_bloods)} rows for {current_pat_client_id_code}"
+                f"After search_bloods_data (non-batch_mode): {len(current_pat_bloods)} rows for {current_pat_client_id_code}",
             )
 
     # --- Integrate Epic Lab Results if enabled ---
@@ -276,26 +285,29 @@ def get_current_pat_bloods(
 
             # Ensure basicobs_value_numeric is numeric
             epic_lab_data["basicobs_value_numeric"] = pd.to_numeric(
-                epic_lab_data["basicobs_value_numeric"], errors="coerce"
+                epic_lab_data["basicobs_value_numeric"],
+                errors="coerce",
             )
 
             # Concatenate Epic lab data with existing bloods data
             current_pat_bloods = pd.concat(
-                [current_pat_bloods, epic_lab_data], ignore_index=True
+                [current_pat_bloods, epic_lab_data],
+                ignore_index=True,
             )
 
     # Ensure 'datetime' column is always a proper datetime object for calculations.
     # This handles both batch mode (where it might be a string copy) and non-batch mode.
     current_pat_bloods["datetime"] = pd.to_datetime(
-        current_pat_bloods[bloods_time_field], errors="coerce"
+        current_pat_bloods[bloods_time_field],
+        errors="coerce",
     )
     if config_obj.verbosity >= 1:
         logger.info(
-            f"After datetime conversion: {len(current_pat_bloods)} rows for {current_pat_client_id_code}"
+            f"After datetime conversion: {len(current_pat_bloods)} rows for {current_pat_client_id_code}",
         )
 
     basicobs_itemname_analysed_list = list(
-        current_pat_bloods["basicobs_itemname_analysed"].unique()
+        current_pat_bloods["basicobs_itemname_analysed"].unique(),
     )
 
     basicobs_itemname_analysed_df_dict = {
@@ -319,7 +331,8 @@ def get_current_pat_bloods(
         # and ensure datetime is valid for sorting.
         cleaned_df = filtered_df.copy()
         cleaned_df["basicobs_value_numeric"] = pd.to_numeric(
-            cleaned_df["basicobs_value_numeric"], errors="coerce"
+            cleaned_df["basicobs_value_numeric"],
+            errors="coerce",
         )
         cleaned_df = cleaned_df.dropna(subset=["basicobs_value_numeric", "datetime"])
 
@@ -366,7 +379,8 @@ def get_current_pat_bloods(
                 )
             delta_days_since_last = (today - latest_date_object).days
             df_unique_filtered.at[
-                patient_row_index, col_name + "_days-since-last-test"
+                patient_row_index,
+                col_name + "_days-since-last-test",
             ] = delta_days_since_last
 
             # Days between earliest and last
@@ -384,7 +398,8 @@ def get_current_pat_bloods(
                     latest_date_object - oldest_date_object
                 ).days
                 df_unique_filtered.at[
-                    patient_row_index, col_name + "_days-between-first-last"
+                    patient_row_index,
+                    col_name + "_days-between-first-last",
                 ] = delta_between_first_last
 
             # Median (requires at least 1 value, but more meaningful with >=2)
@@ -411,14 +426,16 @@ def get_current_pat_bloods(
             col_name_low = col_name_mean - (col_name_std * 3)
 
             df_unique_filtered.at[
-                patient_row_index, col_name + "_contains-extreme-low"
+                patient_row_index,
+                col_name + "_contains-extreme-low",
             ] = int(cleaned_df["basicobs_value_numeric"].min() < col_name_low)
 
             # contains extreme high
             col_name_high = col_name_mean + (col_name_std * 3)
 
             df_unique_filtered.at[
-                patient_row_index, col_name + "_contains-extreme-high"
+                patient_row_index,
+                col_name + "_contains-extreme-high",
             ] = int(cleaned_df["basicobs_value_numeric"].max() > col_name_high)
 
     if config_obj.verbosity >= 6:

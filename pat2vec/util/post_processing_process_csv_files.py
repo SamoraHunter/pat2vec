@@ -40,8 +40,8 @@ def process_csv_files(
 
     Returns:
         The path to the saved concatenated CSV file.
-    """
 
+    """
     # Ensure output folder exists
     os.makedirs(out_folder, exist_ok=True)
 
@@ -65,7 +65,7 @@ def process_csv_files(
                 sample_size = int(sample_size)
             except ValueError:
                 raise ValueError(
-                    f"Invalid sample_size: {sample_size}. Must be an integer or 'all'"
+                    f"Invalid sample_size: {sample_size}. Must be an integer or 'all'",
                 )
 
     if sample_size is None:
@@ -75,7 +75,8 @@ def process_csv_files(
 
     # Create output file path
     output_file = os.path.join(
-        out_folder, f"concatenated_data_{output_filename_suffix}.csv"
+        out_folder,
+        f"concatenated_data_{output_filename_suffix}.csv",
     )
 
     # Handle existing output file
@@ -97,7 +98,7 @@ def process_csv_files(
     # First pass: collect all unique column names
     for file in tqdm(sampled_files, desc="Analyzing columns"):
         try:
-            with open(file, "r", newline="", encoding="utf-8") as infile:
+            with open(file, newline="", encoding="utf-8") as infile:
                 reader = csv.reader(infile)
                 try:
                     header = next(reader)
@@ -123,7 +124,8 @@ def process_csv_files(
     total_rows_processed = 0
 
     for part_chunk in tqdm(
-        range(0, len(sampled_files), part_size), desc="Processing chunks"
+        range(0, len(sampled_files), part_size),
+        desc="Processing chunks",
     ):
         chunk_files = sampled_files[part_chunk : part_chunk + part_size]
 
@@ -132,7 +134,7 @@ def process_csv_files(
 
         for file in chunk_files:
             try:
-                with open(file, "r", newline="", encoding="utf-8") as infile:
+                with open(file, newline="", encoding="utf-8") as infile:
                     reader = csv.DictReader(infile)
                     for row in reader:
                         # Create a clean row with all columns, filling missing ones with empty strings
@@ -159,7 +161,7 @@ def process_csv_files(
             total_rows_processed += len(chunk_data)
 
     logger.info(
-        f"Processed {total_rows_processed} total rows from {len(sampled_files)} files"
+        f"Processed {total_rows_processed} total rows from {len(sampled_files)} files",
     )
 
     # Add timestamp column if requested
@@ -202,6 +204,7 @@ def process_csv_files_multi(
         append_timestamp_column: If True, processes the final file to extract
             a datetime column.
         n_proc: The number of processes to use. Can be an integer, 'all', or 'half'.
+
     """
     curate_columns = False
 
@@ -217,7 +220,8 @@ def process_csv_files_multi(
             sample_size = len(all_file_paths)
 
     output_file = os.path.join(
-        out_folder, f"concatenated_data_{output_filename_suffix}.csv"
+        out_folder,
+        f"concatenated_data_{output_filename_suffix}.csv",
     )
 
     unique_columns = set()
@@ -229,7 +233,7 @@ def process_csv_files_multi(
     if not curate_columns:
         for file in tqdm(all_files):
             if file.endswith(".csv"):
-                with open(file, "r", newline="") as infile:
+                with open(file, newline="") as infile:
                     reader = csv.reader(infile)
                     try:
                         header = next(reader)
@@ -242,7 +246,7 @@ def process_csv_files_multi(
         base_name, extension = os.path.splitext(output_file)
         new_output_file = f"{base_name}_{timestamp}_overwritten{extension}"  # type: ignore
         logger.warning(
-            f"Warning: Output file already exists. Renaming {output_file} to {new_output_file}"
+            f"Warning: Output file already exists. Renaming {output_file} to {new_output_file}",
         )
         os.rename(output_file, new_output_file)
     else:
@@ -277,7 +281,10 @@ def process_csv_files_multi(
             for i in range(0, len(all_files), part_size)
         ]
         results = list(
-            tqdm(pool.imap(process_chunk, args_list), total=len(all_files) // part_size)
+            tqdm(
+                pool.imap(process_chunk, args_list),
+                total=len(all_files) // part_size,
+            ),
         )
 
     with open(output_file, "a", newline="") as outfile:
@@ -285,7 +292,7 @@ def process_csv_files_multi(
         for result in tqdm(results, desc="Writing lines..."):
             for i in range(len(result[next(iter(result))])):
                 writer.writerow(
-                    {column: result[column][i] for column in unique_columns}
+                    {column: result[column][i] for column in unique_columns},
                 )
 
     if append_timestamp_column:

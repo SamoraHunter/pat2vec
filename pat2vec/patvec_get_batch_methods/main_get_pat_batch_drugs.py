@@ -25,8 +25,8 @@ def get_pat_batch_drugs(
 
     Returns:
         A DataFrame containing the batch of medication orders.
-    """
 
+    """
     if config_obj is None or not all(
         hasattr(config_obj, attr)
         for attr in [
@@ -65,21 +65,21 @@ def get_pat_batch_drugs(
                     return df
         except Exception as e:
             logging.error(
-                f"Error with database backend for drugs for patient {current_pat_client_id_code}: {e}"
+                f"Error with database backend for drugs for patient {current_pat_client_id_code}: {e}",
             )
             return pd.DataFrame()
 
     drug_time_field = config_obj.drug_time_field
 
     batch_obs_target_path = os.path.join(
-        config_obj.pre_drugs_batch_path, str(current_pat_client_id_code) + ".csv"
+        config_obj.pre_drugs_batch_path,
+        str(current_pat_client_id_code) + ".csv",
     )
     existence_check = exist_check(batch_obs_target_path, config_obj)
 
     should_fetch = False
     if config_obj.storage_backend == "database" or (
-        config_obj.store_pat_batch_observations
-        and not existence_check
+        (config_obj.store_pat_batch_observations and not existence_check)
         or existence_check is False
     ):
         should_fetch = True
@@ -134,7 +134,7 @@ def get_pat_batch_drugs(
                                 )
                                 if config_obj.overwrite_stored_pat_observations:
                                     del_query = text(
-                                        f"DELETE FROM {db_table if engine.name == 'sqlite' else f'{schema_name}.{table_name}'} WHERE client_idcode = :pat_id"
+                                        f"DELETE FROM {db_table if engine.name == 'sqlite' else f'{schema_name}.{table_name}'} WHERE client_idcode = :pat_id",
                                     )
                                     connection.execute(
                                         del_query,

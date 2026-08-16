@@ -14,6 +14,7 @@ def setup_logger(log_level: str = "INFO", logs_dir: str = "logs") -> logging.Log
 
     Returns:
         The configured logger instance.
+
     """
     # Ensure the logs directory exists
     os.makedirs(logs_dir, exist_ok=True)
@@ -21,7 +22,7 @@ def setup_logger(log_level: str = "INFO", logs_dir: str = "logs") -> logging.Log
     # Create a logger
     logger = logging.getLogger("pat2vec")
     logger.setLevel(
-        getattr(logging, log_level.upper())
+        getattr(logging, log_level.upper()),
     )  # Set the logger's level to the requested level
     logger.propagate = False  # Prevent messages from being passed to the root logger
 
@@ -36,7 +37,7 @@ def setup_logger(log_level: str = "INFO", logs_dir: str = "logs") -> logging.Log
     file_handler = logging.FileHandler(log_file)
     file_handler.setLevel(logging.DEBUG)  # Log everything to the file
     file_formatter = logging.Formatter(
-        "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+        "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     )
     file_handler.setFormatter(file_formatter)
     logger.addHandler(file_handler)
@@ -45,7 +46,7 @@ def setup_logger(log_level: str = "INFO", logs_dir: str = "logs") -> logging.Log
     console_handler = logging.StreamHandler()
     console_handler.setLevel(getattr(logging, log_level.upper()))
     console_formatter = logging.Formatter(
-        "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+        "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     )
     console_handler.setFormatter(console_formatter)
     logger.addHandler(console_handler)

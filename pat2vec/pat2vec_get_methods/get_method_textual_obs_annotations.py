@@ -51,23 +51,23 @@ def get_current_pat_textual_obs_annotations(
         ValueError: If `textual_obs_annotations` is None.
         ValueError: If `current_pat_client_id_code` is None.
         ValueError: If `target_date_range` is None.
-    """
 
+    """
     if config_obj is None:
         raise ValueError(
-            "config_obj cannot be None. Please provide a valid configuration."
+            "config_obj cannot be None. Please provide a valid configuration.",
         )
     if textual_obs_annotations is None:
         raise ValueError(
-            "textual_obs_annotations cannot be None. Please provide a valid DataFrame."
+            "textual_obs_annotations cannot be None. Please provide a valid DataFrame.",
         )
     if current_pat_client_id_code is None:
         raise ValueError(
-            "current_pat_client_id_code cannot be None. Please provide a valid client ID code."
+            "current_pat_client_id_code cannot be None. Please provide a valid client ID code.",
         )
     if target_date_range is None:
         raise ValueError(
-            "target_date_range cannot be None. Please provide a valid target date range."
+            "target_date_range cannot be None. Please provide a valid target date range.",
         )
 
     start_time = config_obj.start_time
@@ -113,7 +113,7 @@ def get_current_pat_textual_obs_annotations(
             # Rename to time_column if a source column was found
             if found_col and found_col != time_column:
                 textual_obs_annotations = textual_obs_annotations.rename(
-                    columns={found_col: time_column}
+                    columns={found_col: time_column},
                 )
 
         filtered_textual_obs_annotations = filter_dataframe_by_timestamp(
@@ -131,7 +131,8 @@ def get_current_pat_textual_obs_annotations(
         # if there are any filtered annotations, calculate the pretty name count features
         if len(filtered_textual_obs_annotations) > 0:
             processed_annotations = calculate_pretty_name_count_features(
-                filtered_textual_obs_annotations, suffix="textual_obs"
+                filtered_textual_obs_annotations,
+                suffix="textual_obs",
             )
 
         else:
@@ -142,13 +143,15 @@ def get_current_pat_textual_obs_annotations(
                     len(filtered_textual_obs_annotations) > 0,
                 )
             processed_annotations = pd.DataFrame(
-                data=[current_pat_client_id_code], columns=["client_idcode"]
+                data=[current_pat_client_id_code],
+                columns=["client_idcode"],
             )
 
     else:
         # if the textual observation annotations are None, create a DataFrame with the client ID code
         processed_annotations = pd.DataFrame(
-            data=[current_pat_client_id_code], columns=["client_idcode"]
+            data=[current_pat_client_id_code],
+            columns=["client_idcode"],
         )
 
     # display the processed annotations if the verbosity level is 6 or higher

@@ -16,7 +16,8 @@ logger = logging.getLogger(__name__)
 
 
 def retrieve_pat_annotations(
-    current_pat_client_idcode: str, config_obj: Any = None
+    current_pat_client_idcode: str,
+    config_obj: Any = None,
 ) -> pd.DataFrame:
     """Concatenates EPR and MCT annotation data for a single patient.
 
@@ -32,17 +33,21 @@ def retrieve_pat_annotations(
     Returns:
         A concatenated DataFrame containing annotations from both EPR and MCT
         sources, with a unified 'updatetime' column.
+
     """
     # Use the existing function that handles both File and DB backends
     # We only want EPR and MCT, so we can ignore other columns if needed,
     # but retrieving everything is safer for backward compatibility here.
     return retrieve_pat_annots_mct_epr(
-        current_pat_client_idcode, config_obj, merge_columns=True
+        current_pat_client_idcode,
+        config_obj,
+        merge_columns=True,
     )
 
 
 def copy_project_folders_with_substring_match(
-    pat2vec_obj: Any, substrings_to_match: list[str] | None = None
+    pat2vec_obj: Any,
+    substrings_to_match: list[str] | None = None,
 ) -> str:
     """Copies project subfolders that match given substrings to a new versioned directory.
 
@@ -55,6 +60,7 @@ def copy_project_folders_with_substring_match(
         pat2vec_obj: The main pat2vec object, containing the `config_obj`.
         substrings_to_match: A list of substrings to identify which folders
             to copy (e.g., ['batches', 'annots']).
+
     """
     if substrings_to_match is None:
         substrings_to_match = ["batches", "annots"]
@@ -198,6 +204,7 @@ def check_csv_files_in_directory(
         ignore_output_vectors: If True, skips paths for 'current_pat_lines_parts'.
         delete_broken: If True, deletes files that fail integrity checks.
         config_obj: The configuration object.
+
     """
     # Collect all CSV files first to get an accurate count and avoid double traversal
     csv_files = []
@@ -212,12 +219,14 @@ def check_csv_files_in_directory(
                 csv_files.append(file_path)
 
     progress_bar = tqdm(
-        total=len(csv_files), unit="file", desc=f"Checking CSV files in {directory}"
+        total=len(csv_files),
+        unit="file",
+        desc=f"Checking CSV files in {directory}",
     )
 
     for file_path in csv_files:
         progress_bar.set_description(
-            f"Checking CSV integrity for: {os.path.basename(file_path)}"
+            f"Checking CSV integrity for: {os.path.basename(file_path)}",
         )
         check_csv_integrity(file_path, verbosity, delete_broken, config_obj=config_obj)
         progress_bar.update(1)

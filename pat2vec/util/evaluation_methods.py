@@ -10,7 +10,8 @@ logger = logging.getLogger(__name__)
 
 
 def compare_ipw_annotation_rows(
-    dataframes: list[pd.DataFrame], columns_to_print: list[str] | None = None
+    dataframes: list[pd.DataFrame],
+    columns_to_print: list[str] | None = None,
 ) -> None:
     """Compares and prints differing rows from multiple annotation DataFrames.
 
@@ -29,6 +30,7 @@ def compare_ipw_annotation_rows(
         columns_to_print: A list of column names to print when differences
             are found. If None, a default set of annotation-related columns
             is used.
+
     """
     if columns_to_print is None:
         # Default columns to print
@@ -103,6 +105,7 @@ class CsvProfiler:
                 where the 'targetId' column is not empty before generating
                 the report. Defaults to False.
             output_dir: Directory where reports will be saved. Defaults to 'profile_reports'.
+
         """
         from ydata_profiling import ProfileReport
 
@@ -136,7 +139,8 @@ class CsvProfiler:
         os.makedirs(output_dir, exist_ok=True)
 
         for csv_file in tqdm(
-            os.listdir(epr_batchs_fp), desc="Generating Profile Reports"
+            os.listdir(epr_batchs_fp),
+            desc="Generating Profile Reports",
         ):
             file_path = os.path.join(epr_batchs_fp, csv_file)
 
@@ -163,7 +167,8 @@ class CsvProfiler:
 
                 if not icd10_opc4s:
                     df = pd.read_csv(file_path, usecols=final_cols).sample(
-                        n=100, random_state=1
+                        n=100,
+                        random_state=1,
                     )
                 else:
                     df = pd.read_csv(file_path, usecols=final_cols)
@@ -186,12 +191,12 @@ class CsvProfiler:
                 profile.to_file(report_path)
 
                 logger.info(
-                    f"✅ Profile report for {csv_file} created at: {report_path}"
+                    f"✅ Profile report for {csv_file} created at: {report_path}",
                 )
 
             except Exception as e:
                 logger.error(
-                    f"❌ Error processing {csv_file}: {type(e).__name__} - {e}"
+                    f"❌ Error processing {csv_file}: {type(e).__name__} - {e}",
                 )
                 traceback.print_exc()
 
@@ -208,7 +213,7 @@ if __name__ == "__main__":
         "cui": [f"C00{i}" for i in range(5)],
         "targetId": [None, "ICD10:R51", None, "ICD10:R05", None],
         "updatetime": pd.to_datetime(
-            ["2023-01-10", "2023-01-11", "2023-01-12", "2023-01-13", "2023-01-14"]
+            ["2023-01-10", "2023-01-11", "2023-01-12", "2023-01-13", "2023-01-14"],
         ),
     }
     pd.DataFrame(data1).to_csv(os.path.join(dummy_dir, "batch_01.csv"), index=False)
@@ -224,7 +229,7 @@ if __name__ == "__main__":
         ],
         "cui": [f"C00{i}" for i in range(5, 10)],
         "observationdocument_recordeddtm": pd.to_datetime(
-            ["2024-02-10", "2024-02-11", "2024-02-12", "2024-02-13", "2024-02-14"]
+            ["2024-02-10", "2024-02-11", "2024-02-12", "2024-02-13", "2024-02-14"],
         ),
     }
     pd.DataFrame(data2).to_csv(os.path.join(dummy_dir, "batch_02.csv"), index=False)
@@ -234,9 +239,10 @@ if __name__ == "__main__":
 
     logger.info("\nRunning example...")
     CsvProfiler.create_profile_reports(
-        epr_batchs_fp=dummy_dir, prefix="class_import_profile"
+        epr_batchs_fp=dummy_dir,
+        prefix="class_import_profile",
     )
 
     logger.info(
-        "\nDemonstration complete. Check the 'profile_reports' directory for output."
+        "\nDemonstration complete. Check the 'profile_reports' directory for output.",
     )

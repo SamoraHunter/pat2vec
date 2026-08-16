@@ -19,6 +19,7 @@ def group_images_by_suffix(folder_path: str) -> dict[str, list[str]]:
     Returns:
         A dictionary where keys are suffixes and values are lists of image
         filenames.
+
     """
     image_groups = {}
 
@@ -35,7 +36,8 @@ def group_images_by_suffix(folder_path: str) -> dict[str, list[str]]:
 
 
 def create_powerpoint_slides_client_idcode_groups(
-    image_groups: dict[str, list[str]], output_path: str
+    image_groups: dict[str, list[str]],
+    output_path: str,
 ) -> None:
     """Creates a PowerPoint presentation from grouped images.
 
@@ -46,6 +48,7 @@ def create_powerpoint_slides_client_idcode_groups(
         image_groups: A dictionary where keys are group identifiers and values
             are lists of image filenames.
         output_path: The path where the output PowerPoint presentation will be saved.
+
     """
     presentation = Presentation()
 
@@ -69,6 +72,7 @@ def create_powerpoint_from_images_group(folder_path: str) -> None:
 
     Args:
         folder_path: The path to the folder containing the images.
+
     """
     image_groups = group_images_by_suffix(folder_path)
     output_path = os.path.join(folder_path, "output_presentation.pptx")
@@ -81,7 +85,9 @@ def create_powerpoint_from_images_group(folder_path: str) -> None:
 
 
 def create_powerpoint_slides(
-    images: list[str], folder_path: str, output_path: str
+    images: list[str],
+    folder_path: str,
+    output_path: str,
 ) -> None:
     """Creates a PowerPoint presentation with one image per slide.
 
@@ -89,6 +95,7 @@ def create_powerpoint_slides(
         images: A list of image filenames.
         folder_path: The directory where the image files are located.
         output_path: The path to save the generated PowerPoint file.
+
     """
     presentation = Presentation()
 
@@ -107,11 +114,12 @@ def create_powerpoint_slides(
 
 
 def create_powerpoint_from_images(folder_path: str) -> None:
-    """
-    Create a PowerPoint presentation from images in a specified folder.
+    """Create a PowerPoint presentation from images in a specified folder.
 
-    Parameters:
+    Parameters
+    ----------
     - folder_path (str): The path to the folder containing images.
+
     """
     images = [
         file_name

@@ -78,23 +78,23 @@ def get_current_pat_epic_imaging_reports_annotations(
         ValueError: If `epic_imaging_reports_annotations` is None.
         ValueError: If `current_pat_client_id_code` is None.
         ValueError: If `target_date_range` is None.
-    """
 
+    """
     if config_obj is None:
         raise ValueError(
-            "config_obj cannot be None. Please provide a valid configuration."
+            "config_obj cannot be None. Please provide a valid configuration.",
         )
     if epic_imaging_reports_annotations is None:
         raise ValueError(
-            "epic_imaging_reports_annotations cannot be None. Please provide a valid DataFrame."
+            "epic_imaging_reports_annotations cannot be None. Please provide a valid DataFrame.",
         )
     if current_pat_client_id_code is None:
         raise ValueError(
-            "current_pat_client_id_code cannot be None. Please provide a valid client ID code."
+            "current_pat_client_id_code cannot be None. Please provide a valid client ID code.",
         )
     if target_date_range is None:
         raise ValueError(
-            "target_date_range cannot be None. Please provide a valid target date range."
+            "target_date_range cannot be None. Please provide a valid target date range.",
         )
 
     start_time = config_obj.start_time
@@ -118,7 +118,9 @@ def get_current_pat_epic_imaging_reports_annotations(
     )
 
     time_column = getattr(
-        config_obj, "epic_imaging_reports_time_field", "document_CreatedWhen"
+        config_obj,
+        "epic_imaging_reports_time_field",
+        "document_CreatedWhen",
     )
 
     if epic_imaging_reports_annotations is not None:
@@ -138,7 +140,7 @@ def get_current_pat_epic_imaging_reports_annotations(
             if found_col and found_col != time_column:
                 epic_imaging_reports_annotations = (
                     epic_imaging_reports_annotations.rename(
-                        columns={found_col: time_column}
+                        columns={found_col: time_column},
                     )
                 )
 
@@ -161,17 +163,19 @@ def get_current_pat_epic_imaging_reports_annotations(
             )
         else:
             processed_annotations = pd.DataFrame(
-                data=[current_pat_client_id_code], columns=["client_idcode"]
+                data=[current_pat_client_id_code],
+                columns=["client_idcode"],
             )
 
     else:
         processed_annotations = pd.DataFrame(
-            data=[current_pat_client_id_code], columns=["client_idcode"]
+            data=[current_pat_client_id_code],
+            columns=["client_idcode"],
         )
 
     if config_obj.verbosity >= 6:
         print(
-            f"DEBUG: Processing epic_imaging_reports_annotations for patient {current_pat_client_id_code}"
+            f"DEBUG: Processing epic_imaging_reports_annotations for patient {current_pat_client_id_code}",
         )
         print(f"Input annotations shape: {epic_imaging_reports_annotations.shape}")
         print(f"Time column used: {time_column}")
@@ -179,13 +183,13 @@ def get_current_pat_epic_imaging_reports_annotations(
         if config_obj.verbosity >= 7:
             print("DEBUG: Filtering epic imaging reports annotations...")
             print(
-                f"Start: {start_year}-{start_month}-{start_day}, End: {end_year}-{end_month}-{end_day}"
+                f"Start: {start_year}-{start_month}-{start_day}, End: {end_year}-{end_month}-{end_day}",
             )
 
         if processed_annotations is not None:
             print(f"Processed annotations shape: {processed_annotations.shape}")
             print(
-                f"Processed columns (first 10): {processed_annotations.columns.tolist()[:10]}"
+                f"Processed columns (first 10): {processed_annotations.columns.tolist()[:10]}",
             )
 
     return processed_annotations

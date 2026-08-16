@@ -30,8 +30,8 @@ def nearest(
     Returns:
         The value from `value_col` corresponding to the nearest date, or None
         if no date is found within the specified range.
-    """
 
+    """
     timebefore = date - max_time_before
     timeafter = date + max_time_after
     filtered_lookup = lookup_dates_and_values[

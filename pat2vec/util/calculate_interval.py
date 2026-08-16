@@ -4,7 +4,9 @@ from dateutil.relativedelta import relativedelta
 
 
 def calculate_interval(
-    start_date: datetime, total_delta: relativedelta, interval_delta: relativedelta
+    start_date: datetime,
+    total_delta: relativedelta,
+    interval_delta: relativedelta,
 ) -> int:
     """Calculates how many 'interval_delta' chunks fit inside 'total_delta'.
 
@@ -22,6 +24,7 @@ def calculate_interval(
 
     Raises:
         ValueError: If `interval_delta` is not a positive duration.
+
     """
     # Check for a zero-length interval to prevent an infinite loop.
     if start_date + interval_delta <= start_date:

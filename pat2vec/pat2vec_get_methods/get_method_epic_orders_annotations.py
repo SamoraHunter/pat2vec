@@ -58,10 +58,11 @@ def get_current_pat_epic_orders_annotations(
         ...     epic_orders_annotations=batch_df,
         ...     config_obj=config
         ... )
+
     """
     if config_obj is None:
         raise ValueError(
-            "config_obj cannot be None. (get_current_pat_epic_orders_annotations)"
+            "config_obj cannot be None. (get_current_pat_epic_orders_annotations)",
         )
 
     start_time = config_obj.start_time
@@ -83,14 +84,14 @@ def get_current_pat_epic_orders_annotations(
 
     if epic_orders_annotations is not None:
         # Handle empty DataFrames or DataFrames without timestamp column
-        if (
-            epic_orders_annotations.empty
-            or "updatetime" not in epic_orders_annotations.columns
+        if epic_orders_annotations.empty or (
+            "updatetime" not in epic_orders_annotations.columns
             and "document_CreatedWhen" not in epic_orders_annotations.columns
         ):
             # Empty or missing required columns - return just client_idcode
             df_pat_target = pd.DataFrame(
-                data=[current_pat_client_id_code], columns=["client_idcode"]
+                data=[current_pat_client_id_code],
+                columns=["client_idcode"],
             )
             return df_pat_target
 
@@ -111,13 +112,14 @@ def get_current_pat_epic_orders_annotations(
         # If no timestamp column found, return empty result
         if not found_col:
             df_pat_target = pd.DataFrame(
-                data=[current_pat_client_id_code], columns=["client_idcode"]
+                data=[current_pat_client_id_code],
+                columns=["client_idcode"],
             )
             return df_pat_target
 
         if found_col and found_col != time_column:
             epic_orders_annotations = epic_orders_annotations.rename(
-                columns={found_col: time_column}
+                columns={found_col: time_column},
             )
 
         filtered_annots = filter_dataframe_by_timestamp(
@@ -134,15 +136,18 @@ def get_current_pat_epic_orders_annotations(
 
         if len(filtered_annots) > 0:
             df_pat_target = calculate_pretty_name_count_features(
-                filtered_annots, suffix="epic_orders"
+                filtered_annots,
+                suffix="epic_orders",
             )
         else:
             df_pat_target = pd.DataFrame(
-                data=[current_pat_client_id_code], columns=["client_idcode"]
+                data=[current_pat_client_id_code],
+                columns=["client_idcode"],
             )
     else:
         df_pat_target = pd.DataFrame(
-            data=[current_pat_client_id_code], columns=["client_idcode"]
+            data=[current_pat_client_id_code],
+            columns=["client_idcode"],
         )
 
     if config_obj.verbosity >= 6:

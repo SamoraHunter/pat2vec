@@ -40,6 +40,7 @@ def get_demo(
 
     Raises:
         Exception: If multiple rows are processed when only one is expected.
+
     """
     # Filters the raw pat batch of data to return the latest row of raw data within the target date range
     current_pat_demo = get_demographics3_batch(
@@ -112,7 +113,7 @@ def get_demo(
 
     exclude_column = "client_idcode"
     current_pat_demo = current_pat_demo.astype(
-        {col: "float" for col in current_pat_demo.columns if col != exclude_column}
+        {col: "float" for col in current_pat_demo.columns if col != exclude_column},
     )
 
     return current_pat_demo.head(1)
@@ -131,6 +132,7 @@ def _process_age(demo_dataframe: pd.DataFrame) -> pd.DataFrame:
 
     Raises:
         Exception: If the input DataFrame contains more than one row.
+
     """
     demo_dataframe = append_age_at_record_series(demo_dataframe)
 
@@ -157,6 +159,7 @@ def _process_ethnicity(demo_dataframe: pd.DataFrame) -> pd.DataFrame:
 
     Raises:
         Exception: If the input DataFrame contains more than one row.
+
     """
     if len(demo_dataframe) > 1:
         raise Exception("more than one row process ethnicity")
@@ -235,6 +238,7 @@ def _process_sex(demo_dataframe: pd.DataFrame) -> pd.DataFrame:
 
     Raises:
         Exception: If the input DataFrame contains more than one row.
+
     """
     sex_map = {"Male": 1, "Female": 0, "male": 1, "female": 0}
     demo_dataframe["male"] = demo_dataframe["client_gendercode"].map(sex_map)
@@ -258,9 +262,10 @@ def _process_dead(demo_dataframe: pd.DataFrame) -> pd.DataFrame:
 
     Raises:
         Exception: If the input DataFrame contains more than one row.
+
     """
     demo_dataframe["dead"] = demo_dataframe["client_deceaseddtm"].apply(
-        lambda x: int(isinstance(x, str))
+        lambda x: int(isinstance(x, str)),
     )
     if len(demo_dataframe) > 1:
         display("error")
@@ -298,6 +303,7 @@ def get_demographics3_batch(
 
     Raises:
         Exception: If batch processing returns multiple rows unexpectedly.
+
     """
     batch_mode = config_obj.batch_mode
 

@@ -11,7 +11,10 @@ from pat2vec.util.parse_date import validate_input_dates
 
 
 def compute_feature_stats(
-    data: pd.DataFrame, column: str, feature_name: str, config_obj: object
+    data: pd.DataFrame,
+    column: str,
+    feature_name: str,
+    config_obj: object,
 ) -> dict:
     """Computes summary statistics for a feature column in the NEWS dataset.
 
@@ -25,6 +28,7 @@ def compute_feature_stats(
     Returns:
         Dict: A dictionary of calculated feature statistics (mean, median, std,
             max, min, n).
+
     """
     stats = {}
     if len(data) > 0:
@@ -95,6 +99,7 @@ def search_news_observations(
     Raises:
         ValueError: If cohort_searcher_with_terms_and_search or client_id_codes is
             None.
+
     """
     if (
         output_filename
@@ -103,7 +108,9 @@ def search_news_observations(
         and hasattr(config_obj, "proj_name")
     ):
         output_filename = os.path.join(
-            config_obj.root_path, config_obj.proj_name, output_filename
+            config_obj.root_path,
+            config_obj.proj_name,
+            output_filename,
         )
 
     if output_filename and os.path.exists(output_filename) and not overwrite:
@@ -121,7 +128,12 @@ def search_news_observations(
 
     start_year, start_month, start_day, end_year, end_month, end_day = (
         validate_input_dates(
-            start_year, start_month, start_day, end_year, end_month, end_day
+            start_year,
+            start_month,
+            start_day,
+            end_year,
+            end_month,
+            end_day,
         )
     )
 
@@ -205,8 +217,8 @@ def get_news(
 
     Raises:
         ValueError: If config_obj is None when required.
-    """
 
+    """
     start_year, start_month, end_year, end_month, start_day, end_day = (
         get_start_end_year_month(target_date_range, config_obj=config_obj)
     )
@@ -273,12 +285,16 @@ def get_news(
         # special case: cap NEWS2 score at [-20, 20]
         if feature_name == "news_score" and len(subset) > 0:
             numeric_values = pd.to_numeric(
-                subset["observation_valuetext_analysed"], errors="coerce"
+                subset["observation_valuetext_analysed"],
+                errors="coerce",
             )
             subset = subset[(numeric_values < 20) & (numeric_values > -20)].copy()
 
         stats = compute_feature_stats(
-            subset, "observation_valuetext_analysed", feature_name, config_obj
+            subset,
+            "observation_valuetext_analysed",
+            feature_name,
+            config_obj,
         )
         news_features.update(stats)
 

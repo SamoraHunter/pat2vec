@@ -33,6 +33,7 @@ def _fetch_epic_clinical_notes_from_elasticsearch(
 
     Returns:
         A DataFrame containing the raw Epic clinical notes for the patient.
+
     """
     try:
         start_time = config_obj.start_time
@@ -75,27 +76,31 @@ def _fetch_epic_clinical_notes_from_elasticsearch(
                 )
             if "document_CreatedWhen" in results.columns:
                 results.rename(
-                    columns={"document_CreatedWhen": "updatetime"}, inplace=True
+                    columns={"document_CreatedWhen": "updatetime"},
+                    inplace=True,
                 )
             if "document_Content" in results.columns:
                 results.rename(
-                    columns={"document_Content": "body_analysed"}, inplace=True
+                    columns={"document_Content": "body_analysed"},
+                    inplace=True,
                 )
             # Handle id -> document_guid rename, with fallback for appointments index
             if "id" in results.columns:
                 results.rename(columns={"id": "document_guid"}, inplace=True)
             elif "document_SourceId" in results.columns:
                 results.rename(
-                    columns={"document_SourceId": "document_guid"}, inplace=True
+                    columns={"document_SourceId": "document_guid"},
+                    inplace=True,
                 )
             if "document_Name" in results.columns:
                 results.rename(
-                    columns={"document_Name": "document_description"}, inplace=True
+                    columns={"document_Name": "document_description"},
+                    inplace=True,
                 )
         return results if results is not None else pd.DataFrame()
     except Exception as e:
         logging.error(
-            f"Error fetching epic clinical notes from ES for {current_pat_client_id_code}: {e}"
+            f"Error fetching epic clinical notes from ES for {current_pat_client_id_code}: {e}",
         )
         return pd.DataFrame()
 
@@ -125,6 +130,7 @@ def get_pat_batch_epic_clinical_notes_appointments_annotations(
     Returns:
         A DataFrame containing the annotations for the patient's epic clinical notes
         appointments documents, or None if no data is available.
+
     """
     if config_obj.storage_backend == "database":
         table_name = "ann_epic_clinical_notes_appointments"
@@ -141,13 +147,15 @@ def get_pat_batch_epic_clinical_notes_appointments_annotations(
                 return df
 
     batch_target_path = os.path.join(
-        config_obj.pre_document_batch_path, str(current_pat_client_id_code) + ".csv"
+        config_obj.pre_document_batch_path,
+        str(current_pat_client_id_code) + ".csv",
     )
 
     pre_document_annotation_batch_path = config_obj.pre_document_annotation_batch_path
 
     current_pat_document_annotation_batch_path = os.path.join(
-        pre_document_annotation_batch_path, current_pat_client_id_code + ".csv"
+        pre_document_annotation_batch_path,
+        current_pat_client_id_code + ".csv",
     )
 
     if exist_check(current_pat_document_annotation_batch_path, config_obj=config_obj):
@@ -191,13 +199,13 @@ def get_pat_batch_epic_clinical_notes_appointments_annotations(
                     )
                 except Exception as e:
                     logging.error(
-                        f"Failed to save raw epic clinical notes appointments batch for {current_pat_client_id_code}: {e}"
+                        f"Failed to save raw epic clinical notes appointments batch for {current_pat_client_id_code}: {e}",
                     )
 
         # When no raw data is found, handle testing mode with dummy MedCAT
         if pat_batch.empty:
             logging.info(
-                f"No clinical notes appointments found for patient {current_pat_client_id_code}, ensuring annotation table exists"
+                f"No clinical notes appointments found for patient {current_pat_client_id_code}, ensuring annotation table exists",
             )
 
             # Create annotation table even with no data (for DB schema)
@@ -219,15 +227,17 @@ def get_pat_batch_epic_clinical_notes_appointments_annotations(
                     )
                 except Exception as e:
                     logging.warning(
-                        f"Could not create annotation table for epic_clinical_notes_appointments: {e}"
+                        f"Could not create annotation table for epic_clinical_notes_appointments: {e}",
                     )
 
             # If testing with dummy MedCAT, generate dummy annotations even without raw data
             if getattr(config_obj, "testing", False) and getattr(
-                config_obj, "dummy_medcat_model", False
+                config_obj,
+                "dummy_medcat_model",
+                False,
             ):
                 logging.info(
-                    f"Testing mode with dummy MedCAT: generating annotations for patient {current_pat_client_id_code}"
+                    f"Testing mode with dummy MedCAT: generating annotations for patient {current_pat_client_id_code}",
                 )
                 pat_batch = pd.DataFrame(
                     {
@@ -235,7 +245,7 @@ def get_pat_batch_epic_clinical_notes_appointments_annotations(
                         "body_analysed": ["Patient clinical notes appointments"],
                         "updatetime": [config_obj.start_time],
                         "document_guid": ["dummy_doc_" + current_pat_client_id_code],
-                    }
+                    },
                 )
             else:
                 return None
@@ -263,7 +273,7 @@ def get_pat_batch_epic_clinical_notes_appointments_annotations(
             engine = config_obj.db_engine
             if not engine:
                 logging.error(
-                    "Database engine not initialized in config_obj for appointments annotations."
+                    "Database engine not initialized in config_obj for appointments annotations.",
                 )
                 return batch_target
 
@@ -294,17 +304,18 @@ def get_pat_batch_epic_clinical_notes_appointments_annotations(
                             batch_to_save[col] = batch_to_save[col].apply(
                                 lambda x: (
                                     json.dumps(x) if isinstance(x, (list, dict)) else x
-                                )
+                                ),
                             )
 
                 if config_obj.overwrite_stored_pat_docs:
                     from sqlalchemy import text
 
                     del_query = text(
-                        f'DELETE FROM "{db_table if engine.name == "sqlite" else f"{schema_name}.{table_name}"}" WHERE client_idcode = :pat_id'
+                        f'DELETE FROM "{db_table if engine.name == "sqlite" else f"{schema_name}.{table_name}"}" WHERE client_idcode = :pat_id',
                     )
                     connection.execute(
-                        del_query, {"pat_id": current_pat_client_id_code}
+                        del_query,
+                        {"pat_id": current_pat_client_id_code},
                     )
                 batch_to_save.to_sql(
                     name=db_table,
@@ -315,7 +326,7 @@ def get_pat_batch_epic_clinical_notes_appointments_annotations(
                 )
         except Exception as e:
             logging.error(
-                f"Could not write appointments annotations to DB for patient {current_pat_client_id_code}: {e}"
+                f"Could not write appointments annotations to DB for patient {current_pat_client_id_code}: {e}",
             )
 
     return batch_target

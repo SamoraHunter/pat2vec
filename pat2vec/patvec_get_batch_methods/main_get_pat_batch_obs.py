@@ -33,10 +33,11 @@ def get_pat_batch_obs(
 
     Returns:
         A DataFrame containing the batch of specified observations.
+
     """
     if not search_term:
         logging.warning(
-            f"get_pat_batch_obs called with empty search_term for patient {current_pat_client_id_code}"
+            f"get_pat_batch_obs called with empty search_term for patient {current_pat_client_id_code}",
         )
         return pd.DataFrame()
 
@@ -79,7 +80,7 @@ def get_pat_batch_obs(
                     return df
         except Exception as e:
             logging.error(
-                f"Error with database backend for observation '{search_term}' for patient {current_pat_client_id_code}: {e}"
+                f"Error with database backend for observation '{search_term}' for patient {current_pat_client_id_code}: {e}",
             )
             return pd.DataFrame()
 
@@ -92,8 +93,7 @@ def get_pat_batch_obs(
 
     should_fetch = False
     if config_obj.storage_backend == "database" or (
-        config_obj.store_pat_batch_observations
-        and not existence_check
+        (config_obj.store_pat_batch_observations and not existence_check)
         or existence_check is False
     ):
         should_fetch = True
@@ -132,7 +132,8 @@ def get_pat_batch_obs(
                     )
                 else:
                     directory_path = config_obj.pre_misc_batch_path.replace(
-                        "misc", sanitized_search_term
+                        "misc",
+                        sanitized_search_term,
                     )
 
                     if not os.path.exists(directory_path):

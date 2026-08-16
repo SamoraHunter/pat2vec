@@ -1,5 +1,4 @@
-"""
-This module provides the main entry point for generating dummy data based on
+"""This module provides the main entry point for generating dummy data based on
 Elasticsearch queries, routing requests to appropriate data generators.
 """
 
@@ -40,13 +39,14 @@ def cohort_searcher_with_terms_and_search_dummy(
 
     Returns:
         A pandas DataFrame containing the generated dummy data.
+
     """
     use_GPT = False
     verbose = False
 
     if verbose:
         logger.debug(
-            f"cohort_searcher_with_terms_and_search_dummy received index_name: {index_name}, fields_list: {fields_list}"
+            f"cohort_searcher_with_terms_and_search_dummy received index_name: {index_name}, fields_list: {fields_list}",
         )
 
     date_range_tuple = extract_date_range(search_string)
@@ -341,7 +341,7 @@ def cohort_searcher_with_terms_and_search_dummy(
             probabilities = [0.7, 0.1, 0.05, 0.05, 0.05]
             num_rows = random.choices(range(1, 6), probabilities)[0]
             search_term = str(
-                extract_search_term_obscatalogmasteritem_displayname(search_string)
+                extract_search_term_obscatalogmasteritem_displayname(search_string),
             )
             df = generate_observations_data(
                 num_rows,
@@ -368,7 +368,7 @@ def cohort_searcher_with_terms_and_search_dummy(
                 fields_list=fields_list,
             )
             return df
-        elif "diagnostic" in search_string:
+        if "diagnostic" in search_string:
             if verbose:
                 logger.debug("Generating data for 'orders' with diagnostic")
             num_rows = random.randint(1, 10)
@@ -425,7 +425,7 @@ def cohort_searcher_with_terms_and_search_dummy(
     elif index_name == "epic_medical_history":
         if term_name != "document_PatientDurableKey":
             logger.warning(
-                f"Searching epic_medical_history with term_name '{term_name}'. Expected 'document_PatientDurableKey'."
+                f"Searching epic_medical_history with term_name '{term_name}'. Expected 'document_PatientDurableKey'.",
             )
         if verbose:
             logger.debug("Generating data for 'epic_medical_history'")
@@ -442,7 +442,7 @@ def cohort_searcher_with_terms_and_search_dummy(
     elif index_name == "epic_orders":
         if term_name != "document_PatientDurableKey":
             logger.warning(
-                f"Searching epic_orders with term_name '{term_name}'. Expected 'document_PatientDurableKey'."
+                f"Searching epic_orders with term_name '{term_name}'. Expected 'document_PatientDurableKey'.",
             )
         if verbose:
             logger.debug("Generating data for 'epic_orders'")
@@ -472,7 +472,7 @@ def cohort_searcher_with_terms_and_search_dummy(
     elif index_name == "epic_patients":
         if term_name != "patient_DurableKey":
             logger.warning(
-                f"Searching epic_patients with term_name '{term_name}'. Expected 'patient_DurableKey'."
+                f"Searching epic_patients with term_name '{term_name}'. Expected 'patient_DurableKey'.",
             )
         if verbose:
             logger.debug("Generating data for 'epic_patients'")
@@ -488,7 +488,7 @@ def cohort_searcher_with_terms_and_search_dummy(
     elif index_name == "epic_imaging_reports":
         if term_name != "document_PatientDurableKey":
             logger.warning(
-                f"Searching epic_imaging_reports with term_name '{term_name}'. Expected 'document_PatientDurableKey'."
+                f"Searching epic_imaging_reports with term_name '{term_name}'. Expected 'document_PatientDurableKey'.",
             )
         if verbose:
             logger.debug("Generating data for 'epic_imaging_reports'")
@@ -504,7 +504,7 @@ def cohort_searcher_with_terms_and_search_dummy(
     elif index_name == "epic_clinical_notes_appointments":
         if term_name != "document_PatientDurableKey":
             logger.warning(
-                f"Searching epic_clinical_notes_appointments with term_name '{term_name}'. Expected 'document_PatientDurableKey'."
+                f"Searching epic_clinical_notes_appointments with term_name '{term_name}'. Expected 'document_PatientDurableKey'.",
             )
         if verbose:
             logger.debug("Generating data for 'epic_clinical_notes_appointments'")
@@ -521,7 +521,7 @@ def cohort_searcher_with_terms_and_search_dummy(
     else:
         if verbose:
             logger.warning(
-                f"No specific dummy data generator for index '{index_name}' with search string '{search_string}'."
+                f"No specific dummy data generator for index '{index_name}' with search string '{search_string}'.",
             )
 
     df = df.loc[:, ~df.columns.duplicated()]

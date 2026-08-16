@@ -37,6 +37,7 @@ def filter_dataframe_by_timestamp(
     Returns:
         A new DataFrame containing only the rows that fall
         within the specified date range.
+
     """
     # Work on a copy to avoid modifying the original DataFrame
     df_copy = df.copy()
@@ -56,7 +57,9 @@ def filter_dataframe_by_timestamp(
         # Parse each value individually to handle mixed timezones and formats safely,
         # then force the Series to a tz-aware datetime64[ns, UTC] dtype for safe comparison.
         df_copy[timestamp_string] = pd.to_datetime(
-            df_copy[timestamp_string].apply(_parse_to_utc), utc=True, errors="coerce"
+            df_copy[timestamp_string].apply(_parse_to_utc),
+            utc=True,
+            errors="coerce",
         )
     else:
         raise KeyError(f"Column '{timestamp_string}' not found in DataFrame.")
@@ -89,7 +92,10 @@ def filter_dataframe_by_timestamp(
         # Swap the entire dates, ensuring correct time components
         start_temp = end_datetime.replace(hour=0, minute=0, second=0, microsecond=0)
         end_temp = start_datetime.replace(
-            hour=23, minute=59, second=59, microsecond=999999
+            hour=23,
+            minute=59,
+            second=59,
+            microsecond=999999,
         )
         start_datetime, end_datetime = start_temp, end_temp
 

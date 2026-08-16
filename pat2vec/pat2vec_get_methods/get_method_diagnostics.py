@@ -93,6 +93,7 @@ def search_diagnostic_orders(
 
     Raises:
         ValueError: If essential arguments are None.
+
     """
     if (
         output_filename
@@ -101,7 +102,9 @@ def search_diagnostic_orders(
         and hasattr(config_obj, "proj_name")
     ):
         output_filename = os.path.join(
-            config_obj.root_path, config_obj.proj_name, output_filename
+            config_obj.root_path,
+            config_obj.proj_name,
+            output_filename,
         )
 
     if output_filename and os.path.exists(output_filename) and not overwrite:
@@ -126,14 +129,19 @@ def search_diagnostic_orders(
 
     start_year, start_month, start_day, end_year, end_month, end_day = (
         validate_input_dates(
-            start_year, start_month, start_day, end_year, end_month, end_day
+            start_year,
+            start_month,
+            start_day,
+            end_year,
+            end_month,
+            end_day,
         )
     )
 
     # Base search string for diagnostic orders
     search_string = (
         'order_typecode:"diagnostic" AND '
-        + f"{diagnostic_time_field}:[{start_year}-{start_month}-{start_day} TO {end_year}-{end_month}-{end_day}]"
+        f"{diagnostic_time_field}:[{start_year}-{start_month}-{start_day} TO {end_year}-{end_month}-{end_day}]"
     )
 
     if additional_custom_search_string:
@@ -162,7 +170,9 @@ def search_diagnostic_orders(
 
 
 def prepare_diagnostic_datetime(
-    diagnostics_data: pd.DataFrame, diagnostic_time_field: str, batch_mode: bool = False
+    diagnostics_data: pd.DataFrame,
+    diagnostic_time_field: str,
+    batch_mode: bool = False,
 ) -> pd.DataFrame:
     """Prepares the datetime column for diagnostic data processing.
 
@@ -177,6 +187,7 @@ def prepare_diagnostic_datetime(
 
     Returns:
         pd.DataFrame: The input DataFrame with an added 'datetime' column.
+
     """
     data = diagnostics_data.copy()
 
@@ -210,6 +221,7 @@ def calculate_diagnostic_features(
 
     Returns:
         Dict: A dictionary of calculated features.
+
     """
     if batch_mode:
         today = datetime.now(timezone.utc)
@@ -238,7 +250,7 @@ def calculate_diagnostic_features(
                 features[f"{col_name}_days-since-last-diagnostic-order"] = delta.days
             except Exception as e:
                 print(
-                    f"Error calculating days since last diagnostic for {col_name}: {e}"
+                    f"Error calculating days since last diagnostic for {col_name}: {e}",
                 )
                 features[f"{col_name}_days-since-last-diagnostic-order"] = None
 
@@ -254,7 +266,7 @@ def calculate_diagnostic_features(
                 features[f"{col_name}_days-between-first-last-diagnostic"] = delta.days
             except Exception as e:
                 print(
-                    f"Error calculating days between first-last diagnostic for {col_name}: {e}"
+                    f"Error calculating days between first-last diagnostic for {col_name}: {e}",
                 )
                 features[f"{col_name}_days-between-first-last-diagnostic"] = None
 
@@ -278,6 +290,7 @@ def create_diagnostic_features_dataframe(
 
     Returns:
         pd.DataFrame: A single-row DataFrame containing the final features.
+
     """
     # Start with basic patient info
     base_df = pd.DataFrame({"client_idcode": [current_pat_client_id_code]})
@@ -329,10 +342,11 @@ def get_current_pat_diagnostics(
     Returns:
         pd.DataFrame: A DataFrame containing diagnostic test features for the
             specified patient.
+
     """
     if config_obj is None:
         raise ValueError(
-            "config_obj cannot be None. Please provide a valid configuration."
+            "config_obj cannot be None. Please provide a valid configuration.",
         )
 
     batch_mode = config_obj.batch_mode
@@ -437,7 +451,9 @@ def get_current_pat_diagnostics(
 
     # Prepare datetime column
     current_pat_diagnostics = prepare_diagnostic_datetime(
-        diagnostics, diagnostic_time_field, batch_mode
+        diagnostics,
+        diagnostic_time_field,
+        batch_mode,
     )
 
     # Group data by order name
@@ -449,12 +465,16 @@ def get_current_pat_diagnostics(
 
     # Calculate diagnostic features
     diagnostic_features = calculate_diagnostic_features(
-        order_name_df_dict, order_name_list, batch_mode
+        order_name_df_dict,
+        order_name_list,
+        batch_mode,
     )
 
     # Create final features DataFrame
     result_df = create_diagnostic_features_dataframe(
-        current_pat_client_id_code, diagnostic_features, current_pat_diagnostics
+        current_pat_client_id_code,
+        diagnostic_features,
+        current_pat_diagnostics,
     )
 
     if config_obj.verbosity >= 6:

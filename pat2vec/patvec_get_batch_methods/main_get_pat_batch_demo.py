@@ -25,6 +25,7 @@ def get_pat_batch_demo(
 
     Returns:
         A DataFrame containing the batch of demographic information.
+
     """
     if config_obj is None or not all(
         hasattr(config_obj, attr)
@@ -62,19 +63,19 @@ def get_pat_batch_demo(
                     return df
         except Exception as e:
             logging.error(
-                f"Error with database backend for demographics for patient {current_pat_client_id_code}: {e}"
+                f"Error with database backend for demographics for patient {current_pat_client_id_code}: {e}",
             )
             return pd.DataFrame()
 
     batch_obs_target_path = os.path.join(
-        config_obj.pre_demo_batch_path, str(current_pat_client_id_code) + ".csv"
+        config_obj.pre_demo_batch_path,
+        str(current_pat_client_id_code) + ".csv",
     )
     existence_check = exist_check(batch_obs_target_path, config_obj)
 
     should_fetch = False
     if config_obj.storage_backend == "database" or (
-        config_obj.store_pat_batch_observations
-        and not existence_check
+        (config_obj.store_pat_batch_observations and not existence_check)
         or existence_check is False
     ):
         should_fetch = True
@@ -118,7 +119,7 @@ def get_pat_batch_demo(
                                 )
                                 if config_obj.overwrite_stored_pat_observations:
                                     del_query = text(
-                                        f"DELETE FROM {db_table if engine.name == 'sqlite' else f'{schema_name}.{table_name}'} WHERE client_idcode = :pat_id"
+                                        f"DELETE FROM {db_table if engine.name == 'sqlite' else f'{schema_name}.{table_name}'} WHERE client_idcode = :pat_id",
                                     )
                                     connection.execute(
                                         del_query,

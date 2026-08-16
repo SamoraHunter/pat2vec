@@ -73,7 +73,7 @@ def generate_basic_observations_data(
                         random.randint(0, 23),
                         random.randint(0, 59),
                         random.randint(0, 59),
-                    ).strftime("%Y-%m-%dT%H:%M:%S")
+                    ).strftime("%Y-%m-%dT%H:%M:%S"),
                 )
             basicobs_entered_dates = dates
             order_entered_dates = dates
@@ -191,6 +191,7 @@ def generate_observations_data(
 
     Returns:
         A pandas DataFrame with generated dummy observation data.
+
     """
     if fields_list is None:
         fields_list = [

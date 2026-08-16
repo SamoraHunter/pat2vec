@@ -380,8 +380,7 @@ def _write_batch(dfs, engine, schema, table):
 
 
 def migrate_csv_to_db(config_obj: Any):
-    """
-    Migrates data from CSV files (file-based backend) to the Database backend..
+    """Migrates data from CSV files (file-based backend) to the Database backend..
     It iterates over known directories in the config, reads CSVs and pushes them to the DB.
     """
     if not config_obj.db_connection_string:
@@ -401,7 +400,7 @@ def migrate_csv_to_db(config_obj: Any):
     for dir_attr, schema, table, id_col, index_columns, filter_val in MAPPINGS:
         if not hasattr(config_obj, dir_attr):
             logger.warning(
-                f"Config object missing attribute {dir_attr}, skipping {table}"
+                f"Config object missing attribute {dir_attr}, skipping {table}",
             )
             continue
 
@@ -418,7 +417,7 @@ def migrate_csv_to_db(config_obj: Any):
             continue
 
         logger.info(
-            f"Migrating {len(files)} files from {dir_path} to {schema}.{table}..."
+            f"Migrating {len(files)} files from {dir_path} to {schema}.{table}...",
         )
 
         # Check if table exists to decide on append/replace behavior or just appending
@@ -471,7 +470,7 @@ if __name__ == "__main__":
     print("\nThis script is intended to be imported and run with a valid config_obj.")
     print("  from pat2vec.util.config_pat2vec import config_class")
     print(
-        "  conf = config_class(storage_backend='database', db_connection_string='postgresql://user:pass@host/db')"
+        "  conf = config_class(storage_backend='database', db_connection_string='postgresql://user:pass@host/db')",
     )
     print("  # ensure you import and call migrate_csv_to_db(conf)")
 

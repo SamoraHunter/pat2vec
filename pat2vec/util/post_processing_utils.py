@@ -30,12 +30,13 @@ def process_chunk(args: tuple) -> dict[str, list[str]]:
 
     Returns:
         A dictionary with concatenated data for the specified unique columns.
+
     """
     part_chunk, all_files, part_size, unique_columns = args
     concatenated_data = {column: [] for column in unique_columns}
     for file in all_files[part_chunk : part_chunk + part_size]:
         if file.endswith(".csv"):
-            with open(file, "r", newline="") as infile:
+            with open(file, newline="") as infile:
                 reader = csv.DictReader(infile)
                 for row in reader:
                     for column in unique_columns:
@@ -98,11 +99,11 @@ def copy_files_and_dirs(
         for root, dirs, files in os.walk(source_dir):
             for file in files:
                 all_source_paths.append(
-                    os.path.relpath(os.path.join(root, file), source_dir)
+                    os.path.relpath(os.path.join(root, file), source_dir),
                 )
             for dir in dirs:
                 all_source_paths.append(
-                    os.path.relpath(os.path.join(root, dir), source_dir)
+                    os.path.relpath(os.path.join(root, dir), source_dir),
                 )
 
     destination_dir = os.path.join(destination, source_name)
@@ -154,6 +155,7 @@ def filter_and_update_csv(
             (keep records after filter_date) or "before" (keep records before
             filter_date). Defaults to "after".
         verbosity (bool, optional): If True, print verbose messages during processing.
+
     """
     for _, row in ipw_dataframe.iterrows():
         client_idcode = str(row["client_idcode"])
@@ -197,7 +199,9 @@ def filter_and_update_csv(
                         ]:
                             if col in df.columns:
                                 df[col] = pd.to_datetime(
-                                    df[col], utc=True, errors="coerce"
+                                    df[col],
+                                    utc=True,
+                                    errors="coerce",
                                 )
                                 update_column = col
                                 break

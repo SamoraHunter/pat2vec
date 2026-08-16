@@ -16,10 +16,13 @@ def extract_datetime_to_column(df: pd.DataFrame, drop: bool = True) -> pd.DataFr
         col_names = df[date_cols].idxmax(axis=1)
         any_one = df[date_cols].max(axis=1) == 1
         df.loc[any_one, "extracted_datetime_stamp"] = col_names[any_one].str.replace(
-            "_date_time_stamp", ""
+            "_date_time_stamp",
+            "",
         )
         df["extracted_datetime_stamp"] = pd.to_datetime(
-            df["extracted_datetime_stamp"], format="(%Y, %m, %d)", errors="coerce"
+            df["extracted_datetime_stamp"],
+            format="(%Y, %m, %d)",
+            errors="coerce",
         )
 
     if drop:
@@ -51,7 +54,8 @@ def extract_datetime_from_binary_columns(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def extract_datetime_from_binary_columns_chunk_reader(
-    filepath: str, chunk_size: int = 1000
+    filepath: str,
+    chunk_size: int = 1000,
 ) -> pd.DataFrame:
     """Reads a CSV in chunks and extracts datetime from binary columns."""
     chunks = []
@@ -68,7 +72,9 @@ def drop_columns_with_all_nan(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.Index]
 
 
 def save_missing_values_pickle(
-    df: pd.DataFrame, out_file_path: str, overwrite: bool = False
+    df: pd.DataFrame,
+    out_file_path: str,
+    overwrite: bool = False,
 ) -> None:
     """Calculates missing percentage and saves as a pickle."""
     missing_dict = (df.isnull().sum() / len(df) * 100).to_dict()
@@ -112,7 +118,8 @@ def impute_datetime(
 
     # Sort by patient and then by datetime, NaT values will be at the end of each group
     df_sorted = df.sort_values(
-        by=[patient_column, datetime_column], na_position="first"
+        by=[patient_column, datetime_column],
+        na_position="first",
     )
 
     cols_to_fill = df.columns.difference([patient_column])
@@ -126,7 +133,7 @@ def impute_datetime(
         ].bfill()
     if mean_impute:
         df_sorted[datetime_column] = df_sorted[datetime_column].fillna(
-            df_sorted[datetime_column].mean()
+            df_sorted[datetime_column].mean(),
         )
 
     # Restore original order
@@ -162,20 +169,21 @@ def missing_percentage_df(dataframe: pd.DataFrame) -> pd.DataFrame:
         {
             "Column": missing_percentage.index,
             "MissingPercentage": missing_percentage.values,
-        }
+        },
     )
 
 
 def aggregate_dataframe_mean(
-    df: pd.DataFrame, group_by_column: str = "client_idcode"
+    df: pd.DataFrame,
+    group_by_column: str = "client_idcode",
 ) -> pd.DataFrame:
     """Aggregates a DataFrame by taking the mean of numeric columns."""
     numeric_cols = df.select_dtypes(include="number").columns
     non_numeric_cols = df.select_dtypes(exclude="number").columns.difference(
-        [group_by_column]
+        [group_by_column],
     )
-    agg_dict = {col: "mean" for col in numeric_cols}
-    agg_dict.update({col: "first" for col in non_numeric_cols})
+    agg_dict = dict.fromkeys(numeric_cols, "mean")
+    agg_dict.update(dict.fromkeys(non_numeric_cols, "first"))
     return df.groupby(group_by_column).agg(agg_dict).reset_index()
 
 
@@ -189,6 +197,7 @@ def collapse_df_to_mean(
     if os.path.exists(output_filename):
         output_df = pd.read_csv(output_filename)
         aggregated_df = pd.concat([output_df, aggregated_df]).drop_duplicates(
-            subset=[client_idcode_string], keep="last"
+            subset=[client_idcode_string],
+            keep="last",
         )
     aggregated_df.to_csv(output_filename, index=False)

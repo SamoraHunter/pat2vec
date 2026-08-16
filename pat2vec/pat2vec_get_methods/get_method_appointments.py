@@ -99,6 +99,7 @@ def search_appointments(
     Raises:
         ValueError: When `cohort_searcher_with_terms_and_search`, `client_id_codes`,
             `appointments_time_field`, or date components are None.
+
     """
     if (
         output_filename
@@ -107,7 +108,9 @@ def search_appointments(
         and hasattr(config_obj, "proj_name")
     ):
         output_filename = os.path.join(
-            config_obj.root_path, config_obj.proj_name, output_filename
+            config_obj.root_path,
+            config_obj.proj_name,
+            output_filename,
         )
 
     if output_filename and os.path.exists(output_filename) and not overwrite:
@@ -131,7 +134,12 @@ def search_appointments(
 
     start_year, start_month, start_day, end_year, end_month, end_day = (
         validate_input_dates(
-            start_year, start_month, start_day, end_year, end_month, end_day
+            start_year,
+            start_month,
+            start_day,
+            end_year,
+            end_month,
+            end_day,
         )
     )
 
@@ -186,6 +194,7 @@ def get_appointments(
         pd.DataFrame: A DataFrame containing pims_apps features for the
             specified patient. If no data is found, a DataFrame with only the
             'client_idcode' is returned.
+
     """
     if config_obj is None:
         raise ValueError(
@@ -240,51 +249,56 @@ def get_appointments(
     if len(current_pat_raw) == 0:
         return pd.DataFrame({"client_idcode": [current_pat_client_id_code]})
 
+    current_pat_raw = current_pat_raw[current_pat_raw["Attended"].astype(int) == 1]
+
+    if not current_pat_raw.empty:
+        # One-hot encode and sum up attendances per patient
+        consultant_features = (
+            pd.get_dummies(
+                current_pat_raw,
+                columns=["ConsultantCode"],
+                prefix="ConsultantCode",
+            )
+            .groupby("client_idcode")
+            .sum(numeric_only=True)
+            .reset_index()
+        )
+        clinic_features = (
+            pd.get_dummies(
+                current_pat_raw,
+                columns=["ClinicCode"],
+                prefix="ClinicCode",
+            )
+            .groupby("client_idcode")
+            .sum(numeric_only=True)
+            .reset_index()
+        )
+        appointment_type_features = (
+            pd.get_dummies(
+                current_pat_raw,
+                columns=["AppointmentType"],
+                prefix="AppointmentType",
+            )
+            .groupby("client_idcode")
+            .sum(numeric_only=True)
+            .reset_index()
+        )
+
+        # Merge all features
+        features = consultant_features.merge(
+            clinic_features,
+            on="client_idcode",
+            how="outer",
+        ).merge(appointment_type_features, on="client_idcode", how="outer")
     else:
-        current_pat_raw = current_pat_raw[current_pat_raw["Attended"].astype(int) == 1]
+        features = pd.DataFrame({"client_idcode": [current_pat_client_id_code]})
 
-        if not current_pat_raw.empty:
-            # One-hot encode and sum up attendances per patient
-            consultant_features = (
-                pd.get_dummies(
-                    current_pat_raw, columns=["ConsultantCode"], prefix="ConsultantCode"
-                )
-                .groupby("client_idcode")
-                .sum(numeric_only=True)
-                .reset_index()
-            )
-            clinic_features = (
-                pd.get_dummies(
-                    current_pat_raw, columns=["ClinicCode"], prefix="ClinicCode"
-                )
-                .groupby("client_idcode")
-                .sum(numeric_only=True)
-                .reset_index()
-            )
-            appointment_type_features = (
-                pd.get_dummies(
-                    current_pat_raw,
-                    columns=["AppointmentType"],
-                    prefix="AppointmentType",
-                )
-                .groupby("client_idcode")
-                .sum(numeric_only=True)
-                .reset_index()
-            )
+    # Ensure all requested patients are in the output, filling missing ones with NaN/0
+    all_clients_df = pd.DataFrame({"client_idcode": [current_pat_client_id_code]})
+    all_clients_df["client_idcode"] = all_clients_df["client_idcode"].astype(str)
+    features["client_idcode"] = features["client_idcode"].astype(str)
 
-            # Merge all features
-            features = consultant_features.merge(
-                clinic_features, on="client_idcode", how="outer"
-            ).merge(appointment_type_features, on="client_idcode", how="outer")
-        else:
-            features = pd.DataFrame({"client_idcode": [current_pat_client_id_code]})
-
-        # Ensure all requested patients are in the output, filling missing ones with NaN/0
-        all_clients_df = pd.DataFrame({"client_idcode": [current_pat_client_id_code]})
-        all_clients_df["client_idcode"] = all_clients_df["client_idcode"].astype(str)
-        features["client_idcode"] = features["client_idcode"].astype(str)
-
-        features = pd.merge(all_clients_df, features, on="client_idcode", how="left")
+    features = pd.merge(all_clients_df, features, on="client_idcode", how="left")
 
     if config_obj.verbosity >= 6:
         display(features)

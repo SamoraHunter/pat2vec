@@ -57,7 +57,7 @@ def _generic_merged_builder(
 
     if not all_pat_list:
         logger.warning(
-            f"No patients provided for {output_filename}. Creating empty file."
+            f"No patients provided for {output_filename}. Creating empty file.",
         )
         pd.DataFrame(columns=standard_cols).to_csv(output_file_path, index=False)
         return output_file_path
@@ -70,7 +70,7 @@ def _generic_merged_builder(
 
     logger.info(
         f"GENERIC BUILDER START: {output_filename}. "
-        f"Processing {len(all_pat_list)} patient(s) with chunk_size={chunk_size}."
+        f"Processing {len(all_pat_list)} patient(s) with chunk_size={chunk_size}.",
     )
 
     def get_data_stream():
@@ -198,7 +198,7 @@ def _generic_merged_builder(
     # This is important when tables don't exist yet (e.g., new epic indices on first run)
     if not any_data_found:
         logger.warning(
-            f"No data found for {output_filename}. Creating empty file with headers."
+            f"No data found for {output_filename}. Creating empty file with headers.",
         )
         pd.DataFrame(columns=standard_cols).to_csv(output_file_path, index=False)
 
@@ -211,10 +211,11 @@ def _generic_merged_builder(
 
 
 def build_merged_epr_mct_annot_df(
-    all_pat_list: list[str], config_obj: Any, overwrite: bool = False
+    all_pat_list: list[str],
+    config_obj: Any,
+    overwrite: bool = False,
 ) -> str | None:
     """Builds a merged DataFrame of annotations from EPR and MCT sources (file or DB)."""
-
     # Sanitise all_pat_list using dict.fromkeys (faster and more memory efficient than set for large lists)
     all_pat_list = list(dict.fromkeys(str(p) for p in all_pat_list if p is not None))
     gc.collect()
@@ -251,7 +252,8 @@ def build_merged_epr_mct_annot_df(
             mask = df["observationannotation_recordeddtm"].isna()
             if mask.any():
                 df.loc[mask, "observationannotation_recordeddtm"] = df.loc[
-                    mask, "updatetime"
+                    mask,
+                    "updatetime",
                 ].values
 
         # Aggressive RAM safety: Drop huge text blobs if they accidentally leaked in
@@ -382,7 +384,9 @@ def build_merged_epr_mct_annot_df(
 
 
 def load_merged_epr_mct_annots(
-    config_obj: Any, all_pat_list: list[str], nrows: int | None = None
+    config_obj: Any,
+    all_pat_list: list[str],
+    nrows: int | None = None,
 ) -> str | pd.DataFrame:
     """Loads merged EPR and MCT annotations.
 
@@ -422,7 +426,9 @@ def load_merged_epr_mct_annots(
 
 
 def build_merged_bloods(
-    all_pat_list: list[str], config_obj: Any, overwrite: bool = False
+    all_pat_list: list[str],
+    config_obj: Any,
+    overwrite: bool = False,
 ) -> str:
     """Builds a merged CSV file of bloods data from patient batch files or database."""
     return _generic_merged_builder(
@@ -445,7 +451,9 @@ def build_merged_bloods(
 
 
 def build_merged_epr_mct_doc_df(
-    all_pat_list: list[str], config_obj: Any, overwrite: bool = False
+    all_pat_list: list[str],
+    config_obj: Any,
+    overwrite: bool = False,
 ) -> str:
     """Builds a merged CSV of documents from EPR and MCT sources (file or DB)."""
 
@@ -552,10 +560,14 @@ def retrieve_pat_bloods(client_idcode: str, config_obj: Any) -> pd.DataFrame:
 
     Returns:
         Bloods data for the given client_idcode, or an empty DataFrame if not found.
+
     """
     if config_obj.storage_backend == "database":
         return get_df_from_db(
-            config_obj, "raw_data", "raw_bloods", patient_ids=[client_idcode]
+            config_obj,
+            "raw_data",
+            "raw_bloods",
+            patient_ids=[client_idcode],
         )
 
     pre_bloods_batch_path = config_obj.pre_bloods_batch_path
@@ -580,10 +592,14 @@ def retrieve_pat_epr_docs(client_idcode: str, config_obj: Any) -> pd.DataFrame:
 
     Returns:
         EPR documents data for the given client_idcode, or an empty DataFrame if not found.
+
     """
     if config_obj.storage_backend == "database":
         return get_df_from_db(
-            config_obj, "raw_data", "raw_epr_docs", patient_ids=[client_idcode]
+            config_obj,
+            "raw_data",
+            "raw_epr_docs",
+            patient_ids=[client_idcode],
         )
 
     pre_document_batch_path = config_obj.pre_document_batch_path
@@ -638,6 +654,7 @@ def retrieve_pat_docs_mct_epr(
                       merged document data for the patient. Returns an empty
                       DataFrame if no data is found for the patient in any
                       of the sources.
+
     """
     if config_obj.storage_backend == "database":
         dfs = []
@@ -684,7 +701,7 @@ def retrieve_pat_docs_mct_epr(
             except Exception as e:
                 # get_df_from_db already logs errors, but we can add context
                 logger.warning(
-                    f"Could not retrieve {source_name} for {client_idcode}: {e}"
+                    f"Could not retrieve {source_name} for {client_idcode}: {e}",
                 )
 
         if not dfs:
@@ -852,7 +869,9 @@ def retrieve_pat_docs_mct_epr(
 
 
 def join_docs_to_annots(
-    annots_df: pd.DataFrame, docs_temp: pd.DataFrame, drop_duplicates: bool = True
+    annots_df: pd.DataFrame,
+    docs_temp: pd.DataFrame,
+    drop_duplicates: bool = True,
 ) -> pd.DataFrame:
     """Merge two DataFrames based on the 'document_guid' column.
 
@@ -864,8 +883,8 @@ def join_docs_to_annots(
 
     Returns:
         A merged DataFrame.
-    """
 
+    """
     if drop_duplicates:
         # Get the sets of column names
         annots_columns_set = set(annots_df.columns)
@@ -889,14 +908,15 @@ def join_docs_to_annots(
 
 
 def get_annots_joined_to_docs(
-    config_obj: Any, pat2vec_obj: Any, nrows: int | None = None
+    config_obj: Any,
+    pat2vec_obj: Any,
+    nrows: int | None = None,
 ) -> str | pd.DataFrame:
     """Builds and merges document and annotation dataframes, then joins them.
 
     Returns the path to the joined CSV file, or a sampled DataFrame if nrows is set.
     This function processes data in small patient-level batches to avoid RAM spikes.
     """
-
     filename = "annots_joined_docs_full.csv"
 
     logger.info("Building joined annotations and documents incrementally...")
@@ -990,7 +1010,9 @@ def get_annots_joined_to_docs(
 
 
 def merge_demographics_csv(
-    all_pat_list: list[str], config_obj: Any, overwrite: bool = False
+    all_pat_list: list[str],
+    config_obj: Any,
+    overwrite: bool = False,
 ) -> str:
     """Merge all demographics data (files or DB) that match the patient list."""
     return _generic_merged_builder(
@@ -1018,7 +1040,9 @@ def merge_demographics_csv(
 
 
 def merge_textual_obs_csv(
-    all_pat_list: list[str], config_obj: Any, overwrite: bool = False
+    all_pat_list: list[str],
+    config_obj: Any,
+    overwrite: bool = False,
 ) -> str:
     """Merge all textual observations data (files or DB) that match the patient list."""
     return _generic_merged_builder(
@@ -1036,7 +1060,7 @@ def merge_textual_obs_csv(
         file_retriever=lambda p, c: (
             pd.read_csv(os.path.join(c.pre_textual_obs_document_batch_path, f"{p}.csv"))
             if os.path.isfile(
-                os.path.join(c.pre_textual_obs_document_batch_path, f"{p}.csv")
+                os.path.join(c.pre_textual_obs_document_batch_path, f"{p}.csv"),
             )
             else pd.DataFrame()
         ),
@@ -1046,7 +1070,9 @@ def merge_textual_obs_csv(
 
 
 def merge_reports_csv(
-    all_pat_list: list[str], config_obj: Any, overwrite: bool = False
+    all_pat_list: list[str],
+    config_obj: Any,
+    overwrite: bool = False,
 ) -> str:
     """Merge all reports data (files or DB) that match the patient list."""
     return _generic_merged_builder(
@@ -1064,7 +1090,7 @@ def merge_reports_csv(
         file_retriever=lambda p, c: (
             pd.read_csv(os.path.join(c.pre_document_batch_path_reports, f"{p}.csv"))
             if os.path.isfile(
-                os.path.join(c.pre_document_batch_path_reports, f"{p}.csv")
+                os.path.join(c.pre_document_batch_path_reports, f"{p}.csv"),
             )
             else pd.DataFrame()
         ),
@@ -1074,7 +1100,9 @@ def merge_reports_csv(
 
 
 def merge_bmi_csv(
-    all_pat_list: list[str], config_obj: Any, overwrite: bool = False
+    all_pat_list: list[str],
+    config_obj: Any,
+    overwrite: bool = False,
 ) -> str:
     """Merge all BMI data (files or DB) that match the patient list."""
     return _generic_merged_builder(
@@ -1100,7 +1128,9 @@ def merge_bmi_csv(
 
 
 def merge_bloods_csv(
-    all_pat_list: list[str], config_obj: Any, overwrite: bool = False
+    all_pat_list: list[str],
+    config_obj: Any,
+    overwrite: bool = False,
 ) -> str:
     """Builds a merged CSV file of bloods data from patient batch files or database."""
     return _generic_merged_builder(
@@ -1123,7 +1153,9 @@ def merge_bloods_csv(
 
 
 def merge_news_csv(
-    all_pat_list: list[str], config_obj: Any, overwrite: bool = False
+    all_pat_list: list[str],
+    config_obj: Any,
+    overwrite: bool = False,
 ) -> str:
     """Merge all NEWS data (files or DB) that match the patient list."""
     return _generic_merged_builder(
@@ -1149,7 +1181,9 @@ def merge_news_csv(
 
 
 def merge_diagnostics_csv(
-    all_pat_list: list[str], config_obj: Any, overwrite: bool = False
+    all_pat_list: list[str],
+    config_obj: Any,
+    overwrite: bool = False,
 ) -> str:
     """Merge all diagnostics data (files or DB) that match the patient list."""
     return _generic_merged_builder(
@@ -1178,7 +1212,9 @@ def merge_diagnostics_csv(
 
 
 def merge_drugs_csv(
-    all_pat_list: list[str], config_obj: Any, overwrite: bool = False
+    all_pat_list: list[str],
+    config_obj: Any,
+    overwrite: bool = False,
 ) -> str:
     """Merge all drugs data (files or DB) that match the patient list."""
     return _generic_merged_builder(
@@ -1207,7 +1243,9 @@ def merge_drugs_csv(
 
 
 def merge_epic_medical_history_csv(
-    all_pat_list: list[str], config_obj: Any, overwrite: bool = False
+    all_pat_list: list[str],
+    config_obj: Any,
+    overwrite: bool = False,
 ) -> str:
     """Merge all Epic medical history data that match the patient list."""
     return _generic_merged_builder(
@@ -1227,7 +1265,7 @@ def merge_epic_medical_history_csv(
         file_retriever=lambda p, c: (
             pd.read_csv(os.path.join(c.pre_epic_medical_history_batch_path, f"{p}.csv"))
             if os.path.isfile(
-                os.path.join(c.pre_epic_medical_history_batch_path, f"{p}.csv")
+                os.path.join(c.pre_epic_medical_history_batch_path, f"{p}.csv"),
             )
             else pd.DataFrame()
         ),
@@ -1236,7 +1274,9 @@ def merge_epic_medical_history_csv(
 
 
 def merge_epic_imaging_reports_csv(
-    all_pat_list: list[str], config_obj: Any, overwrite: bool = False
+    all_pat_list: list[str],
+    config_obj: Any,
+    overwrite: bool = False,
 ) -> str:
     """Merge all Epic imaging reports data that match the patient list."""
     return _generic_merged_builder(
@@ -1256,7 +1296,7 @@ def merge_epic_imaging_reports_csv(
         file_retriever=lambda p, c: (
             pd.read_csv(os.path.join(c.pre_epic_imaging_reports_batch_path, f"{p}.csv"))
             if os.path.isfile(
-                os.path.join(c.pre_epic_imaging_reports_batch_path, f"{p}.csv")
+                os.path.join(c.pre_epic_imaging_reports_batch_path, f"{p}.csv"),
             )
             else pd.DataFrame()
         ),
@@ -1266,7 +1306,9 @@ def merge_epic_imaging_reports_csv(
 
 
 def merge_epic_clinical_notes_appointments_csv(
-    all_pat_list: list[str], config_obj: Any, overwrite: bool = False
+    all_pat_list: list[str],
+    config_obj: Any,
+    overwrite: bool = False,
 ) -> str:
     """Merge all Epic clinical notes appointments data that match the patient list."""
     return _generic_merged_builder(
@@ -1285,13 +1327,15 @@ def merge_epic_clinical_notes_appointments_csv(
         file_retriever=lambda p, c: (
             pd.read_csv(
                 os.path.join(
-                    c.pre_epic_clinical_notes_appointments_batch_path, f"{p}.csv"
-                )
+                    c.pre_epic_clinical_notes_appointments_batch_path,
+                    f"{p}.csv",
+                ),
             )
             if os.path.isfile(
                 os.path.join(
-                    c.pre_epic_clinical_notes_appointments_batch_path, f"{p}.csv"
-                )
+                    c.pre_epic_clinical_notes_appointments_batch_path,
+                    f"{p}.csv",
+                ),
             )
             else pd.DataFrame()
         ),
@@ -1301,7 +1345,9 @@ def merge_epic_clinical_notes_appointments_csv(
 
 
 def merge_appointments_csv(
-    all_pat_list: list[str], config_obj: Any, overwrite: bool = False
+    all_pat_list: list[str],
+    config_obj: Any,
+    overwrite: bool = False,
 ) -> str:
     """Merge all appointments data (files or DB) that match the patient list."""
     return _generic_merged_builder(
@@ -1330,7 +1376,9 @@ def merge_appointments_csv(
 
 
 def merge_epic_encounters_csv(
-    all_pat_list: list[str], config_obj: Any, overwrite: bool = False
+    all_pat_list: list[str],
+    config_obj: Any,
+    overwrite: bool = False,
 ) -> str:
     """Merge all Epic encounters data that match the patient list."""
     return _generic_merged_builder(
@@ -1350,7 +1398,7 @@ def merge_epic_encounters_csv(
         file_retriever=lambda p, c: (
             pd.read_csv(os.path.join(c.pre_epic_encounters_batch_path, f"{p}.csv"))
             if os.path.isfile(
-                os.path.join(c.pre_epic_encounters_batch_path, f"{p}.csv")
+                os.path.join(c.pre_epic_encounters_batch_path, f"{p}.csv"),
             )
             else pd.DataFrame()
         ),
@@ -1359,7 +1407,9 @@ def merge_epic_encounters_csv(
 
 
 def merge_epic_lab_results_csv(
-    all_pat_list: list[str], config_obj: Any, overwrite: bool = False
+    all_pat_list: list[str],
+    config_obj: Any,
+    overwrite: bool = False,
 ) -> str:
     """Merge all Epic lab results data that match the patient list."""
     return _generic_merged_builder(
@@ -1380,7 +1430,7 @@ def merge_epic_lab_results_csv(
         file_retriever=lambda p, c: (
             pd.read_csv(os.path.join(c.pre_epic_lab_results_batch_path, f"{p}.csv"))
             if os.path.isfile(
-                os.path.join(c.pre_epic_lab_results_batch_path, f"{p}.csv")
+                os.path.join(c.pre_epic_lab_results_batch_path, f"{p}.csv"),
             )
             else pd.DataFrame()
         ),
@@ -1389,7 +1439,9 @@ def merge_epic_lab_results_csv(
 
 
 def merge_epic_orders_csv(
-    all_pat_list: list[str], config_obj: Any, overwrite: bool = False
+    all_pat_list: list[str],
+    config_obj: Any,
+    overwrite: bool = False,
 ) -> str:
     """Merge all Epic orders data that match the patient list."""
     return _generic_merged_builder(
@@ -1416,7 +1468,9 @@ def merge_epic_orders_csv(
 
 
 def merge_epic_clinical_notes_csv(
-    all_pat_list: list[str], config_obj: Any, overwrite: bool = False
+    all_pat_list: list[str],
+    config_obj: Any,
+    overwrite: bool = False,
 ) -> str:
     """Merge all Epic clinical notes data that match the patient list."""
     return _generic_merged_builder(
@@ -1437,7 +1491,7 @@ def merge_epic_clinical_notes_csv(
         file_retriever=lambda p, c: (
             pd.read_csv(os.path.join(c.pre_epic_clinical_notes_batch_path, f"{p}.csv"))
             if os.path.isfile(
-                os.path.join(c.pre_epic_clinical_notes_batch_path, f"{p}.csv")
+                os.path.join(c.pre_epic_clinical_notes_batch_path, f"{p}.csv"),
             )
             else pd.DataFrame()
         ),
@@ -1447,7 +1501,9 @@ def merge_epic_clinical_notes_csv(
 
 
 def merge_epic_patients_csv(
-    all_pat_list: list[str], config_obj: Any, overwrite: bool = False
+    all_pat_list: list[str],
+    config_obj: Any,
+    overwrite: bool = False,
 ) -> str:
     """Merge all Epic patient demographic data that match the patient list."""
     return _generic_merged_builder(
@@ -1475,7 +1531,9 @@ def merge_epic_patients_csv(
 
 
 def merge_covid_csv(
-    all_pat_list: list[str], config_obj: Any, overwrite: bool = False
+    all_pat_list: list[str],
+    config_obj: Any,
+    overwrite: bool = False,
 ) -> str:
     """Merge all COVID data (files or DB) that match the patient list."""
     return _generic_merged_builder(
@@ -1538,54 +1596,90 @@ def _merge_observation_sub_type(
 
 
 def merge_smoking_csv(
-    all_pat_list: list[str], config_obj: Any, overwrite: bool = False
+    all_pat_list: list[str],
+    config_obj: Any,
+    overwrite: bool = False,
 ) -> str:
     """Merge all smoking status data."""
     return _merge_observation_sub_type(
-        all_pat_list, config_obj, "raw_smoking", "smoking", overwrite
+        all_pat_list,
+        config_obj,
+        "raw_smoking",
+        "smoking",
+        overwrite,
     )
 
 
 def merge_vte_status_csv(
-    all_pat_list: list[str], config_obj: Any, overwrite: bool = False
+    all_pat_list: list[str],
+    config_obj: Any,
+    overwrite: bool = False,
 ) -> str:
     """Merge all VTE status data."""
     return _merge_observation_sub_type(
-        all_pat_list, config_obj, "raw_vte", "vte_status", overwrite
+        all_pat_list,
+        config_obj,
+        "raw_vte",
+        "vte_status",
+        overwrite,
     )
 
 
 def merge_hosp_site_csv(
-    all_pat_list: list[str], config_obj: Any, overwrite: bool = False
+    all_pat_list: list[str],
+    config_obj: Any,
+    overwrite: bool = False,
 ) -> str:
     """Merge all hospital site data."""
     return _merge_observation_sub_type(
-        all_pat_list, config_obj, "raw_hospsite", "hosp_site", overwrite
+        all_pat_list,
+        config_obj,
+        "raw_hospsite",
+        "hosp_site",
+        overwrite,
     )
 
 
 def merge_core_resus_csv(
-    all_pat_list: list[str], config_obj: Any, overwrite: bool = False
+    all_pat_list: list[str],
+    config_obj: Any,
+    overwrite: bool = False,
 ) -> str:
     """Merge all resuscitation status data."""
     return _merge_observation_sub_type(
-        all_pat_list, config_obj, "raw_resus", "core_resus", overwrite
+        all_pat_list,
+        config_obj,
+        "raw_resus",
+        "core_resus",
+        overwrite,
     )
 
 
 def merge_core_02_csv(
-    all_pat_list: list[str], config_obj: Any, overwrite: bool = False
+    all_pat_list: list[str],
+    config_obj: Any,
+    overwrite: bool = False,
 ) -> str:
     """Merge all core oxygen saturation data."""
     return _merge_observation_sub_type(
-        all_pat_list, config_obj, "raw_core_02", "core_02", overwrite
+        all_pat_list,
+        config_obj,
+        "raw_core_02",
+        "core_02",
+        overwrite,
     )
 
 
 def merge_bed_csv(
-    all_pat_list: list[str], config_obj: Any, overwrite: bool = False
+    all_pat_list: list[str],
+    config_obj: Any,
+    overwrite: bool = False,
 ) -> str:
     """Merge all bed location data."""
     return _merge_observation_sub_type(
-        all_pat_list, config_obj, "raw_bed", "bed", overwrite
+        all_pat_list,
+        config_obj,
+        "raw_bed",
+        "bed",
+        overwrite,
     )

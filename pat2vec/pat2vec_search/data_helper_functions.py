@@ -12,6 +12,7 @@ def appendAge(dataFrame: pd.DataFrame) -> pd.DataFrame:
 
     Returns:
         The DataFrame with an added 'age' column.
+
     """
 
     def age(born):
@@ -35,14 +36,17 @@ def appendAgeAtRecord(dataFrame: pd.DataFrame) -> pd.DataFrame:
 
     Returns:
         The DataFrame with an added 'ageAtRecord' column.
+
     """
 
     def ageAtRecord(row):
         born = datetime.strptime(
-            row["client_dob"].split(".")[0], "%Y-%m-%dT%H:%M:%S"
+            row["client_dob"].split(".")[0],
+            "%Y-%m-%dT%H:%M:%S",
         ).date()
         updateTime = datetime.strptime(
-            row["updatetime"].split(".")[0], "%Y-%m-%dT%H:%M:%S"
+            row["updatetime"].split(".")[0],
+            "%Y-%m-%dT%H:%M:%S",
         ).date()
 
         today = updateTime
@@ -63,16 +67,19 @@ def append_age_at_record_series(series: pd.Series) -> pd.Series:
 
     Returns:
         The input Series with an added 'age' value.
+
     """
 
     def age_at_record(row):
         try:
             born = datetime.strptime(
-                row["client_dob"].split(".")[0], "%Y-%m-%dT%H:%M:%S"
+                row["client_dob"].split(".")[0],
+                "%Y-%m-%dT%H:%M:%S",
             ).date()
         except Exception:
             born = datetime.strptime(
-                row["client_dob"].iloc[0].split(".")[0], "%Y-%m-%dT%H:%M:%S"
+                row["client_dob"].iloc[0].split(".")[0],
+                "%Y-%m-%dT%H:%M:%S",
             ).date()
 
         try:
@@ -101,6 +108,7 @@ def df_column_uniquify(df: pd.DataFrame) -> pd.DataFrame:
 
     Returns:
         The DataFrame with unique column names.
+
     """
     df_columns = df.columns
     new_columns = []

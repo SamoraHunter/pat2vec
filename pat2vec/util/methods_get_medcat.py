@@ -40,10 +40,11 @@ def get_cat(config_obj: Any) -> Union["CAT", dummy_CAT] | None:  # type: ignore
 
     Raises:
         ValueError: If MedCAT is enabled but no valid model path can be found. # type: ignore
+
     """
     if config_obj.verbosity >= 1:
         logger.info(
-            f"Override MedCAT model path: {config_obj.override_medcat_model_path}"
+            f"Override MedCAT model path: {config_obj.override_medcat_model_path}",
         )
 
     if config_obj.testing:
@@ -68,13 +69,13 @@ def get_cat(config_obj: Any) -> Union["CAT", dummy_CAT] | None:  # type: ignore
                 from paths import medcat_path
 
                 logger.info(
-                    "Variable 'medcat_path' imported successfully from 'paths.py' file."
+                    "Variable 'medcat_path' imported successfully from 'paths.py' file.",
                 )
                 # Now you can use medcat_path variable here
                 logger.info(f"medcat_path from paths.py: {medcat_path}")
             except ImportError:
                 logger.error(
-                    "Error: Could not import 'medcat_path' from 'paths.py' file."
+                    "Error: Could not import 'medcat_path' from 'paths.py' file.",
                 )
         else:
             logger.info("The 'paths.py' file does not exist or is being overridden.")
@@ -84,7 +85,7 @@ def get_cat(config_obj: Any) -> Union["CAT", dummy_CAT] | None:  # type: ignore
         if config_obj.override_medcat_model_path == "auto":
             if config_obj.verbosity >= 1:
                 logger.info(
-                    "override_medcat_model_path is set to 'auto'. Searching sys.path."
+                    "override_medcat_model_path is set to 'auto'. Searching sys.path.",
                 )
             # Search for 'medcat_models/' in each directory in sys.path
             for directory in sys.path:
@@ -105,7 +106,7 @@ def get_cat(config_obj: Any) -> Union["CAT", dummy_CAT] | None:  # type: ignore
                     break  # type: ignore
             else:
                 logger.warning(
-                    "Directory 'medcat_models/' not found in any directory in sys.path."  # type: ignore
+                    "Directory 'medcat_models/' not found in any directory in sys.path.",  # type: ignore
                 )
 
         if not path_found:
@@ -122,8 +123,6 @@ def get_cat(config_obj: Any) -> Union["CAT", dummy_CAT] | None:  # type: ignore
 
             cat = CAT.load_model_pack(model_path)
             return cat
-        else:
-            # Handle the case where none of the conditions matched
-            raise ValueError("No valid model path found in the configuration.")
-    else:
-        return None
+        # Handle the case where none of the conditions matched
+        raise ValueError("No valid model path found in the configuration.")
+    return None

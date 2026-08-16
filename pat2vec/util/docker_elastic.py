@@ -21,7 +21,8 @@ class ElasticContainer:
         # because corporate proxies often block the redirects to Cloudflare R2 used by
         # Elastic's own registry, whereas Docker Hub's infrastructure is usually permitted.
         self.image = os.environ.get(
-            "PAT2VEC_ELASTIC_IMAGE", image or "elasticsearch:8.17.0"
+            "PAT2VEC_ELASTIC_IMAGE",
+            image or "elasticsearch:8.17.0",
         )
         self.port = port
         self.container_name = f"pat2vec-test-elastic-{uuid.uuid4().hex[:8]}"
@@ -66,7 +67,7 @@ class ElasticContainer:
                 return
 
             logger.info(
-                f"Found {len(container_ids)} orphaned container(s): {container_ids}. Removing..."
+                f"Found {len(container_ids)} orphaned container(s): {container_ids}. Removing...",
             )
             # Remove them
             subprocess.run(
@@ -76,7 +77,7 @@ class ElasticContainer:
             )
         except FileNotFoundError:
             logger.warning(
-                "Docker command not found, cannot clean up orphaned containers."
+                "Docker command not found, cannot clean up orphaned containers.",
             )
         except Exception as e:
             logger.error(f"An error occurred during orphan cleanup: {e}")
@@ -97,7 +98,9 @@ class ElasticContainer:
         for i in range(retries):
             logger.info(f"Pulling image {self.image} (attempt {i + 1}/{retries})...")
             result = subprocess.run(
-                ["docker", "pull", self.image], capture_output=True, text=True
+                ["docker", "pull", self.image],
+                capture_output=True,
+                text=True,
             )
             if result.returncode == 0:
                 return True
@@ -157,14 +160,16 @@ class ElasticContainer:
                         fields = line.strip().split()
                         if len(fields) > 2 and fields[1] == "00000000":  # Default route
                             return socket.inet_ntoa(
-                                struct.pack("<L", int(fields[2], 16))
+                                struct.pack("<L", int(fields[2], 16)),
                             )
         except Exception:
             pass
 
         try:
             result = subprocess.run(
-                ["ip", "route", "show", "default"], capture_output=True, text=True
+                ["ip", "route", "show", "default"],
+                capture_output=True,
+                text=True,
             )
             if result.returncode == 0 and "via" in result.stdout:
                 return result.stdout.split("via")[1].split()[0]
@@ -196,7 +201,7 @@ class ElasticContainer:
         port_mapping = f"{self.port}:9200"
         if not self._is_port_free(self.port):
             logger.warning(
-                f"Port {self.port} is in use. Letting Docker assign a random port."
+                f"Port {self.port} is in use. Letting Docker assign a random port.",
             )
             port_mapping = "9200"
 
@@ -307,7 +312,7 @@ class ElasticContainer:
                         status = response.json().get("status")
                         if status in ["green", "yellow"]:
                             logger.info(
-                                f"✅ Elasticsearch is ready at {test_url} (status: {status})."
+                                f"✅ Elasticsearch is ready at {test_url} (status: {status}).",
                             )
                             # Update instance state to the successful connection info
                             self.host = test_host
@@ -317,7 +322,7 @@ class ElasticContainer:
                     continue
                 except Exception as e:
                     logger.warning(
-                        f"Unexpected health check error for {test_host}: {e}"
+                        f"Unexpected health check error for {test_host}: {e}",
                     )
 
             time.sleep(5)

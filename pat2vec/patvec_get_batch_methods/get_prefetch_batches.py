@@ -59,10 +59,11 @@ def prefetch_batches(pat2vec_obj: Any) -> list[BatchConfig]:
 
     Returns:
         A list of the `BatchConfig` objects that were processed.
+
     """
     if pat2vec_obj is None:
         print("[ERROR] pat2vec_obj cannot be None")
-        return
+        return None
 
     # Check verbosity setting
     verbose = getattr(pat2vec_obj.config_obj, "verbose", 0)

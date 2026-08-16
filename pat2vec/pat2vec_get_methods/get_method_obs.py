@@ -35,6 +35,7 @@ def get_current_pat_obs(
 
     Raises:
         ValueError: If required configuration attributes are missing.
+
     """
     if pat_batch is None or pat_batch.empty:
         return pd.DataFrame()
@@ -70,7 +71,8 @@ def get_current_pat_obs(
 
     # Extract numeric values
     df["observation_valuetext_analysed"] = pd.to_numeric(
-        df["observation_valuetext_analysed"], errors="coerce"
+        df["observation_valuetext_analysed"],
+        errors="coerce",
     )
 
     # Group by patient and aggregate

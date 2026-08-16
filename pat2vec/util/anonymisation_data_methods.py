@@ -25,6 +25,7 @@ def anonymize_feature_names(df: pd.DataFrame) -> tuple[pd.DataFrame, dict[str, s
             - pd.DataFrame: A new DataFrame with anonymized column names.
             - dict: A dictionary mapping anonymized names to their original
               names, for de-anonymization. Format: {anonymized_name: original_name}.
+
     """
     original_feature_names: list[str] = (
         df.columns.tolist()
@@ -168,7 +169,8 @@ def anonymize_feature_names(df: pd.DataFrame) -> tuple[pd.DataFrame, dict[str, s
 
 
 def deanonymize_feature_names(
-    anonymized_feature_names: list[str], anonymization_key: dict[str, str]
+    anonymized_feature_names: list[str],
+    anonymization_key: dict[str, str],
 ) -> list[str | None]:
     """De-anonymizes a list of feature names using a provided key.
 
@@ -180,10 +182,11 @@ def deanonymize_feature_names(
     Returns:
         A list of the original feature names. If an anonymized name is not
         found in the key, the corresponding item in the list will be None.
+
     """
     deanonymized_names: list[str | None] = []
     for anonymized_name in anonymized_feature_names:
-        original_name = anonymization_key.get(anonymized_name, None)
+        original_name = anonymization_key.get(anonymized_name)
         if original_name is None:
             logger.warning(f"Anonymized name '{anonymized_name}' not found in the key.")
         deanonymized_names.append(original_name)

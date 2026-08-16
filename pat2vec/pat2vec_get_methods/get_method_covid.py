@@ -76,6 +76,7 @@ def search_covid(
     Raises:
         ValueError: If `cohort_searcher_with_terms_and_search` or `client_id_codes`
             is None.
+
     """
     if (
         output_filename
@@ -84,7 +85,9 @@ def search_covid(
         and hasattr(config_obj, "proj_name")
     ):
         output_filename = os.path.join(
-            config_obj.root_path, config_obj.proj_name, output_filename
+            config_obj.root_path,
+            config_obj.proj_name,
+            output_filename,
         )
 
     if output_filename and os.path.exists(output_filename) and not overwrite:
@@ -101,7 +104,12 @@ def search_covid(
 
     start_year, start_month, start_day, end_year, end_month, end_day = (
         validate_input_dates(
-            start_year, start_month, start_day, end_year, end_month, end_day
+            start_year,
+            start_month,
+            start_day,
+            end_year,
+            end_month,
+            end_day,
         )
     )
 
@@ -152,6 +160,7 @@ def calculate_covid_features(
 
     Returns:
         pd.DataFrame: A single-row DataFrame with the `covid_positive` feature.
+
     """
     features = pd.DataFrame({"client_idcode": [current_pat_client_id_code]})
 
@@ -194,6 +203,7 @@ def get_covid(
 
     Returns:
         pd.DataFrame: A DataFrame containing the COVID-19 test feature for the patient.
+
     """
     if config_obj is None:
         raise ValueError("config_obj cannot be None. Provide a valid configuration.")
@@ -208,7 +218,7 @@ def get_covid(
             {
                 "client_idcode": [current_pat_client_id_code],
                 "covid_positive": 0 if config_obj.negate_biochem else np.nan,
-            }
+            },
         )
 
     if batch_mode:

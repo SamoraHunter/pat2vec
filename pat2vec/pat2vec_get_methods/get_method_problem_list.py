@@ -22,6 +22,7 @@ def get_current_pat_problem_list(
 
     Returns:
         pd.DataFrame: A single-row DataFrame containing problem list features.
+
     """
     if pat_batch is None or pat_batch.empty:
         return pd.DataFrame()

@@ -52,6 +52,7 @@ def _get_source_record(
         A DataFrame containing the filtered records from the source.
             Returns an empty DataFrame if the file is not found, is empty, or if
             no rows remain after filtering.
+
     """
     # Try database first if available, then fall back to files
     df = pd.DataFrame()
@@ -63,7 +64,7 @@ def _get_source_record(
     ):
         if verbose >= 10:
             logger.debug(
-                f"Reading annotations from DB table {table_name} for patient {pat_id}"
+                f"Reading annotations from DB table {table_name} for patient {pat_id}",
             )
         df = get_df_from_db(config_obj, "annotations", table_name, patient_ids=[pat_id])
 
@@ -73,26 +74,26 @@ def _get_source_record(
             if os.path.exists(file_path):
                 if verbose >= 10:
                     logger.debug(
-                        f"DB table {table_name} empty for patient {pat_id}, reading from CSV file instead"
+                        f"DB table {table_name} empty for patient {pat_id}, reading from CSV file instead",
                     )
                 try:
                     df = pd.read_csv(file_path)
                     if df.empty:
                         if verbose >= 10:
                             logger.warning(
-                                f"Empty CSV file for patient {pat_id} at {base_path}"
+                                f"Empty CSV file for patient {pat_id} at {base_path}",
                             )
                         return pd.DataFrame()
                 except Exception as e:
                     if verbose >= 10:
                         logger.error(
-                            f"Error reading CSV for patient {pat_id} at {base_path}: {e}"
+                            f"Error reading CSV for patient {pat_id} at {base_path}: {e}",
                         )
                     return pd.DataFrame()
             else:
                 if verbose >= 10:
                     logger.debug(
-                        f"No records found in DB table {table_name} for patient {pat_id}, and no file at {file_path}"
+                        f"No records found in DB table {table_name} for patient {pat_id}, and no file at {file_path}",
                     )
                 return pd.DataFrame()
     else:
@@ -112,14 +113,14 @@ def _get_source_record(
             if df.empty:
                 if verbose >= 10:
                     logger.warning(
-                        f"Empty CSV file for patient {pat_id} at {base_path}"
+                        f"Empty CSV file for patient {pat_id} at {base_path}",
                     )
                 return pd.DataFrame()
 
         except Exception as e:
             if verbose >= 10:
                 logger.error(
-                    f"Error reading CSV for patient {pat_id} at {base_path}: {e}"
+                    f"Error reading CSV for patient {pat_id} at {base_path}: {e}",
                 )
             return pd.DataFrame()
 
@@ -134,7 +135,7 @@ def _get_source_record(
     if missing_columns:
         if verbose >= 10:
             logger.warning(
-                f"Missing necessary columns in {base_path}: {missing_columns}"
+                f"Missing necessary columns in {base_path}: {missing_columns}",
             )
         # Create missing columns with appropriate default values
         for col in missing_columns:
@@ -248,8 +249,8 @@ def get_pat_ipw_record(
 
     Returns:
         pd.DataFrame: A DataFrame containing the single IPW record for the patient.
-    """
 
+    """
     # Use config verbosity if available
     if config_obj and hasattr(config_obj, "verbosity") and config_obj.verbosity >= 0:
         verbose = config_obj.verbosity
@@ -470,7 +471,8 @@ def get_pat_ipw_record(
     for df in dfs_to_compare:
         if "observationdocument_recordeddtm" in df.columns:
             df.rename(
-                columns={"observationdocument_recordeddtm": "updatetime"}, inplace=True
+                columns={"observationdocument_recordeddtm": "updatetime"},
+                inplace=True,
             )
         elif "basicobs_entered" in df.columns:
             # Drop existing updatetime column if it exists
@@ -485,7 +487,7 @@ def get_pat_ipw_record(
         elif "updatetime" not in df.columns:
             if verbose > 10:
                 logger.warning(
-                    f"No timestamp column found in DataFrame with source {df.iloc[0].get('source', 'unknown')}"
+                    f"No timestamp column found in DataFrame with source {df.iloc[0].get('source', 'unknown')}",
                 )
             continue
 
@@ -494,7 +496,9 @@ def get_pat_ipw_record(
         if "updatetime" in df.columns:
             # Use errors='coerce' to turn unparseable dates into NaT (Not a Time)
             df["updatetime"] = pd.to_datetime(
-                df["updatetime"], errors="coerce", utc=True
+                df["updatetime"],
+                errors="coerce",
+                utc=True,
             )
 
     # Filter out dataframes that don't have valid updatetime
@@ -505,7 +509,7 @@ def get_pat_ipw_record(
         elif verbose > 10:
             source = df.iloc[0].get("source", "unknown") if not df.empty else "unknown"
             logger.debug(
-                f"Excluding DataFrame from {source} due to invalid updatetime."
+                f"Excluding DataFrame from {source} due to invalid updatetime.",
             )
 
     # Find the earliest record among valid DataFrames
@@ -516,7 +520,7 @@ def get_pat_ipw_record(
                 source = earliest_df.iloc[0].get("source", "unknown")
                 timestamp = earliest_df.iloc[0]["updatetime"]
                 logger.debug(
-                    f"Selected earliest record from {source} with timestamp {timestamp}."
+                    f"Selected earliest record from {source} with timestamp {timestamp}.",
                 )
         except Exception as e:
             if verbose > 10:
@@ -529,7 +533,7 @@ def get_pat_ipw_record(
     if earliest_df.empty or len(earliest_df) == 0:
         if verbose >= 1:
             logger.info(
-                f"No valid annotations available from EPR, MCT, or textual_obs for {current_pat_idcode}. Creating fallback using global window."
+                f"No valid annotations available from EPR, MCT, or textual_obs for {current_pat_idcode}. Creating fallback using global window.",
             )
 
         # Create a fallback record
@@ -568,7 +572,7 @@ def get_pat_ipw_record(
 
         if verbose >= 1:
             logger.info(
-                f"Fallback date set to: {fallback_date} (lookback={config_obj.lookback})"
+                f"Fallback date set to: {fallback_date} (lookback={config_obj.lookback})",
             )
 
         earliest_df["source"] = ["fallback"]

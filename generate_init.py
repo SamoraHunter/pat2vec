@@ -13,6 +13,7 @@ def generate_init_file_content(package_path="pat2vec"):
 
     Args:
         package_path (str): The path to the package root. Defaults to "pat2vec".
+
     """
     # This will store all importable names (functions and classes) per module.
     module_to_imports = defaultdict(list)
@@ -32,14 +33,15 @@ def generate_init_file_content(package_path="pat2vec"):
                 module_path, _ = os.path.splitext(relative_path)
                 import_path = "." + module_path.replace(os.path.sep, ".")
 
-                with open(file_path, "r", encoding="utf-8") as f:
+                with open(file_path, encoding="utf-8") as f:
                     try:
                         tree = ast.parse(f.read(), filename=file_path)
 
                         # Iterate over top-level nodes only
                         for node in tree.body:
                             if isinstance(
-                                node, (ast.FunctionDef, ast.ClassDef)
+                                node,
+                                (ast.FunctionDef, ast.ClassDef),
                             ) and not node.name.startswith("_"):
                                 name = node.name
                                 module_to_imports[import_path].append(name)
@@ -47,7 +49,8 @@ def generate_init_file_content(package_path="pat2vec"):
                             elif isinstance(node, ast.Assign):
                                 for target in node.targets:
                                     if isinstance(
-                                        target, ast.Name
+                                        target,
+                                        ast.Name,
                                     ) and not target.id.startswith("_"):
                                         name = target.id
                                         # Heuristic: export all-caps variables as constants
@@ -55,7 +58,8 @@ def generate_init_file_content(package_path="pat2vec"):
                                             module_to_imports[import_path].append(name)
                                             all_import_names.add(name)
                             elif isinstance(node, ast.AnnAssign) and isinstance(
-                                node.target, ast.Name
+                                node.target,
+                                ast.Name,
                             ):
                                 name = node.target.id
                                 if not name.startswith("_") and name.isupper():
@@ -130,7 +134,7 @@ def get_version_from_pyproject(pyproject_path="pyproject.toml"):
     import re
 
     try:
-        with open(pyproject_path, "r", encoding="utf-8") as f:
+        with open(pyproject_path, encoding="utf-8") as f:
             content = f.read()
 
         match = re.search(r'^version\s*=\s*["\']([^"\']+)["\']', content, re.MULTILINE)

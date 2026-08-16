@@ -25,8 +25,8 @@ def get_pat_batch_reports(
 
     Returns:
         A DataFrame containing the batch of reports.
-    """
 
+    """
     overwrite_stored_pat_observations = config_obj.overwrite_stored_pat_observations
     store_pat_batch_observations = config_obj.store_pat_batch_observations
 
@@ -73,7 +73,7 @@ def get_pat_batch_reports(
                     return df
         except Exception as e:
             logging.error(
-                f"Error with database backend for reports for patient {current_pat_client_id_code}: {e}"
+                f"Error with database backend for reports for patient {current_pat_client_id_code}: {e}",
             )
             return pd.DataFrame()
 
@@ -81,7 +81,8 @@ def get_pat_batch_reports(
 
     should_fetch = False
     if config_obj.storage_backend == "database" or (
-        store_pat_batch_observations and not existence_check or existence_check is False
+        (store_pat_batch_observations and not existence_check)
+        or existence_check is False
     ):
         should_fetch = True
 
@@ -140,7 +141,7 @@ def get_pat_batch_reports(
                                 )
                                 if overwrite_stored_pat_observations:
                                     del_query = text(
-                                        f"DELETE FROM {db_table if engine.name == 'sqlite' else f'{schema_name}.{table_name}'} WHERE client_idcode = :pat_id"
+                                        f"DELETE FROM {db_table if engine.name == 'sqlite' else f'{schema_name}.{table_name}'} WHERE client_idcode = :pat_id",
                                     )
                                     connection.execute(
                                         del_query,

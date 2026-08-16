@@ -75,6 +75,7 @@ def search_smoking(
     Raises:
         ValueError: If `cohort_searcher_with_terms_and_search` or `client_id_codes`
             is None.
+
     """
     if (
         output_filename
@@ -83,7 +84,9 @@ def search_smoking(
         and hasattr(config_obj, "proj_name")
     ):
         output_filename = os.path.join(
-            config_obj.root_path, config_obj.proj_name, output_filename
+            config_obj.root_path,
+            config_obj.proj_name,
+            output_filename,
         )
 
     if output_filename and os.path.exists(output_filename) and not overwrite:
@@ -100,7 +103,12 @@ def search_smoking(
 
     start_year, start_month, start_day, end_year, end_month, end_day = (
         validate_input_dates(
-            start_year, start_month, start_day, end_year, end_month, end_day
+            start_year,
+            start_month,
+            start_day,
+            end_year,
+            end_month,
+            end_day,
         )
     )
 
@@ -143,6 +151,7 @@ def prepare_smoking_data(raw_data: pd.DataFrame) -> pd.DataFrame:
 
     Raises:
         KeyError: If required columns are missing from the input DataFrame.
+
     """
     data = raw_data[raw_data["obscatalogmasteritem_displayname"] == SEARCH_TERM].copy()
     data.dropna(inplace=True)
@@ -167,6 +176,7 @@ def calculate_smoking_features(
 
     Returns:
         pd.DataFrame: A single-row DataFrame with binary features for smoking status.
+
     """
     term = "smoking_status"
     categories = {
@@ -180,7 +190,7 @@ def calculate_smoking_features(
         value_array = features_data["observation_valuetext_analysed"].dropna()
         for suffix, match_str in categories.items():
             features[f"{term}_{suffix}"] = value_array.str.contains(match_str).astype(
-                int
+                int,
             )
     elif negate_biochem:
         for suffix in categories:
@@ -216,6 +226,7 @@ def get_smoking(
 
     Raises:
         ValueError: If `config_obj` is None.
+
     """
     if config_obj is None:
         raise ValueError("config_obj cannot be None. Provide a valid configuration.")

@@ -28,6 +28,7 @@ class ColumnAnonymizer:
         >>> anonymizer = ColumnAnonymizer(key="my_secret_key")
         >>> df_anon, mapping = anonymizer.anonymize(df)
         >>> df_deanon = anonymizer.deanonymize(df_anon, mapping)
+
     """
 
     def __init__(self, key: str | None = None):
@@ -37,6 +38,7 @@ class ColumnAnonymizer:
             key: Secret key for generating consistent hashes. If None and no
                  environment variable is set, a secure random key will be generated.
                  Keep this secret if you need to maintain consistent mappings across sessions.
+
         """
         self.key = key or os.environ.get("ANONYMIZATION_KEY")
 
@@ -53,6 +55,7 @@ class ColumnAnonymizer:
 
         Returns:
             A deterministic hash string combining the key and value
+
         """
         return hmac.new(
             self.key.encode(),
@@ -68,6 +71,7 @@ class ColumnAnonymizer:
 
         Returns:
             Dictionary mapping original values to their pseudonymized versions
+
         """
         unique_values = values.dropna().unique()
 
@@ -81,7 +85,9 @@ class ColumnAnonymizer:
         return mapping
 
     def anonymize(
-        self, df: pd.DataFrame, column_name: str = "client_idcode"
+        self,
+        df: pd.DataFrame,
+        column_name: str = "client_idcode",
     ) -> tuple[pd.DataFrame, dict[str, str]]:
         """Anonymizes the values in a specified column using deterministic hashing.
 
@@ -95,6 +101,7 @@ class ColumnAnonymizer:
 
         Raises:
             KeyError: If the specified column doesn't exist in the DataFrame
+
         """
         if column_name not in df.columns:
             raise KeyError(column_name)
@@ -134,6 +141,7 @@ class ColumnAnonymizer:
 
         Raises:
             KeyError: If the specified column doesn't exist in the DataFrame
+
         """
         if column_name not in df.columns:
             raise KeyError(column_name)
@@ -177,6 +185,7 @@ class ColumnAnonymizer:
         Args:
             mapping: The mapping dictionary to save (original -> hash)
             filepath: Path where the mapping will be saved (JSON format)
+
         """
         output = {str(k): str(v) for k, v in mapping.items()}
 
@@ -196,8 +205,9 @@ class ColumnAnonymizer:
 
         Returns:
             The loaded mapping dictionary
+
         """
-        with open(filepath, "r", encoding="utf-8") as f:
+        with open(filepath, encoding="utf-8") as f:
             return json.load(f)
 
 
@@ -227,6 +237,7 @@ def anonymize_column(
         0     a1b2c3d4e5f6...
         1     f6e5d4c3b2a1...
         2     1a2b3c4d5e6f...
+
     """
     anonymizer = ColumnAnonymizer(key=key)
     return anonymizer.anonymize(df, column_name)
@@ -252,6 +263,7 @@ def deanonymize_column(
     Example:
         >>> df_anon = pd.DataFrame({'client_idcode': ['a1b2c3d4e5f6...', ...]})
         >>> df_deanon = deanonymize_column(df_anon, mapping)
+
     """
     anonymizer = ColumnAnonymizer()
     return anonymizer.deanonymize(df, mapping, column_name)

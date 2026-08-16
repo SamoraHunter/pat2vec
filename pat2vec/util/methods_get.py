@@ -37,6 +37,7 @@ def list_dir_wrapper(path: str, config_obj: Any = None) -> list[str]:
 
     Returns:
         A list of filenames in the specified directory.
+
     """
     hostname = getattr(config_obj, "hostname", None)
     username = getattr(config_obj, "username", None)
@@ -52,7 +53,9 @@ def list_dir_wrapper(path: str, config_obj: Any = None) -> list[str]:
             ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
             try:
                 ssh_client.connect(
-                    hostname=hostname, username=username, password=password
+                    hostname=hostname,
+                    username=username,
+                    password=password,
                 )
                 sftp_client = ssh_client.open_sftp()
                 sftp_obj = sftp_client
@@ -72,10 +75,9 @@ def list_dir_wrapper(path: str, config_obj: Any = None) -> list[str]:
                 ssh_client.close()
 
         return res
-    else:
-        if os.path.exists(path):
-            return os.listdir(path)
-        return []
+    if os.path.exists(path):
+        return os.listdir(path)
+    return []
 
 
 def convert_timestamp_to_tuple(timestamp: str) -> tuple[int, int]:
@@ -87,6 +89,7 @@ def convert_timestamp_to_tuple(timestamp: str) -> tuple[int, int]:
 
     Returns:
         A tuple containing the year and month as integers.
+
     """
     # use the imported parse function for more robust timestamp conversion
     dt = parse(timestamp)
@@ -107,6 +110,7 @@ def enum_target_date_vector(
 
     Returns:
         A single-row DataFrame with a one-hot encoded column for the target date.
+
     """
     empty_date_vector = get_empty_date_vector(config_obj=config_obj)
 
@@ -131,11 +135,12 @@ def enum_exact_target_date_vector(
 
     Returns:
         A single-row DataFrame with a one-hot encoded column for the target date.
+
     """
     # empty_date_vector = get_empty_date_vector(config_obj=config_obj)
 
     empty_date_vector = pd.DataFrame(
-        columns=["client_idcode", str(target_date_range) + "_date_time_stamp"]
+        columns=["client_idcode", str(target_date_range) + "_date_time_stamp"],
     )
 
     empty_date_vector[str(target_date_range) + "_date_time_stamp"] = 1
@@ -157,6 +162,7 @@ def dump_results(file_data: Any, path: str, config_obj: Any = None) -> None:
         path: The destination file path.
         config_obj: The configuration object containing SFTP credentials and
             settings if `remote_dump` is True.
+
     """
     if config_obj and getattr(config_obj, "storage_backend", "file") == "database":
         return
@@ -226,6 +232,7 @@ def update_pbar(
         **n_docs_to_annotate: Arbitrary keyword arguments that are displayed at the end of the
             progress bar description. Useful for showing counts like the number of documents
             to annotate.
+
     """
     # Early return if progress bar is None
     if t is None:
@@ -269,7 +276,7 @@ def update_pbar(
 
     # Update progress bar description with the determined color formatting
     t.set_description(
-        f"s: {counter_disp} | {current_pat_client_id_code} | task: {colour_val} | {n_docs_to_annotate}"
+        f"s: {counter_disp} | {current_pat_client_id_code} | task: {colour_val} | {n_docs_to_annotate}",
     )
     t.refresh()
 
@@ -282,7 +289,7 @@ def get_free_gpu() -> tuple[int, str]:
     """
     try:
         gpu_stats = subprocess.check_output(
-            ["nvidia-smi", "--format=csv", "--query-gpu=memory.used,memory.free"]
+            ["nvidia-smi", "--format=csv", "--query-gpu=memory.used,memory.free"],
         )
     except subprocess.CalledProcessError as e:
         # Handle cases where nvidia-smi fails (e.g., exit status 18)
@@ -303,7 +310,7 @@ def get_free_gpu() -> tuple[int, str]:
     gpu_df["memory.free"] = gpu_df["memory.free"].map(lambda x: x.rstrip(" [MiB]"))
     idx = gpu_df["memory.free"].astype(int).idxmax()  # type: ignore
     logger.info(
-        "Returning GPU{} with {} free MiB".format(idx, gpu_df.iloc[idx]["memory.free"])
+        "Returning GPU{} with {} free MiB".format(idx, gpu_df.iloc[idx]["memory.free"]),
     )
     return int(idx), gpu_df.iloc[idx]["memory.free"]
 
@@ -317,14 +324,17 @@ def convert_date(date_string: str) -> datetime:
 
     Returns:
         A datetime object representing the date part of the string.
+
     """
-    date_string = date_string.split("T")[0]
+    date_string = date_string.split("T", maxsplit=1)[0]
     date_object = datetime.strptime(date_string, "%Y-%m-%d")
     return date_object
 
 
 def write_csv_wrapper(
-    path: str, csv_file_data: pd.DataFrame | None = None, config_obj: Any = None
+    path: str,
+    csv_file_data: pd.DataFrame | None = None,
+    config_obj: Any = None,
 ) -> None:
     """Writes CSV data to a file either locally or remotely.
 
@@ -335,6 +345,7 @@ def write_csv_wrapper(
         csv_file_data: The DataFrame to write.
         config_obj: An object containing configuration settings, including
             'remote_dump'.
+
     """
     if config_obj and getattr(config_obj, "storage_backend", "file") == "database":
         return
@@ -359,6 +370,7 @@ def read_remote(path: str, config_obj: Any = None) -> pd.DataFrame:
 
     Returns:
         The DataFrame containing the data read from the remote CSV file.
+
     """
     if config_obj is None:
         raise ValueError("Config object cannot be None.")
@@ -401,6 +413,7 @@ def read_csv_wrapper(path: str, config_obj: Any = None) -> pd.DataFrame:
 
     Returns:
         The DataFrame containing the data read from the CSV file.
+
     """
     remote_dump = config_obj.remote_dump
 
@@ -422,6 +435,7 @@ def create_local_folders(config_obj: Any = None) -> None:
     Args:
         config_obj: The configuration object containing `root_path` and
             `proj_name`.
+
     """
     if config_obj and config_obj.storage_backend == "database":
         return
@@ -434,7 +448,9 @@ def create_local_folders(config_obj: Any = None) -> None:
     Path(pat_doc_folder_path).mkdir(parents=True, exist_ok=True)
 
     pat_doc_annot_vec_folder_path = os.path.join(
-        root_path, project_name, "pat_docs_annot_vecs"
+        root_path,
+        project_name,
+        "pat_docs_annot_vecs",
     )
     Path(pat_doc_annot_vec_folder_path).mkdir(parents=True, exist_ok=True)
 
@@ -453,6 +469,7 @@ def create_remote_folders(config_obj: Any = None) -> None:
 
     Raises:
         ValueError: If `config_obj` is not provided.
+
     """
     root_path = config_obj.root_path
     project_name = config_obj.proj_name
@@ -512,8 +529,8 @@ def create_folders_annot_csv_wrapper(config_obj: Any = None) -> None:
 
     Args:
         config_obj: The configuration object.
-    """
 
+    """
     # Create folders
     if not config_obj or not config_obj.remote_dump:
         # Create local folders
@@ -535,6 +552,7 @@ def get_empty_date_vector(config_obj: Any) -> pd.DataFrame:
     Returns:
         A single-row DataFrame with columns for each date in the time window,
         initialized to 0.0.
+
     """
     start_date = config_obj.start_date
     years = config_obj.years
@@ -543,13 +561,18 @@ def get_empty_date_vector(config_obj: Any) -> pd.DataFrame:
     interval_window_delta = config_obj.time_window_interval_delta
 
     combinations = generate_date_list(
-        start_date, years, months, days, interval_window_delta, config_obj=config_obj
+        start_date,
+        years,
+        months,
+        days,
+        interval_window_delta,
+        config_obj=config_obj,
     )
 
     combinations = [str(item) + "_" + "date_time_stamp" for item in combinations]
 
     return pd.DataFrame(data=0.0, index=np.arange(1), columns=combinations).astype(
-        float
+        float,
     )
 
 
@@ -563,6 +586,7 @@ def sftp_exists(path: str, config_obj: Any) -> bool:
 
     Returns:
         True if the path exists, False otherwise.
+
     """
     sftp_client = None
     ssh_client = None
@@ -603,17 +627,18 @@ def exist_check(path: str, config_obj: Any = None) -> bool:
 
     Returns:
         True if the path exists, False otherwise.
+
     """
     remote_dump = config_obj.remote_dump
 
     if remote_dump:
         return sftp_exists(path, config_obj)
-    else:
-        return exists(path)
+    return exists(path)
 
 
 def filter_stripped_list(
-    stripped_list: list[str], config_obj: Any = None
+    stripped_list: list[str],
+    config_obj: Any = None,
 ) -> tuple[list[str], list[str]]:
     """Filters a list of patients to exclude those already processed.
 
@@ -627,6 +652,7 @@ def filter_stripped_list(
     Returns:
         A tuple containing two lists: the filtered list of patients to be
         processed, and the original filtered list (for reference).
+
     """
     strip_list = getattr(config_obj, "strip_list", False)
     current_pat_lines_path = config_obj.current_pat_lines_path
@@ -671,6 +697,7 @@ def create_folders(all_patient_list: list[str], config_obj: Any = None) -> None:
     Args:
         all_patient_list: List of patient IDs.
         config_obj: Configuration object containing paths and verbosity level.
+
     """
     if config_obj and config_obj.storage_backend == "database":
         return
@@ -742,6 +769,7 @@ def create_folders_for_pat(patient_id: str, config_obj: Any = None) -> None:
     Args:
         patient_id: The patient's ID.
         config_obj: Configuration object containing paths and verbosity level.
+
     """
     if config_obj and config_obj.storage_backend == "database":
         return
@@ -811,7 +839,7 @@ def create_folders_for_pat(patient_id: str, config_obj: Any = None) -> None:
 
     if config_obj.verbosity > 0:
         logger.info(
-            f"Folders created for patient {patient_id}: {current_pat_lines_path}..."
+            f"Folders created for patient {patient_id}: {current_pat_lines_path}...",
         )
 
 
@@ -835,6 +863,7 @@ def add_offset_column(
 
     Returns:
         The modified DataFrame with the new offset column.
+
     """
     if start_column_name not in dataframe.columns:
         raise ValueError(f"Column '{start_column_name}' does not exist.")
@@ -930,12 +959,12 @@ def add_offset_column(
 
     if verbose >= 1:
         logger.info(
-            f"Successfully converted {successful_conversions}/{total_rows} datetime values"
+            f"Successfully converted {successful_conversions}/{total_rows} datetime values",
         )
         if successful_conversions < total_rows:
             failed_count = total_rows - successful_conversions
             logger.warning(
-                f"Warning: {failed_count} values could not be converted and will be NaT"
+                f"Warning: {failed_count} values could not be converted and will be NaT",
             )
 
     if verbose >= 2:
@@ -970,7 +999,7 @@ def add_offset_column(
 
     if verbose >= 1:
         logger.info(
-            f"Successfully applied offset to {successful_offsets}/{successful_conversions} converted values"
+            f"Successfully applied offset to {successful_offsets}/{successful_conversions} converted values",
         )
 
     return df
@@ -997,7 +1026,7 @@ def test_datetime_formats():
             None,
             "invalid_date",
             "01/01/24 00.00.00",
-        ]
+        ],
     }
 
     df = pd.DataFrame(test_data)
@@ -1008,7 +1037,8 @@ def test_datetime_formats():
     result = add_offset_column(df, "timestamps", "offset_timestamps", offset, verbose=2)
 
     logger.info(
-        "\nTest Results:\n%s", result[["timestamps", "offset_timestamps"]].to_string()
+        "\nTest Results:\n%s",
+        result[["timestamps", "offset_timestamps"]].to_string(),
     )
 
     return result
@@ -1033,6 +1063,7 @@ def build_patient_dict(
 
     Returns:
         A dictionary where keys are patient IDs and values are (start, end) tuples.
+
     """
     if patient_id_column not in dataframe.columns:
         raise ValueError(f"Column '{patient_id_column}' does not exist.")
@@ -1057,7 +1088,7 @@ def build_patient_dict(
         else:
             logger.warning(
                 f"Ignoring patient {patient_id}: start or end time is null. "
-                f"start: {start_time}, end: {end_time}"
+                f"start: {start_time}, end: {end_time}",
             )
 
     return patient_dict
@@ -1073,8 +1104,8 @@ def write_remote(path, csv_file, config_obj=None):
 
     Raises:
         ValueError: If `config_obj` is not provided.
-    """
 
+    """
     if config_obj is None:
         raise ValueError("Config object cannot be None.")
 

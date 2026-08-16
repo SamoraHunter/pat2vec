@@ -87,6 +87,7 @@ def search_epic_clinical_notes_appointments(
         ValueError: If validate_input_dates fails to validate the date parameters.
         t: Optional tqdm progress bar instance for updating progress during search.
             Defaults to None.
+
     """
     start_time = config_obj.start_time
 
@@ -106,7 +107,9 @@ def search_epic_clinical_notes_appointments(
         and hasattr(config_obj, "proj_name")
     ):
         output_filename = os.path.join(
-            config_obj.root_path, config_obj.proj_name, output_filename
+            config_obj.root_path,
+            config_obj.proj_name,
+            output_filename,
         )
 
     if output_filename and os.path.exists(output_filename) and not overwrite:
@@ -123,7 +126,12 @@ def search_epic_clinical_notes_appointments(
 
     start_year, start_month, start_day, end_year, end_month, end_day = (
         validate_input_dates(
-            start_year, start_month, start_day, end_year, end_month, end_day
+            start_year,
+            start_month,
+            start_day,
+            end_year,
+            end_month,
+            end_day,
         )
     )
 
@@ -188,6 +196,7 @@ def get_epic_clinical_notes_appointments(
 
     Raises:
         ValueError: If config_obj is None.
+
     """
     if config_obj is None:
         raise ValueError("config_obj cannot be None.")
@@ -229,7 +238,8 @@ def get_epic_clinical_notes_appointments(
         current_pat_raw.rename(columns={id_field_name: "client_idcode"}, inplace=True)
 
     features = pd.DataFrame(
-        data=[current_pat_client_id_code], columns=["client_idcode"]
+        data=[current_pat_client_id_code],
+        columns=["client_idcode"],
     )
 
     if len(current_pat_raw) == 0:

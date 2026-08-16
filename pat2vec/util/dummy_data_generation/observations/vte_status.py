@@ -26,6 +26,7 @@ def _calculate_patient_age(base_year: int, observation_month: int) -> int:
 
     Returns:
         Patient age in years (18-90 range with realistic distribution).
+
     """
     np.random.seed(random_state + hash(base_year) % 1000)
 
@@ -53,6 +54,7 @@ def _get_risk_factors(age: int) -> dict:
 
     Returns:
         Dictionary with probability of each risk factor being present.
+
     """
     if age < 40:
         return {
@@ -60,24 +62,23 @@ def _get_risk_factors(age: int) -> dict:
             "cancer_diagnosis": 0.05,
             "immobilization": 0.10,
         }
-    elif age < 60:
+    if age < 60:
         return {
             "recent_surgery": 0.25,
             "cancer_diagnosis": 0.10,
             "immobilization": 0.20,
         }
-    elif age < 75:
+    if age < 75:
         return {
             "recent_surgery": 0.35,
             "cancer_diagnosis": 0.18,
             "immobilization": 0.30,
         }
-    else:
-        return {
-            "recent_surgery": 0.45,
-            "cancer_diagnosis": 0.25,
-            "immobilization": 0.40,
-        }
+    return {
+        "recent_surgery": 0.45,
+        "cancer_diagnosis": 0.25,
+        "immobilization": 0.40,
+    }
 
 
 def _calculate_vte_risk_probability(age: int, risk_factors: dict) -> float:
@@ -100,6 +101,7 @@ def _calculate_vte_risk_probability(age: int, risk_factors: dict) -> float:
 
     Returns:
         Adjusted probability of high VTE risk.
+
     """
     base_prob = 0.35
 
@@ -136,6 +138,7 @@ def _determine_vte_status(age: int, risk_factors: dict) -> str:
 
     Returns:
         VTE status string with appropriate risk category and bleeding risk.
+
     """
     np.random.seed(random_state + hash(age) % 1000)
 
@@ -143,16 +146,15 @@ def _determine_vte_status(age: int, risk_factors: dict) -> str:
 
     if random.random() < (1 - vte_prob * 0.5):
         return "Low risk of VTE"
-    elif random.random() < (1 - vte_prob * 0.2):
+    if random.random() < (1 - vte_prob * 0.2):
         return "Moderate risk of VTE"
-    else:
-        high_risk_type = random.choice(
-            [
-                "High risk of VTE Low risk of bleeding",
-                "High risk of VTE High risk of bleeding",
-            ]
-        )
-        return high_risk_type
+    high_risk_type = random.choice(
+        [
+            "High risk of VTE Low risk of bleeding",
+            "High risk of VTE High risk of bleeding",
+        ],
+    )
+    return high_risk_type
 
 
 def generate_vte_data(
@@ -201,6 +203,7 @@ def generate_vte_data(
 
     Raises:
         None
+
     """
     df_holder_list = []
 

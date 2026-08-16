@@ -29,6 +29,7 @@ def filter_dataframe_by_fuzzy_terms(
 
     Returns:
         A new DataFrame containing only the rows with fuzzy-matched terms.
+
     """
     if verbose >= 1:
         logger.info("Filtering DataFrame by fuzzy terms...")
@@ -51,7 +52,8 @@ def filter_dataframe_by_fuzzy_terms(
 
 
 def apply_data_type_epr_docs_filters(
-    config_obj: Any, batch_target: pd.DataFrame
+    config_obj: Any,
+    batch_target: pd.DataFrame,
 ) -> pd.DataFrame:
     """Applies data type filters to a DataFrame of EPR documents.
 
@@ -72,6 +74,7 @@ def apply_data_type_epr_docs_filters(
 
     Raises:
         AttributeError: If config_obj does not have required filter configuration.
+
     """
     if config_obj.data_type_filter_dict is not None and not batch_target.empty:
         if (
@@ -80,10 +83,10 @@ def apply_data_type_epr_docs_filters(
         ):
             if config_obj.verbosity >= 1:
                 logger.info(
-                    f"Applying document type filter to EPR documents: {config_obj.data_type_filter_dict}"
+                    f"Applying document type filter to EPR documents: {config_obj.data_type_filter_dict}",
                 )
             filter_term_list = config_obj.data_type_filter_dict.get(
-                "filter_term_lists"
+                "filter_term_lists",
             ).get("epr_docs")
             batch_target = filter_dataframe_by_fuzzy_terms(
                 batch_target,
@@ -94,7 +97,7 @@ def apply_data_type_epr_docs_filters(
 
         if (
             config_obj.data_type_filter_dict.get("filter_term_lists").get(
-                "epr_docs_term_regex"
+                "epr_docs_term_regex",
             )
             is not None
         ):
@@ -102,12 +105,12 @@ def apply_data_type_epr_docs_filters(
                 logger.info("Appending regex term counts...")
                 if config_obj.verbosity > 5 and not batch_target.empty:
                     logger.debug(
-                        f"DataFrame before regex term counts:\n{batch_target.head().to_string()}"
+                        f"DataFrame before regex term counts:\n{batch_target.head().to_string()}",
                     )
             batch_target = append_regex_term_counts(
                 df=batch_target,
                 terms=config_obj.data_type_filter_dict.get("filter_term_lists").get(
-                    "epr_docs_term_regex"
+                    "epr_docs_term_regex",
                 ),
                 text_column="body_analysed",
                 debug=config_obj.verbosity > 5,
@@ -115,13 +118,14 @@ def apply_data_type_epr_docs_filters(
     else:
         if config_obj.verbosity >= 1:
             logger.info(
-                "Data type filter dictionary is None or batch target is empty. No filtering applied."
+                "Data type filter dictionary is None or batch target is empty. No filtering applied.",
             )
     return batch_target
 
 
 def apply_bloods_data_type_filter(
-    config_obj: Any, batch_target: pd.DataFrame
+    config_obj: Any,
+    batch_target: pd.DataFrame,
 ) -> pd.DataFrame:
     """Applies data type filters to a DataFrame of bloods data.
 
@@ -141,6 +145,7 @@ def apply_bloods_data_type_filter(
 
     Raises:
         AttributeError: If config_obj does not have required filter configuration.
+
     """
     if config_obj.data_type_filter_dict is not None:
         if (
@@ -149,10 +154,10 @@ def apply_bloods_data_type_filter(
         ):
             if config_obj.verbosity >= 1:
                 logger.info(
-                    f"Applying document type filter to bloods: {config_obj.data_type_filter_dict}"
+                    f"Applying document type filter to bloods: {config_obj.data_type_filter_dict}",
                 )
             filter_term_list = config_obj.data_type_filter_dict.get(
-                "filter_term_lists"
+                "filter_term_lists",
             ).get("bloods")
             batch_target = filter_dataframe_by_fuzzy_terms(
                 batch_target,
@@ -167,7 +172,8 @@ def apply_bloods_data_type_filter(
 
 
 def apply_data_type_epic_clinical_notes_filters(
-    config_obj: Any, batch_target: pd.DataFrame
+    config_obj: Any,
+    batch_target: pd.DataFrame,
 ) -> pd.DataFrame:
     """Applies data type filters to a DataFrame of Epic clinical notes.
 
@@ -188,20 +194,21 @@ def apply_data_type_epic_clinical_notes_filters(
 
     Raises:
         AttributeError: If config_obj does not have required filter configuration.
+
     """
     if config_obj.data_type_filter_dict is not None and not batch_target.empty:
         if (
             config_obj.data_type_filter_dict.get("filter_term_lists").get(
-                "epic_clinical_notes"
+                "epic_clinical_notes",
             )
             is not None
         ):
             if config_obj.verbosity >= 1:
                 logger.info(
-                    f"Applying document type filter to Epic clinical notes: {config_obj.data_type_filter_dict}"
+                    f"Applying document type filter to Epic clinical notes: {config_obj.data_type_filter_dict}",
                 )
             filter_term_list = config_obj.data_type_filter_dict.get(
-                "filter_term_lists"
+                "filter_term_lists",
             ).get("epic_clinical_notes")
             batch_target = filter_dataframe_by_fuzzy_terms(
                 batch_target,
@@ -212,7 +219,7 @@ def apply_data_type_epic_clinical_notes_filters(
 
         if (
             config_obj.data_type_filter_dict.get("filter_term_lists").get(
-                "epic_clinical_notes_term_regex"
+                "epic_clinical_notes_term_regex",
             )
             is not None
         ):
@@ -220,12 +227,12 @@ def apply_data_type_epic_clinical_notes_filters(
                 logger.info("Appending regex term counts to Epic clinical notes...")
                 if config_obj.verbosity > 5 and not batch_target.empty:
                     logger.debug(
-                        f"DataFrame before regex term counts:\n{batch_target.head().to_string()}"
+                        f"DataFrame before regex term counts:\n{batch_target.head().to_string()}",
                     )
             batch_target = append_regex_term_counts(
                 df=batch_target,
                 terms=config_obj.data_type_filter_dict.get("filter_term_lists").get(
-                    "epic_clinical_notes_term_regex"
+                    "epic_clinical_notes_term_regex",
                 ),
                 text_column="document_Content",
                 debug=config_obj.verbosity > 5,
@@ -233,13 +240,14 @@ def apply_data_type_epic_clinical_notes_filters(
     else:
         if config_obj.verbosity >= 1:
             logger.info(
-                "Data type filter dictionary is None or batch target is empty. No filtering applied to Epic clinical notes."
+                "Data type filter dictionary is None or batch target is empty. No filtering applied to Epic clinical notes.",
             )
     return batch_target
 
 
 def apply_data_type_epic_clinical_notes_appointments_filters(
-    config_obj: Any, batch_target: pd.DataFrame
+    config_obj: Any,
+    batch_target: pd.DataFrame,
 ) -> pd.DataFrame:
     """Applies data type filters to a DataFrame of Epic clinical notes appointments.
 
@@ -260,20 +268,21 @@ def apply_data_type_epic_clinical_notes_appointments_filters(
 
     Raises:
         AttributeError: If config_obj does not have required filter configuration.
+
     """
     if config_obj.data_type_filter_dict is not None and not batch_target.empty:
         if (
             config_obj.data_type_filter_dict.get("filter_term_lists").get(
-                "epic_clinical_notes_appointments"
+                "epic_clinical_notes_appointments",
             )
             is not None
         ):
             if config_obj.verbosity >= 1:
                 logger.info(
-                    f"Applying document type filter to Epic clinical notes appointments: {config_obj.data_type_filter_dict}"
+                    f"Applying document type filter to Epic clinical notes appointments: {config_obj.data_type_filter_dict}",
                 )
             filter_term_list = config_obj.data_type_filter_dict.get(
-                "filter_term_lists"
+                "filter_term_lists",
             ).get("epic_clinical_notes_appointments")
             batch_target = filter_dataframe_by_fuzzy_terms(
                 batch_target,
@@ -284,22 +293,22 @@ def apply_data_type_epic_clinical_notes_appointments_filters(
 
         if (
             config_obj.data_type_filter_dict.get("filter_term_lists").get(
-                "epic_clinical_notes_appointments_term_regex"
+                "epic_clinical_notes_appointments_term_regex",
             )
             is not None
         ):
             if config_obj.verbosity > 1:
                 logger.info(
-                    "Appending regex term counts to Epic clinical notes appointments..."
+                    "Appending regex term counts to Epic clinical notes appointments...",
                 )
                 if config_obj.verbosity > 5 and not batch_target.empty:
                     logger.debug(
-                        f"DataFrame before regex term counts:\n{batch_target.head().to_string()}"
+                        f"DataFrame before regex term counts:\n{batch_target.head().to_string()}",
                     )
             batch_target = append_regex_term_counts(
                 df=batch_target,
                 terms=config_obj.data_type_filter_dict.get("filter_term_lists").get(
-                    "epic_clinical_notes_appointments_term_regex"
+                    "epic_clinical_notes_appointments_term_regex",
                 ),
                 text_column="document_Content",
                 debug=config_obj.verbosity > 5,
@@ -307,13 +316,14 @@ def apply_data_type_epic_clinical_notes_appointments_filters(
     else:
         if config_obj.verbosity >= 1:
             logger.info(
-                "Data type filter dictionary is None or batch target is empty. No filtering applied to Epic clinical notes appointments."
+                "Data type filter dictionary is None or batch target is empty. No filtering applied to Epic clinical notes appointments.",
             )
     return batch_target
 
 
 def apply_data_type_epic_patients_filters(
-    config_obj: Any, batch_target: pd.DataFrame
+    config_obj: Any,
+    batch_target: pd.DataFrame,
 ) -> pd.DataFrame:
     """Applies data type filters to a DataFrame of Epic patients.
 
@@ -331,16 +341,17 @@ def apply_data_type_epic_patients_filters(
 
     Raises:
         AttributeError: If config_obj does not have required filter configuration.
+
     """
     if config_obj.data_type_filter_dict is not None and not batch_target.empty:
         if (
             config_obj.data_type_filter_dict.get("filter_term_lists").get(
-                "epic_patients"
+                "epic_patients",
             )
             is not None
         ):
             filter_term_list = config_obj.data_type_filter_dict.get(
-                "filter_term_lists"
+                "filter_term_lists",
             ).get("epic_patients")
             batch_target = filter_dataframe_by_fuzzy_terms(
                 batch_target,
@@ -351,13 +362,14 @@ def apply_data_type_epic_patients_filters(
     else:
         if config_obj.verbosity >= 1:
             logger.info(
-                "Data type filter dictionary is None or batch target is empty. No filtering applied to Epic patients."
+                "Data type filter dictionary is None or batch target is empty. No filtering applied to Epic patients.",
             )
     return batch_target
 
 
 def apply_data_type_epic_medical_history_filters(
-    config_obj: Any, batch_target: pd.DataFrame
+    config_obj: Any,
+    batch_target: pd.DataFrame,
 ) -> pd.DataFrame:
     """Applies data type filters to a DataFrame of Epic medical history.
 
@@ -375,16 +387,17 @@ def apply_data_type_epic_medical_history_filters(
 
     Raises:
         AttributeError: If config_obj does not have required filter configuration.
+
     """
     if config_obj.data_type_filter_dict is not None and not batch_target.empty:
         if (
             config_obj.data_type_filter_dict.get("filter_term_lists").get(
-                "epic_medical_history"
+                "epic_medical_history",
             )
             is not None
         ):
             filter_term_list = config_obj.data_type_filter_dict.get(
-                "filter_term_lists"
+                "filter_term_lists",
             ).get("epic_medical_history")
             batch_target = filter_dataframe_by_fuzzy_terms(
                 batch_target,
@@ -396,7 +409,8 @@ def apply_data_type_epic_medical_history_filters(
 
 
 def apply_data_type_epic_orders_filters(
-    config_obj: Any, batch_target: pd.DataFrame
+    config_obj: Any,
+    batch_target: pd.DataFrame,
 ) -> pd.DataFrame:
     """Applies data type filters to a DataFrame of Epic orders.
 
@@ -414,6 +428,7 @@ def apply_data_type_epic_orders_filters(
 
     Raises:
         AttributeError: If config_obj does not have required filter configuration.
+
     """
     if config_obj.data_type_filter_dict is not None and not batch_target.empty:
         if (
@@ -421,7 +436,7 @@ def apply_data_type_epic_orders_filters(
             is not None
         ):
             filter_term_list = config_obj.data_type_filter_dict.get(
-                "filter_term_lists"
+                "filter_term_lists",
             ).get("epic_orders")
             batch_target = filter_dataframe_by_fuzzy_terms(
                 batch_target,
@@ -433,7 +448,8 @@ def apply_data_type_epic_orders_filters(
 
 
 def apply_data_type_epic_lab_results_filters(
-    config_obj: Any, batch_target: pd.DataFrame
+    config_obj: Any,
+    batch_target: pd.DataFrame,
 ) -> pd.DataFrame:
     """Applies data type filters to a DataFrame of Epic lab results.
 
@@ -451,16 +467,17 @@ def apply_data_type_epic_lab_results_filters(
 
     Raises:
         AttributeError: If config_obj does not have required filter configuration.
+
     """
     if config_obj.data_type_filter_dict is not None and not batch_target.empty:
         if (
             config_obj.data_type_filter_dict.get("filter_term_lists").get(
-                "epic_lab_results"
+                "epic_lab_results",
             )
             is not None
         ):
             filter_term_list = config_obj.data_type_filter_dict.get(
-                "filter_term_lists"
+                "filter_term_lists",
             ).get("epic_lab_results")
             batch_target = filter_dataframe_by_fuzzy_terms(
                 batch_target,
@@ -472,7 +489,8 @@ def apply_data_type_epic_lab_results_filters(
 
 
 def apply_data_type_epic_imaging_reports_filters(
-    config_obj: Any, batch_target: pd.DataFrame
+    config_obj: Any,
+    batch_target: pd.DataFrame,
 ) -> pd.DataFrame:
     """Applies data type filters to a DataFrame of Epic imaging reports.
 
@@ -490,16 +508,17 @@ def apply_data_type_epic_imaging_reports_filters(
 
     Raises:
         AttributeError: If config_obj does not have required filter configuration.
+
     """
     if config_obj.data_type_filter_dict is not None and not batch_target.empty:
         if (
             config_obj.data_type_filter_dict.get("filter_term_lists").get(
-                "epic_imaging_reports"
+                "epic_imaging_reports",
             )
             is not None
         ):
             filter_term_list = config_obj.data_type_filter_dict.get(
-                "filter_term_lists"
+                "filter_term_lists",
             ).get("epic_imaging_reports")
             batch_target = filter_dataframe_by_fuzzy_terms(
                 batch_target,
@@ -511,7 +530,8 @@ def apply_data_type_epic_imaging_reports_filters(
 
 
 def apply_data_type_mct_docs_filters(
-    config_obj: Any, batch_target: pd.DataFrame
+    config_obj: Any,
+    batch_target: pd.DataFrame,
 ) -> pd.DataFrame:
     """Applies data type filters to a DataFrame of MCT documents.
 
@@ -526,6 +546,7 @@ def apply_data_type_mct_docs_filters(
 
     Returns:
         The filtered DataFrame.
+
     """
     if config_obj.data_type_filter_dict is not None and not batch_target.empty:
         if (
@@ -534,10 +555,10 @@ def apply_data_type_mct_docs_filters(
         ):
             if config_obj.verbosity >= 1:
                 logger.info(
-                    f"Applying document type filter to MCT documents: {config_obj.data_type_filter_dict}"
+                    f"Applying document type filter to MCT documents: {config_obj.data_type_filter_dict}",
                 )
             filter_term_list = config_obj.data_type_filter_dict.get(
-                "filter_term_lists"
+                "filter_term_lists",
             ).get("mct_docs")
             batch_target = filter_dataframe_by_fuzzy_terms(
                 batch_target,
@@ -548,7 +569,7 @@ def apply_data_type_mct_docs_filters(
 
         if (
             config_obj.data_type_filter_dict.get("filter_term_lists").get(
-                "mct_docs_term_regex"
+                "mct_docs_term_regex",
             )
             is not None
         ):
@@ -556,12 +577,12 @@ def apply_data_type_mct_docs_filters(
                 logger.info("Appending regex term counts...")
                 if config_obj.verbosity > 5 and not batch_target.empty:
                     logger.debug(
-                        f"DataFrame before regex term counts:\n{batch_target.head().to_string()}"
+                        f"DataFrame before regex term counts:\n{batch_target.head().to_string()}",
                     )
             batch_target = append_regex_term_counts(
                 df=batch_target,
                 terms=config_obj.data_type_filter_dict.get("filter_term_lists").get(
-                    "mct_docs_term_regex"
+                    "mct_docs_term_regex",
                 ),
                 text_column="body_analysed",
                 debug=config_obj.verbosity > 5,
@@ -569,13 +590,14 @@ def apply_data_type_mct_docs_filters(
     else:
         if config_obj.verbosity >= 1:
             logger.info(
-                "Data type filter dictionary is None or batch target is empty. No filtering applied."
+                "Data type filter dictionary is None or batch target is empty. No filtering applied.",
             )
     return batch_target
 
 
 def apply_data_type_drugs_filters(
-    config_obj: Any, batch_target: pd.DataFrame
+    config_obj: Any,
+    batch_target: pd.DataFrame,
 ) -> pd.DataFrame:
     """Applies data type filters to a DataFrame of drug orders.
 
@@ -590,6 +612,7 @@ def apply_data_type_drugs_filters(
 
     Returns:
         The filtered DataFrame.
+
     """
     if config_obj.data_type_filter_dict is not None and not batch_target.empty:
         if (
@@ -598,10 +621,10 @@ def apply_data_type_drugs_filters(
         ):
             if config_obj.verbosity >= 1:
                 logger.info(
-                    f"Applying document type filter to drugs: {config_obj.data_type_filter_dict}"
+                    f"Applying document type filter to drugs: {config_obj.data_type_filter_dict}",
                 )
             filter_term_list = config_obj.data_type_filter_dict.get(
-                "filter_term_lists"
+                "filter_term_lists",
             ).get("drugs")
             batch_target = filter_dataframe_by_fuzzy_terms(
                 batch_target,
@@ -611,14 +634,14 @@ def apply_data_type_drugs_filters(
             )
         if (
             config_obj.data_type_filter_dict.get("filter_term_lists").get(
-                "drugs_term_regex"
+                "drugs_term_regex",
             )
             is not None
         ):
             batch_target = append_regex_term_counts(
                 df=batch_target,
                 terms=config_obj.data_type_filter_dict.get("filter_term_lists").get(
-                    "drugs_term_regex"
+                    "drugs_term_regex",
                 ),
                 text_column="order_summaryline",  # Assuming 'order_summaryline' for drug details
                 debug=config_obj.verbosity > 5,
@@ -627,7 +650,8 @@ def apply_data_type_drugs_filters(
 
 
 def apply_data_type_diagnostics_filters(
-    config_obj: Any, batch_target: pd.DataFrame
+    config_obj: Any,
+    batch_target: pd.DataFrame,
 ) -> pd.DataFrame:
     """Applies data type filters to a DataFrame of diagnostic orders.
 
@@ -648,6 +672,7 @@ def apply_data_type_diagnostics_filters(
 
     Raises:
         AttributeError: If config_obj does not have required filter configuration.
+
     """
     if config_obj.data_type_filter_dict is not None and not batch_target.empty:
         if (
@@ -656,10 +681,10 @@ def apply_data_type_diagnostics_filters(
         ):
             if config_obj.verbosity >= 1:
                 logger.info(
-                    f"Applying document type filter to diagnostics: {config_obj.data_type_filter_dict}"
+                    f"Applying document type filter to diagnostics: {config_obj.data_type_filter_dict}",
                 )
             filter_term_list = config_obj.data_type_filter_dict.get(
-                "filter_term_lists"
+                "filter_term_lists",
             ).get("diagnostics")
             batch_target = filter_dataframe_by_fuzzy_terms(
                 batch_target,
@@ -669,14 +694,14 @@ def apply_data_type_diagnostics_filters(
             )
         if (
             config_obj.data_type_filter_dict.get("filter_term_lists").get(
-                "diagnostics_term_regex"
+                "diagnostics_term_regex",
             )
             is not None
         ):
             batch_target = append_regex_term_counts(
                 df=batch_target,
                 terms=config_obj.data_type_filter_dict.get("filter_term_lists").get(
-                    "diagnostics_term_regex"
+                    "diagnostics_term_regex",
                 ),
                 text_column="order_summaryline",  # Assuming 'order_summaryline' for diagnostic details
                 debug=config_obj.verbosity > 5,
@@ -685,7 +710,8 @@ def apply_data_type_diagnostics_filters(
 
 
 def apply_data_type_news_filters(
-    config_obj: Any, batch_target: pd.DataFrame
+    config_obj: Any,
+    batch_target: pd.DataFrame,
 ) -> pd.DataFrame:
     """Applies data type filters to a DataFrame of NEWS observations.
 
@@ -703,6 +729,7 @@ def apply_data_type_news_filters(
 
     Raises:
         AttributeError: If config_obj does not have required filter configuration.
+
     """
     if config_obj.data_type_filter_dict is not None and not batch_target.empty:
         if (
@@ -710,7 +737,7 @@ def apply_data_type_news_filters(
             is not None
         ):
             filter_term_list = config_obj.data_type_filter_dict.get(
-                "filter_term_lists"
+                "filter_term_lists",
             ).get("news")
             batch_target = filter_dataframe_by_fuzzy_terms(
                 batch_target,
@@ -722,7 +749,8 @@ def apply_data_type_news_filters(
 
 
 def apply_data_type_textual_obs_filters(
-    config_obj: Any, batch_target: pd.DataFrame
+    config_obj: Any,
+    batch_target: pd.DataFrame,
 ) -> pd.DataFrame:
     """Applies data type filters to a DataFrame of textual observations.
 
@@ -743,6 +771,7 @@ def apply_data_type_textual_obs_filters(
 
     Raises:
         AttributeError: If config_obj does not have required filter configuration.
+
     """
     if config_obj.data_type_filter_dict is not None and not batch_target.empty:
         if (
@@ -751,10 +780,10 @@ def apply_data_type_textual_obs_filters(
         ):
             if config_obj.verbosity >= 1:
                 logger.info(
-                    f"Applying document type filter to textual observations: {config_obj.data_type_filter_dict}"
+                    f"Applying document type filter to textual observations: {config_obj.data_type_filter_dict}",
                 )
             filter_term_list = config_obj.data_type_filter_dict.get(
-                "filter_term_lists"
+                "filter_term_lists",
             ).get("textual_obs")
             batch_target = filter_dataframe_by_fuzzy_terms(
                 batch_target,
@@ -765,7 +794,7 @@ def apply_data_type_textual_obs_filters(
 
         if (
             config_obj.data_type_filter_dict.get("filter_term_lists").get(
-                "textual_obs_term_regex"
+                "textual_obs_term_regex",
             )
             is not None
         ):
@@ -773,12 +802,12 @@ def apply_data_type_textual_obs_filters(
                 logger.info("Appending regex term counts to textual observations...")
                 if config_obj.verbosity > 5 and not batch_target.empty:
                     logger.debug(
-                        f"DataFrame before regex term counts:\n{batch_target.head().to_string()}"
+                        f"DataFrame before regex term counts:\n{batch_target.head().to_string()}",
                     )
             batch_target = append_regex_term_counts(
                 df=batch_target,
                 terms=config_obj.data_type_filter_dict.get("filter_term_lists").get(
-                    "textual_obs_term_regex"
+                    "textual_obs_term_regex",
                 ),
                 text_column="textualObs",
                 debug=config_obj.verbosity > 5,
@@ -786,13 +815,14 @@ def apply_data_type_textual_obs_filters(
     else:
         if config_obj.verbosity >= 1:
             logger.info(
-                "Data type filter dictionary is None or batch target is empty. No filtering applied to textual observations."
+                "Data type filter dictionary is None or batch target is empty. No filtering applied to textual observations.",
             )
     return batch_target
 
 
 def apply_data_type_reports_filters(
-    config_obj: Any, batch_target: pd.DataFrame
+    config_obj: Any,
+    batch_target: pd.DataFrame,
 ) -> pd.DataFrame:
     """Applies data type filters to a DataFrame of reports.
 
@@ -813,6 +843,7 @@ def apply_data_type_reports_filters(
 
     Raises:
         AttributeError: If config_obj does not have required filter configuration.
+
     """
     if config_obj.data_type_filter_dict is not None and not batch_target.empty:
         if (
@@ -821,10 +852,10 @@ def apply_data_type_reports_filters(
         ):
             if config_obj.verbosity >= 1:
                 logger.info(
-                    f"Applying document type filter to reports: {config_obj.data_type_filter_dict}"
+                    f"Applying document type filter to reports: {config_obj.data_type_filter_dict}",
                 )
             filter_term_list = config_obj.data_type_filter_dict.get(
-                "filter_term_lists"
+                "filter_term_lists",
             ).get("reports")
             batch_target = filter_dataframe_by_fuzzy_terms(
                 batch_target,
@@ -834,14 +865,14 @@ def apply_data_type_reports_filters(
             )
         if (
             config_obj.data_type_filter_dict.get("filter_term_lists").get(
-                "reports_term_regex"
+                "reports_term_regex",
             )
             is not None
         ):
             batch_target = append_regex_term_counts(
                 df=batch_target,
                 terms=config_obj.data_type_filter_dict.get("filter_term_lists").get(
-                    "reports_term_regex"
+                    "reports_term_regex",
                 ),
                 text_column="body_analysed",
                 debug=config_obj.verbosity > 5,
@@ -850,7 +881,8 @@ def apply_data_type_reports_filters(
 
 
 def apply_data_type_obs_filters(
-    config_obj: Any, batch_target: pd.DataFrame
+    config_obj: Any,
+    batch_target: pd.DataFrame,
 ) -> pd.DataFrame:
     """Applies generic data type filters to a DataFrame of general observations.
 
@@ -868,6 +900,7 @@ def apply_data_type_obs_filters(
 
     Raises:
         AttributeError: If config_obj does not have required filter configuration.
+
     """
     if config_obj.data_type_filter_dict is not None and not batch_target.empty:
         if (
@@ -876,10 +909,10 @@ def apply_data_type_obs_filters(
         ):
             if config_obj.verbosity >= 1:
                 logger.info(
-                    f"Applying document type filter to observations: {config_obj.data_type_filter_dict}"
+                    f"Applying document type filter to observations: {config_obj.data_type_filter_dict}",
                 )
             filter_term_list = config_obj.data_type_filter_dict.get(
-                "filter_term_lists"
+                "filter_term_lists",
             ).get("obs")
             batch_target = filter_dataframe_by_fuzzy_terms(
                 batch_target,

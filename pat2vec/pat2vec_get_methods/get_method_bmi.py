@@ -74,6 +74,7 @@ def search_bmi_observations(
         ValueError: If `cohort_searcher_with_terms_and_search`, `client_id_codes`,
             or `observations_time_field` is None.
         ValueError: If date components are all None.
+
     """
     if (
         output_filename
@@ -82,7 +83,9 @@ def search_bmi_observations(
         and hasattr(config_obj, "proj_name")
     ):
         output_filename = os.path.join(
-            config_obj.root_path, config_obj.proj_name, output_filename
+            config_obj.root_path,
+            config_obj.proj_name,
+            output_filename,
         )
 
     if output_filename and os.path.exists(output_filename) and not overwrite:
@@ -107,14 +110,19 @@ def search_bmi_observations(
 
     start_year, start_month, start_day, end_year, end_month, end_day = (
         validate_input_dates(
-            start_year, start_month, start_day, end_year, end_month, end_day
+            start_year,
+            start_month,
+            start_day,
+            end_year,
+            end_month,
+            end_day,
         )
     )
 
     # Base search string for BMI-related observations
     search_string = (
         'obscatalogmasteritem_displayname:("OBS BMI" OR "OBS Weight" OR "OBS Height") AND '
-        + f"{observations_time_field}:[{start_year}-{start_month}-{start_day} TO {end_year}-{end_month}-{end_day}]"
+        f"{observations_time_field}:[{start_year}-{start_month}-{start_day} TO {end_year}-{end_month}-{end_day}]"
     )
 
     if additional_custom_search_string:
@@ -159,6 +167,7 @@ def calculate_bmi_features(bmi_sample, term_prefix="bmi", negate_biochem=False):
     Returns:
         Dict[str, Union[float, int]]: A dictionary of calculated features including
             mean, median, std, and prefix-specific metrics like high/low/extreme for BMI.
+
     """
     features = {}
 
@@ -197,7 +206,7 @@ def calculate_bmi_features(bmi_sample, term_prefix="bmi", negate_biochem=False):
                     f"{term_prefix}_extreme",
                     f"{term_prefix}_max",
                     f"{term_prefix}_min",
-                ]
+                ],
             )
         elif term_prefix == "weight":
             base_features.extend([f"{term_prefix}_max", f"{term_prefix}_min"])
@@ -238,10 +247,11 @@ def get_bmi_features(
 
     Raises:
         ValueError: If config_obj is None.
+
     """
     if config_obj is None:
         raise ValueError(
-            "config_obj cannot be None. Please provide a valid configuration object."
+            "config_obj cannot be None. Please provide a valid configuration object.",
         )
 
     batch_mode = config_obj.batch_mode
@@ -286,12 +296,12 @@ def get_bmi_features(
 
     if len(bmi_calculation_data) == 0:
         bmi_features = pd.DataFrame(
-            data={"client_idcode": [current_pat_client_id_code]}
+            data={"client_idcode": [current_pat_client_id_code]},
         )
     else:
         # Initialize features DataFrame
         bmi_features = pd.DataFrame(
-            data={"client_idcode": [current_pat_client_id_code]}
+            data={"client_idcode": [current_pat_client_id_code]},
         )
 
         # Get BMI features
@@ -314,7 +324,9 @@ def get_bmi_features(
         ]
 
         height_stats = calculate_bmi_features(
-            height_sample, "height", config_obj.negate_biochem
+            height_sample,
+            "height",
+            config_obj.negate_biochem,
         )
         for key, value in height_stats.items():
             bmi_features[key] = value
@@ -329,7 +341,9 @@ def get_bmi_features(
         ]
 
         weight_stats = calculate_bmi_features(
-            weight_sample, "weight", config_obj.negate_biochem
+            weight_sample,
+            "weight",
+            config_obj.negate_biochem,
         )
         for key, value in weight_stats.items():
             bmi_features[key] = value

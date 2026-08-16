@@ -36,6 +36,7 @@ def get_pat_batch_textual_obs_annotations(
     Returns:
         A DataFrame containing the annotations for the patient's textual
         observations.
+
     """
     if config_obj.storage_backend == "database":
         table_name = "ann_textual_obs"
@@ -61,7 +62,8 @@ def get_pat_batch_textual_obs_annotations(
     )
 
     current_pat_document_annotation_batch_path = os.path.join(
-        pre_textual_obs_annotation_batch_path, current_pat_client_id_code + ".csv"
+        pre_textual_obs_annotation_batch_path,
+        current_pat_client_id_code + ".csv",
     )
 
     if exist_check(current_pat_document_annotation_batch_path, config_obj=config_obj):
@@ -110,7 +112,7 @@ def get_pat_batch_textual_obs_annotations(
             engine = config_obj.db_engine
             if not engine:
                 logging.error(
-                    "Database engine not initialized in config_obj for MCT annotations."
+                    "Database engine not initialized in config_obj for MCT annotations.",
                 )
                 return batch_target
 
@@ -143,15 +145,16 @@ def get_pat_batch_textual_obs_annotations(
                             batch_to_save[col] = batch_to_save[col].apply(
                                 lambda x: (
                                     json.dumps(x) if isinstance(x, (list, dict)) else x
-                                )
+                                ),
                             )
 
                 if config_obj.overwrite_stored_pat_observations:
                     del_query = text(
-                        f'DELETE FROM "{db_table if engine.name == "sqlite" else f"{schema_name}.{table_name}"}" WHERE client_idcode = :pat_id'
+                        f'DELETE FROM "{db_table if engine.name == "sqlite" else f"{schema_name}.{table_name}"}" WHERE client_idcode = :pat_id',
                     )
                     connection.execute(
-                        del_query, {"pat_id": current_pat_client_id_code}
+                        del_query,
+                        {"pat_id": current_pat_client_id_code},
                     )
                 batch_to_save.to_sql(
                     name=db_table,
@@ -162,6 +165,6 @@ def get_pat_batch_textual_obs_annotations(
                 )
         except Exception as e:
             logging.error(
-                f"Could not write textual obs annotations to DB for patient {current_pat_client_id_code}: {e}"
+                f"Could not write textual obs annotations to DB for patient {current_pat_client_id_code}: {e}",
             )
     return batch_target

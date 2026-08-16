@@ -56,6 +56,7 @@ def generate_epr_documents_data(
 
     Returns:
         A pandas DataFrame with generated dummy EPR document data.
+
     """
     if fields_list is None:
         fields_list = [
@@ -71,7 +72,7 @@ def generate_epr_documents_data(
 
     if len(entered_list) > 0:
         logger.info(
-            f"Generating {num_rows} dummy EPR docs for {len(entered_list)} patients, e.g., {entered_list[0]}"
+            f"Generating {num_rows} dummy EPR docs for {len(entered_list)} patients, e.g., {entered_list[0]}",
         )
     else:
         return pd.DataFrame(columns=fields_list)
@@ -127,7 +128,7 @@ def generate_epr_documents_data(
             df["body_analysed"] = df["body_analysed"].fillna("")
 
         logger.debug(
-            f"generate_epr_documents_data returning DataFrame with columns: {df.columns.tolist()}"
+            f"generate_epr_documents_data returning DataFrame with columns: {df.columns.tolist()}",
         )
         return df
     except Exception as e:
@@ -168,6 +169,7 @@ def generate_epr_documents_personal_data(
 
     Returns:
         A pandas DataFrame with generated dummy personal data.
+
     """
     df_holder_list = []
     for i in range(len(entered_list)):
@@ -177,7 +179,7 @@ def generate_epr_documents_personal_data(
         first_name = faker.first_name()
         last_name = faker.last_name()
         dob = faker.date_of_birth(minimum_age=18, maximum_age=90).strftime(
-            "%Y-%m-%dT%H:%M:%S"
+            "%Y-%m-%dT%H:%M:%S",
         )
         gender = random.choice(["male", "female"])
 

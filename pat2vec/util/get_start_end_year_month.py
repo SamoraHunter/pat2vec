@@ -35,25 +35,27 @@ def get_start_end_year_month(
         ValueError: If `config_obj` is not provided.
         TypeError: If target_date_range is not a tuple or list.
         AttributeError: If `config_obj` does not have `time_window_interval_delta`.
-    """
 
+    """
     if config_obj is None:
         raise ValueError("config_obj cannot be None")
 
     if not isinstance(target_date_range, (tuple, list)):
         raise TypeError(
-            f"target_date_range must be a tuple or list, got {type(target_date_range)}"
+            f"target_date_range must be a tuple or list, got {type(target_date_range)}",
         )
 
     time_window_interval_delta = config_obj.time_window_interval_delta
 
     # 1. Handle object-based target_date_range (date, datetime, or Timestamp objects)
     if len(target_date_range) > 0 and isinstance(
-        target_date_range[0], (datetime.datetime, datetime.date, pd.Timestamp)
+        target_date_range[0],
+        (datetime.datetime, datetime.date, pd.Timestamp),
     ):
         start_date = target_date_range[0]
         if len(target_date_range) >= 2 and isinstance(
-            target_date_range[1], (datetime.datetime, datetime.date, pd.Timestamp)
+            target_date_range[1],
+            (datetime.datetime, datetime.date, pd.Timestamp),
         ):
             # Case: explicit (start_dt, end_dt) range
             end_date = target_date_range[1]
@@ -68,7 +70,9 @@ def get_start_end_year_month(
 
             # When IPW+lookback is enabled, use the overall patient window instead of sliding windows
             if getattr(config_obj, "individual_patient_window", False) and getattr(
-                config_obj, "lookback", False
+                config_obj,
+                "lookback",
+                False,
             ):
                 start_date = datetime.date(
                     int(config_obj.global_start_year),
@@ -82,7 +86,9 @@ def get_start_end_year_month(
                 )
             else:
                 start_date = datetime.date(
-                    int(start_year), int(start_month), int(start_day)
+                    int(start_year),
+                    int(start_month),
+                    int(start_day),
                 )
                 end_date = start_date + time_window_interval_delta
         except (ValueError, TypeError, IndexError) as e:
@@ -91,7 +97,7 @@ def get_start_end_year_month(
     else:
         raise ValueError(
             f"target_date_range must have at least 3 components (Y, M, D) or contain date objects. "
-            f"Got length {len(target_date_range)}: {target_date_range}"
+            f"Got length {len(target_date_range)}: {target_date_range}",
         )
 
     if isinstance(start_date, (datetime.datetime, pd.Timestamp)):

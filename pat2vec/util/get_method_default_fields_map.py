@@ -1,5 +1,4 @@
-"""
-Provides a mapping from pat2vec's `get` methods to the default fields
+"""Provides a mapping from pat2vec's `get` methods to the default fields
 they query. This helps users understand the data sources for each
 feature extraction function.
 """
@@ -76,23 +75,23 @@ GET_METHOD_DEFAULT_FIELDS_MAP: dict[str, list[str]] = {
 
 
 def get_default_fields_for_method(method_name: str) -> list[str] | None:
-    """
-    Retrieves the default list of fields for a given `get` method.
+    """Retrieves the default list of fields for a given `get` method.
 
     Args:
         method_name: The name of the `get` method (e.g., 'get_current_pat_bloods').
 
     Returns:
         A list of default fields, or None if the method is not found.
+
     """
     return GET_METHOD_DEFAULT_FIELDS_MAP.get(method_name)
 
 
 def get_all_method_default_fields() -> dict[str, list[str]]:
-    """
-    Retrieves a dictionary of all `get` methods and their default fields.
+    """Retrieves a dictionary of all `get` methods and their default fields.
 
     Returns:
         A dictionary mapping method names to their default list of fields.
+
     """
     return GET_METHOD_DEFAULT_FIELDS_MAP.copy()

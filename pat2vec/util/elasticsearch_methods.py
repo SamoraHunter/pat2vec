@@ -41,6 +41,7 @@ def ingest_data_to_elasticsearch(
 
     Raises:
         ConnectionError: If the Elasticsearch server is not reachable.
+
     """
     # Set default index mapping if none is provided
     index_mapping = index_mapping or {  # type: ignore
@@ -49,7 +50,7 @@ def ingest_data_to_elasticsearch(
             "number_of_replicas": 0,
             "index.mapping.ignore_malformed": True,
             "index.mapping.total_fields.limit": 100000,
-        }
+        },
     }
 
     es = es_client
@@ -67,14 +68,14 @@ def ingest_data_to_elasticsearch(
 
         if host_name not in safe_hosts:
             raise ConnectionError(
-                f"Safety Block: Ingestion to '{host_name}' denied. Only local/test clusters allowed."
+                f"Safety Block: Ingestion to '{host_name}' denied. Only local/test clusters allowed.",
             )
 
         # Safeguard: Block ingestion with non-test users
         safe_users = ["elastic", "test_user"]
         if not api_key and username not in safe_users:
             raise ConnectionError(
-                f"Safety Block: Ingestion with user '{username}' denied. Only test users {safe_users} allowed."
+                f"Safety Block: Ingestion with user '{username}' denied. Only test users {safe_users} allowed.",
             )
 
         # Initialize Elasticsearch client
@@ -103,9 +104,9 @@ def ingest_data_to_elasticsearch(
             es.cluster.put_settings(
                 body={
                     "persistent": {
-                        "cluster.routing.allocation.disk.threshold_enabled": False
-                    }
-                }
+                        "cluster.routing.allocation.disk.threshold_enabled": False,
+                    },
+                },
             )
     except Exception as e:
         logger.error(f"Error connecting to Elasticsearch: {e}")
@@ -160,7 +161,7 @@ def ingest_data_to_elasticsearch(
                 if field_name not in problematic_fields:
                     problematic_fields[field_name] = []
                 problematic_fields[field_name].append(
-                    error_info.get("reason", "Unknown")
+                    error_info.get("reason", "Unknown"),
                 )
 
             else:
@@ -226,6 +227,7 @@ def handle_inconsistent_dtypes(df: pd.DataFrame) -> pd.DataFrame:
 
     Returns:
         The DataFrame with columns cast to their majority data type.
+
     """
     for column in tqdm(df.columns, desc="Processing columns"):
         non_null_values = df[column].dropna()
@@ -299,6 +301,7 @@ def guess_datetime_columns(df: pd.DataFrame, threshold: float = 0.5) -> list[str
 
     Returns:
         A list of column names that are likely to be datetime columns.
+
     """
     datetime_columns = []
     for column in tqdm(df.columns, desc="Processing Columns"):
@@ -336,6 +339,7 @@ def get_guess_datetime_column(df: pd.DataFrame, threshold: float = 0.2) -> str |
     Returns:
         The name of the column most likely to contain datetimes, or None if no
         column meets the threshold.
+
     """
     highest_ratio = 0
     highest_column = None
@@ -382,6 +386,7 @@ def check_patients_existence(
 
     Returns:
         A list of patient IDs that were found in the index.
+
     """
     if (
         config_obj

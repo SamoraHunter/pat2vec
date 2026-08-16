@@ -27,7 +27,9 @@ Example usage:
 class EthnicityAbstractor:
     @staticmethod
     def abstractEthnicity(
-        dataFrame: pd.DataFrame, outputNameString: str, ethnicityColumnString: str
+        dataFrame: pd.DataFrame,
+        outputNameString: str,
+        ethnicityColumnString: str,
     ) -> pd.DataFrame:
         """Abstracts ethnicity from free text to UK census categories.
 
@@ -59,6 +61,7 @@ class EthnicityAbstractor:
         Returns:
             A new DataFrame with an added 'census' column containing the
             mapped ethnicity categories.
+
         """
         assumeBritishWhite = True
         assumeEnglishWhite = True

@@ -46,10 +46,11 @@ def get_current_pat_report_annotations(
 
     Raises:
         ValueError: If `config_obj` is None.
+
     """
     if config_obj is None:
         raise ValueError(
-            "config_obj cannot be None. Please provide a valid configuration."
+            "config_obj cannot be None. Please provide a valid configuration.",
         )
 
     start_time = config_obj.start_time
@@ -94,7 +95,7 @@ def get_current_pat_report_annotations(
             # Rename to time_column if a source column was found
             if found_col and found_col != time_column:
                 report_annotations = report_annotations.rename(
-                    columns={found_col: time_column}
+                    columns={found_col: time_column},
                 )
 
         filtered_report_annotations = filter_dataframe_by_timestamp(
@@ -111,7 +112,8 @@ def get_current_pat_report_annotations(
 
         if len(filtered_report_annotations) > 0:
             processed_annotations = calculate_pretty_name_count_features(
-                filtered_report_annotations, suffix="reports"
+                filtered_report_annotations,
+                suffix="reports",
             )
 
         else:
@@ -121,12 +123,14 @@ def get_current_pat_report_annotations(
                     len(filtered_report_annotations) > 0,
                 )
             processed_annotations = pd.DataFrame(
-                data=[current_pat_client_id_code], columns=["client_idcode"]
+                data=[current_pat_client_id_code],
+                columns=["client_idcode"],
             )
 
     else:
         processed_annotations = pd.DataFrame(
-            data=[current_pat_client_id_code], columns=["client_idcode"]
+            data=[current_pat_client_id_code],
+            columns=["client_idcode"],
         )
 
     if config_obj.verbosity >= 6:

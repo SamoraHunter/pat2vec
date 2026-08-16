@@ -49,6 +49,7 @@ def get_expected_columns_for_table(table_name: str, schema: str) -> list[str]:
     Returns:
         A list of column names that should be in the table, including the ID column
         and any index columns. Returns ['client_idcode'] if not found.
+
     """
     for mapping in MAPPINGS:
         # mapping format: (dir_attr, schema, table, id_col, index_columns, filter_val)
@@ -86,6 +87,7 @@ def extract_nhs_numbers(input_string: str) -> list[str]:
         ['1234567890']
         >>> extract_nhs_numbers("NHS 123 456 7890 and NHS 098 765 4321")
         ['1234567890', '0987654321']
+
     """
     # Find all occurrences of "NHS" followed by a 10-digit number
     matches = re.findall(r"NHS\s*(\d{3}\s*\d{3}\s*\d{4})", input_string)
@@ -95,7 +97,8 @@ def extract_nhs_numbers(input_string: str) -> list[str]:
 
 
 def get_search_client_idcode_list_from_nhs_number_list(
-    nhs_numbers: list[str], pat2vec_obj: Any
+    nhs_numbers: list[str],
+    pat2vec_obj: Any,
 ) -> list[str]:
     """Retrieves a unique list of hospital IDs from a list of NHS numbers.
 
@@ -110,6 +113,7 @@ def get_search_client_idcode_list_from_nhs_number_list(
 
     Returns:
         A unique list of hospital IDs found for the given NHS numbers.
+
     """
     # Perform cohort search
     df = pat2vec_obj.cohort_searcher_with_terms_and_search(
@@ -129,7 +133,7 @@ def get_search_client_idcode_list_from_nhs_number_list(
     ].tolist()
     if missing_ids:
         warnings.warn(
-            f"The following NHS numbers do not have associated Hospital IDs: {missing_ids}"
+            f"The following NHS numbers do not have associated Hospital IDs: {missing_ids}",
         )
 
     return unique_hospital_ids
@@ -181,7 +185,7 @@ def clear_patient_features(patient_id: str, config_obj: Any) -> None:
             if engine.name == "sqlite":
                 target_table = f"{schema_name}_{table_name}"
                 del_query = text(
-                    f'DELETE FROM "{target_table}" WHERE "{id_column}" = :pat_id'
+                    f'DELETE FROM "{target_table}" WHERE "{id_column}" = :pat_id',
                 )
                 if inspect(connection).has_table(target_table):
                     connection.execute(del_query, {"pat_id": patient_id})
@@ -189,7 +193,7 @@ def clear_patient_features(patient_id: str, config_obj: Any) -> None:
                 # Postgres/others
                 if inspect(connection).has_table(table_name, schema=schema_name):
                     del_query = text(
-                        f'DELETE FROM "{schema_name}"."{table_name}" WHERE "{id_column}" = :pat_id'
+                        f'DELETE FROM "{schema_name}"."{table_name}" WHERE "{id_column}" = :pat_id',
                     )
                     connection.execute(del_query, {"pat_id": patient_id})
     except Exception as e:
@@ -213,7 +217,10 @@ def try_parse_list_string(val: Any) -> Any:
 
 
 def save_patient_features(
-    features_df: pd.DataFrame, patient_id: str, config_obj: Any, overwrite: bool = True
+    features_df: pd.DataFrame,
+    patient_id: str,
+    config_obj: Any,
+    overwrite: bool = True,
 ) -> None:
     """Saves the feature vector(s) for a single patient to the configured backend.
 
@@ -232,6 +239,7 @@ def save_patient_features(
     Raises:
         ValueError: If an unknown `storage_backend` is specified.
         Exception: Propagates exceptions from database operations.
+
     """
     if features_df.empty:
         logging.debug(f"features_df is empty for patient {patient_id}, skipping save.")
@@ -270,7 +278,8 @@ def save_patient_features(
 
                 # Ensure the schema exists
                 if engine.name != "sqlite" and not connection.dialect.has_schema(
-                    connection, schema_name
+                    connection,
+                    schema_name,
                 ):
                     connection.execute(CreateSchema(schema_name))
 
@@ -285,7 +294,7 @@ def save_patient_features(
                 # Skip schema evolution for JSON packing mode (all features go into single column)
                 if use_json_packing:
                     logging.info(
-                        f"Using JSON packing mode to avoid column limit issues ({len(features_df.columns)} columns)"
+                        f"Using JSON packing mode to avoid column limit issues ({len(features_df.columns)} columns)",
                     )
                 else:
                     # Check for missing columns and update schema
@@ -294,7 +303,8 @@ def save_patient_features(
                         existing_cols = {
                             c["name"]
                             for c in inspector.get_columns(
-                                target_table, schema=target_schema
+                                target_table,
+                                schema=target_schema,
                             )
                         }
                         missing_cols = [
@@ -303,7 +313,7 @@ def save_patient_features(
 
                         if missing_cols:
                             logging.info(
-                                f"Schema evolution: Adding {len(missing_cols)} new columns to table '{target_table}'"
+                                f"Schema evolution: Adding {len(missing_cols)} new columns to table '{target_table}'",
                             )
                             for col in missing_cols:
                                 dtype = features_df[col].dtype
@@ -329,12 +339,12 @@ def save_patient_features(
                                 try:
                                     connection.execute(
                                         text(
-                                            f"ALTER TABLE {table_ref} ADD COLUMN {quoted_col} {sql_type}"
-                                        )
+                                            f"ALTER TABLE {table_ref} ADD COLUMN {quoted_col} {sql_type}",
+                                        ),
                                     )
                                 except Exception as e:
                                     logging.error(
-                                        f"Failed to add column {col} to table: {e}"
+                                        f"Failed to add column {col} to table: {e}",
                                     )
                                     raise e
 
@@ -359,7 +369,8 @@ def save_patient_features(
                         packed_row = {
                             id_col: row[id_col],
                             "features_json": json.dumps(
-                                feature_dict, cls=FeatureJSONEncoder
+                                feature_dict,
+                                cls=FeatureJSONEncoder,
                             ),
                         }
                         packed_features.append(packed_row)
@@ -367,14 +378,14 @@ def save_patient_features(
                     features_df_packed = pd.DataFrame(packed_features)
 
                     logging.info(
-                        f"Packing {len(features_df.columns)} features into JSON for patient {patient_id}"
+                        f"Packing {len(features_df.columns)} features into JSON for patient {patient_id}",
                     )
 
                     # Ensure the table exists with the correct schema (just ID + JSON column)
                     if not inspector.has_table(target_table, schema=target_schema):
                         create_sql = text(
                             f'CREATE TABLE IF NOT EXISTS "{target_table}" '
-                            f'("{id_col}" TEXT, "features_json" TEXT)'
+                            f'("{id_col}" TEXT, "features_json" TEXT)',
                         )
                         connection.execute(create_sql)
 
@@ -382,10 +393,10 @@ def save_patient_features(
                     if overwrite and not features_df_packed.empty:
                         id_values = list(features_df_packed[id_col].unique())
                         placeholders = ", ".join(
-                            [f":id_{i}" for i in range(len(id_values))]
+                            [f":id_{i}" for i in range(len(id_values))],
                         )
                         delete_query = text(
-                            f'DELETE FROM "{target_table}" WHERE "{id_col}" IN ({placeholders})'
+                            f'DELETE FROM "{target_table}" WHERE "{id_col}" IN ({placeholders})',
                         )
                         connection.execute(
                             delete_query,
@@ -403,7 +414,7 @@ def save_patient_features(
                         )
                 else:
                     logging.info(
-                        f"Inserting {len(features_df)} rows for patient {patient_id} into {target_table} (cols: {len(features_df.columns)})"
+                        f"Inserting {len(features_df)} rows for patient {patient_id} into {target_table} (cols: {len(features_df.columns)})",
                     )
                     # Append the new features
                     features_df.to_sql(
@@ -416,11 +427,15 @@ def save_patient_features(
 
                 # Ensure index on ID column for performance
                 ensure_index(
-                    connection, table_name, schema_name, id_column, engine.name
+                    connection,
+                    table_name,
+                    schema_name,
+                    id_column,
+                    engine.name,
                 )
         except Exception as e:
             logging.error(
-                f"Failed to save features for patient {patient_id} to database: {e}"
+                f"Failed to save features for patient {patient_id} to database: {e}",
             )
             raise
 
@@ -432,7 +447,10 @@ def save_patient_features(
             os.remove(output_file)
             logging.debug(f"Overwriting existing feature file: {output_file}")
         features_df.to_csv(
-            output_file, index=False, mode="a", header=not os.path.exists(output_file)
+            output_file,
+            index=False,
+            mode="a",
+            header=not os.path.exists(output_file),
         )
         logging.debug(f"Saved features for patient {patient_id} to {output_file}")
     else:
@@ -454,6 +472,7 @@ def save_raw_patient_batch(
         table_name: The target table name (without schema prefix).
         config_obj: The configuration object.
         id_column: The column name for the patient ID in this table.
+
     """
     if config_obj.storage_backend != "database":
         return
@@ -474,13 +493,13 @@ def save_raw_patient_batch(
                 target_table = f"{schema_name}_{table_name}"
                 target_schema = None
                 del_query = text(
-                    f'DELETE FROM "{target_table}" WHERE "{id_column}" = :pat_id'
+                    f'DELETE FROM "{target_table}" WHERE "{id_column}" = :pat_id',
                 )
             else:
                 target_table = table_name
                 target_schema = schema_name
                 del_query = text(
-                    f'DELETE FROM "{schema_name}"."{table_name}" WHERE "{id_column}" = :pat_id'
+                    f'DELETE FROM "{schema_name}"."{table_name}" WHERE "{id_column}" = :pat_id',
                 )
 
                 if not connection.dialect.has_schema(connection, schema_name):
@@ -492,7 +511,7 @@ def save_raw_patient_batch(
 
             # Debug output - show columns before and after drop
             print(
-                f"DEBUG helper_functions: Before drop - columns: {df.columns.tolist()}"
+                f"DEBUG helper_functions: Before drop - columns: {df.columns.tolist()}",
             )
 
             # Drop Elasticsearch/MongoDB metadata columns and index column that conflict with SQLite
@@ -504,7 +523,7 @@ def save_raw_patient_batch(
                     df.drop(columns=col, inplace=True)
 
             print(
-                f"DEBUG helper_functions: After drop - columns: {df.columns.tolist()}"
+                f"DEBUG helper_functions: After drop - columns: {df.columns.tolist()}",
             )
 
             # Fix problematic backslashes in text columns that cause SQLite parameter binding issues
@@ -522,7 +541,7 @@ def save_raw_patient_batch(
                     df[col] = df[col].apply(
                         lambda x: (
                             json.dumps(x) if isinstance(x, (list, dict, tuple)) else x
-                        )
+                        ),
                     )
 
             # Create table if it doesn't exist (even with empty DataFrame to ensure schema)
@@ -533,7 +552,8 @@ def save_raw_patient_batch(
                 if df.empty and len(df.columns) == 0:
                     # Truly empty - use minimum columns from MAPPINGS as fallback
                     expected_cols = get_expected_columns_for_table(
-                        table_name, schema_name
+                        table_name,
+                        schema_name,
                     )
                     if id_column not in expected_cols:
                         expected_cols.insert(0, id_column)
@@ -563,7 +583,11 @@ def save_raw_patient_batch(
 
                 # Ensure index on ID column
                 ensure_index(
-                    connection, table_name, schema_name, id_column, engine.name
+                    connection,
+                    table_name,
+                    schema_name,
+                    id_column,
+                    engine.name,
                 )
     except Exception as e:
         logging.error(f"Failed to save raw batch {table_name} for {patient_id}: {e}")
@@ -584,6 +608,7 @@ def save_annotations_to_db(
         table_name: The target table name (without schema prefix).
         config_obj: The configuration object.
         id_column: The column name for the patient ID in this table.
+
     """
     if config_obj.storage_backend != "database":
         return
@@ -604,13 +629,13 @@ def save_annotations_to_db(
                 target_table = f"{schema_name}_{table_name}"
                 target_schema = None
                 del_query = text(
-                    f'DELETE FROM "{target_table}" WHERE "{id_column}" = :pat_id'
+                    f'DELETE FROM "{target_table}" WHERE "{id_column}" = :pat_id',
                 )
             else:
                 target_table = table_name
                 target_schema = schema_name
                 del_query = text(
-                    f'DELETE FROM "{schema_name}"."{table_name}" WHERE "{id_column}" = :pat_id'
+                    f'DELETE FROM "{schema_name}"."{table_name}" WHERE "{id_column}" = :pat_id',
                 )
 
                 if not connection.dialect.has_schema(connection, schema_name):
@@ -626,7 +651,7 @@ def save_annotations_to_db(
                     df[col] = df[col].apply(
                         lambda x: (
                             json.dumps(x) if isinstance(x, (list, dict, tuple)) else x
-                        )
+                        ),
                     )
 
             # Create table if it doesn't exist (even with empty DataFrame to ensure schema)
@@ -637,7 +662,8 @@ def save_annotations_to_db(
                 if df.empty and len(df.columns) == 0:
                     # Truly empty - use minimum columns from MAPPINGS as fallback
                     expected_cols = get_expected_columns_for_table(
-                        table_name, schema_name
+                        table_name,
+                        schema_name,
                     )
                     if id_column not in expected_cols:
                         expected_cols.insert(0, id_column)
@@ -677,11 +703,15 @@ def save_annotations_to_db(
 
                 # Ensure index on ID column
                 ensure_index(
-                    connection, table_name, schema_name, id_column, engine.name
+                    connection,
+                    table_name,
+                    schema_name,
+                    id_column,
+                    engine.name,
                 )
     except Exception as e:
         logging.error(
-            f"Failed to save annotation batch {table_name} for {patient_id}: {e}"
+            f"Failed to save annotation batch {table_name} for {patient_id}: {e}",
         )
 
 
@@ -716,7 +746,7 @@ def get_all_features(config_obj: Any) -> pd.DataFrame:
                 inspector = inspect(connection)
                 if not inspector.has_table(target_table, schema=target_schema):
                     logging.warning(
-                        f"Table '{target_table}' not found in database. Returning empty DataFrame."
+                        f"Table '{target_table}' not found in database. Returning empty DataFrame.",
                     )
                     return pd.DataFrame()
 
@@ -731,13 +761,13 @@ def get_all_features(config_obj: Any) -> pd.DataFrame:
                         unpacked = pd.json_normalize(
                             df.loc[json_mask, "features_json"]
                             .apply(json.loads)
-                            .tolist()
+                            .tolist(),
                         )
                         unpacked.index = df.loc[json_mask].index
                         df = df.drop(columns=["features_json"]).combine_first(unpacked)
 
                 logging.debug(
-                    f"Loaded DataFrame from DB table {target_table}. Shape: {df.shape}"
+                    f"Loaded DataFrame from DB table {target_table}. Shape: {df.shape}",
                 )
                 return df
         except Exception as e:
@@ -767,8 +797,7 @@ def get_df_from_db(
     patient_id_column: str = "client_idcode",
     columns: list[str] | None = None,
 ) -> pd.DataFrame:
-    """
-    Generic helper to retrieve a DataFrame from the database backend.
+    """Generic helper to retrieve a DataFrame from the database backend.
 
     This function handles database connections, dialect-specific table naming
     (e.g., for SQLite), and filtering by a list of patient IDs.
@@ -783,6 +812,7 @@ def get_df_from_db(
 
     Returns:
         A pandas DataFrame with the requested data, or an empty DataFrame on error.
+
     """
     try:
         engine = config_obj.db_engine
@@ -805,7 +835,7 @@ def get_df_from_db(
                 if config_obj.testing:
                     raise RuntimeError(
                         f"{error_msg} This likely means dummy data was never generated during testing mode. "
-                        "Please ensure the pat2vec initialization successfully saved batch data."
+                        "Please ensure the pat2vec initialization successfully saved batch data.",
                     )
                 logger.warning(f"{error_msg} Returning empty DataFrame.")
                 return pd.DataFrame()
@@ -820,9 +850,9 @@ def get_df_from_db(
                 missing_columns = [c for c in columns if c not in table_columns]
                 if missing_columns:
                     logger.debug(
-                        f"Columns {missing_columns} not found in table '{target_table}'. Available: {table_columns}"
+                        f"Columns {missing_columns} not found in table '{target_table}'. Available: {table_columns}",
                     )
-                columns_to_use = available_columns if available_columns else None
+                columns_to_use = available_columns or None
             else:
                 columns_to_use = None
 
@@ -855,11 +885,11 @@ def get_df_from_db(
                         unpacked = pd.json_normalize(
                             df_chunk.loc[json_mask, "features_json"]
                             .apply(json.loads)
-                            .tolist()
+                            .tolist(),
                         )
                         unpacked.index = df_chunk.loc[json_mask].index
                         df_chunk = df_chunk.drop(
-                            columns=["features_json"]
+                            columns=["features_json"],
                         ).combine_first(unpacked)
 
                 all_data.append(df_chunk)
@@ -870,7 +900,7 @@ def get_df_from_db(
 
     except Exception as e:
         logger.error(
-            f"Error in get_df_from_db reading from database for {schema}.{table}: {e}"
+            f"Error in get_df_from_db reading from database for {schema}.{table}: {e}",
         )
         return pd.DataFrame()
 
@@ -899,6 +929,7 @@ def get_df_from_db_with_temporal_filter(
 
     Returns:
         DataFrame with filtered data, or empty DataFrame on error.
+
     """
     try:
         engine = config_obj.db_engine
@@ -951,7 +982,7 @@ def get_df_from_db_with_temporal_filter(
                         # Handle both ISO format (2023-01-01T00:00:00+00:00) and space-separated formats
                         if "T" in dt_str:
                             # ISO format like '2023-01-01T00:00:00+00:00'
-                            date_part = dt_str.split("T")[0]
+                            date_part = dt_str.split("T", maxsplit=1)[0]
                         elif " " in dt_str:
                             # Space-separated like '2023-01-01 00:00:00' or '2023-01-01 00:00:00+00:00'
                             parts = dt_str.split(" ")
@@ -971,7 +1002,8 @@ def get_df_from_db_with_temporal_filter(
 
                     end_date_obj = pd.to_datetime(end_date)
                     if isinstance(end_date_obj, pd.Timestamp) and hasattr(
-                        end_date_obj, "date"
+                        end_date_obj,
+                        "date",
                     ):
                         end_date_only = end_date_obj.date()
                         # Add one day to include the entire end date
@@ -988,7 +1020,7 @@ def get_df_from_db_with_temporal_filter(
                         params["end_date"] = _format_datetime_for_sql(end_date)
 
                     where_clauses.append(
-                        f'"{time_column}" >= :start_date AND "{time_column}" < :end_date'
+                        f'"{time_column}" >= :start_date AND "{time_column}" < :end_date',
                     )
 
                 where_clause = " WHERE " + " AND ".join(where_clauses)
@@ -1005,11 +1037,11 @@ def get_df_from_db_with_temporal_filter(
                         unpacked = pd.json_normalize(
                             df_chunk.loc[json_mask, "features_json"]
                             .apply(json.loads)
-                            .tolist()
+                            .tolist(),
                         )
                         unpacked.index = df_chunk.loc[json_mask].index
                         df_chunk = df_chunk.drop(
-                            columns=["features_json"]
+                            columns=["features_json"],
                         ).combine_first(unpacked)
 
                 all_data.append(df_chunk)

@@ -3,7 +3,6 @@ line-length = 88
 extend-select = ["ALL"]
 
 ignore = [
-    "LOG015",
     "BLE001",
 ]
 

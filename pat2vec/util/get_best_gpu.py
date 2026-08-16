@@ -21,6 +21,7 @@ def set_best_gpu(gpu_mem_threshold: int) -> None:
     Args:
         gpu_mem_threshold: The minimum amount of free memory (in MB) required
             to select a GPU.
+
     """
     if torch.cuda.is_available():
         gpu_index, free_mem = get_free_gpu()

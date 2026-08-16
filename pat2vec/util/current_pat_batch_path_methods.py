@@ -13,10 +13,15 @@ class PathsClass:
         suffix (str): The provided suffix for directory names.
         all_paths (List[str]): A list of all generated absolute directory paths.
         output_folder_path (str): The absolute path to the main output directory.
+
     """
 
     def __init__(
-        self, root_path: str, suffix: str, output_folder: str, create_dirs: bool = True
+        self,
+        root_path: str,
+        suffix: str,
+        output_folder: str,
+        create_dirs: bool = True,
     ) -> None:
         """Initializes the PathsClass.
 
@@ -29,6 +34,7 @@ class PathsClass:
             output_folder: The name of the main output folder (e.g., 'outputs').
             create_dirs: If True, creates the directories on the file system.
                 Defaults to True.
+
         """
         self.root_path = root_path
         self.suffix = suffix
@@ -80,6 +86,7 @@ class PathsClass:
         Args:
             paths: A list of relative directory paths to be created under the
                 root path.
+
         """
         for path in self.all_paths:
             Path(path).mkdir(parents=True, exist_ok=True)

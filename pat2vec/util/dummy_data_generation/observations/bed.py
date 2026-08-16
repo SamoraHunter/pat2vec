@@ -47,6 +47,7 @@ def _generate_bed_assignment_for_ward(
 
     Returns:
         Bed assignment string matching ward conventions
+
     """
     ward_bed_patterns = {
         "WD": [
@@ -114,6 +115,7 @@ def generate_bed_data(
 
     Raises:
         None
+
     """
     from faker import Faker
 
@@ -137,7 +139,7 @@ def generate_bed_data(
         random.seed(news_seed)
 
         _baseline_news = int(
-            min(max(random.gauss(DEFAULT_NEWS_MEAN, DEFAULT_NEWS_STD), 0), 20)
+            min(max(random.gauss(DEFAULT_NEWS_MEAN, DEFAULT_NEWS_STD), 0), 20),
         )
 
         np.random.seed(spo2_seed)
@@ -167,7 +169,8 @@ def generate_bed_data(
 
             # Assign ward type for each admission (allowing some variability within patient)
             current_ward_type = random.choices(
-                WARD_TYPES_LIST, weights=WARD_PROBS_INIT
+                WARD_TYPES_LIST,
+                weights=WARD_PROBS_INIT,
             )[0]
 
             bed_assignment = _generate_bed_assignment_for_ward(current_ward_type)
@@ -181,10 +184,10 @@ def generate_bed_data(
                     "obscatalogmasteritem_displayname": "CORE_BedNumber3",
                     "observation_valuetext_analysed": value,
                     "observationdocument_recordeddtm": admission_date.strftime(
-                        "%Y-%m-%dT%H:%M:%S"
+                        "%Y-%m-%dT%H:%M:%S",
                     ),
                     "clientvisit_visitidcode": f"visit_{faker_inst.random_number(digits=8, fix_len=True)}",
-                }
+                },
             )
 
         df = pd.DataFrame(admissions)

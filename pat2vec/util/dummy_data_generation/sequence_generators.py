@@ -33,6 +33,7 @@ def generate_patient_timeline(client_idcode: str) -> str:
 
     Returns:
         A string containing the patient's dummy timeline.
+
     """
     logging.getLogger("transformers").setLevel(logging.WARNING)
     generator = pipeline("text-generation", model="gpt2")
@@ -51,13 +52,15 @@ def generate_patient_timeline(client_idcode: str) -> str:
 
     timeline = []
     current_time = datetime.utcfromtimestamp(
-        random.randint(789331200, int(datetime.now().timestamp()))
+        random.randint(789331200, int(datetime.now().timestamp())),
     )
 
     for i in range(num_entries):
         entry_timestamp = current_time + timedelta(days=random.randint(1, 30))
         entry_text = generator(
-            "Patient presented with:", max_length=50, do_sample=True
+            "Patient presented with:",
+            max_length=50,
+            do_sample=True,
         )[0]["generated_text"]
 
         patient_info["Age"] += (entry_timestamp - current_time).days / 365
@@ -86,6 +89,7 @@ def generate_patient_timeline_faker(client_idcode: str) -> str:
 
     Returns:
         A string containing the patient's dummy timeline.
+
     """
     probabilities = [0.7, 0.1, 0.05, 0.05, 0.05]
     num_entries = random.choices(range(1, 6), probabilities)[0]
@@ -101,7 +105,7 @@ def generate_patient_timeline_faker(client_idcode: str) -> str:
 
     timeline = []
     current_time = datetime.utcfromtimestamp(
-        random.randint(789331200, int(datetime.now().timestamp()))
+        random.randint(789331200, int(datetime.now().timestamp())),
     )
 
     for i in range(num_entries):
@@ -132,6 +136,7 @@ def get_patient_timeline_dummy(
     Returns:
         The text of a random patient timeline, or None if the file is not found
         or is invalid.
+
     """
     try:
         df: pd.DataFrame = pd.read_csv(output_path)
@@ -158,14 +163,15 @@ def get_patient_timeline_dummy(
         return None
 
     try:
-        return cast(str, sample.iloc[0]["body_analysed"])
+        return cast("str", sample.iloc[0]["body_analysed"])
     except KeyError:
         logger.error("KeyError: 'body_analysed' column doesn't exist in the DataFrame!")
         return None
 
 
 def run_generate_patient_timeline_and_append(
-    n: int = 10, output_path: str = os.path.join("test_files", "dummy_timeline.csv")
+    n: int = 10,
+    output_path: str = os.path.join("test_files", "dummy_timeline.csv"),
 ) -> None:
     """Generates and appends dummy patient timelines to a CSV file.
 
@@ -176,6 +182,7 @@ def run_generate_patient_timeline_and_append(
         n: The number of patient timelines to generate. Defaults to 10.
         output_path: The path to the output CSV file. Defaults to
             "test_files/dummy_timeline.csv".
+
     """
     try:
         if os.path.exists(output_path):
@@ -201,8 +208,8 @@ def run_generate_patient_timeline_and_append(
                     {
                         "client_idcode": client_idcode,
                         "body_analysed": patient_timeline_text,
-                    }
-                ]
+                    },
+                ],
             )
             df = pd.concat([df, new_row], ignore_index=True)
         except Exception as e:
@@ -211,7 +218,10 @@ def run_generate_patient_timeline_and_append(
 
     try:
         df.to_csv(
-            output_path, mode="a", header=not os.path.exists(output_path), index=False
+            output_path,
+            mode="a",
+            header=not os.path.exists(output_path),
+            index=False,
         )
     except Exception as e:
         logger.error(f"Exception: {e}")

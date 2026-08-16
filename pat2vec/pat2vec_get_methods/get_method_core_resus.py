@@ -70,6 +70,7 @@ def search_core_resus_observations(
 
     Raises:
         ValueError: If essential arguments are None.
+
     """
     if (
         output_filename
@@ -78,7 +79,9 @@ def search_core_resus_observations(
         and hasattr(config_obj, "proj_name")
     ):
         output_filename = os.path.join(
-            config_obj.root_path, config_obj.proj_name, output_filename
+            config_obj.root_path,
+            config_obj.proj_name,
+            output_filename,
         )
 
     if output_filename and os.path.exists(output_filename) and not overwrite:
@@ -103,14 +106,19 @@ def search_core_resus_observations(
 
     start_year, start_month, start_day, end_year, end_month, end_day = (
         validate_input_dates(
-            start_year, start_month, start_day, end_year, end_month, end_day
+            start_year,
+            start_month,
+            start_day,
+            end_year,
+            end_month,
+            end_day,
         )
     )
 
     # Base search string for CORE_RESUS_STATUS observations
     search_string = (
         'obscatalogmasteritem_displayname:("CORE_RESUS_STATUS") AND '
-        + f"{observations_time_field}:[{start_year}-{start_month}-{start_day} TO {end_year}-{end_month}-{end_day}]"
+        f"{observations_time_field}:[{start_year}-{start_month}-{start_day} TO {end_year}-{end_month}-{end_day}]"
     )
 
     if additional_custom_search_string:
@@ -139,7 +147,9 @@ def search_core_resus_observations(
 
 
 def calculate_core_resus_features(
-    features_data, term_prefix="core_resus_status", negate_biochem=False
+    features_data,
+    term_prefix="core_resus_status",
+    negate_biochem=False,
 ) -> dict:
     """Calculates resuscitation status features from observations.
 
@@ -154,6 +164,7 @@ def calculate_core_resus_features(
 
     Returns:
         Dict[str, int]: A dictionary of calculated features.
+
     """
     features = {}
 
@@ -163,13 +174,13 @@ def calculate_core_resus_features(
             features_data[
                 features_data["observation_valuetext_analysed"]
                 == "For cardiopulmonary resuscitation"
-            ]
+            ],
         )
         features[f"{term_prefix}_Not for cardiopulmonary resuscitation"] = len(
             features_data[
                 features_data["observation_valuetext_analysed"]
                 == "Not for cardiopulmonary resuscitation"
-            ]
+            ],
         )
     elif negate_biochem:
         # Set 0 values when negate_biochem is True and no data available
@@ -210,10 +221,11 @@ def get_core_resus(
 
     Raises:
         ValueError: If `config_obj` is None.
+
     """
     if config_obj is None:
         raise ValueError(
-            "config_obj cannot be None. Please provide a valid configuration object."
+            "config_obj cannot be None. Please provide a valid configuration object.",
         )
 
     batch_mode = config_obj.batch_mode
@@ -253,7 +265,8 @@ def get_core_resus(
 
     # Initialize features DataFrame
     features = pd.DataFrame(
-        data=[current_pat_client_id_code], columns=["client_idcode"]
+        data=[current_pat_client_id_code],
+        columns=["client_idcode"],
     )
 
     if len(current_pat_raw) == 0:
@@ -268,7 +281,9 @@ def get_core_resus(
     # Calculate features
     term = "CORE_RESUS_STATUS".lower()
     resus_stats = calculate_core_resus_features(
-        features_data, term, config_obj.negate_biochem
+        features_data,
+        term,
+        config_obj.negate_biochem,
     )
 
     # Add calculated features to the DataFrame

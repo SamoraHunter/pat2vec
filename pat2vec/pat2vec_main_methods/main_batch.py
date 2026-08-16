@@ -111,25 +111,26 @@ def main_batch(
     Side Effects:
         - Writes a CSV file containing the patient's feature vector for the specified time slice.
         - Updates the tqdm progress bar `t`.
+
     """
     if config_obj is None:
         raise ValueError(
-            "config_obj cannot be None. Please provide a valid configuration. (main_batch)"
+            "config_obj cannot be None. Please provide a valid configuration. (main_batch)",
         )
 
     if batches is None:
         raise ValueError(
-            "batches cannot be None. Please provide a valid dictionary of dataframes. (main_batch)"
+            "batches cannot be None. Please provide a valid dictionary of dataframes. (main_batch)",
         )
 
     if cohort_searcher_with_terms_and_search is None:
         raise ValueError(
-            "cohort_searcher_with_terms_and_search cannot be None. Please provide a valid configuration. (main_batch)"
+            "cohort_searcher_with_terms_and_search cannot be None. Please provide a valid configuration. (main_batch)",
         )
 
     if t is None:
         raise ValueError(
-            "t cannot be None. Please provide a valid configuration. (main_batch)"
+            "t cannot be None. Please provide a valid configuration. (main_batch)",
         )
 
     if (
@@ -140,7 +141,7 @@ def main_batch(
     ):
         if cat is None:
             raise ValueError(
-                "cat cannot be None with annotations or annotations_mrc or annotations_reports or textual_obs. Please provide a valid configuration. (main_batch)"
+                "cat cannot be None with annotations or annotations_mrc or annotations_reports or textual_obs. Please provide a valid configuration. (main_batch)",
             )
 
     current_pat_client_id_code = str(current_pat_client_id_code)
@@ -174,7 +175,7 @@ def main_batch(
                         list_dir_wrapper(
                             current_pat_lines_path + str(current_pat_client_id_code),
                             config_obj,
-                        )
+                        ),
                     )
                     >= n_pat_lines
                 ):
@@ -430,7 +431,7 @@ def main_batch(
                             == "batch_epic_clinical_notes_annotations"
                         ):
                             print(
-                                "\n=== DEBUG: Processing epic clinical notes annotations ==="
+                                "\n=== DEBUG: Processing epic clinical notes annotations ===",
                             )
                             print(f"Patient: {current_pat_client_id_code}")
                             print(f"Batches keys available: {list(batches.keys())}")
@@ -438,17 +439,17 @@ def main_batch(
                             if batch_data is not None:
                                 print(f"Batch data type: {type(batch_data)}")
                                 print(
-                                    f"Batch row count: {len(batch_data) if batch_data is not None else 0}"
+                                    f"Batch row count: {len(batch_data) if batch_data is not None else 0}",
                                 )
                                 if batch_data is not None and not batch_data.empty:
                                     print(
-                                        f"Batch columns (first 15): {batch_data.columns.tolist()[:15]}"
+                                        f"Batch columns (first 15): {batch_data.columns.tolist()[:15]}",
                                     )
                                     print(
-                                        f"Has pretty_name column: {'pretty_name' in batch_data.columns}"
+                                        f"Has pretty_name column: {'pretty_name' in batch_data.columns}",
                                     )
                                     print(
-                                        f"Has cui column: {'cui' in batch_data.columns}"
+                                        f"Has cui column: {'cui' in batch_data.columns}",
                                     )
                                 else:
                                     print("WARNING: Batch data is None or empty!")
@@ -457,7 +458,12 @@ def main_batch(
                             print("==========================================\n")
 
                         update_pbar(
-                            p_bar_entry, start_time, i, config["pbar"], t, config_obj
+                            p_bar_entry,
+                            start_time,
+                            i,
+                            config["pbar"],
+                            t,
+                            config_obj,
                         )
 
                         # Dynamically build the arguments dictionary for each function
@@ -489,17 +495,18 @@ def main_batch(
                             == "batch_epic_clinical_notes_annotations"
                         ):
                             print(
-                                "=== DEBUG: After epic clinical notes annotations processing ==="
+                                "=== DEBUG: After epic clinical notes annotations processing ===",
                             )
                             print(f"Feature df type: {type(feature_df)}")
                             print(
-                                f"Feature df shape: {feature_df.shape if feature_df is not None else 'None'}"
+                                f"Feature df shape: {feature_df.shape if feature_df is not None else 'None'}",
                             )
                             if feature_df is not None and hasattr(
-                                feature_df, "columns"
+                                feature_df,
+                                "columns",
                             ):
                                 print(
-                                    f"Feature columns (first 10): {list(feature_df.columns)[:10]}"
+                                    f"Feature columns (first 10): {list(feature_df.columns)[:10]}",
                                 )
                                 has_medcat = any(
                                     "pretty_name" in col for col in feature_df.columns
@@ -535,7 +542,8 @@ def main_batch(
 
                 if pat_concatted.columns.duplicated().any():
                     pat_concatted = pat_concatted.groupby(
-                        pat_concatted.columns, axis=1
+                        pat_concatted.columns,
+                        axis=1,
                     ).sum()
 
                 pat_concatted.insert(0, "client_idcode", current_pat_client_id_code)
@@ -556,7 +564,7 @@ def main_batch(
                     if not remote_dump:
                         if len(pat_concatted) > 1:
                             logging.error(
-                                f"Batch too large for local dump. Shape: {pat_concatted.shape}"
+                                f"Batch too large for local dump. Shape: {pat_concatted.shape}",
                             )
                             logging.error(pat_concatted)
 
@@ -564,7 +572,9 @@ def main_batch(
                     else:
                         if multi_process:
                             write_remote(
-                                output_path, pat_concatted, config_obj=config_obj
+                                output_path,
+                                pat_concatted,
+                                config_obj=config_obj,
                             )
                         else:
                             with sftp_client.open(output_path, "w") as file:
@@ -603,7 +613,7 @@ def main_batch(
                 logging.error(e)
                 logging.error(traceback.format_exc())
                 logging.error(
-                    f"Reproduce on {current_pat_client_id_code, target_date_range}"
+                    f"Reproduce on {current_pat_client_id_code, target_date_range}",
                 )
                 template = "An exception of type {0} occurred. Arguments:\n{1!r}"
                 message = template.format(type(e).__name__, e.args)

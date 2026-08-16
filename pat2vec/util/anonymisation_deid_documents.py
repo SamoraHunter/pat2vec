@@ -88,6 +88,7 @@ class DeIdAnonymizer:
         pii_labels: A list of PII labels the loaded model is configured to redact.
         anonymization_log: A list of dictionaries logging each operation.
         logger: A configured logger instance for the class.
+
     """
 
     def __init__(
@@ -124,6 +125,7 @@ class DeIdAnonymizer:
                 rather than truncated at ~512 tokens. A small positive value
                 (e.g. 32-50) is a reasonable starting point. Ignored if
                 disable_chunking is True.
+
         """
         self.model: type[DeIdModel] | None = None
         self.model_path = model_path
@@ -139,7 +141,7 @@ class DeIdAnonymizer:
         # Check if MedCAT is available
         if not MEDCAT_AVAILABLE:
             self.logger.error(
-                "MedCAT is not installed. Please install it using: pip install medcat"
+                "MedCAT is not installed. Please install it using: pip install medcat",
             )
             raise ImportError("MedCAT is required but not installed")
 
@@ -155,6 +157,7 @@ class DeIdAnonymizer:
 
         Returns:
             True if the model was loaded successfully, False otherwise.
+
         """
         try:
             # FIX: assign the Path object so .exists() is available
@@ -171,7 +174,7 @@ class DeIdAnonymizer:
             # Hotfix for a spaCy extension error that can occur with some MedCAT models.
             if not spacy.tokens.Span.has_extension("link_candidates"):
                 self.logger.info(
-                    "Registering missing 'link_candidates' spaCy extension."
+                    "Registering missing 'link_candidates' spaCy extension.",
                 )
                 spacy.tokens.Span.set_extension("link_candidates", default=[])
 
@@ -182,13 +185,13 @@ class DeIdAnonymizer:
                 self.logger.warning(
                     "Model's 'pii_labels' attribute is empty. "
                     "Falling back to default PII label list. "
-                    "Override `anonymizer.pii_labels` if your model targets different concepts."
+                    "Override `anonymizer.pii_labels` if your model targets different concepts.",
                 )
                 self.pii_labels = _DEFAULT_PII_LABELS
                 self.model.pii_labels = self.pii_labels
 
             self.logger.info(
-                f"Model configured to redact PII labels: {self.pii_labels}"
+                f"Model configured to redact PII labels: {self.pii_labels}",
             )
 
             # FIX: disable chunking overlap to prevent multiprocessing hanging.
@@ -211,7 +214,7 @@ class DeIdAnonymizer:
         except ValueError as e:
             self.logger.error(f"Error loading DeIdModel: {e}")
             self.logger.error(
-                "Please ensure the path corresponds to a valid DeId model"
+                "Please ensure the path corresponds to a valid DeId model",
             )
             return False
         except Exception as e:
@@ -235,16 +238,18 @@ class DeIdAnonymizer:
             self.logger.info(
                 "Chunking overlap window disabled on TransformersNER to prevent "
                 "multiprocessing hang. Documents longer than ~512 tokens will only "
-                "have their first ~512 tokens de-identified."
+                "have their first ~512 tokens de-identified.",
             )
         except (AttributeError, IndexError) as e:
             self.logger.warning(
                 f"Could not apply chunking fix (model structure may differ): {e}. "
-                "If processing hangs, inspect `model.cat._addl_ner` manually."
+                "If processing hangs, inspect `model.cat._addl_ner` manually.",
             )
 
     def enable_chunking(
-        self, overlap_window: int = 32, silence_repeated_warning: bool = True
+        self,
+        overlap_window: int = 32,
+        silence_repeated_warning: bool = True,
     ) -> None:
         """Enables chunking on the transformer NER component so long documents
         are scanned in overlapping windows instead of being truncated at ~512
@@ -271,6 +276,7 @@ class DeIdAnonymizer:
                 it stops repeating. This does not affect any other MedCAT
                 logging. Set False to keep seeing MedCAT's own warning on
                 every call.
+
         """
         self._check_model_loaded()
         try:
@@ -283,18 +289,18 @@ class DeIdAnonymizer:
                 f"Chunking ENABLED with overlap_window={overlap_window}. "
                 "Long documents will now be scanned in full via overlapping "
                 "windows rather than truncated at ~512 tokens. "
-                "Ensure all anonymize_* calls use n_process=1."
+                "Ensure all anonymize_* calls use n_process=1.",
             )
             if silence_repeated_warning:
                 logging.getLogger("medcat.utils.ner.deid").setLevel(logging.ERROR)
                 self.logger.info(
                     "Silenced MedCAT's repeated per-call chunking warning "
                     "(medcat.utils.ner.deid logger set to ERROR level). "
-                    "Call `silence_medcat_chunking_warning(False)` to restore it."
+                    "Call `silence_medcat_chunking_warning(False)` to restore it.",
                 )
         except (AttributeError, IndexError) as e:
             self.logger.error(
-                f"Could not enable chunking (model structure may differ): {e}"
+                f"Could not enable chunking (model structure may differ): {e}",
             )
             raise
 
@@ -309,12 +315,13 @@ class DeIdAnonymizer:
         Args:
             silence: If True, raises that logger to ERROR level (hiding the
                 warning). If False, restores it to WARNING level.
+
         """
         level = logging.ERROR if silence else logging.WARNING
         logging.getLogger("medcat.utils.ner.deid").setLevel(level)
         self.logger.info(
             f"MedCAT chunking warning {'silenced' if silence else 'restored'} "
-            f"(medcat.utils.ner.deid logger set to {logging.getLevelName(level)})."
+            f"(medcat.utils.ner.deid logger set to {logging.getLevelName(level)}).",
         )
 
     def get_gpu_status(self) -> dict[str, Any]:
@@ -323,6 +330,7 @@ class DeIdAnonymizer:
         Returns:
             A dictionary with device info for the transformer component,
             or an explanatory message if it could not be determined.
+
         """
         self._check_model_loaded()
         try:
@@ -338,7 +346,8 @@ class DeIdAnonymizer:
                 if torch.cuda.is_available():
                     info["cuda_device_name"] = torch.cuda.get_device_name(0)
                     info["cuda_memory_allocated_mb"] = round(
-                        torch.cuda.memory_allocated(0) / 1024**2, 1
+                        torch.cuda.memory_allocated(0) / 1024**2,
+                        1,
                     )
             except ImportError:
                 pass
@@ -351,7 +360,7 @@ class DeIdAnonymizer:
         if not self.is_loaded or self.model is None:
             raise RuntimeError(
                 "DeIdModel not loaded. Please call load_model() first or "
-                "provide model_path during initialization."
+                "provide model_path during initialization.",
             )
 
     def _log_operation(self, operation: str, details: dict[str, Any]) -> None:
@@ -364,7 +373,10 @@ class DeIdAnonymizer:
         self.anonymization_log.append(log_entry)
 
     def anonymize_text(
-        self, text: str, redact: bool = True, verify: bool = False
+        self,
+        text: str,
+        redact: bool = True,
+        verify: bool = False,
     ) -> str | tuple[str, dict[str, Any]]:
         r"""Anonymizes a single text string.
 
@@ -378,6 +390,7 @@ class DeIdAnonymizer:
         Returns:
             If `verify` is False, returns the anonymized text string.
             If `verify` is True, returns a tuple of (anonymized_text, verification_info).
+
         """
         self._check_model_loaded()
 
@@ -437,6 +450,7 @@ class DeIdAnonymizer:
             If `verify_sample` is False, returns a list of anonymized texts.
             If `verify_sample` is True, returns a tuple of
             (anonymized_texts, verification_report).
+
         """
         self._check_model_loaded()
 
@@ -444,7 +458,10 @@ class DeIdAnonymizer:
             ctx = suppress_gc_collect() if suppress_gc else _null_context()
             with ctx:
                 anonymized: list[str] = self.model.deid_multi_texts(
-                    texts, redact=redact, n_process=n_process, batch_size=batch_size
+                    texts,
+                    redact=redact,
+                    n_process=n_process,
+                    batch_size=batch_size,
                 )
 
             self._log_operation(
@@ -460,7 +477,9 @@ class DeIdAnonymizer:
 
             if verify_sample:
                 verification_report = self._verify_multiple_texts(
-                    texts, anonymized, sample_size
+                    texts,
+                    anonymized,
+                    sample_size,
                 )
                 return anonymized, verification_report
 
@@ -515,6 +534,7 @@ class DeIdAnonymizer:
 
         Returns:
             A DataFrame with the specified text columns anonymized.
+
         """
         self._check_model_loaded()
 
@@ -640,6 +660,7 @@ class DeIdAnonymizer:
         Returns:
             A new DataFrame with the specified text columns anonymized
             (original rows preserved, plus new `<col><suffix>` columns).
+
         """
         self._check_model_loaded()
 
@@ -693,21 +714,20 @@ class DeIdAnonymizer:
                         f"{col}{suffix}" for col in text_columns
                     }
                     if len(cached_chunk) == expected_len and expected_cols.issubset(
-                        set(cached_chunk.columns)
+                        set(cached_chunk.columns),
                     ):
                         results.append(cached_chunk)
                         n_resumed += 1
                         continue
-                    else:
-                        self.logger.warning(
-                            f"Checkpoint {checkpoint_path.name} exists but doesn't "
-                            "match expected shape/columns for this run -- "
-                            "recomputing this chunk instead of trusting it."
-                        )
+                    self.logger.warning(
+                        f"Checkpoint {checkpoint_path.name} exists but doesn't "
+                        "match expected shape/columns for this run -- "
+                        "recomputing this chunk instead of trusting it.",
+                    )
                 except Exception as e:
                     self.logger.warning(
                         f"Could not read checkpoint {checkpoint_path.name} "
-                        f"({e}) -- recomputing this chunk."
+                        f"({e}) -- recomputing this chunk.",
                     )
 
             chunk = df.iloc[start : start + chunk_size].copy()
@@ -766,7 +786,7 @@ class DeIdAnonymizer:
         if n_resumed:
             self.logger.info(
                 f"Resumed {n_resumed}/{n_chunks} chunks from existing checkpoints; "
-                f"computed {n_computed} new chunk(s)."
+                f"computed {n_computed} new chunk(s).",
             )
 
         return result_df
@@ -779,6 +799,7 @@ class DeIdAnonymizer:
 
         Returns:
             A list of dictionaries, each representing a found PII entity.
+
         """
         self._check_model_loaded()
         self.logger.info("Inspecting text for PII entities...")
@@ -792,7 +813,7 @@ class DeIdAnonymizer:
                 self.logger.info(
                     f"  - Text: '{ent['text']}', "
                     f"Label: {ent['label']}, "
-                    f"Confidence: {ent.get('confidence', 'N/A'):.2f}"
+                    f"Confidence: {ent.get('confidence', 'N/A'):.2f}",
                 )
 
         return entities
@@ -806,6 +827,7 @@ class DeIdAnonymizer:
         Returns:
             A list of dictionaries with details (text, label, start, end,
             confidence) for each identified PII entity.
+
         """
         self._check_model_loaded()
 
@@ -821,7 +843,7 @@ class DeIdAnonymizer:
                         "start": ent.start_char,
                         "end": ent.end_char,
                         "confidence": getattr(ent, "_.acc", None),
-                    }
+                    },
                 )
 
             return entities
@@ -843,13 +865,17 @@ class DeIdAnonymizer:
         }
 
     def _verify_multiple_texts(
-        self, original_texts: list[str], anonymized_texts: list[str], sample_size: int
+        self,
+        original_texts: list[str],
+        anonymized_texts: list[str],
+        sample_size: int,
     ) -> dict[str, Any]:
         """Verifies anonymization quality for a sample of multiple texts."""
         import random
 
         indices = random.sample(
-            range(len(original_texts)), min(sample_size, len(original_texts))
+            range(len(original_texts)),
+            min(sample_size, len(original_texts)),
         )
 
         total_entities = 0
@@ -857,7 +883,8 @@ class DeIdAnonymizer:
 
         for i in indices:
             verification = self._verify_single_text(
-                original_texts[i], anonymized_texts[i]
+                original_texts[i],
+                anonymized_texts[i],
             )
             total_entities += verification["entities_found"]
             all_entity_types.update(verification["entity_types"])
@@ -876,6 +903,7 @@ class DeIdAnonymizer:
         Returns:
             A dictionary containing statistics about the anonymization
             operations, model details, and total texts processed.
+
         """
         if not self.anonymization_log:
             return {"message": "No anonymization operations performed yet"}
@@ -923,6 +951,7 @@ class DeIdAnonymizer:
 
         Args:
             filepath: The path where the log file will be saved.
+
         """
         import json
 
@@ -990,7 +1019,9 @@ def _null_context():
 
 
 def anonymize_single_text(
-    text: str, model_path: str | Path, redact: bool = True
+    text: str,
+    model_path: str | Path,
+    redact: bool = True,
 ) -> str:
     """Quickly anonymize a single text string.
 
@@ -1001,6 +1032,7 @@ def anonymize_single_text(
 
     Returns:
         The anonymized text.
+
     """
     anonymizer = DeIdAnonymizer(model_path)
     return anonymizer.anonymize_text(text, redact=redact)
@@ -1037,6 +1069,7 @@ def anonymize_dataframe_quick(
         ...     text_columns='body_analysed',
         ...     model_path='/path/to/model.zip',
         ... )
+
     """
     anonymizer = DeIdAnonymizer(model_path)
     return anonymizer.anonymize_dataframe(

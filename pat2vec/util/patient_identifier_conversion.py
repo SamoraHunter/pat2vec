@@ -12,6 +12,7 @@ def _get_column_case_insensitive(df: pd.DataFrame, column_name: str) -> pd.Serie
 
     Returns:
         The Series corresponding to the matching column.
+
     """
     if column_name in df.columns:
         return df[column_name]
@@ -21,7 +22,7 @@ def _get_column_case_insensitive(df: pd.DataFrame, column_name: str) -> pd.Serie
         return df[lower_columns[column_name.lower()]]
 
     raise KeyError(
-        f"Column '{column_name}' not found (case-insensitive check also failed)"
+        f"Column '{column_name}' not found (case-insensitive check also failed)",
     )
 
 
@@ -35,6 +36,7 @@ def extract_hospital_numbers(hospital_number_str: str) -> list[str]:
     Returns:
         A list of cleaned hospital number strings, or an empty list if the
         input is None, NaN, or empty.
+
     """
     if (
         pd.isna(hospital_number_str)
@@ -58,6 +60,7 @@ def extract_nhs_number(nhs_number_str: str) -> str | None:
     Returns:
         The 10-digit NHS number as a string without spaces, or None if no valid
         NHS number is found.
+
     """
     if pd.isna(nhs_number_str) or not nhs_number_str or nhs_number_str == "":
         return None
@@ -80,6 +83,7 @@ def extract_mrn(mrn_str: str) -> str | None:
 
     Returns:
         The MRN string without the prefix, or None if no valid MRN is found.
+
     """
     if pd.isna(mrn_str) or not mrn_str or mrn_str == "":
         return None
@@ -94,7 +98,8 @@ def extract_mrn(mrn_str: str) -> str | None:
 
 
 def convert_hospital_number_to_durable_key(
-    hospital_numbers: list[str], pat2vec_obj
+    hospital_numbers: list[str],
+    pat2vec_obj,
 ) -> tuple[str | None, list[str]]:
     """Convert a list of hospital numbers to a single durable key.
 
@@ -108,6 +113,7 @@ def convert_hospital_number_to_durable_key(
         first durable key found for the given hospital numbers, or None if no
         match is found. missing_hospital_numbers is a list of input hospital
         numbers that were not found.
+
     """
     df = pat2vec_obj.cohort_searcher_with_terms_and_search(
         index_name="epic_patients",
@@ -127,11 +133,11 @@ def convert_hospital_number_to_durable_key(
     if missing_hn:
         print(
             f"Hospital Number size diff: input={len(hospital_numbers)}, "
-            f"found={len(found_hn)}, missing={len(missing_hn)}"
+            f"found={len(found_hn)}, missing={len(missing_hn)}",
         )
     else:
         print(
-            f"Hospital Number size diff: input={len(hospital_numbers)}, output={len(found_hn)}"
+            f"Hospital Number size diff: input={len(hospital_numbers)}, output={len(found_hn)}",
         )
 
     durable_keys = df["patient_DurableKey"].dropna().unique()
@@ -143,7 +149,8 @@ def convert_hospital_number_to_durable_key(
 
 
 def convert_hospital_numbers_to_durable_keys(
-    hospital_numbers: list[str], pat2vec_obj
+    hospital_numbers: list[str],
+    pat2vec_obj,
 ) -> tuple[list[str], list[str]]:
     """Convert a list of hospital numbers to their corresponding durable keys.
 
@@ -157,6 +164,7 @@ def convert_hospital_numbers_to_durable_keys(
         list of unique durable keys corresponding to the given hospital numbers,
         preserving order of first occurrence. missing_hospital_numbers is a list
         of input hospital numbers that were not found.
+
     """
     df = pat2vec_obj.cohort_searcher_with_terms_and_search(
         index_name="epic_patients",
@@ -176,11 +184,11 @@ def convert_hospital_numbers_to_durable_keys(
     if missing_hn:
         print(
             f"Hospital Number size diff: input={len(hospital_numbers)}, "
-            f"found={len(found_hn)}, missing={len(missing_hn)}"
+            f"found={len(found_hn)}, missing={len(missing_hn)}",
         )
     else:
         print(
-            f"Hospital Number size diff: input={len(hospital_numbers)}, output={len(found_hn)}"
+            f"Hospital Number size diff: input={len(hospital_numbers)}, output={len(found_hn)}",
         )
 
     durable_keys = df["patient_DurableKey"].dropna().unique().tolist()
@@ -188,7 +196,8 @@ def convert_hospital_numbers_to_durable_keys(
 
 
 def convert_durable_key_to_hospital_numbers(
-    durable_key: str, pat2vec_obj
+    durable_key: str,
+    pat2vec_obj,
 ) -> tuple[list[str], list[str]]:
     """Convert a durable key to its corresponding hospital numbers.
 
@@ -202,6 +211,7 @@ def convert_durable_key_to_hospital_numbers(
         list of unique hospital number strings corresponding to the given durable
         key, preserving order of first occurrence. missing_durable_keys is a list
         of input durable keys that were not found.
+
     """
     df = pat2vec_obj.cohort_searcher_with_terms_and_search(
         index_name="epic_patients",
@@ -232,7 +242,8 @@ def convert_durable_key_to_hospital_numbers(
 
 
 def convert_nhs_number_to_durable_key(
-    nhs_numbers: list[str], pat2vec_obj
+    nhs_numbers: list[str],
+    pat2vec_obj,
 ) -> tuple[str | None, list[str]]:
     """Convert a list of NHS numbers to a single durable key.
 
@@ -246,6 +257,7 @@ def convert_nhs_number_to_durable_key(
         durable key found for the given NHS numbers, or None if no match is
         found. missing_nhs_numbers is a list of input NHS numbers that were not
         found.
+
     """
     df = pat2vec_obj.cohort_searcher_with_terms_and_search(
         index_name="epic_patients",
@@ -265,11 +277,11 @@ def convert_nhs_number_to_durable_key(
     if missing_nhs:
         print(
             f"NHS Number size diff: input={len(nhs_numbers)}, "
-            f"found={len(found_nhs)}, missing={len(missing_nhs)}"
+            f"found={len(found_nhs)}, missing={len(missing_nhs)}",
         )
     else:
         print(
-            f"NHS Number size diff: input={len(nhs_numbers)}, output={len(found_nhs)}"
+            f"NHS Number size diff: input={len(nhs_numbers)}, output={len(found_nhs)}",
         )
 
     durable_keys = df["patient_DurableKey"].dropna().unique()
@@ -281,7 +293,8 @@ def convert_nhs_number_to_durable_key(
 
 
 def convert_durable_key_to_nhs_numbers(
-    durable_key: str, pat2vec_obj
+    durable_key: str,
+    pat2vec_obj,
 ) -> tuple[list[str], list[str]]:
     """Convert a durable key to its corresponding NHS numbers.
 
@@ -295,6 +308,7 @@ def convert_durable_key_to_nhs_numbers(
         unique NHS number strings corresponding to the given durable key,
         preserving order of first occurrence. missing_durable_keys is a list of
         input durable keys that were not found.
+
     """
     df = pat2vec_obj.cohort_searcher_with_terms_and_search(
         index_name="epic_patients",
@@ -324,7 +338,8 @@ def convert_durable_key_to_nhs_numbers(
 
 
 def convert_mrn_to_durable_key(
-    mrns: list[str], pat2vec_obj
+    mrns: list[str],
+    pat2vec_obj,
 ) -> tuple[str | None, list[str]]:
     """Convert a list of MRNs to a single durable key.
 
@@ -337,6 +352,7 @@ def convert_mrn_to_durable_key(
         A tuple of (durable_key, missing_mrns). durable_key is the first durable
         key found for the given MRNs, or None if no match is found.
         missing_mrns is a list of input MRNs that were not found.
+
     """
     df = pat2vec_obj.cohort_searcher_with_terms_and_search(
         index_name="epic_patients",
@@ -356,7 +372,7 @@ def convert_mrn_to_durable_key(
     if missing_mrn:
         print(
             f"MRN size diff: input={len(mrns)}, "
-            f"found={len(found_mrn)}, missing={len(missing_mrn)}"
+            f"found={len(found_mrn)}, missing={len(missing_mrn)}",
         )
     else:
         print(f"MRN size diff: input={len(mrns)}, output={len(found_mrn)}")
@@ -370,7 +386,8 @@ def convert_mrn_to_durable_key(
 
 
 def convert_durable_key_to_mrn(
-    durable_key: str, pat2vec_obj
+    durable_key: str,
+    pat2vec_obj,
 ) -> tuple[list[str], list[str]]:
     """Convert a durable key to its corresponding MRNs.
 
@@ -384,6 +401,7 @@ def convert_durable_key_to_mrn(
         strings corresponding to the given durable key, preserving order of first
         occurrence. missing_durable_keys is a list of input durable keys that were
         not found.
+
     """
     df = pat2vec_obj.cohort_searcher_with_terms_and_search(
         index_name="epic_patients",
@@ -413,7 +431,8 @@ def convert_durable_key_to_mrn(
 
 
 def convert_durable_keys_to_hospital_numbers(
-    durable_keys: list[str], pat2vec_obj
+    durable_keys: list[str],
+    pat2vec_obj,
 ) -> tuple[list[str], list[str]]:
     """Convert a list of durable keys to their corresponding hospital numbers.
 
@@ -427,6 +446,7 @@ def convert_durable_keys_to_hospital_numbers(
         list of unique hospital number strings corresponding to the given durable
         keys, preserving order of first occurrence. missing_durable_keys is a
         list of input durable keys that were not found.
+
     """
     all_hospital_numbers = []
     missing_dk = []
@@ -436,13 +456,14 @@ def convert_durable_keys_to_hospital_numbers(
         if missing:
             missing_dk.extend(missing)
     print(
-        f"Hospital Number size diff: input={len(durable_keys)}, output={len(all_hospital_numbers)}"
+        f"Hospital Number size diff: input={len(durable_keys)}, output={len(all_hospital_numbers)}",
     )
     return list(dict.fromkeys(all_hospital_numbers)), missing_dk
 
 
 def convert_nhs_numbers_to_durable_keys(
-    nhs_numbers: list[str], pat2vec_obj
+    nhs_numbers: list[str],
+    pat2vec_obj,
 ) -> tuple[list[str], list[str]]:
     """Convert a list of NHS numbers to their corresponding durable keys.
 
@@ -456,6 +477,7 @@ def convert_nhs_numbers_to_durable_keys(
         unique durable keys corresponding to the given NHS numbers, preserving
         order of first occurrence. missing_nhs_numbers is a list of input NHS
         numbers that were not found.
+
     """
     df = pat2vec_obj.cohort_searcher_with_terms_and_search(
         index_name="epic_patients",
@@ -475,11 +497,11 @@ def convert_nhs_numbers_to_durable_keys(
     if missing_nhs:
         print(
             f"NHS Number size diff: input={len(nhs_numbers)}, "
-            f"found={len(found_nhs)}, missing={len(missing_nhs)}"
+            f"found={len(found_nhs)}, missing={len(missing_nhs)}",
         )
     else:
         print(
-            f"NHS Number size diff: input={len(nhs_numbers)}, output={len(found_nhs)}"
+            f"NHS Number size diff: input={len(nhs_numbers)}, output={len(found_nhs)}",
         )
 
     durable_keys = df["patient_DurableKey"].dropna().unique().tolist()
@@ -487,7 +509,8 @@ def convert_nhs_numbers_to_durable_keys(
 
 
 def convert_durable_keys_to_nhs_numbers(
-    durable_keys: list[str], pat2vec_obj
+    durable_keys: list[str],
+    pat2vec_obj,
 ) -> tuple[list[str], list[str]]:
     """Convert a list of durable keys to their corresponding NHS numbers.
 
@@ -501,6 +524,7 @@ def convert_durable_keys_to_nhs_numbers(
         unique NHS number strings corresponding to the given durable keys,
         preserving order of first occurrence. missing_durable_keys is a list of
         input durable keys that were not found.
+
     """
     all_nhs_numbers = []
     missing_dk = []
@@ -510,13 +534,14 @@ def convert_durable_keys_to_nhs_numbers(
         if missing:
             missing_dk.extend(missing)
     print(
-        f"NHS Number size diff: input={len(durable_keys)}, output={len(all_nhs_numbers)}"
+        f"NHS Number size diff: input={len(durable_keys)}, output={len(all_nhs_numbers)}",
     )
     return list(dict.fromkeys(all_nhs_numbers)), missing_dk
 
 
 def convert_mrns_to_durable_keys(
-    mrns: list[str], pat2vec_obj
+    mrns: list[str],
+    pat2vec_obj,
 ) -> tuple[list[str], list[str]]:
     """Convert a list of MRNs to their corresponding durable keys.
 
@@ -529,6 +554,7 @@ def convert_mrns_to_durable_keys(
         A tuple of (durable_keys, missing_mrns). durable_keys is a list of unique
         durable keys corresponding to the given MRNs, preserving order of first
         occurrence. missing_mrns is a list of input MRNs that were not found.
+
     """
     df = pat2vec_obj.cohort_searcher_with_terms_and_search(
         index_name="epic_patients",
@@ -548,7 +574,7 @@ def convert_mrns_to_durable_keys(
     if missing_mrn:
         print(
             f"MRN size diff: input={len(mrns)}, "
-            f"found={len(found_mrn)}, missing={len(missing_mrn)}"
+            f"found={len(found_mrn)}, missing={len(missing_mrn)}",
         )
     else:
         print(f"MRN size diff: input={len(mrns)}, output={len(found_mrn)}")
@@ -558,7 +584,8 @@ def convert_mrns_to_durable_keys(
 
 
 def convert_durable_keys_to_mrns(
-    durable_keys: list[str], pat2vec_obj
+    durable_keys: list[str],
+    pat2vec_obj,
 ) -> tuple[list[str], list[str]]:
     """Convert a list of durable keys to their corresponding MRNs.
 
@@ -572,6 +599,7 @@ def convert_durable_keys_to_mrns(
         strings corresponding to the given durable keys, preserving order of first
         occurrence. missing_durable_keys is a list of input durable keys that were
         not found.
+
     """
     all_mrns = []
     missing_dk = []
@@ -592,6 +620,7 @@ def extract_source_id(source_id_str: str) -> str | None:
 
     Returns:
         The Source ID string, or None if no valid Source ID is found.
+
     """
     if pd.isna(source_id_str) or not source_id_str or source_id_str == "":
         return None
@@ -606,7 +635,8 @@ def extract_source_id(source_id_str: str) -> str | None:
 
 
 def convert_source_id_to_durable_key(
-    source_ids: list[str], pat2vec_obj
+    source_ids: list[str],
+    pat2vec_obj,
 ) -> tuple[str | None, list[str]]:
     """Convert a list of Source IDs to a single durable key.
 
@@ -619,6 +649,7 @@ def convert_source_id_to_durable_key(
         A tuple of (durable_key, missing_source_ids). durable_key is the first
         durable key found for the given Source IDs, or None if no match is found.
         missing_source_ids is a list of input Source IDs that were not found.
+
     """
     df = pat2vec_obj.cohort_searcher_with_terms_and_search(
         index_name="epic_patients",
@@ -638,7 +669,7 @@ def convert_source_id_to_durable_key(
     if missing_sid:
         print(
             f"Source ID size diff: input={len(source_ids)}, "
-            f"found={len(found_sid)}, missing={len(missing_sid)}"
+            f"found={len(found_sid)}, missing={len(missing_sid)}",
         )
 
     durable_keys = df["patient_DurableKey"].dropna().unique()
@@ -650,7 +681,8 @@ def convert_source_id_to_durable_key(
 
 
 def convert_durable_key_to_source_id(
-    durable_key: str, pat2vec_obj
+    durable_key: str,
+    pat2vec_obj,
 ) -> tuple[list[str], list[str]]:
     """Convert a durable key to its corresponding Source IDs.
 
@@ -664,6 +696,7 @@ def convert_durable_key_to_source_id(
         unique Source ID strings corresponding to the given durable key,
         preserving order of first occurrence. missing_durable_keys is a list of
         input durable keys that were not found.
+
     """
     df = pat2vec_obj.cohort_searcher_with_terms_and_search(
         index_name="epic_patients",
@@ -693,7 +726,8 @@ def convert_durable_key_to_source_id(
 
 
 def convert_source_ids_to_durable_keys(
-    source_ids: list[str], pat2vec_obj
+    source_ids: list[str],
+    pat2vec_obj,
 ) -> tuple[list[str], list[str]]:
     """Convert a list of Source IDs to their corresponding durable keys.
 
@@ -707,6 +741,7 @@ def convert_source_ids_to_durable_keys(
         unique durable keys corresponding to the given Source IDs, preserving
         order of first occurrence. missing_source_ids is a list of input Source
         IDs that were not found.
+
     """
     df = pat2vec_obj.cohort_searcher_with_terms_and_search(
         index_name="epic_patients",
@@ -726,7 +761,7 @@ def convert_source_ids_to_durable_keys(
     if missing_sid:
         print(
             f"Source ID size diff: input={len(source_ids)}, "
-            f"found={len(found_sid)}, missing={len(missing_sid)}"
+            f"found={len(found_sid)}, missing={len(missing_sid)}",
         )
 
     durable_keys = df["patient_DurableKey"].dropna().unique().tolist()
@@ -734,7 +769,8 @@ def convert_source_ids_to_durable_keys(
 
 
 def convert_durable_keys_to_source_ids(
-    durable_keys: list[str], pat2vec_obj
+    durable_keys: list[str],
+    pat2vec_obj,
 ) -> tuple[list[str], list[str]]:
     """Convert a list of durable keys to their corresponding Source IDs.
 
@@ -748,6 +784,7 @@ def convert_durable_keys_to_source_ids(
         unique Source ID strings corresponding to the given durable keys,
         preserving order of first occurrence. missing_durable_keys is a list of
         input durable keys that were not found.
+
     """
     all_source_ids = []
     missing_dk = []
@@ -757,7 +794,7 @@ def convert_durable_keys_to_source_ids(
         if missing:
             missing_dk.extend(missing)
     print(
-        f"Source ID size diff: input={len(durable_keys)}, output={len(all_source_ids)}"
+        f"Source ID size diff: input={len(durable_keys)}, output={len(all_source_ids)}",
     )
     return list(dict.fromkeys(all_source_ids)), missing_dk
 

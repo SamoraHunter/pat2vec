@@ -78,6 +78,7 @@ def search_hospital_site(
 
     Raises:
         ValueError: If `cohort_searcher_with_terms_and_search` or `client_id_codes` is None.
+
     """
     if (
         output_filename
@@ -86,7 +87,9 @@ def search_hospital_site(
         and hasattr(config_obj, "proj_name")
     ):
         output_filename = os.path.join(
-            config_obj.root_path, config_obj.proj_name, output_filename
+            config_obj.root_path,
+            config_obj.proj_name,
+            output_filename,
         )
 
     if output_filename and os.path.exists(output_filename) and not overwrite:
@@ -103,7 +106,12 @@ def search_hospital_site(
 
     start_year, start_month, start_day, end_year, end_month, end_day = (
         validate_input_dates(
-            start_year, start_month, start_day, end_year, end_month, end_day
+            start_year,
+            start_month,
+            start_day,
+            end_year,
+            end_month,
+            end_day,
         )
     )
 
@@ -145,6 +153,7 @@ def prepare_hospital_site_data(raw_data):
     Returns:
         pd.DataFrame: Filtered DataFrame containing only valid CORE_HospitalSite
             records with no missing values in any column.
+
     """
     data = raw_data[raw_data["obscatalogmasteritem_displayname"] == SEARCH_TERM].copy()
     data.dropna(inplace=True)
@@ -152,7 +161,9 @@ def prepare_hospital_site_data(raw_data):
 
 
 def calculate_hospital_site_features(
-    features_data, current_pat_client_id_code, negate_biochem=False
+    features_data,
+    current_pat_client_id_code,
+    negate_biochem=False,
 ):
     """Generate binary hospital site features from observation values.
 
@@ -169,6 +180,7 @@ def calculate_hospital_site_features(
     Returns:
         pd.DataFrame: A single-row DataFrame with binary indicators for hospital
             sites including 'client_idcode', '{term}_dh', and '{term}_ph'.
+
     """
     term = "hosp_site".lower()
     features = pd.DataFrame({"client_idcode": [current_pat_client_id_code]})
@@ -216,10 +228,11 @@ def get_hosp_site(
 
     Raises:
         ValueError: If config_obj is None.
+
     """
     if config_obj is None:
         raise ValueError(
-            "config_obj cannot be None. Please provide a valid configuration."
+            "config_obj cannot be None. Please provide a valid configuration.",
         )
 
     batch_mode = config_obj.batch_mode

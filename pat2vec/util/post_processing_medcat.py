@@ -44,6 +44,7 @@ def sample_by_terms(
         A new DataFrame containing the sampled rows. An additional
         'matched_term' column is added for debugging, showing which specific
         term from a group matched the row.
+
     """
     # Flatten term groups for creating match keys and initialize result
     term_matches = {tuple(group): [] for group in term_groups}
@@ -68,14 +69,14 @@ def sample_by_terms(
             sampled_indices.update(indices)
             if len(indices) < min_samples_per_term:
                 warnings.append(
-                    f"Could not meet minimum samples ({min_samples_per_term}) for term group {group}. Found {len(indices)} matches."
+                    f"Could not meet minimum samples ({min_samples_per_term}) for term group {group}. Found {len(indices)} matches.",
                 )
 
     # Calculate remaining quota for proportional sampling
     remaining_quota = total_sample_size - len(sampled_indices)
     if remaining_quota < 0:
         warnings.append(
-            f"Total sample size ({total_sample_size}) is less than required minimum samples ({len(sampled_indices)}). Adjusting to {len(sampled_indices)}."
+            f"Total sample size ({total_sample_size}) is less than required minimum samples ({len(sampled_indices)}). Adjusting to {len(sampled_indices)}.",
         )
         remaining_quota = 0
 
@@ -89,8 +90,9 @@ def sample_by_terms(
             num_to_sample = int(remaining_quota * proportion)
             remaining_samples.extend(
                 random.sample(
-                    unselected_indices, min(num_to_sample, len(unselected_indices))
-                )
+                    unselected_indices,
+                    min(num_to_sample, len(unselected_indices)),
+                ),
             )
 
     # Combine sampled indices
@@ -179,6 +181,7 @@ def coerce_document_df_to_medcat_trainer_input(
     Raises:
         KeyError: If `name_value` or `text_column_value` are not found in the
             DataFrame's columns.
+
     """
     # Clean column names to avoid issues with whitespace
     df.columns = df.columns.str.strip()
@@ -186,7 +189,7 @@ def coerce_document_df_to_medcat_trainer_input(
     # Check for the existence of required columns
     if name_value not in df.columns or text_column_value not in df.columns:
         raise KeyError(
-            f"Expected columns '{name_value}' or '{text_column_value}' are missing from the DataFrame"
+            f"Expected columns '{name_value}' or '{text_column_value}' are missing from the DataFrame",
         )
 
     logger.debug(f"Columns before renaming: {df.columns.tolist()}")
@@ -198,7 +201,7 @@ def coerce_document_df_to_medcat_trainer_input(
     # Check if renaming succeeded
     if "name" not in df.columns or "text" not in df.columns:
         raise KeyError(
-            "Renaming failed: 'name' or 'text' column is missing after rename"
+            "Renaming failed: 'name' or 'text' column is missing after rename",
         )
 
     # Ensure unique values in the 'name' column
@@ -211,7 +214,7 @@ def coerce_document_df_to_medcat_trainer_input(
             else:
                 # print warning about duplicate values in the 'name' column
                 logger.warning(
-                    f"Duplicate value '{value}' found in 'name' column. Renaming to '{value}_{seen[value]}'"
+                    f"Duplicate value '{value}' found in 'name' column. Renaming to '{value}_{seen[value]}'",
                 )
 
                 seen[value] += 1

@@ -32,6 +32,7 @@ def _fetch_epic_clinical_notes_from_elasticsearch(
 
     Returns:
         A DataFrame containing the raw Epic clinical notes for the patient.
+
     """
     try:
         start_time = config_obj.start_time
@@ -78,14 +79,16 @@ def _fetch_epic_clinical_notes_from_elasticsearch(
                 )
             if "document_Content" in results.columns:
                 results.rename(
-                    columns={"document_Content": "body_analysed"}, inplace=True
+                    columns={"document_Content": "body_analysed"},
+                    inplace=True,
                 )
             # Handle id -> document_guid rename, with fallback for clinical notes index
             if "id" in results.columns:
                 results.rename(columns={"id": "document_guid"}, inplace=True)
             elif "document_SourceId" in results.columns:
                 results.rename(
-                    columns={"document_SourceId": "document_guid"}, inplace=True
+                    columns={"document_SourceId": "document_guid"},
+                    inplace=True,
                 )
             if "document_Name" in results.columns:
                 results.rename(
@@ -94,7 +97,7 @@ def _fetch_epic_clinical_notes_from_elasticsearch(
         return results if results is not None else pd.DataFrame()
     except Exception as e:
         logging.error(
-            f"Error fetching epic clinical notes from ES for {current_pat_client_id_code}: {e}"
+            f"Error fetching epic clinical notes from ES for {current_pat_client_id_code}: {e}",
         )
         return pd.DataFrame()
 
@@ -123,6 +126,7 @@ def get_pat_batch_epic_clinical_notes_annotations(
 
     Returns:
         A DataFrame containing the annotations for the patient's Epic clinical notes.
+
     """
     print("\n=== DEBUG get_pat_batch_epic_clinical_notes_annotations START ===")
     print(f"Patient: {current_pat_client_id_code}")
@@ -157,7 +161,8 @@ def get_pat_batch_epic_clinical_notes_annotations(
     )
 
     current_pat_document_annotation_batch_path = os.path.join(
-        pre_document_annotation_batch_path, current_pat_client_id_code + ".csv"
+        pre_document_annotation_batch_path,
+        current_pat_client_id_code + ".csv",
     )
 
     if exist_check(current_pat_document_annotation_batch_path, config_obj=config_obj):
@@ -201,18 +206,18 @@ def get_pat_batch_epic_clinical_notes_annotations(
                     )
                 except Exception as e:
                     logging.error(
-                        f"Failed to save raw epic clinical notes batch for {current_pat_client_id_code}: {e}"
+                        f"Failed to save raw epic clinical notes batch for {current_pat_client_id_code}: {e}",
                     )
 
         if config_obj.verbosity >= 6:
             print(
-                f"DEBUG: Got {len(pat_batch)} rows from raw epic_clinical_notes source"
+                f"DEBUG: Got {len(pat_batch)} rows from raw epic_clinical_notes source",
             )
 
         # When no raw data is found, create annotation table and handle testing mode
         if pat_batch.empty:
             logging.info(
-                f"No raw clinical notes found for patient {current_pat_client_id_code}, ensuring annotation table exists"
+                f"No raw clinical notes found for patient {current_pat_client_id_code}, ensuring annotation table exists",
             )
 
             # Create annotation table even with no data (for DB schema)
@@ -234,15 +239,17 @@ def get_pat_batch_epic_clinical_notes_annotations(
                     )
                 except Exception as e:
                     logging.warning(
-                        f"Could not create annotation table for epic_clinical_notes: {e}"
+                        f"Could not create annotation table for epic_clinical_notes: {e}",
                     )
 
             # If testing with dummy MedCAT, generate dummy annotations even without raw data
             if getattr(config_obj, "testing", False) and getattr(
-                config_obj, "dummy_medcat_model", False
+                config_obj,
+                "dummy_medcat_model",
+                False,
             ):
                 logging.info(
-                    f"Testing mode with dummy MedCAT: generating annotations for patient {current_pat_client_id_code}"
+                    f"Testing mode with dummy MedCAT: generating annotations for patient {current_pat_client_id_code}",
                 )
                 pat_batch = pd.DataFrame(
                     {
@@ -250,7 +257,7 @@ def get_pat_batch_epic_clinical_notes_annotations(
                         "body_analysed": ["Patient clinical notes"],
                         "updatetime": [config_obj.start_time],
                         "document_guid": ["dummy_doc_" + current_pat_client_id_code],
-                    }
+                    },
                 )
             else:
                 from pat2vec.util.post_processing_annotations import EMPTY_ANNOT_COLS
@@ -266,7 +273,7 @@ def get_pat_batch_epic_clinical_notes_annotations(
         )
 
     print(
-        f"\nDEBUG: After annotation generation, batch_target shape: {batch_target.shape if batch_target is not None else 'None'}"
+        f"\nDEBUG: After annotation generation, batch_target shape: {batch_target.shape if batch_target is not None else 'None'}",
     )
 
     should_store = (
@@ -282,7 +289,7 @@ def get_pat_batch_epic_clinical_notes_annotations(
             engine = config_obj.db_engine
             if not engine:
                 logging.error(
-                    "Database engine not initialized in config_obj for epic clinical notes annotations."
+                    "Database engine not initialized in config_obj for epic clinical notes annotations.",
                 )
                 return batch_target
 
@@ -311,7 +318,7 @@ def get_pat_batch_epic_clinical_notes_annotations(
                             .any()
                         ):
                             batch_to_save[col] = batch_to_save[col].apply(
-                                lambda x: str(x) if isinstance(x, (list, dict)) else x
+                                lambda x: str(x) if isinstance(x, (list, dict)) else x,
                             )
 
                 if config_obj.overwrite_stored_pat_docs:
@@ -327,11 +334,11 @@ def get_pat_batch_epic_clinical_notes_annotations(
                     index=False,
                 )
             print(
-                f"DEBUG: Successfully wrote epic clinical notes annotations to DB for patient {current_pat_client_id_code}"
+                f"DEBUG: Successfully wrote epic clinical notes annotations to DB for patient {current_pat_client_id_code}",
             )
         except Exception as e:
             logging.error(
-                f"Could not write epic clinical notes annotations to DB for patient {current_pat_client_id_code}: {e}"
+                f"Could not write epic clinical notes annotations to DB for patient {current_pat_client_id_code}: {e}",
             )
     else:
         print("DEBUG: Skipping database storage (should_store=False or empty batch)")

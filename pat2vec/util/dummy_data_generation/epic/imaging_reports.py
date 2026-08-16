@@ -164,11 +164,13 @@ def _select_modality(clinical_indication=None, patient_age="adults"):
 
     Returns:
         A selected imaging modality string.
+
     """
     if clinical_indication and patient_age in CLINICAL_INDICATIONS_BY_AGE:
         for modality, _ in REALISTIC_MODALITY_DIST:
             if clinical_indication in CLINICAL_INDICATIONS_BY_AGE[patient_age].get(
-                modality, []
+                modality,
+                [],
             ):
                 return modality
 
@@ -184,6 +186,7 @@ def _select_body_region(modality):
 
     Returns:
         A body region string appropriate for the modality.
+
     """
     if modality in BODY_REGIONS:
         return random.choice(BODY_REGIONS[modality])
@@ -199,6 +202,7 @@ def _generate_clinical_indication(modality, patient_age="adults"):
 
     Returns:
         A clinical indication string.
+
     """
     if modality in CLINICAL_INDICATIONS:
         return random.choice(CLINICAL_INDICATIONS[modality])
@@ -215,8 +219,8 @@ def _generate_report_content(modality, body_region, clinical_indication):
 
     Returns:
         A realistic imaging report text.
-    """
 
+    """
     if modality == "X-Ray":
         impression_templates = [
             f"Radiographic evaluation of {body_region.lower()} demonstrates",
@@ -309,6 +313,7 @@ def _determine_study_status(modality, clinical_indication):
 
     Returns:
         A study status string ("Final" or "Preliminary").
+
     """
     if not clinical_indication:
         return random.choices(["Final", "Preliminary"], weights=[0.85, 0.15])[0]
@@ -342,6 +347,7 @@ def _generate_report_name(modality, body_region):
 
     Returns:
         A clinically relevant report name string.
+
     """
     prefix_map = {
         "X-Ray": ["Radiograph", "Plain Film", "CR"],
@@ -398,13 +404,15 @@ def generate_epic_imaging_reports_data(
 
     Returns:
         A pandas DataFrame with generated dummy imaging report data.
+
     """
     df_holder_list = []
     for client_id_code in entered_list:
         rows_data = []
         for _ in range(num_rows):
             patient_age_group = random.choices(
-                ["children", "adults", "elderly"], weights=[0.15, 0.70, 0.15]
+                ["children", "adults", "elderly"],
+                weights=[0.15, 0.70, 0.15],
             )[0]
 
             modality = np.random.choice(
@@ -415,11 +423,14 @@ def generate_epic_imaging_reports_data(
             body_region = _select_body_region(modality)
 
             clinical_indication = _generate_clinical_indication(
-                modality, patient_age_group
+                modality,
+                patient_age_group,
             )
 
             report_content = _generate_report_content(
-                modality, body_region, clinical_indication
+                modality,
+                body_region,
+                clinical_indication,
             )
 
             study_status = _determine_study_status(modality, clinical_indication)

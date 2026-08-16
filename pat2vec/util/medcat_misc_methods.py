@@ -15,8 +15,7 @@ logger = logging.getLogger(__name__)
 
 
 def medcat_trainer_export_to_df(file_path: str) -> pd.DataFrame:
-    """
-    Converts a MedCATTrainer export JSON file to a pandas DataFrame.
+    """Converts a MedCATTrainer export JSON file to a pandas DataFrame.
 
     Args:
         file_path: Path to the JSON file containing MedCATTrainer export data.
@@ -24,9 +23,10 @@ def medcat_trainer_export_to_df(file_path: str) -> pd.DataFrame:
     Returns:
         A DataFrame containing the extracted data, with each row representing
         a single annotation.
+
     """
     # Load the JSON data
-    with open(file_path, "r") as f:
+    with open(file_path) as f:
         data = json.load(f)
 
     # Initialize lists to store extracted data
@@ -110,8 +110,7 @@ def extract_labels_from_medcat_annotation_export(
     window: int = 300,
     output_file: str | None = None,
 ) -> pd.DataFrame:
-    """
-    Extracts and validates labels from a MedCAT annotation export.
+    """Extracts and validates labels from a MedCAT annotation export.
 
     This function compares annotations from a MedCAT trainer export (`df`)
     with a set of human-labeled data (`human_labels`). It matches them based
@@ -127,8 +126,8 @@ def extract_labels_from_medcat_annotation_export(
 
     Returns:
         The processed `human_labels` DataFrame with the 'extracted_label' column.
-    """
 
+    """
     human_labels["extracted_label"] = np.nan
 
     for j in tqdm(range(len(df))):
@@ -168,8 +167,7 @@ def extract_labels_from_medcat_annotation_export(
 
 
 def recreate_json(df: pd.DataFrame, output_file: str | None = None) -> str:
-    """
-    Converts an exported MedCAT trainer DataFrame back to a training JSON.
+    """Converts an exported MedCAT trainer DataFrame back to a training JSON.
 
     This function takes a DataFrame (as produced by `medcat_trainer_export_to_df`)
     and reconstructs the original JSON structure required for training a
@@ -181,12 +179,13 @@ def recreate_json(df: pd.DataFrame, output_file: str | None = None) -> str:
 
     Returns:
         A JSON string representing the MedCAT training data.
+
     """
     projects = []
 
     # Group by project and document
     grouped = df.groupby(
-        ["project_name", "project_id", "document_id", "document_name", "text"]
+        ["project_name", "project_id", "document_id", "document_name", "text"],
     )
 
     for (
@@ -218,7 +217,7 @@ def recreate_json(df: pd.DataFrame, output_file: str | None = None) -> str:
                 "manually_created": annotation_data["manually_created"],
                 "meta_anns": {
                     "Subject/Experiencer": {
-                        "value": annotation_data["subject_experiencer"]
+                        "value": annotation_data["subject_experiencer"],
                     },
                     "Presence": {"value": annotation_data["presence"]},
                     "Time": {"value": annotation_data["time"]},
@@ -236,7 +235,7 @@ def recreate_json(df: pd.DataFrame, output_file: str | None = None) -> str:
                     "text": text,
                     "annotations": documents,
                     "relations": [],
-                }
+                },
             ],
         }
         projects.append(project)
@@ -268,8 +267,7 @@ def manually_label_annotation_df(
     verbose: bool = False,
     filter_codes_list: list[list[str]] = [],
 ) -> None:
-    """
-    Interactively labels an annotation DataFrame.
+    """Interactively labels an annotation DataFrame.
 
     This function loops over an annotation DataFrame, displays annotations for
     unique client ID codes, and prompts the user for a label (1 for correct,
@@ -285,6 +283,7 @@ def manually_label_annotation_df(
         verbose: If True, prints verbose output.
         filter_codes_list: A list of CUI code lists. A client is considered
             "done" when they have a correct annotation for each list of codes.
+
     """
     counter = 0
     if os.path.exists(file_path):
@@ -322,13 +321,13 @@ def manually_label_annotation_df(
                             (df["client_idcode"] == row["client_idcode"])
                             & (df["human_label"] != 1)
                             & (df["cui"].isin(filter_codes))
-                        ]
+                        ],
                     ),
                     len(
                         df[
                             (df["client_idcode"] == row["client_idcode"])
                             & (df["cui"].isin(filter_codes))
-                        ]
+                        ],
                     ),
                 )
                 for filter_codes in filter_codes_list
@@ -339,10 +338,12 @@ def manually_label_annotation_df(
             text_sample = row["text_sample"]
             source_value = row["source_value"]
             highlighted_text = text_sample.replace(
-                source_value, f"\033[1m{source_value}\033[0m"
+                source_value,
+                f"\033[1m{source_value}\033[0m",
             )  # Bold highlight
             highlighted_text = text_sample.replace(
-                source_value, f"\033[4;1m{source_value}\033[0m"
+                source_value,
+                f"\033[4;1m{source_value}\033[0m",
             )  # Underline and bold highlight
 
             # Wrap the text to fit within standard scroll window width
@@ -351,7 +352,7 @@ def manually_label_annotation_df(
 
             clear_output(wait=True)  # Clear Jupyter notebook display
             label = input(
-                f"Labelling {row['client_idcode']} Press enter for 1 or enter 0 for 0.: "
+                f"Labelling {row['client_idcode']} Press enter for 1 or enter 0 for 0.: ",
             )
             if label == "":
                 label = 1
@@ -368,14 +369,14 @@ def manually_label_annotation_df(
             counter += 1
 
             logger.info(
-                f"Remaining unlabeled rows: {df[df['human_label'].isna()].shape[0]}, Labeled rows: {df[df['human_label'].notna()].shape[0]}"
+                f"Remaining unlabeled rows: {df[df['human_label'].isna()].shape[0]}, Labeled rows: {df[df['human_label'].notna()].shape[0]}",
             )
             logger.info(
-                f"Remaining unlabeled clients: {df[df['human_label'].isna()]['client_idcode'].nunique()}, Labeled clients: {df[df['human_label'].notna()]['client_idcode'].nunique()}"
+                f"Remaining unlabeled clients: {df[df['human_label'].isna()]['client_idcode'].nunique()}, Labeled clients: {df[df['human_label'].notna()]['client_idcode'].nunique()}",
             )
             for i, filter_codes in enumerate(filter_codes_list):
                 logger.info(
-                    f"Remaining labels for filter {i + 1} as a total of codes: {remaining_labels_info[i][0]}/{remaining_labels_info[i][1]}"
+                    f"Remaining labels for filter {i + 1} as a total of codes: {remaining_labels_info[i][0]}/{remaining_labels_info[i][1]}",
                 )
 
     if verbose:
@@ -405,9 +406,9 @@ def parse_medcat_trainer_project_json(json_path: str) -> pd.DataFrame:
         - Handles nested JSON structures and safely converts JSON strings.
         - Explodes 'cuis' and 'documents' columns to create detailed rows.
         - Extracts meta-annotation details into separate columns.
-    """
 
-    with open(json_path, "r", encoding="utf-8") as f:
+    """
+    with open(json_path, encoding="utf-8") as f:
         data = json.load(f)
 
     # Fix 1: Ensure data is parsed if it's a string or a list of JSON strings
@@ -470,7 +471,7 @@ def parse_medcat_trainer_project_json(json_path: str) -> pd.DataFrame:
         return result
 
     doc_data = pd.DataFrame(
-        doc_df.apply(extract_document_data, axis=1).tolist()
+        doc_df.apply(extract_document_data, axis=1).tolist(),
     ).dropna()
 
     # Step 6: Explode annotations
@@ -492,7 +493,7 @@ def parse_medcat_trainer_project_json(json_path: str) -> pd.DataFrame:
                             "ann_start": ann.get("start"),
                             "ann_end": ann.get("end"),
                             "ann_validated": ann.get("validated"),
-                        }
+                        },
                     )
 
                     if "meta_anns" in ann:
@@ -503,9 +504,9 @@ def parse_medcat_trainer_project_json(json_path: str) -> pd.DataFrame:
                                     f"meta_{clean_name}_value": meta_data.get("value"),
                                     f"meta_{clean_name}_acc": meta_data.get("acc"),
                                     f"meta_{clean_name}_validated": meta_data.get(
-                                        "validated"
+                                        "validated",
                                     ),
-                                }
+                                },
                             )
 
                     final_data.append(ann_record)
@@ -518,7 +519,7 @@ def parse_medcat_trainer_project_json(json_path: str) -> pd.DataFrame:
             {
                 "project_id": df_projects.iloc[0]["id"],
                 "project_name": df_projects.iloc[0]["name"],
-            }
+            },
         )
 
     # Final DataFrame
@@ -531,10 +532,16 @@ def parse_medcat_trainer_project_json(json_path: str) -> pd.DataFrame:
 
 
 def create_ner_results_dataframe(
-    fps, fns, tps, cui_prec, cui_rec, cui_f1, cui_counts, cat=None
+    fps,
+    fns,
+    tps,
+    cui_prec,
+    cui_rec,
+    cui_f1,
+    cui_counts,
+    cat=None,
 ):
-    """
-    Creates a Pandas DataFrame from NER evaluation dictionaries.
+    """Creates a Pandas DataFrame from NER evaluation dictionaries.
 
     Args:
         fps (dict): Dictionary of false positives with CUI as keys.
@@ -549,6 +556,7 @@ def create_ner_results_dataframe(
     Returns:
         pandas.DataFrame: DataFrame with CUI as index and columns for
                           fps, fns, tps, cui_prec, cui_rec, cui_f1, cui_counts and optionally a cat medcat object.
+
     """
     all_cuis = (
         set(fps.keys())
@@ -580,8 +588,7 @@ def create_ner_results_dataframe(
 
 
 def plot_ner_results(results_df: pd.DataFrame) -> None:
-    """
-    Generates plots to visualize NER (Named Entity Recognition) evaluation results.
+    """Generates plots to visualize NER (Named Entity Recognition) evaluation results.
 
     This function creates a series of plots to help analyze the performance
     of an NER model, including F1-scores, precision-recall, error analysis,
@@ -591,6 +598,7 @@ def plot_ner_results(results_df: pd.DataFrame) -> None:
         results_df: A DataFrame containing NER evaluation metrics, which must
             include 'cui_name', 'cui_f1', 'cui_prec', 'cui_rec', 'fps', 'fns',
             'tps', and 'cui_counts'.
+
     """
     if "cui_name" not in results_df.columns:
         logger.error("Error: 'cui_name' column is required in the DataFrame.")
@@ -620,7 +628,9 @@ def plot_ner_results(results_df: pd.DataFrame) -> None:
 
     # 3. Bar Plot: Error Analysis (fps, fns, tps)
     results_df_melted = results_df[["cui_name", "fps", "fns", "tps"]].melt(
-        id_vars="cui_name", var_name="error_type", value_name="count"
+        id_vars="cui_name",
+        var_name="error_type",
+        value_name="count",
     )
     plt.figure(figsize=(10, 6))
     sns.barplot(x="cui_name", y="count", hue="error_type", data=results_df_melted)

@@ -5,7 +5,8 @@ import pandas as pd
 
 
 def filter_annot_dataframe(
-    dataframe: pd.DataFrame, filter_args: dict[str, Any]
+    dataframe: pd.DataFrame,
+    filter_args: dict[str, Any],
 ) -> pd.DataFrame:
     """Filters an annotation DataFrame based on specified criteria.
 
@@ -25,6 +26,7 @@ def filter_annot_dataframe(
 
     Returns:
         The filtered DataFrame.
+
     """
     # Initialize a boolean mask with True values for all rows
     mask = pd.Series(True, index=dataframe.index)

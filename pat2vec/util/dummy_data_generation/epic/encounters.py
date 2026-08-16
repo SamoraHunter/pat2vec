@@ -87,12 +87,13 @@ def calculate_length_of_stay(
 
     Returns:
         Length of stay in days.
+
     """
     base_los = 0
 
     if admission_type == "Outpatient":
         return 0
-    elif admission_type == "Inpatient":
+    if admission_type == "Inpatient":
         department_base = {
             "Internal Medicine": 4,
             "Surgery": 5,
@@ -185,7 +186,8 @@ def generate_epic_encounters_data(
 
         for admission_date in admission_dates:
             admission_type = np.random.choice(
-                REALISTIC_ADMISSION_TYPES, p=ADMISSION_TYPE_WEIGHTS
+                REALISTIC_ADMISSION_TYPES,
+                p=ADMISSION_TYPE_WEIGHTS,
             )
 
             department = generate_realistic_department()
@@ -196,7 +198,7 @@ def generate_epic_encounters_data(
 
             if admission_type == "Outpatient":
                 discharge_date = admission_date + timedelta(
-                    hours=np.random.randint(2, 8)
+                    hours=np.random.randint(2, 8),
                 )
             else:
                 discharge_date = admission_date + timedelta(days=los)

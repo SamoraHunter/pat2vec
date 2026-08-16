@@ -14,6 +14,7 @@ def stringlist2searchlist(string_list: str, output_name: str) -> None:
     Args:
         string_list: A string where items are separated by newlines.
         output_name: The base name for the output text file ('.txt' will be appended).
+
     """
     list_string = string_list.replace("\n", '" OR "')
     textfile = open(output_name + ".txt", "w")
@@ -31,6 +32,7 @@ def pylist2searchlist(list_name: list[str], output_name: str) -> None:
     Args:
         list_name: A list of strings to be joined.
         output_name: The base name for the output text file ('.txt' will be appended).
+
     """
     test_str = '" OR "'.join(list_name)
     textfile = open(output_name + ".txt", "w")
@@ -48,6 +50,7 @@ def stringlist2pylist(string_list: str, var_name: str) -> None:
     Args:
         string_list: A string where items are separated by newlines.
         var_name: The name of the global variable to which the resulting list will be assigned.
+
     """
     globals()[var_name] = string_list.replace("\n", ",").split(",")
     print("List generated!")
@@ -62,6 +65,7 @@ def date_cleaner(df: pd.DataFrame, cols: list[str], date_format: str) -> None:
         df: The DataFrame to modify.
         cols: A list of column names to format.
         date_format: The target string format for the dates (e.g., '%Y-%m-%d').
+
     """
     for col in cols:
         df[col] = pd.to_datetime(df[col], utc=True).dt.strftime(date_format)
@@ -84,6 +88,7 @@ def bulk_str_findall(
         target_colname_regex_pairs: A dictionary mapping new column names to regex patterns.
         source_colname: The name of the column to search within.
         df_name: The DataFrame to modify.
+
     """
     for key, value in target_colname_regex_pairs.items():
         df_name[key] = (
@@ -100,6 +105,7 @@ def without_keys(d: dict[Any, Any], keys: Iterable[Any]) -> dict[Any, Any]:
 
     Returns:
         A new dictionary without the specified keys.
+
     """
     return {k: v for k, v in d.items() if k not in keys}
 
@@ -122,6 +128,7 @@ def bulk_str_extract(
         source_colname: The name of the column to search within.
         df_name: The DataFrame to modify.
         expand: The `expand` parameter for `pd.Series.str.extract`.
+
     """
     for key, value in target_colname_regex_pairs.items():
         df_name[key] = (
@@ -148,6 +155,7 @@ def bulk_str_extract_round_robin(
         df_name: The DataFrame to modify.
         source_colname: The name of the column to search within.
         expand: The `expand` parameter for `pd.Series.str.extract`.
+
     """
     for key, value in target_dict.items():
         remaining_dict = without_keys(target_dict, key)

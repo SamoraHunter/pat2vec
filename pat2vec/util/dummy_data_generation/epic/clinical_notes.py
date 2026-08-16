@@ -429,20 +429,21 @@ def generate_document_name(specialty: str, note_type: str, patient_age: int) -> 
 
     if note_type == "Progress Note":
         return f"{random.choice(prefixes)} {specialty} Progress Note"
-    elif note_type == "Consultation Note":
+    if note_type == "Consultation Note":
         return f"Consultation - {specialty}"
-    elif note_type == "Discharge Summary":
+    if note_type == "Discharge Summary":
         return f"{specialty} Discharge Summary"
-    elif note_type == "Emergency Note":
+    if note_type == "Emergency Note":
         return f"Emergency Department Evaluation - {specialty}"
-    elif note_type == "Admission Note":
+    if note_type == "Admission Note":
         return f"{random.choice(prefixes)} {specialty} Admission Note"
 
     return f"{note_type} - {specialty}"
 
 
 def get_patient_timeline_dummy(
-    client_id_code: str, patient_age: int | None = None
+    client_id_code: str,
+    patient_age: int | None = None,
 ) -> str:
     """Gets a realistic dummy patient timeline with clinical note content."""
     specialty = select_specialty_by_distribution()
@@ -495,8 +496,10 @@ def generate_epic_clinical_notes_data(
 
     Returns:
         A pandas DataFrame with generated dummy clinical note data.
+
     Raises:
         None
+
     """
     df_holder_list = []
 
@@ -505,7 +508,12 @@ def generate_epic_clinical_notes_data(
         patient_age = random.randint(18, 85)
 
     global_start_dt = datetime(
-        global_start_year, global_start_month, global_start_day, 0, 0, 0
+        global_start_year,
+        global_start_month,
+        global_start_day,
+        0,
+        0,
+        0,
     )
     global_end_dt = datetime(
         global_end_year,
@@ -527,11 +535,16 @@ def generate_epic_clinical_notes_data(
 
             content = get_note_template(specialty, note_type, patient_per_note_age)
             document_name = generate_document_name(
-                specialty, note_type, patient_per_note_age
+                specialty,
+                note_type,
+                patient_per_note_age,
             )
 
             doc_date = determine_document_date(
-                None, note_type, global_start_dt, global_end_dt
+                None,
+                note_type,
+                global_start_dt,
+                global_end_dt,
             )
 
             note_data.append(
@@ -542,7 +555,7 @@ def generate_epic_clinical_notes_data(
                     "document_Name": document_name,
                     "document_EncounterEpicCsn": faker.random_number(digits=10),
                     "id": faker.uuid4(),
-                }
+                },
             )
 
         df_holder_list.append(pd.DataFrame(note_data))
@@ -593,6 +606,7 @@ def generate_epic_medical_history_data(
     ],
 ) -> pd.DataFrame:
     """Generates dummy data for the 'epic_medical_history' index.
+
     Args:
         num_rows: Number of rows to generate per client.
         entered_list: List of client IDs to generate data for.
@@ -601,10 +615,13 @@ def generate_epic_medical_history_data(
         global_end_year: End year for the random date range.
         global_end_month: End month for the random date range.
     fields_list: List of columns to include in the DataFrame.
+
     Returns:
         A pandas DataFrame with generated dummy medical history data.
+
     Raises:
         None
+
     """
     df_holder_list = []
     for client_id_code in entered_list:
@@ -676,6 +693,7 @@ def generate_epic_orders_data(
     ],
 ) -> pd.DataFrame:
     """Generates dummy data for the 'epic_orders' index.
+
     Args:
         num_rows: Number of rows to generate per client.
         entered_list: List of client IDs to generate data for.
@@ -684,10 +702,13 @@ def generate_epic_orders_data(
         global_end_year: End year for the random date range.
         global_end_month: End month for the random date range.
     fields_list: List of columns to include in the DataFrame.
+
     Returns:
         A pandas DataFrame with generated dummy orders data.
+
     Raises:
         None
+
     """
     df_holder_list = []
     for client_id_code in entered_list:

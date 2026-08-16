@@ -79,6 +79,7 @@ def search_epic_encounters(
     Raises:
         ValueError: If `cohort_searcher_with_terms_and_search` is None.
         ValueError: If `patient_durable_keys` is None.
+
     """
     if (
         output_filename
@@ -87,7 +88,9 @@ def search_epic_encounters(
         and hasattr(config_obj, "proj_name")
     ):
         output_filename = os.path.join(
-            config_obj.root_path, config_obj.proj_name, output_filename
+            config_obj.root_path,
+            config_obj.proj_name,
+            output_filename,
         )
 
     start_time = config_obj.start_time
@@ -115,7 +118,12 @@ def search_epic_encounters(
 
     start_year, start_month, start_day, end_year, end_month, end_day = (
         validate_input_dates(
-            start_year, start_month, start_day, end_year, end_month, end_day
+            start_year,
+            start_month,
+            start_day,
+            end_year,
+            end_month,
+            end_day,
         )
     )
 
@@ -178,6 +186,7 @@ def get_epic_encounters(
 
     Raises:
         ValueError: If `config_obj` is None.
+
     """
     if config_obj is None:
         raise ValueError("config_obj cannot be None.")
@@ -220,7 +229,8 @@ def get_epic_encounters(
         current_pat_raw.rename(columns={id_field_name: "client_idcode"}, inplace=True)
 
     features = pd.DataFrame(
-        data=[current_pat_client_id_code], columns=["client_idcode"]
+        data=[current_pat_client_id_code],
+        columns=["client_idcode"],
     )
 
     if len(current_pat_raw) == 0:

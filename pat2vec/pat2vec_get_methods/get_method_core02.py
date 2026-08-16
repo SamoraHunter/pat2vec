@@ -73,6 +73,7 @@ def search_core_o2_observations(
 
     Raises:
         ValueError: If essential arguments are None.
+
     """
     if (
         output_filename
@@ -81,7 +82,9 @@ def search_core_o2_observations(
         and hasattr(config_obj, "proj_name")
     ):
         output_filename = os.path.join(
-            config_obj.root_path, config_obj.proj_name, output_filename
+            config_obj.root_path,
+            config_obj.proj_name,
+            output_filename,
         )
 
     if output_filename and os.path.exists(output_filename) and not overwrite:
@@ -106,14 +109,19 @@ def search_core_o2_observations(
 
     start_year, start_month, start_day, end_year, end_month, end_day = (
         validate_input_dates(
-            start_year, start_month, start_day, end_year, end_month, end_day
+            start_year,
+            start_month,
+            start_day,
+            end_year,
+            end_month,
+            end_day,
         )
     )
 
     # Base search string for CORE_SpO2 observations
     search_string = (
         f'obscatalogmasteritem_displayname:("{search_term}") AND '
-        + f"{observations_time_field}:[{start_year}-{start_month}-{start_day} TO {end_year}-{end_month}-{end_day}]"
+        f"{observations_time_field}:[{start_year}-{start_month}-{start_day} TO {end_year}-{end_month}-{end_day}]"
     )
 
     if additional_custom_search_string:
@@ -152,6 +160,7 @@ def clean_observation_value(value) -> str | None:
     Returns:
         Optional[str]: The cleaned value suitable for use as a column name,
             or None if the input is NaN.
+
     """
     if pd.isna(value):
         return None
@@ -169,6 +178,7 @@ def calculate_core_o2_features(features_data, search_term="CORE_SpO2") -> dict:
 
     Returns:
         Dict[str, int]: A dictionary of calculated binary features.
+
     """
     features = {}
 
@@ -215,15 +225,16 @@ def get_core_02(
     Raises:
         ValueError: If `config_obj` is None, or if
             `cohort_searcher_with_terms_and_search` is None when not in batch mode.
+
     """
     if config_obj is None:
         raise ValueError(
-            "config_obj cannot be None. Please provide a valid configuration."
+            "config_obj cannot be None. Please provide a valid configuration.",
         )
 
     if not config_obj.batch_mode and cohort_searcher_with_terms_and_search is None:
         raise ValueError(
-            "cohort_searcher_with_terms_and_search cannot be None when not in batch mode."
+            "cohort_searcher_with_terms_and_search cannot be None when not in batch mode.",
         )
 
     batch_mode = config_obj.batch_mode
@@ -266,7 +277,8 @@ def get_core_02(
 
     # Initialize features DataFrame
     features = pd.DataFrame(
-        data=[current_pat_client_id_code], columns=["client_idcode"]
+        data=[current_pat_client_id_code],
+        columns=["client_idcode"],
     )
 
     if len(current_pat_raw) == 0:

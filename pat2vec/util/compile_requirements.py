@@ -15,6 +15,7 @@ def run_pip_compile() -> bool:
 
     Returns:
         True if the command is successful, False otherwise.
+
     """
     try:
         subprocess.run(
@@ -35,6 +36,7 @@ def append_to_file(filename: str, requirement: str) -> None:
     Args:
         filename: The path to the file.
         requirement: The requirement string to append.
+
     """
     with open(filename, "a") as f:
         f.write(requirement + "\n")
@@ -76,7 +78,7 @@ def process_requirements() -> None:
             failed_requirements.append(requirement)
 
             # Revert by removing the last requirement (remove the last line from requirements.in)
-            with open("requirements.in", "r") as f:
+            with open("requirements.in") as f:
                 lines = f.readlines()
             with open("requirements.in", "w") as f:
                 f.writelines(lines[:-1])
@@ -89,7 +91,7 @@ def process_requirements() -> None:
     logger.info("\nProcessing completed.")
     if failed_requirements:
         logger.warning(
-            f"Failed requirements saved in failed_requirements.txt: {failed_requirements}"
+            f"Failed requirements saved in failed_requirements.txt: {failed_requirements}",
         )
     else:
         logger.info("All requirements were successfully added and compiled.")

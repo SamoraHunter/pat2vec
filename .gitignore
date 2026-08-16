@@ -252,3 +252,4 @@ doc_status.json
 docstring_coverage_report.json
 .secrets
 snomed_methods/snomed_icd10_map/data/tls_Icd10cmHumanReadableMap_US1000124_20230901.tsv
+.ai/*

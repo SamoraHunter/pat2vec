@@ -121,6 +121,7 @@ def _select_appointment_type(
 
     Returns:
         Appointment type string
+
     """
     # Base probability distribution
     weights = dict(APPOINTMENT_DISTRIBUTION.copy())
@@ -157,7 +158,9 @@ def _select_appointment_type(
 
     # Select based on weighted probabilities
     return random.choices(
-        list(normalized.keys()), weights=list(normalized.values()), k=1
+        list(normalized.keys()),
+        weights=list(normalized.values()),
+        k=1,
     )[0]
 
 
@@ -175,6 +178,7 @@ def _generate_appointment_datetime(
 
     Returns:
         Random datetime within the offset range
+
     """
     if base_date is None:
         return create_random_date_from_globals(2020, 1, 2023, 12, 1, 31)
@@ -214,10 +218,11 @@ def _get_clinical_correlation(appointment_type: str) -> tuple[list[str], str]:
 
     Returns:
         Tuple of (list of possible clinic descriptions, consultant code)
+
     """
     clinics = CLINIC_CODES_BY_TYPE.get(appointment_type, ["CL000"])
     specialty = random.choice(
-        SPECIALTIES_BY_TYPE.get(appointment_type, ["General Practice"])
+        SPECIALTIES_BY_TYPE.get(appointment_type, ["General Practice"]),
     )
     return clinics, specialty
 
@@ -229,13 +234,16 @@ def _generate_realistic_appointment_data(
 ) -> dict[str, list]:
     """Generate realistic appointment data for a single patient.
 
-    Parameters:
+    Parameters
+    ----------
         num_rows: Number of appointments to generate
         patient_dob: Patient date of birth for age calculation
         base_date: Base date for relative appointment generation
 
-    Returns:
+    Returns
+    -------
         Dictionary with appointment fields
+
     """
     if patient_dob is None:
         # Generate random DOB (adults more common in hospital settings)
@@ -304,7 +312,7 @@ def _generate_realistic_appointment_data(
 
         data["Popular"].append(faker.random_number(digits=3))
         data["AppointmentType"].append(
-            random.choice(APPOINTMENT_TYPES.get(appointment_type, ["Type A"]))
+            random.choice(APPOINTMENT_TYPES.get(appointment_type, ["Type A"])),
         )
         data["AttendanceReference"].append(faker.random_number(digits=6))
         data["ClinicCode"].append(clinic_code)
@@ -322,23 +330,25 @@ def _generate_realistic_appointment_data(
 
         data["AppointmentDateTime"].append(appt_date_str)
         data["Attended"].append(
-            random.choices([0, 1], weights=[0.2, 0.8])[0]
-            if appointment_type != "Emergency Department"
-            else random.choices([0, 1], weights=[0.15, 0.85])[0]
+            (
+                random.choices([0, 1], weights=[0.2, 0.8])[0]
+                if appointment_type != "Emergency Department"
+                else random.choices([0, 1], weights=[0.15, 0.85])[0]
+            ),
         )
         data["CancDesc"].append(faker.sentence() if random.random() < 0.1 else "")
         data["CancRefNo"].append(
-            faker.random_number(digits=8) if random.random() < 0.1 else ""
+            faker.random_number(digits=8) if random.random() < 0.1 else "",
         )
         data["ConsultantCode"].append(consultant_code)
         data["DateCreated"].append(
-            faker.date_time_this_year().strftime("%Y-%m-%dT%H:%M:%S")
+            faker.date_time_this_year().strftime("%Y-%m-%dT%H:%M:%S"),
         )
         data["Ethnicity"].append(
             random.choices(
                 ["White British", "Asian", "Black", "Mixed", "Chinese"],
                 weights=[0.45, 0.25, 0.15, 0.1, 0.05],
-            )[0]
+            )[0],
         )
         data["Gender"].append(random.choice(["Male", "Female"]))
         data["NHSNoStatusCode"].append(str(faker.random_number(digits=2)))
@@ -422,6 +432,7 @@ def generate_appointments_data(
 
     Returns:
         pandas DataFrame with appointment data
+
     """
     df_holder_list = []
 
@@ -454,7 +465,7 @@ def generate_appointments_data(
         df = pd.concat(df_holder_list, ignore_index=True)
 
         unique_fields = list(
-            dict.fromkeys(fields_list + ["HospitalID", "_id", "_index", "_score"])
+            dict.fromkeys(fields_list + ["HospitalID", "_id", "_index", "_score"]),
         )
 
         df = df[unique_fields]

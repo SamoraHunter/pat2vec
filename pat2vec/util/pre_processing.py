@@ -90,15 +90,17 @@ def get_treatment_docs_by_iterative_multi_term_cohort_searcher_no_terms_fuzzy(
 
     Returns:
         A DataFrame containing the search results.
+
     """
     if verbose >= 1:
         logger.info(
-            f"pat2vec_obj.treatment_doc_filename: {pat2vec_obj.treatment_doc_filename}"
+            f"pat2vec_obj.treatment_doc_filename: {pat2vec_obj.treatment_doc_filename}",
         )
 
     if pat2vec_obj.config_obj and hasattr(pat2vec_obj.config_obj, "root_path"):
         output_path = os.path.join(
-            pat2vec_obj.config_obj.root_path, pat2vec_obj.treatment_doc_filename
+            pat2vec_obj.config_obj.root_path,
+            pat2vec_obj.treatment_doc_filename,
         )
     else:
         output_path = pat2vec_obj.treatment_doc_filename
@@ -142,10 +144,10 @@ def get_treatment_docs_by_iterative_multi_term_cohort_searcher_no_terms_fuzzy(
         # Printing results
         logger.info(f"Lookback: {pat2vec_obj.config_obj.lookback}")
         logger.info(
-            f"Global Start Date: {global_start_day}/{global_start_month}/{global_start_year}"
+            f"Global Start Date: {global_start_day}/{global_start_month}/{global_start_year}",
         )
         logger.info(
-            f"Global End Date: {global_end_day}/{global_end_month}/{global_end_year}"
+            f"Global End Date: {global_end_day}/{global_end_month}/{global_end_year}",
         )
 
     if verbose >= 1:
@@ -154,7 +156,7 @@ def get_treatment_docs_by_iterative_multi_term_cohort_searcher_no_terms_fuzzy(
                 logger.info("Running in testing mode (elastic), doing real search.")
             else:
                 logger.info(
-                    "Running in testing mode, searchers will provide dummy data."
+                    "Running in testing mode, searchers will provide dummy data.",
                 )
         else:
             logger.info("Running in live mode, doing real search.")
@@ -162,7 +164,9 @@ def get_treatment_docs_by_iterative_multi_term_cohort_searcher_no_terms_fuzzy(
 
     is_testing_mode = pat2vec_obj.config_obj.testing
     is_testing_non_elastic = is_testing_mode and not getattr(
-        pat2vec_obj.config_obj, "testing_elastic", False
+        pat2vec_obj.config_obj,
+        "testing_elastic",
+        False,
     )
 
     # Define search configurations for different data sources
@@ -252,7 +256,7 @@ def get_treatment_docs_by_iterative_multi_term_cohort_searcher_no_terms_fuzzy(
             logger.info(
                 f"{config['source_name']}: {global_start_day}/{global_start_month}/{global_start_year} to "
                 f"{global_end_day}/{global_end_month}/{global_end_year}, "
-                f"lookback: {pat2vec_obj.config_obj.lookback}"
+                f"lookback: {pat2vec_obj.config_obj.lookback}",
             )
 
             if is_testing_non_elastic:
@@ -263,7 +267,8 @@ def get_treatment_docs_by_iterative_multi_term_cohort_searcher_no_terms_fuzzy(
                     "textual_obs": "basic_observations",
                 }
                 dummy_index = index_map.get(
-                    config["source_name"], config["source_name"]
+                    config["source_name"],
+                    config["source_name"],
                 )
                 search_string = f"updatetime:[{global_start_year}-{global_start_month}-{global_start_day} TO {global_end_year}-{global_end_month}-{global_end_day}]"
                 docs = cohort_searcher_with_terms_and_search_dummy(
@@ -298,7 +303,9 @@ def get_treatment_docs_by_iterative_multi_term_cohort_searcher_no_terms_fuzzy(
                     "slop": slop,
                     "testing": pat2vec_obj.config_obj.testing,
                     "testing_elastic": getattr(
-                        pat2vec_obj.config_obj, "testing_elastic", False
+                        pat2vec_obj.config_obj,
+                        "testing_elastic",
+                        False,
                     ),
                 }
                 # mct and textual_obs have debug=True as default (tests expect False)
@@ -342,7 +349,8 @@ def get_treatment_docs_by_iterative_multi_term_cohort_searcher_no_terms_fuzzy(
                     search_results = docs
                 else:
                     search_results = pd.concat(
-                        [search_results, docs], ignore_index=True
+                        [search_results, docs],
+                        ignore_index=True,
                     )
                 search_results.drop_duplicates(inplace=True)
 
@@ -372,6 +380,7 @@ def draw_document_samples(df: pd.DataFrame, n: int) -> pd.DataFrame:
 
     Returns:
         A new DataFrame containing the sampled entries.
+
     """
     sampled_df = pd.DataFrame(columns=df.columns)
     for term in df["search_term"].unique():
@@ -382,7 +391,10 @@ def draw_document_samples(df: pd.DataFrame, n: int) -> pd.DataFrame:
         else:
             weights = pd.Series(np.ones(term_size) / term_size)
             sampled_indices = np.random.choice(
-                term_size, size=n, replace=False, p=weights
+                term_size,
+                size=n,
+                replace=False,
+                p=weights,
             )
             sampled_df = pd.concat([sampled_df, term_df.iloc[sampled_indices]])
     return sampled_df
@@ -400,6 +412,7 @@ def demo_to_latest(demo_df: pd.DataFrame) -> pd.DataFrame:
 
     Returns:
         A DataFrame containing only the latest record for each patient.
+
     """
     demo_df["updatetime"] = pd.to_datetime(demo_df["updatetime"], utc=True)
     latest_demo_df = demo_df.loc[
@@ -420,6 +433,7 @@ def calculate_age_append(df: pd.DataFrame) -> pd.DataFrame:
 
     Returns:
         The input DataFrame with an additional 'age' column.
+
     """
     # Drop rows with missing 'client_dob' values
     df.dropna(subset=["client_dob"], inplace=True)
@@ -471,6 +485,7 @@ def search_cohort(
 
     Raises:
         ValueError: If `pat2vec_obj` is not provided.
+
     """
     search_string = f"updatetime:[{start_year}-{start_month}-{start_day} TO {end_year}-{end_month}-{end_day}]"
 
@@ -511,8 +526,7 @@ def search_cohort(
 
 
 def get_all_patient_list(config_obj: Any) -> list[str]:
-    """
-    Retrieves a list of all patient IDs based on the provided configuration.
+    """Retrieves a list of all patient IDs based on the provided configuration.
 
     This function attempts to get the patient list in the following order:
     1. Directly from `config_obj.all_patient_list` if it's set.
@@ -526,6 +540,7 @@ def get_all_patient_list(config_obj: Any) -> list[str]:
 
     Returns:
         A list of patient IDs (strings).
+
     """
     if config_obj.all_patient_list:
         logger.info("Using patient list from config_obj.all_patient_list.")
@@ -533,30 +548,29 @@ def get_all_patient_list(config_obj: Any) -> list[str]:
 
     if config_obj.all_patient_list_path:
         logger.info(
-            f"Loading patient list from CSV: {config_obj.all_patient_list_path}"
+            f"Loading patient list from CSV: {config_obj.all_patient_list_path}",
         )
         try:
             df = pd.read_csv(config_obj.all_patient_list_path)
             if config_obj.all_patient_list_column in df.columns:
                 return df[config_obj.all_patient_list_column].astype(str).tolist()
-            else:
-                logger.warning(
-                    f"Column '{config_obj.all_patient_list_column}' not found in {config_obj.all_patient_list_path}. Falling back to directory scan."
-                )
+            logger.warning(
+                f"Column '{config_obj.all_patient_list_column}' not found in {config_obj.all_patient_list_path}. Falling back to directory scan.",
+            )
         except FileNotFoundError:
             logger.warning(
-                f"Patient list CSV not found at {config_obj.all_patient_list_path}. Falling back to directory scan."
+                f"Patient list CSV not found at {config_obj.all_patient_list_path}. Falling back to directory scan.",
             )
         except Exception as e:
             logger.error(
-                f"Error reading patient list CSV at {config_obj.all_patient_list_path}: {e}. Falling back to directory scan."
+                f"Error reading patient list CSV at {config_obj.all_patient_list_path}: {e}. Falling back to directory scan.",
             )
 
     if config_obj.pre_document_batch_path and os.path.isdir(
-        config_obj.pre_document_batch_path
+        config_obj.pre_document_batch_path,
     ):
         logger.info(
-            f"Scanning directory for patient files: {config_obj.pre_document_batch_path}"
+            f"Scanning directory for patient files: {config_obj.pre_document_batch_path}",
         )
         patient_ids = []
         for filename in os.listdir(config_obj.pre_document_batch_path):
@@ -565,6 +579,6 @@ def get_all_patient_list(config_obj: Any) -> list[str]:
         return patient_ids
 
     logger.warning(
-        "No patient list found in config, CSV path, or batch directory. Returning empty list."
+        "No patient list found in config, CSV path, or batch directory. Returning empty list.",
     )
     return []

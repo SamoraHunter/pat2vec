@@ -37,6 +37,7 @@ def mean_impute_dataframe(
 
     Returns:
         The full DataFrame with missing numeric values imputed.
+
     """
     random.seed(seed)
 
@@ -51,22 +52,28 @@ def mean_impute_dataframe(
 
     # Split into train, test, and validation sets
     X_train_orig, X_test_orig, y_train_orig, y_test_orig = train_test_split(
-        X, y, test_size=test_size, random_state=random_state
+        X,
+        y,
+        test_size=test_size,
+        random_state=random_state,
     )
     X_train, X_val, y_train, y_val = train_test_split(
-        X_train_orig, y_train_orig, test_size=val_size, random_state=random_state
+        X_train_orig,
+        y_train_orig,
+        test_size=val_size,
+        random_state=random_state,
     )
 
     # Print shapes after split
     logger.info(
-        f"Train shape: {X_train.shape}, Validation shape: {X_val.shape}, Test shape: {X_test_orig.shape}"
+        f"Train shape: {X_train.shape}, Validation shape: {X_val.shape}, Test shape: {X_test_orig.shape}",
     )
 
     # Identify numeric and non-numeric columns
     numeric_cols = X.select_dtypes(include=[np.number]).columns
     non_numeric_cols = X.select_dtypes(exclude=[np.number]).columns
     logger.info(
-        f"Numeric columns: {len(numeric_cols)}, Non-numeric columns: {len(non_numeric_cols)}"
+        f"Numeric columns: {len(numeric_cols)}, Non-numeric columns: {len(non_numeric_cols)}",
     )
 
     # Initialize imputed DataFrames
@@ -89,7 +96,7 @@ def mean_impute_dataframe(
                 X_val_imputed[col] = 0.0
                 X_test_imputed[col] = 0.0
                 logger.info(
-                    f"Column '{col}' was entirely NaN in training set, imputed with 0."
+                    f"Column '{col}' was entirely NaN in training set, imputed with 0.",
                 )
                 continue
 
@@ -136,7 +143,8 @@ def mean_impute_dataframe(
 
 
 def save_missing_percentage(
-    df: pd.DataFrame, output_file: str = "percent_missing.pkl"
+    df: pd.DataFrame,
+    output_file: str = "percent_missing.pkl",
 ) -> dict[str, float]:
     """Calculates and saves the percentage of missing values for each column.
 
@@ -147,10 +155,11 @@ def save_missing_percentage(
     Returns:
         A dictionary where keys are column names and values are the
         percentage of missing values.
+
     """
     if df.empty:
         # If the DataFrame is empty, all columns are 100% missing
-        percent_missing = {col: 100.0 for col in df.columns}
+        percent_missing = dict.fromkeys(df.columns, 100.0)
     else:
         percent_missing = df.isnull().mean() * 100
         percent_missing = percent_missing.to_dict()
@@ -159,7 +168,7 @@ def save_missing_percentage(
         pickle.dump(percent_missing, file)
 
     logger.warning(
-        "Ensure you rename the pickle file: training_data_filename + _percent_missing.pkl"
+        "Ensure you rename the pickle file: training_data_filename + _percent_missing.pkl",
     )
 
     return percent_missing

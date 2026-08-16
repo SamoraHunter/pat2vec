@@ -18,7 +18,9 @@ from pat2vec.util.methods_annotation_regex import append_regex_term_counts
 
 
 def verify_split_data_concatenated(
-    original_df: pd.DataFrame, client_idcode_column: str, save_folder: str
+    original_df: pd.DataFrame,
+    client_idcode_column: str,
+    save_folder: str,
 ) -> None:
     """Verifies split data by concatenating and comparing with the original.
 
@@ -31,6 +33,7 @@ def verify_split_data_concatenated(
         original_df: The original DataFrame before splitting.
         client_idcode_column: The name of the column used for splitting.
         save_folder: The directory where the split CSV files are saved.
+
     """
     # Check for missing/extra files
     expected_clients = set(original_df[client_idcode_column].unique())
@@ -63,7 +66,9 @@ def verify_split_data_concatenated(
 
 
 def verify_split_data_individual(
-    original_df: pd.DataFrame, client_idcode_column: str, save_folder: str
+    original_df: pd.DataFrame,
+    client_idcode_column: str,
+    save_folder: str,
 ) -> None:
     """Verifies split data by checking each individual CSV file.
 
@@ -75,6 +80,7 @@ def verify_split_data_individual(
         original_df: The original DataFrame before splitting.
         client_idcode_column: The name of the column used for splitting.
         save_folder: The directory where the split CSV files are saved.
+
     """
     # Check for missing/extra files (same as above)
     expected_clients = set(original_df[client_idcode_column].unique())
@@ -99,7 +105,7 @@ def verify_split_data_individual(
 
         # Compare data (ignore row order by sorting)
         if not original_data.sort_values(by=original_data.columns.tolist()).equals(
-            csv_data.sort_values(by=csv_data.columns.tolist())
+            csv_data.sort_values(by=csv_data.columns.tolist()),
         ):
             raise ValueError(f"Data mismatch for client: {client}")
     logging.info("Verification successful: All CSVs match the original DataFrame.")
@@ -111,6 +117,7 @@ def save_group(client_idcode_group: tuple[str, pd.DataFrame], save_folder: str) 
     Args:
         client_idcode_group: A tuple containing the client ID and their data as a DataFrame.
         save_folder: The directory where the CSV file will be saved.
+
     """
     client_idcode, group = client_idcode_group
     file_path = os.path.join(save_folder, f"{client_idcode}.csv")
@@ -139,6 +146,7 @@ def split_and_save_csv(
         client_idcode_column: The name of the column to group by.
         save_folder: The path to the folder where CSVs will be saved.
         num_processes: The number of processes to use. Defaults to all available CPUs.
+
     """
     # Ensure the save folder exists
     if not os.path.exists(save_folder):
@@ -185,6 +193,7 @@ def get_merged_pat_batch_bloods(
 
     Returns:
         A DataFrame containing the merged batch of blood test observations.
+
     """
     if config_obj is None or not all(
         hasattr(config_obj, attr)
@@ -217,16 +226,19 @@ def get_merged_pat_batch_bloods(
             # 1. Check if we can load from the database (caching mechanism)
             if not overwrite_stored_pat_observations:
                 logging.info(
-                    f"Attempting to load bloods data for {len(client_idcode_list)} patients from database '{schema_name}.{table_name}'."
+                    f"Attempting to load bloods data for {len(client_idcode_list)} patients from database '{schema_name}.{table_name}'.",
                 )
                 df = get_df_from_db(
-                    config_obj, schema_name, table_name, patient_ids=client_idcode_list
+                    config_obj,
+                    schema_name,
+                    table_name,
+                    patient_ids=client_idcode_list,
                 )
                 if not df.empty:
                     # Assuming that if we find data, it's complete enough for this run,
                     # as the alternative is to fetch and replace the entire table.
                     logging.info(
-                        f"Successfully loaded {len(df)} records from database cache."
+                        f"Successfully loaded {len(df)} records from database cache.",
                     )
                     return df
 
@@ -251,7 +263,7 @@ def get_merged_pat_batch_bloods(
             if (
                 config_obj.data_type_filter_dict
                 and config_obj.data_type_filter_dict.get("filter_term_lists", {}).get(
-                    "bloods"
+                    "bloods",
                 )
             ):
                 if config_obj.verbosity >= 1:
@@ -276,7 +288,7 @@ def get_merged_pat_batch_bloods(
                 engine = config_obj.db_engine
                 if not engine:
                     logging.error(
-                        "DB engine not initialized, cannot save merged bloods."
+                        "DB engine not initialized, cannot save merged bloods.",
                     )
                     return batch_target
 
@@ -289,7 +301,7 @@ def get_merged_pat_batch_bloods(
                     db_schema = None if engine.name == "sqlite" else schema_name
 
                     logging.info(
-                        f"Writing {len(batch_target)} records to database table '{db_table_name}'..."
+                        f"Writing {len(batch_target)} records to database table '{db_table_name}'...",
                     )
                     batch_target.to_sql(
                         name=db_table_name,
@@ -314,10 +326,10 @@ def get_merged_pat_batch_bloods(
         merged_batches_path = os.path.join(input_directory, "merged_bloods_batches.csv")
 
         if not overwrite_stored_pat_observations and os.path.exists(
-            merged_batches_path
+            merged_batches_path,
         ):
             logging.info(
-                f"Merged batches file already exists at {merged_batches_path}. Loading from disk."
+                f"Merged batches file already exists at {merged_batches_path}. Loading from disk.",
             )
             return pd.read_csv(merged_batches_path)
 
@@ -340,7 +352,7 @@ def get_merged_pat_batch_bloods(
             if (
                 config_obj.data_type_filter_dict
                 and config_obj.data_type_filter_dict.get("filter_term_lists", {}).get(
-                    "bloods"
+                    "bloods",
                 )
             ):
                 if config_obj.verbosity >= 1:
@@ -369,7 +381,7 @@ def get_merged_pat_batch_bloods(
 
         except Exception as e:
             logging.error(
-                f"Error retrieving batch blood test-related observations: {e}"
+                f"Error retrieving batch blood test-related observations: {e}",
             )
             return pd.DataFrame()
 
@@ -391,8 +403,8 @@ def get_merged_pat_batch_drugs(
 
     Returns:
         A DataFrame containing the merged batch of drug orders.
-    """
 
+    """
     if config_obj is None or not all(
         hasattr(config_obj, attr)
         for attr in [
@@ -424,14 +436,17 @@ def get_merged_pat_batch_drugs(
             # 1. Check if we can load from the database
             if not overwrite_stored_pat_observations:
                 logging.info(
-                    f"Attempting to load drugs data for {len(client_idcode_list)} patients from database '{schema_name}.{table_name}'."
+                    f"Attempting to load drugs data for {len(client_idcode_list)} patients from database '{schema_name}.{table_name}'.",
                 )
                 df = get_df_from_db(
-                    config_obj, schema_name, table_name, patient_ids=client_idcode_list
+                    config_obj,
+                    schema_name,
+                    table_name,
+                    patient_ids=client_idcode_list,
                 )
                 if not df.empty:
                     logging.info(
-                        f"Successfully loaded {len(df)} records from database cache."
+                        f"Successfully loaded {len(df)} records from database cache.",
                     )
                     return df
 
@@ -459,7 +474,7 @@ def get_merged_pat_batch_drugs(
             if (
                 config_obj.data_type_filter_dict
                 and config_obj.data_type_filter_dict.get("filter_term_lists", {}).get(
-                    "drugs"
+                    "drugs",
                 )
             ):
                 if config_obj.verbosity >= 1:
@@ -482,7 +497,7 @@ def get_merged_pat_batch_drugs(
                 engine = config_obj.db_engine
                 if not engine:
                     logging.error(
-                        "DB engine not initialized, cannot save merged drugs."
+                        "DB engine not initialized, cannot save merged drugs.",
                     )
                     return batch_target
 
@@ -500,7 +515,7 @@ def get_merged_pat_batch_drugs(
                         batch_target.drop(columns=col, inplace=True)
 
                 logging.info(
-                    f"Writing {len(batch_target)} records to database table '{db_schema}.{db_table_name}'..."
+                    f"Writing {len(batch_target)} records to database table '{db_schema}.{db_table_name}'...",
                 )
                 batch_target.to_sql(
                     name=db_table_name,
@@ -525,10 +540,10 @@ def get_merged_pat_batch_drugs(
         merged_batches_path = os.path.join(input_directory, "merged_drugs_batches.csv")
 
         if not overwrite_stored_pat_observations and os.path.exists(
-            merged_batches_path
+            merged_batches_path,
         ):
             logging.info(
-                f"Merged batches file already exists at {merged_batches_path}. Loading from disk."
+                f"Merged batches file already exists at {merged_batches_path}. Loading from disk.",
             )
             return pd.read_csv(merged_batches_path)
 
@@ -554,7 +569,7 @@ def get_merged_pat_batch_drugs(
             if (
                 config_obj.data_type_filter_dict
                 and config_obj.data_type_filter_dict.get("filter_term_lists", {}).get(
-                    "drugs"
+                    "drugs",
                 )
             ):
                 if config_obj.verbosity >= 1:
@@ -601,8 +616,8 @@ def get_merged_pat_batch_diagnostics(
 
     Returns:
         A DataFrame containing the merged batch of diagnostic orders.
-    """
 
+    """
     if config_obj is None or not all(
         hasattr(config_obj, attr)
         for attr in [
@@ -635,14 +650,17 @@ def get_merged_pat_batch_diagnostics(
 
             if not overwrite_stored_pat_observations:
                 logging.info(
-                    f"Attempting to load diagnostics data for {len(client_idcode_list)} patients from database '{schema_name}.{table_name}'."
+                    f"Attempting to load diagnostics data for {len(client_idcode_list)} patients from database '{schema_name}.{table_name}'.",
                 )
                 df = get_df_from_db(
-                    config_obj, schema_name, table_name, patient_ids=client_idcode_list
+                    config_obj,
+                    schema_name,
+                    table_name,
+                    patient_ids=client_idcode_list,
                 )
                 if not df.empty:
                     logging.info(
-                        f"Successfully loaded {len(df)} records from database cache."
+                        f"Successfully loaded {len(df)} records from database cache.",
                     )
                     return df
 
@@ -667,7 +685,7 @@ def get_merged_pat_batch_diagnostics(
             if (
                 config_obj.data_type_filter_dict
                 and config_obj.data_type_filter_dict.get("filter_term_lists", {}).get(
-                    "diagnostics"
+                    "diagnostics",
                 )
             ):
                 if config_obj.verbosity >= 1:
@@ -689,7 +707,7 @@ def get_merged_pat_batch_diagnostics(
                 engine = config_obj.db_engine
                 if not engine:
                     logging.error(
-                        "DB engine not initialized, cannot save merged diagnostics."
+                        "DB engine not initialized, cannot save merged diagnostics.",
                     )
                     return batch_target
 
@@ -707,7 +725,7 @@ def get_merged_pat_batch_diagnostics(
                         batch_target.drop(columns=col, inplace=True)
 
                 logging.info(
-                    f"Writing {len(batch_target)} records to database table '{db_schema}.{db_table_name}'..."
+                    f"Writing {len(batch_target)} records to database table '{db_schema}.{db_table_name}'...",
                 )
                 batch_target.to_sql(
                     name=db_table_name,
@@ -729,14 +747,15 @@ def get_merged_pat_batch_diagnostics(
         input_directory = config_obj.pre_merged_input_batches_path
         os.makedirs(input_directory, exist_ok=True)
         merged_batches_path = os.path.join(
-            input_directory, "merged_diagnostics_batches.csv"
+            input_directory,
+            "merged_diagnostics_batches.csv",
         )
 
         if not overwrite_stored_pat_observations and os.path.exists(
-            merged_batches_path
+            merged_batches_path,
         ):
             logging.info(
-                f"Merged batches file already exists at {merged_batches_path}. Loading from disk."
+                f"Merged batches file already exists at {merged_batches_path}. Loading from disk.",
             )
             return pd.read_csv(merged_batches_path)
 
@@ -762,7 +781,7 @@ def get_merged_pat_batch_diagnostics(
             if config_obj.data_type_filter_dict is not None:
                 if (
                     config_obj.data_type_filter_dict.get("filter_term_lists").get(
-                        "diagnostics"
+                        "diagnostics",
                     )
                     is not None
                 ):
@@ -772,7 +791,7 @@ def get_merged_pat_batch_diagnostics(
                             config_obj.data_type_filter_dict,
                         )
                     filter_term_list = config_obj.data_type_filter_dict.get(
-                        "filter_term_lists"
+                        "filter_term_lists",
                     ).get("diagnostics")
                     batch_target = filter_dataframe_by_fuzzy_terms(
                         batch_target,
@@ -812,8 +831,8 @@ def get_merged_pat_batch_mct_docs(
 
     Returns:
         A DataFrame containing the merged batch of MCT documents.
-    """
 
+    """
     if config_obj is None or not all(
         hasattr(config_obj, attr)
         for attr in [
@@ -846,14 +865,17 @@ def get_merged_pat_batch_mct_docs(
 
             if not overwrite_stored_pat_docs:
                 logging.info(
-                    f"Attempting to load MCT docs data for {len(client_idcode_list)} patients from database '{schema_name}.{table_name}'."
+                    f"Attempting to load MCT docs data for {len(client_idcode_list)} patients from database '{schema_name}.{table_name}'.",
                 )
                 df = get_df_from_db(
-                    config_obj, schema_name, table_name, patient_ids=client_idcode_list
+                    config_obj,
+                    schema_name,
+                    table_name,
+                    patient_ids=client_idcode_list,
                 )
                 if not df.empty:
                     logging.info(
-                        f"Successfully loaded {len(df)} records from database cache."
+                        f"Successfully loaded {len(df)} records from database cache.",
                     )
                     return df
 
@@ -890,7 +912,9 @@ def get_merged_pat_batch_mct_docs(
 
             if split_clinical_notes_bool:
                 batch_target = split_and_append_chunks(
-                    batch_target, epr=False, mct=True
+                    batch_target,
+                    epr=False,
+                    mct=True,
                 )
 
             if (
@@ -899,7 +923,7 @@ def get_merged_pat_batch_mct_docs(
                 engine = config_obj.db_engine
                 if not engine:
                     logging.error(
-                        "DB engine not initialized, cannot save merged MCT docs."
+                        "DB engine not initialized, cannot save merged MCT docs.",
                     )
                     return batch_target
 
@@ -917,7 +941,7 @@ def get_merged_pat_batch_mct_docs(
                         batch_target.drop(columns=col, inplace=True)
 
                 logging.info(
-                    f"Writing {len(batch_target)} records to database table '{db_schema}.{db_table_name}'..."
+                    f"Writing {len(batch_target)} records to database table '{db_schema}.{db_table_name}'...",
                 )
                 batch_target.to_sql(
                     name=db_table_name,
@@ -939,12 +963,13 @@ def get_merged_pat_batch_mct_docs(
         input_directory = config_obj.pre_merged_input_batches_path
         os.makedirs(input_directory, exist_ok=True)
         merged_batches_path = os.path.join(
-            input_directory, "merged_mct_docs_batches.csv"
+            input_directory,
+            "merged_mct_docs_batches.csv",
         )
 
         if not overwrite_stored_pat_docs and os.path.exists(merged_batches_path):
             logging.info(
-                f"Merged batches file already exists at {merged_batches_path}. Loading from disk."
+                f"Merged batches file already exists at {merged_batches_path}. Loading from disk.",
             )
             return pd.read_csv(merged_batches_path)
 
@@ -976,7 +1001,9 @@ def get_merged_pat_batch_mct_docs(
 
             if split_clinical_notes_bool:
                 batch_target = split_and_append_chunks(
-                    batch_target, epr=False, mct=True
+                    batch_target,
+                    epr=False,
+                    mct=True,
                 )
 
             if store_pat_batch_docs or overwrite_stored_pat_docs:
@@ -1008,8 +1035,8 @@ def get_merged_pat_batch_epr_docs(
 
     Returns:
         A DataFrame containing the merged batch of EPR documents.
-    """
 
+    """
     if config_obj is None or not all(
         hasattr(config_obj, attr)
         for attr in [
@@ -1040,14 +1067,17 @@ def get_merged_pat_batch_epr_docs(
 
             if not overwrite_stored_pat_docs:
                 logging.info(
-                    f"Attempting to load EPR docs data for {len(client_idcode_list)} patients from database '{schema_name}.{table_name}'."
+                    f"Attempting to load EPR docs data for {len(client_idcode_list)} patients from database '{schema_name}.{table_name}'.",
                 )
                 df = get_df_from_db(
-                    config_obj, schema_name, table_name, patient_ids=client_idcode_list
+                    config_obj,
+                    schema_name,
+                    table_name,
+                    patient_ids=client_idcode_list,
                 )
                 if not df.empty:
                     logging.info(
-                        f"Successfully loaded {len(df)} records from database cache."
+                        f"Successfully loaded {len(df)} records from database cache.",
                     )
                     return df
 
@@ -1069,7 +1099,7 @@ def get_merged_pat_batch_epr_docs(
             if config_obj.data_type_filter_dict is not None and not batch_target.empty:
                 if (
                     config_obj.data_type_filter_dict.get("filter_term_lists", {}).get(
-                        "epr_docs"
+                        "epr_docs",
                     )
                     is not None
                 ):
@@ -1084,7 +1114,7 @@ def get_merged_pat_batch_epr_docs(
                     )
                 if (
                     config_obj.data_type_filter_dict.get("filter_term_lists", {}).get(
-                        "epr_docs_term_regex"
+                        "epr_docs_term_regex",
                     )
                     is not None
                 ):
@@ -1119,7 +1149,7 @@ def get_merged_pat_batch_epr_docs(
                 engine = config_obj.db_engine
                 if not engine:
                     logging.error(
-                        "DB engine not initialized, cannot save merged EPR docs."
+                        "DB engine not initialized, cannot save merged EPR docs.",
                     )
                     return batch_target
 
@@ -1137,7 +1167,7 @@ def get_merged_pat_batch_epr_docs(
                         batch_target.drop(columns=col, inplace=True)
 
                 logging.info(
-                    f"Writing {len(batch_target)} records to database table '{db_schema}.{db_table_name}'..."
+                    f"Writing {len(batch_target)} records to database table '{db_schema}.{db_table_name}'...",
                 )
                 batch_target.to_sql(
                     name=db_table_name,
@@ -1159,12 +1189,13 @@ def get_merged_pat_batch_epr_docs(
         input_directory = config_obj.pre_merged_input_batches_path
         os.makedirs(input_directory, exist_ok=True)
         merged_batches_path = os.path.join(
-            input_directory, "merged_epr_docs_batches.csv"
+            input_directory,
+            "merged_epr_docs_batches.csv",
         )
 
         if not overwrite_stored_pat_docs and os.path.exists(merged_batches_path):
             logging.info(
-                f"Merged batches file already exists at {merged_batches_path}. Loading from disk."
+                f"Merged batches file already exists at {merged_batches_path}. Loading from disk.",
             )
             return pd.read_csv(merged_batches_path)
 
@@ -1187,7 +1218,7 @@ def get_merged_pat_batch_epr_docs(
             if config_obj.data_type_filter_dict is not None and not batch_target.empty:
                 if (
                     config_obj.data_type_filter_dict.get("filter_term_lists", {}).get(
-                        "epr_docs"
+                        "epr_docs",
                     )
                     is not None
                 ):
@@ -1202,7 +1233,7 @@ def get_merged_pat_batch_epr_docs(
                     )
                 if (
                     config_obj.data_type_filter_dict.get("filter_term_lists", {}).get(
-                        "epr_docs_term_regex"
+                        "epr_docs_term_regex",
                     )
                     is not None
                 ):
@@ -1262,8 +1293,8 @@ def get_merged_pat_batch_textual_obs_docs(
 
     Returns:
         A DataFrame containing the merged batch of textual observation documents.
-    """
 
+    """
     if config_obj is None or not all(
         hasattr(config_obj, attr)
         for attr in [
@@ -1297,14 +1328,17 @@ def get_merged_pat_batch_textual_obs_docs(
 
             if not overwrite_stored_pat_observations:
                 logging.info(
-                    f"Attempting to load textual obs data for {len(client_idcode_list)} patients from database '{schema_name}.{table_name}'."
+                    f"Attempting to load textual obs data for {len(client_idcode_list)} patients from database '{schema_name}.{table_name}'.",
                 )
                 df = get_df_from_db(
-                    config_obj, schema_name, table_name, patient_ids=client_idcode_list
+                    config_obj,
+                    schema_name,
+                    table_name,
+                    patient_ids=client_idcode_list,
                 )
                 if not df.empty:
                     logging.info(
-                        f"Successfully loaded {len(df)} records from database cache."
+                        f"Successfully loaded {len(df)} records from database cache.",
                     )
                     return df
 
@@ -1334,7 +1368,7 @@ def get_merged_pat_batch_textual_obs_docs(
                 engine = config_obj.db_engine
                 if not engine:
                     logging.error(
-                        "DB engine not initialized, cannot save merged textual obs."
+                        "DB engine not initialized, cannot save merged textual obs.",
                     )
                     return batch_target
 
@@ -1352,7 +1386,7 @@ def get_merged_pat_batch_textual_obs_docs(
                         batch_target.drop(columns=col, inplace=True)
 
                 logging.info(
-                    f"Writing {len(batch_target)} records to database table '{db_schema}.{db_table_name}'..."
+                    f"Writing {len(batch_target)} records to database table '{db_schema}.{db_table_name}'...",
                 )
                 batch_target.to_sql(
                     name=db_table_name,
@@ -1374,14 +1408,15 @@ def get_merged_pat_batch_textual_obs_docs(
         input_directory = config_obj.pre_merged_input_batches_path
         os.makedirs(input_directory, exist_ok=True)
         merged_batches_path = os.path.join(
-            input_directory, "merged_textual_obs_batches.csv"
+            input_directory,
+            "merged_textual_obs_batches.csv",
         )
 
         if not overwrite_stored_pat_observations and os.path.exists(
-            merged_batches_path
+            merged_batches_path,
         ):
             logging.info(
-                f"Merged batches file already exists at {merged_batches_path}. Loading from disk."
+                f"Merged batches file already exists at {merged_batches_path}. Loading from disk.",
             )
             return pd.read_csv(merged_batches_path)
 
@@ -1439,8 +1474,8 @@ def get_merged_pat_batch_appointments(
 
     Returns:
         A DataFrame containing the merged batch of appointments.
-    """
 
+    """
     if config_obj is None or not all(
         hasattr(config_obj, attr)
         for attr in [
@@ -1471,7 +1506,7 @@ def get_merged_pat_batch_appointments(
 
             if not config_obj.overwrite_stored_pat_observations:
                 logging.info(
-                    f"Attempting to load appointments data for {len(client_idcode_list)} patients from database '{schema_name}.{table_name}'."
+                    f"Attempting to load appointments data for {len(client_idcode_list)} patients from database '{schema_name}.{table_name}'.",
                 )
                 df = get_df_from_db(
                     config_obj,
@@ -1482,7 +1517,7 @@ def get_merged_pat_batch_appointments(
                 )
                 if not df.empty:
                     logging.info(
-                        f"Successfully loaded {len(df)} records from database cache."
+                        f"Successfully loaded {len(df)} records from database cache.",
                     )
                     return df
 
@@ -1532,7 +1567,7 @@ def get_merged_pat_batch_appointments(
                 engine = config_obj.db_engine
                 if not engine:
                     logging.error(
-                        "DB engine not initialized, cannot save merged appointments."
+                        "DB engine not initialized, cannot save merged appointments.",
                     )
                     return batch_target
 
@@ -1550,7 +1585,7 @@ def get_merged_pat_batch_appointments(
                         batch_target.drop(columns=col, inplace=True)
 
                 logging.info(
-                    f"Writing {len(batch_target)} records to database table '{db_schema}.{db_table_name}'..."
+                    f"Writing {len(batch_target)} records to database table '{db_schema}.{db_table_name}'...",
                 )
                 batch_target.to_sql(
                     name=db_table_name,
@@ -1572,14 +1607,15 @@ def get_merged_pat_batch_appointments(
         input_directory = config_obj.pre_merged_input_batches_path
         os.makedirs(input_directory, exist_ok=True)
         merged_batches_path = os.path.join(
-            input_directory, "merged_appointments_batches.csv"
+            input_directory,
+            "merged_appointments_batches.csv",
         )
 
         if not config_obj.overwrite_stored_pat_observations and os.path.exists(
-            merged_batches_path
+            merged_batches_path,
         ):
             logging.info(
-                f"Merged batches file already exists at {merged_batches_path}. Loading from disk."
+                f"Merged batches file already exists at {merged_batches_path}. Loading from disk.",
             )
             return pd.read_csv(merged_batches_path)
 
@@ -1657,8 +1693,8 @@ def get_merged_pat_batch_demo(
 
     Returns:
         A DataFrame containing the merged batch of demographic information.
-    """
 
+    """
     if config_obj is None or not all(
         hasattr(config_obj, attr)
         for attr in [
@@ -1687,14 +1723,17 @@ def get_merged_pat_batch_demo(
 
             if not config_obj.overwrite_stored_pat_observations:
                 logging.info(
-                    f"Attempting to load demographics data for {len(client_idcode_list)} patients from database '{schema_name}.{table_name}'."
+                    f"Attempting to load demographics data for {len(client_idcode_list)} patients from database '{schema_name}.{table_name}'.",
                 )
                 df = get_df_from_db(
-                    config_obj, schema_name, table_name, patient_ids=client_idcode_list
+                    config_obj,
+                    schema_name,
+                    table_name,
+                    patient_ids=client_idcode_list,
                 )
                 if not df.empty:
                     logging.info(
-                        f"Successfully loaded {len(df)} records from database cache."
+                        f"Successfully loaded {len(df)} records from database cache.",
                     )
                     return df
 
@@ -1722,7 +1761,7 @@ def get_merged_pat_batch_demo(
                 engine = config_obj.db_engine
                 if not engine:
                     logging.error(
-                        "DB engine not initialized, cannot save merged demographics."
+                        "DB engine not initialized, cannot save merged demographics.",
                     )
                     return batch_target
 
@@ -1740,7 +1779,7 @@ def get_merged_pat_batch_demo(
                         batch_target.drop(columns=col, inplace=True)
 
                 logging.info(
-                    f"Writing {len(batch_target)} records to database table '{db_schema}.{db_table_name}'..."
+                    f"Writing {len(batch_target)} records to database table '{db_schema}.{db_table_name}'...",
                 )
                 batch_target.to_sql(
                     name=db_table_name,
@@ -1764,10 +1803,10 @@ def get_merged_pat_batch_demo(
         merged_batches_path = os.path.join(input_directory, "merged_demo_batches.csv")
 
         if not config_obj.overwrite_stored_pat_observations and os.path.exists(
-            merged_batches_path
+            merged_batches_path,
         ):
             logging.info(
-                f"Merged batches file already exists at {merged_batches_path}. Loading from disk."
+                f"Merged batches file already exists at {merged_batches_path}. Loading from disk.",
             )
             return pd.read_csv(merged_batches_path)
 
@@ -1823,8 +1862,8 @@ def get_merged_pat_batch_bmi(
 
     Returns:
         A DataFrame containing the merged batch of BMI-related observations.
-    """
 
+    """
     if config_obj is None or not all(
         hasattr(config_obj, attr)
         for attr in [
@@ -1853,14 +1892,17 @@ def get_merged_pat_batch_bmi(
 
             if not overwrite_stored_pat_observations:
                 logging.info(
-                    f"Attempting to load BMI data for {len(client_idcode_list)} patients from database '{schema_name}.{table_name}'."
+                    f"Attempting to load BMI data for {len(client_idcode_list)} patients from database '{schema_name}.{table_name}'.",
                 )
                 df = get_df_from_db(
-                    config_obj, schema_name, table_name, patient_ids=client_idcode_list
+                    config_obj,
+                    schema_name,
+                    table_name,
+                    patient_ids=client_idcode_list,
                 )
                 if not df.empty:
                     logging.info(
-                        f"Successfully loaded {len(df)} records from database cache."
+                        f"Successfully loaded {len(df)} records from database cache.",
                     )
                     return df
 
@@ -1887,7 +1929,7 @@ def get_merged_pat_batch_bmi(
                 engine = config_obj.db_engine
                 if not engine:
                     logging.error(
-                        "DB engine not initialized, cannot save merged BMI data."
+                        "DB engine not initialized, cannot save merged BMI data.",
                     )
                     return batch_target
 
@@ -1905,7 +1947,7 @@ def get_merged_pat_batch_bmi(
                         batch_target.drop(columns=col, inplace=True)
 
                 logging.info(
-                    f"Writing {len(batch_target)} records to database table '{db_schema}.{db_table_name}'..."
+                    f"Writing {len(batch_target)} records to database table '{db_schema}.{db_table_name}'...",
                 )
                 batch_target.to_sql(
                     name=db_table_name,
@@ -1929,10 +1971,10 @@ def get_merged_pat_batch_bmi(
         merged_batches_path = os.path.join(input_directory, "merged_bmi_batches.csv")
 
         if not config_obj.overwrite_stored_pat_observations and os.path.exists(
-            merged_batches_path
+            merged_batches_path,
         ):
             logging.info(
-                f"Merged batches file already exists at {merged_batches_path}. Loading from disk."
+                f"Merged batches file already exists at {merged_batches_path}. Loading from disk.",
             )
             return pd.read_csv(merged_batches_path)
 
@@ -1987,8 +2029,8 @@ def get_merged_pat_batch_obs(
 
     Returns:
         A DataFrame containing the merged batch of specified observations.
-    """
 
+    """
     if config_obj is None or not all(
         hasattr(config_obj, attr)
         for attr in [
@@ -2021,14 +2063,17 @@ def get_merged_pat_batch_obs(
 
             if not overwrite_stored_pat_observations:
                 logging.info(
-                    f"Attempting to load '{search_term}' data for {len(client_idcode_list)} patients from database '{schema_name}.{table_name}'."
+                    f"Attempting to load '{search_term}' data for {len(client_idcode_list)} patients from database '{schema_name}.{table_name}'.",
                 )
                 df = get_df_from_db(
-                    config_obj, schema_name, table_name, patient_ids=client_idcode_list
+                    config_obj,
+                    schema_name,
+                    table_name,
+                    patient_ids=client_idcode_list,
                 )
                 if not df.empty:
                     logging.info(
-                        f"Successfully loaded {len(df)} records from database cache."
+                        f"Successfully loaded {len(df)} records from database cache.",
                     )
                     return df
 
@@ -2055,7 +2100,7 @@ def get_merged_pat_batch_obs(
                 engine = config_obj.db_engine
                 if not engine:
                     logging.error(
-                        f"DB engine not initialized, cannot save merged obs for '{search_term}'."
+                        f"DB engine not initialized, cannot save merged obs for '{search_term}'.",
                     )
                     return batch_target
 
@@ -2073,7 +2118,7 @@ def get_merged_pat_batch_obs(
                         batch_target.drop(columns=col, inplace=True)
 
                 logging.info(
-                    f"Writing {len(batch_target)} records to database table '{db_schema}.{db_table_name}'..."
+                    f"Writing {len(batch_target)} records to database table '{db_schema}.{db_table_name}'...",
                 )
                 batch_target.to_sql(
                     name=db_table_name,
@@ -2088,7 +2133,7 @@ def get_merged_pat_batch_obs(
 
         except Exception as e:
             logging.error(
-                f"Database operation failed for observation '{search_term}': {e}"
+                f"Database operation failed for observation '{search_term}': {e}",
             )
             return pd.DataFrame()
 
@@ -2097,14 +2142,15 @@ def get_merged_pat_batch_obs(
         input_directory = config_obj.pre_merged_input_batches_path
         os.makedirs(input_directory, exist_ok=True)
         merged_batches_path = os.path.join(
-            input_directory, f"merged_{search_term}_batches.csv"
+            input_directory,
+            f"merged_{search_term}_batches.csv",
         )
 
         if not config_obj.overwrite_stored_pat_observations and os.path.exists(
-            merged_batches_path
+            merged_batches_path,
         ):
             logging.info(
-                f"Merged batches file already exists at {merged_batches_path}. Loading from disk."
+                f"Merged batches file already exists at {merged_batches_path}. Loading from disk.",
             )
             return pd.read_csv(merged_batches_path)
 
@@ -2159,8 +2205,8 @@ def get_merged_pat_batch_news(
 
     Returns:
         A DataFrame containing the merged batch of NEWS observations.
-    """
 
+    """
     if config_obj is None or not all(
         hasattr(config_obj, attr)
         for attr in [
@@ -2189,14 +2235,17 @@ def get_merged_pat_batch_news(
 
             if not overwrite_stored_pat_observations:
                 logging.info(
-                    f"Attempting to load NEWS data for {len(client_idcode_list)} patients from database '{schema_name}.{table_name}'."
+                    f"Attempting to load NEWS data for {len(client_idcode_list)} patients from database '{schema_name}.{table_name}'.",
                 )
                 df = get_df_from_db(
-                    config_obj, schema_name, table_name, patient_ids=client_idcode_list
+                    config_obj,
+                    schema_name,
+                    table_name,
+                    patient_ids=client_idcode_list,
                 )
                 if not df.empty:
                     logging.info(
-                        f"Successfully loaded {len(df)} records from database cache."
+                        f"Successfully loaded {len(df)} records from database cache.",
                     )
                     return df
 
@@ -2223,7 +2272,7 @@ def get_merged_pat_batch_news(
                 engine = config_obj.db_engine
                 if not engine:
                     logging.error(
-                        "DB engine not initialized, cannot save merged NEWS data."
+                        "DB engine not initialized, cannot save merged NEWS data.",
                     )
                     return batch_target
 
@@ -2241,7 +2290,7 @@ def get_merged_pat_batch_news(
                         batch_target.drop(columns=col, inplace=True)
 
                 logging.info(
-                    f"Writing {len(batch_target)} records to database table '{db_schema}.{db_table_name}'..."
+                    f"Writing {len(batch_target)} records to database table '{db_schema}.{db_table_name}'...",
                 )
                 batch_target.to_sql(
                     name=db_table_name,
@@ -2265,10 +2314,10 @@ def get_merged_pat_batch_news(
         merged_batches_path = os.path.join(input_directory, "merged_news_batches.csv")
 
         if not config_obj.overwrite_stored_pat_observations and os.path.exists(
-            merged_batches_path
+            merged_batches_path,
         ):
             logging.info(
-                f"Merged batches file already exists at {merged_batches_path}. Loading from disk."
+                f"Merged batches file already exists at {merged_batches_path}. Loading from disk.",
             )
             return pd.read_csv(merged_batches_path)
 
@@ -2323,8 +2372,8 @@ def get_merged_pat_batch_reports(
 
     Returns:
         A DataFrame containing the merged batch of reports.
-    """
 
+    """
     if config_obj is None or not all(
         hasattr(config_obj, attr)
         for attr in [
@@ -2356,7 +2405,7 @@ def get_merged_pat_batch_reports(
 
             if not overwrite_stored_pat_observations:
                 logging.info(
-                    f"Attempting to load reports data for {len(client_idcode_list)} patients from database '{schema_name}.{table_name}'."
+                    f"Attempting to load reports data for {len(client_idcode_list)} patients from database '{schema_name}.{table_name}'.",
                 )
                 df = get_df_from_db(
                     config_obj,
@@ -2367,7 +2416,7 @@ def get_merged_pat_batch_reports(
                 )
                 if not df.empty:
                     logging.info(
-                        f"Successfully loaded {len(df)} records from database cache."
+                        f"Successfully loaded {len(df)} records from database cache.",
                     )
                     return df
 
@@ -2397,7 +2446,7 @@ def get_merged_pat_batch_reports(
                 engine = config_obj.db_engine
                 if not engine:
                     logging.error(
-                        "DB engine not initialized, cannot save merged reports."
+                        "DB engine not initialized, cannot save merged reports.",
                     )
                     return batch_target
 
@@ -2415,7 +2464,7 @@ def get_merged_pat_batch_reports(
                         batch_target.drop(columns=col, inplace=True)
 
                 logging.info(
-                    f"Writing {len(batch_target)} records to database table '{db_schema}.{db_table_name}'..."
+                    f"Writing {len(batch_target)} records to database table '{db_schema}.{db_table_name}'...",
                 )
                 batch_target.to_sql(
                     name=db_table_name,
@@ -2437,14 +2486,15 @@ def get_merged_pat_batch_reports(
         input_directory = config_obj.pre_merged_input_batches_path
         os.makedirs(input_directory, exist_ok=True)
         merged_batches_path = os.path.join(
-            input_directory, "merged_reports_batches.csv"
+            input_directory,
+            "merged_reports_batches.csv",
         )
 
         if not overwrite_stored_pat_observations and os.path.exists(
-            merged_batches_path
+            merged_batches_path,
         ):
             logging.info(
-                f"Merged batches file already exists at {merged_batches_path}. Loading from disk."
+                f"Merged batches file already exists at {merged_batches_path}. Loading from disk.",
             )
             return pd.read_csv(merged_batches_path)
 

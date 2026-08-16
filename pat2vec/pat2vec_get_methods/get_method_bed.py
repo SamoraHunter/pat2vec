@@ -74,6 +74,7 @@ def search_bed_data(
     Raises:
         ValueError: If `cohort_searcher_with_terms_and_search`, `client_id_codes`,
             or `bed_time_field` is None, or if any date component is None.
+
     """
     if (
         output_filename
@@ -82,7 +83,9 @@ def search_bed_data(
         and hasattr(config_obj, "proj_name")
     ):
         output_filename = os.path.join(
-            config_obj.root_path, config_obj.proj_name, output_filename
+            config_obj.root_path,
+            config_obj.proj_name,
+            output_filename,
         )
 
     if output_filename and os.path.exists(output_filename) and not overwrite:
@@ -106,7 +109,12 @@ def search_bed_data(
 
     start_year, start_month, start_day, end_year, end_month, end_day = (
         validate_input_dates(
-            start_year, start_month, start_day, end_year, end_month, end_day
+            start_year,
+            start_month,
+            start_day,
+            end_year,
+            end_month,
+            end_day,
         )
     )
 
@@ -164,6 +172,7 @@ def get_bed(
 
     Raises:
         ValueError: If `config_obj` is None.
+
     """
     batch_mode = config_obj.batch_mode
 
@@ -205,7 +214,8 @@ def get_bed(
         )
 
     features = pd.DataFrame(
-        data=[current_pat_client_id_code], columns=["client_idcode"]
+        data=[current_pat_client_id_code],
+        columns=["client_idcode"],
     )
 
     if len(current_pat_raw) == 0:

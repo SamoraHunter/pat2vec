@@ -27,6 +27,7 @@ def temporary_file(suffix: str = ".csv", delete: bool = True) -> Iterator[str]:
 
     Yields:
         The path to the temporary file.
+
     """
     temp_file = tempfile.NamedTemporaryFile(suffix=suffix, delete=False)
     temp_file.close()
@@ -86,6 +87,7 @@ def multi_annots_to_df(
 
     Raises:
         ValueError: If `config_obj` is not provided.
+
     """
     if config_obj is None:
         raise ValueError("config_obj is required")
@@ -105,7 +107,8 @@ def multi_annots_to_df(
 
             if not doc_to_annot_df.empty:
                 doc_to_annot_df.dropna(
-                    subset=["client_idcode", time_column], inplace=True
+                    subset=["client_idcode", time_column],
+                    inplace=True,
                 )
                 if not doc_to_annot_df.empty:
                     processed_dfs.append(doc_to_annot_df)
@@ -174,7 +177,10 @@ def multi_annots_to_df(
     # Write to Database if backend is 'database'
     if getattr(config_obj, "storage_backend", "file") == "database":
         save_annotations_to_db(
-            final_df, current_pat_client_idcode, "ann_epr_docs", config_obj
+            final_df,
+            current_pat_client_idcode,
+            "ann_epr_docs",
+            config_obj,
         )
 
     return final_df

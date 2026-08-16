@@ -44,6 +44,7 @@ def json_to_dataframe(
         A pandas DataFrame where each row is a single annotation, or an empty
         DataFrame if no entities are present in the input (or synthetic data
         when testing=True with no entities).
+
     """
     logger = logging.getLogger(__name__)
 
@@ -162,7 +163,7 @@ def json_to_dataframe(
                     text_sample_value,
                     full_doc_value,
                     document_guid_value,
-                ]
+                ],
             ]
 
             df = pd.DataFrame(data, columns=columns)
@@ -216,7 +217,7 @@ def json_to_dataframe(
                     np.nan,
                     np.nan,
                     document_guid_value,
-                ]
+                ],
             ]
 
             columns = [
@@ -249,40 +250,39 @@ def json_to_dataframe(
 
             df = pd.DataFrame(data, columns=columns)
             return df
-        else:
-            # Standardize document identifier column name for empty DataFrames
-            target_guid_column = "document_guid" if guid_column == "id" else guid_column
+        # Standardize document identifier column name for empty DataFrames
+        target_guid_column = "document_guid" if guid_column == "id" else guid_column
 
-            columns = [
-                "client_idcode",
-                time_column,
-                "pretty_name",
-                "cui",
-                "type_ids",
-                "types",
-                "source_value",
-                "detected_name",
-                "acc",
-                "context_similarity",
-                "start",
-                "end",
-                "icd10",
-                "ontologies",
-                "snomed",
-                "id",
-                "Time_Value",
-                "Time_Confidence",
-                "Presence_Value",
-                "Presence_Confidence",
-                "Subject_Value",
-                "Subject_Confidence",
-                "text_sample",
-                "full_doc",
-                target_guid_column,
-            ]
+        columns = [
+            "client_idcode",
+            time_column,
+            "pretty_name",
+            "cui",
+            "type_ids",
+            "types",
+            "source_value",
+            "detected_name",
+            "acc",
+            "context_similarity",
+            "start",
+            "end",
+            "icd10",
+            "ontologies",
+            "snomed",
+            "id",
+            "Time_Value",
+            "Time_Confidence",
+            "Presence_Value",
+            "Presence_Confidence",
+            "Subject_Value",
+            "Subject_Confidence",
+            "text_sample",
+            "full_doc",
+            target_guid_column,
+        ]
 
-            empty_df = pd.DataFrame(data=None, columns=columns)
-            return empty_df
+        empty_df = pd.DataFrame(data=None, columns=columns)
+        return empty_df
 
 
 def parse_meta_anns(meta_anns: dict[str, Any]) -> dict[str, Any]:
@@ -297,6 +297,7 @@ def parse_meta_anns(meta_anns: dict[str, Any]) -> dict[str, Any]:
 
     Returns:
         A dictionary containing the parsed meta-annotation values and confidences.
+
     """
     time_value = meta_anns.get("Time", {}).get("value")
     time_confidence = meta_anns.get("Time", {}).get("confidence")

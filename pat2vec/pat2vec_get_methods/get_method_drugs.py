@@ -65,7 +65,7 @@ def search_drug_orders(
      and the specified time window defined by start_year, start_month, end_year,
      and end_month parameters. Optionally saves results to CSV or loads existing data.
 
-     Args:
+    Args:
          cohort_searcher_with_terms_and_search (Optional[Callable]): The function for
              cohort searching. Defaults to None.
          client_id_codes (Optional[Union[str, List[str]]]): The client ID code(s) of
@@ -97,12 +97,13 @@ def search_drug_orders(
              order_holdreasontext, order_entered, clientvisit_visitidcode,
              order_performeddtm, order_createdwhen).
 
-     Raises:
+    Raises:
          ValueError: If cohort_searcher_with_terms_and_search is None, client_id_codes is None,
              or drug_time_field is None. These parameters are required for searching.
          RuntimeError: If the search query fails due to Elasticsearch connectivity issues
              or invalid index configuration.
          OSError: If there are permissions issues when saving output_filename.
+
     """
     if (
         output_filename
@@ -111,7 +112,9 @@ def search_drug_orders(
         and hasattr(config_obj, "proj_name")
     ):
         output_filename = os.path.join(
-            config_obj.root_path, config_obj.proj_name, output_filename
+            config_obj.root_path,
+            config_obj.proj_name,
+            output_filename,
         )
 
     if output_filename and os.path.exists(output_filename) and not overwrite:
@@ -130,13 +133,18 @@ def search_drug_orders(
 
     start_year, start_month, start_day, end_year, end_month, end_day = (
         validate_input_dates(
-            start_year, start_month, start_day, end_year, end_month, end_day
+            start_year,
+            start_month,
+            start_day,
+            end_year,
+            end_month,
+            end_day,
         )
     )
 
     search_string = (
         'order_typecode:"medication" AND '
-        + f"{drug_time_field}:[{start_year}-{start_month}-{start_day} TO {end_year}-{end_month}-{end_day}]"
+        f"{drug_time_field}:[{start_year}-{start_month}-{start_day} TO {end_year}-{end_month}-{end_day}]"
     )
 
     if additional_custom_search_string:
@@ -164,7 +172,9 @@ def search_drug_orders(
 
 
 def prepare_drug_datetime(
-    drugs_data: pd.DataFrame, drug_time_field: str, batch_mode: bool = False
+    drugs_data: pd.DataFrame,
+    drug_time_field: str,
+    batch_mode: bool = False,
 ) -> pd.DataFrame:
     """Prepares the datetime column for drug data processing.
 
@@ -184,6 +194,7 @@ def prepare_drug_datetime(
 
     Raises:
         ValueError: If drug_time_field does not exist in drugs_data.
+
     """
     data = drugs_data.copy()
 
@@ -225,6 +236,7 @@ def calculate_drug_features(
     Raises:
         ValueError: If order_name_df_dict is None or empty.
         TypeError: If order_name_list is not a list.
+
     """
     if batch_mode:
         today = datetime.now(timezone.utc)
@@ -263,7 +275,7 @@ def calculate_drug_features(
                 features[f"{col_name}_days-between-first-last-drug"] = delta.days
             except Exception as e:
                 print(
-                    f"Error calculating days between first-last drug for {col_name}: {e}"
+                    f"Error calculating days between first-last drug for {col_name}: {e}",
                 )
                 features[f"{col_name}_days-between-first-last-drug"] = None
 
@@ -271,7 +283,9 @@ def calculate_drug_features(
 
 
 def create_drug_features_dataframe(
-    current_pat_client_id_code: str, drug_features: dict, original_data: pd.DataFrame
+    current_pat_client_id_code: str,
+    drug_features: dict,
+    original_data: pd.DataFrame,
 ) -> pd.DataFrame:
     """Creates the final drug features DataFrame.
 
@@ -295,6 +309,7 @@ def create_drug_features_dataframe(
     Raises:
         ValueError: If current_pat_client_id_code is empty or None.
         KeyError: If required columns are missing from original_data.
+
     """
     base_df = pd.DataFrame({"client_idcode": [current_pat_client_id_code]})
 
@@ -356,6 +371,7 @@ def get_current_pat_drugs(
         ValueError: If config_obj is None or missing required attributes (batch_mode,
             drug_time_field, feature_engineering_arg_dict).
         TypeError: If target_date_range is not a tuple or dates are invalid.
+
     """
     batch_mode = config_obj.batch_mode
     drug_time_field = config_obj.drug_time_field
@@ -469,12 +485,17 @@ def get_current_pat_drugs(
 
     # Calculate features
     drug_features = calculate_drug_features(
-        order_name_df_dict, order_name_list, drugs_arg_dict, batch_mode
+        order_name_df_dict,
+        order_name_list,
+        drugs_arg_dict,
+        batch_mode,
     )
 
     # Create final features dataframe
     result_df = create_drug_features_dataframe(
-        current_pat_client_id_code, drug_features, current_pat_drugs
+        current_pat_client_id_code,
+        drug_features,
+        current_pat_drugs,
     )
 
     if config_obj.verbosity >= 6:

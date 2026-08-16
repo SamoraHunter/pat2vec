@@ -49,10 +49,11 @@ def get_current_pat_annotations_mrc_cs(
 
     Raises:
         ValueError: If `config_obj` is None.
+
     """
     if config_obj is None:
         raise ValueError(
-            "config_obj cannot be None. Please provide a valid configuration. (get_current_pat_annotations_mrc_cs)"
+            "config_obj cannot be None. Please provide a valid configuration. (get_current_pat_annotations_mrc_cs)",
         )
 
     start_time = config_obj.start_time
@@ -90,7 +91,8 @@ def get_current_pat_annotations_mrc_cs(
 
         if len(filtered_batch_mct_docs_annotations) > 0:
             df_pat_target = calculate_pretty_name_count_features(
-                filtered_batch_mct_docs_annotations, suffix="mct"
+                filtered_batch_mct_docs_annotations,
+                suffix="mct",
             )
         else:
             if config_obj.verbosity >= 6:
@@ -99,12 +101,14 @@ def get_current_pat_annotations_mrc_cs(
                     len(filtered_batch_mct_docs_annotations) > 0,
                 )
             df_pat_target = pd.DataFrame(
-                data=[current_pat_client_id_code], columns=["client_idcode"]
+                data=[current_pat_client_id_code],
+                columns=["client_idcode"],
             )
 
     else:
         df_pat_target = pd.DataFrame(
-            data=[current_pat_client_id_code], columns=["client_idcode"]
+            data=[current_pat_client_id_code],
+            columns=["client_idcode"],
         )
 
     if config_obj.verbosity >= 6:

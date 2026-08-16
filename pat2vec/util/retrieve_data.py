@@ -254,10 +254,11 @@ def retrieve_patient_data(
     Returns:
         pd.DataFrame: A DataFrame containing the requested data, or an empty DataFrame
         if not found or if data_type is invalid.
+
     """
     if data_type not in DATA_TYPE_CONFIG:
         logger.error(
-            f"Unknown data type: '{data_type}'. Supported types: {list(DATA_TYPE_CONFIG.keys())}"
+            f"Unknown data type: '{data_type}'. Supported types: {list(DATA_TYPE_CONFIG.keys())}",
         )
         return pd.DataFrame()
 
@@ -299,42 +300,41 @@ def retrieve_patient_data(
                 cohort_searcher_with_terms_and_search,
             )
         return df
-    else:
-        # File-based backend
-        path_attr = config["path_attr"]
-        if not hasattr(config_obj, path_attr):
-            logger.error(f"Config object missing required attribute: {path_attr}")
-            return pd.DataFrame()
+    # File-based backend
+    path_attr = config["path_attr"]
+    if not hasattr(config_obj, path_attr):
+        logger.error(f"Config object missing required attribute: {path_attr}")
+        return pd.DataFrame()
 
-        base_path = getattr(config_obj, path_attr)
-        file_path = f"{base_path}/{client_idcode}.csv"
+    base_path = getattr(config_obj, path_attr)
+    file_path = f"{base_path}/{client_idcode}.csv"
 
-        try:
-            df = pd.read_csv(file_path)
-            # Apply concept-specific filtering for mixed observation directories
-            filter_val = config.get("display_name_filter")
-            if filter_val and not df.empty:
-                col = "obscatalogmasteritem_displayname"
-                if col in df.columns:
-                    df = df[df[col] == filter_val]
+    try:
+        df = pd.read_csv(file_path)
+        # Apply concept-specific filtering for mixed observation directories
+        filter_val = config.get("display_name_filter")
+        if filter_val and not df.empty:
+            col = "obscatalogmasteritem_displayname"
+            if col in df.columns:
+                df = df[df[col] == filter_val]
+        return df
+    except FileNotFoundError:
+        # For Epic types, try ES fallback if file not found
+        if (
+            data_type.startswith("epic_")
+            and cohort_searcher_with_terms_and_search is not None
+        ):
+            df = _fetch_epic_data_from_es(
+                client_idcode,
+                data_type.replace("_annotations", ""),
+                config_obj,
+                cohort_searcher_with_terms_and_search,
+            )
             return df
-        except FileNotFoundError:
-            # For Epic types, try ES fallback if file not found
-            if (
-                data_type.startswith("epic_")
-                and cohort_searcher_with_terms_and_search is not None
-            ):
-                df = _fetch_epic_data_from_es(
-                    client_idcode,
-                    data_type.replace("_annotations", ""),
-                    config_obj,
-                    cohort_searcher_with_terms_and_search,
-                )
-                return df
-            return pd.DataFrame()
-        except Exception as e:
-            logger.error(f"Error reading file {file_path}: {e}")
-            return pd.DataFrame()
+        return pd.DataFrame()
+    except Exception as e:
+        logger.error(f"Error reading file {file_path}: {e}")
+        return pd.DataFrame()
 
 
 def _fetch_epic_data_from_es(
@@ -353,6 +353,7 @@ def _fetch_epic_data_from_es(
 
     Returns:
         pd.DataFrame: A DataFrame containing the fetched data, or empty if not found.
+
     """
     try:
         from pat2vec.util.helper_functions import save_raw_patient_batch
@@ -494,11 +495,13 @@ def _fetch_epic_data_from_es(
             # Rename time fields to updatetime
             if "document_CreatedWhen" in results.columns:
                 results.rename(
-                    columns={"document_CreatedWhen": "updatetime"}, inplace=True
+                    columns={"document_CreatedWhen": "updatetime"},
+                    inplace=True,
                 )
             elif "activity_AdmissionDate" in results.columns:
                 results.rename(
-                    columns={"activity_AdmissionDate": "updatetime"}, inplace=True
+                    columns={"activity_AdmissionDate": "updatetime"},
+                    inplace=True,
                 )
 
             # Ensure client_idcode is present for db storage
@@ -546,6 +549,7 @@ def _fetch_data_from_dummy_generator(
 
     Returns:
         pd.DataFrame: A DataFrame containing the generated dummy data.
+
     """
     start_year = config_obj.global_start_year
     start_month = config_obj.global_start_month

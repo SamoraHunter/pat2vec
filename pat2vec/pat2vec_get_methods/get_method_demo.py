@@ -74,6 +74,7 @@ def search_demographics(
 
     Raises:
         ValueError: If essential arguments are None.
+
     """
     if (
         output_filename
@@ -82,7 +83,9 @@ def search_demographics(
         and hasattr(config_obj, "proj_name")
     ):
         output_filename = os.path.join(
-            config_obj.root_path, config_obj.proj_name, output_filename
+            config_obj.root_path,
+            config_obj.proj_name,
+            output_filename,
         )
 
     if output_filename and os.path.exists(output_filename) and not overwrite:
@@ -107,7 +110,12 @@ def search_demographics(
 
     start_year, start_month, start_day, end_year, end_month, end_day = (
         validate_input_dates(
-            start_year, start_month, start_day, end_year, end_month, end_day
+            start_year,
+            start_month,
+            start_day,
+            end_year,
+            end_month,
+            end_day,
         )
     )
 
@@ -151,6 +159,7 @@ def get_demographics_data(pat2vec_obj: object, pat_list: list[str]) -> pd.DataFr
 
     Raises:
         ValueError: If config attributes are missing or search fails.
+
     """
     config = pat2vec_obj.config_obj
 
@@ -179,14 +188,16 @@ def get_demographics_data(pat2vec_obj: object, pat_list: list[str]) -> pd.DataFr
         and config.ethnicity_abstractor_enabled
     ):
         results = EthnicityAbstractor.abstractEthnicity(
-            results, config.ethnicity_column
+            results,
+            config.ethnicity_column,
         )
 
     return results
 
 
 def process_demographics_data(
-    demo_data: pd.DataFrame, patlist: list[str]
+    demo_data: pd.DataFrame,
+    patlist: list[str],
 ) -> pd.DataFrame:
     """Processes raw demographics data to return the most recent record per patient.
 
@@ -200,6 +211,7 @@ def process_demographics_data(
 
     Raises:
         Exception: Annotated but caught; returns fallback DataFrame on error.
+
     """
     if len(demo_data) == 0:
         # No data found, return DataFrame with just patient IDs
@@ -252,10 +264,11 @@ def get_demographics3(
     Raises:
         ValueError: If `config_obj` or `cohort_searcher_with_terms_and_search` is
             None, or if `patlist` is empty.
+
     """
     if config_obj is None:
         raise ValueError(
-            "config_obj cannot be None. Please provide a valid configuration."
+            "config_obj cannot be None. Please provide a valid configuration.",
         )
 
     if cohort_searcher_with_terms_and_search is None:

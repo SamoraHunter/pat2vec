@@ -24,6 +24,7 @@ def is_safe_host(h: str) -> bool:
 
     Returns:
         True if the host is safe for dummy data operations, False otherwise.
+
     """
     if h in [
         "localhost",
@@ -39,8 +40,9 @@ def is_safe_host(h: str) -> bool:
     # Allow private IP ranges (common for Docker bridge/internal networks)
     return bool(
         re.match(
-            r"^(127\.|10\.|172\.(1[6-9]|2[0-9]|3[0-1])\.|172\.17\.0\.1|192\.168\.)", h
-        )
+            r"^(127\.|10\.|172\.(1[6-9]|2[0-9]|3[0-1])\.|172\.17\.0\.1|192\.168\.)",
+            h,
+        ),
     )
 
 
@@ -54,6 +56,7 @@ def maybe_nan(value: Any, probability: float = 0.2) -> Any:
 
     Returns:
         The original value or `np.nan`.
+
     """
     return value if random.random() > probability else np.nan
 
@@ -78,6 +81,7 @@ def create_random_date_from_globals(
 
     Returns:
         A random datetime object within the specified range.
+
     """
     # Convert day params to int for robustness (handles string "01" from config)
     start_day_val = int(start_day) if start_day is not None else 1
@@ -105,7 +109,6 @@ def create_random_date_from_globals(
 
 def generate_uuid(prefix: str, length: int = 7) -> str:
     """Generates a UUID-like string with a given prefix."""
-
     chars = string.ascii_uppercase + string.digits
     random_chars = "".join(random.choices(chars, k=length))
     return f"{prefix}{random_chars}"
@@ -121,6 +124,7 @@ def generate_uuid_list(n: int, prefix: str, length: int = 7) -> list[str]:
 
     Returns:
         A list of generated UUID-like strings.
+
     """
     return [generate_uuid(prefix, length) for _ in range(n)]
 
@@ -140,6 +144,7 @@ def extract_date_range(
     Returns:
         A tuple of six integers (start_year, start_month, start_day,
         end_year, end_month, end_day), or None if the pattern is not found.
+
     """
     pattern = r"(\d{4})-(\d{2})-(\d{2}) TO (\d{4})-(\d{2})-(\d{2})"
     match = re.search(pattern, date_string)
@@ -177,11 +182,11 @@ def extract_search_term_obscatalogmasteritem_displayname(
 
     Returns:
         The extracted search term, or the original string if no match is found.
+
     """
     match = re.search(r"obscatalogmasteritem_displayname:\((.*?)\)", search_string)
     if match:
         search_term = match.group(1).replace('"', "").replace("'", "").strip()
         search_term = search_term.split("AND", 1)[0].split("OR", 1)[0].strip()
         return search_term
-    else:
-        return search_string
+    return search_string

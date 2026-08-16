@@ -1,5 +1,4 @@
-"""
-Provides a mapping from pat2vec's `get` methods to the default Elasticsearch
+"""Provides a mapping from pat2vec's `get` methods to the default Elasticsearch
 indices they query. This helps users understand the data sources for each
 feature extraction function.
 """
@@ -41,8 +40,7 @@ GET_METHOD_INDEX_MAP: dict[str, str] = {
 
 
 def get_index_for_method(method_name: str) -> str | None:
-    """
-    Retrieves the default Elasticsearch index for a given `get` method.
+    """Retrieves the default Elasticsearch index for a given `get` method.
 
     Args:
         method_name: The name of the `get` method (e.g., 'get_current_pat_bloods').
@@ -50,15 +48,16 @@ def get_index_for_method(method_name: str) -> str | None:
     Returns:
         The name of the default index as a string, or None if the method
         is not found in the map.
+
     """
     return GET_METHOD_INDEX_MAP.get(method_name)
 
 
 def get_all_method_indices() -> dict[str, str]:
-    """
-    Retrieves a dictionary of all `get` methods and their default indices.
+    """Retrieves a dictionary of all `get` methods and their default indices.
 
     Returns:
         A dictionary mapping method names to their default index names.
+
     """
     return GET_METHOD_INDEX_MAP.copy()

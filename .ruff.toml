@@ -4,7 +4,6 @@ line-length = 88
 [lint]
 select = ["ALL"]
 ignore = [
-    "LOG015",
     "BLE001",
     "G004",
     "TRY400",

@@ -27,6 +27,7 @@ def _calculate_age_at_observation(dob: datetime, observation_date: datetime) -> 
 
     Returns:
         Age in years as an integer.
+
     """
     age = observation_date.year - dob.year
     if (observation_date.month, observation_date.day) < (dob.month, dob.day):
@@ -50,6 +51,7 @@ def _get_dnr_probability(age: int, is_icu_hdu: bool = False) -> float:
 
     Returns:
         Probability of "Not for cardiopulmonary resuscitation".
+
     """
     if age < 60:
         base_prob = random.uniform(0.95, 0.98)
@@ -67,7 +69,9 @@ def _get_dnr_probability(age: int, is_icu_hdu: bool = False) -> float:
 
 
 def _determine_resuscitation_status(
-    age: int, observation_date: datetime, is_icu_hdu: bool = False
+    age: int,
+    observation_date: datetime,
+    is_icu_hdu: bool = False,
 ) -> str:
     """Determines resuscitation status based on age and context.
 
@@ -78,13 +82,13 @@ def _determine_resuscitation_status(
 
     Returns:
         Either "For cardiopulmonary resuscitation" or "Not for cardiopulmonary resuscitation".
+
     """
     not_for_cpr_prob = _get_dnr_probability(age, is_icu_hdu)
 
     if random.random() < not_for_cpr_prob:
         return "Not for cardiopulmonary resuscitation"
-    else:
-        return "For cardiopulmonary resuscitation"
+    return "For cardiopulmonary resuscitation"
 
 
 def generate_core_resus_data(
@@ -123,6 +127,7 @@ def generate_core_resus_data(
 
     Raises:
         None
+
     """
     df_holder_list = []
 
@@ -163,7 +168,9 @@ def generate_core_resus_data(
             is_icu_hdu = random.random() < 0.15
 
             status = _determine_resuscitation_status(
-                age_at_observation, obs_date, is_icu_hdu
+                age_at_observation,
+                obs_date,
+                is_icu_hdu,
             )
 
             resus_statuses.append(status)

@@ -83,6 +83,7 @@ def search_epic_patients(
     Raises:
         ValueError: If `cohort_searcher_with_terms_and_search` is None.
         ValueError: If `patient_durable_keys` is None.
+
     """
     if (
         output_filename
@@ -91,7 +92,9 @@ def search_epic_patients(
         and hasattr(config_obj, "proj_name")
     ):
         output_filename = os.path.join(
-            config_obj.root_path, config_obj.proj_name, output_filename
+            config_obj.root_path,
+            config_obj.proj_name,
+            output_filename,
         )
 
     start_time = config_obj.start_time
@@ -119,7 +122,12 @@ def search_epic_patients(
 
     start_year, start_month, start_day, end_year, end_month, end_day = (
         validate_input_dates(
-            start_year, start_month, start_day, end_year, end_month, end_day
+            start_year,
+            start_month,
+            start_day,
+            end_year,
+            end_month,
+            end_day,
         )
     )
 
@@ -128,7 +136,7 @@ def search_epic_patients(
     if additional_custom_search_string:
         search_string += f" {additional_custom_search_string}"
 
-    fields_to_use = fields_override if fields_override else EPIC_PATIENTS_FIELDS
+    fields_to_use = fields_override or EPIC_PATIENTS_FIELDS
 
     results = cohort_searcher_with_terms_and_search(
         index_name=index_name,
@@ -181,6 +189,7 @@ def get_epic_patients(
 
     Raises:
         ValueError: If `config_obj` is None.
+
     """
     if config_obj is None:
         raise ValueError("config_obj cannot be None.")
@@ -223,7 +232,8 @@ def get_epic_patients(
         current_pat_raw.rename(columns={id_field_name: "client_idcode"}, inplace=True)
 
     features = pd.DataFrame(
-        data=[current_pat_client_id_code], columns=["client_idcode"]
+        data=[current_pat_client_id_code],
+        columns=["client_idcode"],
     )
 
     if len(current_pat_raw) == 0:
@@ -231,7 +241,8 @@ def get_epic_patients(
 
     # Take the latest record if multiple exist for a patient within the time window
     current_pat_raw = current_pat_raw.sort_values(
-        by=time_field, ascending=False
+        by=time_field,
+        ascending=False,
     ).drop_duplicates(subset=["client_idcode"])
 
     # Extract numerical feature: patient_Age
@@ -261,7 +272,7 @@ def get_epic_patients(
             value = current_pat_raw[field].iloc[0]
             if pd.notna(value):
                 features[f"epic_pat_{field.lower().replace('patient_', '')}"] = int(
-                    value
+                    value,
                 )
 
     # Extract deceased status

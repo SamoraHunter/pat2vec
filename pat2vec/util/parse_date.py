@@ -9,8 +9,7 @@ def validate_input_dates(
     end_month: int | str,
     end_day: int | str,
 ) -> tuple[str, str, str, str, str, str]:
-    """
-    Validates start and end date components, accepting ints or strings.
+    """Validates start and end date components, accepting ints or strings.
 
     This function converts all inputs to integers, checks if they form valid
     calendar dates, and formats the month/day with a leading zero if needed.
@@ -30,6 +29,7 @@ def validate_input_dates(
     Raises:
         ValueError: If any input cannot be converted to an integer or if
                     the date is invalid (e.g., month=13).
+
     """
     try:
         # Step 1: Coerce all start date inputs to integers.

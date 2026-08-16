@@ -12,7 +12,8 @@ random.seed(random_state)
 
 
 def generate_age_with_demographic_weighting(
-    minimum_age: int = 18, maximum_age: int = 90
+    minimum_age: int = 18,
+    maximum_age: int = 90,
 ) -> int:
     """Generates age with realistic demographic distribution.
 
@@ -26,6 +27,7 @@ def generate_age_with_demographic_weighting(
 
     Returns:
         Randomly selected age with realistic distribution.
+
     """
     ages = np.arange(minimum_age, maximum_age + 1)
 
@@ -56,6 +58,7 @@ def generate_gender_population_balanced(female_fraction: float = 0.51) -> str:
 
     Returns:
         "Female" or "Male".
+
     """
     return "Female" if random.random() < female_fraction else "Male"
 
@@ -90,6 +93,7 @@ def generate_epic_patients_data(
 
     Raises:
         None
+
     """
     df_holder_list = []
 

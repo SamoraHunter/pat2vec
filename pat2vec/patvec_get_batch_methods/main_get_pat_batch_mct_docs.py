@@ -28,6 +28,7 @@ def get_pat_batch_mct_docs(
 
     Returns:
         A DataFrame containing the batch of MCT documents.
+
     """
     if config_obj is None or not all(
         hasattr(config_obj, attr)
@@ -52,7 +53,8 @@ def get_pat_batch_mct_docs(
     split_clinical_notes_bool = config_obj.split_clinical_notes
 
     batch_epr_target_path_mct = os.path.join(
-        config_obj.pre_document_batch_path_mct, str(current_pat_client_id_code) + ".csv"
+        config_obj.pre_document_batch_path_mct,
+        str(current_pat_client_id_code) + ".csv",
     )
 
     batch_target = pd.DataFrame()
@@ -118,7 +120,9 @@ def get_pat_batch_mct_docs(
 
                 if split_clinical_notes_bool:
                     batch_target = split_and_append_chunks(
-                        batch_target, epr=False, mct=True
+                        batch_target,
+                        epr=False,
+                        mct=True,
                     )
 
                 if config_obj.storage_backend == "database" and not batch_target.empty:
@@ -143,7 +147,9 @@ def get_pat_batch_mct_docs(
                             ]
                             for col in cols_to_drop:
                                 batch_target.drop(
-                                    columns=col, inplace=True, errors="ignore"
+                                    columns=col,
+                                    inplace=True,
+                                    errors="ignore",
                                 )
 
                             # Fix problematic backslashes in text columns that cause SQLite parameter binding issues
@@ -170,7 +176,9 @@ def get_pat_batch_mct_docs(
                             for col in timestamp_cols:
                                 if col in batch_target.columns:
                                     batch_target[col] = pd.to_datetime(
-                                        batch_target[col], errors="coerce", utc=True
+                                        batch_target[col],
+                                        errors="coerce",
+                                        utc=True,
                                     ).dt.strftime("%Y-%m-%d %H:%M:%S")
 
                             # Convert any list/dict/tuple columns to JSON strings for database compatibility
@@ -179,7 +187,10 @@ def get_pat_batch_mct_docs(
                                     if (
                                         batch_target[col]
                                         .apply(
-                                            lambda x: isinstance(x, (list, dict, tuple))
+                                            lambda x: isinstance(
+                                                x,
+                                                (list, dict, tuple),
+                                            ),
                                         )
                                         .any()
                                     ):
@@ -188,7 +199,7 @@ def get_pat_batch_mct_docs(
                                                 json.dumps(x)
                                                 if isinstance(x, (list, dict, tuple))
                                                 else x
-                                            )
+                                            ),
                                         )
 
                             with engine.begin() as connection:
@@ -204,7 +215,7 @@ def get_pat_batch_mct_docs(
                                 )
                                 if overwrite_stored_pat_docs:
                                     del_query = text(
-                                        f"DELETE FROM {db_table if engine.name == 'sqlite' else f'{schema_name}.{table_name}'} WHERE client_idcode = :pat_id"
+                                        f"DELETE FROM {db_table if engine.name == 'sqlite' else f'{schema_name}.{table_name}'} WHERE client_idcode = :pat_id",
                                     )
                                     connection.execute(
                                         del_query,
@@ -221,7 +232,8 @@ def get_pat_batch_mct_docs(
                         logging.error(f"Failed to save MCT docs batch to DB: {e}")
                 elif not batch_target.empty:
                     os.makedirs(
-                        os.path.dirname(batch_epr_target_path_mct), exist_ok=True
+                        os.path.dirname(batch_epr_target_path_mct),
+                        exist_ok=True,
                     )
                     batch_target.to_csv(batch_epr_target_path_mct, index=False)
         else:

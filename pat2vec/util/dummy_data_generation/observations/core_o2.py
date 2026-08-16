@@ -51,6 +51,7 @@ def generate_clinically_coherent_spO2(
 
     Returns:
         A str representing the SpO2 value or oxygen delivery method.
+
     """
     np.random.seed(random_state + hash(baseline_severity) % 10000)
     random.seed(random_state + hash(baseline_severity) % 10000)
@@ -67,7 +68,9 @@ def generate_clinically_coherent_spO2(
         severity_weights = [0.01, 0.03, 0.10, 0.25, 0.35, 0.26]
 
     _value_idx = random.choices(
-        range(len(DEFAULT_SPO2_VALUES)), weights=severity_weights, k=1
+        range(len(DEFAULT_SPO2_VALUES)),
+        weights=severity_weights,
+        k=1,
     )[0]
 
     method_prob = random.random()
@@ -118,6 +121,7 @@ def generate_core_o2_data(
 
     Returns:
         A pandas DataFrame with generated dummy SpO2 data.
+
     """
     df_holder_list = []
 
@@ -163,7 +167,7 @@ def generate_core_o2_data(
             else:
                 year_range = global_end_year - global_start_year + 1
                 target_year = int(
-                    global_start_year + (random.random() ** 2) * year_range
+                    global_start_year + (random.random() ** 2) * year_range,
                 )
                 target_year = min(max(target_year, global_start_year), global_end_year)
                 target_month = random.randint(1, 12)
@@ -195,7 +199,7 @@ def generate_core_o2_data(
                 baseline_severity = "severe_hypoxia"
 
             spO2_value = generate_clinically_coherent_spO2(
-                baseline_severity=baseline_severity
+                baseline_severity=baseline_severity,
             )
 
             spo2_values.append(spO2_value)

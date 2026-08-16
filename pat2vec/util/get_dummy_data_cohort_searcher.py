@@ -55,6 +55,7 @@ def is_safe_host(h: str) -> bool:
 
     Raises:
         None
+
     """
     if h in [
         "localhost",
@@ -70,8 +71,9 @@ def is_safe_host(h: str) -> bool:
     # 127.x.x.x, 10.x.x.x, 172.16-31.x.x, 192.168.x.x
     return bool(
         re.match(
-            r"^(127\.|10\.|172\.(1[6-9]|2[0-9]|3[0-1])\.|172\.17\.0\.1|192\.168\.)", h
-        )
+            r"^(127\.|10\.|172\.(1[6-9]|2[0-9]|3[0-1])\.|172\.17\.0\.1|192\.168\.)",
+            h,
+        ),
     )
 
 
@@ -88,6 +90,7 @@ def maybe_nan(value: Any, probability: float = 0.2) -> Any | float:
 
     Raises:
         None
+
     """
     return value if random.random() > probability else np.nan
 
@@ -123,6 +126,7 @@ def generate_epr_documents_data(
 
     Raises:
         None
+
     """
     if fields_list is None:
         fields_list = [
@@ -137,7 +141,7 @@ def generate_epr_documents_data(
     logger.debug(f"generate_epr_documents_data received fields_list: {fields_list}")
     if len(entered_list) > 0:
         logger.info(
-            f"Generating {num_rows} dummy EPR docs for {len(entered_list)} patients, e.g., {entered_list[0]}"
+            f"Generating {num_rows} dummy EPR docs for {len(entered_list)} patients, e.g., {entered_list[0]}",
         )
     else:
         return pd.DataFrame(columns=fields_list)
@@ -201,7 +205,7 @@ def generate_epr_documents_data(
             df["body_analysed"] = df["body_analysed"].fillna("")
 
         logger.debug(
-            f"generate_epr_documents_data returning DataFrame with columns: {df.columns.tolist()}"
+            f"generate_epr_documents_data returning DataFrame with columns: {df.columns.tolist()}",
         )
 
         return df
@@ -248,6 +252,7 @@ def generate_epr_documents_personal_data(
 
     Raises:
         None
+
     """
     df_holder_list = []
 
@@ -259,7 +264,7 @@ def generate_epr_documents_personal_data(
         first_name = faker.first_name()
         last_name = faker.last_name()
         dob = faker.date_of_birth(minimum_age=18, maximum_age=90).strftime(
-            "%Y-%m-%dT%H:%M:%S"
+            "%Y-%m-%dT%H:%M:%S",
         )
         gender = random.choice(["male", "female"])
 
@@ -357,8 +362,8 @@ def generate_diagnostic_orders_data(
 
     Raises:
         None
-    """
 
+    """
     df_holder_list = []
 
     for i in range(len(entered_list)):
@@ -476,6 +481,7 @@ def generate_drug_orders_data(
 
     Raises:
         None
+
     """
     df_holder_list = []
 
@@ -495,7 +501,7 @@ def generate_drug_orders_data(
                         random.randint(0, 23),
                         random.randint(0, 59),
                         random.randint(0, 59),
-                    ).strftime("%Y-%m-%dT%H:%M:%S")
+                    ).strftime("%Y-%m-%dT%H:%M:%S"),
                 )
             order_entered_dates = dates
             order_created_dates = dates
@@ -617,8 +623,8 @@ def generate_observations_MRC_text_data(
 
     Raises:
         None
-    """
 
+    """
     df_holder_list = []
 
     for i in range(len(entered_list)):
@@ -718,6 +724,7 @@ def generate_observations_Reports_text_data(
 
     Raises:
         None
+
     """
     random.seed(random_state)
     df_holder_list = []
@@ -839,6 +846,7 @@ def generate_appointments_data(
 
     Raises:
         None
+
     """
     df_holder_list = []
 
@@ -976,6 +984,7 @@ def generate_observations_data(
 
     Raises:
         None
+
     """
     if fields_list is None:
         fields_list = [
@@ -1065,6 +1074,7 @@ def generate_basic_observations_data(
 
     Raises:
         None
+
     """
     if fields_list is None:
         fields_list = [
@@ -1106,7 +1116,7 @@ def generate_basic_observations_data(
                         random.randint(0, 23),
                         random.randint(0, 59),
                         random.randint(0, 59),
-                    ).strftime("%Y-%m-%dT%H:%M:%S")
+                    ).strftime("%Y-%m-%dT%H:%M:%S"),
                 )
             basicobs_entered_dates = dates
             order_entered_dates = dates
@@ -1206,8 +1216,7 @@ def generate_basic_observations_textual_obs_data(
     fields_list: list[str] | None = None,
 ) -> pd.DataFrame:
     # logger.debug("generate_basic_observations_textual_obs_data")
-    """
-    Generates dummy textual data for the 'basic_observations' index.
+    """Generates dummy textual data for the 'basic_observations' index.
 
     Args:
         num_rows: Number of rows to generate for each client.
@@ -1220,6 +1229,7 @@ def generate_basic_observations_textual_obs_data(
 
     Returns:
         A pandas DataFrame with generated dummy textual observation data.
+
     """
     if fields_list is None:
         fields_list = [
@@ -1322,12 +1332,13 @@ def extract_date_range(
 
     Raises:
         None
+
     """
     pattern = r"(\d{4})-(\d{2})-(\d{2}) TO (\d{4})-(\d{2})-(\d{2})"
     match = re.search(pattern, date_string)  # type: ignore
     if not match:
         logger.warning(
-            f"No date range found in search string: {date_string}. Using default global dates."
+            f"No date range found in search string: {date_string}. Using default global dates.",
         )
         # Fallback to default global dates if no date range is found
         return 1995, 1, 1, 2023, 12, 31  # Default values
@@ -1386,6 +1397,7 @@ def generate_epic_encounters_data(
 
     Raises:
         None
+
     """
     df_holder_list = []
 
@@ -1481,6 +1493,7 @@ def generate_epic_clinical_notes_data(
 
     Raises:
         None
+
     """
     # Provide default fields if not specified (for compatibility with annotation functions)
     if fields_list is None:
@@ -1526,7 +1539,7 @@ def generate_epic_clinical_notes_data(
         df_holder_list.append(pd.DataFrame(data))
 
     if not df_holder_list:
-        return pd.DataFrame(columns=fields_list if fields_list else [])
+        return pd.DataFrame(columns=fields_list or [])
     final_df = pd.concat(df_holder_list, ignore_index=True)
     unique_fields = list(dict.fromkeys(fields_list)) if fields_list else []
     # Ensure document_Content is present if generated
@@ -1577,6 +1590,7 @@ def generate_epic_medical_history_data(
 
     Raises:
         None
+
     """
     df_holder_list = []
 
@@ -1656,6 +1670,7 @@ def generate_epic_orders_data(
 
     Raises:
         None
+
     """
     df_holder_list = []
 
@@ -1763,6 +1778,7 @@ def generate_epic_lab_results_data(
 
     Raises:
         None
+
     """
     df_holder_list = []
 
@@ -1850,6 +1866,7 @@ def generate_epic_patients_data(
 
     Raises:
         None
+
     """
     df_holder_list = []
     for client_id_code in entered_list:
@@ -1917,6 +1934,7 @@ def generate_epic_imaging_reports_data(
 
     Raises:
         None
+
     """
     df_holder_list = []
     for client_id_code in entered_list:
@@ -2030,6 +2048,7 @@ def cohort_searcher_with_terms_and_search_dummy(
     This function acts as a stand-in for a real CogStack/Elasticsearch query,
     routing requests to different dummy data generator functions based on the
     `index_name` and `search_string`.
+
     Args:
         index_name: The name of the target index (e.g., 'epr_documents').
         fields_list: A list of fields to be returned in the DataFrame.
@@ -2037,17 +2056,18 @@ def cohort_searcher_with_terms_and_search_dummy(
         entered_list: The list of values for the term-level query.
         search_string: A string simulating a query string search, used for
             routing to the correct data generator.
+
     Returns:
         A pandas DataFrame containing the generated dummy data.
-    """
 
+    """
     # set here for drop in replacement of function
     use_GPT = False
     verbose = False
 
     if verbose:
         logger.debug(
-            f"cohort_searcher_with_terms_and_search_dummy received index_name: {index_name}, fields_list: {fields_list}"
+            f"cohort_searcher_with_terms_and_search_dummy received index_name: {index_name}, fields_list: {fields_list}",
         )
 
     date_range_tuple = extract_date_range(search_string)
@@ -2186,7 +2206,8 @@ def cohort_searcher_with_terms_and_search_dummy(
             if verbose:
                 logger.debug("Generating data for 'basicobs_value_numeric'")
             num_rows = random.randint(
-                1, 10
+                1,
+                10,
             )  # Ensure at least 1 row for basic observations
             df = generate_basic_observations_data(
                 num_rows,
@@ -2213,7 +2234,7 @@ def cohort_searcher_with_terms_and_search_dummy(
             # But generate dates within the range that would be filtered (June 14-17 to cover possible date slices)
             base_date = datetime(2023, 6, 15)
             print(
-                f"DEBUG cohort_searcher: Generating BMI data with num_rows={num_rows}, base_date={base_date}"
+                f"DEBUG cohort_searcher: Generating BMI data with num_rows={num_rows}, base_date={base_date}",
             )
             df = generate_bmi_data(
                 num_rows,
@@ -2371,7 +2392,7 @@ def cohort_searcher_with_terms_and_search_dummy(
             probabilities = [0.7, 0.1, 0.05, 0.05, 0.05]
             num_rows = random.choices(range(1, 6), probabilities)[0]
             search_term = str(
-                extract_search_term_obscatalogmasteritem_displayname(search_string)
+                extract_search_term_obscatalogmasteritem_displayname(search_string),
             )
             df = generate_observations_data(
                 num_rows,
@@ -2404,7 +2425,7 @@ def cohort_searcher_with_terms_and_search_dummy(
             )
             return df
 
-        elif "diagnostic" in search_string:
+        if "diagnostic" in search_string:
             if verbose:
                 logger.debug("Generating data for 'orders' with diagnostic")
             num_rows = random.randint(1, 10)  # Ensure at least 1 row for diagnostics
@@ -2474,7 +2495,7 @@ def cohort_searcher_with_terms_and_search_dummy(
         # For epic_medical_history, document_PatientDurableKey is the primary patient identifier
         if term_name != "document_PatientDurableKey":
             logger.warning(
-                f"Searching epic_medical_history with term_name '{term_name}'. Expected 'document_PatientDurableKey'."
+                f"Searching epic_medical_history with term_name '{term_name}'. Expected 'document_PatientDurableKey'.",
             )
 
         if verbose:
@@ -2496,7 +2517,7 @@ def cohort_searcher_with_terms_and_search_dummy(
         # For epic_orders, document_PatientDurableKey is the primary patient identifier
         if term_name != "document_PatientDurableKey":
             logger.warning(
-                f"Searching epic_orders with term_name '{term_name}'. Expected 'document_PatientDurableKey'."
+                f"Searching epic_orders with term_name '{term_name}'. Expected 'document_PatientDurableKey'.",
             )
 
         if verbose:
@@ -2533,7 +2554,7 @@ def cohort_searcher_with_terms_and_search_dummy(
     elif index_name == "epic_patients":
         if term_name != "patient_DurableKey":
             logger.warning(
-                f"Searching epic_patients with term_name '{term_name}'. Expected 'patient_DurableKey'."
+                f"Searching epic_patients with term_name '{term_name}'. Expected 'patient_DurableKey'.",
             )
         if verbose:
             logger.debug("Generating data for 'epic_patients'")
@@ -2551,7 +2572,7 @@ def cohort_searcher_with_terms_and_search_dummy(
     elif index_name == "epic_imaging_reports":
         if term_name != "document_PatientDurableKey":
             logger.warning(
-                f"Searching epic_imaging_reports with term_name '{term_name}'. Expected 'document_PatientDurableKey'."
+                f"Searching epic_imaging_reports with term_name '{term_name}'. Expected 'document_PatientDurableKey'.",
             )
         if verbose:
             logger.debug("Generating data for 'epic_imaging_reports'")
@@ -2569,7 +2590,7 @@ def cohort_searcher_with_terms_and_search_dummy(
     elif index_name == "epic_clinical_notes_appointments":
         if term_name != "document_PatientDurableKey":
             logger.warning(
-                f"Searching epic_clinical_notes_appointments with term_name '{term_name}'. Expected 'document_PatientDurableKey'."
+                f"Searching epic_clinical_notes_appointments with term_name '{term_name}'. Expected 'document_PatientDurableKey'.",
             )
         if verbose:
             logger.debug("Generating data for 'epic_clinical_notes_appointments'")
@@ -2589,12 +2610,13 @@ def cohort_searcher_with_terms_and_search_dummy(
         # If no specific generator matched (index_name unknown), ensure it has the expected columns.
         logger.warning(
             f"No specific dummy data generator for index '{index_name}' with search string '{search_string}'. "
-            f"Returning an empty DataFrame with requested fields."
+            f"Returning an empty DataFrame with requested fields.",
         )
         cols = list(
             dict.fromkeys(
-                ["updatetime", "_index", "_id", "_score", "client_idcode"] + fields_list
-            )
+                ["updatetime", "_index", "_id", "_score", "client_idcode"]
+                + fields_list,
+            ),
         )
         df = pd.DataFrame(columns=cols)
         return df
@@ -2637,6 +2659,7 @@ def generate_patient_timeline(client_idcode: str) -> str:
 
     Raises:
         None
+
     """
     logging.getLogger("transformers").setLevel(logging.WARNING)
     generator = pipeline("text-generation", model="gpt2")
@@ -2660,13 +2683,15 @@ def generate_patient_timeline(client_idcode: str) -> str:
 
     # Generate a random timestamp between 1995 and the current time
     current_time = datetime.utcfromtimestamp(
-        random.randint(789331200, int(datetime.now().timestamp()))
+        random.randint(789331200, int(datetime.now().timestamp())),
     )
 
     for i in range(num_entries):
         entry_timestamp = current_time + timedelta(days=random.randint(1, 30))
         entry_text = generator(
-            "Patient presented with:", max_length=50, do_sample=True
+            "Patient presented with:",
+            max_length=50,
+            do_sample=True,
         )[0]["generated_text"]
 
         # Update patient information
@@ -2701,6 +2726,7 @@ def generate_patient_timeline_faker(client_idcode: str) -> str:
 
     Raises:
         None
+
     """
     probabilities = [0.7, 0.1, 0.05, 0.05, 0.05]  # Adjust as needed
 
@@ -2721,7 +2747,7 @@ def generate_patient_timeline_faker(client_idcode: str) -> str:
 
     # Generate a random timestamp between 1995 and the current time
     current_time = datetime.utcfromtimestamp(
-        random.randint(789331200, int(datetime.now().timestamp()))
+        random.randint(789331200, int(datetime.now().timestamp())),
     )
 
     for i in range(num_entries):
@@ -2760,6 +2786,7 @@ def extract_search_term_obscatalogmasteritem_displayname(search_string: str) -> 
 
     Raises:
         None
+
     """
     match = re.search(r"obscatalogmasteritem_displayname:\((.*?)\)", search_string)
     if match:
@@ -2768,12 +2795,12 @@ def extract_search_term_obscatalogmasteritem_displayname(search_string: str) -> 
         # Ignore anything after 'AND' or 'OR'
         search_term = search_term.split("AND", 1)[0].split("OR", 1)[0].strip()
         return search_term
-    else:
-        return search_string
+    return search_string
 
 
 def run_generate_patient_timeline_and_append(
-    n: int = 10, output_path: str = os.path.join("test_files", "dummy_timeline.csv")
+    n: int = 10,
+    output_path: str = os.path.join("test_files", "dummy_timeline.csv"),
 ) -> None:
     """Generates and appends dummy patient timelines to a CSV file.
 
@@ -2791,15 +2818,15 @@ def run_generate_patient_timeline_and_append(
     Raises:
         FileNotFoundError: If the output_path does not exist and cannot be created.
         Exception: For any other unexpected errors during timeline generation or file operations.
-    """
 
+    """
     try:
         # Check if the CSV file exists, if not, create a new DataFrame
         if os.path.exists(output_path):  # If the CSV file exists
             df = pd.read_csv(output_path)  # Read existing CSV file
         else:  # If the CSV file doesn't exist
             df = pd.DataFrame(
-                columns=["client_idcode", "body_analysed"]  # type: ignore
+                columns=["client_idcode", "body_analysed"],  # type: ignore
             )  # Create a new DataFrame with two columns
     except FileNotFoundError:
         logger.error(f"FileNotFoundError: {output_path} doesn't exist!")
@@ -2823,8 +2850,8 @@ def run_generate_patient_timeline_and_append(
                     {
                         "client_idcode": client_idcode,
                         "body_analysed": patient_timeline_text,
-                    }
-                ]
+                    },
+                ],
             )
             df = pd.concat([df, new_row], ignore_index=True)
         except Exception as e:
@@ -2834,7 +2861,10 @@ def run_generate_patient_timeline_and_append(
     # Write DataFrame to CSV with append mode
     try:
         df.to_csv(
-            output_path, mode="a", header=not os.path.exists(output_path), index=False
+            output_path,
+            mode="a",
+            header=not os.path.exists(output_path),
+            index=False,
         )  # Write to CSV file
     except Exception as e:
         logger.error(f"Exception: {e}")
@@ -2858,6 +2888,7 @@ def get_patient_timeline_dummy(
 
     Raises:
         None
+
     """
     try:
         df: pd.DataFrame = pd.read_csv(output_path)
@@ -2890,7 +2921,7 @@ def get_patient_timeline_dummy(
 
     # Get the value of the 'body_analysed' column from the random row
     try:
-        return cast(str, sample.iloc[0]["body_analysed"])
+        return cast("str", sample.iloc[0]["body_analysed"])
     except KeyError:
         logger.error("KeyError: 'body_analysed' column doesn't exist in the DataFrame!")
         return None
@@ -2908,6 +2939,7 @@ def generate_uuid(prefix: str, length: int = 7) -> str:
 
     Raises:
         ValueError: When the prefix is not 'P' or 'V'.
+
     """
     if prefix not in ("P", "V"):
         raise ValueError("Prefix must be 'P' or 'V'")
@@ -2932,6 +2964,7 @@ def generate_uuid_list(n: int, prefix: str, length: int = 7) -> list[str]:
 
     Raises:
         None
+
     """
     uuid_list = [generate_uuid(prefix, length) for _ in range(n)]
     return uuid_list
@@ -2966,6 +2999,7 @@ def generate_covid_observations_data(
 
     Raises:
         None
+
     """
     from pat2vec.pat2vec_get_methods.get_method_covid import (
         COVID_FIELDS,
@@ -3052,6 +3086,7 @@ def generate_hospital_site_data(
 
     Raises:
         None
+
     """
     df_holder_list = []
 
@@ -3148,6 +3183,7 @@ def generate_news_data(
 
     Raises:
         None
+
     """
     df_holder_list = []
 
@@ -3239,6 +3275,7 @@ def generate_bmi_data(
 
     Raises:
         None
+
     """
     df_holder_list = []
     observation_types = ["OBS BMI Calculation", "OBS Weight", "OBS Height"]
@@ -3280,7 +3317,7 @@ def generate_bmi_data(
                         random.randint(0, 23),
                         random.randint(0, 59),
                         random.randint(0, 59),
-                    )
+                    ),
                 )
         else:
             # Generate dates concentrated around June 2023 to match common test date ranges
@@ -3308,7 +3345,7 @@ def generate_bmi_data(
                                 random.randint(0, 23),
                                 random.randint(0, 59),
                                 random.randint(0, 59),
-                            )
+                            ),
                         )
                     else:
                         # Use original range for remaining
@@ -3320,7 +3357,7 @@ def generate_bmi_data(
                                 global_end_month,
                                 global_start_day,
                                 global_end_day,
-                            )
+                            ),
                         )
 
         data = {
@@ -3350,7 +3387,8 @@ def generate_bmi_data(
 
 
 def populate_elastic_with_dummy_data(
-    config_obj: Any, n_patients: int = 10
+    config_obj: Any,
+    n_patients: int = 10,
 ) -> list[str]:
     """Generates dummy data and ingests it into Elasticsearch.
 
@@ -3368,13 +3406,16 @@ def populate_elastic_with_dummy_data(
 
     Raises:
         None
+
     """
     # Safeguard: Ensure testing flags are enabled in config
     if not getattr(config_obj, "testing", False) or not getattr(
-        config_obj, "testing_elastic", False
+        config_obj,
+        "testing_elastic",
+        False,
     ):
         logger.error(
-            "Safety Block: 'testing' and 'testing_elastic' must both be True to populate dummy data. Aborting."
+            "Safety Block: 'testing' and 'testing_elastic' must both be True to populate dummy data. Aborting.",
         )
         return []
 
@@ -3390,7 +3431,7 @@ def populate_elastic_with_dummy_data(
 
     if not os.path.exists(creds_path):
         logger.error(
-            f"Safety Block: Test credentials file '{creds_filename}' not found at {creds_path}. Aborting dummy data population."
+            f"Safety Block: Test credentials file '{creds_filename}' not found at {creds_path}. Aborting dummy data population.",
         )
         return []
 
@@ -3413,7 +3454,7 @@ def populate_elastic_with_dummy_data(
         logger.info(f"Loaded isolated test credentials from {creds_path}")
     except Exception as e:
         logger.error(
-            f"Failed to initialize CogStack client from credentials file {creds_path}: {e}"
+            f"Failed to initialize CogStack client from credentials file {creds_path}: {e}",
         )
         return []
 
@@ -3424,7 +3465,7 @@ def populate_elastic_with_dummy_data(
             hosts = [node.host for node in nodes]
             if not all(is_safe_host(h) for h in hosts):
                 logger.error(
-                    f"Unsafe operation: Attempting to populate dummy data on non-local host(s): {hosts}. Aborting."
+                    f"Unsafe operation: Attempting to populate dummy data on non-local host(s): {hosts}. Aborting.",
                 )
                 return []
 
@@ -3433,7 +3474,7 @@ def populate_elastic_with_dummy_data(
             current_user = getattr(config_obj, "username", None)
             if current_user and current_user not in safe_users:
                 logger.error(
-                    f"Unsafe operation: Attempting to populate dummy data with non-test user '{current_user}'. Aborting."
+                    f"Unsafe operation: Attempting to populate dummy data with non-test user '{current_user}'. Aborting.",
                 )
                 return []
 
@@ -3441,7 +3482,7 @@ def populate_elastic_with_dummy_data(
             cluster_info = cs.elastic.info()
             cluster_name = cluster_info.get("cluster_name")
             logger.info(
-                f"Populating dummy data on cluster: {cluster_name} (version {cluster_info.get('version', {}).get('number')})"
+                f"Populating dummy data on cluster: {cluster_name} (version {cluster_info.get('version', {}).get('number')})",
             )
 
             # Safeguard: Verify cluster is empty or allowed to proceed
@@ -3451,7 +3492,7 @@ def populate_elastic_with_dummy_data(
             ]
             if user_indices and not getattr(config_obj, "testing_elastic", False):
                 logger.error(
-                    f"Unsafe operation: Target cluster is not empty. Found indices: {user_indices}. Aborting."
+                    f"Unsafe operation: Target cluster is not empty. Found indices: {user_indices}. Aborting.",
                 )
                 return []
         except Exception as e:
@@ -3470,12 +3511,13 @@ def populate_elastic_with_dummy_data(
 
     # Load schema and create indices if schema file exists
     schema_path = getattr(config_obj, "test_schema_path", None) or os.path.join(
-        "test_files", "elastic_schemas.json"
+        "test_files",
+        "elastic_schemas.json",
     )
 
     if os.path.exists(schema_path):
         try:
-            with open(schema_path, "r") as f:
+            with open(schema_path) as f:
                 schemas = json.load(f)
 
             logger.info(f"Applying schemas from {schema_path}...")
@@ -3493,7 +3535,9 @@ def populate_elastic_with_dummy_data(
 
                 # Create index
                 cs.elastic.indices.create(
-                    index=index_name, mappings=mappings, settings=settings
+                    index=index_name,
+                    mappings=mappings,
+                    settings=settings,
                 )
                 logger.info(f"Created index: {index_name} with custom schema")
             logger.warning("Could not initialize CogStack client for schema creation.")
@@ -3510,14 +3554,14 @@ def populate_elastic_with_dummy_data(
     if config_patient_list is not None and len(config_patient_list) > 0:
         patient_ids = list(config_patient_list)
         logger.info(
-            f"Using {len(patient_ids)} patients from config_obj.all_patient_list"
+            f"Using {len(patient_ids)} patients from config_obj.all_patient_list",
         )
 
     # Priority 2: In testing_elastic mode, if no IDs provided, generate random ones
     elif getattr(config_obj, "testing_elastic", False):
         patient_ids = generate_uuid_list(n_patients, "P")
         logger.info(
-            f"Generated {n_patients} dummy patient IDs for testing_elastic: {patient_ids[:5]}..."
+            f"Generated {n_patients} dummy patient IDs for testing_elastic: {patient_ids[:5]}...",
         )
 
     else:
@@ -3533,7 +3577,7 @@ def populate_elastic_with_dummy_data(
 
         if patient_ids:
             logger.info(
-                f"Using {len(patient_ids)} existing patient IDs from treatment doc: {patient_ids[:5]}..."
+                f"Using {len(patient_ids)} existing patient IDs from treatment doc: {patient_ids[:5]}...",
             )
             if len(patient_ids) > n_patients:
                 patient_ids = patient_ids[:n_patients]
@@ -3541,7 +3585,7 @@ def populate_elastic_with_dummy_data(
             # Fallback: Generate random
             patient_ids = generate_uuid_list(n_patients, "P")
             logger.info(
-                f"Generated {n_patients} dummy patient IDs (fallback): {patient_ids[:5]}..."
+                f"Generated {n_patients} dummy patient IDs (fallback): {patient_ids[:5]}...",
             )
 
     # 2. Generate and Ingest Data for Each Index
@@ -3585,7 +3629,9 @@ def populate_elastic_with_dummy_data(
     if getattr(config_obj, "testing_elastic", False):
         try:
             filename = getattr(
-                config_obj, "treatment_doc_filename", "treatment_docs.csv"
+                config_obj,
+                "treatment_doc_filename",
+                "treatment_docs.csv",
             )
             root_path = getattr(config_obj, "root_path", "")
             if root_path:
@@ -3594,7 +3640,7 @@ def populate_elastic_with_dummy_data(
             else:
                 output_path = filename
             logger.info(
-                f"Saving generated cohort to {output_path} for testing_elastic workflow."
+                f"Saving generated cohort to {output_path} for testing_elastic workflow.",
             )
             df_epr.to_csv(output_path, index=False)
         except Exception as e:
@@ -3625,7 +3671,9 @@ def populate_elastic_with_dummy_data(
     df_basic_all = pd.concat([df_basic_obs, df_basic_textual], ignore_index=True)
     df_basic_all = df_basic_all.where(pd.notnull(df_basic_all), None)
     ingest_data_to_elasticsearch(
-        df_basic_all, "basic_observations", es_client=cs.elastic
+        df_basic_all,
+        "basic_observations",
+        es_client=cs.elastic,
     )
     cs.elastic.indices.refresh(index="basic_observations")
 
@@ -3642,7 +3690,7 @@ def populate_elastic_with_dummy_data(
             global_end_year=global_end_year,
             global_end_month=global_end_month,
             global_end_day=global_end_day,
-        )
+        ),
     )
     # NEWS
     obs_dfs.append(
@@ -3655,7 +3703,7 @@ def populate_elastic_with_dummy_data(
             global_end_year=global_end_year,
             global_end_month=global_end_month,
             global_end_day=global_end_day,
-        )
+        ),
     )
     # MRC Text
     obs_dfs.append(
@@ -3669,7 +3717,7 @@ def populate_elastic_with_dummy_data(
             global_end_month=global_end_month,
             global_end_day=global_end_day,
             use_GPT=False,
-        )
+        ),
     )
     # Generic observations (fallback/misc)
     obs_dfs.append(
@@ -3683,7 +3731,7 @@ def populate_elastic_with_dummy_data(
             global_end_month=global_end_month,
             global_end_day=global_end_day,
             search_term="Generic Observation",
-        )
+        ),
     )
 
     df_obs = pd.concat(obs_dfs, ignore_index=True)
@@ -3703,7 +3751,7 @@ def populate_elastic_with_dummy_data(
             global_end_year=global_end_year,
             global_end_month=global_end_month,
             global_end_day=global_end_day,
-        )
+        ),
     )
     order_dfs.append(
         generate_diagnostic_orders_data(
@@ -3715,7 +3763,7 @@ def populate_elastic_with_dummy_data(
             global_end_year=global_end_year,
             global_end_month=global_end_month,
             global_end_day=global_end_day,
-        )
+        ),
     )
     df_orders = pd.concat(order_dfs, ignore_index=True)
     df_orders = df_orders.where(pd.notnull(df_orders), None)
@@ -3750,10 +3798,13 @@ def populate_elastic_with_dummy_data(
         global_end_day=global_end_day,
     )
     df_epic_imaging_reports = df_epic_imaging_reports.where(
-        pd.notnull(df_epic_imaging_reports), None
+        pd.notnull(df_epic_imaging_reports),
+        None,
     )
     ingest_data_to_elasticsearch(
-        df_epic_imaging_reports, "epic_imaging_reports", es_client=cs.elastic
+        df_epic_imaging_reports,
+        "epic_imaging_reports",
+        es_client=cs.elastic,
     )
     cs.elastic.indices.refresh(index="epic_imaging_reports")
     # Epic Orders
@@ -3784,7 +3835,9 @@ def populate_elastic_with_dummy_data(
     )
     df_epic_patients = df_epic_patients.where(pd.notnull(df_epic_patients), None)
     ingest_data_to_elasticsearch(
-        df_epic_patients, "epic_patients", es_client=cs.elastic
+        df_epic_patients,
+        "epic_patients",
+        es_client=cs.elastic,
     )
     cs.elastic.indices.refresh(index="epic_patients")
     # Epic Encounters
@@ -3800,7 +3853,9 @@ def populate_elastic_with_dummy_data(
     )
     df_epic_encounters = df_epic_encounters.where(pd.notnull(df_epic_encounters), None)
     ingest_data_to_elasticsearch(
-        df_epic_encounters, "epic_encounters", es_client=cs.elastic
+        df_epic_encounters,
+        "epic_encounters",
+        es_client=cs.elastic,
     )
     cs.elastic.indices.refresh(index="epic_encounters")
 
@@ -3817,10 +3872,13 @@ def populate_elastic_with_dummy_data(
         use_GPT=False,
     )
     df_epic_clinical_notes = df_epic_clinical_notes.where(
-        pd.notnull(df_epic_clinical_notes), None
+        pd.notnull(df_epic_clinical_notes),
+        None,
     )
     ingest_data_to_elasticsearch(
-        df_epic_clinical_notes, "epic_clinical_notes", es_client=cs.elastic
+        df_epic_clinical_notes,
+        "epic_clinical_notes",
+        es_client=cs.elastic,
     )
     cs.elastic.indices.refresh(index="epic_clinical_notes")
 
@@ -3836,10 +3894,13 @@ def populate_elastic_with_dummy_data(
         global_end_day=global_end_day,
     )
     df_epic_medical_history = df_epic_medical_history.where(
-        pd.notnull(df_epic_medical_history), None
+        pd.notnull(df_epic_medical_history),
+        None,
     )
     ingest_data_to_elasticsearch(
-        df_epic_medical_history, "epic_medical_history", es_client=cs.elastic
+        df_epic_medical_history,
+        "epic_medical_history",
+        es_client=cs.elastic,
     )
     cs.elastic.indices.refresh(index="epic_medical_history")
 
@@ -3871,7 +3932,9 @@ def populate_elastic_with_dummy_data(
     )
     df_epic_appt_notes = df_epic_appt_notes.where(pd.notnull(df_epic_appt_notes), None)
     ingest_data_to_elasticsearch(
-        df_epic_appt_notes, "epic_clinical_notes_appointments", es_client=cs.elastic
+        df_epic_appt_notes,
+        "epic_clinical_notes_appointments",
+        es_client=cs.elastic,
     )
     cs.elastic.indices.refresh(index="epic_clinical_notes_appointments")
 
@@ -3887,10 +3950,13 @@ def populate_elastic_with_dummy_data(
         global_end_day=global_end_day,
     )
     df_epic_lab_results = df_epic_lab_results.where(
-        pd.notnull(df_epic_lab_results), None
+        pd.notnull(df_epic_lab_results),
+        None,
     )
     ingest_data_to_elasticsearch(
-        df_epic_lab_results, "epic_lab_results", es_client=cs.elastic
+        df_epic_lab_results,
+        "epic_lab_results",
+        es_client=cs.elastic,
     )
     cs.elastic.indices.refresh(index="epic_lab_results")
 
@@ -3927,6 +3993,7 @@ def generate_bed_data(
 
     Raises:
         None
+
     """
     df_holder_list = []
 
@@ -4009,6 +4076,7 @@ def generate_vte_data(
 
     Raises:
         None
+
     """
     df_holder_list = []
     vte_statuses = [
@@ -4082,6 +4150,7 @@ def generate_smoking_data(
 
     Raises:
         None
+
     """
     df_holder_list = []
     smoking_statuses = ["Current smoker", "Ex-smoker", "Never smoked", "Smoker"]
@@ -4152,6 +4221,7 @@ def generate_core_o2_data(
 
     Raises:
         None
+
     """
     df_holder_list = []
 
@@ -4213,6 +4283,7 @@ def _calculate_age_at_observation(dob: datetime, observation_date: datetime) -> 
 
     Returns:
         Age in years as an integer.
+
     """
     age = observation_date.year - dob.year
     if (observation_date.month, observation_date.day) < (dob.month, dob.day):
@@ -4236,6 +4307,7 @@ def _get_dnr_probability(age: int, is_icu_hdu: bool = False) -> float:
 
     Returns:
         Probability of "Not for cardiopulmonary resuscitation".
+
     """
     if age < 60:
         base_prob = random.uniform(0.95, 0.98)
@@ -4253,7 +4325,9 @@ def _get_dnr_probability(age: int, is_icu_hdu: bool = False) -> float:
 
 
 def _determine_resuscitation_status(
-    age: int, observation_date: datetime, is_icu_hdu: bool = False
+    age: int,
+    observation_date: datetime,
+    is_icu_hdu: bool = False,
 ) -> str:
     """Determines resuscitation status based on age and context.
 
@@ -4264,13 +4338,13 @@ def _determine_resuscitation_status(
 
     Returns:
         Either "For cardiopulmonary resuscitation" or "Not for cardiopulmonary resuscitation".
+
     """
     not_for_cpr_prob = _get_dnr_probability(age, is_icu_hdu)
 
     if random.random() < not_for_cpr_prob:
         return "Not for cardiopulmonary resuscitation"
-    else:
-        return "For cardiopulmonary resuscitation"
+    return "For cardiopulmonary resuscitation"
 
 
 def generate_core_resus_data(
@@ -4309,6 +4383,7 @@ def generate_core_resus_data(
 
     Raises:
         None
+
     """
     df_holder_list = []
 
@@ -4345,7 +4420,9 @@ def generate_core_resus_data(
             is_icu_hdu = random.random() < 0.15
 
             status = _determine_resuscitation_status(
-                age_at_observation, obs_date, is_icu_hdu
+                age_at_observation,
+                obs_date,
+                is_icu_hdu,
             )
 
             resus_statuses.append(status)
@@ -4398,15 +4475,19 @@ class dummy_CAT:
                         "Presence": {"value": "True", "confidence": 1.0},
                         "Subject/Experiencer": {"value": "Patient", "confidence": 1.0},
                     },
-                }
-            }
+                },
+            },
         }
 
     def get_entities(self, text: str) -> dict:
         return self(text)["entities"]
 
     def get_entities_multi_texts(
-        self, texts: list[str], n_process: int = 1, batch_size: int = 100, **kwargs
+        self,
+        texts: list[str],
+        n_process: int = 1,
+        batch_size: int = 100,
+        **kwargs,
     ) -> list[dict[str, Any]]:
         """Returns a list of dummy annotations for a list of texts.
 
@@ -4450,6 +4531,7 @@ def generate_problem_list_data(
 
     Raises:
         None
+
     """
     df_holder_list = []
     for client_id_code in entered_list:
@@ -4506,6 +4588,7 @@ def generate_synthetic_clinical_note(client_idcode: str) -> str:
 
     Returns:
         A synthetic clinical note string containing various medical mentions.
+
     """
     # Sample medical conditions and symptoms from the gold standard CUIs
     sample_conditions = [

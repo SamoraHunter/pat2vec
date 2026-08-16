@@ -156,5 +156,5 @@ __all__.extend(
         # Router and population
         "cohort_searcher_with_terms_and_search_dummy",
         "populate_elastic_with_dummy_data",
-    ]
+    ],
 )

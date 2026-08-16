@@ -32,6 +32,7 @@ def generate_date_list(
 
     Returns:
         A chronologically sorted list of (year, month, day) tuples.
+
     """
     # Handle missing config_obj gracefully
     if not config_obj:
@@ -74,7 +75,10 @@ def generate_date_list(
         and global_end_limit.second == 0
     ):
         global_end_limit = global_end_limit.replace(
-            hour=23, minute=59, second=59, microsecond=999999
+            hour=23,
+            minute=59,
+            second=59,
+            microsecond=999999,
         )
 
     # Clamp the calculated range to the global boundaries
@@ -93,18 +97,18 @@ def generate_date_list(
     if getattr(config_obj, "verbosity", 0) >= 1:
         if final_start_date > chronological_start:
             logging.info(
-                f"Adjusted start date from {chronological_start.date()} to {final_start_date.date()} due to global limit."
+                f"Adjusted start date from {chronological_start.date()} to {final_start_date.date()} due to global limit.",
             )
         if final_end_date < chronological_end:
             logging.info(
-                f"Adjusted end date from {chronological_end.date()} to {final_end_date.date()} due to global limit."
+                f"Adjusted end date from {chronological_end.date()} to {final_end_date.date()} due to global limit.",
             )
 
     # Validate that we have a valid date range
     if final_start_date > final_end_date:
         if getattr(config_obj, "verbosity", 0) >= 1:
             logging.warning(
-                f"Invalid date range after clamping: start_date ({final_start_date.date()}) is after end_date ({final_end_date.date()}). Returning empty list."
+                f"Invalid date range after clamping: start_date ({final_start_date.date()}) is after end_date ({final_end_date.date()}). Returning empty list.",
             )
         return []
 
@@ -131,7 +135,7 @@ def generate_date_list(
             # Additional safety check for year bounds
             if next_date.year < 1:
                 logging.warning(
-                    f"Next date would have invalid year {next_date.year}, stopping iteration"
+                    f"Next date would have invalid year {next_date.year}, stopping iteration",
                 )
                 break
             current_date = next_date
@@ -143,13 +147,13 @@ def generate_date_list(
 
     if iteration_count >= max_iterations:
         logging.warning(
-            f"Maximum iterations ({max_iterations}) reached, stopping date generation"
+            f"Maximum iterations ({max_iterations}) reached, stopping date generation",
         )
 
     # Log the results for debugging
     if getattr(config_obj, "verbosity", 0) >= 1:
         logging.info(
-            f"Generated {len(date_list)} dates from {final_start_date.date()} to {final_end_date.date()}"
+            f"Generated {len(date_list)} dates from {final_start_date.date()} to {final_end_date.date()}",
         )
         if date_list:
             logging.info(f"First date: {date_list[0]}, Last date: {date_list[-1]}")

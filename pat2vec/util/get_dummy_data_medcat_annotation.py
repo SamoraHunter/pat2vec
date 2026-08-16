@@ -28,6 +28,7 @@ def random_sample(pickled_dict: dict[str, Any], sample_size: int) -> dict[str, A
 
     Returns:
         A new dictionary containing the sampled entities.
+
     """
     random.seed(random_state)
     keys = list(pickled_dict["entities"].keys())
@@ -57,6 +58,7 @@ def get_or_create_annotations_for_text(
     Returns:
         A dictionary with entities containing accurate positions matching the text,
         including text samples around each entity.
+
     """
     random.seed(random_state)
 
@@ -96,7 +98,8 @@ def get_or_create_annotations_for_text(
 
         if gold_standard_available:
             selected_gold = random.sample(
-                gold_standard_available, min(2, len(gold_standard_available))
+                gold_standard_available,
+                min(2, len(gold_standard_available)),
             )
             remaining_keys = [k for k in entity_keys if k not in selected_gold]
             sampled_keys = selected_gold[:num_entities_to_sample]
@@ -106,8 +109,9 @@ def get_or_create_annotations_for_text(
                 extra_needed = num_entities_to_sample - len(sampled_keys)
                 sampled_keys.extend(
                     random.sample(
-                        remaining_keys, min(extra_needed, len(remaining_keys))
-                    )
+                        remaining_keys,
+                        min(extra_needed, len(remaining_keys)),
+                    ),
                 )
         else:
             sampled_keys = random.sample(entity_keys, num_entities_to_sample)
@@ -121,7 +125,8 @@ def get_or_create_annotations_for_text(
 
             # Create synthetic positions based on hash (reproducible for same entity/text combo)
             base_pos = abs(hash(str(key) + str(document_id))) % max(
-                50, len(text) * 2 if text else 100
+                50,
+                len(text) * 2 if text else 100,
             )
 
             start_pos = base_pos
@@ -188,7 +193,8 @@ def get_or_create_annotations_for_text(
         if gold_standard_available:
             # Ensure at least one gold standard entity is included
             selected_gold = random.sample(
-                gold_standard_available, min(2, len(gold_standard_available))
+                gold_standard_available,
+                min(2, len(gold_standard_available)),
             )
             remaining_keys = [k for k in entity_keys if k not in selected_gold]
             sampled_keys = selected_gold[:num_entities_to_sample]
@@ -198,8 +204,9 @@ def get_or_create_annotations_for_text(
                 extra_needed = num_entities_to_sample - len(sampled_keys)
                 sampled_keys.extend(
                     random.sample(
-                        remaining_keys, min(extra_needed, len(remaining_keys))
-                    )
+                        remaining_keys,
+                        min(extra_needed, len(remaining_keys)),
+                    ),
                 )
         else:
             # No gold standard entities available, use random sampling
@@ -260,7 +267,8 @@ def get_or_create_annotations_for_text(
                 # Use hash of document text to get reproducible positions
                 key_str = str(key)
                 base_pos = abs(hash(key_str + str(document_id))) % max(
-                    100, len(text) if text else 500
+                    100,
+                    len(text) if text else 500,
                 )
 
                 start_pos = base_pos
@@ -326,6 +334,7 @@ def dummy_medcat_annotation_generator(
     Returns:
         A dictionary containing entities with annotation details. If text is
         provided, entities will have accurate positions matching the document.
+
     """
     pickle_file = os.path.join("test_files", "sample_annotations.pickle")
     # Load the dictionary from the pickle file
@@ -386,6 +395,7 @@ class dummy_CAT:
         Args:
             with_filters: If True, initialize with some dummy filters for testing
                          filter removal logic. Defaults to False.
+
         """
         self.config = self.DummyConfig()
         self.cdb = self.DummyCDB()
@@ -393,7 +403,7 @@ class dummy_CAT:
         if with_filters:
             # Add some dummy filters for testing
             self.config.linking.filters = self.DummyFilters(
-                {"cuis": {"C0001234", "C0005678"}, "type_ids": {"T047", "T048"}}
+                {"cuis": {"C0001234", "C0005678"}, "type_ids": {"T047", "T048"}},
             )
             self.config.linking.filter_before_disamb = True
             self.cdb.config.linking.filters["cuis"] = {"C9999999"}
@@ -407,13 +417,18 @@ class dummy_CAT:
 
         Returns:
             A dictionary containing entities with accurate positions in the text.
+
         """
         # Generate a simple document ID based on hash of text (for caching)
         doc_id = hash(text) % 10000 if text else None
         return dummy_medcat_annotation_generator(text=text, document_id=doc_id)
 
     def get_entities_multi_texts(
-        self, texts: list[str], n_process: int = 1, batch_size: int = 100, **kwargs
+        self,
+        texts: list[str],
+        n_process: int = 1,
+        batch_size: int = 100,
+        **kwargs,
     ) -> list[dict[str, Any]]:
         """Returns a list of annotations linked to each text.
 
@@ -429,19 +444,20 @@ class dummy_CAT:
         Returns:
             A list of dictionaries, where each dictionary contains entities with
             accurate positions matching the corresponding text.
+
         """
         result = []
 
         for i in range(len(texts)):
             doc_id = hash(texts[i]) % 10000 if texts[i] else None
             result.append(
-                dummy_medcat_annotation_generator(text=texts[i], document_id=doc_id)
+                dummy_medcat_annotation_generator(text=texts[i], document_id=doc_id),
             )
 
         # raise error if there are texts but no results
         if len(texts) > 0 and len(result) == 0:
             raise ValueError(
-                "No results returned from dummy_medcat_annotation_generator"
+                "No results returned from dummy_medcat_annotation_generator",
             )
         return result
 
@@ -466,6 +482,7 @@ def augment_dummy_annotations_file(target_count: int = 500) -> None:
 
     Args:
         target_count: The desired minimum number of annotations in the file.
+
     """
     pickle_file = os.path.join("test_files", "sample_annotations.pickle")
 
@@ -514,15 +531,15 @@ def augment_dummy_annotations_file(target_count: int = 500) -> None:
                 if "meta_anns" in new_entity:
                     if "Presence" in new_entity["meta_anns"]:
                         new_entity["meta_anns"]["Presence"]["value"] = random.choice(
-                            ["True", "False"]
+                            ["True", "False"],
                         )
                     if "Time" in new_entity["meta_anns"]:
                         new_entity["meta_anns"]["Time"]["value"] = random.choice(
-                            ["Recent", "Past"]
+                            ["Recent", "Past"],
                         )
                     if "Subject" in new_entity["meta_anns"]:
                         new_entity["meta_anns"]["Subject"]["value"] = random.choice(
-                            ["Patient", "Other"]
+                            ["Patient", "Other"],
                         )
 
                 entities[new_key] = new_entity

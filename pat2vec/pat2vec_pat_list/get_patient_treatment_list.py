@@ -32,6 +32,7 @@ def extract_treatment_id_list_from_docs(config_obj: Any) -> list[str]:
 
     Raises:
         ValueError: If the file format is not CSV or XLSX.
+
     """
     random.seed(config_obj.random_seed_val)
     np.random.seed(config_obj.random_seed_val)
@@ -41,7 +42,8 @@ def extract_treatment_id_list_from_docs(config_obj: Any) -> list[str]:
     treatment_doc_path = None
     if hasattr(config_obj, "root_path") and config_obj.root_path:
         potential_path = os.path.join(
-            config_obj.root_path, config_obj.treatment_doc_filename
+            config_obj.root_path,
+            config_obj.treatment_doc_filename,
         )
         if os.path.exists(potential_path):
             treatment_doc_path = potential_path
@@ -65,7 +67,7 @@ def extract_treatment_id_list_from_docs(config_obj: Any) -> list[str]:
 
     if treatment_doc_path is None:
         print(
-            f"Warning: Treatment document not found. Checked project root and CWD for '{config_obj.treatment_doc_filename}'. Returning empty list."
+            f"Warning: Treatment document not found. Checked project root and CWD for '{config_obj.treatment_doc_filename}'. Returning empty list.",
         )
         return []
 
@@ -79,7 +81,7 @@ def extract_treatment_id_list_from_docs(config_obj: Any) -> list[str]:
         docs = pd.read_excel(treatment_doc_path)
     else:
         raise ValueError(
-            f"Unsupported file format: {file_extension}. Please provide a CSV or XLSX file."
+            f"Unsupported file format: {file_extension}. Please provide a CSV or XLSX file.",
         )
 
     # If patient_id_column_name is 'auto', use regex to find the most likely column
@@ -109,7 +111,7 @@ def extract_treatment_id_list_from_docs(config_obj: Any) -> list[str]:
                 column_matches = sum(
                     docs[column]
                     .astype(str)
-                    .str.contains("|".join(sample_id_patterns), na=False)
+                    .str.contains("|".join(sample_id_patterns), na=False),
                 )
                 if column_matches > max_matches:
                     max_matches = column_matches
@@ -153,7 +155,7 @@ def extract_treatment_id_list_from_docs(config_obj: Any) -> list[str]:
                 column_matches = sum(
                     docs[column]
                     .astype(str)
-                    .str.contains("|".join(sample_id_patterns), na=False)
+                    .str.contains("|".join(sample_id_patterns), na=False),
                 )
                 if column_matches > max_matches:
                     max_matches = column_matches
@@ -211,6 +213,7 @@ def generate_control_list(
 
     Returns:
         A list of client IDs for the generated control group.
+
     """
     random.seed(42)
 
@@ -225,11 +228,12 @@ def generate_control_list(
     n_treatments = len(treatment_client_id_list) * treatment_control_ratio_n
     if verbosity > 0:
         print(
-            f"{n_treatments} selected as controls"
+            f"{n_treatments} selected as controls",
         )  # Soft control selection, many treatments will be false positives
 
     treatment_control_sample = pd.DataFrame(full_control_client_id_list).sample(
-        n_treatments, random_state=42
+        n_treatments,
+        random_state=42,
     )[0]
     all_patient_list_control = list(treatment_control_sample.values)
 
@@ -256,9 +260,10 @@ def sanitize_hospital_ids(hospital_ids: list[str], config_obj: Any) -> list[str]
 
     Returns:
         The sanitized list of hospital IDs.
+
     """
     valid_format = re.compile(
-        r"^[A-Z]\d{6}$"
+        r"^[A-Z]\d{6}$",
     )  # Regular expression for one uppercase letter followed by 6 digits
     valid_count = 0
     uppercase_warning_count = 0
@@ -278,7 +283,7 @@ def sanitize_hospital_ids(hospital_ids: list[str], config_obj: Any) -> list[str]
 
     if config_obj.verbosity > 0:
         print(
-            f"Debug: Number of hospital IDs conforming to the format before sanitization: {valid_count}"
+            f"Debug: Number of hospital IDs conforming to the format before sanitization: {valid_count}",
         )
 
     if (
@@ -286,12 +291,12 @@ def sanitize_hospital_ids(hospital_ids: list[str], config_obj: Any) -> list[str]
     ):  # Only print detailed warnings at a higher verbosity level
         if uppercase_warning_count > 0:
             print(
-                f"Warning: Number of hospital IDs that do not start with an uppercase letter: {uppercase_warning_count}"
+                f"Warning: Number of hospital IDs that do not start with an uppercase letter: {uppercase_warning_count}",
             )
 
         if digit_warning_count > 0:
             print(
-                f"Warning: Number of hospital IDs that do not have exactly 6 digits following the letter: {digit_warning_count}"
+                f"Warning: Number of hospital IDs that do not have exactly 6 digits following the letter: {digit_warning_count}",
             )
 
     if config_obj.sanitize_pat_list:
@@ -314,13 +319,12 @@ def sanitize_hospital_ids(hospital_ids: list[str], config_obj: Any) -> list[str]
         irregular_count = sum(len(hospital_id) != 7 for hospital_id in sanitized_list)
         if irregular_count > 0 and config_obj.verbosity > 1:
             print(
-                f"Warning: Number of hospital IDs that do not have exactly 7 characters: {irregular_count}"
+                f"Warning: Number of hospital IDs that do not have exactly 7 characters: {irregular_count}",
             )
 
         # Assuming all_patient_list should be returned or assigned
         return sanitized_list
-    else:
-        return hospital_ids
+    return hospital_ids
 
 
 def get_all_patients_list(config_obj: Any) -> list[str]:
@@ -347,9 +351,12 @@ def get_all_patients_list(config_obj: Any) -> list[str]:
     Raises:
         ValueError: If required configuration parameters are missing (e.g.,
             `test_data_path` in testing mode).
+
     """
     is_static_test = config_obj.testing and not getattr(
-        config_obj, "testing_elastic", False
+        config_obj,
+        "testing_elastic",
+        False,
     )
 
     if config_obj.individual_patient_window:
@@ -361,12 +368,12 @@ def get_all_patients_list(config_obj: Any) -> list[str]:
 
         if ipw_df is None or id_column is None:
             raise ValueError(
-                "For individual_patient_window, both 'individual_patient_window_df' and 'individual_patient_id_column_name' must be provided in config."
+                "For individual_patient_window, both 'individual_patient_window_df' and 'individual_patient_id_column_name' must be provided in config.",
             )
 
         if id_column not in ipw_df.columns:
             raise ValueError(
-                f"Column '{id_column}' not found in individual_patient_window_df."
+                f"Column '{id_column}' not found in individual_patient_window_df.",
             )
 
         patient_ids = ipw_df[id_column].unique().tolist()
@@ -390,7 +397,7 @@ def get_all_patients_list(config_obj: Any) -> list[str]:
 
             if fallback_path:
                 print(
-                    f"Info: Treatment docs not found. Falling back to static test data: {fallback_path}"
+                    f"Info: Treatment docs not found. Falling back to static test data: {fallback_path}",
                 )
                 test_df = read_test_data(fallback_path)
                 if test_df is not None and "client_idcode" in test_df.columns:
@@ -400,7 +407,7 @@ def get_all_patients_list(config_obj: Any) -> list[str]:
     else:  # This is now only for static testing
         if not hasattr(config_obj, "test_data_path") or not config_obj.test_data_path:
             raise ValueError(
-                "In testing mode, 'test_data_path' must be set in the config object."
+                "In testing mode, 'test_data_path' must be set in the config object.",
             )
 
         test_df = read_test_data(config_obj.test_data_path)
@@ -428,23 +435,28 @@ def get_all_patients_list(config_obj: Any) -> list[str]:
         all_patient_list.extend(control_ids)
 
     all_patient_list = sanitize_hospital_ids(
-        hospital_ids=all_patient_list, config_obj=config_obj
+        hospital_ids=all_patient_list,
+        config_obj=config_obj,
     )
 
     # Validate patient existence in Elasticsearch (Live mode or Elastic Testing mode)
     should_check = getattr(config_obj, "check_patient_existence", True)
     is_live_or_elastic_test = not config_obj.testing or getattr(
-        config_obj, "testing_elastic", False
+        config_obj,
+        "testing_elastic",
+        False,
     )
     if is_live_or_elastic_test and should_check:
         if config_obj.verbosity > 0:
             print(
-                "Verifying patient existence in Elasticsearch based on enabled data sources..."
+                "Verifying patient existence in Elasticsearch based on enabled data sources...",
             )
 
         # Determine the term name for the ID field, defaulting to client_idcode.keyword
         id_field_term = getattr(
-            config_obj, "client_idcode_term_name", "client_idcode.keyword"
+            config_obj,
+            "client_idcode_term_name",
+            "client_idcode.keyword",
         )
 
         # Construct indices to check based on enabled main_options
@@ -522,7 +534,7 @@ def get_all_patients_list(config_obj: Any) -> list[str]:
         if not indices_to_check:
             if config_obj.verbosity > 0:
                 print(
-                    "No specific data sources enabled for existence check. Defaulting to epr_documents."
+                    "No specific data sources enabled for existence check. Defaulting to epr_documents.",
                 )
             add_index("epr_documents", id_field_term)
 
@@ -530,7 +542,8 @@ def get_all_patients_list(config_obj: Any) -> list[str]:
             print(f"Checking patient existence against indices: {indices_to_check}")
 
         valid_patients = check_patients_existence(
-            all_patient_list, index_name=indices_to_check
+            all_patient_list,
+            index_name=indices_to_check,
         )
 
         # Fallback: If 0 patients found and using .keyword, try base field (test schema handling)
@@ -542,7 +555,7 @@ def get_all_patients_list(config_obj: Any) -> list[str]:
             fallback_field = id_field_term.replace(".keyword", "")
             if config_obj.verbosity > 0:
                 print(
-                    f"Warning: No patients found with {id_field_term}. Retrying with fallback field: {fallback_field}"
+                    f"Warning: No patients found with {id_field_term}. Retrying with fallback field: {fallback_field}",
                 )
 
             indices_fallback = [
@@ -550,17 +563,18 @@ def get_all_patients_list(config_obj: Any) -> list[str]:
             ]
 
             valid_patients = check_patients_existence(
-                all_patient_list, index_name=indices_fallback
+                all_patient_list,
+                index_name=indices_fallback,
             )
 
         missing_count = len(all_patient_list) - len(valid_patients)
         if missing_count > 0:
             print(
-                f"Warning: {missing_count} patients from the list were not found in Elasticsearch and will be skipped."
+                f"Warning: {missing_count} patients from the list were not found in Elasticsearch and will be skipped.",
             )
             if config_obj.verbosity > 1:
                 print(
-                    f"Skipped IDs sample: {list(set(all_patient_list) - set(valid_patients))[:10]}"
+                    f"Skipped IDs sample: {list(set(all_patient_list) - set(valid_patients))[:10]}",
                 )
 
         all_patient_list = valid_patients
@@ -580,7 +594,7 @@ def get_all_patients_list(config_obj: Any) -> list[str]:
         if config_obj.verbosity >= 0:
             # The print statement now reflects the actual number of samples being taken.
             print(
-                f"Sampling {n_samples} of {len(all_patient_list)} available treatment docs."
+                f"Sampling {n_samples} of {len(all_patient_list)} available treatment docs.",
             )
 
             # Safely sample the DataFrame.
@@ -592,7 +606,8 @@ def get_all_patients_list(config_obj: Any) -> list[str]:
 
 
 def analyze_client_codes(
-    client_idcode_list: list[str], min_val: int = 3
+    client_idcode_list: list[str],
+    min_val: int = 3,
 ) -> dict[str, Any]:
     """Analyzes and clusters client ID codes based on their structure.
 
@@ -607,6 +622,7 @@ def analyze_client_codes(
 
     Returns:
         A dictionary containing 'valid_codes', 'invalid_codes', and 'clusters'.
+
     """
     # Step 1: Separate valid and invalid codes based on the expected pattern
     expected_pattern = r"^[A-Z]\d{6}$"
@@ -620,10 +636,11 @@ def analyze_client_codes(
     # Display warnings for large numbers of invalid codes
     if len(invalid_codes) > len(client_idcode_list) * 0.0001:  # If >10% are invalid
         print(
-            f"Warning: invalid codes ({len(invalid_codes)} out of {len(client_idcode_list)})"
+            f"Warning: invalid codes ({len(invalid_codes)} out of {len(client_idcode_list)})",
         )
         print(
-            "Sample invalid codes:", invalid_codes[:15]
+            "Sample invalid codes:",
+            invalid_codes[:15],
         )  # Show a sample of invalid codes
 
     # Step 2: Extract features for valid codes
@@ -640,7 +657,8 @@ def analyze_client_codes(
 
     # Perform clustering on valid codes
     n_clusters = min(
-        min_val, len(valid_codes)
+        min_val,
+        len(valid_codes),
     )  # At most 3 clusters, or fewer if not enough codes
     if n_clusters > 1:
         kmeans = KMeans(n_clusters=n_clusters, random_state=42)
@@ -661,7 +679,7 @@ def analyze_client_codes(
     else:
         cluster_dict = {0: valid_codes}
         print(
-            "Insufficient valid codes for clustering. All valid codes grouped in a single cluster."
+            "Insufficient valid codes for clustering. All valid codes grouped in a single cluster.",
         )
 
     # Step 3: Return results as a dictionary
