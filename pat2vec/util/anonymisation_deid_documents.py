@@ -322,10 +322,10 @@ class DeIdAnonymizer:
         """
         level = logging.ERROR if silence else logging.WARNING
         logging.getLogger("medcat.utils.ner.deid").setLevel(level)
-          self.logger.info(
-                f"MedCAT chunking warning {'silenced' if silence else 'restored'} "
-                f"(medcat.utils.ner.deid logger set to {logging.getLevelName(level)}).",
-            )
+        self.logger.info(
+            f"MedCAT chunking warning {'silenced' if silence else 'restored'} "
+            f"(medcat.utils.ner.deid logger set to {logging.getLevelName(level)}).",
+        )
 
     def get_gpu_status(self) -> dict[str, Any]:
         """Reports whether the underlying transformer NER model is on GPU.
