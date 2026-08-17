@@ -24,6 +24,12 @@ def get_notebook_path(key: str) -> str:
         return "/workspaces/pat2vec/notebooks/test/demo/test_demo_get.ipynb"
     elif key == "bmi":
         return "/workspaces/pat2vec/notebooks/test/bmi/test_bmi_get.ipynb"
+    elif key == "annotations_mrc":
+        return "/workspaces/pat2vec/notebooks/test/test_annotations_mrc_get.ipynb"
+    elif key == "negated_presence_annotations":
+        return "/workspaces/pat2vec/notebooks/test/test_negated_presence_annotations_get.ipynb"
+    elif key == "annotations_reports":
+        return "/workspaces/pat2vec/notebooks/test/test_annotations_reports_get.ipynb"
     else:
         # All notebooks follow pattern: test_{key}_get.ipynb
         sub_dir_path = f"/workspaces/pat2vec/notebooks/test/{key}/test_{key}_get.ipynb"
@@ -645,8 +651,46 @@ def test_epic_clinical_notes_appointments():
     if not success:
         for error in errors:
             print(f"ERROR: {error}")
-        assert False, (
-            f"Epic clinical notes appointments notebook test failed: {'; '.join(errors)}"
-        )
+        assert (
+            False
+        ), f"Epic clinical notes appointments notebook test failed: {'; '.join(errors)}"
+
+    cleanup_all_test_artifacts()
+
+
+def test_annotations_mrc():
+    """Test annotations_mrc notebook e2e execution."""
+    success, errors = test_notebook_e2e("annotations_mrc")
+
+    if not success:
+        for error in errors:
+            print(f"ERROR: {error}")
+        assert False, f"Annotations MRC notebook test failed: {'; '.join(errors)}"
+
+    cleanup_all_test_artifacts()
+
+
+def test_negated_presence_annotations():
+    """Test negated_presence_annotations notebook e2e execution."""
+    success, errors = test_notebook_e2e("negated_presence_annotations")
+
+    if not success:
+        for error in errors:
+            print(f"ERROR: {error}")
+        assert (
+            False
+        ), f"Negated presence annotations notebook test failed: {'; '.join(errors)}"
+
+    cleanup_all_test_artifacts()
+
+
+def test_annotations_reports():
+    """Test annotations_reports notebook e2e execution."""
+    success, errors = test_notebook_e2e("annotations_reports")
+
+    if not success:
+        for error in errors:
+            print(f"ERROR: {error}")
+        assert False, f"Annotations reports notebook test failed: {'; '.join(errors)}"
 
     cleanup_all_test_artifacts()
