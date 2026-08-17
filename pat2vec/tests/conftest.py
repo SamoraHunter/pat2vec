@@ -2,6 +2,7 @@ import glob
 import os
 import shutil
 import sys
+from pathlib import Path
 
 import pytest
 import requests
@@ -150,31 +151,27 @@ def pytest_unconfigure(config):
 def _cleanup_test_artifacts():
     """Clean up test artifacts including temp directories and credential files."""
     # Clean up temp directories matching pattern /tmp/*_test_project
-    tmp_dir = "/tmp"
-    for item in os.listdir(tmp_dir):
-        if item.endswith("_test_project") and os.path.isdir(
-            os.path.join(tmp_dir, item),
-        ):
+    tmp_dir = Path("/tmp")
+    for item in tmp_dir.iterdir():
+        if item.name.endswith("_test_project") and item.is_dir():
             try:
-                shutil.rmtree(os.path.join(tmp_dir, item))
+                shutil.rmtree(item)
             except Exception:
                 pass
 
     # Clean up temp directories matching pattern /workspaces/pat2vec/tmp/*_test_project
-    tmp_proj_dir = "/workspaces/pat2vec/tmp"
-    if os.path.exists(tmp_proj_dir):
-        for item in os.listdir(tmp_proj_dir):
-            if item.endswith("_test_project") and os.path.isdir(
-                os.path.join(tmp_proj_dir, item),
-            ):
+    tmp_proj_dir = Path("/workspaces/pat2vec/tmp")
+    if tmp_proj_dir.exists():
+        for item in tmp_proj_dir.iterdir():
+            if item.name.endswith("_test_project") and item.is_dir():
                 try:
-                    shutil.rmtree(os.path.join(tmp_proj_dir, item))
+                    shutil.rmtree(item)
                 except Exception:
                     pass
 
     # Clean up credential files matching pattern test_elastic_credentials_*_get.py
     cred_pattern = "/workspaces/pat2vec/test_elastic_credentials_*_get.py"
-    for cred_file in glob.glob(cred_pattern):
+    for cred_file in glob.glob(cred_pattern):  # noqa: PTH207
         try:
             os.remove(cred_file)
         except Exception:

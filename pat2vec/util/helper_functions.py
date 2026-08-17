@@ -4,6 +4,7 @@ import logging
 import os
 import re
 import warnings
+from pathlib import Path
 from typing import Any  # Keep typing imports together
 
 import pandas as pd
@@ -164,7 +165,7 @@ def ensure_index(
 
         connection.execute(text(sql))
     except Exception as e:
-        logging.warning(f"Could not create index {idx_name} on {table_name}: {e}")
+        logger.warning(f"Could not create index {idx_name} on {table_name}: {e}")
 
 
 def clear_patient_features(patient_id: str, config_obj: Any) -> None:
@@ -197,7 +198,7 @@ def clear_patient_features(patient_id: str, config_obj: Any) -> None:
                     )
                     connection.execute(del_query, {"pat_id": patient_id})
     except Exception as e:
-        logging.error(f"Failed to clear features for patient {patient_id}: {e}")
+        logger.error(f"Failed to clear features for patient {patient_id}: {e}")
 
 
 def try_parse_list_string(val: Any) -> Any:
@@ -242,7 +243,7 @@ def save_patient_features(
 
     """
     if features_df.empty:
-        logging.debug(f"features_df is empty for patient {patient_id}, skipping save.")
+        logger.debug(f"features_df is empty for patient {patient_id}, skipping save.")
         return
 
     if config_obj.storage_backend == "database":
@@ -294,7 +295,7 @@ def save_patient_features(
 
                 # Skip schema evolution for JSON packing mode (all features go into single column)
                 if use_json_packing:
-                    logging.info(
+                    logger.info(
                         f"Using JSON packing mode to avoid column limit issues ({len(features_df.columns)} columns)",
                     )
                 else:
@@ -313,7 +314,7 @@ def save_patient_features(
                         ]
 
                         if missing_cols:
-                            logging.info(
+                            logger.info(
                                 f"Schema evolution: Adding {len(missing_cols)} new columns to table '{target_table}'",
                             )
                             for col in missing_cols:
@@ -344,7 +345,7 @@ def save_patient_features(
                                         ),
                                     )
                                 except Exception as e:
-                                    logging.error(
+                                    logger.error(
                                         f"Failed to add column {col} to table: {e}",
                                     )
                                     raise
@@ -378,7 +379,7 @@ def save_patient_features(
 
                     features_df_packed = pd.DataFrame(packed_features)
 
-                    logging.info(
+                    logger.info(
                         f"Packing {len(features_df.columns)} features into JSON for patient {patient_id}",
                     )
 
@@ -414,7 +415,7 @@ def save_patient_features(
                             index=False,
                         )
                 else:
-                    logging.info(
+                    logger.info(
                         f"Inserting {len(features_df)} rows for patient {patient_id} into {target_table} (cols: {len(features_df.columns)})",
                     )
                     # Append the new features
@@ -435,7 +436,7 @@ def save_patient_features(
                     engine.name,
                 )
         except Exception as e:
-            logging.error(
+            logger.error(
                 f"Failed to save features for patient {patient_id} to database: {e}",
             )
             raise
@@ -446,14 +447,14 @@ def save_patient_features(
         output_file = os.path.join(output_dir, f"{patient_id}.csv")
         if overwrite and os.path.exists(output_file):
             os.remove(output_file)
-            logging.debug(f"Overwriting existing feature file: {output_file}")
+            logger.debug(f"Overwriting existing feature file: {output_file}")
         features_df.to_csv(
             output_file,
             index=False,
             mode="a",
             header=not os.path.exists(output_file),
         )
-        logging.debug(f"Saved features for patient {patient_id} to {output_file}")
+        logger.debug(f"Saved features for patient {patient_id} to {output_file}")
     else:
         msg = f"Unknown storage_backend: {config_obj.storage_backend}"
         raise ValueError(msg)
@@ -592,7 +593,7 @@ def save_raw_patient_batch(
                     engine.name,
                 )
     except Exception as e:
-        logging.error(f"Failed to save raw batch {table_name} for {patient_id}: {e}")
+        logger.error(f"Failed to save raw batch {table_name} for {patient_id}: {e}")
 
 
 def save_annotations_to_db(
@@ -712,7 +713,7 @@ def save_annotations_to_db(
                     engine.name,
                 )
     except Exception as e:
-        logging.error(
+        logger.error(
             f"Failed to save annotation batch {table_name} for {patient_id}: {e}",
         )
 
@@ -725,12 +726,12 @@ def get_all_features(config_obj: Any) -> pd.DataFrame:
     If storage_backend is 'file', it reads and concatenates all individual
     patient CSV files from the `current_pat_lines_path` directory.
     """
-    logging.info(f"get_all_features called with backend: {config_obj.storage_backend}")
+    logger.info(f"get_all_features called with backend: {config_obj.storage_backend}")
     if config_obj.storage_backend == "database":
         try:
             engine = config_obj.db_engine
             if not engine:
-                logging.error("Database engine not initialized in config_obj.")
+                logger.error("Database engine not initialized in config_obj.")
                 return pd.DataFrame()
 
             table_name = "features"
@@ -747,7 +748,7 @@ def get_all_features(config_obj: Any) -> pd.DataFrame:
             with engine.connect() as connection:
                 inspector = inspect(connection)
                 if not inspector.has_table(target_table, schema=target_schema):
-                    logging.warning(
+                    logger.warning(
                         f"Table '{target_table}' not found in database. Returning empty DataFrame.",
                     )
                     return pd.DataFrame()
@@ -756,7 +757,7 @@ def get_all_features(config_obj: Any) -> pd.DataFrame:
 
                 # Check for packed JSON features and unpack if present
                 if "features_json" in df.columns:
-                    logging.debug("Unpacking 'features_json' column...")
+                    logger.debug("Unpacking 'features_json' column...")
                     # Only unpack non-null rows
                     json_mask = df["features_json"].notna()
                     if json_mask.any():
@@ -768,19 +769,17 @@ def get_all_features(config_obj: Any) -> pd.DataFrame:
                         unpacked.index = df.loc[json_mask].index
                         df = df.drop(columns=["features_json"]).combine_first(unpacked)
 
-                logging.debug(
+                logger.debug(
                     f"Loaded DataFrame from DB table {target_table}. Shape: {df.shape}",
                 )
                 return df
         except Exception as e:
-            logging.error(f"Error in get_all_features reading from database: {e}")
+            logger.error(f"Error in get_all_features reading from database: {e}")
             return pd.DataFrame()
 
     elif config_obj.storage_backend == "file":
-        path = config_obj.current_pat_lines_path
-        all_files = [
-            os.path.join(path, f) for f in os.listdir(path) if f.endswith(".csv")
-        ]
+        path = Path(config_obj.current_pat_lines_path)
+        all_files = [str(f) for f in path.iterdir() if f.suffix == ".csv"]
         if not all_files:
             return pd.DataFrame()
         df_from_each_file = (
@@ -939,7 +938,7 @@ def get_df_from_db_with_temporal_filter(
     try:
         engine = config_obj.db_engine
         if not engine:
-            logging.error("Database engine not initialized in config_obj.")
+            logger.error("Database engine not initialized in config_obj.")
             return pd.DataFrame()
 
         with engine.connect() as connection:
@@ -1056,5 +1055,5 @@ def get_df_from_db_with_temporal_filter(
             )
 
     except Exception as e:
-        logging.error(f"Error with temporal database filter for {table}: {e}")
+        logger.error(f"Error with temporal database filter for {table}: {e}")
         return pd.DataFrame()

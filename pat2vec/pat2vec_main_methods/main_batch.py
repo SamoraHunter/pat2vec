@@ -2,6 +2,8 @@ import logging
 import time
 import traceback
 
+_logger = logging.getLogger(__name__)
+
 import pandas as pd
 
 from pat2vec.pat2vec_get_methods import (
@@ -568,10 +570,10 @@ def main_batch(
 
                     if not remote_dump:
                         if len(pat_concatted) > 1:
-                            logging.error(
+                            _logger.error(
                                 f"Batch too large for local dump. Shape: {pat_concatted.shape}",
                             )
-                            logging.error(pat_concatted)
+                            _logger.error(pat_concatted)
 
                         pat_concatted.to_csv(output_path)
                     else:
@@ -605,24 +607,24 @@ def main_batch(
                     )
 
                 if config_obj.verbosity >= 9:
-                    logging.debug("Reached end main batch")
+                    _logger.debug("Reached end main batch")
 
                 return pat_concatted
             except RuntimeError:
-                logging.error("Caught runtime error... is torch?")
-                logging.error(RuntimeError)
-                logging.info("sleeping 1h")
+                _logger.error("Caught runtime error... is torch?")
+                _logger.error(RuntimeError)
+                _logger.info("sleeping 1h")
                 time.sleep(3600)
 
             except Exception as e:
-                logging.error(e)
-                logging.error(traceback.format_exc())
-                logging.error(
+                _logger.error(e)
+                _logger.error(traceback.format_exc())
+                _logger.error(
                     f"Reproduce on {current_pat_client_id_code, target_date_range}",
                 )
                 template = "An exception of type {0} occurred. Arguments:\n{1!r}"
                 message = template.format(type(e).__name__, e.args)
-                logging.error(message)
+                _logger.error(message)
                 raise
 
         else:

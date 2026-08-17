@@ -117,6 +117,8 @@ from pat2vec.util.methods_get import (
 from pat2vec.util.methods_get_medcat import get_cat
 from pat2vec.util.retrieve_data import retrieve_patient_data
 
+_logger = logging.getLogger(__name__)
+
 
 class main:
     """The main orchestrator for the pat2vec feature extraction pipeline.
@@ -200,7 +202,7 @@ class main:
         self.config_obj = config_obj
 
         if self.config_obj is None:
-            logging.info("Initializing default config from config_pat2vec.")
+            _logger.info("Initializing default config from config_pat2vec.")
             self.config_obj = config_pat2vec.config_class()
 
         # config parameters
@@ -220,12 +222,12 @@ class main:
                 self.cohort_searcher_with_terms_and_search = (
                     cohort_searcher_with_terms_and_search_dummy
                 )
-                logging.info(
+                _logger.info(
                     "Initialized cohort_searcher_with_terms_and_search_dummy function.",
                 )
             else:
                 if self.config_obj.verbosity > 0:
-                    logging.info(
+                    _logger.info(
                         "Initialized cohort_searcher_with_terms_and_search function.",
                     )
                 self.cohort_searcher_with_terms_and_search = (
@@ -233,10 +235,10 @@ class main:
                 )
         else:
             if self.config_obj.verbosity > 0:
-                logging.warning("cohort_searcher_with_terms_and_search is disabled.")
+                _logger.warning("cohort_searcher_with_terms_and_search is disabled.")
             self.cohort_searcher_with_terms_and_search = None
 
-        logging.debug(
+        _logger.debug(
             f"DEBUG: Final self.cohort_searcher_with_terms_and_search = {self.cohort_searcher_with_terms_and_search}",
         )
         # Respect all_patient_list if explicitly provided in config
@@ -252,8 +254,8 @@ class main:
         self.sftp_client = config_obj.sftp_obj
 
         if self.verbosity > 0:
-            logging.info("Pre-annotation path: %s", self.pre_annotation_path)
-            logging.info("Pre-annotation path MRC: %s", self.pre_annotation_path_mrc)
+            _logger.info("Pre-annotation path: %s", self.pre_annotation_path)
+            _logger.info("Pre-annotation path MRC: %s", self.pre_annotation_path_mrc)
 
         # Using a medcat CUI filter for annotations data.
         self.use_filter = use_filter
@@ -276,9 +278,9 @@ class main:
             random.shuffle(self.all_patient_list)
 
         if self.config_obj.verbosity > 0:
-            logging.info(f"remote_dump: {self.remote_dump}")
-            logging.info("Pre-annotation path: %s", self.pre_annotation_path)
-            logging.info("Pre-annotation path MRC: %s", self.pre_annotation_path_mrc)
+            _logger.info(f"remote_dump: {self.remote_dump}")
+            _logger.info("Pre-annotation path: %s", self.pre_annotation_path)
+            _logger.info("Pre-annotation path MRC: %s", self.pre_annotation_path_mrc)
 
         if self.config_obj.storage_backend == "file":
             self.stripped_list_start = [
@@ -290,7 +292,7 @@ class main:
             ]
 
             (
-                logging.info(
+                _logger.info(
                     f"Length of stripped_list_start: {len(self.stripped_list_start)}",
                 )
                 if self.config_obj.verbosity > 0
@@ -301,7 +303,7 @@ class main:
             try:
                 engine = config_obj.db_engine
                 if not engine:
-                    logging.warning(
+                    _logger.warning(
                         "Database engine not initialized. Cannot fetch existing patients.",
                     )
                     self.stripped_list_start = []
@@ -324,13 +326,13 @@ class main:
                                 text(f'SELECT DISTINCT "{id_col}" FROM {full_t}'),
                             )
                             self.stripped_list_start = [str(row[0]) for row in result]
-                            logging.info(
+                            _logger.info(
                                 f"Found {len(self.stripped_list_start)} existing patients in database.",
                             )
                     else:
                         self.stripped_list_start = []
             except Exception as e:
-                logging.warning(f"Could not fetch existing patients from DB: {e}")
+                _logger.warning(f"Could not fetch existing patients from DB: {e}")
                 self.stripped_list_start = []
         else:
             self.stripped_list_start = []
@@ -343,7 +345,7 @@ class main:
                 for p in self.all_patient_list
                 if str(p) not in self.stripped_list_start
             ]
-            logging.info(
+            _logger.info(
                 f"Filtering {original_count - len(self.all_patient_list)} already-processed patients from progress bar",
             )
 
@@ -414,12 +416,12 @@ class main:
                     self.cat.cdb.config.linking.filters["cuis"] = set()
 
             if removed_filters:
-                logging.warning(
+                _logger.warning(
                     "Model has pre-existing filters. Since use_filter=False, the following filters are being removed:\n"
                     + "\n".join(f"  - {f}" for f in removed_filters),
                 )
             else:
-                logging.info(
+                _logger.info(
                     "No pre-existing filters found in model. Processing all entities.",
                 )
 
@@ -427,7 +429,7 @@ class main:
 
         if self.config_obj.prefetch_pat_batches:
             if self.config_obj.verbosity > 0:
-                logging.info("Prefetching patient batches...")
+                _logger.info("Prefetching patient batches...")
 
             prefetch_batches(pat2vec_obj=self)
 
@@ -1516,7 +1518,7 @@ class main:
                 # Handle cases where annotation functions might return None
                 if batch_result is None:
                     if self.config_obj.verbosity > 2:
-                        logging.debug(f"{config['var']} is empty")
+                        _logger.debug(f"{config['var']} is empty")
                     batches[config["var"]] = config["empty"]
                 else:
                     batches[config["var"]] = batch_result
@@ -1732,7 +1734,7 @@ class main:
                     id_column="client_idcode",
                 )
             except Exception as e:
-                logging.error(f"Failed to create annotation table {table_name}: {e}")
+                _logger.error(f"Failed to create annotation table {table_name}: {e}")
 
     def _setup_patient_time_window(
         self,
@@ -1751,7 +1753,7 @@ class main:
 
         """
         if self.config_obj.verbosity >= 4:
-            logging.debug(
+            _logger.debug(
                 "main_pat2vec>self.config_obj.individual_patient_window: %s",
                 self.config_obj.individual_patient_window,
             )
@@ -1775,17 +1777,17 @@ class main:
                     int(self.config_obj.initial_global_end_day),
                 )
                 if self.config_obj.verbosity >= 4:
-                    logging.debug(
+                    _logger.debug(
                         f"Control pat full {current_pat_client_id_code} ipw dates set:",
                     )
-                    logging.debug("Start Date: %s", current_pat_start_date)
-                    logging.debug("End Date: %s", current_pat_end_date)
+                    _logger.debug("Start Date: %s", current_pat_start_date)
+                    _logger.debug("End Date: %s", current_pat_end_date)
 
             elif self.config_obj.individual_patient_window_controls_method == "random":
                 # Select a random treatment's time window for application.
                 patient_ids = list(self.config_obj.patient_dict.keys())
                 if not patient_ids:
-                    logging.warning(
+                    _logger.warning(
                         "Warning: Cannot use 'random' control method with an empty patient_dict. Skipping.",
                     )
                     return None
@@ -1793,13 +1795,13 @@ class main:
                 pat_dates = self.config_obj.patient_dict.get(random_pat_id)
                 current_pat_start_date, current_pat_end_date = pat_dates
             else:
-                logging.error(
+                _logger.error(
                     f"Unknown control method: {self.config_obj.individual_patient_window_controls_method}",
                 )
                 return None
         else:  # It's a treatment patient
             if len(pat_dates) != 2:
-                logging.warning(
+                _logger.warning(
                     f"Warning: Invalid dates for patient {current_pat_client_id_code}. Skipping.",
                 )
                 return None
@@ -1812,7 +1814,7 @@ class main:
             or not isinstance(current_pat_start_date, datetime)
             or not isinstance(current_pat_end_date, datetime)
         ):
-            logging.warning(
+            _logger.warning(
                 f"Warning: Dates for patient {current_pat_client_id_code} are invalid. Skipping.",
             )
             return None
@@ -1862,8 +1864,8 @@ class main:
         )
 
         if self.config_obj.verbosity >= 4:
-            logging.debug("ipw, datelist for %s", current_pat_client_id_code)
-            logging.debug(date_list[0:5] if date_list else "date_list is empty")
+            _logger.debug("ipw, datelist for %s", current_pat_client_id_code)
+            _logger.debug(date_list[0:5] if date_list else "date_list is empty")
 
         self.n_pat_lines = len(date_list)
         return date_list
@@ -1952,7 +1954,7 @@ class main:
                     text_col = config["text_col"]
 
                     if time_col not in batch.columns:
-                        logging.warning(
+                        _logger.warning(
                             f"Cleaning skipped for {config['key']}: column '{time_col}' missing.",
                         )
                         continue
@@ -1973,31 +1975,31 @@ class main:
 
                         batches[config["key"]] = batch
                     except Exception as e:
-                        logging.error(f"Error cleaning batch {config['key']}: {e}")
-                        logging.error(f"Batch type: {type(batch)}")
-                        logging.error(f"Batch columns: {batch.columns}")
+                        _logger.error(f"Error cleaning batch {config['key']}: {e}")
+                        _logger.error(f"Batch type: {type(batch)}")
+                        _logger.error(f"Batch columns: {batch.columns}")
 
         if self.config_obj.verbosity > 3:
-            logging.debug("Post-batch timestamp NaN drop counts:")
-            logging.debug("EPR: %d", len(batches["batch_epr"]))
-            logging.debug("MCT: %d", len(batches["batch_mct"]))
-            logging.debug(
+            _logger.debug("Post-batch timestamp NaN drop counts:")
+            _logger.debug("EPR: %d", len(batches["batch_epr"]))
+            _logger.debug("MCT: %d", len(batches["batch_mct"]))
+            _logger.debug(
                 "EPR annotations: %d",
                 len(batches["batch_epr_docs_annotations"]),
             )
-            logging.debug(
+            _logger.debug(
                 "EPR annotations mct: %d",
                 len(batches["batch_epr_docs_annotations_mct"]),
             )
-            logging.debug(
+            _logger.debug(
                 "textual obs docs: %d",
                 len(batches["batch_textual_obs_docs"]),
             )
-            logging.debug(
+            _logger.debug(
                 "textual obs annotations: %d",
                 len(batches["batch_textual_obs_annotations"]),
             )
-            logging.debug(
+            _logger.debug(
                 "batch_report_docs_annotations: %d",
                 len(batches["batch_reports_docs_annotations"]),
             )
@@ -2022,7 +2024,7 @@ class main:
         # This check is a safeguard, but the main logic for skipping is at a higher level.
         if current_pat_client_id_code in self.stripped_list_start:
             if self.config_obj.verbosity > 3:
-                logging.info(
+                _logger.info(
                     f"Patient {current_pat_client_id_code} already processed, skipping slice processing.",
                 )
             return
@@ -2031,10 +2033,10 @@ class main:
         for date_slice in date_list:
             try:
                 if self.config_obj.verbosity > 5:
-                    logging.debug(
+                    _logger.debug(
                         f"Processing date {date_slice} for patient {current_pat_client_id_code}...",
                     )
-                logging.debug(
+                _logger.debug(
                     f"DEBUG: _process_patient_slices: cohort_searcher_with_terms_and_search = {self.cohort_searcher_with_terms_and_search}",
                 )
 
@@ -2063,11 +2065,11 @@ class main:
                         )
 
             except Exception as e:
-                logging.error(e)
-                logging.error(
+                _logger.error(e)
+                _logger.error(
                     f"Exception in patmaker on {current_pat_client_id_code, date_slice}",
                 )
-                logging.error(traceback.format_exc())
+                _logger.error(traceback.format_exc())
                 raise
 
     def pat_maker(self, i: int) -> None:
@@ -2123,27 +2125,27 @@ class main:
 
         """
         if i >= len(self.all_patient_list):
-            logging.warning(
+            _logger.warning(
                 f"Patient index {i} out of bounds (list size: {len(self.all_patient_list)}). Cannot process.",
             )
             return
 
         if self.config_obj.verbosity > 3:
-            logging.debug(f"Processing patient {i} at {self.all_patient_list[i]}...")
+            _logger.debug(f"Processing patient {i} at {self.all_patient_list[i]}...")
 
         current_pat_client_id_code = str(self.all_patient_list[i])
 
         # Check if patient has already been processed
         if current_pat_client_id_code in self.stripped_list_start:
             if self.config_obj.verbosity >= 4:
-                logging.debug(f"Patient {i} in stripped_list_start")
+                _logger.debug(f"Patient {i} in stripped_list_start")
             if self.config_obj.multi_process is False:
                 self.config_obj.skipped_counter += 1
             else:
                 with self.config_obj.skipped_counter.get_lock():  # type: ignore
                     self.config_obj.skipped_counter.value += 1  # type: ignore
             if self.config_obj.verbosity > 0:
-                logging.info(
+                _logger.info(
                     f"Patient {current_pat_client_id_code} already processed, skipping.",
                 )
             self.t.update(1)
@@ -2199,7 +2201,7 @@ class main:
         if self.config_obj.storage_backend == "database":
             clear_patient_features(current_pat_client_id_code, self.config_obj)
 
-        logging.info(
+        _logger.info(
             f"Processing {len(date_list)} time slices for patient {current_pat_client_id_code}",
         )
 

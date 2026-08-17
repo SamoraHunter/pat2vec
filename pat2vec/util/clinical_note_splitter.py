@@ -139,7 +139,7 @@ def split_clinical_notes(
     index_list = []
     none_rows = []
 
-    for index, row in clin_note.iterrows():
+    for _index, row in clin_note.iterrows():
         d = row["body_analysed"]
         ch = []
         try:
@@ -239,7 +239,7 @@ def split_clinical_notes_mct(
     index_list = []
     none_rows = []
 
-    for index, row in clin_note.iterrows():
+    for _index, row in clin_note.iterrows():
         d = row["observation_valuetext_analysed"]
         ch = []
         try:
@@ -366,7 +366,7 @@ def split_epic_clinical_notes(
     )
     guid_col = "document_guid" if "document_guid" in clin_note.columns else "id"
 
-    for index, row in clin_note.iterrows():
+    for _index, row in clin_note.iterrows():
         d = row[text_col]
         ch = []
         try:

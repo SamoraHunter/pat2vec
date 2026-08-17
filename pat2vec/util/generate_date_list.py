@@ -3,6 +3,8 @@ from datetime import datetime
 from typing import Any
 from zoneinfo import ZoneInfo
 
+_logger = logging.getLogger(__name__)
+
 from dateutil.relativedelta import relativedelta
 
 
@@ -97,18 +99,18 @@ def generate_date_list(
     # Use logging instead of print
     if getattr(config_obj, "verbosity", 0) >= 1:
         if final_start_date > chronological_start:
-            logging.info(
+            _logger.info(
                 f"Adjusted start date from {chronological_start.date()} to {final_start_date.date()} due to global limit.",
             )
         if final_end_date < chronological_end:
-            logging.info(
+            _logger.info(
                 f"Adjusted end date from {chronological_end.date()} to {final_end_date.date()} due to global limit.",
             )
 
     # Validate that we have a valid date range
     if final_start_date > final_end_date:
         if getattr(config_obj, "verbosity", 0) >= 1:
-            logging.warning(
+            _logger.warning(
                 f"Invalid date range after clamping: start_date ({final_start_date.date()}) is after end_date ({final_end_date.date()}). Returning empty list.",
             )
         return []
@@ -129,35 +131,35 @@ def generate_date_list(
         if current_date.year > 0:  # Ensure year is positive
             date_list.append((current_date.year, current_date.month, current_date.day))
         else:
-            logging.warning(f"Skipping invalid date with year {current_date.year}")
+            _logger.warning(f"Skipping invalid date with year {current_date.year}")
 
         try:
             # Safely add the interval
             next_date = current_date + time_window_interval_delta
             # Additional safety check for year bounds
             if next_date.year < 1:
-                logging.warning(
+                _logger.warning(
                     f"Next date would have invalid year {next_date.year}, stopping iteration",
                 )
                 break
             current_date = next_date
         except (ValueError, OverflowError) as e:
-            logging.error(f"Date calculation error: {e}")
+            _logger.error(f"Date calculation error: {e}")
             break
 
         iteration_count += 1
 
     if iteration_count >= max_iterations:
-        logging.warning(
+        _logger.warning(
             f"Maximum iterations ({max_iterations}) reached, stopping date generation",
         )
 
     # Log the results for debugging
     if getattr(config_obj, "verbosity", 0) >= 1:
-        logging.info(
+        _logger.info(
             f"Generated {len(date_list)} dates from {final_start_date.date()} to {final_end_date.date()}",
         )
         if date_list:
-            logging.info(f"First date: {date_list[0]}, Last date: {date_list[-1]}")
+            _logger.info(f"First date: {date_list[0]}, Last date: {date_list[-1]}")
 
     return date_list
