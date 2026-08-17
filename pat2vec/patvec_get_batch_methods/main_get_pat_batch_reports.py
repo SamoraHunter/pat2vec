@@ -2,6 +2,9 @@ import logging
 import os
 from typing import Any
 
+_logger = logging.getLogger(__name__)
+
+
 import pandas as pd
 from sqlalchemy import text
 
@@ -73,7 +76,7 @@ def get_pat_batch_reports(
                 if not df.empty:
                     return df
         except Exception as e:
-            logging.error(
+            _logger.error(
                 f"Error with database backend for reports for patient {current_pat_client_id_code}: {e}",
             )
             return pd.DataFrame()
@@ -156,7 +159,7 @@ def get_pat_batch_reports(
                                     index=False,
                                 )
                     except Exception as e:
-                        logging.error(f"Failed to save textual obs batch to DB: {e}")
+                        _logger.error(f"Failed to save textual obs batch to DB: {e}")
                 elif not batch_target.empty:
                     os.makedirs(os.path.dirname(batch_obs_target_path), exist_ok=True)
                     batch_target.to_csv(batch_obs_target_path)
@@ -167,5 +170,5 @@ def get_pat_batch_reports(
         return batch_target
     except Exception as e:
         """"""
-        logging.error(f"Error retrieving batch reports: {e}")
+        _logger.error(f"Error retrieving batch reports: {e}")
         return pd.DataFrame()

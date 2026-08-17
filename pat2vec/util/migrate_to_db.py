@@ -1,6 +1,7 @@
 import logging
 import os
 import time
+from pathlib import Path
 from typing import Any
 
 import pandas as pd
@@ -398,7 +399,7 @@ def migrate_csv_to_db(config_obj: Any):
                     connection.execute(CreateSchema(schema))
 
     # 2. Iterate Mappings
-    for dir_attr, schema, table, id_col, index_columns, filter_val in MAPPINGS:
+    for dir_attr, schema, table, _, _, filter_val in MAPPINGS:
         if not hasattr(config_obj, dir_attr):
             logger.warning(
                 f"Config object missing attribute {dir_attr}, skipping {table}",
@@ -413,7 +414,7 @@ def migrate_csv_to_db(config_obj: Any):
             logger.info(f"Directory {dir_path} does not exist, skipping {table}")
             continue
 
-        files = [f for f in os.listdir(dir_path) if f.endswith(".csv")]
+        files = [f.name for f in Path(dir_path).iterdir() if f.suffix == ".csv"]
         if not files:
             continue
 
@@ -426,7 +427,7 @@ def migrate_csv_to_db(config_obj: Any):
         batch_size = 100
         dfs = []
 
-        for i, f in enumerate(tqdm(files, desc=f"Reading {table}")):
+        for _i, f in enumerate(tqdm(files, desc=f"Reading {table}")):
             try:
                 df = pd.read_csv(os.path.join(dir_path, f))
 
@@ -458,7 +459,7 @@ def migrate_csv_to_db(config_obj: Any):
             _write_batch(dfs, engine, schema, table)
 
     # 3. Create Indexes
-    for dir_attr, schema, table, id_col, index_columns, filter_val in MAPPINGS:
+    for _, schema, table, _, index_columns, _ in MAPPINGS:
         create_indexes(engine, schema, table, index_columns)
 
     logger.info("Migration completed.")

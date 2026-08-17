@@ -267,7 +267,7 @@ def extract_types_from_csv(directory: str) -> list[str]:
     all_types = set()
 
     # Traverse the directory and its subdirectories
-    for root, dirs, files in os.walk(directory):
+    for root, _dirs, files in os.walk(directory):
         logger.debug(f"Scanning files in {root}: {files}")
         for file in files:
             if file.endswith(".csv"):

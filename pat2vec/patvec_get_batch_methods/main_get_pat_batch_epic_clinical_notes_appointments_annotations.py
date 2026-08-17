@@ -3,6 +3,9 @@ import logging
 import os
 from typing import Any
 
+_logger = logging.getLogger(__name__)
+
+
 import pandas as pd
 
 from pat2vec.util.helper_functions import (
@@ -94,7 +97,7 @@ def _fetch_epic_clinical_notes_from_elasticsearch(
                 )
         return results if results is not None else pd.DataFrame()
     except Exception as e:
-        logging.error(
+        _logger.error(
             f"Error fetching epic clinical notes from ES for {current_pat_client_id_code}: {e}",
         )
         return pd.DataFrame()
@@ -193,13 +196,13 @@ def get_pat_batch_epic_clinical_notes_appointments_annotations(
                         config_obj,
                     )
                 except Exception as e:
-                    logging.error(
+                    _logger.error(
                         f"Failed to save raw epic clinical notes appointments batch for {current_pat_client_id_code}: {e}",
                     )
 
         # When no raw data is found, handle testing mode with dummy MedCAT
         if pat_batch.empty:
-            logging.info(
+            _logger.info(
                 f"No clinical notes appointments found for patient {current_pat_client_id_code}, ensuring annotation table exists",
             )
 
@@ -221,7 +224,7 @@ def get_pat_batch_epic_clinical_notes_appointments_annotations(
                         id_column="client_idcode",
                     )
                 except Exception as e:
-                    logging.warning(
+                    _logger.warning(
                         f"Could not create annotation table for epic_clinical_notes_appointments: {e}",
                     )
 
@@ -231,7 +234,7 @@ def get_pat_batch_epic_clinical_notes_appointments_annotations(
                 "dummy_medcat_model",
                 False,
             ):
-                logging.info(
+                _logger.info(
                     f"Testing mode with dummy MedCAT: generating annotations for patient {current_pat_client_id_code}",
                 )
                 pat_batch = pd.DataFrame(
@@ -267,7 +270,7 @@ def get_pat_batch_epic_clinical_notes_appointments_annotations(
         try:
             engine = config_obj.db_engine
             if not engine:
-                logging.error(
+                _logger.error(
                     "Database engine not initialized in config_obj for appointments annotations.",
                 )
                 return batch_target
@@ -320,7 +323,7 @@ def get_pat_batch_epic_clinical_notes_appointments_annotations(
                     index=False,
                 )
         except Exception as e:
-            logging.error(
+            _logger.error(
                 f"Could not write appointments annotations to DB for patient {current_pat_client_id_code}: {e}",
             )
 

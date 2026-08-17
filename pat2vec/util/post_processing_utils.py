@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 def count_files(path: str) -> int:
     """Recursively counts the number of files in a directory."""
     count = 0
-    for root, dirs, files in os.walk(path):
+    for _root, _dirs, files in os.walk(path):
         count += len(files)
     return count
 

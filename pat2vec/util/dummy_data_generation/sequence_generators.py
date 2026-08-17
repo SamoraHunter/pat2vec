@@ -55,7 +55,7 @@ def generate_patient_timeline(client_idcode: str) -> str:
         random.randint(789331200, int(datetime.now().timestamp())),
     )
 
-    for i in range(num_entries):
+    for _i in range(num_entries):
         entry_timestamp = current_time + timedelta(days=random.randint(1, 30))
         entry_text = generator(
             "Patient presented with:",
@@ -107,7 +107,7 @@ def generate_patient_timeline_faker(client_idcode: str) -> str:
         random.randint(789331200, int(datetime.now().timestamp())),
     )
 
-    for i in range(num_entries):
+    for _i in range(num_entries):
         entry_timestamp = current_time + timedelta(days=random.randint(1, 30))
         entry_text = faker.sentence(nb_words=15)
 

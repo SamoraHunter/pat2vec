@@ -3,6 +3,9 @@ import logging
 import os
 from typing import Any
 
+_logger = logging.getLogger(__name__)
+
+
 import pandas as pd
 from sqlalchemy import text
 
@@ -105,7 +108,7 @@ def get_pat_batch_mct_docs(
 
             if config_obj.store_pat_batch_docs or overwrite_stored_pat_docs:
                 if config_obj.verbosity >= 3:
-                    logging.debug("get_epr_mct_docs_predropna: %d", len(batch_target))
+                    _logger.debug("get_epr_mct_docs_predropna: %d", len(batch_target))
                 col_list_drop_nan = [
                     "observation_valuetext_analysed",
                     "observationdocument_recordeddtm",
@@ -117,7 +120,7 @@ def get_pat_batch_mct_docs(
                     batch_target = batch_target.dropna(subset=valid_cols).copy()
 
                 if config_obj.verbosity >= 3:
-                    logging.debug("get_epr_mct_docs_postdropna: %d", len(batch_target))
+                    _logger.debug("get_epr_mct_docs_postdropna: %d", len(batch_target))
 
                 if split_clinical_notes_bool:
                     batch_target = split_and_append_chunks(
@@ -229,7 +232,7 @@ def get_pat_batch_mct_docs(
                                     index=False,
                                 )
                     except Exception as e:
-                        logging.error(f"Failed to save MCT docs batch to DB: {e}")
+                        _logger.error(f"Failed to save MCT docs batch to DB: {e}")
                 elif not batch_target.empty:
                     os.makedirs(
                         os.path.dirname(batch_epr_target_path_mct),
@@ -241,5 +244,5 @@ def get_pat_batch_mct_docs(
         return batch_target
     except Exception as e:
         """"""
-        logging.error(f"Error retrieving batch MCT documents: {e}")
+        _logger.error(f"Error retrieving batch MCT documents: {e}")
         return pd.DataFrame()

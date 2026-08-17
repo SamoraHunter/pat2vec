@@ -568,7 +568,7 @@ def get_all_patient_list(config_obj: Any) -> list[str]:
             f"Scanning directory for patient files: {config_obj.pre_document_batch_path}",
         )
         patient_ids = []
-        for filename in os.listdir(config_obj.pre_document_batch_path):
+        for filename in os.listdir(config_obj.pre_document_batch_path):  # noqa: PTH208
             if filename.endswith(".csv"):
                 patient_ids.append(os.path.splitext(filename)[0])
         return patient_ids

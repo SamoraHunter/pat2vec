@@ -1096,7 +1096,7 @@ class config_class:
         self._validate_and_fix_global_dates()
 
         # Update global start date based on the provided start_date (only for forward looking)
-        self = update_global_start_date(self, self.start_date)
+        _updated_config = update_global_start_date(self, self.start_date)
 
         if not self.individual_patient_window:
             #: List of datetime objects for time window generation.

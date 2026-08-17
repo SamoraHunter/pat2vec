@@ -2,6 +2,7 @@ import logging
 import os
 import shutil
 import warnings
+from pathlib import Path
 from typing import Any
 
 import pandas as pd
@@ -87,11 +88,10 @@ def copy_project_folders_with_substring_match(
         new_project_name = f"{base_project_name}_{suffix}"
         new_project_path = os.path.join(parent_dir, new_project_name)
 
+    project_root = Path(project_root)
     os.makedirs(new_project_path, exist_ok=True)  # Ensure parent directory exists
     old_project_folders = (
-        os.listdir(project_root)
-        if isinstance(project_root, str) and os.path.isdir(project_root)
-        else []
+        [item.name for item in project_root.iterdir()] if project_root.is_dir() else []
     )
 
     for folder in tqdm(old_project_folders, desc="Copying folders"):
@@ -208,7 +208,7 @@ def check_csv_files_in_directory(
     """
     # Collect all CSV files first to get an accurate count and avoid double traversal
     csv_files = []
-    for root, dirs, files in os.walk(directory):
+    for root, _dirs, files in os.walk(directory):
         for file in files:
             file_path = os.path.join(root, file)
             if ignore_outputs and "output" in file_path.lower():

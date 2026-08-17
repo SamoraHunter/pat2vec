@@ -2,6 +2,9 @@ import logging
 import os
 from typing import Any
 
+_logger = logging.getLogger(__name__)
+
+
 import pandas as pd
 from sqlalchemy import text
 
@@ -66,7 +69,7 @@ def get_pat_batch_appointments(
                 if not df.empty:
                     return df
         except Exception as e:
-            logging.error(
+            _logger.error(
                 f"Error with database backend for appointments for patient {current_pat_client_id_code}: {e}",
             )
             return pd.DataFrame()
@@ -168,7 +171,7 @@ def get_pat_batch_appointments(
                                     index=False,
                                 )
                     except Exception as e:
-                        logging.error(f"Failed to save appointments batch to DB: {e}")
+                        _logger.error(f"Failed to save appointments batch to DB: {e}")
                 elif not batch_target.empty:
                     os.makedirs(
                         os.path.dirname(appointments_target_path),
@@ -180,5 +183,5 @@ def get_pat_batch_appointments(
         return batch_target
     except Exception as e:
         """"""
-        logging.error(f"Error retrieving batch appointments orders: {e}")
+        _logger.error(f"Error retrieving batch appointments orders: {e}")
         return pd.DataFrame()

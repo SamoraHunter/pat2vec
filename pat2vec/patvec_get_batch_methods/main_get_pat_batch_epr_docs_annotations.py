@@ -6,6 +6,9 @@ import logging
 import os
 from typing import Any
 
+_logger = logging.getLogger(__name__)
+
+
 import pandas as pd
 from sqlalchemy import text
 
@@ -135,7 +138,7 @@ def get_pat_batch_epr_docs_annotations(
         try:
             engine = config_obj.db_engine
             if not engine:
-                logging.error(
+                _logger.error(
                     "Database engine not initialized in config_obj for reports annotations.",
                 )
                 return batch_target
@@ -188,7 +191,7 @@ def get_pat_batch_epr_docs_annotations(
                     index=False,
                 )
         except Exception as e:
-            logging.error(
+            _logger.error(
                 f"Could not write EPR annotations to DB for patient {current_pat_client_id_code}: {e}",
             )
     return batch_target

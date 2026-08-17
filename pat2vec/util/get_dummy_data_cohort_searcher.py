@@ -2702,7 +2702,7 @@ def generate_patient_timeline(client_idcode: str) -> str:
         random.randint(789331200, int(datetime.now().timestamp())),
     )
 
-    for i in range(num_entries):
+    for _i in range(num_entries):
         entry_timestamp = current_time + timedelta(days=random.randint(1, 30))
         entry_text = generator(
             "Patient presented with:",
@@ -2764,7 +2764,7 @@ def generate_patient_timeline_faker(client_idcode: str) -> str:
         random.randint(789331200, int(datetime.now().timestamp())),
     )
 
-    for i in range(num_entries):
+    for _i in range(num_entries):
         entry_timestamp = current_time + timedelta(days=random.randint(1, 30))
         entry_text = faker.sentence(nb_words=15)
 
@@ -3320,7 +3320,7 @@ def generate_bmi_data(
             # For testing: generate dates within a predictable range around base_date
             # All rows use the same date to ensure they're captured when filtering for single-day windows
             test_day = max(1, min(28, base_date.day))
-            for i in range(num_rows):
+            for _i in range(num_rows):
                 date_values.append(
                     datetime(
                         base_date.year,
@@ -3333,7 +3333,7 @@ def generate_bmi_data(
                 )
         else:
             # Generate dates concentrated around June 2023 to match common test date ranges
-            for i in range(num_rows):
+            for _i in range(num_rows):
                 if random.random() < 0.7:  # 70% chance to generate a June 2023 date
                     year = 2023
                     month = 6  # June

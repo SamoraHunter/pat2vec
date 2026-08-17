@@ -149,7 +149,7 @@ def build_ipw_dataframe(
             except Exception as e:
                 logger.error(f"Could not fetch patient list from database: {e}")
         else:  # file-based
-            pat_list = os.listdir(config_obj.pre_document_batch_path)
+            pat_list = os.listdir(config_obj.pre_document_batch_path)  # noqa: PTH208
             pat_list_stripped = [
                 os.path.splitext(file)[0] for file in pat_list if file.endswith(".csv")
             ]

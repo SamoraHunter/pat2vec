@@ -376,7 +376,7 @@ def manually_label_annotation_df(
             logger.info(
                 f"Remaining unlabeled clients: {df[df['human_label'].isna()]['client_idcode'].nunique()}, Labeled clients: {df[df['human_label'].notna()]['client_idcode'].nunique()}",
             )
-            for i, filter_codes in enumerate(filter_codes_list):
+            for i, _filter_codes in enumerate(filter_codes_list):
                 logger.info(
                     f"Remaining labels for filter {i + 1} as a total of codes: {remaining_labels_info[i][0]}/{remaining_labels_info[i][1]}",
                 )

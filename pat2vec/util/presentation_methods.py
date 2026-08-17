@@ -23,7 +23,7 @@ def group_images_by_suffix(folder_path: str) -> dict[str, list[str]]:
     """
     image_groups = {}
 
-    for file_name in os.listdir(folder_path):
+    for file_name in os.listdir(folder_path):  # noqa: PTH208
         if file_name.endswith((".png", ".jpg", ".jpeg")):
             suffix = file_name.split("_")[-1].split(".")[0]
             image_groups.setdefault(suffix, []).append(file_name)
@@ -119,7 +119,7 @@ def create_powerpoint_from_images(folder_path: str) -> None:
     """
     images = [
         file_name
-        for file_name in os.listdir(folder_path)
+        for file_name in os.listdir(folder_path)  # noqa: PTH208
         if file_name.endswith((".png", ".jpg", ".jpeg"))
     ]
 

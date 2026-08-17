@@ -2,6 +2,9 @@ import logging
 import os
 from typing import Any
 
+_logger = logging.getLogger(__name__)
+
+
 import pandas as pd
 
 from pat2vec.util.helper_functions import (
@@ -36,7 +39,7 @@ def get_pat_batch_obs(
 
     """
     if not search_term:
-        logging.warning(
+        _logger.warning(
             f"get_pat_batch_obs called with empty search_term for patient {current_pat_client_id_code}",
         )
         return pd.DataFrame()
@@ -80,7 +83,7 @@ def get_pat_batch_obs(
                 if not df.empty:
                     return df
         except Exception as e:
-            logging.error(
+            _logger.error(
                 f"Error with database backend for observation '{search_term}' for patient {current_pat_client_id_code}: {e}",
             )
             return pd.DataFrame()
@@ -145,5 +148,5 @@ def get_pat_batch_obs(
 
         return batch_target
     except Exception as e:
-        logging.error(f"Error retrieving batch {search_term}: {e}")
+        _logger.error(f"Error retrieving batch {search_term}: {e}")
         return pd.DataFrame()

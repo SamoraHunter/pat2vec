@@ -84,7 +84,7 @@ def sample_by_terms(
     total_hits = sum(len(indices) for indices in term_matches.values())
     remaining_samples = []
     if total_hits > 0 and remaining_quota > 0:
-        for group, indices in term_matches.items():
+        for indices in term_matches.values():
             unselected_indices = list(set(indices) - sampled_indices)
             proportion = len(indices) / total_hits
             num_to_sample = int(remaining_quota * proportion)

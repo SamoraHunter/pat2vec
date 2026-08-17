@@ -2,6 +2,9 @@ import logging
 import os
 from typing import Any
 
+_logger = logging.getLogger(__name__)
+
+
 import pandas as pd
 
 from pat2vec.util.helper_functions import (
@@ -91,7 +94,7 @@ def _fetch_epic_imaging_reports_from_elasticsearch(
                 )
         return results if results is not None else pd.DataFrame()
     except Exception as e:
-        logging.error(
+        _logger.error(
             f"Error fetching epic imaging reports from ES for {current_pat_client_id_code}: {e}",
         )
         return pd.DataFrame()
@@ -191,7 +194,7 @@ def get_pat_batch_epic_imaging_reports_annotations(
                         config_obj,
                     )
                 except Exception as e:
-                    logging.error(
+                    _logger.error(
                         f"Failed to save raw epic imaging reports batch for {current_pat_client_id_code}: {e}",
                     )
 
@@ -201,7 +204,7 @@ def get_pat_batch_epic_imaging_reports_annotations(
             )
 
         if pat_batch.empty:
-            logging.info(
+            _logger.info(
                 f"No raw imaging reports found for patient {current_pat_client_id_code}, ensuring annotation table exists",
             )
             if (
@@ -221,7 +224,7 @@ def get_pat_batch_epic_imaging_reports_annotations(
                         id_column="client_idcode",
                     )
                 except Exception as e:
-                    logging.warning(
+                    _logger.warning(
                         f"Could not create annotation table for epic_imaging_reports: {e}",
                     )
 
@@ -263,7 +266,7 @@ def get_pat_batch_epic_imaging_reports_annotations(
         try:
             engine = config_obj.db_engine
             if not engine:
-                logging.error(
+                _logger.error(
                     "Database engine not initialized in config_obj for epic imaging reports annotations.",
                 )
                 return batch_target
@@ -309,7 +312,7 @@ def get_pat_batch_epic_imaging_reports_annotations(
                     index=False,
                 )
         except Exception as e:
-            logging.error(
+            _logger.error(
                 f"Could not write epic imaging reports annotations to DB for patient {current_pat_client_id_code}: {e}",
             )
     return batch_target

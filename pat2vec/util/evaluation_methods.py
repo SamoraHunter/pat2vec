@@ -1,6 +1,7 @@
 import logging
 import os
 import traceback
+from pathlib import Path
 
 import pandas as pd
 from IPython.display import clear_output
@@ -138,13 +139,11 @@ class CsvProfiler:
         # Create the output directory for profile reports if it doesn't already exist
         os.makedirs(output_dir, exist_ok=True)
 
-        for csv_file in tqdm(
-            os.listdir(epr_batchs_fp),
+        for file_path in tqdm(
+            Path(epr_batchs_fp).iterdir(),
             desc="Generating Profile Reports",
         ):
-            file_path = os.path.join(epr_batchs_fp, csv_file)
-
-            if not os.path.isfile(file_path):
+            if not file_path.is_file():
                 continue
 
             try:

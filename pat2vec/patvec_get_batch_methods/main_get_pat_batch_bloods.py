@@ -2,6 +2,9 @@ import logging
 import os
 from typing import Any
 
+_logger = logging.getLogger(__name__)
+
+
 import pandas as pd
 from sqlalchemy import text
 
@@ -86,7 +89,7 @@ def get_pat_batch_bloods(
                     start_date = pd.to_datetime(start_date_str)
                     end_date = pd.to_datetime(end_date_str)
                 except (ValueError, TypeError) as e:
-                    logging.warning(
+                    _logger.warning(
                         f"Could not parse dates for IPW temporal filter: {e}",
                     )
 
@@ -112,7 +115,7 @@ def get_pat_batch_bloods(
                 if not df.empty:
                     return df
         except Exception as e:
-            logging.error(
+            _logger.error(
                 f"Error with database backend for bloods for patient {current_pat_client_id_code}: {e}",
             )
             return pd.DataFrame()
@@ -156,7 +159,7 @@ def get_pat_batch_bloods(
                     is not None
                 ):
                     if config_obj.verbosity >= 1:
-                        logging.info(
+                        _logger.info(
                             "applying doc type filter to bloods",
                             config_obj.data_type_filter_dict,
                         )
@@ -217,7 +220,7 @@ def get_pat_batch_bloods(
                                     index=False,
                                 )
                     except Exception as e:
-                        logging.error(f"Failed to save bloods batch to DB: {e}")
+                        _logger.error(f"Failed to save bloods batch to DB: {e}")
                 elif not batch_target.empty:
                     os.makedirs(os.path.dirname(batch_obs_target_path), exist_ok=True)
                     batch_target.to_csv(batch_obs_target_path)
@@ -228,5 +231,5 @@ def get_pat_batch_bloods(
         return batch_target
     except Exception as e:
         """"""
-        logging.error(f"Error retrieving batch blood test-related observations: {e}")
+        _logger.error(f"Error retrieving batch blood test-related observations: {e}")
         return pd.DataFrame()

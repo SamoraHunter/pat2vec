@@ -76,7 +76,7 @@ def list_dir_wrapper(path: str, config_obj: Any = None) -> list[str]:
 
         return res
     if os.path.exists(path):
-        return os.listdir(path)
+        return os.listdir(path)  # noqa: PTH208
     return []
 
 
@@ -1080,7 +1080,7 @@ def build_patient_dict(
 
     patient_dict = {}
 
-    for index, row in dataframe.iterrows():
+    for _index, row in dataframe.iterrows():
         patient_id = row[patient_id_column]
         start_time = row[start_column]
         end_time = row[end_column]

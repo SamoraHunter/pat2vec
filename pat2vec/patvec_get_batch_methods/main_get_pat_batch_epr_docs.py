@@ -2,6 +2,9 @@ import logging
 import os
 from typing import Any
 
+_logger = logging.getLogger(__name__)
+
+
 import pandas as pd
 from IPython.display import display
 from sqlalchemy import text
@@ -82,7 +85,7 @@ def get_pat_batch_epr_docs(
                 if not df.empty:
                     return df
         except Exception as e:
-            logging.error(
+            _logger.error(
                 f"Error with database backend for EPR docs for patient {current_pat_client_id_code}: {e}",
             )
             return pd.DataFrame()
@@ -91,13 +94,13 @@ def get_pat_batch_epr_docs(
     global_end_day = str(global_end_day).zfill(2)
 
     if config_obj.verbosity >= 6:
-        logging.debug("batch_epr_target_path: %s", batch_epr_target_path)
-        logging.debug("global_start_year: %s", global_start_year)
-        logging.debug("global_start_month: %s", global_start_month)
-        logging.debug("global_end_year: %s", global_end_year)
-        logging.debug("global_end_month: %s", global_end_month)
-        logging.debug("global_start_day: %s", global_start_day)
-        logging.debug("global_end_day: %s", global_end_day)
+        _logger.debug("batch_epr_target_path: %s", batch_epr_target_path)
+        _logger.debug("global_start_year: %s", global_start_year)
+        _logger.debug("global_start_month: %s", global_start_month)
+        _logger.debug("global_end_year: %s", global_end_year)
+        _logger.debug("global_end_month: %s", global_end_month)
+        _logger.debug("global_start_day: %s", global_start_day)
+        _logger.debug("global_end_day: %s", global_end_day)
 
     existence_check = exist_check(batch_epr_target_path, config_obj)
 
@@ -134,7 +137,7 @@ def get_pat_batch_epr_docs(
                     is not None
                 ):
                     if config_obj.verbosity >= 1:
-                        logging.info(
+                        _logger.info(
                             "applying doc type filter to EPR docs",
                             config_obj.data_type_filter_dict,
                         )
@@ -157,7 +160,7 @@ def get_pat_batch_epr_docs(
                     is not None
                 ):
                     if config_obj.verbosity > 1:
-                        logging.debug("append_regex_term_counts...")
+                        _logger.debug("append_regex_term_counts...")
                         display(batch_target)
                     batch_target = append_regex_term_counts(
                         df=batch_target,
@@ -181,7 +184,7 @@ def get_pat_batch_epr_docs(
                 # batch_target.dropna(subset='body_analysed', inplace=True)
 
                 if config_obj.verbosity >= 3:
-                    logging.debug("get_epr_docs_predropna: %d", len(batch_target))
+                    _logger.debug("get_epr_docs_predropna: %d", len(batch_target))
 
                 col_list_drop_nan = ["body_analysed", "updatetime", "client_idcode"]
 
@@ -191,7 +194,7 @@ def get_pat_batch_epr_docs(
                     batch_target = batch_target.dropna(subset=valid_cols).copy()
 
                 if config_obj.verbosity >= 3:
-                    logging.debug("get_epr_docs_postdropna: %d", len(batch_target))
+                    _logger.debug("get_epr_docs_postdropna: %d", len(batch_target))
 
                 if split_clinical_notes_bool and not batch_target.empty:
                     batch_target = split_and_append_chunks(batch_target, epr=True)
@@ -214,10 +217,10 @@ def get_pat_batch_epr_docs(
                             dropna=False,
                         )
                         if config_obj.verbosity > 2:
-                            logging.debug(
+                            _logger.debug(
                                 f"pre_filter_split_notes_len: {pre_filter_split_notes_len}",
                             )
-                            logging.debug(
+                            _logger.debug(
                                 f"post_filter_split_notes_len: {len(batch_target)}",
                             )
 
@@ -259,7 +262,7 @@ def get_pat_batch_epr_docs(
                                     index=False,
                                 )
                     except Exception as e:
-                        logging.error(f"Failed to save EPR docs batch to DB: {e}")
+                        _logger.error(f"Failed to save EPR docs batch to DB: {e}")
                 elif not batch_target.empty:
                     os.makedirs(os.path.dirname(batch_epr_target_path), exist_ok=True)
                     batch_target.to_csv(batch_epr_target_path)
@@ -269,7 +272,7 @@ def get_pat_batch_epr_docs(
 
         return batch_target
     except Exception as e:
-        logging.error(
+        _logger.error(
             f"Error retrieving batch EPR documents: {e}",
         )  # Log the original error
         raise  # Re-raise the original exception
