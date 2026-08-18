@@ -18,8 +18,6 @@ from .pat2vec_get_methods.get_method_appointments import (
 )
 from .pat2vec_get_methods.get_method_bed import (
     BED_FIELDS,
-    get_bed,
-    search_bed_data,
 )
 from .pat2vec_get_methods.get_method_bloods import (
     BLOODS_FIELDS,

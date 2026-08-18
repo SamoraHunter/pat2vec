@@ -77,7 +77,7 @@ def get_current_pat_annotations_mrc_cs(
 
     # display(batch_epr_docs_annotations)
 
-    if batch_mct_docs_annotations is not None:
+    if batch_mct_docs_annotations is not None and len(batch_mct_docs_annotations) > 0:
         filtered_batch_mct_docs_annotations = filter_dataframe_by_timestamp(
             batch_mct_docs_annotations,
             start_year,
@@ -94,6 +94,7 @@ def get_current_pat_annotations_mrc_cs(
             df_pat_target = calculate_pretty_name_count_features(
                 filtered_batch_mct_docs_annotations,
                 suffix="mct",
+                patient_id=current_pat_client_id_code,
             )
         else:
             if config_obj.verbosity >= 6:

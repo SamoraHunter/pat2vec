@@ -137,6 +137,7 @@ def get_current_pat_epic_orders_annotations(
             df_pat_target = calculate_pretty_name_count_features(
                 filtered_annots,
                 suffix="epic_orders",
+                patient_id=current_pat_client_id_code,
             )
         else:
             df_pat_target = pd.DataFrame(

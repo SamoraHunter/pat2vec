@@ -139,6 +139,7 @@ def get_current_pat_annotations(
             df_pat_target = calculate_pretty_name_count_features(
                 filtered_batch_epr_docs_annotations,
                 suffix="epr",
+                patient_id=current_pat_client_id_code,
             )
 
         else:

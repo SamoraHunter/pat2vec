@@ -139,6 +139,7 @@ def get_current_pat_textual_obs_annotations(
             processed_annotations = calculate_pretty_name_count_features(
                 filtered_textual_obs_annotations,
                 suffix="textual_obs",
+                patient_id=current_pat_client_idcode,
             )
 
         else:

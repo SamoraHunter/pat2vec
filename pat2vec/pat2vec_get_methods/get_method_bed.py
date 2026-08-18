@@ -240,3 +240,93 @@ def get_bed(
             features[f"bed_{bed_term}"] = 1
 
     return features
+
+
+def get_bed_features(
+    current_pat_client_id_code,
+    target_date_range,
+    pat_batch,
+    config_obj=None,
+    cohort_searcher_with_terms_and_search=None,
+):
+    """Retrieves BED-related features for a patient within a specified date range.
+
+    This function fetches bed number data, either from a pre-loaded batch or by
+    searching, and returns the results as a DataFrame with feature columns.
+
+    Args:
+        current_pat_client_id_code (str): The client ID code of the patient.
+        target_date_range (Tuple[int, int, int, int, int, int]): A tuple
+            representing the target date range as (start_year, start_month,
+            end_year, end_month, start_day, end_day).
+        pat_batch (pd.DataFrame): The DataFrame containing patient data for batch mode.
+        config_obj (Optional[object]): Configuration object. Defaults to None.
+        cohort_searcher_with_terms_and_search (Optional[Callable]): The function for
+            cohort searching. Defaults to None.
+
+    Returns:
+        pd.DataFrame: A single-row DataFrame containing BED-related features for the
+            specified patient including client_idcode and bed feature columns.
+
+    Raises:
+        ValueError: If config_obj is None.
+
+    """
+    batch_mode = config_obj.batch_mode
+
+    start_year, start_month, end_year, end_month, start_day, end_day = (
+        get_start_end_year_month(target_date_range, config_obj=config_obj)
+    )
+    search_term = "CORE_BedNumber3"
+    bed_time_field = "observationdocument_recordeddtm"
+
+    if pat_batch.empty:
+        return pd.DataFrame({"client_idcode": [current_pat_client_id_code]})
+
+    if batch_mode:
+        current_pat_raw = filter_dataframe_by_timestamp(
+            pat_batch,
+            start_year,
+            start_month,
+            end_year,
+            end_month,
+            start_day,
+            end_day,
+            bed_time_field,
+        )
+    else:
+        current_pat_raw = search_bed_data(
+            cohort_searcher_with_terms_and_search=cohort_searcher_with_terms_and_search,
+            client_id_codes=current_pat_client_id_code,
+            client_idcode_name=config_obj.client_idcode_term_name,
+            bed_time_field=bed_time_field,
+            start_year=start_year,
+            start_month=start_month,
+            start_day=start_day,
+            end_year=end_year,
+            end_month=end_month,
+            end_day=end_day,
+            search_term=search_term,
+            output_filename=None,
+            config_obj=config_obj,
+        )
+
+    features = pd.DataFrame(
+        data=[current_pat_client_id_code],
+        columns=["client_idcode"],
+    )
+
+    if len(current_pat_raw) == 0:
+        return features
+
+    features_data = current_pat_raw[
+        current_pat_raw["obscatalogmasteritem_displayname"] == search_term
+    ]
+
+    if len(features_data) > 0:
+        all_bed_terms = list(features_data["observation_valuetext_analysed"].unique())
+
+        for bed_term in all_bed_terms:
+            features[f"bed_{bed_term}"] = 1
+
+    return features

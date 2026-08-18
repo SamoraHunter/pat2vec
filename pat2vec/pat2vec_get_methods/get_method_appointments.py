@@ -311,3 +311,35 @@ def get_appointments(
         display(features)
 
     return features
+
+
+def get_appointments_features(
+    current_pat_client_id_code,
+    target_date_range,
+    pat_batch,
+    config_obj=None,
+    cohort_searcher_with_terms_and_search=None,
+):
+    """Wrapper function for get_appointments following BMI pattern.
+
+    Args:
+        current_pat_client_id_code: The client ID code of the patient.
+        target_date_range: A tuple representing the target date range.
+        pat_batch: The DataFrame containing patient data for batch mode.
+        config_obj: Configuration object. Defaults to None.
+        cohort_searcher_with_terms_and_search: The function for cohort searching.
+
+    Returns:
+        pd.DataFrame or list: Appointments features for the specified patient(s).
+
+    Raises:
+        ValueError: If config_obj is None.
+
+    """
+    return get_appointments(
+        current_pat_client_id_code,
+        target_date_range,
+        pat_batch,
+        config_obj=config_obj,
+        cohort_searcher_with_terms_and_search=cohort_searcher_with_terms_and_search,
+    )

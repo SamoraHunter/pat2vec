@@ -33,9 +33,8 @@ def get_current_pat_epic_clinical_notes_annotations(
         target_date_range: A tuple containing (start_date, end_date) defining
             the time period to filter annotations by.
         epic_clinical_notes_annotations: DataFrame containing Epic clinical notes
-            annotations for a batch of patients..Must be pre-annotated using MedCAT
-            and contain 'document_CreatedWhen' column for timestamp filtering,
-            'pretty_name', 'cui' for feature extraction.
+            annotations for a batch of patients. Must contain 'document_CreatedWhen'
+            column for timestamp filtering and 'pretty_name', 'cui' for feature extraction.
         config_obj: Configuration object with settings such as `verbosity` and
             `start_time`. Cannot be None.
         t: Optional progress bar object for updating status during processing.
@@ -45,28 +44,6 @@ def get_current_pat_epic_clinical_notes_annotations(
         cat: The MedCAT object used for text annotation. This parameter is included
             for API consistency but may not be directly used if annotations are
             pre-computed. Defaults to None.
-
-    Returns:
-        pd.DataFrame: A DataFrame containing the calculated annotation features
-            for the specified patient. If no annotations are found, returns a
-            DataFrame with only the 'client_idcode' column.
-
-    Args:
-        current_pat_client_id_code: The unique identifier for the patient.
-        target_date_range: A tuple containing (start_date, end_date) defining
-            the time period to filter annotations by.
-        epic_clinical_notes_annotations: DataFrame containing Epic clinical notes
-            annotations for a batch of patients. Must contain 'document_CreatedWhen'
-            column for timestamp filtering and 'pretty_name', 'cui' for feature
-            extraction.
-        config_obj: Configuration object with settings such as `verbosity` and
-            `start_time`. Cannot be None.
-        t: Optional progress bar object for updating status during processing.
-            Defaults to None.
-        cohort_searcher_with_terms_and_search: Placeholder for a cohort searcher
-            function, unused in this implementation. Defaults to None.
-        cat: Placeholder for a MedCAT object, unused in this implementation.
-            Defaults to None.
 
     Returns:
         pd.DataFrame: A DataFrame containing the calculated annotation features
@@ -167,6 +144,7 @@ def get_current_pat_epic_clinical_notes_annotations(
             processed_annotations = calculate_pretty_name_count_features(
                 filtered_epic_clinical_notes_annotations,
                 suffix="epic_clinical_notes",
+                patient_id=current_pat_client_id_code,
             )
         else:
             processed_annotations = pd.DataFrame(

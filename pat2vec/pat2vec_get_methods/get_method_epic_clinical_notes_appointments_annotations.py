@@ -145,7 +145,7 @@ def get_current_pat_epic_clinical_notes_appointments_annotations(
             processed_annotations = calculate_pretty_name_count_features(
                 filtered_epic_clinical_notes_appointments_annotations,
                 suffix="epic_clinical_notes_appointments",
-                config_obj=config_obj,
+                patient_id=current_pat_client_idcode,
             )
 
         else:

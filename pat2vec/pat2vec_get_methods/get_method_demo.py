@@ -171,7 +171,7 @@ def get_demographics_data(pat2vec_obj: object, pat_list: list[str]) -> pd.DataFr
     results = cohort_searcher_with_terms_and_search(
         index_name="epr_documents",
         fields_list=DEMOGRAPHICS_FIELDS,
-        term_name=f"{config.client_idcode_term_name}.keyword",
+        term_name=config.client_idcode_term_name,
         entered_list=pat_list,
         search_string=(
             f"updatetime:[{config.global_start_year}-{config.global_start_month}-{config.global_start_day} "

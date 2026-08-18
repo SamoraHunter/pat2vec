@@ -296,3 +296,86 @@ def get_vte_status(
         display(features)
 
     return features
+
+
+def get_vte_status_features(
+    current_pat_client_id_code: str,
+    target_date_range: tuple,
+    pat_batch: pd.DataFrame,
+    config_obj: object | None = None,
+    cohort_searcher_with_terms_and_search: Callable | None = None,
+) -> pd.DataFrame:
+    """Retrieves VTE status features for a patient within a date range.
+
+    This function fetches VTE status observation data, either from a pre-loaded
+    batch or by searching, and returns feature columns (not just client_idcode).
+
+    Args:
+        current_pat_client_id_code (str): The patient's client ID.
+        target_date_range (Tuple[int, int, int, int, int, int]): A tuple representing
+            the target date range as (start_year, start_month, end_year, end_month,
+            start_day, end_day).
+        pat_batch (pd.DataFrame): The DataFrame containing patient data for batch mode.
+        config_obj (Optional[object]): Configuration object with settings like
+            `batch_mode`. Defaults to None.
+        cohort_searcher_with_terms_and_search (Optional[Callable]): The function for
+            cohort searching. Defaults to None.
+
+    Returns:
+        pd.DataFrame: A DataFrame containing VTE status features for the patient.
+
+    Raises:
+        ValueError: If `config_obj` is None.
+
+    """
+    batch_mode = config_obj.batch_mode
+
+    start_year, start_month, end_year, end_month, start_day, end_day = (
+        get_start_end_year_month(target_date_range, config_obj=config_obj)
+    )
+    search_term = "CORE_VTE_STATUS"
+    vte_time_field = "observationdocument_recordeddtm"
+
+    if pat_batch.empty:
+        return pd.DataFrame({"client_idcode": [current_pat_client_id_code]})
+
+    if batch_mode:
+        current_pat_raw = filter_dataframe_by_timestamp(
+            pat_batch,
+            start_year,
+            start_month,
+            end_day,
+            end_month,
+            vte_time_field,
+        )
+    else:
+        current_pat_raw = search_vte_status_data(
+            cohort_searcher_with_terms_and_search=cohort_searcher_with_terms_and_search,
+            client_id_codes=current_pat_client_id_code,
+            client_idcode_name=config_obj.client_idcode_term_name,
+            vte_time_field=vte_time_field,
+            start_year=start_year,
+            start_month=start_month,
+            start_day=start_day,
+            end_year=end_year,
+            end_month=end_month,
+            end_day=end_day,
+            search_term=search_term,
+            output_filename=None,
+            config_obj=config_obj,
+        )
+
+    if len(current_pat_raw) == 0:
+        return pd.DataFrame({"client_idcode": [current_pat_client_id_code]})
+
+    features_data = prepare_vte_data(current_pat_raw)
+    features = calculate_vte_features(
+        features_data,
+        current_pat_client_id_code,
+        negate_biochem=config_obj.negate_biochem,
+    )
+
+    if config_obj.verbosity >= 6:
+        display(features)
+
+    return features

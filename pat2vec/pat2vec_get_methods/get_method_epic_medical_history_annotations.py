@@ -165,6 +165,7 @@ def get_current_pat_epic_medical_history_annotations(
             processed_annotations = calculate_pretty_name_count_features(
                 filtered_epic_medical_history_annotations,
                 suffix="epic_medical_history",
+                patient_id=current_pat_client_id_code,
             )
         else:
             processed_annotations = pd.DataFrame(

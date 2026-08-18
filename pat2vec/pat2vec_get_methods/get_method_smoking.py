@@ -284,3 +284,45 @@ def get_smoking(
         display(features)
 
     return features
+
+
+def get_smoking_features(
+    current_pat_client_id_code,
+    target_date_range,
+    pat_batch,
+    config_obj=None,
+    cohort_searcher_with_terms_and_search=None,
+):
+    """Retrieves smoking status features for a patient within a specified date range.
+
+    This function is a wrapper around get_smoking() that provides feature extraction
+    capabilities. It fetches CORE_SmokingStatus observation data, either from a pre-loaded
+    batch or by searching Elasticsearch, and then creates binary flags indicating
+    the presence of records for different smoking statuses (Current Smoker, Non-Smoker).
+
+    Args:
+        current_pat_client_id_code (str): The client ID code of the patient.
+        target_date_range (Tuple[int, int, int, int, int, int]): A tuple representing
+            the target date range as (start_year, start_month, end_year, end_month,
+            start_day, end_day).
+        pat_batch (pd.DataFrame): The DataFrame containing patient data for batch mode.
+        config_obj (Optional[object]): Configuration object containing batch_mode,
+            negate_biochem, and other settings. Defaults to None.
+        cohort_searcher_with_terms_and_search (Optional[Callable]): The function for
+            cohort searching. Defaults to None.
+
+    Returns:
+        pd.DataFrame: A single-row DataFrame containing smoking status features for the patient.
+            If no data is found, returns a DataFrame with only client_idcode column.
+
+    Raises:
+        ValueError: If config_obj is None or required parameters are missing.
+
+    """
+    return get_smoking(
+        current_pat_client_id_code=current_pat_client_id_code,
+        target_date_range=target_date_range,
+        pat_batch=pat_batch,
+        config_obj=config_obj,
+        cohort_searcher_with_terms_and_search=cohort_searcher_with_terms_and_search,
+    )
