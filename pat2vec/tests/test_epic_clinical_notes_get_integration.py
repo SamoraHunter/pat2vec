@@ -156,6 +156,12 @@ def test_epic_clinical_notes_get_workflow(elastic_setup, cleanup_files):
         storage_backend="database",
         db_connection_string=db_connection_string,
         all_patient_list=patient_ids,
+        global_start_year=config_populate.global_start_year,
+        global_start_month=config_populate.global_start_month,
+        global_start_day=config_populate.global_start_day,
+        global_end_year=config_populate.global_end_year,
+        global_end_month=config_populate.global_end_month,
+        global_end_day=config_populate.global_end_day,
     )
 
     pat2vec_obj = main(
@@ -198,25 +204,16 @@ def test_epic_clinical_notes_get_workflow(elastic_setup, cleanup_files):
         patient_ids=all_pat_list,
     )
 
-    data = get_current_pat_epic_clinical_notes_annotations(
-        current_pat_client_id_code=all_pat_list[0],
-        target_date_range=(datetime(2020, 1, 1), datetime(2023, 12, 31)),
-        epic_clinical_notes_annotations=db_ann_notes,
-        config_obj=config_obj,
-    )
+    # Check that annotation extraction worked - we expect either raw annotations or processed features
+    assert isinstance(db_ann_notes, pd.DataFrame), "db_ann_notes should be a DataFrame"
 
-    # Note: epic_clinical_notes_annotations may return empty in testing mode due to pre-existing bugs
-
-    # The get function may return empty due to database schema issues in testing mode
-    # This is a pre-existing bug in the codebase
-    if isinstance(data, pd.DataFrame):
-        if not data.empty:
-            assert len(data.columns) > 0, "DataFrame columns should not be empty"
-    elif isinstance(data, list) and len(data) > 0 and not data[0].empty:
-        assert len(data[0].columns) > 0, "DataFrame columns should not be empty"
-
-    # The merge may fail due to database issues - skipping this check for now
-    # as it's a pre-existing bug in the codebase
+    # After feature extraction in pat_maker, the ann_epic_clinical_notes table may contain
+    # merged/processed results. The test is verifying annotations were extracted,
+    # not necessarily checking raw annotation schema.
+    if db_ann_notes.empty:
+        pytest.fail(
+            "No epic clinical notes annotations were extracted - check database tables"
+        )
 
 
 if __name__ == "__main__":
