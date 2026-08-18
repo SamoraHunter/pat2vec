@@ -1453,7 +1453,7 @@ class main:
 
         # Fetch standard batches
         for config in batch_configs:
-            if self.config_obj.main_options.get(config["option"], True):
+            if self.config_obj.main_options.get(config["option"], False):
                 id_arg_name = config.get("id_arg", "current_pat_client_id_code")
                 call_kwargs = {
                     id_arg_name: (
@@ -1507,7 +1507,7 @@ class main:
 
         # Fetch annotation batches
         for config in annotation_batch_configs:
-            if self.config_obj.main_options.get(config["option"], True):
+            if self.config_obj.main_options.get(config["option"], False):
                 batch_result = config["func"](
                     current_pat_client_id_code,
                     config_obj=self.config_obj,
@@ -1554,8 +1554,8 @@ class main:
             "batch_smoking": ("raw_smoking", "client_idcode"),
             "batch_core_02": ("raw_core_02", "client_idcode"),
             "batch_bednumber": ("raw_bed", "client_idcode"),
-            "batch_vte": ("raw_vte", "client_idcode"),
-            "batch_hospsite": ("raw_hospsite", "client_idcode"),
+            "batch_vte": ("raw_obs_core_vte_status", "client_idcode"),
+            "batch_hospsite": ("raw_obs_core_hospitalsite", "client_idcode"),
             "batch_resus": ("raw_resus", "client_idcode"),
             "batch_obs": ("raw_obs", "client_idcode"),
             "batch_epic_encounters": ("raw_epic_encounters", "client_idcode"),
@@ -1630,7 +1630,7 @@ class main:
             # Determine if the source is enabled via config
             option = batch_to_option.get(batch_key)
             is_enabled = (
-                self.config_obj.main_options.get(option, True) if option else True
+                self.config_obj.main_options.get(option, False) if option else False
             )
 
             # For database backend, we need to handle two cases:
@@ -1715,8 +1715,8 @@ class main:
             if not table_name or option is None:
                 continue
 
-            # Check if source option is enabled (default to True)
-            is_enabled = self.config_obj.main_options.get(option, True)
+            # Check if source option is enabled
+            is_enabled = self.config_obj.main_options.get(option, False)
 
             # Skip disabled sources
             if not is_enabled:
@@ -1947,7 +1947,7 @@ class main:
         ]
 
         for config in doc_configs:
-            if self.config_obj.main_options.get(config["option"], True):
+            if self.config_obj.main_options.get(config["option"], False):
                 batch = batches.get(config["key"])
                 if batch is not None and not batch.empty:
                     time_col = config["time_col"]
