@@ -1095,6 +1095,30 @@ class config_class:
             self.global_end_date = None
         self._validate_and_fix_global_dates()
 
+        # When testing_elastic=True, ensure global dates align with the date range used
+        # for dummy data generation. If start_date is before global_start and in testing mode,
+        # adjust it to avoid empty date lists.
+        if (
+            self.testing_elastic
+            and hasattr(self, "start_date")
+            and self.start_date < self.global_start_date
+        ):
+            logger.info(
+                f"Testing with elastic: adjusting start_date from {self.start_date} to {self.global_start_date}",
+            )
+            # Update the start_date to match global_start
+            self.start_date = self.global_start_date
+            # Recalculate date_list since start_date changed
+            if not self.individual_patient_window:
+                self.date_list = generate_date_list(
+                    self.start_date,
+                    self.years,
+                    self.months,
+                    self.days,
+                    time_window_interval_delta=self.time_window_interval_delta,
+                    config_obj=self,
+                )
+
         # Update global start date based on the provided start_date (only for forward looking)
         _updated_config = update_global_start_date(self, self.start_date)
 

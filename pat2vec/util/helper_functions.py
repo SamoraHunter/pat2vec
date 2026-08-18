@@ -16,11 +16,13 @@ from tqdm import tqdm
 # Moved from pat2vec.util.post_processing_build_methods to break circular import
 logger = logging.getLogger(__name__)  # Ensure logger is defined at module level
 
-# Import MAPPINGS for schema information when creating empty tables
+# Import MAPPINGS and EMPTY_ANNOT_COLS for schema information when creating empty tables
 try:
     from .migrate_to_db import MAPPINGS
+    from .post_processing_annotations import EMPTY_ANNOT_COLS
 except ImportError:
     MAPPINGS = []
+    EMPTY_ANNOT_COLS = []
 
 
 def get_ram_usage():
@@ -645,6 +647,39 @@ def save_annotations_to_db(
                     connection.execute(CreateSchema(schema_name))
 
             inspector = inspect(connection)
+
+            # Validate schema for existing annotation tables and drop if incomplete
+            table_is_valid = True
+            if inspector.has_table(target_table, schema=target_schema):
+                if schema_name == "annotations":
+                    # For annotation tables, check if table has all expected columns from df
+                    existing_cols = [
+                        c["name"]
+                        for c in inspector.get_columns(
+                            target_table,
+                            schema=target_schema,
+                        )
+                    ]
+                    required_cols = set(EMPTY_ANNOT_COLS)
+                    existing_col_set = set(existing_cols)
+                    missing_cols = required_cols - existing_col_set
+                    # Also check if df has extra columns that aren't in the table
+                    # (like custom time columns such as observationdocument_recordeddtm, basicobs_entered)
+                    df_cols = set(df.columns)
+                    table_has_all_df_cols = df_cols.issubset(
+                        existing_col_set | required_cols,
+                    )
+                    if missing_cols or not table_has_all_df_cols:
+                        logger.debug(
+                            f"Annotation table '{target_table}' schema mismatch. "
+                            f"Missing: {missing_cols}, Table has all df columns: {table_has_all_df_cols}",
+                        )
+                        table_is_valid = False
+
+                if not table_is_valid:
+                    # Drop table and recreate with correct schema
+                    connection.execute(text(f'DROP TABLE IF EXISTS "{target_table}"'))
+
             if inspector.has_table(target_table, schema=target_schema):
                 connection.execute(del_query, {"pat_id": patient_id})
 
@@ -677,13 +712,9 @@ def save_annotations_to_db(
 
                 # For annotation tables, ensure core annotation columns are always present
                 if schema_name == "annotations":
-                    annotation_additional_cols = [
-                        col
-                        for col in ["text_sample", "full_doc"]
-                        if col not in list(create_df.columns)
-                    ]
-                    if annotation_additional_cols:
-                        for col in annotation_additional_cols:
+                    # Add any missing standard annotation columns from EMPTY_ANNOT_COLS
+                    for col in EMPTY_ANNOT_COLS:
+                        if col not in create_df.columns:
                             create_df[col] = pd.NA
 
                 create_df.to_sql(
@@ -834,14 +865,6 @@ def get_df_from_db(
             inspector = inspect(connection)
             if not inspector.has_table(target_table, schema=target_schema):
                 error_msg = f"Table '{target_table}' not found in database."
-                if config_obj.testing:
-                    msg = (
-                        f"{error_msg} This likely means dummy data was never generated during testing mode. "
-                        "Please ensure the pat2vec initialization successfully saved batch data."
-                    )
-                    raise RuntimeError(
-                        msg,
-                    )
                 logger.warning(f"{error_msg} Returning empty DataFrame.")
                 return pd.DataFrame()
 

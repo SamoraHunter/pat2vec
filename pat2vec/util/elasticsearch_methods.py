@@ -94,9 +94,36 @@ def ingest_data_to_elasticsearch(
                 request_timeout=60,
             )
 
-    # Check connection
-    try:
-        if not es.ping():
+        # Check connection with retry logic for transient failures
+        max_retries = 5  # Up to 5 retries (1 minute total with 10s interval)
+        retry_interval = 12.0  # Wait 12 seconds between retries (Elasticsearch can take time to fully start)
+
+        es_ping_success = False
+        for attempt in range(1, max_retries + 1):
+            try:
+                if es.ping():
+                    es_ping_success = True
+                    break
+                if attempt < max_retries:
+                    logger.warning(
+                        f"Elasticsearch ping failed (attempt {attempt}/{max_retries}). "
+                        f"Retrying in {retry_interval}s...",
+                    )
+                    time.sleep(retry_interval)
+            except Exception as e:
+                if attempt < max_retries:
+                    logger.warning(
+                        f"Elasticsearch connection error (attempt {attempt}/{max_retries}): {e}. "
+                        f"Retrying in {retry_interval}s...",
+                    )
+                    time.sleep(retry_interval)
+                else:
+                    raise ConnectionError(
+                        f"Elasticsearch connection failed after {max_retries} attempts. "
+                        f"Please ensure the Elasticsearch service is running and accessible.",
+                    ) from e
+
+        if not es_ping_success:
             msg = "Elasticsearch server not reachable."
             raise ConnectionError(msg)
 
@@ -111,9 +138,6 @@ def ingest_data_to_elasticsearch(
                     },
                 },
             )
-    except Exception as e:
-        logger.error(f"Error connecting to Elasticsearch: {e}")
-        raise
 
     # Replace index if requested
     if es.indices.exists(index=index_name) and replace_index:

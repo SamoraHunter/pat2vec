@@ -1346,30 +1346,38 @@ def merge_appointments_csv(
     config_obj: Any,
     overwrite: bool = False,
 ) -> str:
-    """Merge all appointments data (files or DB) that match the patient list."""
-    return _generic_merged_builder(
-        all_pat_list=all_pat_list,
-        config_obj=config_obj,
-        output_filename="merged_appointments.csv",
-        standard_cols=[
-            "client_idcode",
-            "HospitalID",
-            "AppointmentType",
-            "AppointmentDateTime",
-            "ConsultantCode",
-            "ClinicCode",
-            "Specialty",
-            "DateCreated",
-        ],
-        db_sources=[("raw_data", "raw_appointments", None)],
-        file_retriever=lambda p, c: (
-            pd.read_csv(os.path.join(c.pre_appointments_batch_path, f"{p}.csv"))
-            if os.path.isfile(os.path.join(c.pre_appointments_batch_path, f"{p}.csv"))
-            else pd.DataFrame()
-        ),
-        overwrite=overwrite,
-        patient_id_col="HospitalID",
-    )
+    """Merge all appointments data from database and raise ValueError if empty.
+
+    Args:
+        all_pat_list: List of patient IDs to include in the merge
+        config_obj: Configuration object with database connection info
+        overwrite: If True, regenerate CSV even if it exists
+
+    Returns:
+        Path to merged CSV file
+
+    Raises:
+        ValueError: If no appointments data was found in database
+
+    """
+    from pat2vec.util.helper_functions import get_all_features
+
+    all_data = get_all_features(config_obj)
+
+    if all_data.empty:
+        raise ValueError(
+            "merge_appointments_csv() returned empty DataFrame — no data found in database",
+        )
+
+    proj_name = config_obj.proj_name
+    output_dir = os.path.join(proj_name, "outputs")
+    os.makedirs(output_dir, exist_ok=True)
+    merged_path = os.path.join(output_dir, "merged_appointments.csv")
+
+    if overwrite or not os.path.exists(merged_path):
+        all_data.to_csv(merged_path, index=False)
+
+    return merged_path
 
 
 def merge_epic_encounters_csv(
@@ -1616,7 +1624,7 @@ def merge_vte_status_csv(
     return _merge_observation_sub_type(
         all_pat_list,
         config_obj,
-        "raw_vte",
+        "raw_obs_core_vte_status",
         "vte_status",
         overwrite,
     )
@@ -1631,7 +1639,7 @@ def merge_hosp_site_csv(
     return _merge_observation_sub_type(
         all_pat_list,
         config_obj,
-        "raw_hospsite",
+        "raw_obs_core_hospitalsite",
         "hosp_site",
         overwrite,
     )

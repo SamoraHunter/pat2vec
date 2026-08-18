@@ -39,6 +39,9 @@ EMPTY_ANNOT_COLS = [
     "document_guid",
     "annotation_description",
     "observationannotation_recordeddtm",
+    # Columns created by json_to_dataframe for annotation detail
+    "text_sample",
+    "full_doc",
 ]
 
 
@@ -1028,7 +1031,7 @@ def remove_file_from_paths(
                     "raw_reports",
                     "raw_covid",
                     "raw_smoking",
-                    "raw_vte",
+                    "raw_obs_core_vte_status",
                     "raw_resus",
                     "raw_core_02",
                     "raw_bed",

@@ -72,7 +72,7 @@ DATA_TYPE_CONFIG: dict[str, dict[str, str]] = {
         "display_name_filter": "CORE_SmokingStatus",
     },
     "vte_status": {
-        "db_table": "raw_vte",
+        "db_table": "raw_obs_core_vte_status",
         "db_schema": "raw_data",
         "path_attr": "pre_obs_batch_path",
         "id_column": "client_idcode",

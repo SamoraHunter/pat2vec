@@ -110,11 +110,71 @@ class ElasticContainer:
 
         return False
 
-    def _is_port_free(self, port: int) -> bool:
-        """Checks if a local port is free."""
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            # connect_ex returns 0 if connection succeeds (port is busy)
-            return s.connect_ex(("localhost", port)) != 0
+    def _is_port_free(self, port: int, timeout: float = 1.0) -> bool:
+        """Checks if a local port is free with retry logic.
+
+        Args:
+            port: The port number to check.
+            timeout: Maximum time in seconds to wait for the port to become free.
+                Defaults to 1.0 second.
+
+        Returns:
+            True if the port is free, False if it's in use or timeout occurs.
+
+        """
+        start_time = time.time()
+
+        while time.time() - start_time < timeout:
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                # connect_ex returns 0 if connection succeeds (port is busy)
+                result = s.connect_ex(("localhost", port))
+                if result != 0:
+                    return True
+
+            # Port is busy, wait a bit before retrying
+            time.sleep(0.2)
+
+        return False
+
+    def _find_free_port(
+        self,
+        start_port: int,
+        max_attempts: int = 10,
+        timeout: float = 1.0,
+    ) -> int:
+        """Finds a free port starting from start_port.
+
+        Args:
+            start_port: The port number to start checking from.
+            max_attempts: Maximum number of ports to try. Defaults to 10.
+            timeout: Time to wait for each port check in seconds. Defaults to 1.0.
+
+        Returns:
+            A free port number within the safe test range (19200-19210).
+
+        Raises:
+            RuntimeError: If no free port is found within the allowed range.
+
+        """
+        # Safe test port range - avoids collision with real clusters which typically
+        # use standard ports like 9200, 9300, etc.
+        TEST_PORT_START = 19200
+        TEST_PORT_END = 19210
+
+        for attempt in range(max_attempts):
+            port = start_port + attempt
+            if port > TEST_PORT_END:
+                port = TEST_PORT_START + (port % (TEST_PORT_END - TEST_PORT_START + 1))
+
+            if self._is_port_free(port, timeout=timeout):
+                return port
+
+        msg = (
+            f"Could not find a free port within the test range "
+            f"({TEST_PORT_START}-{TEST_PORT_END}) after {max_attempts} attempts. "
+            f"Another process may be holding these ports."
+        )
+        raise RuntimeError(msg)
 
     def _get_mapped_port(self) -> int:
         """Retrieves the host port mapped to container port 9200."""
@@ -198,13 +258,26 @@ class ElasticContainer:
             logger.error(f"Failed to pull Docker image: {self.image}")
             return False
 
-        # Determine port mapping. Use random port if configured port is busy.
-        port_mapping = f"{self.port}:9200"
-        if not self._is_port_free(self.port):
+        # Determine port mapping - try to find a free port within the safe test range
+        # If no free port found in the range, let Docker assign one automatically
+
+        # First, clean up any containers that may be holding ports
+        self.cleanup_orphans()
+
+        # Try to find a free port with retries - check multiple times for robustness
+        try:
+            self.port = self._find_free_port(self.port, max_attempts=10, timeout=3.0)
+            logger.info(f"Found available test port: {self.port}")
+        except RuntimeError as e:
             logger.warning(
-                f"Port {self.port} is in use. Letting Docker assign a random port.",
+                f"Fallback: Docker auto-assigning port (no free ports in range "
+                f"{19200}-{19210}). Original error: {e}",
             )
+            # Let Docker assign a random free port
             port_mapping = "9200"
+        else:
+            # Use specific port mapping since we now have a confirmed free port
+            port_mapping = f"{self.port}:9200"
 
         cmd = [
             "docker",

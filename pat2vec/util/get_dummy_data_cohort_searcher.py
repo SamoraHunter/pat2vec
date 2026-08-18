@@ -3433,12 +3433,16 @@ def populate_elastic_with_dummy_data(
 
     # Initialize CogStack client to interact with Elastic
     # We avoid initialize_cogstack_client to prevent accidental usage of global/live clients
-    # We strictly require a specific credentials file in the root directory
+    # Use credentials path from config, defaulting to legacy file if not set
     import importlib.util
 
     from pat2vec.pat2vec_search.cogstack_search_methods import CogStack
 
-    creds_filename = "test_elastic_credentials.py"
+    creds_filename = getattr(
+        config_obj,
+        "credentials_path",
+        "test_elastic_credentials.py",
+    )
     creds_path = os.path.abspath(creds_filename)
 
     if not os.path.exists(creds_path):
@@ -3972,6 +3976,25 @@ def populate_elastic_with_dummy_data(
         es_client=cs.elastic,
     )
     cs.elastic.indices.refresh(index="epic_lab_results")
+
+    # Problem List data
+    df_problem_list = generate_problem_list_data(
+        num_rows=random.randint(1, 5),
+        entered_list=patient_ids,
+        global_start_year=global_start_year,
+        global_start_month=global_start_month,
+        global_start_day=global_start_day,
+        global_end_year=global_end_year,
+        global_end_month=global_end_month,
+        global_end_day=global_end_day,
+    )
+    df_problem_list = df_problem_list.where(pd.notnull(df_problem_list), None)
+    ingest_data_to_elasticsearch(
+        df_problem_list,
+        "problem_list",
+        es_client=cs.elastic,
+    )
+    cs.elastic.indices.refresh(index="problem_list")
 
     logger.info("Successfully populated Elasticsearch with dummy data.")
     return patient_ids

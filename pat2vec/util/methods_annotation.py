@@ -1266,6 +1266,7 @@ def multi_annots_to_df_mct(
 def calculate_pretty_name_count_features(
     df_copy: pd.DataFrame,
     suffix: str = "epr",
+    patient_id: str | None = None,
 ) -> pd.DataFrame | None:
     """Calculates count-based features from the 'pretty_name' column.
 
@@ -1275,6 +1276,7 @@ def calculate_pretty_name_count_features(
     Args:
         df_copy: The input DataFrame, expected to have a 'pretty_name' column.
         suffix: A suffix to append to the feature name.
+        patient_id: Optional patient ID to include in the result DataFrame.
 
     Returns:
         Optional[pd.DataFrame]: A single-row DataFrame with counts for each
@@ -1301,6 +1303,9 @@ def calculate_pretty_name_count_features(
 
         # Convert all values to float
         result_vector = result_vector.astype(float)
+
+        if patient_id is not None:
+            result_vector.insert(0, "client_idcode", patient_id)
     else:
         result_vector = None
 
