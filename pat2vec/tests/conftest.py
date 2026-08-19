@@ -184,3 +184,36 @@ def _cleanup_test_artifacts():
             os.remove(legacy_cred)
     except Exception:
         pass
+
+
+# --- Shared Elasticsearch container for test_get_methods/ ---
+
+from pat2vec.util.docker_elastic import ElasticContainer
+
+
+@pytest.fixture(scope="session")
+def elastic_container(tmp_path_factory):
+    """Single ES container shared across all get-method test classes.
+    Yields the credential file path so each class can build its own
+    config exactly as before — nothing else in each class changes.
+    """
+    container = ElasticContainer()
+    container.stop()  # clear any stale container from a previous run
+
+    if not container.start():
+        pytest.fail("Failed to start Elasticsearch container. Is Docker running?")
+
+    host, username, password = container.get_credentials()
+
+    cred_path = str(tmp_path_factory.mktemp("es_creds") / "test_elastic_credentials.py")
+    with open(cred_path, "w") as f:
+        f.write(
+            f'username = "{username}"\n'
+            f'password = "{password}"\n'
+            f"api_key = None\n"
+            f'hosts = ["{host}"]\n',
+        )
+
+    yield cred_path
+
+    container.stop()

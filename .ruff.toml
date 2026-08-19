@@ -136,7 +136,6 @@ ignore = [
     "EXE005",  # shebang with python
     "G003",  # Logging f-string
     "PLW0127",  # Shadowing name
-    "TRY203",  # Try except raise
     "DTZ011",  # Naive datetime
 ]
 

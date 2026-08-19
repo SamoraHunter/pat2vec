@@ -5,10 +5,10 @@ import sys
 
 import numpy as np
 import pandas as pd
+import pytest
 
 from pat2vec.main_pat2vec import main
 from pat2vec.util.config_pat2vec import config_class
-from pat2vec.util.docker_elastic import ElasticContainer
 from pat2vec.util.get_dummy_data_cohort_searcher import (
     generate_covid_observations_data,
     populate_elastic_with_dummy_data,
@@ -30,9 +30,13 @@ random.seed(random_seed_value)
 class TestCovidGet:
     """Stage-mirroring pytest for test_covid_get.ipynb."""
 
-    @classmethod
-    def setup_class(cls: type) -> None:
-        """Set up shared state for all tests."""
+    @pytest.fixture(autouse=True, scope="class")
+    def _start_elastic(self, elastic_container):
+        """Run all setup that depends on the shared ES container."""
+        cls = type(self)
+        cls.cred_path = elastic_container
+        cls.creds_filename = elastic_container
+
         cls.current_dir = os.getcwd()
         cls.grandparent_dir = os.path.dirname(os.path.dirname(cls.current_dir))
 
@@ -44,42 +48,18 @@ class TestCovidGet:
         cls.PROJ_NAME = "covid_test_project"
         cls.DB_FILENAME = "temp_covid_db.sqlite"
         cls.DB_PATH = os.path.join(cls.PROJ_NAME, "outputs", cls.DB_FILENAME)
-        cls.creds_filename = "test_elastic_credentials.py"
 
         # Cleanup previous test outputs
         for dir_to_remove in ["covid_test_project"]:
             try:
                 shutil.rmtree(dir_to_remove, ignore_errors=True)
             except Exception as e:
-                msg = f"Failed to clean up '{dir_to_remove}' directory: {e}. "
-                "Critical error - cannot start with stale data."
-                raise RuntimeError(msg) from e
+                raise RuntimeError(f"Failed to clean up '{dir_to_remove}': {e}") from e
 
-        # Start Elasticsearch container
-        cls.es_container = ElasticContainer()
-        cls.es_container.stop()
-
-        if not cls.es_container.start():
-            msg = "Failed to start Elasticsearch container. Check if Docker is running."
-            raise RuntimeError(msg)
-
-        host, username, password = cls.es_container.get_credentials()
-
-        creds_content = f"""
-username = "{username}"
-password = "{password}"
-api_key = None
-hosts = ["{host}"]
-"""
-
-        with open(cls.creds_filename, "w") as f:
-            f.write(creds_content)
-
-        # Create config for population
         schema_path = os.path.abspath("test_files/elastic_schemas.json")
         config_populate = config_class(
             proj_name="covid_test_project",
-            credentials_path=cls.creds_filename,
+            credentials_path=cls.cred_path,
             test_schema_path=schema_path,
             testing=True,
             testing_elastic=True,
@@ -91,13 +71,9 @@ hosts = ["{host}"]
             global_end_day=31,
         )
 
-        # Populate dummy data
         cls.patient_ids = populate_elastic_with_dummy_data(
-            config_populate,
-            n_patients=5,
+            config_populate, n_patients=5
         )
-
-        # Setup CohStack client and index
         cls.cs = initialize_cogstack_client(config_populate)
 
         indices = [
@@ -109,7 +85,6 @@ hosts = ["{host}"]
         ]
         cls.cs.elastic.indices.refresh(index=indices, ignore_unavailable=True)
 
-        # Generate and ingest COVID data
         covid_dfs = []
         for pid in cls.patient_ids:
             df = generate_covid_observations_data(
@@ -128,26 +103,21 @@ hosts = ["{host}"]
             else covid_dfs[0]
         )
         df_covid = df_covid.where(pd.notnull(df_covid), None)
-
         ingest_data_to_elasticsearch(
             df_covid, "basic_observations", es_client=cls.cs.elastic
         )
         cls.cs.elastic.indices.refresh(index="basic_observations")
 
-        # Initialize database
         os.makedirs(os.path.dirname(cls.DB_PATH), exist_ok=True)
-
         if os.path.exists(cls.DB_PATH):
             os.remove(cls.DB_PATH)
 
         db_connection_string = f"sqlite:///{cls.DB_PATH}"
-
         cls.logger = setup_logger()
 
-        # Create main config
         cls.config_obj = config_class(
             proj_name=cls.PROJ_NAME,
-            credentials_path=cls.creds_filename,
+            credentials_path=cls.cred_path,
             current_path_dir="",
             main_options={"covid": True},
             batch_mode=True,
@@ -167,7 +137,6 @@ hosts = ["{host}"]
             all_patient_list=cls.patient_ids,
         )
 
-        # Run pat2vec pipeline
         cls.pat2vec_obj = main(
             cogstack=True,
             use_filter=False,
@@ -176,18 +145,9 @@ hosts = ["{host}"]
             hostname=None,
             config_obj=cls.config_obj,
         )
-
-        # Process first patient
         cls.pat2vec_obj.pat_maker(0)
 
-    @classmethod
-    def teardown_class(cls: type) -> None:
-        """Clean up after all tests."""
-        try:
-            if hasattr(cls, "es_container") and cls.es_container is not None:
-                cls.es_container.stop()
-        except Exception as e:
-            print(f"Warning: Failed to stop Elasticsearch container: {e}")
+    # --- CHANGE 3: teardown_class removed — session fixture handles container.stop() ---
 
     def test_1_dummy_data_generation(self):
         """Test dummy data generation - verify patient IDs were created."""
@@ -312,16 +272,6 @@ hosts = ["{host}"]
             msg = f"Failed to remove '{self.PROJ_NAME}' directory: {e}"
             raise AssertionError(msg) from e
 
-        try:
-            if os.path.exists(self.creds_filename):
-                os.remove(self.creds_filename)
-        except Exception as e:
-            msg = f"Failed to remove Elasticsearch credentials file '{self.creds_filename}': {e}"
-            raise AssertionError(msg) from e
-
         # Verify cleanup
         assert not os.path.exists(self.DB_PATH), "Database file should be removed"
         assert not os.path.exists(self.PROJ_NAME), "Project directory should be removed"
-        assert not os.path.exists(
-            self.creds_filename
-        ), "Credentials file should be removed"
