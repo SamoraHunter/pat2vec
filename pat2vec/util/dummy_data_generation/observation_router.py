@@ -30,6 +30,7 @@ def cohort_searcher_with_terms_and_search_dummy(
     `index_name` and `search_string`.
 
     Args:
+    ----
         index_name: The name of the target index (e.g., 'epr_documents').
         fields_list: A list of fields to be returned in the DataFrame.
         term_name: The field name for the term-level query (e.g., 'client_idcode').
@@ -38,6 +39,7 @@ def cohort_searcher_with_terms_and_search_dummy(
             routing to the correct data generator.
 
     Returns:
+    -------
         A pandas DataFrame containing the generated dummy data.
 
     """

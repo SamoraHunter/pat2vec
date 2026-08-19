@@ -7,10 +7,12 @@ def appendAge(dataFrame: pd.DataFrame) -> pd.DataFrame:
     """Calculates current age and appends it as a new 'age' column.
 
     Args:
+    ----
         dataFrame: A DataFrame containing a 'client_dob' column with
             date of birth strings.
 
     Returns:
+    -------
         The DataFrame with an added 'age' column.
 
     """
@@ -32,9 +34,11 @@ def appendAgeAtRecord(dataFrame: pd.DataFrame) -> pd.DataFrame:
     """Calculates age at the time of record and appends it as 'ageAtRecord'.
 
     Args:
+    ----
         dataFrame: A DataFrame with 'client_dob' and 'updatetime' columns.
 
     Returns:
+    -------
         The DataFrame with an added 'ageAtRecord' column.
 
     """
@@ -62,10 +66,12 @@ def append_age_at_record_series(series: pd.Series) -> pd.Series:
     """Calculates age at record time for a single row (passed as a Series).
 
     Args:
+    ----
         series: A pandas Series representing a single row, containing
             'client_dob' and 'updatetime'.
 
     Returns:
+    -------
         The input Series with an added 'age' value.
 
     """
@@ -104,9 +110,11 @@ def df_column_uniquify(df: pd.DataFrame) -> pd.DataFrame:
     suffix (e.g., 'col_1', 'col_2').
 
     Args:
+    ----
         df: The DataFrame to process.
 
     Returns:
+    -------
         The DataFrame with unique column names.
 
     """

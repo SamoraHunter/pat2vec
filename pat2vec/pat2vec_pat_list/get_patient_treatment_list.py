@@ -26,14 +26,17 @@ def extract_treatment_id_list_from_docs(config_obj: Any) -> list[str]:
     the document to a smaller size if configured.
 
     Args:
+    ----
         config_obj: A configuration object containing parameters like
             `treatment_doc_filename`, `patient_id_column_name`, and
             `sample_treatment_docs`.
 
     Returns:
+    -------
         A list of unique client IDs from the treatment document.
 
     Raises:
+    ------
         ValueError: If the file format is not CSV or XLSX.
 
     """
@@ -205,6 +208,7 @@ def generate_control_list(
     The resulting list of control IDs is saved to a pickle file.
 
     Args:
+    ----
         treatment_client_id_list: A list of client IDs for the treatment group.
         treatment_control_ratio_n: The desired ratio of control patients to
             treatment patients (e.g., 2 for a 2:1 ratio).
@@ -214,6 +218,7 @@ def generate_control_list(
         verbosity: The level of verbosity for logging.
 
     Returns:
+    -------
         A list of client IDs for the generated control group.
 
     """
@@ -256,11 +261,13 @@ def sanitize_hospital_ids(hospital_ids: list[str], config_obj: Any) -> list[str]
     format (e.g., one letter followed by six digits).
 
     Args:
+    ----
         hospital_ids: A list of hospital IDs to be sanitized.
         config_obj: A configuration object containing the `verbosity` and
             `sanitize_pat_list` flags.
 
     Returns:
+    -------
         The sanitized list of hospital IDs.
 
     """
@@ -344,13 +351,16 @@ def get_all_patients_list(config_obj: Any) -> list[str]:
         `sample_treatment_docs` is configured.
 
     Args:
+    ----
         config_obj: The main configuration object containing all necessary
             parameters.
 
     Returns:
+    -------
         A list of all patient IDs to be processed by the pipeline.
 
     Raises:
+    ------
         ValueError: If required configuration parameters are missing (e.g.,
             `test_data_path` in testing mode).
 
@@ -622,10 +632,12 @@ def analyze_client_codes(
     the sum of their digits.
 
     Args:
+    ----
         client_idcode_list: A list of client ID codes to analyze.
         min_val: The minimum number of clusters to create. Defaults to 3.
 
     Returns:
+    -------
         A dictionary containing 'valid_codes', 'invalid_codes', and 'clusters'.
 
     """

@@ -24,6 +24,7 @@ def find_date(
     timestamp.
 
     Args:
+    ----
         txt: The input text to search for date entries.
         original_update_time_value: A fallback timestamp to use if a date cannot be parsed from a chunk.
         reg: The regular expression pattern to identify the start of a date entry.
@@ -31,6 +32,7 @@ def find_date(
         verbosity: The level of logging for messages.
 
     Returns:
+    -------
         A list of dictionaries, where each dictionary represents a text chunk
         and contains the text, the parsed date, and metadata about the match.
 
@@ -121,10 +123,12 @@ def split_clinical_notes(
     documents based on embedded timestamps.
 
     Args:
+    ----
         clin_note: A DataFrame containing the clinical notes to be split.
         verbosity_val: The verbosity level passed to the `find_date` function.
 
     Returns:
+    -------
         A tuple containing two DataFrames:
         - pd.DataFrame: The processed notes, split into smaller chunks.
         - pd.DataFrame: The original rows of notes that could not be split.
@@ -219,10 +223,12 @@ def split_clinical_notes_mct(
     text into smaller documents based on embedded timestamps.
 
     Args:
+    ----
         clin_note: A DataFrame containing the clinical notes to be split.
         verbosity_val: The verbosity level passed to the `find_date` function.
 
     Returns:
+    -------
         A tuple containing two DataFrames:
         - pd.DataFrame: The processed notes, split into smaller chunks.
         - pd.DataFrame: The original rows of notes that could not be split.
@@ -338,10 +344,12 @@ def split_epic_clinical_notes(
     documents based on embedded timestamps.
 
     Args:
+    ----
         clin_note: A DataFrame containing the clinical notes to be split.
         verbosity_val: The verbosity level passed to the `find_date` function.
 
     Returns:
+    -------
         A tuple containing two DataFrames:
         - pd.DataFrame: The processed notes, split into smaller chunks.
         - pd.DataFrame: The original rows of notes that could not be split.
@@ -453,12 +461,14 @@ def split_and_append_chunks(
     chunks back with the original non-clinical documents.
 
     Args:
+    ----
         docs: The input DataFrame containing various document types.
         epr: If True, assumes an EPR schema for splitting.
         mct: If True, assumes an MCT/observations schema for splitting.
         verbosity: The verbosity level for logging and splitting.
 
     Returns:
+    -------
         A new DataFrame containing the original non-clinical notes plus the
         newly created smaller chunks from the split clinical notes.
 

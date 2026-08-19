@@ -49,6 +49,7 @@ def search_bloods_data(
     within a specified time window.
 
     Args:
+    ----
         cohort_searcher_with_terms_and_search (Optional[Callable]): The function for
             cohort searching. Defaults to None.
         client_id_codes (Optional[Union[str, List[str]]]): The client ID code(s) of
@@ -77,11 +78,13 @@ def search_bloods_data(
             Defaults to None.
 
     Returns:
+    -------
         pd.DataFrame: A DataFrame containing the raw bloods data with columns from
             BLOODS_FIELDS (e.g., client_idcode, basicobs_itemname_analysed,
             basicobs_value_numeric, basicobs_entered, etc.).
 
     Raises:
+    ------
         ValueError: If `cohort_searcher_with_terms_and_search` or `client_id_codes`
             is None.
 
@@ -165,6 +168,7 @@ def get_current_pat_bloods(
     such as mean, median, standard deviation, counts, and time-based features.
 
     Args:
+    ----
         current_pat_client_id_code (str): The client ID code of the patient.
         target_date_range (Tuple[Tuple[int, int], Tuple[int, int]]): A tuple containing
             ((start_year, start_month), (end_year, end_month)) for the date range.
@@ -178,6 +182,7 @@ def get_current_pat_bloods(
             and `main_options`. Defaults to None.
 
     Returns:
+    -------
         pd.DataFrame: A DataFrame containing calculated blood test features for the
             specified patient. Each row represents one patient, with columns for
             each unique blood test type including statistics (mean, median, std,
@@ -185,6 +190,7 @@ def get_current_pat_bloods(
             and flags (contains-extreme-low, contains-extreme-high).
 
     Raises:
+    ------
         AttributeError: If `config_obj` is None or missing required attributes
             (e.g., `batch_mode`, `bloods_time_field`, `client_idcode_term_name`,
             `main_options`).

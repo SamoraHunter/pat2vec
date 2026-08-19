@@ -41,6 +41,7 @@ def search_core_o2_observations(
     patients within a given date range.
 
     Args:
+    ----
         cohort_searcher_with_terms_and_search (Optional[Callable]): The function for
             cohort searching. Defaults to None.
         client_id_codes (Optional[Union[str, List[str]]]): The client ID code(s) of
@@ -69,9 +70,11 @@ def search_core_o2_observations(
             Defaults to None.
 
     Returns:
+    -------
         pd.DataFrame: A DataFrame containing the raw CORE_SpO2 observation data.
 
     Raises:
+    ------
         ValueError: If essential arguments are None.
 
     """
@@ -159,9 +162,11 @@ def clean_observation_value(value) -> str | None:
     Replaces characters that are invalid in column names.
 
     Args:
+    ----
         value (str): The original observation value.
 
     Returns:
+    -------
         Optional[str]: The cleaned value suitable for use as a column name,
             or None if the input is NaN.
 
@@ -177,10 +182,12 @@ def calculate_core_o2_features(features_data, search_term="CORE_SpO2") -> dict:
     Creates binary features for each unique observation value found in the data.
 
     Args:
+    ----
         features_data (pd.DataFrame): DataFrame containing CORE_SpO2 observations.
         search_term (str): The observation type being processed. Defaults to "CORE_SpO2".
 
     Returns:
+    -------
         Dict[str, int]: A dictionary of calculated binary features.
 
     """
@@ -213,6 +220,7 @@ def get_core_02(
     unique observation value.
 
     Args:
+    ----
         current_pat_client_id_code (str): The client ID code of the patient.
         target_date_range (Tuple): A tuple representing the target date range.
         pat_batch (pd.DataFrame): The DataFrame containing patient data for batch mode.
@@ -222,11 +230,13 @@ def get_core_02(
             cohort searching. Defaults to None.
 
     Returns:
+    -------
         pd.DataFrame: A DataFrame containing CORE_SpO2 features for the
             specified patient. If no data is found, a DataFrame with only the
             'client_idcode' is returned.
 
     Raises:
+    ------
         ValueError: If `config_obj` is None, or if
             `cohort_searcher_with_terms_and_search` is None when not in batch mode.
 

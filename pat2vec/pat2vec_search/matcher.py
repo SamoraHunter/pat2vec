@@ -28,6 +28,7 @@ def matcher(
     columns to the template DataFrame.
 
     Args:
+    ----
         data_template_df: Template DataFrame with patient IDs and target dates.
         lab_results_df: DataFrame with lab results, including patient IDs,
             dates, test names, and results.
@@ -40,6 +41,7 @@ def matcher(
         after: Number of days after the target date to include in the search window.
 
     Returns:
+    -------
         The template DataFrame with added columns for each unique lab test,
         populated with the nearest result value.
 
@@ -97,10 +99,12 @@ def match_terms_in_text(text: str, terms: list[str]) -> list[str]:
     """Finds whole word, case-insensitive matches of a list of terms within a given text.
 
     Args:
+    ----
         text (str): The text to search within.
         terms (list[str]): A list of terms to search for.
 
     Returns:
+    -------
         list[str]: A list of terms that were found in the text.
 
     """
@@ -121,10 +125,12 @@ def find_all_matches(text: str, patterns: dict[str, str]) -> dict[str, list[str]
     """Finds all matches for a dictionary of regex patterns within a given text.
 
     Args:
+    ----
         text (str): The text to search within.
         patterns (dict[str, str]): A dictionary where keys are names and values are regex patterns.
 
     Returns:
+    -------
         dict[str, list[str]]: A dictionary of lists of all matches found for each pattern.
 
     """

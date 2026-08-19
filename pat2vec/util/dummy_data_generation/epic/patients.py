@@ -22,10 +22,12 @@ def generate_age_with_demographic_weighting(
     Uses weighted probability based on inverted U-shape distribution.
 
     Args:
+    ----
         minimum_age: Minimum age in years.
         maximum_age: Maximum age in years.
 
     Returns:
+    -------
         Randomly selected age with realistic distribution.
 
     """
@@ -54,9 +56,11 @@ def generate_gender_population_balanced(female_fraction: float = 0.51) -> str:
     general human population statistics.
 
     Args:
+    ----
         female_fraction: Fraction of females (default 0.51).
 
     Returns:
+    -------
         "Female" or "Male".
 
     """
@@ -75,6 +79,7 @@ def generate_epic_patients_data(
     """Generates dummy data for the 'epic_patients' index.
 
     Args:
+    ----
         num_rows: Number of rows to generate per client.
         entered_list: List of client IDs to generate data for.
         global_start_year: Start year for the random date range.
@@ -84,9 +89,11 @@ def generate_epic_patients_data(
     fields_list: List of columns to include in the DataFrame.
 
     Returns:
+    -------
         A pandas DataFrame with generated dummy patient data.
 
     Raises:
+    ------
         None
 
     """

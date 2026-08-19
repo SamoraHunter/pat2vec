@@ -31,11 +31,13 @@ def list_dir_wrapper(path: str, config_obj: Any = None) -> list[str]:
     the `remote_dump` setting in the configuration object.
 
     Args:
+    ----
         path: The path to the directory to list.
         config_obj: The configuration object containing SFTP credentials and
             settings if `remote_dump` is True.
 
     Returns:
+    -------
         A list of filenames in the specified directory.
 
     """
@@ -76,7 +78,7 @@ def list_dir_wrapper(path: str, config_obj: Any = None) -> list[str]:
 
         return res
     if os.path.exists(path):
-        return os.listdir(path)  # noqa: PTH208
+        return os.listdir(path)
     return []
 
 
@@ -84,10 +86,12 @@ def convert_timestamp_to_tuple(timestamp: str) -> tuple[int, int]:
     """Converts a timestamp string to a (year, month) tuple.
 
     Args:
+    ----
         timestamp: The timestamp string to convert, expected in the format
             `%Y-%m-%dT%H:%M:%S.%f%z`.
 
     Returns:
+    -------
         A tuple containing the year and month as integers.
 
     """
@@ -104,11 +108,13 @@ def enum_target_date_vector(
     """Creates a one-hot encoded date vector for a target date.
 
     Args:
+    ----
         target_date_range: A tuple of (year, month, day) for the target date.
         current_pat_client_id_code: The patient's ID.
         config_obj: The configuration object.
 
     Returns:
+    -------
         A single-row DataFrame with a one-hot encoded column for the target date.
 
     """
@@ -129,11 +135,13 @@ def enum_exact_target_date_vector(
     """Creates a one-hot encoded date vector for a specific target date.
 
     Args:
+    ----
         target_date_range: A tuple of (year, month, day) for the target date.
         current_pat_client_id_code: The patient's ID.
         config_obj: The configuration object (currently unused).
 
     Returns:
+    -------
         A single-row DataFrame with a one-hot encoded column for the target date.
 
     """
@@ -158,6 +166,7 @@ def dump_results(file_data: Any, path: str, config_obj: Any = None) -> None:
     If `storage_backend` is set to 'database' in `config_obj`, this function returns without saving to file.
 
     Args:
+    ----
         file_data: The Python object to be pickled.
         path: The destination file path.
         config_obj: The configuration object containing SFTP credentials and
@@ -219,6 +228,7 @@ def update_pbar(
     thresholds.
 
     Args:
+    ----
         current_pat_client_id_code: The identifier of the patient currently being processed.
         start_time: The start time of the current operation.
             Note: This parameter is currently overwritten by `config_obj.start_time`.
@@ -319,10 +329,12 @@ def convert_date(date_string: str) -> datetime:
     """Converts a date string in 'YYYY-MM-DD' format to a datetime object.
 
     Args:
+    ----
         date_string: The string to convert, which may include a time part
             (e.g., 'YYYY-MM-DDTHH:MM:SS').
 
     Returns:
+    -------
         A datetime object representing the date part of the string.
 
     """
@@ -340,6 +352,7 @@ def write_csv_wrapper(
     If `storage_backend` is set to 'database' in `config_obj`, this function returns without writing.
 
     Args:
+    ----
         path: The path to the destination CSV file.
         csv_file_data: The DataFrame to write.
         config_obj: An object containing configuration settings, including
@@ -364,10 +377,12 @@ def read_remote(path: str, config_obj: Any = None) -> pd.DataFrame:
     """Reads a remote CSV file via SFTP and returns a pandas DataFrame.
 
     Args:
+    ----
         path: The remote path of the CSV file to read.
         config_obj: An object containing configuration details.
 
     Returns:
+    -------
         The DataFrame containing the data read from the remote CSV file.
 
     """
@@ -407,10 +422,12 @@ def read_csv_wrapper(path: str, config_obj: Any = None) -> pd.DataFrame:
     configuration.
 
     Args:
+    ----
         path: The path to the CSV file (local or remote).
         config_obj: An object containing configuration settings, including 'remote_dump'.
 
     Returns:
+    -------
         The DataFrame containing the data read from the CSV file.
 
     """
@@ -432,6 +449,7 @@ def create_local_folders(config_obj: Any = None) -> None:
     If `storage_backend` is set to 'database' in `config_obj`, this function returns without creating folders.
 
     Args:
+    ----
         config_obj: The configuration object containing `root_path` and
             `proj_name`.
 
@@ -463,10 +481,12 @@ def create_remote_folders(config_obj: Any = None) -> None:
     If `storage_backend` is set to 'database' in `config_obj`, this function returns without creating folders.
 
     Args:
+    ----
         config_obj: An object containing configuration details like `root_path`,
             `proj_name`, and SFTP credentials.
 
     Raises:
+    ------
         ValueError: If `config_obj` is not provided.
 
     """
@@ -528,6 +548,7 @@ def create_folders_annot_csv_wrapper(config_obj: Any = None) -> None:
     `create_remote_folders` based on the `remote_dump` flag in the config.
 
     Args:
+    ----
         config_obj: The configuration object.
 
     """
@@ -547,9 +568,11 @@ def get_empty_date_vector(config_obj: Any) -> pd.DataFrame:
     configuration object.
 
     Args:
+    ----
         config_obj: The configuration object with time window settings.
 
     Returns:
+    -------
         A single-row DataFrame with columns for each date in the time window,
         initialized to 0.0.
 
@@ -580,11 +603,13 @@ def sftp_exists(path: str, config_obj: Any) -> bool:
     """Checks if a file or directory exists on a remote SFTP server.
 
     Args:
+    ----
         path: The remote path to check.
         config_obj: The configuration object containing SFTP credentials and
             settings.
 
     Returns:
+    -------
         True if the path exists, False otherwise.
 
     """
@@ -622,10 +647,12 @@ def exist_check(path: str, config_obj: Any = None) -> bool:
     the `remote_dump` flag in the configuration object.
 
     Args:
+    ----
         path: The path to check.
         config_obj: The configuration object.
 
     Returns:
+    -------
         True if the path exists, False otherwise.
 
     """
@@ -646,10 +673,12 @@ def filter_stripped_list(
     files, indicating that processing for that patient is complete.
 
     Args:
+    ----
         stripped_list: The initial list of patient IDs to process.
         config_obj: The configuration object containing paths and settings.
 
     Returns:
+    -------
         A tuple containing two lists: the filtered list of patients to be
         processed, and the original filtered list (for reference).
 
@@ -695,6 +724,7 @@ def create_folders(all_patient_list: list[str], config_obj: Any = None) -> None:
     If `storage_backend` is set to 'database' in `config_obj`, this function returns without creating folders.
 
     Args:
+    ----
         all_patient_list: List of patient IDs.
         config_obj: Configuration object containing paths and verbosity level.
 
@@ -767,6 +797,7 @@ def create_folders_for_pat(patient_id: str, config_obj: Any = None) -> None:
     If `storage_backend` is set to 'database' in `config_obj`, this function returns without creating folders.
 
     Args:
+    ----
         patient_id: The patient's ID.
         config_obj: Configuration object containing paths and verbosity level.
 
@@ -855,6 +886,7 @@ def add_offset_column(
     Handles multiple datetime formats flexibly.
 
     Args:
+    ----
         dataframe: The input DataFrame.
         start_column_name: The name of the column with the starting datetime.
         offset_column_name: The name for the new column to be created.
@@ -862,6 +894,7 @@ def add_offset_column(
         verbose: Verbosity level (0=silent, 1=basic, 2=detailed).
 
     Returns:
+    -------
         The modified DataFrame with the new offset column.
 
     """
@@ -1057,12 +1090,14 @@ def build_patient_dict(
     """Builds a dictionary mapping patient IDs to (start, end) datetime tuples.
 
     Args:
+    ----
         dataframe: The input DataFrame.
         patient_id_column: The name of the column containing patient IDs.
         start_column: The name of the column containing start datetimes.
         end_column: The name of the column containing end datetimes.
 
     Returns:
+    -------
         A dictionary where keys are patient IDs and values are (start, end) tuples.
 
     """
@@ -1102,11 +1137,13 @@ def write_remote(path, csv_file, config_obj=None):
     """Writes a pandas DataFrame to a remote file via SFTP.
 
     Args:
+    ----
         path: The remote path where the file should be written.
         csv_file: The DataFrame to be written.
         config_obj: An object containing SFTP configuration details.
 
     Raises:
+    ------
         ValueError: If `config_obj` is not provided.
 
     """

@@ -18,6 +18,7 @@ def nearest(
     given reference date, within a specified time window.
 
     Args:
+    ----
         date: The reference date to find the nearest date around.
         lookup_dates_and_values: DataFrame containing dates and values.
         date_col: The name of the column containing dates in the DataFrame.
@@ -28,6 +29,7 @@ def nearest(
             Defaults to 50 weeks.
 
     Returns:
+    -------
         The value from `value_col` corresponding to the nearest date, or None
         if no date is found within the specified range.
 

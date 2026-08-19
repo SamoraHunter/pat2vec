@@ -8,7 +8,8 @@ logger = logging.getLogger(__name__)
 class PathsClass:
     """Manages the creation and organization of directory paths for the pipeline.
 
-    Attributes:
+    Attributes
+    ----------
         root_path (str): The provided root directory path.
         suffix (str): The provided suffix for directory names.
         all_paths (List[str]): A list of all generated absolute directory paths.
@@ -28,6 +29,7 @@ class PathsClass:
         Sets up and creates all necessary directory paths for a processing run.
 
         Args:
+        ----
             root_path: The root directory path where all paths will be based.
             suffix: The suffix to be appended to each directory name for
                 differentiation.
@@ -84,6 +86,7 @@ class PathsClass:
         """Creates directories from a list of paths.
 
         Args:
+        ----
             paths: A list of relative directory paths to be created under the
                 root path.
 

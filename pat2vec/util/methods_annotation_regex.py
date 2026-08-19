@@ -19,12 +19,14 @@ def append_regex_term_counts(
     A new column is added to the DataFrame for each term, containing the count.
 
     Args:
+    ----
         df: The DataFrame to process.
         terms: A list of regex patterns to search for.
         text_column: The name of the column containing the text to search.
         debug: If True, prints debugging information about the DataFrame.
 
     Returns:
+    -------
         The original DataFrame with new columns for the counts of each term.
 
     """

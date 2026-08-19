@@ -40,6 +40,7 @@ class config_class:
         - Manages MedCAT configuration for NLP annotation
 
     Attributes:
+    ----------
         remote_dump: Flag for remote SFTP data dumping.
         suffix: Output folder name suffix.
         treatment_doc_filename: Input document containing the cohort list.
@@ -48,6 +49,7 @@ class config_class:
         main_options: Dictionary of boolean flags for feature extraction options.
 
     Example:
+    -------
         >>> config = config_class(proj_name="my_project", start_date=(2020, 1, 1))
         >>> # Use config with FeatureExtractionPipeline
 
@@ -134,6 +136,7 @@ class config_class:
         file paths, time window settings, feature selection, and operational flags.
 
         Args:
+        ----
             remote_dump: If `True`, data will be dumped to a remote server via SFTP.
             suffix: A suffix to append to output folder names.
             treatment_doc_filename: The filename for the input document containing the
@@ -1306,7 +1309,8 @@ class config_class:
         The dictionary contains boolean flags for various features that have a
         dummy data generator implemented for testing purposes.
 
-        Returns:
+        Returns
+        -------
             A dictionary with feature names as keys and a boolean indicating
             if a test implementation exists.
 
@@ -1425,10 +1429,12 @@ def update_global_start_date(self: T_config, start_date: datetime) -> T_config:
     This logic only applies when looking forward (lookback=False).
 
     Args:
+    ----
         self: The configuration object instance.
         start_date: The new start date to compare against the global start date.
 
     Returns:
+    -------
         The configuration object instance.
 
     """
@@ -1464,9 +1470,11 @@ def validate_and_fix_global_dates(config: T_config) -> T_config:
     compatibility with Elasticsearch range queries and warns the user.
 
     Args:
+    ----
         config: The configuration object instance.
 
     Returns:
+    -------
         The modified configuration object.
 
     """

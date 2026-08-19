@@ -436,10 +436,12 @@ def _calculate_sequential_order_dates(
     """Calculate sequential dates with realistic clinical timing patterns.
 
     Args:
+    ----
         base_date: The base datetime to calculate from
         time_offsets: List of relative offsets in minutes
 
     Returns:
+    -------
         List of calculated datetime objects with proper sequencing
 
     """
@@ -455,9 +457,11 @@ def _get_weighted_drug(random_instance: random.Random) -> str:
     """Get a drug name based on realistic category distribution.
 
     Args:
+    ----
         random_instance: Random instance for sampling
 
     Returns:
+    -------
         Drug name as string
 
     """
@@ -477,9 +481,11 @@ def _determine_patient_age_distribution(
     """Generate realistic patient age distribution.
 
     Args:
+    ----
         random_instance: Random instance for sampling
 
     Returns:
+    -------
         Patient age (0-100)
 
     """
@@ -508,9 +514,11 @@ def _determine_admission_type(
     """Determine admission type based on timing patterns.
 
     Args:
+    ----
         base_date: The base datetime to evaluate
 
     Returns:
+    -------
         'emergency' or 'elective'
 
     """
@@ -544,6 +552,7 @@ def generate_diagnostic_orders_data(
     - Realistic date generation relative to admission
 
     Args:
+    ----
         num_rows: Number of rows to generate per client.
         entered_list: List of client IDs to generate data for.
         global_start_year: Start year for the random date range.
@@ -555,6 +564,7 @@ def generate_diagnostic_orders_data(
         fields_list: List of columns to include in the DataFrame.
 
     Returns:
+    -------
         A pandas DataFrame with generated dummy diagnostic order data.
 
     """
@@ -699,6 +709,7 @@ def generate_drug_orders_data(
     - Realistic brand/generic name distribution
 
     Args:
+    ----
         num_rows: Number of rows to generate per client.
         entered_list: List of client IDs to generate data for.
         global_start_year: Start year for the random date range.
@@ -711,6 +722,7 @@ def generate_drug_orders_data(
         base_date: Optional fixed datetime to use as base.
 
     Returns:
+    -------
         A pandas DataFrame with generated dummy drug order data.
 
     """

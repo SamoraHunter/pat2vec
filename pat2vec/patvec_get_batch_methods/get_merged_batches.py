@@ -34,6 +34,7 @@ def verify_split_data_concatenated(
     original DataFrame's order.
 
     Args:
+    ----
         original_df: The original DataFrame before splitting.
         client_idcode_column: The name of the column used for splitting.
         save_folder: The directory where the split CSV files are saved.
@@ -87,6 +88,7 @@ def verify_split_data_individual(
     its content to the relevant slice of the original DataFrame.
 
     Args:
+    ----
         original_df: The original DataFrame before splitting.
         client_idcode_column: The name of the column used for splitting.
         save_folder: The directory where the split CSV files are saved.
@@ -131,6 +133,7 @@ def save_group(client_idcode_group: tuple[str, pd.DataFrame], save_folder: str) 
     """Saves a single patient's data group to a CSV file.
 
     Args:
+    ----
         client_idcode_group: A tuple containing the client ID and their data as a DataFrame.
         save_folder: The directory where the CSV file will be saved.
 
@@ -158,6 +161,7 @@ def split_and_save_csv(
     saves the data for each client into a separate CSV file in the `save_folder`.
 
     Args:
+    ----
         df: The pandas DataFrame to split.
         client_idcode_column: The name of the column to group by.
         save_folder: The path to the folder where CSVs will be saved.
@@ -202,12 +206,14 @@ def get_merged_pat_batch_bloods(
     `client_idcode_list` in a single search operation.
 
     Args:
+    ----
         client_idcode_list: A list of client ID codes.
         search_term: The term to search for (currently unused in the query).
         config_obj: The configuration object.
         cohort_searcher_with_terms_and_search: The search function to use.
 
     Returns:
+    -------
         A DataFrame containing the merged batch of blood test observations.
 
     """
@@ -415,11 +421,13 @@ def get_merged_pat_batch_drugs(
     `client_idcode_list` in a single search operation, filtering for medication orders.
 
     Args:
+    ----
         client_idcode_list: A list of client ID codes.
         config_obj: The configuration object.
         cohort_searcher_with_terms_and_search: The search function to use.
 
     Returns:
+    -------
         A DataFrame containing the merged batch of drug orders.
 
     """
@@ -630,11 +638,13 @@ def get_merged_pat_batch_diagnostics(
     `client_idcode_list` in a single search operation, filtering for diagnostic orders.
 
     Args:
+    ----
         client_idcode_list: A list of client ID codes.
         config_obj: The configuration object.
         cohort_searcher_with_terms_and_search: The search function to use.
 
     Returns:
+    -------
         A DataFrame containing the merged batch of diagnostic orders.
 
     """
@@ -846,12 +856,14 @@ def get_merged_pat_batch_mct_docs(
     `client_idcode_list`, filtering for 'AoMRC_ClinicalSummary_FT' documents.
 
     Args:
+    ----
         client_idcode_list: A list of client ID codes.
         search_term: The term to search for (currently unused).
         config_obj: The configuration object.
         cohort_searcher_with_terms_and_search: The search function to use.
 
     Returns:
+    -------
         A DataFrame containing the merged batch of MCT documents.
 
     """
@@ -1052,12 +1064,14 @@ def get_merged_pat_batch_epr_docs(
     `client_idcode_list` within the globally defined time window.
 
     Args:
+    ----
         client_idcode_list: A list of client ID codes.
         search_term: The term to search for (currently unused).
         config_obj: The configuration object.
         cohort_searcher_with_terms_and_search: The search function to use.
 
     Returns:
+    -------
         A DataFrame containing the merged batch of EPR documents.
 
     """
@@ -1313,12 +1327,14 @@ def get_merged_pat_batch_textual_obs_docs(
     `client_idcode_list` and filters for rows containing non-empty `textualObs`.
 
     Args:
+    ----
         client_idcode_list: A list of client ID codes.
         search_term: The term to search for (currently unused).
         config_obj: The configuration object.
         cohort_searcher_with_terms_and_search: The search function to use.
 
     Returns:
+    -------
         A DataFrame containing the merged batch of textual observation documents.
 
     """
@@ -1496,12 +1512,14 @@ def get_merged_pat_batch_appointments(
     `client_idcode_list` within the globally defined time window.
 
     Args:
+    ----
         client_idcode_list: A list of client ID codes.
         search_term: The term to search for (currently unused).
         config_obj: The configuration object.
         cohort_searcher_with_terms_and_search: The search function to use.
 
     Returns:
+    -------
         A DataFrame containing the merged batch of appointments.
 
     """
@@ -1717,12 +1735,14 @@ def get_merged_pat_batch_demo(
     `client_idcode_list` to get their demographic data.
 
     Args:
+    ----
         client_idcode_list: A list of client ID codes.
         search_term: The term to search for (currently unused).
         config_obj: The configuration object.
         cohort_searcher_with_terms_and_search: The search function to use.
 
     Returns:
+    -------
         A DataFrame containing the merged batch of demographic information.
 
     """
@@ -1888,12 +1908,14 @@ def get_merged_pat_batch_bmi(
     `client_idcode_list`, filtering for BMI, Weight, and Height observations.
 
     Args:
+    ----
         client_idcode_list: A list of client ID codes.
         search_term: The term to search for (currently unused).
         config_obj: The configuration object.
         cohort_searcher_with_terms_and_search: The search function to use.
 
     Returns:
+    -------
         A DataFrame containing the merged batch of BMI-related observations.
 
     """
@@ -2057,12 +2079,14 @@ def get_merged_pat_batch_obs(
     `client_idcode_list`, filtering for a specific `search_term`.
 
     Args:
+    ----
         client_idcode_list: A list of client ID codes.
         search_term: The specific observation term to search for.
         config_obj: The configuration object.
         cohort_searcher_with_terms_and_search: The search function to use.
 
     Returns:
+    -------
         A DataFrame containing the merged batch of specified observations.
 
     """
@@ -2235,12 +2259,14 @@ def get_merged_pat_batch_news(
     `client_idcode_list`, filtering for 'NEWS' or 'NEWS2' observations.
 
     Args:
+    ----
         client_idcode_list: A list of client ID codes.
         search_term: The term to search for (currently unused).
         config_obj: The configuration object.
         cohort_searcher_with_terms_and_search: The search function to use.
 
     Returns:
+    -------
         A DataFrame containing the merged batch of NEWS observations.
 
     """
@@ -2404,12 +2430,14 @@ def get_merged_pat_batch_reports(
     `client_idcode_list`, filtering for documents where the item name is 'report'.
 
     Args:
+    ----
         client_idcode_list: A list of client ID codes.
         search_term: The specific report type to search for.
         config_obj: The configuration object.
         cohort_searcher_with_terms_and_search: The search function to use.
 
     Returns:
+    -------
         A DataFrame containing the merged batch of reports.
 
     """

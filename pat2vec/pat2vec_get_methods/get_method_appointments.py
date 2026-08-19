@@ -66,6 +66,7 @@ def search_appointments(
     save the search results to disk.
 
     Args:
+    ----
         cohort_searcher_with_terms_and_search (Optional[Callable]): The function for
             cohort searching. Defaults to None.
         client_id_codes (Optional[Union[str, List[str]]]): The client ID code(s) of
@@ -94,9 +95,11 @@ def search_appointments(
             Defaults to None.
 
     Returns:
+    -------
         pd.DataFrame: A DataFrame containing the raw appointment data.
 
     Raises:
+    ------
         ValueError: When `cohort_searcher_with_terms_and_search`, `client_id_codes`,
             `appointments_time_field`, or date components are None.
 
@@ -187,6 +190,7 @@ def get_appointments(
     features for consultant, clinic, and appointment type.
 
     Args:
+    ----
         current_pat_client_id_code (str): The client ID code of the patient.
         target_date_range (tuple): A tuple representing the target date range.
         pat_batch (pd.DataFrame): The DataFrame containing patient data for batch mode.
@@ -195,6 +199,7 @@ def get_appointments(
             cohort searching. Defaults to None.
 
     Returns:
+    -------
         pd.DataFrame: A DataFrame containing pims_apps features for the
             specified patient. If no data is found, a DataFrame with only the
             'client_idcode' is returned.
@@ -323,6 +328,7 @@ def get_appointments_features(
     """Wrapper function for get_appointments following BMI pattern.
 
     Args:
+    ----
         current_pat_client_id_code: The client ID code of the patient.
         target_date_range: A tuple representing the target date range.
         pat_batch: The DataFrame containing patient data for batch mode.
@@ -330,9 +336,11 @@ def get_appointments_features(
         cohort_searcher_with_terms_and_search: The function for cohort searching.
 
     Returns:
+    -------
         pd.DataFrame or list: Appointments features for the specified patient(s).
 
     Raises:
+    ------
         ValueError: If config_obj is None.
 
     """

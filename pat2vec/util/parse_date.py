@@ -15,6 +15,7 @@ def validate_input_dates(
     calendar dates, and formats the month/day with a leading zero if needed.
 
     Args:
+    ----
         start_year (int or str): The year of the start date.
         start_month (int or str): The month of the start date.
         start_day (int or str): The day of the start date.
@@ -23,10 +24,12 @@ def validate_input_dates(
         end_day (int or str): The day of the end date.
 
     Returns:
+    -------
         A tuple containing the formatted string values in the same order:
         (start_year, start_month, start_day, end_year, end_month, end_day).
 
     Raises:
+    ------
         ValueError: If any input cannot be converted to an integer or if
                     the date is invalid (e.g., month=13).
 

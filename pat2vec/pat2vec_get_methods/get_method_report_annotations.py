@@ -25,6 +25,7 @@ def get_current_pat_report_annotations(
     features from the 'pretty_name' of the annotations.
 
     Args:
+    ----
         current_pat_client_id_code (str): The unique identifier for the patient.
         target_date_range (Tuple): The date range to filter annotations by.
         report_annotations (Optional[pd.DataFrame]): DataFrame containing
@@ -40,11 +41,13 @@ def get_current_pat_report_annotations(
             implementation. Defaults to None.
 
     Returns:
+    -------
         pd.DataFrame: A DataFrame containing the calculated annotation features
             for the specified patient. If no annotations are found, a DataFrame
             with only the 'client_idcode' is returned.
 
     Raises:
+    ------
         ValueError: If `config_obj` is None.
 
     """

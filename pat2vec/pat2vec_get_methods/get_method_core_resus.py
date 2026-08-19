@@ -40,6 +40,7 @@ def search_core_resus_observations(
     specified patients.
 
     Args:
+    ----
         cohort_searcher_with_terms_and_search (Optional[Callable]): The function for
             cohort searching. Defaults to None.
         client_id_codes (Optional[Union[str, List[str]]]): The client ID code(s) of
@@ -66,9 +67,11 @@ def search_core_resus_observations(
             Defaults to None.
 
     Returns:
+    -------
         pd.DataFrame: A DataFrame containing the raw CORE_RESUS_STATUS observation data.
 
     Raises:
+    ------
         ValueError: If essential arguments are None.
 
     """
@@ -161,12 +164,14 @@ def calculate_core_resus_features(
     cardiopulmonary resuscitation" statuses.
 
     Args:
+    ----
         features_data (pd.DataFrame): DataFrame containing CORE_RESUS_STATUS observations.
         term_prefix (str): Prefix for feature column names. Defaults to "core_resus_status".
         negate_biochem (bool): If True, returns features with a value of 0 when no
             data is available. Defaults to False.
 
     Returns:
+    -------
         Dict[str, int]: A dictionary of calculated features.
 
     """
@@ -209,6 +214,7 @@ def get_core_resus(
     batch or by searching, and then counts the occurrences of each status type.
 
     Args:
+    ----
         current_pat_client_id_code (str): The client ID code of the patient.
         target_date_range (Tuple): A tuple representing the target date range.
         pat_batch (pd.DataFrame): The DataFrame containing patient data for batch mode.
@@ -220,10 +226,12 @@ def get_core_resus(
             and other settings. Defaults to None.
 
     Returns:
+    -------
         pd.DataFrame: A DataFrame containing CORE_RESUS_STATUS features for the
             specified patient.
 
     Raises:
+    ------
         ValueError: If `config_obj` is None.
 
     """

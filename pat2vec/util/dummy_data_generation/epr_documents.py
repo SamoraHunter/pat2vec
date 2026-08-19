@@ -45,6 +45,7 @@ def generate_epr_documents_data(
     """Generates dummy EPR document data.
 
     Args:
+    ----
         num_rows: Number of rows to generate per client.
         entered_list: List of client IDs to generate data for.
         global_start_year: Start year for the random date range.
@@ -55,6 +56,7 @@ def generate_epr_documents_data(
         fields_list: List of columns to include in the DataFrame.
 
     Returns:
+    -------
         A pandas DataFrame with generated dummy EPR document data.
 
     """
@@ -150,6 +152,7 @@ def generate_epr_documents_personal_data(
     """Generates dummy personal data for the 'epr_documents' index (demographics).
 
     Args:
+    ----
         num_rows: Number of rows to generate per client.
         entered_list: List of client IDs to generate data for.
         global_start_year: Start year for the random date range.
@@ -159,6 +162,7 @@ def generate_epr_documents_personal_data(
         fields_list: List of columns to include in the DataFrame.
 
     Returns:
+    -------
         A pandas DataFrame with generated dummy personal data.
 
     """

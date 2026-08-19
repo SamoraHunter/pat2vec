@@ -20,6 +20,7 @@ def get_current_pat_obs(
     within a date range, computes numeric aggregates, and returns feature columns.
 
     Args:
+    ----
         current_pat_client_id_code (str): The patient's ID code used to filter data.
         target_date_range (Tuple[Any, Any]): A tuple of (start_datetime, end_datetime)
             representing the temporal window for filtering observations.
@@ -29,11 +30,13 @@ def get_current_pat_obs(
             andbatch_mode settings.
 
     Returns:
+    -------
         pd.DataFrame: A single-row DataFrame containing aggregated observation features
             with column names prefixed by the search term. Returns empty DataFrame if
             no matching data is found.
 
     Raises:
+    ------
         ValueError: If required configuration attributes are missing.
 
     """

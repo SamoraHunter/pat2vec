@@ -1,6 +1,7 @@
 import logging
 from datetime import datetime
 from typing import Any
+
 from zoneinfo import ZoneInfo
 
 _logger = logging.getLogger(__name__)
@@ -24,6 +25,7 @@ def generate_date_list(
     list is clamped to global start and end dates defined in the `config_obj`.
 
     Args:
+    ----
         start_date: The anchor date for the calculation.
         years: The number of years to add or subtract.
         months: The number of months to add or subtract.
@@ -33,6 +35,7 @@ def generate_date_list(
             attributes (e.g., `global_start_year`).
 
     Returns:
+    -------
         A chronologically sorted list of (year, month, day) tuples.
 
     """

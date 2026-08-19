@@ -25,6 +25,7 @@ def get_current_pat_annotations(
     features from the 'pretty_name' of the annotations.
 
     Args:
+    ----
         current_pat_client_id_code (str): The unique identifier for the patient.
         target_date_range (Tuple): A tuple containing the start and end dates for
             filtering annotations as (start_year, start_month, end_year, end_month).
@@ -44,16 +45,19 @@ def get_current_pat_annotations(
             Currently unused but included for API consistency. Defaults to None.
 
     Returns:
+    -------
         pd.DataFrame: A DataFrame containing the calculated annotation features for
             the specified patient. Includes 'client_idcode' column and count-based
             features derived from 'pretty_name' values (e.g., epr_pretty_name_X).
 
     Raises:
+    ------
         ValueError: If `config_obj` is None.
         TypeError: If `batch_epr_docs_annotations` is provided and is not a
             pandas DataFrame.
 
     Examples:
+    --------
         >>> config = ConfigObject(batch_mode=True, verbosity=0)
         >>> result = get_current_pat_annotations(
         ...     current_pat_client_id_code="12345",

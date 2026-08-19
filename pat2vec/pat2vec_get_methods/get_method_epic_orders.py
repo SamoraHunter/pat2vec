@@ -48,6 +48,7 @@ def search_epic_orders(
     existing data from disk or save the search results to disk.
 
     Args:
+    ----
         cohort_searcher_with_terms_and_search (Optional[Callable]): The function for
             cohort searching. Required for executing queries.
         patient_durable_keys (Optional[Union[str, List[str]]]): The patient durable key(s)
@@ -78,9 +79,11 @@ def search_epic_orders(
             Defaults to None.
 
     Returns:
+    -------
         pd.DataFrame: A DataFrame containing the raw Epic orders data.
 
     Raises:
+    ------
         ValueError: When `cohort_searcher_with_terms_and_search` or `patient_durable_keys`
             is None, or when date components are invalid.
 
@@ -174,6 +177,7 @@ def get_epic_orders(
     one-hot encoded binary features based on order class and order status.
 
     Args:
+    ----
         current_pat_client_id_code: The client ID code of the patient.
         target_date_range (Tuple): A tuple representing the target date range as
             (start_year, start_month, end_year, end_month).
@@ -185,11 +189,13 @@ def get_epic_orders(
             Defaults to None.
 
     Returns:
+    -------
         pd.DataFrame: A DataFrame containing Epic orders features for the specified patient.
             Binary columns are created for each unique order class and status.
             If no data is found, a DataFrame with only the 'client_idcode' is returned.
 
     Raises:
+    ------
         ValueError: If `config_obj` is None.
 
     """

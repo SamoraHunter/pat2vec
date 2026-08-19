@@ -26,6 +26,7 @@ def compare_ipw_annotation_rows(
     filter.
 
     Args:
+    ----
         dataframes: A list of pandas DataFrames to compare. Each DataFrame
             should have a `name` attribute for clear output.
         columns_to_print: A list of column names to print when differences
@@ -98,6 +99,7 @@ class CsvProfiler:
         file in a 'profile_reports' subdirectory.
 
         Args:
+        ----
             epr_batchs_fp: Path to the directory containing the CSV files.
             prefix: An optional prefix to add to the generated report filenames.
             cols: A specific list of columns to include in the profile. If None,

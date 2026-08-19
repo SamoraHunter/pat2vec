@@ -20,9 +20,11 @@ def is_safe_host(h: str) -> bool:
     """Checks if a host is local or part of a private network to permit dummy data population.
 
     Args:
+    ----
         h: The hostname or IP address to check.
 
     Returns:
+    -------
         True if the host is safe for dummy data operations, False otherwise.
 
     """
@@ -50,11 +52,13 @@ def maybe_nan(value: Any, probability: float = 0.2) -> Any:
     """Returns a value or NaN based on a probability.
 
     Args:
+    ----
         value: The value to potentially return.
         probability: The probability of returning `np.nan` instead of the value.
             Defaults to 0.2.
 
     Returns:
+    -------
         The original value or `np.nan`.
 
     """
@@ -72,6 +76,7 @@ def create_random_date_from_globals(
     """Generates a random datetime within a given month-level range.
 
     Args:
+    ----
         start_year: The starting year.
         start_month: The starting month.
         end_year: The ending year.
@@ -80,6 +85,7 @@ def create_random_date_from_globals(
         end_day: The optional ending day (defaults to last day of end month).
 
     Returns:
+    -------
         A random datetime object within the specified range.
 
     """
@@ -118,11 +124,13 @@ def generate_uuid_list(n: int, prefix: str, length: int = 7) -> list[str]:
     """Generates a list of n UUID-like strings.
 
     Args:
+    ----
         n: The number of UUIDs to generate.
         prefix: The prefix for each UUID.
         length: The length of the random part of each UUID. Defaults to 7.
 
     Returns:
+    -------
         A list of generated UUID-like strings.
 
     """
@@ -139,9 +147,11 @@ def extract_date_range(
     might not contain a date range, returning None in such scenarios.
 
     Args:
+    ----
         date_string: The string containing the date range.
 
     Returns:
+    -------
         A tuple of six integers (start_year, start_month, start_day,
         end_year, end_month, end_day), or None if the pattern is not found.
 
@@ -178,9 +188,11 @@ def extract_search_term_obscatalogmasteritem_displayname(
     term by removing quotes and stripping any trailing 'AND' or 'OR' clauses.
 
     Args:
+    ----
         search_string: The input query string.
 
     Returns:
+    -------
         The extracted search term, or the original string if no match is found.
 
     """

@@ -34,12 +34,14 @@ def get_pat_batch_epr_docs_annotations(
     the result.
 
     Args:
+    ----
     current_pat_client_id_code: The patient's unique identifier.
     config_obj: The main configuration object.
     cat: The loaded MedCAT `CAT` object.
     t: The tqdm progress bar instance.
 
     Returns:
+    -------
     A DataFrame containing the annotations for the patient's EPR documents.
 
     """
@@ -53,6 +55,7 @@ def get_pat_batch_epr_docs_annotations(
                 schema_name,
                 table_name,
                 patient_ids=[current_pat_client_id_code],
+                warn_on_missing=False,
             )
             if not df.empty:
                 return df

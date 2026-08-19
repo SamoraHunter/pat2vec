@@ -18,9 +18,11 @@ def anonymize_feature_names(df: pd.DataFrame) -> tuple[pd.DataFrame, dict[str, s
     avoiding partial matches (e.g., matching '_count' before '_count_present').
 
     Args:
+    ----
         df: The input pandas DataFrame whose columns need to be anonymized.
 
     Returns:
+    -------
         A tuple containing:
             - pd.DataFrame: A new DataFrame with anonymized column names.
             - dict: A dictionary mapping anonymized names to their original
@@ -175,11 +177,13 @@ def deanonymize_feature_names(
     """De-anonymizes a list of feature names using a provided key.
 
     Args:
+    ----
         anonymized_feature_names: A list of anonymized feature names.
         anonymization_key: The dictionary mapping anonymized names back to
             original names. Format: {anonymized_name: original_name}.
 
     Returns:
+    -------
         A list of the original feature names. If an anonymized name is not
         found in the key, the corresponding item in the list will be None.
 

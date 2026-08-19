@@ -27,6 +27,7 @@ def mean_impute_dataframe(
     recombines the imputed sets into a single DataFrame.
 
     Args:
+    ----
         data: The input DataFrame containing features and target variables.
         y_vars: The name of the target variable column(s).
         test_size: The proportion of the dataset to allocate to the test split.
@@ -36,6 +37,7 @@ def mean_impute_dataframe(
         seed: Seed for Python's `random` module.
 
     Returns:
+    -------
         The full DataFrame with missing numeric values imputed.
 
     """
@@ -149,10 +151,12 @@ def save_missing_percentage(
     """Calculates and saves the percentage of missing values for each column.
 
     Args:
+    ----
         df: The input DataFrame to analyze.
         output_file: The path to save the resulting dictionary as a pickle file.
 
     Returns:
+    -------
         A dictionary where keys are column names and values are the
         percentage of missing values.
 

@@ -161,10 +161,12 @@ def _select_modality(clinical_indication=None, patient_age="adults"):
     """Selects an imaging modality based on clinical correlation patterns.
 
     Args:
+    ----
         clinical_indication: Optional clinical indication to guide modality selection.
         patient_age: Patient age group ("children", "adults", "elderly").
 
     Returns:
+    -------
         A selected imaging modality string.
 
     """
@@ -184,9 +186,11 @@ def _select_body_region(modality):
     """Selects a body region appropriate for the given imaging modality.
 
     Args:
+    ----
         modality: The imaging modality (e.g., "X-Ray", "MRI").
 
     Returns:
+    -------
         A body region string appropriate for the modality.
 
     """
@@ -199,10 +203,12 @@ def _generate_clinical_indication(modality, patient_age="adults"):
     """Generates a clinical indication correlated with the imaging modality.
 
     Args:
+    ----
         modality: The imaging modality.
         patient_age: Patient age group for context.
 
     Returns:
+    -------
         A clinical indication string.
 
     """
@@ -215,11 +221,13 @@ def _generate_report_content(modality, body_region, clinical_indication):
     """Generates realistic report content based on imaging parameters.
 
     Args:
+    ----
         modality: The imaging modality.
         body_region: The imaged body region.
         clinical_indication: The clinical indication.
 
     Returns:
+    -------
         A realistic imaging report text.
 
     """
@@ -310,10 +318,12 @@ def _determine_study_status(modality, clinical_indication):
     """Determines study status with realistic patterns.
 
     Args:
+    ----
         modality: The imaging modality.
         clinical_indication: The clinical indication.
 
     Returns:
+    -------
         A study status string ("Final" or "Preliminary").
 
     """
@@ -344,10 +354,12 @@ def _generate_report_name(modality, body_region):
     """Generates a meaningful report name with clinical correlation.
 
     Args:
+    ----
         modality: The imaging modality.
         body_region: The imaged body region.
 
     Returns:
+    -------
         A clinically relevant report name string.
 
     """
@@ -386,6 +398,7 @@ def generate_epic_imaging_reports_data(
     """Generates dummy data for the 'epic_imaging_reports' index with realistic clinical correlations.
 
     Args:
+    ----
         num_rows: Number of rows to generate per client.
         entered_list: List of client IDs to generate data for.
         global_start_year: Start year for the random date range.
@@ -397,6 +410,7 @@ def generate_epic_imaging_reports_data(
         fields_list: List of columns to include in the DataFrame.
 
     Returns:
+    -------
         A pandas DataFrame with generated dummy imaging report data.
 
     """

@@ -31,6 +31,7 @@ def get_pat_document_annotation_batch_epic_orders(
     expected in epic_orders data after ES fetching.
 
     Args:
+    ----
         current_pat_client_idcode: The client ID for the current patient.
         pat_batch: A DataFrame containing the batch of Epic orders documents.
         cat: The loaded MedCAT `CAT` object for entity recognition.
@@ -38,6 +39,7 @@ def get_pat_document_annotation_batch_epic_orders(
         t: The tqdm progress bar instance to update.
 
     Returns:
+    -------
         A DataFrame containing the annotation batch for the patient's Epic orders.
 
     """
@@ -113,6 +115,7 @@ def get_pat_document_annotation_batch(
     file, and then reads that file back into a DataFrame.
 
     Args:
+    ----
         current_pat_client_idcode: The client ID for the current patient.
         pat_batch: A DataFrame containing the batch of documents for the patient.
         cat: The loaded MedCAT `CAT` object for entity recognition.
@@ -120,6 +123,7 @@ def get_pat_document_annotation_batch(
         t: The tqdm progress bar instance to update.
 
     Returns:
+    -------
         A DataFrame containing the annotation batch for the patient.
 
     """
@@ -321,6 +325,7 @@ def get_pat_document_annotation_batch_epic_clinical_notes(
     """Retrieves or creates the annotation batch for a patient's Epic clinical notes.
 
     Args:
+    ----
         current_pat_client_idcode: The client ID for the current patient.
         pat_batch: A DataFrame containing the batch of Epic clinical notes.
         cat: The loaded MedCAT `CAT` object.
@@ -328,6 +333,7 @@ def get_pat_document_annotation_batch_epic_clinical_notes(
         t: The tqdm progress bar instance.
 
     Returns:
+    -------
         A DataFrame containing the annotation batch.
 
     """
@@ -535,6 +541,7 @@ def get_pat_document_annotation_batch_mct(
     and returns the result as a DataFrame.
 
     Args:
+    ----
         current_pat_client_idcode: The client ID for the current patient.
         pat_batch: A DataFrame containing the batch of MCT documents.
         cat: The loaded MedCAT `CAT` object.
@@ -542,6 +549,7 @@ def get_pat_document_annotation_batch_mct(
         t: The tqdm progress bar instance.
 
     Returns:
+    -------
         A DataFrame containing the annotation batch for the patient's MCT
         documents.
 
@@ -587,6 +595,7 @@ def get_pat_batch_textual_obs_annotation_batch(
     result as a DataFrame.
 
     Args:
+    ----
         current_pat_client_idcode: The client ID for the current patient.
         pat_batch: A DataFrame containing the batch of textual observations.
         cat: The loaded MedCAT `CAT` object.
@@ -594,6 +603,7 @@ def get_pat_batch_textual_obs_annotation_batch(
         t: The tqdm progress bar instance.
 
     Returns:
+    -------
         A DataFrame containing the annotation batch for the patient's textual
         observations.
 
@@ -633,6 +643,7 @@ def get_pat_document_annotation_batch_reports(
     DataFrame.
 
     Args:
+    ----
         current_pat_client_idcode: The client ID for the current patient.
         pat_batch: A DataFrame containing the batch of reports.
         cat: The loaded MedCAT `CAT` object.
@@ -640,6 +651,7 @@ def get_pat_document_annotation_batch_reports(
         t: The tqdm progress bar instance.
 
     Returns:
+    -------
         A DataFrame containing the annotation batch for the patient's
         reports.
 

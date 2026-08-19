@@ -107,6 +107,7 @@ def generate_pie_charts(
     are grouped into an "other" category.
 
     Args:
+    ----
         all_batch_annots: DataFrame containing annotation data with columns
             like 'client_idcode', 'pretty_name', and 'types'.
         save_plots: If True, saves the charts as PNG files in a local

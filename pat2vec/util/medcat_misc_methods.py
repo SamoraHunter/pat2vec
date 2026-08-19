@@ -18,9 +18,11 @@ def medcat_trainer_export_to_df(file_path: str) -> pd.DataFrame:
     """Converts a MedCATTrainer export JSON file to a pandas DataFrame.
 
     Args:
+    ----
         file_path: Path to the JSON file containing MedCATTrainer export data.
 
     Returns:
+    -------
         A DataFrame containing the extracted data, with each row representing
         a single annotation.
 
@@ -118,12 +120,14 @@ def extract_labels_from_medcat_annotation_export(
     in an 'extracted_label' column in the `human_labels` DataFrame.
 
     Args:
+    ----
         df: The trainer output in DataFrame form (from `medcat_trainer_export_to_df`).
         human_labels: The DataFrame containing human-labeled text samples.
         window: The window size for extracting text samples for comparison.
         output_file: An optional file path to save the processed DataFrame.
 
     Returns:
+    -------
         The processed `human_labels` DataFrame with the 'extracted_label' column.
 
     """
@@ -173,10 +177,12 @@ def recreate_json(df: pd.DataFrame, output_file: str | None = None) -> str:
     MedCAT model.
 
     Args:
+    ----
         df: DataFrame containing exported data from a MedCAT trainer project.
         output_file: Optional file path to save the generated JSON.
 
     Returns:
+    -------
         A JSON string representing the MedCAT training data.
 
     """
@@ -275,6 +281,7 @@ def manually_label_annotation_df(
     saved to a CSV file.
 
     Args:
+    ----
         df: The DataFrame to annotate.
         file_path: The file path to store the human labels.
         confirmatory: If True, skips clients who already have a confirmed
@@ -398,13 +405,16 @@ def parse_medcat_trainer_project_json(json_path: str) -> pd.DataFrame:
     single annotation with its associated document and project metadata.
 
     Args:
+    ----
         json_path: Path to the JSON file from a MedCAT trainer export.
 
     Returns:
+    -------
         A DataFrame containing parsed and structured data, including project
         and document details, annotations, and their meta-annotations.
 
     Notes:
+    -----
         - Handles nested JSON structures and safely converts JSON strings.
         - Explodes 'cuis' and 'documents' columns to create detailed rows.
         - Extracts meta-annotation details into separate columns.
@@ -546,6 +556,7 @@ def create_ner_results_dataframe(
     """Creates a Pandas DataFrame from NER evaluation dictionaries.
 
     Args:
+    ----
         fps (dict): Dictionary of false positives with CUI as keys.
         fns (dict): Dictionary of false negatives with CUI as keys.
         tps (dict): Dictionary of true positives with CUI as keys.
@@ -556,6 +567,7 @@ def create_ner_results_dataframe(
         if cat object passed, will add preferred name
 
     Returns:
+    -------
         pandas.DataFrame: DataFrame with CUI as index and columns for
                           fps, fns, tps, cui_prec, cui_rec, cui_f1, cui_counts and optionally a cat medcat object.
 
@@ -595,6 +607,7 @@ def plot_ner_results(results_df: pd.DataFrame) -> None:
     and the relationship between concept frequency and performance.
 
     Args:
+    ----
         results_df: A DataFrame containing NER evaluation metrics, which must
             include 'cui_name', 'cui_f1', 'cui_prec', 'cui_rec', 'fps', 'fns',
             'tps', and 'cui_counts'.

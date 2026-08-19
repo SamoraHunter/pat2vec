@@ -27,6 +27,7 @@ def get_demo(
     features for age, sex, deceased status, and ethnicity.
 
     Args:
+    ----
         current_pat_client_id_code (str): The client ID code for the patient.
         target_date_range (Tuple): The date range for which to get data. Tuple format:
             (start_year, start_month, end_year, end_month, start_day, end_day).
@@ -35,10 +36,12 @@ def get_demo(
             Defaults to None.
 
     Returns:
+    -------
         pd.DataFrame: A single-row DataFrame with demographic features including age,
             male (binary), dead (binary), and one-hot encoded ethnicity columns.
 
     Raises:
+    ------
         Exception: If multiple rows are processed when only one is expected.
 
     """
@@ -124,14 +127,17 @@ def _process_age(demo_dataframe: pd.DataFrame) -> pd.DataFrame:
     """Calculates and appends the patient's age to the DataFrame.
 
     Args:
+    ----
         demo_dataframe (pd.DataFrame): DataFrame containing demographic information,
             including a 'client_dob' column.
 
     Returns:
+    -------
         pd.DataFrame: The DataFrame with an added 'age' column calculated from
             date of birth to record datetime.
 
     Raises:
+    ------
         Exception: If the input DataFrame contains more than one row.
 
     """
@@ -150,16 +156,19 @@ def _process_ethnicity(demo_dataframe: pd.DataFrame) -> pd.DataFrame:
     """Abstracts and one-hot encodes ethnicity information.
 
     Args:
+    ----
         demo_dataframe (pd.DataFrame): DataFrame containing demographic information,
             including a 'client_racecode' column.
 
     Returns:
+    -------
         pd.DataFrame: The DataFrame with added one-hot encoded census ethnicity columns
             including 'census_white', 'census_asian_or_asian_british',
             'census_black_african_caribbean_or_black_british',
             'census_mixed_or_multiple_ethnic_groups', and 'census_other_ethnic_group'.
 
     Raises:
+    ------
         Exception: If the input DataFrame contains more than one row.
 
     """
@@ -234,13 +243,16 @@ def _process_sex(demo_dataframe: pd.DataFrame) -> pd.DataFrame:
     """Maps gender information to a binary 'male' column.
 
     Args:
+    ----
         demo_dataframe (pd.DataFrame): DataFrame containing demographic information,
             including a 'client_gendercode' column with values like 'Male', 'Female'.
 
     Returns:
+    -------
         pd.DataFrame: The DataFrame with an added 'male' column (1 for Male, 0 for Female).
 
     Raises:
+    ------
         Exception: If the input DataFrame contains more than one row.
 
     """
@@ -259,13 +271,16 @@ def _process_dead(demo_dataframe: pd.DataFrame) -> pd.DataFrame:
     """Maps deceased status to a binary 'dead' column.
 
     Args:
+    ----
         demo_dataframe (pd.DataFrame): DataFrame containing demographic information,
             including a 'client_deceaseddtm' column with datetime values or strings.
 
     Returns:
+    -------
         pd.DataFrame: The DataFrame with an added 'dead' column (1 if deceased, 0 otherwise).
 
     Raises:
+    ------
         Exception: If the input DataFrame contains more than one row.
 
     """
@@ -294,6 +309,7 @@ def get_demographics3_batch(
     the single most recent record for each patient within the specified time window.
 
     Args:
+    ----
         patlist (List[str]): A list of patient client ID codes.
         target_date_range (Tuple): The date range for which to retrieve data. Tuple format:
             (start_year, start_month, end_year, end_month, start_day, end_day).
@@ -304,10 +320,12 @@ def get_demographics3_batch(
             cohort searching. Defaults to None.
 
     Returns:
+    -------
         pd.DataFrame: A DataFrame containing the most recent demographic record
             for the patient(s) in the date range. Includes all demographic fields.
 
     Raises:
+    ------
         Exception: If batch processing returns multiple rows unexpectedly.
 
     """

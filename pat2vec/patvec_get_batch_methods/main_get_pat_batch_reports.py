@@ -21,12 +21,14 @@ def get_pat_batch_reports(
     """Retrieves a batch of reports for a patient.
 
     Args:
+    ----
         current_pat_client_id_code: The patient's unique identifier.
         search_term: The specific report type to search for.
         config_obj: The main configuration object.
         cohort_searcher_with_terms_and_search: The search function to use.
 
     Returns:
+    -------
         A DataFrame containing the batch of reports.
 
     """
@@ -72,6 +74,7 @@ def get_pat_batch_reports(
                     schema_name,
                     table_name,
                     patient_ids=[current_pat_client_id_code],
+                    warn_on_missing=False,
                 )
                 if not df.empty:
                     return df

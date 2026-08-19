@@ -44,6 +44,7 @@ def search_demographics(
     """Searches for demographics data for patients within a date range.
 
     Args:
+    ----
         cohort_searcher_with_terms_and_search (Optional[Callable]): The function for
             cohort searching. Defaults to None.
         client_id_codes (Optional[Union[str, List[str]]]): The client ID code(s) of
@@ -70,9 +71,11 @@ def search_demographics(
             Defaults to None.
 
     Returns:
+    -------
         pd.DataFrame: A DataFrame containing the raw demographics data.
 
     Raises:
+    ------
         ValueError: If essential arguments are None.
 
     """
@@ -155,13 +158,16 @@ def get_demographics_data(pat2vec_obj: object, pat_list: list[str]) -> pd.DataFr
     """Retrieves and processes demographics data for a list of patients.
 
     Args:
+    ----
         pat2vec_obj (object): The pat2vec object containing configuration.
         pat_list (List[str]): List of patient IDs.
 
     Returns:
+    -------
         pd.DataFrame: Processed demographics data.
 
     Raises:
+    ------
         ValueError: If config attributes are missing or search fails.
 
     """
@@ -206,14 +212,17 @@ def process_demographics_data(
     """Processes raw demographics data to return the most recent record per patient.
 
     Args:
+    ----
         demo_data (pd.DataFrame): Raw demographics data from the search.
         patlist (List[str]): List of patient IDs that were requested.
 
     Returns:
+    -------
         pd.DataFrame: Processed demographics data containing the single most
             recent record for the patient(s).
 
     Raises:
+    ------
         Exception: Annotated but caught; returns fallback DataFrame on error.
 
     """
@@ -251,6 +260,7 @@ def get_demographics3(
     """Gets demographics information for patients within a specified date range.
 
     Args:
+    ----
         patlist (List[str]): List of patient IDs.
         target_date_range (Tuple): A tuple representing the target date range as
             (start_year, start_month, end_year, end_month, start_day, end_day).
@@ -262,10 +272,12 @@ def get_demographics3(
             to None.
 
     Returns:
+    -------
         pd.DataFrame: Demographics information for the specified patients, with
             the most recent record per patient.
 
     Raises:
+    ------
         ValueError: If `config_obj` or `cohort_searcher_with_terms_and_search` is
             None, or if `patlist` is empty.
 

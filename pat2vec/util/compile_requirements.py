@@ -13,7 +13,8 @@ def run_pip_compile() -> bool:
     generate a `requirements.txt` file. If the command fails, it prints the
     error to the console.
 
-    Returns:
+    Returns
+    -------
         True if the command is successful, False otherwise.
 
     """
@@ -34,6 +35,7 @@ def append_to_file(filename: str, requirement: str) -> None:
     """Appends a requirement to a file, followed by a newline.
 
     Args:
+    ----
         filename: The path to the file.
         requirement: The requirement string to append.
 

@@ -19,6 +19,7 @@ def set_best_gpu(gpu_mem_threshold: int) -> None:
     CPU-only mode.
 
     Args:
+    ----
         gpu_mem_threshold: The minimum amount of free memory (in MB) required
             to select a GPU.
 

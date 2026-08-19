@@ -9,7 +9,9 @@ from sqlalchemy import text
 from pat2vec.util.helper_functions import save_annotations_to_db
 from pat2vec.util.methods_annotation_json_to_dataframe import (
     json_to_dataframe,
-)  # Keep for now, might move later
+)
+
+# Keep for now, might move later
 from pat2vec.util.methods_get import exist_check, update_pbar
 from pat2vec.util.post_processing_annotations import (
     EMPTY_ANNOT_COLS,
@@ -34,6 +36,7 @@ def _ensure_synthetic_annotation_row(
     columns, we still produce at least one valid annotation row for testing mode.
 
     Args:
+    ----
         doc: The pandas Series representing the original document
         current_pat_client_id_code: The patient's unique identifier
         time_column: The name of the timestamp column in doc
@@ -42,6 +45,7 @@ def _ensure_synthetic_annotation_row(
         config_obj: Optional configuration object to get fallback timestamp
 
     Returns:
+    -------
         pd.DataFrame: A single-row DataFrame with valid synthetic annotation data
 
     """
@@ -126,13 +130,16 @@ def check_pat_document_annotation_complete(
     """Checks if a patient's document annotation data already exists (file or database).
 
     Args:
+    ----
         current_pat_client_id_code: The patient's ID code.
         config_obj: The configuration object containing file paths.
 
     Returns:
+    -------
         bool: True if the annotation data exists, False otherwise.
 
     Raises:
+    ------
         Exception: Propagates exceptions from database operations.
 
     """
@@ -182,6 +189,7 @@ def annot_pat_batch_docs(
     """Annotates a batch of patient documents using a MedCAT model.
 
     Args:
+    ----
         current_pat_client_idcode: The patient identifier (ID code).
         pat_batch: DataFrame containing the documents to be annotated.
         cat: The loaded MedCAT `CAT` object.
@@ -191,10 +199,12 @@ def annot_pat_batch_docs(
             text to annotate.
 
     Returns:
+    -------
         List[Dict[str, Any]]: A list of dictionaries, where each dictionary contains
         the MedCAT annotation entities for a document.
 
     Raises:
+    ------
         Exception: Propagates exceptions from MedCAT annotation operations.
 
     """
@@ -238,6 +248,7 @@ def multi_annots_to_df_textual_obs(
     to a patient-specific CSV file or database table.
 
     Args:
+    ----
         current_pat_client_idcode: The patient identifier (ID code).
         pat_batch: DataFrame of the original documents that were annotated.
         multi_annots: The list of annotation dictionaries from MedCAT.
@@ -249,9 +260,11 @@ def multi_annots_to_df_textual_obs(
         include_text_sample: If True, includes a text sample around the annotation.
 
     Returns:
+    -------
         pd.DataFrame: The annotated dataframe.
 
     Raises:
+    ------
         Exception: Propagates exceptions from database operations or file I/O.
 
     """
@@ -345,6 +358,7 @@ def multi_annots_to_df_epr_docs(
     """Converts MedCAT annotations for EPR documents to a DataFrame and saves it (file or DB).
 
     Args:
+    ----
         current_pat_client_idcode: The patient identifier (ID code).
         pat_batch: DataFrame of the original documents that were annotated.
         multi_annots: The list of annotation dictionaries from MedCAT.
@@ -356,9 +370,11 @@ def multi_annots_to_df_epr_docs(
         include_text_sample: If True, includes a text sample around the annotation.
 
     Returns:
+    -------
         pd.DataFrame: The annotated dataframe.
 
     Raises:
+    ------
         Exception: Propagates exceptions from database operations or file I/O.
 
     """
@@ -457,6 +473,7 @@ def multi_annots_to_df_reports(
     the result to a patient-specific CSV file or database table.
 
     Args:
+    ----
         current_pat_client_idcode: The patient identifier (ID code).
         pat_batch: DataFrame of the original report documents that were annotated.
         multi_annots: The list of annotation dictionaries from MedCAT.
@@ -468,9 +485,11 @@ def multi_annots_to_df_reports(
         include_text_sample: If True, includes a text sample around the annotation.
 
     Returns:
+    -------
         pd.DataFrame: The annotated dataframe.
 
     Raises:
+    ------
         Exception: Propagates exceptions from database operations or file I/O.
 
     """
@@ -564,6 +583,7 @@ def multi_annots_to_df_epic_lab_results(
     """Converts MedCAT annotations for Epic lab results to a DataFrame and saves it.
 
     Args:
+    ----
         current_pat_client_idcode: The patient identifier (ID code).
         pat_batch: DataFrame of the original documents that were annotated.
         multi_annots: The list of annotation dictionaries from MedCAT.
@@ -575,9 +595,11 @@ def multi_annots_to_df_epic_lab_results(
         guid_column: The name of the document identifier column in `pat_batch`.
 
     Returns:
+    -------
         pd.DataFrame: The annotated dataframe.
 
     Raises:
+    ------
         Exception: Propagates exceptions from database operations or file I/O.
 
     """
@@ -650,6 +672,7 @@ def multi_annots_to_df_epic_orders(
     """Converts MedCAT annotations for Epic orders to a DataFrame and saves it (file or DB).
 
     Args:
+    ----
         current_pat_client_idcode: The patient identifier (ID code).
         pat_batch: DataFrame of the original documents that were annotated.
         multi_annots: The list of annotation dictionaries from MedCAT.
@@ -661,9 +684,11 @@ def multi_annots_to_df_epic_orders(
         guid_column: The name of the document identifier column in `pat_batch`.
 
     Returns:
+    -------
         pd.DataFrame: The annotated dataframe.
 
     Raises:
+    ------
         Exception: Propagates exceptions from database operations or file I/O.
 
     """
@@ -754,6 +779,7 @@ def multi_annots_to_df_epic_clinical_notes(
     """Converts MedCAT annotations for Epic clinical notes to a DataFrame and saves it (file or DB).
 
     Args:
+    ----
         current_pat_client_idcode: The patient identifier (ID code).
         pat_batch: DataFrame of the original documents that were annotated.
         multi_annots: The list of annotation dictionaries from MedCAT.
@@ -765,9 +791,11 @@ def multi_annots_to_df_epic_clinical_notes(
         guid_column: The name of the document identifier column in `pat_batch`.
 
     Returns:
+    -------
         pd.DataFrame: The annotated dataframe.
 
     Raises:
+    ------
         Exception: Propagates exceptions from database operations or file I/O.
 
     """
@@ -865,6 +893,7 @@ def multi_annots_to_df_epic_clinical_notes_appointments(
     """Converts MedCAT annotations for Epic clinical notes appointments to a DataFrame and saves it.
 
     Args:
+    ----
         current_pat_client_idcode: The patient identifier (ID code).
         pat_batch: DataFrame of the original documents that were annotated.
         multi_annots: The list of annotation dictionaries from MedCAT.
@@ -876,9 +905,11 @@ def multi_annots_to_df_epic_clinical_notes_appointments(
         guid_column: The name of the document identifier column in `pat_batch`.
 
     Returns:
+    -------
         pd.DataFrame: The annotated dataframe.
 
     Raises:
+    ------
         Exception: Propagates exceptions from database operations or file I/O.
 
     """
@@ -976,6 +1007,7 @@ def multi_annots_to_df_epic_imaging_reports(
     """Converts MedCAT annotations for Epic imaging reports to a DataFrame and saves it.
 
     Args:
+    ----
         current_pat_client_idcode: The patient identifier (ID code).
         pat_batch: DataFrame of the original documents that were annotated.
         multi_annots: The list of annotation dictionaries from MedCAT.
@@ -987,9 +1019,11 @@ def multi_annots_to_df_epic_imaging_reports(
         guid_column: The name of the document identifier column in `pat_batch`.
 
     Returns:
+    -------
         pd.DataFrame: The annotated dataframe.
 
     Raises:
+    ------
         Exception: Propagates exceptions from database operations or file I/O.
 
     """
@@ -1079,6 +1113,7 @@ def multi_annots_to_df_epic_medical_history(
     """Converts MedCAT annotations for Epic medical history to a DataFrame and saves it (file or DB).
 
     Args:
+    ----
         current_pat_client_idcode: The patient identifier (ID code).
         pat_batch: DataFrame of the original documents that were annotated.
         multi_annots: The list of annotation dictionaries from MedCAT.
@@ -1090,9 +1125,11 @@ def multi_annots_to_df_epic_medical_history(
         guid_column: The name of the document identifier column in `pat_batch`.
 
     Returns:
+    -------
         pd.DataFrame: The annotated dataframe.
 
     Raises:
+    ------
         Exception: Propagates exceptions from database operations or file I/O.
 
     """
@@ -1171,6 +1208,7 @@ def multi_annots_to_df_mct(
     saves the result to a patient-specific CSV file or database table.
 
     Args:
+    ----
         current_pat_client_idcode: The patient identifier (ID code).
         pat_batch: DataFrame of the original MCT documents that were annotated.
         multi_annots: The list of annotation dictionaries from MedCAT.
@@ -1182,9 +1220,11 @@ def multi_annots_to_df_mct(
         include_text_sample: If True, includes a text sample around the annotation.
 
     Returns:
+    -------
         pd.DataFrame: The annotated dataframe.
 
     Raises:
+    ------
         Exception: Propagates exceptions from database operations or file I/O.
 
     """
@@ -1274,15 +1314,18 @@ def calculate_pretty_name_count_features(
     for each name, returning the result as a single-row DataFrame (vector).
 
     Args:
+    ----
         df_copy: The input DataFrame, expected to have a 'pretty_name' column.
         suffix: A suffix to append to the feature name.
         patient_id: Optional patient ID to include in the result DataFrame.
 
     Returns:
+    -------
         Optional[pd.DataFrame]: A single-row DataFrame with counts for each
             pretty_name, or None if the input DataFrame is empty.
 
     Raises:
+    ------
         Exception: Propagates exceptions from groupby operations.
 
     """

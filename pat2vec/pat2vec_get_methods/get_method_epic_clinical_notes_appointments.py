@@ -47,6 +47,7 @@ def search_epic_clinical_notes_appointments(
     saved to CSV or loaded from existing files if not overwritten.
 
     Args:
+    ----
         cohort_searcher_with_terms_and_search: A callable search function that takes
             index_name, fields_list, term_name, entered_list, and search_string as
             arguments. Required for fetching data.
@@ -77,11 +78,13 @@ def search_epic_clinical_notes_appointments(
             for constructing file paths. Defaults to None.
 
     Returns:
+    -------
         pd.DataFrame: A DataFrame containing the search results with columns for
             document_PatientDurableKey, document_CreatedWhen, document_UpdatedWhen,
             document_Name, document_Content, and other specified fields.
 
     Raises:
+    ------
         ValueError: If cohort_searcher_with_terms_and_search is None or if
             patient_durable_keys is None.
         ValueError: If validate_input_dates fails to validate the date parameters.
@@ -178,6 +181,7 @@ def get_epic_clinical_notes_appointments(
     batches) or real-time search mode.
 
     Args:
+    ----
         current_pat_client_id_code: The unique identifier for the patient whose
             annotations are being retrieved.
         target_date_range: A tuple representing the date range to filter notes by.
@@ -192,11 +196,13 @@ def get_epic_clinical_notes_appointments(
             Defaults to None.
 
     Returns:
+    -------
         pd.DataFrame: A DataFrame containing extracted features from clinical notes
             and appointments. Includes a 'client_idcode' column and one-hot encoded
             columns for each unique document_Name found (with sanitized names).
 
     Raises:
+    ------
         ValueError: If config_obj is None.
 
     """

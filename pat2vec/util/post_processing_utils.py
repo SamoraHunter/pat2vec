@@ -26,9 +26,11 @@ def process_chunk(args: tuple) -> dict[str, list[str]]:
     data from those columns.
 
     Args:
+    ----
         args: A tuple containing (part_chunk, all_files, part_size, unique_columns).
 
     Returns:
+    -------
         A dictionary with concatenated data for the specified unique columns.
 
     """
@@ -148,6 +150,7 @@ def filter_and_update_csv(
     and filters the rows in those CSV files based on a timestamp column and a filter date.
 
     Args:
+    ----
         target_directory: The root directory containing the CSV files to be filtered.
         ipw_dataframe (pd.DataFrame): A DataFrame containing patient IPW records,
             including 'client_idcode' and a timestamp column (e.g., 'updatetime').

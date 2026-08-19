@@ -45,6 +45,7 @@ def search_hospital_site(
     Results can be cached to or loaded from a CSV file if specified.
 
     Args:
+    ----
         cohort_searcher_with_terms_and_search (Optional[Callable]): The function for
             cohort searching. Defaults to None.
         client_id_codes (str): The client ID code(s) of the patient(s). Can be a single
@@ -73,10 +74,12 @@ def search_hospital_site(
             and proj_name for output file path construction. Defaults to None.
 
     Returns:
+    -------
         pd.DataFrame: A DataFrame containing hospital site observation data with
             columns defined in HOSP_SITE_FIELDS.
 
     Raises:
+    ------
         ValueError: If `cohort_searcher_with_terms_and_search` or `client_id_codes` is None.
 
     """
@@ -150,9 +153,11 @@ def prepare_hospital_site_data(raw_data):
     """Filter to valid CORE_HospitalSite records and drop rows with missing values.
 
     Args:
+    ----
         raw_data (pd.DataFrame): Raw hospital site observation data.
 
     Returns:
+    -------
         pd.DataFrame: Filtered DataFrame containing only valid CORE_HospitalSite
             records with no missing values in any column.
 
@@ -172,6 +177,7 @@ def calculate_hospital_site_features(
     the observation_valuetext_analysed contains the respective site codes.
 
     Args:
+    ----
         features_data (pd.DataFrame): DataFrame containing filteredhospital site
             observation data with 'observation_valuetext_analysed' column.
         current_pat_client_id_code (str): The client ID code of the patient.
@@ -179,6 +185,7 @@ def calculate_hospital_site_features(
             no data is available. Defaults to False.
 
     Returns:
+    -------
         pd.DataFrame: A single-row DataFrame with binary indicators for hospital
             sites including 'client_idcode', '{term}_dh', and '{term}_ph'.
 
@@ -212,6 +219,7 @@ def get_hosp_site(
     of records from specific hospital sites (DH and PRUH).
 
     Args:
+    ----
         current_pat_client_id_code (str): The client ID code of the patient.
         target_date_range (Tuple[int, int, int, int, int, int]): A tuple representing
             the target date range as (start_year, start_month, end_year, end_month,
@@ -224,10 +232,12 @@ def get_hosp_site(
             cohort searching. Defaults to None.
 
     Returns:
+    -------
         pd.DataFrame: A single-row DataFrame containing hospital site features for the
             patient including 'client_idcode', 'hosp_site_dh', and 'hosp_site_ph'.
 
     Raises:
+    ------
         ValueError: If config_obj is None.
 
     """

@@ -22,11 +22,13 @@ def random_sample(pickled_dict: dict[str, Any], sample_size: int) -> dict[str, A
     """Selects a random sample of entities from a pickled dictionary.
 
     Args:
+    ----
         pickled_dict: The dictionary loaded from a pickle file, expected
             to have an 'entities' key.
         sample_size: The number of entities to sample.
 
     Returns:
+    -------
         A new dictionary containing the sampled entities.
 
     """
@@ -50,11 +52,13 @@ def get_or_create_annotations_for_text(
     4. Including meta-annotations (Presence, Time, Subject)
 
     Args:
+    ----
         text: The document text to annotate.
         sample_annotations_data: The loaded pickle file with sample entities.
         document_id: Optional document ID for storage in document store.
 
     Returns:
+    -------
         A dictionary with entities containing accurate positions matching the text,
         including text samples around each entity.
 
@@ -326,11 +330,13 @@ def dummy_medcat_annotation_generator(
     entities from the sample data (backward compatible).
 
     Args:
+    ----
         text: Optional document text to annotate. When provided, annotations
             will include accurate start/end positions within this text.
         document_id: Optional document ID for caching/storing annotations.
 
     Returns:
+    -------
         A dictionary containing entities with annotation details. If text is
         provided, entities will have accurate positions matching the document.
 
@@ -392,6 +398,7 @@ class dummy_CAT:
         """Initialize dummy CAT object.
 
         Args:
+        ----
             with_filters: If True, initialize with some dummy filters for testing
                          filter removal logic. Defaults to False.
 
@@ -411,10 +418,12 @@ class dummy_CAT:
         """Returns MedCAT annotations linked to the provided text.
 
         Args:
+        ----
             text: The text to annotate. Annotations will have accurate start/end
                 positions matching the document content.
 
         Returns:
+        -------
             A dictionary containing entities with accurate positions in the text.
 
         """
@@ -435,12 +444,14 @@ class dummy_CAT:
         positions matching the document content.
 
         Args:
+        ----
             texts: The list of texts to annotate. Each text will have annotations
                 with accurate start/end positions within that text.
             n_process: Number of processes to use (ignored).
             batch_size: Batch size to use (ignored).
 
         Returns:
+        -------
             A list of dictionaries, where each dictionary contains entities with
             accurate positions matching the corresponding text.
 
@@ -481,6 +492,7 @@ def augment_dummy_annotations_file(target_count: int = 500) -> None:
     result back to the file.
 
     Args:
+    ----
         target_count: The desired minimum number of annotations in the file.
 
     """

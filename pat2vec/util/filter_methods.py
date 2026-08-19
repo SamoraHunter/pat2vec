@@ -22,12 +22,14 @@ def filter_dataframe_by_fuzzy_terms(
     the rows that have a match score above a certain threshold (80).
 
     Args:
+    ----
         df: The DataFrame to filter.
         filter_term_list: A list of terms to search for.
         column_name: The name of the column to perform the fuzzy match on.
         verbose: Verbosity level for logging.
 
     Returns:
+    -------
         A new DataFrame containing only the rows with fuzzy-matched terms.
 
     """
@@ -62,16 +64,19 @@ def apply_data_type_epr_docs_filters(
     adding the counts as new columns.
 
     Args:
+    ----
         config_obj: A configuration object containing filter settings with a
             `data_type_filter_dict` attribute that specifies filter rules.
         batch_target: The DataFrame of EPR documents to be filtered, expected
             to have at least 'document_description' and 'body_analysed' columns.
 
     Returns:
+    -------
         The filtered DataFrame with additional regex term count columns if
         configured in `config_obj`.
 
     Raises:
+    ------
         AttributeError: If config_obj does not have required filter configuration.
 
     """
@@ -133,16 +138,19 @@ def apply_bloods_data_type_filter(
     `config_obj`.
 
     Args:
+    ----
         config_obj: A configuration object containing filter settings with a
             `data_type_filter_dict` attribute that specifies filter rules.
         batch_target: The DataFrame of bloods data to be filtered, expected
             to have a 'basicobs_itemname_analysed' column.
 
     Returns:
+    -------
         The filtered DataFrame with additional regex term count columns if
         configured in `config_obj`.
 
     Raises:
+    ------
         AttributeError: If config_obj does not have required filter configuration.
 
     """
@@ -182,16 +190,19 @@ def apply_data_type_epic_clinical_notes_filters(
     adding the counts as new columns.
 
     Args:
+    ----
         config_obj: A configuration object containing filter settings with a
             `data_type_filter_dict` attribute that specifies filter rules.
         batch_target: The DataFrame of Epic clinical notes to be filtered, expected
             to have 'document_Name' and 'document_Content' columns.
 
     Returns:
+    -------
         The filtered DataFrame with additional regex term count columns if
         configured in `config_obj`.
 
     Raises:
+    ------
         AttributeError: If config_obj does not have required filter configuration.
 
     """
@@ -256,16 +267,19 @@ def apply_data_type_epic_clinical_notes_appointments_filters(
     adding the counts as new columns.
 
     Args:
+    ----
         config_obj: A configuration object containing filter settings with a
             `data_type_filter_dict` attribute that specifies filter rules.
         batch_target: The DataFrame of Epic clinical notes appointments to be filtered, expected
             to have 'document_Name' and 'document_Content' columns.
 
     Returns:
+    -------
         The filtered DataFrame with additional regex term count columns if
         configured in `config_obj`.
 
     Raises:
+    ------
         AttributeError: If config_obj does not have required filter configuration.
 
     """
@@ -330,15 +344,18 @@ def apply_data_type_epic_patients_filters(
     It can apply fuzzy term matching on the 'patient_Gender' or 'patient_Ethnicity' columns.
 
     Args:
+    ----
         config_obj: A configuration object containing filter settings with a
             `data_type_filter_dict` attribute that specifies filter rules.
         batch_target: The DataFrame of Epic patients to be filtered, expected
             to have 'patient_Gender' and/or 'patient_Ethnicity' columns.
 
     Returns:
+    -------
         The filtered DataFrame based on patient filters configured in `config_obj`.
 
     Raises:
+    ------
         AttributeError: If config_obj does not have required filter configuration.
 
     """
@@ -376,15 +393,18 @@ def apply_data_type_epic_medical_history_filters(
     'document_Comment' column using filter terms defined in `config_obj`.
 
     Args:
+    ----
         config_obj: A configuration object containing filter settings with a
             `data_type_filter_dict` attribute that specifies filter rules.
         batch_target: The DataFrame of Epic medical history to be filtered, expected
             to have a 'document_Comment' column.
 
     Returns:
+    -------
         The filtered DataFrame based on medical history filters configured in `config_obj`.
 
     Raises:
+    ------
         AttributeError: If config_obj does not have required filter configuration.
 
     """
@@ -417,15 +437,18 @@ def apply_data_type_epic_orders_filters(
     'document_Name' column using filter terms defined in `config_obj`.
 
     Args:
+    ----
         config_obj: A configuration object containing filter settings with a
             `data_type_filter_dict` attribute that specifies filter rules.
         batch_target: The DataFrame of Epic orders to be filtered, expected
             to have a 'document_Name' column.
 
     Returns:
+    -------
         The filtered DataFrame based on order filters configured in `config_obj`.
 
     Raises:
+    ------
         AttributeError: If config_obj does not have required filter configuration.
 
     """
@@ -456,15 +479,18 @@ def apply_data_type_epic_lab_results_filters(
     'document_Name' column using filter terms defined in `config_obj`.
 
     Args:
+    ----
         config_obj: A configuration object containing filter settings with a
             `data_type_filter_dict` attribute that specifies filter rules.
         batch_target: The DataFrame of Epic lab results to be filtered, expected
             to have a 'document_Name' column.
 
     Returns:
+    -------
         The filtered DataFrame based on lab result filters configured in `config_obj`.
 
     Raises:
+    ------
         AttributeError: If config_obj does not have required filter configuration.
 
     """
@@ -497,15 +523,18 @@ def apply_data_type_epic_imaging_reports_filters(
     'document_Name' column using filter terms defined in `config_obj`.
 
     Args:
+    ----
         config_obj: A configuration object containing filter settings with a
             `data_type_filter_dict` attribute that specifies filter rules.
         batch_target: The DataFrame of Epic imaging reports to be filtered, expected
             to have a 'document_Name' column.
 
     Returns:
+    -------
         The filtered DataFrame based on imaging report filters configured in `config_obj`.
 
     Raises:
+    ------
         AttributeError: If config_obj does not have required filter configuration.
 
     """
@@ -540,10 +569,12 @@ def apply_data_type_mct_docs_filters(
     adding the counts as new columns.
 
     Args:
+    ----
         config_obj: A configuration object containing filter settings.
         batch_target: The DataFrame of MCT documents to be filtered.
 
     Returns:
+    -------
         The filtered DataFrame.
 
     """
@@ -606,10 +637,12 @@ def apply_data_type_drugs_filters(
     adding the counts as new columns.
 
     Args:
+    ----
         config_obj: A configuration object containing filter settings.
         batch_target: The DataFrame of drug orders to be filtered.
 
     Returns:
+    -------
         The filtered DataFrame.
 
     """
@@ -660,16 +693,19 @@ def apply_data_type_diagnostics_filters(
     adding the counts as new columns.
 
     Args:
+    ----
         config_obj: A configuration object containing filter settings with a
             `data_type_filter_dict` attribute that specifies filter rules.
         batch_target: The DataFrame of diagnostic orders to be filtered, expected
             to have 'order_name' and 'order_summaryline' columns.
 
     Returns:
+    -------
         The filtered DataFrame with additional regex term count columns if
         configured in `config_obj`.
 
     Raises:
+    ------
         AttributeError: If config_obj does not have required filter configuration.
 
     """
@@ -718,15 +754,18 @@ def apply_data_type_news_filters(
     'obscatalogmasteritem_displayname' column using filter terms defined in `config_obj`.
 
     Args:
+    ----
         config_obj: A configuration object containing filter settings with a
             `data_type_filter_dict` attribute that specifies filter rules.
         batch_target: The DataFrame of NEWS observations to be filtered, expected
             to have an 'obscatalogmasteritem_displayname' column.
 
     Returns:
+    -------
         The filtered DataFrame based on NEWS observation filters configured in `config_obj`.
 
     Raises:
+    ------
         AttributeError: If config_obj does not have required filter configuration.
 
     """
@@ -759,16 +798,19 @@ def apply_data_type_textual_obs_filters(
     adding the counts as new columns.
 
     Args:
+    ----
         config_obj: A configuration object containing filter settings with a
             `data_type_filter_dict` attribute that specifies filter rules.
         batch_target: The DataFrame of textual observations to be filtered, expected
             to have a 'textualObs' column.
 
     Returns:
+    -------
         The filtered DataFrame with additional regex term count columns if
         configured in `config_obj`.
 
     Raises:
+    ------
         AttributeError: If config_obj does not have required filter configuration.
 
     """
@@ -831,16 +873,19 @@ def apply_data_type_reports_filters(
     adding the counts as new columns.
 
     Args:
+    ----
         config_obj: A configuration object containing filter settings with a
             `data_type_filter_dict` attribute that specifies filter rules.
         batch_target: The DataFrame of reports to be filtered, expected
             to have a 'body_analysed' column.
 
     Returns:
+    -------
         The filtered DataFrame with additional regex term count columns if
         configured in `config_obj`.
 
     Raises:
+    ------
         AttributeError: If config_obj does not have required filter configuration.
 
     """
@@ -889,15 +934,18 @@ def apply_data_type_obs_filters(
     It can apply fuzzy term matching on the 'obscatalogmasteritem_displayname' column.
 
     Args:
+    ----
         config_obj: A configuration object containing filter settings with a
             `data_type_filter_dict` attribute that specifies filter rules.
         batch_target: The DataFrame of observations to be filtered, expected
             to have an 'obscatalogmasteritem_displayname' column.
 
     Returns:
+    -------
         The filtered DataFrame based on observation filters configured in `config_obj`.
 
     Raises:
+    ------
         AttributeError: If config_obj does not have required filter configuration.
 
     """

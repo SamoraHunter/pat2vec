@@ -12,7 +12,8 @@ def setup_logger(log_level: str = "INFO", logs_dir: str = "logs") -> logging.Log
         specified `logs` directory.
     2.  A stream handler that prints INFO level logs to the console.
 
-    Returns:
+    Returns
+    -------
         The configured logger instance.
 
     """

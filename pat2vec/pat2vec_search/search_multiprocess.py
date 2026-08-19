@@ -61,6 +61,7 @@ def cohort_searcher_with_terms_and_search_multi(
     back into a single DataFrame.
 
     Args:
+    ----
         index_name: The name of the index to search.
         fields_list: The list of fields to retrieve.
         term_name: The name of the term to filter on.
@@ -68,6 +69,7 @@ def cohort_searcher_with_terms_and_search_multi(
         search_string: The search string to use.
 
     Returns:
+    -------
         A DataFrame containing the combined results of the parallel search.
 
     """

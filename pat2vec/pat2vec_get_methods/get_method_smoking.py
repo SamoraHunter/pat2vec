@@ -42,6 +42,7 @@ def search_smoking(
     """Searches for CORE_SmokingStatus observations.
 
     Args:
+    ----
         cohort_searcher_with_terms_and_search (Optional[Callable]): The function for
             cohort searching. Defaults to None.
         client_id_codes (Optional[Union[str, List[str]]]): The client ID code(s) of
@@ -70,9 +71,11 @@ def search_smoking(
             Defaults to None.
 
     Returns:
+    -------
         pd.DataFrame: A DataFrame containing the raw smoking status observation data.
 
     Raises:
+    ------
         ValueError: If `cohort_searcher_with_terms_and_search` or `client_id_codes`
             is None.
 
@@ -146,12 +149,15 @@ def prepare_smoking_data(raw_data: pd.DataFrame) -> pd.DataFrame:
     """Filters for valid CORE_SmokingStatus records and drops NAs.
 
     Args:
+    ----
         raw_data (pd.DataFrame): The raw observation data.
 
     Returns:
+    -------
         pd.DataFrame: A cleaned DataFrame containing only valid smoking status records.
 
     Raises:
+    ------
         KeyError: If required columns are missing from the input DataFrame.
 
     """
@@ -170,12 +176,14 @@ def calculate_smoking_features(
     'Current Smoker' or 'Non-Smoker'.
 
     Args:
+    ----
         features_data (pd.DataFrame): The prepared smoking status data.
         current_pat_client_id_code (str): The patient's client ID.
         negate_biochem (bool): If True, returns features with NaN values when
             no data is available. Defaults to False.
 
     Returns:
+    -------
         pd.DataFrame: A single-row DataFrame with binary features for smoking status.
 
     """
@@ -214,6 +222,7 @@ def get_smoking(
     of records for different smoking statuses.
 
     Args:
+    ----
         current_pat_client_id_code (str): The client ID code of the patient.
         target_date_range (Tuple): A tuple representing the target date range.
         pat_batch (pd.DataFrame): The DataFrame containing patient data for batch mode.
@@ -223,9 +232,11 @@ def get_smoking(
             cohort searching. Defaults to None.
 
     Returns:
+    -------
         pd.DataFrame: A DataFrame containing smoking status features for the patient.
 
     Raises:
+    ------
         ValueError: If `config_obj` is None.
 
     """
@@ -301,6 +312,7 @@ def get_smoking_features(
     the presence of records for different smoking statuses (Current Smoker, Non-Smoker).
 
     Args:
+    ----
         current_pat_client_id_code (str): The client ID code of the patient.
         target_date_range (Tuple[int, int, int, int, int, int]): A tuple representing
             the target date range as (start_year, start_month, end_year, end_month,
@@ -312,10 +324,12 @@ def get_smoking_features(
             cohort searching. Defaults to None.
 
     Returns:
+    -------
         pd.DataFrame: A single-row DataFrame containing smoking status features for the patient.
             If no data is found, returns a DataFrame with only client_idcode column.
 
     Raises:
+    ------
         ValueError: If config_obj is None or required parameters are missing.
 
     """

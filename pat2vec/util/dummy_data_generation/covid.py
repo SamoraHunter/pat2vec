@@ -25,6 +25,7 @@ def generate_covid_observations_data(
     """Generates dummy data for COVID-19 test observations.
 
     Args:
+    ----
         num_rows: Number of rows to generate per client.
         entered_list: List of client IDs to generate data for.
         global_start_year: Start year for the random date range.
@@ -34,9 +35,11 @@ def generate_covid_observations_data(
     fields_list: List of columns to include in the DataFrame.
 
     Returns:
+    -------
         A pandas DataFrame with generated dummy COVID-19 observation data.
 
     Raises:
+    ------
         None
 
     """

@@ -14,16 +14,18 @@ def group_images_by_suffix(folder_path: str) -> dict[str, list[str]]:
     be grouped under the key 'client1'.
 
     Args:
+    ----
         folder_path: The path to the folder containing the images.
 
     Returns:
+    -------
         A dictionary where keys are suffixes and values are lists of image
         filenames.
 
     """
     image_groups = {}
 
-    for file_name in os.listdir(folder_path):  # noqa: PTH208
+    for file_name in os.listdir(folder_path):
         if file_name.endswith((".png", ".jpg", ".jpeg")):
             suffix = file_name.split("_")[-1].split(".")[0]
             image_groups.setdefault(suffix, []).append(file_name)
@@ -41,6 +43,7 @@ def create_powerpoint_slides_client_idcode_groups(
     slide in the presentation.
 
     Args:
+    ----
         image_groups: A dictionary where keys are group identifiers and values
             are lists of image filenames.
         output_path: The path where the output PowerPoint presentation will be saved.
@@ -67,6 +70,7 @@ def create_powerpoint_from_images_group(folder_path: str) -> None:
     """Creates a PowerPoint presentation by grouping images in a folder.
 
     Args:
+    ----
         folder_path: The path to the folder containing the images.
 
     """
@@ -88,6 +92,7 @@ def create_powerpoint_slides(
     """Creates a PowerPoint presentation with one image per slide.
 
     Args:
+    ----
         images: A list of image filenames.
         folder_path: The directory where the image files are located.
         output_path: The path to save the generated PowerPoint file.
@@ -119,7 +124,7 @@ def create_powerpoint_from_images(folder_path: str) -> None:
     """
     images = [
         file_name
-        for file_name in os.listdir(folder_path)  # noqa: PTH208
+        for file_name in os.listdir(folder_path)
         if file_name.endswith((".png", ".jpg", ".jpeg"))
     ]
 

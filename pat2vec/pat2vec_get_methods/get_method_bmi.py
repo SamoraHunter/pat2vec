@@ -41,6 +41,7 @@ def search_bmi_observations(
     Results can be saved to or loaded from a CSV file if specified.
 
     Args:
+    ----
         cohort_searcher_with_terms_and_search (Optional[Callable]): The function for
             cohort searching. Defaults to None.
         client_id_codes (Optional[str]): The client ID code(s) of the patient(s).
@@ -67,10 +68,12 @@ def search_bmi_observations(
             and proj_name for output file path construction. Defaults to None.
 
     Returns:
+    -------
         pd.DataFrame: A DataFrame containing the raw BMI observation data with
             columns defined in BMI_FIELDS.
 
     Raises:
+    ------
         ValueError: If `cohort_searcher_with_terms_and_search`, `client_id_codes`,
             or `observations_time_field` is None.
         ValueError: If date components are all None.
@@ -161,6 +164,7 @@ def calculate_bmi_features(bmi_sample, term_prefix="bmi", negate_biochem=False):
     based on the term prefix. For BMI-specific data, includes high/low/extreme flags.
 
     Args:
+    ----
         bmi_sample (pd.DataFrame): DataFrame containing the observation data with
             'observation_valuetext_analysed' column.
         term_prefix (str): Prefix for feature column names (e.g., 'bmi',
@@ -169,6 +173,7 @@ def calculate_bmi_features(bmi_sample, term_prefix="bmi", negate_biochem=False):
             no data is available. Defaults to False.
 
     Returns:
+    -------
         Dict[str, Union[float, int]]: A dictionary of calculated features including
             mean, median, std, and prefix-specific metrics like high/low/extreme for BMI.
 
@@ -235,6 +240,7 @@ def get_bmi_features(
     Features include mean, median, std, min, max, and clinical thresholds where applicable.
 
     Args:
+    ----
         current_pat_client_id_code (str): The client ID code of the patient.
         target_date_range (Tuple[int, int, int, int, int, int]): A tuple
             representing the target date range as (start_year, start_month,
@@ -246,10 +252,12 @@ def get_bmi_features(
             cohort searching. Defaults to None.
 
     Returns:
+    -------
         pd.DataFrame: A single-row DataFrame containing BMI-related features for the
             specified patient including client_idcode and statistical metrics.
 
     Raises:
+    ------
         ValueError: If config_obj is None.
 
     """

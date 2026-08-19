@@ -63,6 +63,7 @@ def search_diagnostic_orders(
     Uses a cohort searcher to find diagnostic orders.
 
     Args:
+    ----
         cohort_searcher_with_terms_and_search (Optional[Callable]): The function for
             cohort searching. Defaults to None.
         client_id_codes (Optional[Union[str, List[str]]]): The client ID code(s) of
@@ -89,9 +90,11 @@ def search_diagnostic_orders(
             Defaults to None.
 
     Returns:
+    -------
         pd.DataFrame: A DataFrame containing the raw diagnostic order data.
 
     Raises:
+    ------
         ValueError: If essential arguments are None.
 
     """
@@ -184,12 +187,14 @@ def prepare_diagnostic_datetime(
     (in batch mode) or converting it to datetime objects.
 
     Args:
+    ----
         diagnostics_data (pd.DataFrame): Raw diagnostic data.
         diagnostic_time_field (str): The name of the time field to process.
         batch_mode (bool): Whether the function is running in batch mode.
             Defaults to False.
 
     Returns:
+    -------
         pd.DataFrame: The input DataFrame with an added 'datetime' column.
 
     """
@@ -217,6 +222,7 @@ def calculate_diagnostic_features(
     test type.
 
     Args:
+    ----
         order_name_df_dict (Dict[str, pd.DataFrame]): A dictionary mapping order
             names to their corresponding DataFrames.
         order_name_list (List[str]): A list of unique order names to process.
@@ -224,6 +230,7 @@ def calculate_diagnostic_features(
             Defaults to False.
 
     Returns:
+    -------
         Dict: A dictionary of calculated features.
 
     """
@@ -285,11 +292,13 @@ def create_diagnostic_features_dataframe(
     single-row DataFrame.
 
     Args:
+    ----
         current_pat_client_id_code (str): The patient's client ID.
         diagnostic_features (Dict): The dictionary of calculated features.
         original_data (pd.DataFrame): The original diagnostic data, used for reference.
 
     Returns:
+    -------
         pd.DataFrame: A single-row DataFrame containing the final features.
 
     """
@@ -332,6 +341,7 @@ def get_current_pat_diagnostics(
     diagnostic order found.
 
     Args:
+    ----
         current_pat_client_id_code (str): The client ID code of the patient.
         target_date_range (Tuple): A tuple representing the target date range.
         pat_batch (pd.DataFrame): The DataFrame containing patient data for batch mode.
@@ -341,6 +351,7 @@ def get_current_pat_diagnostics(
             cohort searching. Defaults to None.
 
     Returns:
+    -------
         pd.DataFrame: A DataFrame containing diagnostic test features for the
             specified patient.
 

@@ -15,6 +15,7 @@ def get_start_end_year_month(
     and single date objects where the end is calculated using the config's interval.
 
     Args:
+    ----
         target_date_range: The date range input. Supported formats:
             - Tuple[int, int, int]: (year, month, day)
             - Tuple[date/datetime/Timestamp, date/datetime/Timestamp]: (start, end)
@@ -25,6 +26,7 @@ def get_start_end_year_month(
             to the start date to calculate the end date. Defaults to None.
 
     Returns:
+    -------
         A tuple of six integers in the order:
         (start_year, start_month, end_year, end_month, start_day, end_day).
 
@@ -32,6 +34,7 @@ def get_start_end_year_month(
          the positional arguments expected by `filter_dataframe_by_timestamp`.
 
     Raises:
+    ------
         ValueError: If `config_obj` is not provided.
         TypeError: If target_date_range is not a tuple or list.
         AttributeError: If `config_obj` does not have `time_window_interval_delta`.

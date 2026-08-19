@@ -83,7 +83,8 @@ class DeIdAnonymizer:
     strings, pandas DataFrame columns), and providing utilities for inspection
     and reporting.
 
-    Attributes:
+    Attributes
+    ----------
         model: The loaded MedCAT DeIdModel instance.
         model_path: The path to the loaded model pack.
         is_loaded: A boolean indicating if a model is successfully loaded.
@@ -103,6 +104,7 @@ class DeIdAnonymizer:
         """Initializes the DeIdAnonymizer.
 
         Args:
+        ----
             model_path: Optional path to the MedCAT DeIdModel pack. If provided,
                 the model is loaded upon initialization.
             log_level: The logging level for the instance (e.g., "INFO", "DEBUG").
@@ -156,9 +158,11 @@ class DeIdAnonymizer:
         """Loads a pre-trained DeIdModel from a specified path.
 
         Args:
+        ----
             model_path: The path to the model pack (directory or .zip file).
 
         Returns:
+        -------
             True if the model was loaded successfully, False otherwise.
 
         """
@@ -266,6 +270,7 @@ class DeIdAnonymizer:
         thoroughly test for hangs in your specific environment first.
 
         Args:
+        ----
             overlap_window: The stride/overlap size in tokens. A small
                 positive value (e.g. 32-50) works well for typical clinical
                 notes. Must be >= 0 (None disables chunking).
@@ -316,6 +321,7 @@ class DeIdAnonymizer:
         the specific 'medcat.utils.ner.deid' logger, not other MedCAT logging.
 
         Args:
+        ----
             silence: If True, raises that logger to ERROR level (hiding the
                 warning). If False, restores it to WARNING level.
 
@@ -330,7 +336,8 @@ class DeIdAnonymizer:
     def get_gpu_status(self) -> dict[str, Any]:
         """Reports whether the underlying transformer NER model is on GPU.
 
-        Returns:
+        Returns
+        -------
             A dictionary with device info for the transformer component,
             or an explanatory message if it could not be determined.
 
@@ -387,6 +394,7 @@ class DeIdAnonymizer:
         r"""Anonymizes a single text string.
 
         Args:
+        ----
             text: The input text to anonymize.
             redact: If True, replaces PII with asterisks ('\***'). If False,
                 replaces PII with type tags (e.g., '<PERSON>').
@@ -394,6 +402,7 @@ class DeIdAnonymizer:
                 a dictionary with verification information.
 
         Returns:
+        -------
             If `verify` is False, returns the anonymized text string.
             If `verify` is True, returns a tuple of (anonymized_text, verification_info).
 
@@ -435,6 +444,7 @@ class DeIdAnonymizer:
         """Anonymizes a list of text strings, with parallel processing support.
 
         Args:
+        ----
             texts: A list of input texts to anonymize.
             redact: If True, replaces PII with asterisks. If False, uses type tags.
             n_process: The number of processes to use for parallel execution.
@@ -453,6 +463,7 @@ class DeIdAnonymizer:
                 reference cycles on a very long-running process.
 
         Returns:
+        -------
             If `verify_sample` is False, returns a list of anonymized texts.
             If `verify_sample` is True, returns a tuple of
             (anonymized_texts, verification_report).
@@ -515,6 +526,7 @@ class DeIdAnonymizer:
         checkpointing.
 
         Args:
+        ----
             df: The input DataFrame.
             text_columns: A column name (str) or list of column names containing
                 the text to be anonymized.
@@ -539,6 +551,7 @@ class DeIdAnonymizer:
                 there's less bar-spam than in anonymize_dataframe_chunked.
 
         Returns:
+        -------
             A DataFrame with the specified text columns anonymized.
 
         """
@@ -621,6 +634,7 @@ class DeIdAnonymizer:
         collection between chunks, and (optionally) resumable checkpoints.
 
         Args:
+        ----
             df: The input DataFrame. Always processed in a new copy (inplace
                 is not supported here since chunk results are concatenated).
             text_columns: A column name (str) or list of column names to anonymize.
@@ -665,6 +679,7 @@ class DeIdAnonymizer:
                 want a clean re-run).
 
         Returns:
+        -------
             A new DataFrame with the specified text columns anonymized
             (original rows preserved, plus new `<col><suffix>` columns).
 
@@ -803,9 +818,11 @@ class DeIdAnonymizer:
         """Inspects text to find and log PII entities without anonymizing.
 
         Args:
+        ----
             text: The text to inspect.
 
         Returns:
+        -------
             A list of dictionaries, each representing a found PII entity.
 
         """
@@ -830,9 +847,11 @@ class DeIdAnonymizer:
         """Gets structured annotations for PII entities in a text.
 
         Args:
+        ----
             text: The input text to analyze.
 
         Returns:
+        -------
             A list of dictionaries with details (text, label, start, end,
             confidence) for each identified PII entity.
 
@@ -908,7 +927,8 @@ class DeIdAnonymizer:
     def generate_report(self) -> dict[str, Any]:
         """Generates a summary report of all operations performed.
 
-        Returns:
+        Returns
+        -------
             A dictionary containing statistics about the anonymization
             operations, model details, and total texts processed.
 
@@ -958,6 +978,7 @@ class DeIdAnonymizer:
         """Saves the anonymization operation log to a JSON file.
 
         Args:
+        ----
             filepath: The path where the log file will be saved.
 
         """
@@ -1034,11 +1055,13 @@ def anonymize_single_text(
     """Quickly anonymize a single text string.
 
     Args:
+    ----
         text: The input text to anonymize.
         model_path: The path to the DeIdModel pack.
         redact: If True, replaces PII with asterisks. If False, uses type tags.
 
     Returns:
+    -------
         The anonymized text.
 
     """
@@ -1059,6 +1082,7 @@ def anonymize_dataframe_quick(
     """Quickly anonymize one or more columns in a DataFrame.
 
     Args:
+    ----
         df: The input DataFrame.
         text_columns: A column name (str) or list of column names to anonymize.
         model_path: The path to the DeIdModel pack.
@@ -1069,9 +1093,11 @@ def anonymize_dataframe_quick(
         batch_size: Number of texts per batch (default 100).
 
     Returns:
+    -------
         A DataFrame with the specified text columns anonymized.
 
     Example:
+    -------
         >>> result = anonymize_dataframe_quick(
         ...     df,
         ...     text_columns='body_analysed',

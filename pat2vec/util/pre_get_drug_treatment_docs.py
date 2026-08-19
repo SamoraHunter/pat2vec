@@ -35,6 +35,7 @@ def get_treatment_records_by_drug_order_name(
     `column_fields_to_match`.
 
     Args:
+    ----
         pat2vec_obj: The main pat2vec object, containing configuration settings.
         term: A single drug name or keyword to search for.
         verbose: Verbosity level for logging/debugging.
@@ -43,12 +44,14 @@ def get_treatment_records_by_drug_order_name(
         column_fields_to_match: List of columns to check for fuzzy matching.
 
     Returns:
+    -------
         A DataFrame containing treatment records that match the search term.
         An additional column, `matched_{term}`, is added to indicate which
         fields matched the term. Returns an empty DataFrame if no records are
         found.
 
     Raises:
+    ------
         ValueError: If `pat2vec_obj` is None or `term` is not a string.
 
     """
@@ -460,6 +463,7 @@ def iterative_drug_treatment_search(
     It can handle deduplication based on 'order_guid'.
 
     Args:
+    ----
         pat2vec_obj: The main pat2vec object containing configuration settings.
         search_terms: A list of drug names or keywords to search for.
         output_file_path: Path to the CSV file where results will be
@@ -472,6 +476,7 @@ def iterative_drug_treatment_search(
         overwrite: If True, overwrite the output file if it exists.
 
     Returns:
+    -------
         A merged DataFrame of the search results.
 
     """

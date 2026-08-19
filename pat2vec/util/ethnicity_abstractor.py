@@ -47,11 +47,13 @@ class EthnicityAbstractor:
           precedence over national or country terms.
 
         Note:
+        ----
             The keyword lists and mapping logic may contain ambiguities. Manual
             review of the output is recommended. The `outputNameString` parameter
             is currently unused within the function's logic.
 
         Args:
+        ----
             dataFrame: The DataFrame containing the ethnicity data.
             outputNameString: A string to prefix an output filename (currently
                 unused).
@@ -59,6 +61,7 @@ class EthnicityAbstractor:
                 contains the free-text ethnicity entries.
 
         Returns:
+        -------
             A new DataFrame with an added 'census' column containing the
             mapped ethnicity categories.
 

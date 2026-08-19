@@ -55,9 +55,11 @@ def prefetch_batches(pat2vec_obj: Any) -> list[BatchConfig]:
     especially when dealing with a large cohort.
 
     Args:
+    ----
         pat2vec_obj: The patient vector object containing configuration and patient data.
 
     Returns:
+    -------
         A list of the `BatchConfig` objects that were processed.
 
     """

@@ -22,6 +22,7 @@ def filter_dataframe_by_timestamp(
     and ensures the start date is chronologically before the end date.
 
     Args:
+    ----
         df: The DataFrame to filter.
         start_year: The year of the start date.
         start_month: The month of the start date.
@@ -35,6 +36,7 @@ def filter_dataframe_by_timestamp(
             timestamp column before filtering. Defaults to False.
 
     Returns:
+    -------
         A new DataFrame containing only the rows that fall
         within the specified date range.
 

@@ -29,6 +29,7 @@ def process_csv_files(
     and can process files in chunks.
 
     Args:
+    ----
         input_path: The path to the directory containing the CSV files.
         out_folder: The folder name for the output CSV file.
         output_filename_suffix: The suffix for the output CSV file name.
@@ -39,6 +40,7 @@ def process_csv_files(
             file to extract a datetime column from binary date columns.
 
     Returns:
+    -------
         The path to the saved concatenated CSV file.
 
     """
@@ -198,6 +200,7 @@ def process_csv_files_multi(
     concatenation of a large number of CSV files.
 
     Args:
+    ----
         input_path: The path to the directory containing the CSV files.
         out_folder: The folder name for the output CSV file.
         output_filename_suffix: The suffix for the output CSV file name.

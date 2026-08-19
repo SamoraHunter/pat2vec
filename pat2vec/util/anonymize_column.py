@@ -25,6 +25,7 @@ class ColumnAnonymizer:
         - Preserves data integrity while hiding sensitive values
 
     Example:
+    -------
         >>> anonymizer = ColumnAnonymizer(key="my_secret_key")
         >>> df_anon, mapping = anonymizer.anonymize(df)
         >>> df_deanon = anonymizer.deanonymize(df_anon, mapping)
@@ -35,6 +36,7 @@ class ColumnAnonymizer:
         """Initialize the ColumnAnonymizer.
 
         Args:
+        ----
             key: Secret key for generating consistent hashes. If None and no
                  environment variable is set, a secure random key will be generated.
                  Keep this secret if you need to maintain consistent mappings across sessions.
@@ -51,9 +53,11 @@ class ColumnAnonymizer:
         """Generate a deterministic hash for a given value using the secret key.
 
         Args:
+        ----
             value: The string value to hash
 
         Returns:
+        -------
             A deterministic hash string combining the key and value
 
         """
@@ -67,9 +71,11 @@ class ColumnAnonymizer:
         """Create a mapping from original values to anonymized values.
 
         Args:
+        ----
             values: A pandas Series containing unique values to map
 
         Returns:
+        -------
             Dictionary mapping original values to their pseudonymized versions
 
         """
@@ -92,14 +98,17 @@ class ColumnAnonymizer:
         """Anonymizes the values in a specified column using deterministic hashing.
 
         Args:
+        ----
             df: The input DataFrame containing the column to anonymize
             column_name: Name of the column to anonymize (default: 'client_idcode')
 
         Returns:
+        -------
             Tuple of (anonymized_dataframe, mapping_dictionary)
             The mapping dictionary can be used to deanonymize the data later.
 
         Raises:
+        ------
             KeyError: If the specified column doesn't exist in the DataFrame
 
         """
@@ -132,14 +141,17 @@ class ColumnAnonymizer:
         """De-anonymizes values in a specified column using a provided mapping.
 
         Args:
+        ----
             df: The anonymized DataFrame
             mapping: Dictionary containing the original -> hash mappings from anonymize()
             column_name: Name of the column to deanonymize (default: 'client_idcode')
 
         Returns:
+        -------
             A new DataFrame with_deanonymized values in the specified column
 
         Raises:
+        ------
             KeyError: If the specified column doesn't exist in the DataFrame
 
         """
@@ -183,6 +195,7 @@ class ColumnAnonymizer:
         """Save the anonymization mapping to a file.
 
         Args:
+        ----
             mapping: The mapping dictionary to save (original -> hash)
             filepath: Path where the mapping will be saved (JSON format)
 
@@ -201,9 +214,11 @@ class ColumnAnonymizer:
         """Load an anonymization mapping from a file.
 
         Args:
+        ----
             filepath: Path to the saved mapping file
 
         Returns:
+        -------
             The loaded mapping dictionary
 
         """
@@ -222,14 +237,17 @@ def anonymize_column(
     for one-off anonymization operations without needing to manage class instances.
 
     Args:
+    ----
         df: The input DataFrame containing the column to anonymize
         column_name: Name of the column to anonymize (default: 'client_idcode')
         key: Optional secret key for consistent hashing. If None, a secure random key is generated.
 
     Returns:
+    -------
         Tuple of (anonymized_dataframe, mapping_dictionary)
 
     Example:
+    -------
         >>> df = pd.DataFrame({'client_idcode': ['A001', 'B002', 'C003']})
         >>> df_anon, mapping = anonymize_column(df)
         >>> print(df_a_non)
@@ -253,14 +271,17 @@ def deanonymize_column(
     This is a wrapper around ColumnAnonymizer.deanonymize for simple use cases.
 
     Args:
+    ----
         df: The anonymized DataFrame
         mapping: Dictionary from the anonymization operation (original -> hash)
         column_name: Name of the column to deanonymize (default: 'client_idcode')
 
     Returns:
+    -------
         A new DataFrame with de-anonymized values
 
     Example:
+    -------
         >>> df_anon = pd.DataFrame({'client_idcode': ['a1b2c3d4e5f6...', ...]})
         >>> df_deanon = deanonymize_column(df_anon, mapping)
 

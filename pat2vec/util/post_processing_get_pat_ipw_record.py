@@ -7,7 +7,9 @@ import pandas as pd
 
 from pat2vec.util.helper_functions import (
     get_df_from_db,
-)  # Keep for now, might move later
+)
+
+# Keep for now, might move later
 from pat2vec.util.post_processing_annotations import (
     filter_and_select_rows,
     filter_annot_dataframe2,
@@ -36,6 +38,7 @@ def _get_source_record(
     various filters.
 
     Args:
+    ----
         pat_id: The patient identifier.
         base_path: The base directory path where the patient's CSV file is located.
         time_column: The name of the column containing the timestamp.
@@ -49,6 +52,7 @@ def _get_source_record(
         table_name: The name of the database table to query (if using DB backend).
 
     Returns:
+    -------
         A DataFrame containing the filtered records from the source.
             Returns an empty DataFrame if the file is not found, is empty, or if
             no rows remain after filtering.
@@ -225,6 +229,7 @@ def get_pat_ipw_record(
     date settings in the configuration.
 
     Args:
+    ----
         current_pat_idcode: The unique identifier for the patient.
         config_obj: The configuration object containing
             paths and settings. Defaults to None.
@@ -248,6 +253,7 @@ def get_pat_ipw_record(
             Epic clinical notes appointments. Defaults to True.
 
     Returns:
+    -------
         pd.DataFrame: A DataFrame containing the single IPW record for the patient.
 
     """

@@ -15,12 +15,14 @@ def get_current_pat_problem_list(
     """Extracts features for the patient's problem list.
 
     Args:
+    ----
         current_pat_client_id_code: The patient's ID code.
         target_date_range: A tuple of (start_datetime, end_datetime).
         pat_batch: DataFrame containing a batch of problem list records.
         config_obj: The configuration object.
 
     Returns:
+    -------
         pd.DataFrame: A single-row DataFrame containing problem list features.
 
     """

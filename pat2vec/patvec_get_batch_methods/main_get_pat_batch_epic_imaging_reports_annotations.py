@@ -27,6 +27,7 @@ def _fetch_epic_imaging_reports_from_elasticsearch(
     """Fetches Epic imaging reports data from Elasticsearch.
 
     Args:
+    ----
         current_pat_client_id_code: The patient's unique identifier.
         config_obj: The configuration object with search settings.
         cohort_searcher_with_terms_and_search: Search function to use for ES queries.
@@ -34,6 +35,7 @@ def _fetch_epic_imaging_reports_from_elasticsearch(
         t: tqdm progress bar instance.
 
     Returns:
+    -------
         A DataFrame containing the raw Epic imaging reports for the patient.
 
     """
@@ -115,6 +117,7 @@ def get_pat_batch_epic_imaging_reports_annotations(
     and saves the result.
 
     Args:
+    ----
         current_pat_client_id_code: The patient's unique identifier.
         config_obj: The main configuration object.
         cat: The loaded MedCAP `CAT` object.
@@ -123,6 +126,7 @@ def get_pat_batch_epic_imaging_reports_annotations(
             data from Elasticsearch. If provided and DB returns empty, ES will be used.
 
     Returns:
+    -------
         A DataFrame containing the annotations for the patient's Epic imaging reports.
 
     """
@@ -136,6 +140,7 @@ def get_pat_batch_epic_imaging_reports_annotations(
                 schema_name,
                 table_name,
                 patient_ids=[current_pat_client_id_code],
+                warn_on_missing=False,
             )
             if not df.empty:
                 return df

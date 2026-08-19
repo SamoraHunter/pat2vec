@@ -47,6 +47,7 @@ def search_epic_patients(
     """Searches for Epic patient data for patients within a date range.
 
     Args:
+    ----
         cohort_searcher_with_terms_and_search: A callable function that performs
             the cohort search with terms and search string. Cannot be None.
         patient_durable_keys: Patient durable keys (DurableKey) to search for.
@@ -77,10 +78,12 @@ def search_epic_patients(
             Defaults to None.
 
     Returns:
+    -------
         pd.DataFrame: DataFrame containing the search results matching the
             specified criteria. Columns depend on the fields searched.
 
     Raises:
+    ------
         ValueError: If `cohort_searcher_with_terms_and_search` is None.
         ValueError: If `patient_durable_keys` is None.
 
@@ -168,6 +171,7 @@ def get_epic_patients(
     """Retrieves epic_patients features for a patient within a date range.
 
     Args:
+    ----
         current_pat_client_id_code: The unique identifier code for the patient
             to retrieve data for.
         target_date_range: The date range tuple specifying the time period to
@@ -184,12 +188,14 @@ def get_epic_patients(
             Defaults to None.
 
     Returns:
+    -------
         pd.DataFrame: DataFrame containing extracted features from epic patients
             including numerical features (e.g., age) and binary categorical
             features (e.g., gender, ethnicity flags). Always includes
             'client_idcode' column.
 
     Raises:
+    ------
         ValueError: If `config_obj` is None.
 
     """

@@ -125,12 +125,14 @@ def generate_schema_from_cluster(
     UUIDs, creation dates, etc.).
 
     Args:
+    ----
         indices: List of index names or patterns to export. If None, defaults to
                  the standard pat2vec indices: ["epr_documents", "basic_observations",
                  "observations", "order", "pims_apps*"].
         output_file: Path to save the generated schema JSON.
 
     Returns:
+    -------
         A dictionary where keys are the simplified index names (e.g., 'pims_apps'
         instead of 'pims_apps*') and values are dictionaries containing "mappings"
         and "settings".

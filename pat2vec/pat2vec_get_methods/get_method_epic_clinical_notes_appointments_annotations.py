@@ -30,6 +30,7 @@ def get_current_pat_epic_clinical_notes_appointments_annotations(
     with pretty_name, cui (Concept Unique Identifier), and other metadata.
 
     Args:
+    ----
         current_pat_client_id_code: The unique identifier for the patient.
         target_date_range: A tuple containing (start_date, end_date) defining
             the time period to filter annotations by.
@@ -48,11 +49,13 @@ def get_current_pat_epic_clinical_notes_appointments_annotations(
             pre-computed. Defaults to None.
 
     Returns:
+    -------
         pd.DataFrame: A DataFrame containing the calculated annotation features
             for the specified patient. If no annotations are found, returns a
             DataFrame with only the 'client_idcode' column.
 
     Raises:
+    ------
         ValueError: If `config_obj` is None.
         ValueError: If `epic_clinical_notes_appointments_annotations` is None.
         ValueError: If `current_pat_client_id_code` is None.

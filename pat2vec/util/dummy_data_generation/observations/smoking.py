@@ -28,10 +28,12 @@ def _calculate_patient_age(base_year: int, observation_month: int) -> int:
     - Younger patients: 20s-30s less common in routine settings
 
     Args:
+    ----
         base_year: Base year for age calculation.
         observation_month: Month of observation (for finer age grading).
 
     Returns:
+    -------
         Patient age in years (18-90 range with realistic distribution).
 
     """
@@ -65,9 +67,11 @@ def _get_smoking_probabilities(age: int) -> dict:
     - Over 80: Mostly never/ex-smokers, very low current smokers (<5%)
 
     Args:
+    ----
         age: Patient's age in years.
 
     Returns:
+    -------
         Dictionary with probabilities for each smoking status category.
 
     """
@@ -123,9 +127,11 @@ def _select_smoking_status(age: int) -> str:
     """Selects smoking status based on age-correlated probability distribution.
 
     Args:
+    ----
         age: Patient's age in years.
 
     Returns:
+    -------
         Smoking status string selected according to realistic clinical patterns.
 
     """
@@ -167,6 +173,7 @@ def generate_smoking_data(
     Missing data rate reduced to realistic ~3-5% for missing smoking status.
 
     Args:
+    ----
         num_rows: Number of rows to generate per client.
         entered_list: List of client IDs to generate data for.
         global_start_year: Start year for the random date range.
@@ -178,9 +185,11 @@ def generate_smoking_data(
         fields_list: List of columns to include in the DataFrame.
 
     Returns:
+    -------
         A pandas DataFrame with generated dummy smoking status data.
 
     Raises:
+    ------
         None
 
     """

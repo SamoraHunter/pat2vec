@@ -23,10 +23,12 @@ def _calculate_patient_age(base_year: int, observation_month: int) -> int:
     - Younger patients: 20s-30s less common in routine settings
 
     Args:
+    ----
         base_year: Base year for age calculation.
         observation_month: Month of observation (for finer age grading).
 
     Returns:
+    -------
         Patient age in years (18-90 range with realistic distribution).
 
     """
@@ -52,9 +54,11 @@ def _get_risk_factors(age: int) -> dict:
     - Immobilization: +2x higher VTE risk
 
     Args:
+    ----
         age: Patient's age in years.
 
     Returns:
+    -------
         Dictionary with probability of each risk factor being present.
 
     """
@@ -98,10 +102,12 @@ def _calculate_vte_risk_probability(age: int, risk_factors: dict) -> float:
     - Immobilization: +2x higher VTE risk
 
     Args:
+    ----
         age: Patient's age in years.
         risk_factors: Dictionary with risk factor presence flags.
 
     Returns:
+    -------
         Adjusted probability of high VTE risk.
 
     """
@@ -133,10 +139,12 @@ def _determine_vte_status(age: int, risk_factors: dict) -> str:
     Within high risk, bleeding risk varies (~60% low bleeding risk, 40% high);
 
     Args:
+    ----
         age: Patient's age in years.
         risk_factors: Dictionary with risk factor presence flags.
 
     Returns:
+    -------
         VTE status string with appropriate risk category and bleeding risk.
 
     """
@@ -187,6 +195,7 @@ def generate_vte_data(
     Missing data rate reduced to realistic ~3-5% for missing VTE status.
 
     Args:
+    ----
         num_rows: Number of rows to generate per client.
         entered_list: List of client IDs to generate data for.
         global_start_year: Start year for the random date range.
@@ -198,9 +207,11 @@ def generate_vte_data(
         fields_list: List of columns to include in the DataFrame.
 
     Returns:
+    -------
         A pandas DataFrame with generated dummy VTE status data.
 
     Raises:
+    ------
         None
 
     """

@@ -83,11 +83,13 @@ def calculate_length_of_stay(
     """Calculates realistic length of stay based on clinical factors.
 
     Args:
+    ----
         admission_type: Type of admission (Inpatient, Outpatient, Emergency).
         patient_age: Patient age in years.
         department: Department/service where patient is treated.
 
     Returns:
+    -------
         Length of stay in days.
 
     """

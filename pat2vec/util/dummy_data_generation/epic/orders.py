@@ -119,11 +119,13 @@ def _generate_realistic_timestamps(
     """Generates realistic workflow timestamps with proper timing relationships.
 
     Args:
+    ----
         base_date: The base datetime for order creation.
         created_time_offset_minutes: Minutes offset for CreatedWhen (default 0).
         updated_time_offset_minutes: Max minutes offset for UpdatedWhen (default 30).
 
     Returns:
+    -------
         tuple: (CreatedWhen, UpdatedWhen) as ISO-formatted strings.
 
     """
@@ -155,9 +157,11 @@ def _generate_order_name(order_class: str) -> str:
     """Generates realistic order name based on class type.
 
     Args:
+    ----
         order_class: The order class (Medication, Lab, or Imaging).
 
     Returns:
+    -------
         Realistic order name string.
 
     """
@@ -170,9 +174,11 @@ def _generate_order_content(order_class: str) -> str:
     """Generates realistic order content based on class type.
 
     Args:
+    ----
         order_class: The order class (Medication, Lab, or Imaging).
 
     Returns:
+    -------
         Realistic clinical content string.
 
     """
@@ -196,6 +202,7 @@ def generate_epic_orders_data(
     """Generates realistic dummy data for the 'epic_orders' index with clinical patterns.
 
     Args:
+    ----
         num_rows: Number of rows to generate per client.
         entered_list: List of client IDs to generate data for.
         global_start_year: Start year for the random date range.
@@ -207,6 +214,7 @@ def generate_epic_orders_data(
         fields_list: List of columns to include in the DataFrame.
 
     Returns:
+    -------
         A pandas DataFrame with generated realistic orders data following Epic patterns.
 
     """

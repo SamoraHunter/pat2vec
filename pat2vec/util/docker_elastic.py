@@ -114,11 +114,13 @@ class ElasticContainer:
         """Checks if a local port is free with retry logic.
 
         Args:
+        ----
             port: The port number to check.
             timeout: Maximum time in seconds to wait for the port to become free.
                 Defaults to 1.0 second.
 
         Returns:
+        -------
             True if the port is free, False if it's in use or timeout occurs.
 
         """
@@ -145,14 +147,17 @@ class ElasticContainer:
         """Finds a free port starting from start_port.
 
         Args:
+        ----
             start_port: The port number to start checking from.
             max_attempts: Maximum number of ports to try. Defaults to 10.
             timeout: Time to wait for each port check in seconds. Defaults to 1.0.
 
         Returns:
+        -------
             A free port number within the safe test range (19200-19210).
 
         Raises:
+        ------
             RuntimeError: If no free port is found within the allowed range.
 
         """

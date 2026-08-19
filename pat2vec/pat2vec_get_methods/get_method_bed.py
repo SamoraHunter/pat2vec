@@ -40,6 +40,7 @@ def search_bed_data(
     Uses a cohort searcher to find bed data based on a search term and date range.
 
     Args:
+    ----
         cohort_searcher_with_terms_and_search: The function for
             cohort searching. Defaults to None.
         client_id_codes: The client ID code(s) of
@@ -69,9 +70,11 @@ def search_bed_data(
             Defaults to None.
 
     Returns:
+    -------
         pd.DataFrame: A DataFrame containing the raw bed data.
 
     Raises:
+    ------
         ValueError: If `cohort_searcher_with_terms_and_search`, `client_id_codes`,
             or `bed_time_field` is None, or if any date component is None.
 
@@ -162,6 +165,7 @@ def get_bed(
     bed number found.
 
     Args:
+    ----
         current_pat_client_id_code (str): The client ID code of the patient.
         target_date_range (Tuple): A tuple representing the target date range.
         pat_batch (pd.DataFrame): The DataFrame containing patient data for batch mode.
@@ -170,11 +174,13 @@ def get_bed(
             cohort searching. Defaults to None.
 
     Returns:
+    -------
         pd.DataFrame: A DataFrame containing CORE_BedNumber3 features for the
             specified patient. If no data is found, a DataFrame with only the
             'client_idcode' is returned.
 
     Raises:
+    ------
         ValueError: If `config_obj` is None.
 
     """
@@ -255,6 +261,7 @@ def get_bed_features(
     searching, and returns the results as a DataFrame with feature columns.
 
     Args:
+    ----
         current_pat_client_id_code (str): The client ID code of the patient.
         target_date_range (Tuple[int, int, int, int, int, int]): A tuple
             representing the target date range as (start_year, start_month,
@@ -265,10 +272,12 @@ def get_bed_features(
             cohort searching. Defaults to None.
 
     Returns:
+    -------
         pd.DataFrame: A single-row DataFrame containing BED-related features for the
             specified patient including client_idcode and bed feature columns.
 
     Raises:
+    ------
         ValueError: If config_obj is None.
 
     """

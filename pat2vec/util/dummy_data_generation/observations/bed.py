@@ -45,9 +45,11 @@ def _generate_bed_assignment_for_ward(
     - ITU (Intensive Therapy): SpecializedITU care units
 
     Args:
+    ----
         ward_type: The determined ward type (WD/HDU/ITU)
 
     Returns:
+    -------
         Bed assignment string matching ward conventions
 
     """
@@ -102,6 +104,7 @@ def generate_bed_data(
     - Reduced NaN rate (~4%) for missing data
 
     Args:
+    ----
         num_rows: Number of rows to generate per client.
         entered_list: List of client IDs to generate data for.
         global_start_year: Start year for the random date range.
@@ -113,9 +116,11 @@ def generate_bed_data(
         fields_list: List of columns to include in the DataFrame.
 
     Returns:
+    -------
         A pandas DataFrame with generated dummy bed data.
 
     Raises:
+    ------
         None
 
     """

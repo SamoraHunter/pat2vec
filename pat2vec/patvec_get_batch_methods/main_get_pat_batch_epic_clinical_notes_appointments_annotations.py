@@ -28,6 +28,7 @@ def _fetch_epic_clinical_notes_from_elasticsearch(
     """Fetches Epic clinical notes data from Elasticsearch.
 
     Args:
+    ----
         current_pat_client_id_code: The patient's unique identifier.
         config_obj: The configuration object with search settings.
         cohort_searcher_with_terms_and_search: Search function to use for ES queries.
@@ -35,6 +36,7 @@ def _fetch_epic_clinical_notes_from_elasticsearch(
         t: tqdm progress bar instance.
 
     Returns:
+    -------
         A DataFrame containing the raw Epic clinical notes for the patient.
 
     """
@@ -118,6 +120,7 @@ def get_pat_batch_epic_clinical_notes_appointments_annotations(
     MedCAT model, and saves the result.
 
     Args:
+    ----
         current_pat_client_id_code: The patient's unique identifier.
         config_obj: The main configuration object.
         cohort_searcher_with_terms_and_search: Optional search function to fetch
@@ -126,6 +129,7 @@ def get_pat_batch_epic_clinical_notes_appointments_annotations(
         t: The tqdm progress bar instance.
 
     Returns:
+    -------
         A DataFrame containing the annotations for the patient's epic clinical notes
         appointments documents, or None if no data is available.
 
@@ -140,6 +144,7 @@ def get_pat_batch_epic_clinical_notes_appointments_annotations(
                 schema_name,
                 table_name,
                 patient_ids=[current_pat_client_id_code],
+                warn_on_missing=False,
             )
             if not df.empty:
                 return df

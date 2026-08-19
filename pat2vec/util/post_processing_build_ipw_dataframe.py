@@ -32,6 +32,7 @@ def build_ipw_dataframe(
     occurrence of a specific clinical event (e.g., a diagnosis CUI).
 
     Args:
+    ----
         annot_filter_arguments: A dictionary of filters to apply
             to the annotations before selecting the IPW record. Defaults to None.
         filter_codes: A list of CUI codes to identify
@@ -57,6 +58,7 @@ def build_ipw_dataframe(
             the `pre_document_batch_path`. Defaults to an empty list.
 
     Returns:
+    -------
         pd.DataFrame: A DataFrame where each row represents the IPW record for a
             patient, containing details of the index event.
 
@@ -149,7 +151,7 @@ def build_ipw_dataframe(
             except Exception as e:
                 logger.error(f"Could not fetch patient list from database: {e}")
         else:  # file-based
-            pat_list = os.listdir(config_obj.pre_document_batch_path)  # noqa: PTH208
+            pat_list = os.listdir(config_obj.pre_document_batch_path)
             pat_list_stripped = [
                 os.path.splitext(file)[0] for file in pat_list if file.endswith(".csv")
             ]

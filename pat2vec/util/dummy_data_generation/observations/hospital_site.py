@@ -52,11 +52,13 @@ def _get_hospital_admission_weights(
     """Calculate adjusted hospital probabilities based on admission patterns.
 
     Args:
+    ----
         admission_type: 'emergency' or 'elective', defaults to random mix
         hour_of_day: Hour (0-23), used to determine if admission occurred
             during off-hours (potential emergency)
 
     Returns:
+    -------
         Dictionary mapping hospital codes to adjusted probability weights
 
     """
@@ -91,10 +93,12 @@ def _determine_admission_type(hour: int, day_of_week: int) -> str:
     """Determine if admission is likely emergency or elective based on timing.
 
     Args:
+    ----
         hour: Hour of day (0-23)
         day_of_week: Day of week (0=Monday, 6=Sunday)
 
     Returns:
+    -------
         'emergency' or 'elective'
 
     """
@@ -134,6 +138,7 @@ def generate_hospital_site_data(
     - Reduced NaN rate (~3-5%) for missing data
 
     Args:
+    ----
         num_rows: Number of rows to generate per client.
         entered_list: List of client IDs to generate data for.
         global_start_year: Start year for the random date range.
@@ -145,9 +150,11 @@ def generate_hospital_site_data(
         fields_list: List of columns to include in the DataFrame.
 
     Returns:
+    -------
         A pandas DataFrame with generated dummy hospital site data.
 
     Raises:
+    ------
         None
 
     """

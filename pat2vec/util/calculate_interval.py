@@ -15,14 +15,17 @@ def calculate_interval(
     how many full intervals fit within this period.
 
     Args:
+    ----
         start_date: The starting date of the total period.
         total_delta: The total duration from the start date.
         interval_delta: The duration of a single interval chunk.
 
     Returns:
+    -------
         The number of complete intervals that fit within the total duration.
 
     Raises:
+    ------
         ValueError: If `interval_delta` is not a positive duration.
 
     """

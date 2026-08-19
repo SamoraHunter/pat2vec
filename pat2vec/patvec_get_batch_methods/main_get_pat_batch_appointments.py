@@ -21,12 +21,14 @@ def get_pat_batch_appointments(
     """Retrieves a batch of appointments for a patient.
 
     Args:
+    ----
         current_pat_client_id_code: The patient's unique identifier.
         search_term: The term to search for (currently unused).
         config_obj: The main configuration object.
         cohort_searcher_with_terms_and_search: The search function to use.
 
     Returns:
+    -------
         A DataFrame containing the batch of appointments.
 
     """
@@ -65,6 +67,7 @@ def get_pat_batch_appointments(
                     table_name,
                     patient_ids=[current_pat_client_id_code],
                     patient_id_column="HospitalID",
+                    warn_on_missing=False,
                 )
                 if not df.empty:
                     return df

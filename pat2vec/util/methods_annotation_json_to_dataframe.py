@@ -26,6 +26,7 @@ def json_to_dataframe(
     metadata.
 
     Args:
+    ----
         json_data: The 'entities' dictionary from MedCAT's output.
         doc: The pandas Series representing the original document, containing
             metadata like text, timestamp, and GUID.
@@ -41,6 +42,7 @@ def json_to_dataframe(
         testing: If True and entities is empty, inject synthetic annotation data.
 
     Returns:
+    -------
         A pandas DataFrame where each row is a single annotation, or an empty
         DataFrame if no entities are present in the input (or synthetic data
         when testing=True with no entities).
@@ -290,9 +292,11 @@ def parse_meta_anns(meta_anns: dict[str, Any]) -> dict[str, Any]:
     check for 'Subject' if 'Subject/Experiencer' is not found.
 
     Args:
+    ----
         meta_anns: The meta_anns dictionary from a MedCAT entity.
 
     Returns:
+    -------
         A dictionary containing the parsed meta-annotation values and confidences.
 
     """

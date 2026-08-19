@@ -27,11 +27,13 @@ def retrieve_pat_annotations(
     and concatenates data from EPR and MCT sources into a single DataFrame.
 
     Args:
+    ----
         current_pat_client_idcode: The client ID code for the patient.
         config_obj: The configuration object containing file paths for
             EPR and MCT annotation batches.
 
     Returns:
+    -------
         A concatenated DataFrame containing annotations from both EPR and MCT
         sources, with a unified 'updatetime' column.
 
@@ -58,6 +60,7 @@ def copy_project_folders_with_substring_match(
     subfolders whose names contain one of the specified substrings.
 
     Args:
+    ----
         pat2vec_obj: The main pat2vec object, containing the `config_obj`.
         substrings_to_match: A list of substrings to identify which folders
             to copy (e.g., ['batches', 'annots']).
@@ -121,6 +124,7 @@ def check_csv_integrity(
     that fail these checks.
 
     Args:
+    ----
         file_path: The path to the CSV file to check.
         verbosity: The level of detail for logging warnings.
         delete_broken: If True, deletes files that fail integrity checks.
@@ -128,6 +132,7 @@ def check_csv_integrity(
             True to pass to `remove_file_from_paths`.
 
     Raises:
+    ------
         UserWarning: If the CSV file is empty, cannot be parsed, a key column
             contains null values, or the file is not found. These warnings
             are issued to inform the user of potential data integrity issues.
@@ -198,6 +203,7 @@ def check_csv_files_in_directory(
     ignore certain common output directories.
 
     Args:
+    ----
         directory: The root directory to start the search from.
         verbosity: The verbosity level passed to `check_csv_integrity`.
         ignore_outputs: If True, skips any path containing 'output'.

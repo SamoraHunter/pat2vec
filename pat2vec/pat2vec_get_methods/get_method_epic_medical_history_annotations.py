@@ -30,6 +30,7 @@ def get_current_pat_epic_medical_history_annotations(
     and other metadata.
 
     Args:
+    ----
         current_pat_client_id_code: The unique identifier for the patient.
         target_date_range: A tuple containing (start_date, end_date) defining
             the time period to filter annotations by.
@@ -48,11 +49,13 @@ def get_current_pat_epic_medical_history_annotations(
             pre-computed. Defaults to None.
 
     Returns:
+    -------
         pd.DataFrame: A DataFrame containing the calculated annotation features
             for the specified patient. If no annotations are found, returns a
             DataFrame with only the 'client_idcode' column.
 
     Args:
+    ----
         current_pat_client_id_code: The unique identifier for the patient.
         target_date_range: A tuple containing (start_date, end_date) defining
             the time period to filter annotations by.
@@ -70,11 +73,13 @@ def get_current_pat_epic_medical_history_annotations(
             Defaults to None.
 
     Returns:
+    -------
         pd.DataFrame: A DataFrame containing the calculated annotation features
             for the specified patient. If no annotations are found, returns a
             DataFrame with only the 'client_idcode' column.
 
     Raises:
+    ------
         ValueError: If `config_obj` is None.
         ValueError: If `epic_medical_history_annotations` is None.
         ValueError: If `current_pat_client_id_code` is None.
@@ -128,7 +133,10 @@ def get_current_pat_epic_medical_history_annotations(
         "document_CreatedWhen",
     )
 
-    if epic_medical_history_annotations is not None:
+    if (
+        epic_medical_history_annotations is not None
+        and not epic_medical_history_annotations.empty
+    ):
         if time_column not in epic_medical_history_annotations.columns:
             alternative_columns = [
                 "updatetime",

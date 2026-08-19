@@ -19,6 +19,7 @@ def compute_feature_stats(
     """Computes summary statistics for a feature column in the NEWS dataset.
 
     Args:
+    ----
         data (pd.DataFrame): Subset of patient data for the feature.
         column (str): Column to compute stats from (e.g.,
             'observation_valuetext_analysed').
@@ -26,6 +27,7 @@ def compute_feature_stats(
         config_obj (object): Configuration object with `negate_biochem` attribute.
 
     Returns:
+    -------
         Dict: A dictionary of calculated feature statistics (mean, median, std,
             max, min, n).
 
@@ -68,6 +70,7 @@ def search_news_observations(
     """Searches for NEWS/NEWS2 observation data within a date range.
 
     Args:
+    ----
         cohort_searcher_with_terms_and_search: The cohort searcher function for
             executing the search query. Cannot be None.
         client_id_codes: Client ID codes (string or list of strings) to search.
@@ -94,9 +97,11 @@ def search_news_observations(
             proj_name attributes for path construction. Defaults to None.
 
     Returns:
+    -------
         pd.DataFrame: DataFrame containing the searched NEWS observation records.
 
     Raises:
+    ------
         ValueError: If cohort_searcher_with_terms_and_search or client_id_codes is
             None.
 
@@ -198,6 +203,7 @@ def get_news(
     news_avpu, and more.
 
     Args:
+    ----
         current_pat_client_id_code (str): The client ID code of the patient to
             retrieve NEWS features for.
         target_date_range (Tuple): Date range tuple specifying the time period
@@ -213,11 +219,13 @@ def get_news(
             the default observation search fields. Defaults to None.
 
     Returns:
+    -------
         pd.DataFrame: DataFrame containing calculated NEWS feature statistics for
             each patient, with columns like news_score_mean, news_systolic_bp_std,
             etc., plus client_idcode identifier column.
 
     Raises:
+    ------
         ValueError: If config_obj is None when required.
 
     """

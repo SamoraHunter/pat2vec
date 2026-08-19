@@ -18,6 +18,7 @@ def filter_annot_dataframe(
     -   Annotation types (e.g., 'disorder', 'procedure').
 
     Args:
+    ----
         dataframe: The annotation DataFrame to filter.
         filter_args: A dictionary where keys are column names and values are
             the criteria to filter by. For confidence/accuracy scores, the
@@ -25,6 +26,7 @@ def filter_annot_dataframe(
             of allowed values.
 
     Returns:
+    -------
         The filtered DataFrame.
 
     """

@@ -26,12 +26,14 @@ def get_pat_batch_epr_docs(
     """Retrieves a batch of EPR documents for a patient.
 
     Args:
+    ----
         current_pat_client_id_code: The patient's unique identifier.
         search_term: The term to search for (currently unused).
         config_obj: The main configuration object.
         cohort_searcher_with_terms_and_search: The search function to use.
 
     Returns:
+    -------
         A DataFrame containing the batch of EPR documents.
 
     """
@@ -81,6 +83,7 @@ def get_pat_batch_epr_docs(
                     schema_name,
                     table_name,
                     patient_ids=[current_pat_client_id_code],
+                    warn_on_missing=False,
                 )
                 if not df.empty:
                     return df

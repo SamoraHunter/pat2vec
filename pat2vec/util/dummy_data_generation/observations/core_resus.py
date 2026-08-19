@@ -23,10 +23,12 @@ def _calculate_age_at_observation(dob: datetime, observation_date: datetime) -> 
     """Calculates age in years at the time of observation.
 
     Args:
+    ----
         dob: Date of birth as a datetime object.
         observation_date: The date of the observation.
 
     Returns:
+    -------
         Age in years as an integer.
 
     """
@@ -47,10 +49,12 @@ def _get_dnr_probability(age: int, is_icu_hdu: bool = False) -> float:
     ICU/HDU patients have higher rates of DNR/DNH decisions.
 
     Args:
+    ----
         age: Patient's age in years.
         is_icu_hdu: Whether the observation is from ICU/HDU context.
 
     Returns:
+    -------
         Probability of "Not for cardiopulmonary resuscitation".
 
     """
@@ -77,11 +81,13 @@ def _determine_resuscitation_status(
     """Determines resuscitation status based on age and context.
 
     Args:
+    ----
         age: Patient's age in years.
         observation_date: Date of the observation.
         is_icu_hdu: Whether this is an ICU/HDU context.
 
     Returns:
+    -------
         Either "For cardiopulmonary resuscitation" or "Not for cardiopulmonary resuscitation".
 
     """
@@ -113,6 +119,7 @@ def generate_core_resus_data(
     ICU/HDU contexts have higher rates of DNR/DNH decisions.
 
     Args:
+    ----
         num_rows: Number of rows to generate per client.
         entered_list: List of client IDs to generate data for.
         global_start_year: Start year for the random date range.
@@ -124,9 +131,11 @@ def generate_core_resus_data(
         fields_list: List of columns to include in the DataFrame.
 
     Returns:
+    -------
         A pandas DataFrame with generated dummy resuscitation status data.
 
     Raises:
+    ------
         None
 
     """

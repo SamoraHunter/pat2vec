@@ -47,9 +47,11 @@ def generate_clinically_coherent_spO2(
     - NRB Mask: severe hypoxia support
 
     Args:
+    ----
         baseline_severity: The expected clinical severity level.
 
     Returns:
+    -------
         A str representing the SpO2 value or oxygen delivery method.
 
     """
@@ -109,6 +111,7 @@ def generate_core_o2_data(
     """Generates dummy data for CORE_SpO2 (oxygen saturation) observations with clinically coherent patterns.
 
     Args:
+    ----
         num_rows: Number of rows to generate per client.
         entered_list: List of client IDs to generate data for.
         global_start_year: Start year for the random date range.
@@ -120,6 +123,7 @@ def generate_core_o2_data(
         fields_list: List of columns to include in the DataFrame. Defaults to CORE_O2_FIELDS.
 
     Returns:
+    -------
         A pandas DataFrame with generated dummy SpO2 data.
 
     """

@@ -46,6 +46,7 @@ def generate_bmi_data(
     """Generates dummy data for BMI, Weight, and Height observations with realistic statistical distributions.
 
     Args:
+    ----
         num_rows: Number of rows to generate per client.
         entered_list: List of client IDs to generate data for.
         global_start_year: Start year for the random date range.
@@ -56,9 +57,11 @@ def generate_bmi_data(
         base_date: Optional datetime reference for testing.
 
     Returns:
+    -------
         A pandas DataFrame with generated dummy BMI-related data.
 
     Raises:
+    ------
         None
 
     """

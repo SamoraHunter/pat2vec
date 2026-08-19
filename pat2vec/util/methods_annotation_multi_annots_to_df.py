@@ -22,10 +22,12 @@ def temporary_file(suffix: str = ".csv", delete: bool = True) -> Iterator[str]:
     """Context manager for creating and cleaning up temporary files.
 
     Args:
+    ----
         suffix: The file suffix for the temporary file.
         delete: If True, the file is deleted upon exiting the context.
 
     Yields:
+    ------
         The path to the temporary file.
 
     """
@@ -64,6 +66,7 @@ def multi_annots_to_df(
     designated annotation directory or written to the configured database.
 
     Args:
+    ----
         current_pat_client_idcode: The unique identifier for the patient.
         pat_batch: A DataFrame where each row represents a document
             in the patient's batch.
@@ -81,11 +84,13 @@ def multi_annots_to_df(
             contains the unique identifier for each document. Defaults to 'document_guid'.
 
     Returns:
+    -------
         A consolidated DataFrame containing all annotations for the
         patient's document batch. An empty DataFrame is returned if no valid
         annotations are processed.
 
     Raises:
+    ------
         ValueError: If `config_obj` is not provided.
 
     """

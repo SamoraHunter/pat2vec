@@ -65,6 +65,7 @@ def get_treatment_docs_by_iterative_multi_term_cohort_searcher_no_terms_fuzzy(
     results to a CSV file.
 
     Args:
+    ----
         pat2vec_obj: A pat2vec object with necessary attributes set.
         term_list: A list of terms to search for.
         overwrite: Whether to overwrite the output file if it already exists.
@@ -89,6 +90,7 @@ def get_treatment_docs_by_iterative_multi_term_cohort_searcher_no_terms_fuzzy(
         slop: The slop for phrase matching. Defaults to 1.
 
     Returns:
+    -------
         A DataFrame containing the search results.
 
     """
@@ -373,11 +375,13 @@ def draw_document_samples(df: pd.DataFrame, n: int) -> pd.DataFrame:
     """Draws n random samples for each unique 'search_term' in a DataFrame.
 
     Args:
+    ----
         df: DataFrame containing a 'search_term' column.
         n: The number of samples to draw for each unique search term. If a
             term has fewer than `n` rows, all its rows are returned.
 
     Returns:
+    -------
         A new DataFrame containing the sampled entries.
 
     """
@@ -406,10 +410,12 @@ def demo_to_latest(demo_df: pd.DataFrame) -> pd.DataFrame:
     most recent entry for each unique 'client_idcode'.
 
     Args:
+    ----
         demo_df: A DataFrame with patient demographic data, including
             'client_idcode' and 'updatetime' columns.
 
     Returns:
+    -------
         A DataFrame containing only the latest record for each patient.
 
     """
@@ -425,9 +431,11 @@ def calculate_age_append(df: pd.DataFrame) -> pd.DataFrame:
     new 'age' column. Rows with invalid or missing 'client_dob' are dropped.
 
     Args:
+    ----
         df: DataFrame containing client data with a 'client_dob' column.
 
     Returns:
+    -------
         The input DataFrame with an additional 'age' column.
 
     """
@@ -465,6 +473,7 @@ def search_cohort(
     """Searches for a cohort of patients' demographic data within a date range.
 
     Args:
+    ----
         patlist: List of patient IDs to search for.
         pat2vec_obj: The main pat2vec object with a configured cohort searcher.
         start_year: Start year for the search.
@@ -477,9 +486,11 @@ def search_cohort(
             the search query.
 
     Returns:
+    -------
         A DataFrame containing the demographic data for the specified cohort.
 
     Raises:
+    ------
         ValueError: If `pat2vec_obj` is not provided.
 
     """
@@ -531,9 +542,11 @@ def get_all_patient_list(config_obj: Any) -> list[str]:
        `config_obj.pre_document_batch_path` and extracting IDs from filenames.
 
     Args:
+    ----
         config_obj: A configuration object containing patient list settings.
 
     Returns:
+    -------
         A list of patient IDs (strings).
 
     """
@@ -568,7 +581,7 @@ def get_all_patient_list(config_obj: Any) -> list[str]:
             f"Scanning directory for patient files: {config_obj.pre_document_batch_path}",
         )
         patient_ids = []
-        for filename in os.listdir(config_obj.pre_document_batch_path):  # noqa: PTH208
+        for filename in os.listdir(config_obj.pre_document_batch_path):
             if filename.endswith(".csv"):
                 patient_ids.append(os.path.splitext(filename)[0])
         return patient_ids

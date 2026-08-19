@@ -115,11 +115,13 @@ def _select_appointment_type(
     """Select appointment type based on patient demographics and timing.
 
     Args:
+    ----
         patient_age: Age of the patient in years
         hour: Hour of day (0-23), affects emergency likelihood
         day_of_week: Day of week (0=Monday, 6=Sunday)
 
     Returns:
+    -------
         Appointment type string
 
     """
@@ -172,11 +174,13 @@ def _generate_appointment_datetime(
     """Generate appointment date relative to a base date with realistic patterns.
 
     Args:
+    ----
         base_date: Reference date for relative offsets
         min_days_offset: Minimum days before base_date (negative)
         max_days_offset: Maximum days after base_date (positive)
 
     Returns:
+    -------
         Random datetime within the offset range
 
     """
@@ -214,7 +218,8 @@ def _generate_appointment_datetime(
 def _get_clinical_correlation(appointment_type: str) -> tuple[list[str], str]:
     """Get clinical correlations for an appointment type.
 
-    Returns:
+    Returns
+    -------
         Tuple of (list of possible clinic descriptions, consultant code)
 
     """
@@ -384,6 +389,7 @@ def generate_appointments_data(
     - Realistic scheduling patterns (time of day, day of week)
 
     Args:
+    ----
         num_rows: Number of appointments per patient/client
         entered_list: List of patient/client IDs
         global_start_year: Start year for date range
@@ -395,6 +401,7 @@ def generate_appointments_data(
         fields_list: List of columns to include
 
     Returns:
+    -------
         pandas DataFrame with appointment data
 
     """

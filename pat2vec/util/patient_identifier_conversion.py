@@ -7,10 +7,12 @@ def _get_column_case_insensitive(df: pd.DataFrame, column_name: str) -> pd.Serie
     """Get a DataFrame column in a case-insensitive manner.
 
     Args:
+    ----
         df: The DataFrame to access.
         column_name: The column name (case-insensitive).
 
     Returns:
+    -------
         The Series corresponding to the matching column.
 
     """
@@ -31,10 +33,12 @@ def extract_hospital_numbers(hospital_number_str: str) -> list[str]:
     """Extract hospital numbers from a comma-separated string.
 
     Args:
+    ----
         hospital_number_str: A string containing one or more hospital numbers,
             separated by commas.
 
     Returns:
+    -------
         A list of cleaned hospital number strings, or an empty list if the
         input is None, NaN, or empty.
 
@@ -54,10 +58,12 @@ def extract_nhs_number(nhs_number_str: str) -> str | None:
     """Extract NHS number from a formatted string.
 
     Args:
+    ----
         nhs_number_str: A string potentially containing an NHS number in the
             format "NHS XXX XXX XXXX" where X is a digit.
 
     Returns:
+    -------
         The 10-digit NHS number as a string without spaces, or None if no valid
         NHS number is found.
 
@@ -78,10 +84,12 @@ def extract_mrn(mrn_str: str) -> str | None:
     """Extract MRN (Medical Record Number) from a formatted string.
 
     Args:
+    ----
         mrn_str: A string potentially containing an MRN in the format "MRN XXX"
             or "MRN:XXX" where X is an alphanumeric character.
 
     Returns:
+    -------
         The MRN string without the prefix, or None if no valid MRN is found.
 
     """
@@ -104,11 +112,13 @@ def convert_hospital_number_to_durable_key(
     """Convert a list of hospital numbers to a single durable key.
 
     Args:
+    ----
         hospital_numbers: A list of hospital number strings.
         pat2vec_obj: An initialized pat2vec object with the
             cohort_searcher_with_terms_and_search method.
 
     Returns:
+    -------
         A tuple of (durable_key, missing_hospital_numbers). durable_key is the
         first durable key found for the given hospital numbers, or None if no
         match is found. missing_hospital_numbers is a list of input hospital
@@ -155,11 +165,13 @@ def convert_hospital_numbers_to_durable_keys(
     """Convert a list of hospital numbers to their corresponding durable keys.
 
     Args:
+    ----
         hospital_numbers: A list of hospital number strings.
         pat2vec_obj: An initialized pat2vec object with the
             cohort_searcher_with_terms_and_search method.
 
     Returns:
+    -------
         A tuple of (durable_keys, missing_hospital_numbers). durable_keys is a
         list of unique durable keys corresponding to the given hospital numbers,
         preserving order of first occurrence. missing_hospital_numbers is a list
@@ -202,11 +214,13 @@ def convert_durable_key_to_hospital_numbers(
     """Convert a durable key to its corresponding hospital numbers.
 
     Args:
+    ----
         durable_key: A durable key string.
         pat2vec_obj: An initialized pat2vec object with the
             cohort_searcher_with_terms_and_search method.
 
     Returns:
+    -------
         A tuple of (hospital_numbers, missing_durable_keys). hospital_numbers is a
         list of unique hospital number strings corresponding to the given durable
         key, preserving order of first occurrence. missing_durable_keys is a list
@@ -248,11 +262,13 @@ def convert_nhs_number_to_durable_key(
     """Convert a list of NHS numbers to a single durable key.
 
     Args:
+    ----
         nhs_numbers: A list of NHS number strings (10 digits without spaces).
         pat2vec_obj: An initialized pat2vec object with the
             cohort_searcher_with_terms_and_search method.
 
     Returns:
+    -------
         A tuple of (durable_key, missing_nhs_numbers). durable_key is the first
         durable key found for the given NHS numbers, or None if no match is
         found. missing_nhs_numbers is a list of input NHS numbers that were not
@@ -299,11 +315,13 @@ def convert_durable_key_to_nhs_numbers(
     """Convert a durable key to its corresponding NHS numbers.
 
     Args:
+    ----
         durable_key: A durable key string.
         pat2vec_obj: An initialized pat2vec object with the
             cohort_searcher_with_terms_and_search method.
 
     Returns:
+    -------
         A tuple of (nhs_numbers, missing_durable_keys). nhs_numbers is a list of
         unique NHS number strings corresponding to the given durable key,
         preserving order of first occurrence. missing_durable_keys is a list of
@@ -344,11 +362,13 @@ def convert_mrn_to_durable_key(
     """Convert a list of MRNs to a single durable key.
 
     Args:
+    ----
         mrns: A list of MRN strings.
         pat2vec_obj: An initialized pat2vec object with the
             cohort_searcher_with_terms_and_search method.
 
     Returns:
+    -------
         A tuple of (durable_key, missing_mrns). durable_key is the first durable
         key found for the given MRNs, or None if no match is found.
         missing_mrns is a list of input MRNs that were not found.
@@ -392,11 +412,13 @@ def convert_durable_key_to_mrn(
     """Convert a durable key to its corresponding MRNs.
 
     Args:
+    ----
         durable_key: A durable key string.
         pat2vec_obj: An initialized pat2vec object with the
             cohort_searcher_with_terms_and_search method.
 
     Returns:
+    -------
         A tuple of (mrns, missing_durable_keys). mrns is a list of unique MRN
         strings corresponding to the given durable key, preserving order of first
         occurrence. missing_durable_keys is a list of input durable keys that were
@@ -437,11 +459,13 @@ def convert_durable_keys_to_hospital_numbers(
     """Convert a list of durable keys to their corresponding hospital numbers.
 
     Args:
+    ----
         durable_keys: A list of durable key strings.
         pat2vec_obj: An initialized pat2vec object with the
             cohort_searcher_with_terms_and_search method.
 
     Returns:
+    -------
         A tuple of (hospital_numbers, missing_durable_keys). hospital_numbers is a
         list of unique hospital number strings corresponding to the given durable
         keys, preserving order of first occurrence. missing_durable_keys is a
@@ -468,11 +492,13 @@ def convert_nhs_numbers_to_durable_keys(
     """Convert a list of NHS numbers to their corresponding durable keys.
 
     Args:
+    ----
         nhs_numbers: A list of NHS number strings (10 digits without spaces).
         pat2vec_obj: An initialized pat2vec object with the
             cohort_searcher_with_terms_and_search method.
 
     Returns:
+    -------
         A tuple of (durable_keys, missing_nhs_numbers). durable_keys is a list of
         unique durable keys corresponding to the given NHS numbers, preserving
         order of first occurrence. missing_nhs_numbers is a list of input NHS
@@ -515,11 +541,13 @@ def convert_durable_keys_to_nhs_numbers(
     """Convert a list of durable keys to their corresponding NHS numbers.
 
     Args:
+    ----
         durable_keys: A list of durable key strings.
         pat2vec_obj: An initialized pat2vec object with the
             cohort_searcher_with_terms_and_search method.
 
     Returns:
+    -------
         A tuple of (nhs_numbers, missing_durable_keys). nhs_numbers is a list of
         unique NHS number strings corresponding to the given durable keys,
         preserving order of first occurrence. missing_durable_keys is a list of
@@ -546,11 +574,13 @@ def convert_mrns_to_durable_keys(
     """Convert a list of MRNs to their corresponding durable keys.
 
     Args:
+    ----
         mrns: A list of MRN strings.
         pat2vec_obj: An initialized pat2vec object with the
             cohort_searcher_with_terms_and_search method.
 
     Returns:
+    -------
         A tuple of (durable_keys, missing_mrns). durable_keys is a list of unique
         durable keys corresponding to the given MRNs, preserving order of first
         occurrence. missing_mrns is a list of input MRNs that were not found.
@@ -590,11 +620,13 @@ def convert_durable_keys_to_mrns(
     """Convert a list of durable keys to their corresponding MRNs.
 
     Args:
+    ----
         durable_keys: A list of durable key strings.
         pat2vec_obj: An initialized pat2vec object with the
             cohort_searcher_with_terms_and_search method.
 
     Returns:
+    -------
         A tuple of (mrns, missing_durable_keys). mrns is a list of unique MRN
         strings corresponding to the given durable keys, preserving order of first
         occurrence. missing_durable_keys is a list of input durable keys that were
@@ -616,9 +648,11 @@ def extract_source_id(source_id_str: str) -> str | None:
     """Extract Source ID from a formatted string.
 
     Args:
+    ----
         source_id_str: A string potentially containing a Source ID.
 
     Returns:
+    -------
         The Source ID string, or None if no valid Source ID is found.
 
     """
@@ -641,11 +675,13 @@ def convert_source_id_to_durable_key(
     """Convert a list of Source IDs to a single durable key.
 
     Args:
+    ----
         source_ids: A list of Source ID strings.
         pat2vec_obj: An initialized pat2vec object with the
             cohort_searcher_with_terms_and_search method.
 
     Returns:
+    -------
         A tuple of (durable_key, missing_source_ids). durable_key is the first
         durable key found for the given Source IDs, or None if no match is found.
         missing_source_ids is a list of input Source IDs that were not found.
@@ -687,11 +723,13 @@ def convert_durable_key_to_source_id(
     """Convert a durable key to its corresponding Source IDs.
 
     Args:
+    ----
         durable_key: A durable key string.
         pat2vec_obj: An initialized pat2vec object with the
             cohort_searcher_with_terms_and_search method.
 
     Returns:
+    -------
         A tuple of (source_ids, missing_durable_keys). source_ids is a list of
         unique Source ID strings corresponding to the given durable key,
         preserving order of first occurrence. missing_durable_keys is a list of
@@ -732,11 +770,13 @@ def convert_source_ids_to_durable_keys(
     """Convert a list of Source IDs to their corresponding durable keys.
 
     Args:
+    ----
         source_ids: A list of Source ID strings.
         pat2vec_obj: An initialized pat2vec object with the
             cohort_searcher_with_terms_and_search method.
 
     Returns:
+    -------
         A tuple of (durable_keys, missing_source_ids). durable_keys is a list of
         unique durable keys corresponding to the given Source IDs, preserving
         order of first occurrence. missing_source_ids is a list of input Source
@@ -775,11 +815,13 @@ def convert_durable_keys_to_source_ids(
     """Convert a list of durable keys to their corresponding Source IDs.
 
     Args:
+    ----
         durable_keys: A list of durable key strings.
         pat2vec_obj: An initialized pat2vec object with the
             cohort_searcher_with_terms_and_search method.
 
     Returns:
+    -------
         A tuple of (source_ids, missing_durable_keys). source_ids is a list of
         unique Source ID strings corresponding to the given durable keys,
         preserving order of first occurrence. missing_durable_keys is a list of

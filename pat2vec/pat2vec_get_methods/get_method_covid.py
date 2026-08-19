@@ -43,6 +43,7 @@ def search_covid(
     """Searches for COVID-19 test observations.
 
     Args:
+    ----
         cohort_searcher_with_terms_and_search (Optional[Callable]): The function for
             cohort searching. Defaults to None.
         client_id_codes (Optional[Union[str, List[str]]]): The client ID code(s) of
@@ -71,9 +72,11 @@ def search_covid(
             Defaults to None.
 
     Returns:
+    -------
         pd.DataFrame: A DataFrame containing the raw COVID-19 test observation data.
 
     Raises:
+    ------
         ValueError: If `cohort_searcher_with_terms_and_search` or `client_id_codes`
             is None.
 
@@ -155,12 +158,14 @@ def calculate_covid_features(
     if no results are found (or 0 if negate_biochem is True).
 
     Args:
+    ----
         features_data (pd.DataFrame): The prepared COVID-19 test data.
         current_pat_client_id_code (str): The patient's client ID.
         negate_biochem (bool): If True, returns 0 when no data is available.
             Defaults to False.
 
     Returns:
+    -------
         pd.DataFrame: A single-row DataFrame with the `covid_positive` feature.
 
     """
@@ -196,6 +201,7 @@ def get_covid(
     """Retrieves COVID-19 test features for a patient within a date range.
 
     Args:
+    ----
         current_pat_client_id_code (str): The client ID code of the patient.
         target_date_range (Tuple): A tuple representing the target date range.
         pat_batch (pd.DataFrame): The DataFrame containing patient data for batch mode.
@@ -204,6 +210,7 @@ def get_covid(
             cohort searching. Defaults to None.
 
     Returns:
+    -------
         pd.DataFrame: A DataFrame containing the COVID-19 test feature for the patient.
 
     """

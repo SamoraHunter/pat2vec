@@ -91,6 +91,7 @@ def main_batch(
     a time-slice representation of the patient's state.
 
     Args:
+    ----
         current_pat_client_id_code (str): The unique identifier for the patient being processed.
         target_date_range (tuple): A tuple representing the specific time window (e.g., (YYYY, MM, DD))
             for which to generate the feature vector.
@@ -107,6 +108,7 @@ def main_batch(
             annotation options are enabled.
 
     Raises:
+    ------
         ValueError: If `config_obj`, `cohort_searcher_with_terms_and_search`, `t`, or `cat` (when required)
             are not provided.
 

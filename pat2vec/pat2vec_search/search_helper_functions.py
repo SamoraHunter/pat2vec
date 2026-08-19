@@ -12,6 +12,7 @@ def stringlist2searchlist(string_list: str, output_name: str) -> None:
     "term1\nterm2" becomes ""term1" OR "term2"".
 
     Args:
+    ----
         string_list: A string where items are separated by newlines.
         output_name: The base name for the output text file ('.txt' will be appended).
 
@@ -30,6 +31,7 @@ def pylist2searchlist(list_name: list[str], output_name: str) -> None:
     ['term1', 'term2'] becomes ""term1" OR "term2"".
 
     Args:
+    ----
         list_name: A list of strings to be joined.
         output_name: The base name for the output text file ('.txt' will be appended).
 
@@ -44,10 +46,12 @@ def stringlist2pylist(string_list: str, var_name: str) -> None:
     """Converts a newline-separated string into a Python list and assigns it to a global variable.
 
     Note:
+    ----
         This function uses `globals()` to create a variable in the global
         scope, which is generally not recommended.
 
     Args:
+    ----
         string_list: A string where items are separated by newlines.
         var_name: The name of the global variable to which the resulting list will be assigned.
 
@@ -62,6 +66,7 @@ def date_cleaner(df: pd.DataFrame, cols: list[str], date_format: str) -> None:
     This function modifies the DataFrame in-place.
 
     Args:
+    ----
         df: The DataFrame to modify.
         cols: A list of column names to format.
         date_format: The target string format for the dates (e.g., '%Y-%m-%d').
@@ -85,6 +90,7 @@ def bulk_str_findall(
     modifies the DataFrame in-place.
 
     Args:
+    ----
         target_colname_regex_pairs: A dictionary mapping new column names to regex patterns.
         source_colname: The name of the column to search within.
         df_name: The DataFrame to modify.
@@ -100,10 +106,12 @@ def without_keys(d: dict[Any, Any], keys: Iterable[Any]) -> dict[Any, Any]:
     """Returns a new dictionary excluding the specified keys.
 
     Args:
+    ----
         d: The original dictionary.
         keys: An iterable of keys to exclude.
 
     Returns:
+    -------
         A new dictionary without the specified keys.
 
     """
@@ -124,6 +132,7 @@ def bulk_str_extract(
     DataFrame in-place.
 
     Args:
+    ----
         target_colname_regex_pairs: A dictionary mapping new column names to regex patterns.
         source_colname: The name of the column to search within.
         df_name: The DataFrame to modify.
@@ -151,6 +160,7 @@ def bulk_str_extract_round_robin(
     in the dictionary. This modifies the DataFrame in-place.
 
     Args:
+    ----
         target_dict: A dictionary mapping new column names to regex patterns.
         df_name: The DataFrame to modify.
         source_colname: The name of the column to search within.

@@ -29,6 +29,7 @@ def sample_by_terms(
         to reach the `total_sample_size`.
 
     Args:
+    ----
         df: The DataFrame to sample from.
         column: The column in `df` to search for term matches.
         term_groups: A list of term groups, where each inner list contains
@@ -41,6 +42,7 @@ def sample_by_terms(
             term as a match.
 
     Returns:
+    -------
         A new DataFrame containing the sampled rows. An additional
         'matched_term' column is added for debugging, showing which specific
         term from a group matched the row.
@@ -170,15 +172,18 @@ def coerce_document_df_to_medcat_trainer_input(
     3.  Returns a new DataFrame containing only the 'name' and 'text' columns.
 
     Args:
+    ----
         df: The input DataFrame.
         text_column_value: The name of the column containing the document text.
         name_value: The name of the column to be used as the document identifier.
 
     Returns:
+    -------
         A new DataFrame with 'name' and 'text' columns, ready for MedCAT
         trainer.
 
     Raises:
+    ------
         KeyError: If `name_value` or `text_column_value` are not found in the
             DataFrame's columns.
 
