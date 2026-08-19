@@ -191,9 +191,11 @@ def generate_lab_test_name(category: str) -> dict:
     """Generates a realistic lab test with clinical correlation patterns.
 
     Args:
+    ----
         category: The lab category to sample from (CBC, Chemistry, etc.)
 
     Returns:
+    -------
         A dict containing name, unit, and value range for the test.
 
     """
@@ -202,18 +204,20 @@ def generate_lab_test_name(category: str) -> dict:
     return np.random.choice(tests, p=weights)
 
 
-def generate_lab_value(test_info: dict) -> tuple[float, str]:
+def generate_lab_value(test_info: dict) -> tuple[float | str, str]:
     """Generates a realistic lab value within clinically appropriate range.
 
     Args:
+    ----
         test_info: Dict containing min/max ranges for the test.
 
     Returns:
+    -------
         Tuple of (value, unit).
 
     """
     if "min" not in test_info or "max" not in test_info:
-        return None, test_info.get("unit", "")
+        return "", test_info.get("unit", "")
 
     base_value = np.random.uniform(test_info["min"], test_info["max"])
 
@@ -231,10 +235,12 @@ def generate_lab_panel(category: str, num_tests: int) -> list[dict]:
     """Generates a clinically coherent panel of related lab tests.
 
     Args:
+    ----
         category: The main category for the panel.
         num_tests: Number of tests in the panel.
 
     Returns:
+    -------
         List of test records with correlated values.
 
     """

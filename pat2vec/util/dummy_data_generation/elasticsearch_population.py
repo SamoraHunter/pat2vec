@@ -55,10 +55,12 @@ def populate_elastic_with_dummy_data(
     load this data into the configured Elasticsearch instance.
 
     Args:
+    ----
         config_obj: The configuration object containing date ranges.
         n_patients: The number of dummy patients to generate. Defaults to 10.
 
     Returns:
+    -------
         A list of the generated dummy patient IDs.
 
     """
@@ -78,11 +80,31 @@ def populate_elastic_with_dummy_data(
         return []
 
     # Initialize CogStack client to interact with Elastic
-    creds_filename = "test_elastic_credentials.py"
-    creds_path = os.path.abspath(creds_filename)
+    creds_path = getattr(config_obj, "credentials_path", None)
+
+    # Prefer the test-specific credentials if it exists (backward compatibility for tests)
+    current_dir_creds = os.path.abspath("test_elastic_credentials.py")
+    logger.debug(
+        f"Checking test credentials: {current_dir_creds}, exists={os.path.exists(current_dir_creds)}",
+    )
+    logger.debug(f"Config creds path: {creds_path}")
+
+    if os.path.exists(current_dir_creds):
+        creds_path = current_dir_creds
+        logger.info(f"Using test-specific credentials: {creds_path}")
+    elif creds_path:
+        # Use explicit path from config
+        creds_path = os.path.abspath(creds_path)
+        logger.debug(f"Using credentials path from config: {creds_path}")
+    else:
+        # Fallback to default path
+        creds_filename = "test_elastic_credentials.py"
+        creds_path = os.path.abspath(creds_filename)
+        logger.debug(f"No explicit path, using default: {creds_path}")
+
     if not os.path.exists(creds_path):
         logger.error(
-            f"Safety Block: Test credentials file '{creds_filename}' not found at {creds_path}. Aborting dummy data population.",
+            f"Safety Block: Test credentials file '{creds_path}' not found. Aborting dummy data population.",
         )
         return []
 
@@ -583,7 +605,7 @@ def generate_observations_MRC_text_data(
         data = {
             "observation_guid": [generate_uuid("O") for _ in range(num_rows)],
             "client_idcode": [current_pat_client_id_code for _ in range(num_rows)],
-            "obscatalogmasteritem_displayname": ["AoMRC_ClinicalSummary_FT"],
+            "obscatalogmasteritem_displayname": ["AoMRC_ClinicalSummary_FT"] * num_rows,
             "observation_valuetext_analysed": [
                 (
                     timeline_generator(current_pat_client_id_code)

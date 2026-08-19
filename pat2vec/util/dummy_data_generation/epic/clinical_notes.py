@@ -444,8 +444,8 @@ def determine_document_date(
             global_start_dt.month,
             global_end_dt.year,
             global_end_dt.month,
-            global_start_day=global_start_dt.day,
-            global_end_day=global_end_dt.day,
+            start_day=global_start_dt.day,
+            end_day=global_end_dt.day,
         )
 
     if note_type == "Discharge Summary" and admission_date:
@@ -539,6 +539,7 @@ def generate_epic_clinical_notes_data(
     """Generates dummy data for the 'epic_clinical_notes' index.
 
     Args:
+    ----
         num_rows: Number of rows to generate per client.
         entered_list: List of client IDs to generate data for.
         global_start_year: Start year for the random date range.
@@ -550,9 +551,11 @@ def generate_epic_clinical_notes_data(
         fields_list: List of columns to include in the DataFrame.
 
     Returns:
+    -------
         A pandas DataFrame with generated dummy clinical note data.
 
     Raises:
+    ------
         None
 
     """
@@ -664,6 +667,7 @@ def generate_epic_medical_history_data(
     """Generates dummy data for the 'epic_medical_history' index.
 
     Args:
+    ----
         num_rows: Number of rows to generate per client.
         entered_list: List of client IDs to generate data for.
         global_start_year: Start year for the random date range.
@@ -673,9 +677,11 @@ def generate_epic_medical_history_data(
     fields_list: List of columns to include in the DataFrame.
 
     Returns:
+    -------
         A pandas DataFrame with generated dummy medical history data.
 
     Raises:
+    ------
         None
 
     """
@@ -751,6 +757,7 @@ def generate_epic_orders_data(
     """Generates dummy data for the 'epic_orders' index.
 
     Args:
+    ----
         num_rows: Number of rows to generate per client.
         entered_list: List of client IDs to generate data for.
         global_start_year: Start year for the random date range.
@@ -760,9 +767,11 @@ def generate_epic_orders_data(
     fields_list: List of columns to include in the DataFrame.
 
     Returns:
+    -------
         A pandas DataFrame with generated dummy orders data.
 
     Raises:
+    ------
         None
 
     """

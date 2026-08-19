@@ -46,10 +46,12 @@ def get_expected_columns_for_table(table_name: str, schema: str) -> list[str]:
     to determine what columns should exist even when the initial batch is empty.
 
     Args:
+    ----
         table_name: The table name without schema prefix (e.g., 'raw_drugs')
         schema: The schema name ('raw_data' or 'annotations')
 
     Returns:
+    -------
         A list of column names that should be in the table, including the ID column
         and any index columns. Returns ['client_idcode'] if not found.
 
@@ -80,12 +82,15 @@ def extract_nhs_numbers(input_string: str) -> list[str]:
     any spaces.
 
     Args:
+    ----
         input_string: The string to search for NHS numbers.
 
     Returns:
+    -------
         A list of all extracted 10-digit NHS numbers as strings.
 
     Examples:
+    --------
         >>> extract_nhs_numbers("NHS 123 456 7890")
         ['1234567890']
         >>> extract_nhs_numbers("NHS 123 456 7890 and NHS 098 765 4321")
@@ -109,11 +114,13 @@ def get_search_client_idcode_list_from_nhs_number_list(
     'PatNHSNo' in the provided list.
 
     Args:
+    ----
         nhs_numbers: A list of NHS numbers to search for.
         pat2vec_obj: An object with a `cohort_searcher_with_terms_and_search`
             method for querying the data source.
 
     Returns:
+    -------
         A unique list of hospital IDs found for the given NHS numbers.
 
     """
@@ -234,12 +241,14 @@ def save_patient_features(
     `current_pat_lines_path` directory, preserving the original behavior.
 
     Args:
+    ----
         features_df: The DataFrame containing one or more feature vectors for the patient.
         patient_id: The unique identifier for the patient.
         config_obj: The configuration object containing backend settings and paths.
         overwrite: If True, delete existing features for the patient before saving. Defaults to True.
 
     Raises:
+    ------
         ValueError: If an unknown `storage_backend` is specified.
         Exception: Propagates exceptions from database operations.
 
@@ -472,6 +481,7 @@ def save_raw_patient_batch(
     """Saves a raw data batch for a patient to the database.
 
     Args:
+    ----
         df: The DataFrame containing the raw data.
         patient_id: The patient identifier.
         table_name: The target table name (without schema prefix).
@@ -608,6 +618,7 @@ def save_annotations_to_db(
     """Saves an annotation batch for a patient to the database.
 
     Args:
+    ----
         df: The DataFrame containing the annotations.
         patient_id: The patient identifier.
         table_name: The target table name (without schema prefix).
@@ -679,6 +690,8 @@ def save_annotations_to_db(
                 if not table_is_valid:
                     # Drop table and recreate with correct schema
                     connection.execute(text(f'DROP TABLE IF EXISTS "{target_table}"'))
+                    # Refresh inspector: the cached state still reports the dropped table
+                    inspector = inspect(connection)
 
             if inspector.has_table(target_table, schema=target_schema):
                 connection.execute(del_query, {"pat_id": patient_id})
@@ -836,6 +849,7 @@ def get_df_from_db(
     (e.g., for SQLite), and filtering by a list of patient IDs.
 
     Args:
+    ----
         config_obj: The configuration object.
         schema: The database schema name (e.g., 'raw_data').
         table: The database table name (e.g., 'raw_drugs').
@@ -844,6 +858,7 @@ def get_df_from_db(
         columns: An optional list of columns to select.
 
     Returns:
+    -------
         A pandas DataFrame with the requested data, or an empty DataFrame on error.
 
     """
@@ -945,6 +960,7 @@ def get_df_from_db_with_temporal_filter(
     """Retrieves DataFrame from database with optional temporal filtering.
 
     Args:
+    ----
         config_obj: Configuration object with database engine.
         schema: Database schema name.
         table: Table name.
@@ -955,6 +971,7 @@ def get_df_from_db_with_temporal_filter(
         patient_id_column: Name of the patient ID column.
 
     Returns:
+    -------
         DataFrame with filtered data, or empty DataFrame on error.
 
     """

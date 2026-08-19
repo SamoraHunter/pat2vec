@@ -108,6 +108,7 @@ class CogStack:
         instances, supporting both API key and basic authentication methods.
 
         Args:
+        ----
             hosts: A list of CogStack host URLs.
             username: The username for basic authentication. Required if using
                 basic auth (api=False).
@@ -119,9 +120,11 @@ class CogStack:
                 key auth (api=True).
 
         Returns:
+        -------
             CogStack: Returns self instance connected to the Elasticsearch cluster.
 
         Raises:
+        ------
             Exception: If Elasticsearch connection fails during initialization.
 
         """
@@ -147,12 +150,14 @@ class CogStack:
         """Prompts for API credentials if they are not provided.
 
         Args:
+        ----
             api_username: The API username. If not provided, prompts the user
                 interactively.
             api_password: The API password. If not provided, prompts the user
                 interactively using getpass.
 
         Returns:
+        -------
             Tuple[str, str]: A tuple containing (api_username, api_password).
 
         """
@@ -170,12 +175,14 @@ class CogStack:
         """Prompts for basic authentication credentials if they are not provided.
 
         Args:
+        ----
             username: The username. If not provided, prompts the user
                 interactively.
             password: The password. If not provided, prompts the user
                 interactively using getpass.
 
         Returns:
+        -------
             Tuple[str, str]: A tuple containing (username, password).
 
         """
@@ -198,6 +205,7 @@ class CogStack:
         through all results of a query.
 
         Args:
+        ----
             index: A list of Elasticsearch indices to search.
             query: The Elasticsearch query dictionary.
             es_gen_size: The number of documents to retrieve per shard in each
@@ -205,10 +213,12 @@ class CogStack:
             request_timeout: The timeout in seconds for the request. Defaults to 300.
 
         Returns:
+        -------
             Generator[Dict[str, Any], None, None]: A generator that yields search
                 hits as dictionaries.
 
         Raises:
+        ------
             elasticsearch.ElasticsearchException: If the Elasticsearch query fails.
 
         """
@@ -234,6 +244,7 @@ class CogStack:
         and converts them into a pandas DataFrame with metadata fields.
 
         Args:
+        ----
             query: The Elasticsearch query dictionary.
             index: The name of the index or a list of indices to search.
             column_headers: An optional list of specific columns to include in
@@ -243,10 +254,12 @@ class CogStack:
                 Defaults to 300.
 
         Returns:
+        -------
             pd.DataFrame: A DataFrame containing the search results with columns
                 _index, _id, _score, and the fields from _source.
 
         Raises:
+        ------
             elasticsearch.ElasticsearchException: If the Elasticsearch query fails.
 
         """
@@ -287,9 +300,11 @@ class CogStack:
         in the index mapping.
 
         Args:
+        ----
             index_name: The name of the index or an index pattern (e.g., 'my-index-*').
 
         Returns:
+        -------
             List[str]: A sorted list of unique field names found across the
                 matching indices. Returns an empty list if the index is not found.
 
@@ -322,7 +337,8 @@ class CogStack:
 
         Uses the cat.indices API to fetch a list of indices.
 
-        Returns:
+        Returns
+        -------
             List[str]: A sorted list of unique index names. Returns an empty
                 list if an error occurs.
 
@@ -347,9 +363,11 @@ class CogStack:
         Eland provides a pandas-like API for data stored in Elasticsearch.
 
         Args:
+        ----
             index: The name of the index or index pattern to query.
 
         Returns:
+        -------
             ed.DataFrame: An Eland DataFrame object configured with the
                 Elasticsearch client and index pattern.
 
@@ -367,11 +385,13 @@ def get_all_fields_for_method(
     Uses the cogstack client's get_index_fields method to fetch field names.
 
     Args:
+    ----
         method_name: The name of the `get` method used to look up the index.
         cs: An initialized CogStack client. If not provided or None, one will be
             initialized by calling initialize_cogstack_client().
 
     Returns:
+    -------
         List[str]: A list of all fields in the index, or an empty list if no
             index is found or the client initialization fails.
 
@@ -398,9 +418,11 @@ def list_chunker(entered_list: list[Any]) -> list[list[Any]]:
     systems with too much data at once.
 
     Args:
+    ----
         entered_list: The list to be split into chunks.
 
     Returns:
+    -------
         List[List[Any]]: A list of sublists, each containing up to 10,000
             elements from the original list.
 
@@ -418,9 +440,11 @@ def dataframe_generator(
     datasets.
 
     Args:
+    ----
         list_of_dfs: A list of pandas DataFrames to iterate over.
 
     Yields:
+    ------
         pd.DataFrame: The next DataFrame in the list.
 
     """
@@ -442,6 +466,7 @@ def cohort_searcher_with_terms_and_search(
     the list in chunks.
 
     Args:
+    ----
         index_name: The name of the Elasticsearch index to search.
         fields_list: The list of fields to return from each document.
         term_name: The name of the field to use for the term-level filter.
@@ -449,6 +474,7 @@ def cohort_searcher_with_terms_and_search(
         search_string: The query string to apply to the search.
 
     Returns:
+    -------
         pd.DataFrame: A DataFrame containing the search results with all
             specified fields and document metadata. Empty DataFrame if
             no results found or CogStack client not initialized. When
@@ -456,6 +482,7 @@ def cohort_searcher_with_terms_and_search(
             chunked processing.
 
     Raises:
+    ------
         Exception: If merging results fails (re-raises exceptions from
             dataframe operations).
 
@@ -498,7 +525,8 @@ def cohort_searcher_with_terms_and_search(
             # Concatenate DataFrames using the generator
             merged_df = pd.concat(dataframe_generator(results), ignore_index=True)
             merged_df = merged_df.set_index("_id")
-        except Exception:
+        except Exception as e:
+            _logger.error(e)
             raise
 
         return merged_df
@@ -523,14 +551,17 @@ def set_index_safe_wrapper(df: pd.DataFrame) -> pd.DataFrame:
     returns the original DataFrame if it fails, logging a warning.
 
     Note:
+    ----
         The current implementation has a bug where df.set_index("id") does not
         assign the result back to df. Consider using df = df.set_index("id")
         instead.
 
     Args:
+    ----
         df: The pandas DataFrame to modify.
 
     Returns:
+    -------
         pd.DataFrame: Either the DataFrame with 'id' set as index, or the
             original DataFrame if setting the index fails.
 
@@ -556,18 +587,21 @@ def cohort_searcher_with_terms_no_search(
     list in chunks.
 
     Args:
+    ----
         index_name: The name of the index to search.
         fields_list: A list of fields to return from each document.
         term_name: The field to filter on with exact value matching.
         entered_list: The list of values to search for in the `term_name` field.
 
     Returns:
+    -------
         pd.DataFrame or List[pd.DataFrame]: A DataFrame containing the search
             results. For large lists (>=10000), returns a list of DataFrames
             where each chunk has been processed through set_index_safe_wrapper.
             When entry_list < 10000, returns a single DataFrame.
 
     Raises:
+    ------
         Exception: Re-raises exceptions from Elasticsearch queries or dataframe
             operations during chunked processing.
 
@@ -614,11 +648,13 @@ def cohort_searcher_no_terms(
     This function performs a full-text search without any terms filter.
 
     Args:
+    ----
         index_name: The name of the Elasticsearch index to search.
         fields_list: A list of fields to return from each document.
         search_string: The query string to use for the full-text search.
 
     Returns:
+    -------
         pd.DataFrame: A DataFrame containing the search results. Empty
             DataFrame if CogStack client not initialized or no matches found.
 
@@ -653,6 +689,7 @@ def cohort_searcher_no_terms_fuzzy(
     proximity.
 
     Args:
+    ----
         index_name: The name of the Elasticsearch index to search.
         fields_list: List of fields to retrieve from each document.
         search_string: The search string to query.
@@ -664,10 +701,12 @@ def cohort_searcher_no_terms_fuzzy(
             Only applies when method='phrase'. Defaults to 1.
 
     Returns:
+    -------
         pd.DataFrame: A DataFrame containing the search results. Empty
             DataFrame if CogStack client not initialized or no matches found.
 
     Raises:
+    ------
         ValueError: If an invalid `method` is provided (not 'fuzzy', 'exact',
             or 'phrase').
 
@@ -774,6 +813,7 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy(
     incremental data collection.
 
     Args:
+    ----
         terms_list: The list of search terms to search for in document content.
         treatment_doc_filename: The name of the file to store the results in.
             If append=True and file exists, new results are appended.
@@ -804,6 +844,7 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy(
             dummy). Used for partial testing scenarios. Defaults to False.
 
     Returns:
+    -------
         pd.DataFrame: A DataFrame containing all search results with an added
             'search_term' column indicating which term matched. Also saves to
             `treatment_doc_filename` if specified.
@@ -1035,6 +1076,7 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy_mct(
     documents (type: AoMRC_ClinicalSummary_FT) that contain specified terms.
 
     Args:
+    ----
         terms_list: A list of terms to search for in document content.
         treatment_doc_filename: The filename to load or save the results.
         start_year, start_month, start_day: The start date range (inclusive).
@@ -1052,6 +1094,7 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy_mct(
         testing_elastic: If True and testing=True, still uses real ES. Defaults False.
 
     Returns:
+    -------
         pd.DataFrame: A DataFrame containing the search results.
 
     """
@@ -1354,6 +1397,7 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy_epic_imaging_reports(
     contains the specified terms and renames fields to a standard schema.
 
     Args:
+    ----
         terms_list: A list of terms to search for in document content.
         treatment_doc_filename: The filename to load or save results.
         start_year, start_month, start_day: Start date range (inclusive).
@@ -1370,6 +1414,7 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy_epic_imaging_reports(
         testing_elastic: If True and testing=True, still uses real ES. Defaults False.
 
     Returns:
+    -------
         pd.DataFrame: A DataFrame with standard column names (renamed from Epic-specific fields).
 
     """
@@ -1533,6 +1578,7 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy_epic_medical_history(
     or `document_Name` fields contain specified terms, with field renaming to standard schema.
 
     Args:
+    ----
         terms_list: A list of terms to search for in document content.
         treatment_doc_filename: The filename to load or save results.
         start_year, start_month, start_day: Start date range (inclusive).
@@ -1549,6 +1595,7 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy_epic_medical_history(
         testing_elastic: If True and testing=True, still uses real ES. Defaults False.
 
     Returns:
+    -------
         pd.DataFrame: A DataFrame with standard column names (renamed from Epic-specific fields).
 
     """
@@ -1714,6 +1761,7 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy_epic_clinical_notes(
     contains specified terms, with field renaming to standard schema.
 
     Args:
+    ----
         terms_list: A list of terms to search for in document content.
         treatment_doc_filename: The filename to load or save results.
         start_year, start_month, start_day: Start date range (inclusive).
@@ -1730,6 +1778,7 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy_epic_clinical_notes(
         testing_elastic: If True and testing=True, still uses real ES. Defaults False.
 
     Returns:
+    -------
         pd.DataFrame: A DataFrame with standard column names (renamed from Epic-specific fields).
 
     """
@@ -1893,6 +1942,7 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy_epic_clinical_notes_appo
     the `document_Content` field contains the specified terms.
 
     Args:
+    ----
         terms_list: A list of terms to search for.
         treatment_doc_filename: The filename to load or save the results.
         start_year, start_month, start_day: The start of the date range.
@@ -1910,6 +1960,7 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy_epic_clinical_notes_appo
                          instance even if `testing` is True.
 
     Returns:
+    -------
         A DataFrame containing the search results.
 
     """
@@ -3003,11 +3054,13 @@ def initialize_cogstack_client(config_obj=None):
     4. Returns None if all credential loading attempts fail
 
     Args:
+    ----
         config_obj: An optional configuration object that may have a
             `credentials_path` attribute specifying the path to the
             credentials file.
 
     Returns:
+    -------
         CogStack or None: The initialized CogStack client instance, or None
             if credentials could not be loaded or connection failed.
 
@@ -3114,6 +3167,7 @@ def check_patients_existence(
     the field doesn't support aggregations.
 
     Args:
+    ----
         patient_ids: A list of patient identifiers to check for existence.
         index_name: The name of the index, or a list of tuples (index_name,
             id_field) for checking multiple indices with fallback behavior.
@@ -3124,6 +3178,7 @@ def check_patients_existence(
             client. Can have testing/testing_elastic attributes.
 
     Returns:
+    -------
         List[str]: A list of patient IDs that exist in the specified indices.
 
     """
@@ -3250,6 +3305,7 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy_textual_obs(
     or null text values.
 
     Args:
+    ----
         terms_list: A list of terms to search for in textual content.
         treatment_doc_filename: The filename to load or save results.
         start_year, start_month, start_day: Start date range (inclusive).
@@ -3268,6 +3324,7 @@ def iterative_multi_term_cohort_searcher_no_terms_fuzzy_textual_obs(
         testing_elastic: If True and testing=True, still use real ES. Defaults False.
 
     Returns:
+    -------
         pd.DataFrame: A DataFrame with search results including a 'body_analysed'
             column derived from 'textualObs'.
 

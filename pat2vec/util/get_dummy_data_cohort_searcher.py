@@ -48,12 +48,15 @@ def is_safe_host(h: str) -> bool:
     """Checks if a host is local or part of a private network to permit dummy data population.
 
     Args:
+    ----
         h: The hostname or IP address to check.
 
     Returns:
+    -------
         True if the host is safe for dummy data operations, False otherwise.
 
     Raises:
+    ------
         None
 
     """
@@ -81,14 +84,17 @@ def maybe_nan(value: Any, probability: float = 0.2) -> Any | float:
     """Returns a value or NaN based on a probability.
 
     Args:
+    ----
         value: The value to potentially return.
         probability: The probability of returning `np.nan` instead of the value.
             Defaults to 0.2.
 
     Returns:
+    -------
         The original value or `np.nan`.
 
     Raises:
+    ------
         None
 
     """
@@ -110,6 +116,7 @@ def generate_epr_documents_data(
     """Generates dummy EPR document data.
 
     Args:
+    ----
         num_rows: Number of rows to generate per client.
         entered_list: List of client IDs to generate data for.
         global_start_year: Start year for the random date range.
@@ -122,9 +129,11 @@ def generate_epr_documents_data(
         fields_list: List of columns to include in the DataFrame.
 
     Returns:
+    -------
         A pandas DataFrame with generated dummy EPR document data.
 
     Raises:
+    ------
         None
 
     """
@@ -228,6 +237,7 @@ def generate_epr_documents_personal_data(
     """Generates dummy personal data for the 'epr_documents' index (demographics).
 
     Args:
+    ----
         num_rows: Number of rows to generate per client.
         entered_list: List of client IDs to generate data for.
         global_start_year: Start year for the random date range.
@@ -239,9 +249,11 @@ def generate_epr_documents_personal_data(
         fields_list: List of columns to include in the DataFrame.
 
     Returns:
+    -------
         A pandas DataFrame with generated dummy personal data.
 
     Raises:
+    ------
         None
 
     """
@@ -333,6 +345,7 @@ def generate_diagnostic_orders_data(
     """Generates dummy data for the 'diagnostic_orders' index.
 
     Args:
+    ----
         num_rows: Number of rows to generate per client.
         entered_list: List of client IDs to generate data for.
         global_start_year: Start year for the random date range.
@@ -344,9 +357,11 @@ def generate_diagnostic_orders_data(
         fields_list: List of columns to include in the DataFrame.
 
     Returns:
+    -------
         A pandas DataFrame with generated dummy diagnostic order data.
 
     Raises:
+    ------
         None
 
     """
@@ -452,6 +467,7 @@ def generate_drug_orders_data(
     """Generates dummy data for the 'drug_orders' index.
 
     Args:
+    ----
         num_rows: Number of rows to generate per client.
         entered_list: List of client IDs to generate data for.
         global_start_year: Start year for the random date range.
@@ -464,9 +480,11 @@ def generate_drug_orders_data(
         base_date: Optional datetime reference for testing.
 
     Returns:
+    -------
         A pandas DataFrame with generated dummy drug order data.
 
     Raises:
+    ------
         None
 
     """
@@ -599,6 +617,7 @@ def generate_observations_MRC_text_data(
     """Generates dummy data for the 'observations' index (MRC clinical notes).
 
     Args:
+    ----
         num_rows: Number of rows to generate per client.
         entered_list: List of client IDs to generate data for.
         global_start_year: Start year for the random date range.
@@ -611,9 +630,11 @@ def generate_observations_MRC_text_data(
         fields_list: List of columns to include in the DataFrame.
 
     Returns:
+    -------
         A pandas DataFrame with generated dummy observation data.
 
     Raises:
+    ------
         None
 
     """
@@ -700,6 +721,7 @@ def generate_observations_Reports_text_data(
     """Generates dummy data for the 'basic_observations' index (Reports).
 
     Args:
+    ----
         num_rows: Number of rows to generate per client.
         entered_list: List of client IDs to generate data for.
         global_start_year: Start year for the random date range.
@@ -712,9 +734,11 @@ def generate_observations_Reports_text_data(
         fields_list: List of columns to include in the DataFrame.
 
     Returns:
+    -------
         A pandas DataFrame with generated dummy report data.
 
     Raises:
+    ------
         None
 
     """
@@ -800,6 +824,7 @@ def generate_appointments_data(
     """Generates dummy data for the 'pims_apps' index.
 
     Args:
+    ----
         num_rows: Number of rows to generate per client.
         entered_list: List of client IDs to generate data for.
         global_start_year: Start year for the random date range.
@@ -811,9 +836,11 @@ def generate_appointments_data(
         fields_list: List of columns to include in the DataFrame.
 
     Returns:
+    -------
         A pandas DataFrame with generated dummy appointment data.
 
     Raises:
+    ------
         None
 
     """
@@ -970,6 +997,7 @@ def generate_observations_data(
     """Generates dummy data for the 'observations' index.
 
     Args:
+    ----
         num_rows: Number of rows to generate per client.
         entered_list: List of client IDs to generate data for.
         global_start_year: Start year for the random date range.
@@ -983,9 +1011,11 @@ def generate_observations_data(
         fields_list: List of columns to include in the DataFrame.
 
     Returns:
+    -------
         A pandas DataFrame with generated dummy observation data.
 
     Raises:
+    ------
         None
 
     """
@@ -1059,6 +1089,7 @@ def generate_basic_observations_data(
     """Generates dummy data for the 'basic_observations' index.
 
     Args:
+    ----
         num_rows: Number of rows to generate per client.
         entered_list: List of client IDs to generate data for.
         global_start_year: Start year for the random date range.
@@ -1071,9 +1102,11 @@ def generate_basic_observations_data(
         base_date: Optional datetime reference for testing.
 
     Returns:
+    -------
         A pandas DataFrame with generated dummy basic observation data.
 
     Raises:
+    ------
         None
 
     """
@@ -1218,6 +1251,7 @@ def generate_basic_observations_textual_obs_data(
     """Generates dummy textual data for the 'basic_observations' index.
 
     Args:
+    ----
         num_rows: Number of rows to generate for each client.
         entered_list: List of client IDs to generate data for.
         global_start_year: Start year for the random date range.
@@ -1227,6 +1261,7 @@ def generate_basic_observations_textual_obs_data(
         fields_list: List of columns to include in the DataFrame.
 
     Returns:
+    -------
         A pandas DataFrame with generated dummy textual observation data.
 
     """
@@ -1322,13 +1357,16 @@ def extract_date_range(
     might not contain a date range, returning None in such scenarios.
 
     Args:
+    ----
         date_string: The string containing the date range.
 
     Returns:
+    -------
         A tuple of six integers (start_year, start_month, start_day,
         end_year, end_month, end_day), or None if the pattern is not found.
 
     Raises:
+    ------
         None
 
     """
@@ -1371,6 +1409,7 @@ def generate_epic_encounters_data(
     """Generates dummy data for the 'epic_encounters' index.
 
     Args:
+    ----
         num_rows: Number of rows to generate per client.
         entered_list: List of client IDs to generate data for.
         global_start_year: Start year for the random date range.
@@ -1382,9 +1421,11 @@ def generate_epic_encounters_data(
         fields_list: List of columns to include in the DataFrame.
 
     Returns:
+    -------
         A pandas DataFrame with generated dummy encounter data.
 
     Raises:
+    ------
         None
 
     """
@@ -1470,6 +1511,7 @@ def generate_epic_clinical_notes_data(
     """Generates dummy data for the 'epic_clinical_notes' index.
 
     Args:
+    ----
         num_rows: Number of rows to generate per client.
         entered_list: List of client IDs to generate data for.
         global_start_year: Start year for the random date range.
@@ -1482,9 +1524,11 @@ def generate_epic_clinical_notes_data(
         fields_list: List of columns to include in the DataFrame.
 
     Returns:
+    -------
         A pandas DataFrame with generated dummy clinical note data.
 
     Raises:
+    ------
         None
 
     """
@@ -1569,6 +1613,7 @@ def generate_epic_medical_history_data(
     """Generates dummy data for the 'epic_medical_history' index.
 
     Args:
+    ----
         num_rows: Number of rows to generate per client.
         entered_list: List of client IDs to generate data for.
         global_start_year: Start year for the random date range.
@@ -1580,9 +1625,11 @@ def generate_epic_medical_history_data(
         fields_list: List of columns to include in the DataFrame.
 
     Returns:
+    -------
         A pandas DataFrame with generated dummy medical history data.
 
     Raises:
+    ------
         None
 
     """
@@ -1649,6 +1696,7 @@ def generate_epic_orders_data(
     """Generates dummy data for the 'epic_orders' index.
 
     Args:
+    ----
         num_rows: Number of rows to generate per client.
         entered_list: List of client IDs to generate data for.
         global_start_year: Start year for the random date range.
@@ -1660,9 +1708,11 @@ def generate_epic_orders_data(
         fields_list: List of columns to include in the DataFrame.
 
     Returns:
+    -------
         A pandas DataFrame with generated dummy orders data.
 
     Raises:
+    ------
         None
 
     """
@@ -1759,6 +1809,7 @@ def generate_epic_lab_results_data(
     """Generates dummy data for the 'epic_lab_results' index.
 
     Args:
+    ----
         num_rows: Number of rows to generate per client.
         entered_list: List of client IDs to generate data for.
         global_start_year: Start year for the random date range.
@@ -1770,9 +1821,11 @@ def generate_epic_lab_results_data(
         fields_list: List of columns to include in the DataFrame.
 
     Returns:
+    -------
         A pandas DataFrame with generated dummy lab result data.
 
     Raises:
+    ------
         None
 
     """
@@ -1817,11 +1870,15 @@ def generate_epic_lab_results_data(
             "document_CollectedDate": [
                 collected_date.strftime("%Y-%m-%dT%H:%M:%S") for _ in range(num_rows)
             ],
+            "document_LabComponentValue": [
+                str(round(random.uniform(1, 100), 2)) for _ in range(num_rows)
+            ],
             "document_LabResultEpicId": [
                 faker.random_number(digits=8) for _ in range(num_rows)
             ],
             "document_Fields.valueText": [
-                str(random.uniform(1, 100)) for _ in range(num_rows)
+                f"{round(random.uniform(1, 100), 2)!s} test_unit"
+                for _ in range(num_rows)
             ],
             "id": [faker.uuid4() for _ in range(num_rows)],
         }
@@ -1854,6 +1911,7 @@ def generate_epic_patients_data(
     """Generates dummy data for the 'epic_patients' index.
 
     Args:
+    ----
         num_rows: Number of rows to generate per client.
         entered_list: List of client IDs to generate data for.
         global_start_year: Start year for the random date range.
@@ -1865,9 +1923,11 @@ def generate_epic_patients_data(
         fields_list: List of columns to include in the DataFrame.
 
     Returns:
+    -------
         A pandas DataFrame with generated dummy patient data.
 
     Raises:
+    ------
         None
 
     """
@@ -1921,6 +1981,7 @@ def generate_epic_imaging_reports_data(
     """Generates dummy data for the 'epic_imaging_reports' index.
 
     Args:
+    ----
         num_rows: Number of rows to generate per client.
         entered_list: List of client IDs to generate data for.
         global_start_year: Start year for the random date range.
@@ -1932,9 +1993,11 @@ def generate_epic_imaging_reports_data(
         fields_list: List of columns to include in the DataFrame.
 
     Returns:
+    -------
         A pandas DataFrame with generated dummy imaging report data.
 
     Raises:
+    ------
         None
 
     """
@@ -2064,6 +2127,7 @@ def cohort_searcher_with_terms_and_search_dummy(
     `index_name` and `search_string`.
 
     Args:
+    ----
         index_name: The name of the target index (e.g., 'epr_documents').
         fields_list: A list of fields to be returned in the DataFrame.
         term_name: The field name for the term-level query (e.g., 'client_idcode').
@@ -2072,6 +2136,7 @@ def cohort_searcher_with_terms_and_search_dummy(
             routing to the correct data generator.
 
     Returns:
+    -------
         A pandas DataFrame containing the generated dummy data.
 
     """
@@ -2668,12 +2733,15 @@ def generate_patient_timeline(client_idcode: str) -> str:
     including demographic information and a series of timestamped entries.
 
     Args:
+    ----
         client_idcode: The client ID for the patient.
 
     Returns:
+    -------
         A string containing the patient's dummy timeline.
 
     Raises:
+    ------
         None
 
     """
@@ -2733,12 +2801,15 @@ def generate_patient_timeline_faker(client_idcode: str) -> str:
     with fake sentences.
 
     Args:
+    ----
         client_idcode: The client ID for the patient.
 
     Returns:
+    -------
         A string containing the patient's dummy timeline.
 
     Raises:
+    ------
         None
 
     """
@@ -2791,12 +2862,15 @@ def extract_search_term_obscatalogmasteritem_displayname(search_string: str) -> 
     term by removing quotes and stripping any trailing 'AND' or 'OR' clauses.
 
     Args:
+    ----
         search_string: The input query string.
 
     Returns:
+    -------
         The extracted search term, or the original string if no match is found.
 
     Raises:
+    ------
         None
 
     """
@@ -2819,14 +2893,17 @@ def run_generate_patient_timeline_and_append(
     specified CSV file. If the file doesn't exist, it will be created.
 
     Args:
+    ----
         n: The number of patient timelines to generate. Defaults to 10.
         output_path: The path to the output CSV file. Defaults to
             "test_files/dummy_timeline.csv".
 
     Returns:
+    -------
         None
 
     Raises:
+    ------
         FileNotFoundError: If the output_path does not exist and cannot be created.
         Exception: For any other unexpected errors during timeline generation or file operations.
 
@@ -2889,15 +2966,18 @@ def get_patient_timeline_dummy(
     """Retrieves a random patient timeline from a pre-generated CSV file.
 
     Args:
+    ----
         client_idcode: The client ID to search for (currently unused, as a
             random row is always selected).
         output_path: The path to the CSV file containing dummy timelines.
 
     Returns:
+    -------
         The text of a random patient timeline, or None if the file is not found
         or is invalid.
 
     Raises:
+    ------
         None
 
     """
@@ -2942,13 +3022,16 @@ def generate_uuid(prefix: str, length: int = 7) -> str:
     """Generates a UUID-like string with a given prefix.
 
     Args:
+    ----
         prefix: The prefix for the UUID, must be 'P' or 'V'.
         length: The length of the random part of the string. Defaults to 7.
 
     Returns:
+    -------
         The generated UUID-like string.
 
     Raises:
+    ------
         ValueError: When the prefix is not 'P' or 'V'.
 
     """
@@ -2967,14 +3050,17 @@ def generate_uuid_list(n: int, prefix: str, length: int = 7) -> list[str]:
     """Generates a list of n UUID-like strings.
 
     Args:
+    ----
         n: The number of UUIDs to generate.
         prefix: The prefix for each UUID.
         length: The length of the random part of each UUID. Defaults to 7.
 
     Returns:
+    -------
         A list of generated UUID-like strings.
 
     Raises:
+    ------
         None
 
     """
@@ -2995,6 +3081,7 @@ def generate_covid_observations_data(
     """Generates dummy data for COVID-19 test observations.
 
     Args:
+    ----
         num_rows: Number of rows to generate per client.
         entered_list: List of client IDs to generate data for.
         global_start_year: Start year for the random date range.
@@ -3006,9 +3093,11 @@ def generate_covid_observations_data(
         fields_list: List of columns to include in the DataFrame.
 
     Returns:
+    -------
         A pandas DataFrame with generated dummy COVID-19 observation data.
 
     Raises:
+    ------
         None
 
     """
@@ -3074,6 +3163,7 @@ def generate_hospital_site_data(
     """Generates dummy data for hospital site observations.
 
     Args:
+    ----
         num_rows: Number of rows to generate per client.
         entered_list: List of client IDs to generate data for.
         global_start_year: Start year for the random date range.
@@ -3085,9 +3175,11 @@ def generate_hospital_site_data(
         fields_list: List of columns to include in the DataFrame.
 
     Returns:
+    -------
         A pandas DataFrame with generated dummy hospital site data.
 
     Raises:
+    ------
         None
 
     """
@@ -3171,6 +3263,7 @@ def generate_news_data(
     """Generates dummy data for NEWS observations.
 
     Args:
+    ----
         num_rows: Number of rows to generate per client.
         entered_list: List of client IDs to generate data for.
         global_start_year: Start year for the random date range.
@@ -3182,9 +3275,11 @@ def generate_news_data(
         fields_list: List of columns to include in the DataFrame.
 
     Returns:
+    -------
         A pandas DataFrame with generated dummy NEWS observation data.
 
     Raises:
+    ------
         None
 
     """
@@ -3271,6 +3366,7 @@ def generate_bmi_data(
     """Generates dummy data for BMI, Weight, and Height observations.
 
     Args:
+    ----
         num_rows: Number of rows to generate per client.
         entered_list: List of client IDs to generate data for.
         global_start_year: Start year for the random date range.
@@ -3283,9 +3379,11 @@ def generate_bmi_data(
         base_date: Optional datetime reference for testing.
 
     Returns:
+    -------
         A pandas DataFrame with generated dummy BMI-related data.
 
     Raises:
+    ------
         None
 
     """
@@ -3410,13 +3508,16 @@ def populate_elastic_with_dummy_data(
     load this data into the configured Elasticsearch instance.
 
     Args:
+    ----
         config_obj: The configuration object containing date ranges.
         n_patients: The number of dummy patients to generate. Defaults to 10.
 
     Returns:
+    -------
         A list of the generated dummy patient IDs.
 
     Raises:
+    ------
         None
 
     """
@@ -3438,11 +3539,24 @@ def populate_elastic_with_dummy_data(
 
     from pat2vec.pat2vec_search.cogstack_search_methods import CogStack
 
-    creds_filename = getattr(
-        config_obj,
-        "credentials_path",
-        "test_elastic_credentials.py",
-    )
+    # Try test-specific credentials first (backward compatibility for existing tests)
+    current_dir_creds = os.path.abspath("test_elastic_credentials.py")
+
+    if os.path.exists(current_dir_creds):
+        creds_filename = "test_elastic_credentials.py"
+        logger.debug(f"Using test-specific credentials: {current_dir_creds}")
+    else:
+        # Fall back to config's credentials_path, or default
+        creds_filename = getattr(
+            config_obj,
+            "credentials_path",
+            None,
+        )
+        if creds_filename:
+            creds_filename = os.path.abspath(creds_filename)
+        else:
+            creds_filename = current_dir_creds
+
     creds_path = os.path.abspath(creds_filename)
 
     if not os.path.exists(creds_path):
@@ -4014,6 +4128,7 @@ def generate_bed_data(
     """Generates dummy data for bed number observations.
 
     Args:
+    ----
         num_rows: Number of rows to generate per client.
         entered_list: List of client IDs to generate data for.
         global_start_year: Start year for the random date range.
@@ -4025,9 +4140,11 @@ def generate_bed_data(
         fields_list: List of columns to include in the DataFrame.
 
     Returns:
+    -------
         A pandas DataFrame with generated dummy bed data.
 
     Raises:
+    ------
         None
 
     """
@@ -4097,6 +4214,7 @@ def generate_vte_data(
     """Generates dummy data for VTE status observations.
 
     Args:
+    ----
         num_rows: Number of rows to generate per client.
         entered_list: List of client IDs to generate data for.
         global_start_year: Start year for the random date range.
@@ -4108,9 +4226,11 @@ def generate_vte_data(
         fields_list: List of columns to include in the DataFrame.
 
     Returns:
+    -------
         A pandas DataFrame with generated dummy VTE status data.
 
     Raises:
+    ------
         None
 
     """
@@ -4171,6 +4291,7 @@ def generate_smoking_data(
     """Generates dummy data for smoking status observations.
 
     Args:
+    ----
         num_rows: Number of rows to generate per client.
         entered_list: List of client IDs to generate data for.
         global_start_year: Start year for the random date range.
@@ -4182,9 +4303,11 @@ def generate_smoking_data(
         fields_list: List of columns to include in the DataFrame.
 
     Returns:
+    -------
         A pandas DataFrame with generated dummy smoking status data.
 
     Raises:
+    ------
         None
 
     """
@@ -4242,6 +4365,7 @@ def generate_core_o2_data(
     """Generates dummy data for CORE_SpO2 (oxygen saturation) observations.
 
     Args:
+    ----
         num_rows: Number of rows to generate per client.
         entered_list: List of client IDs to generate data for.
         global_start_year: Start year for the random date range.
@@ -4253,9 +4377,11 @@ def generate_core_o2_data(
         fields_list: List of columns to include in the DataFrame.
 
     Returns:
+    -------
         A pandas DataFrame with generated dummy SpO2 data.
 
     Raises:
+    ------
         None
 
     """
@@ -4314,10 +4440,12 @@ def _calculate_age_at_observation(dob: datetime, observation_date: datetime) -> 
     """Calculates age in years at the time of observation.
 
     Args:
+    ----
         dob: Date of birth as a datetime object.
         observation_date: The date of the observation.
 
     Returns:
+    -------
         Age in years as an integer.
 
     """
@@ -4338,10 +4466,12 @@ def _get_dnr_probability(age: int, is_icu_hdu: bool = False) -> float:
     ICU/HDU patients have higher rates of DNR/DNH decisions.
 
     Args:
+    ----
         age: Patient's age in years.
         is_icu_hdu: Whether the observation is from ICU/HDU context.
 
     Returns:
+    -------
         Probability of "Not for cardiopulmonary resuscitation".
 
     """
@@ -4368,11 +4498,13 @@ def _determine_resuscitation_status(
     """Determines resuscitation status based on age and context.
 
     Args:
+    ----
         age: Patient's age in years.
         observation_date: Date of the observation.
         is_icu_hdu: Whether this is an ICU/HDU context.
 
     Returns:
+    -------
         Either "For cardiopulmonary resuscitation" or "Not for cardiopulmonary resuscitation".
 
     """
@@ -4404,6 +4536,7 @@ def generate_core_resus_data(
     ICU/HDU contexts have higher rates of DNR/DNH decisions.
 
     Args:
+    ----
         num_rows: Number of rows to generate per client.
         entered_list: List of client IDs to generate data for.
         global_start_year: Start year for the random date range.
@@ -4415,9 +4548,11 @@ def generate_core_resus_data(
         fields_list: List of columns to include in the DataFrame.
 
     Returns:
+    -------
         A pandas DataFrame with generated dummy resuscitation status data.
 
     Raises:
+    ------
         None
 
     """
@@ -4546,6 +4681,7 @@ def generate_problem_list_data(
     """Generates dummy data for the 'problem_list' index.
 
     Args:
+    ----
         num_rows: Number of rows to generate per client.
         entered_list: List of client IDs to generate data for.
         global_start_year: Start year for the random date range.
@@ -4557,9 +4693,11 @@ def generate_problem_list_data(
         fields_list: List of columns to include in the DataFrame.
 
     Returns:
+    -------
         A pandas DataFrame with generated dummy problem list data.
 
     Raises:
+    ------
         None
 
     """
@@ -4622,9 +4760,11 @@ def generate_synthetic_clinical_note(client_idcode: str) -> str:
     dummy MedCAT annotations, ensuring IPW demonstration has valid data.
 
     Args:
+    ----
         client_idcode: The patient ID (used for reproducibility via hashing).
 
     Returns:
+    -------
         A synthetic clinical note string containing various medical mentions.
 
     """

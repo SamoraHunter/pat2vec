@@ -29,9 +29,11 @@ def generate_patient_timeline(client_idcode: str) -> str:
     including demographic information and a series of timestamped entries.
 
     Args:
+    ----
         client_idcode: The client ID for the patient.
 
     Returns:
+    -------
         A string containing the patient's dummy timeline.
 
     """
@@ -84,9 +86,11 @@ def generate_patient_timeline_faker(client_idcode: str) -> str:
     with fake sentences.
 
     Args:
+    ----
         client_idcode: The client ID for the patient.
 
     Returns:
+    -------
         A string containing the patient's dummy timeline.
 
     """
@@ -128,10 +132,12 @@ def get_patient_timeline_dummy(
     """Retrieves a random patient timeline from a pre-generated CSV file.
 
     Args:
+    ----
         client_idcode: The client ID to search for (currently unused).
         output_path: The path to the CSV file containing dummy timelines.
 
     Returns:
+    -------
         The text of a random patient timeline, or None if the file is not found
         or is invalid.
 
@@ -177,6 +183,7 @@ def run_generate_patient_timeline_and_append(
     specified CSV file. If the file doesn't exist, it will be created.
 
     Args:
+    ----
         n: The number of patient timelines to generate. Defaults to 10.
         output_path: The path to the output CSV file. Defaults to
             "test_files/dummy_timeline.csv".
@@ -233,5 +240,28 @@ random.seed(random_state)
 faker = Faker()
 faker.seed_instance(random_state)
 
+
+def generate_uuid_list(n: int, prefix: str = "", length: int = 7) -> list[str]:
+    """Generates a list of UUIDs with optional prefix.
+
+    Args:
+    ----
+        n: Number of UUIDs to generate.
+        prefix: Optional prefix for each UUID (e.g., "P" for patient IDs).
+        length: Length of the random suffix. Defaults to 7.
+
+    Returns:
+    -------
+        A list of generated UUID strings.
+
+    """
+    uuid_list = []
+    for _ in range(n):
+        random_part = "".join(random.choices(string.hexdigits[:10], k=length))
+        uuid_str = f"{prefix}{random_part}"
+        uuid_list.append(uuid_str)
+    return uuid_list
+
+
 # Export pipeline for backward compatibility
-__all__ = ["pipeline"]
+__all__ = ["generate_uuid_list", "pipeline"]
