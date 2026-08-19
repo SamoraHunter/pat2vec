@@ -5,10 +5,10 @@ import sys
 
 import numpy as np
 import pandas as pd
+import pytest
 
 from pat2vec.main_pat2vec import main
 from pat2vec.util.config_pat2vec import config_class
-from pat2vec.util.docker_elastic import ElasticContainer
 from pat2vec.util.get_dummy_data_cohort_searcher import (
     generate_epic_encounters_data,
     populate_elastic_with_dummy_data,
@@ -30,9 +30,12 @@ random.seed(random_seed_value)
 class TestEpicEncountersGet:
     """Stage-mirroring pytest for test_epic_encounters_get.ipynb."""
 
-    @classmethod
-    def setup_class(cls: type) -> None:
-        """Set up shared state for all tests."""
+    @pytest.fixture(autouse=True, scope="class")
+    def _start_elastic(self, elastic_container):
+        cls = type(self)
+        cls.cred_path = elastic_container
+        cls.creds_filename = elastic_container
+
         cls.current_dir = os.getcwd()
         cls.grandparent_dir = os.path.dirname(os.path.dirname(cls.current_dir))
 
@@ -44,9 +47,7 @@ class TestEpicEncountersGet:
         cls.PROJ_NAME = "epic_encounters_test_project"
         cls.DB_FILENAME = "temp_epic_encounters_db.sqlite"
         cls.DB_PATH = os.path.join(cls.PROJ_NAME, "outputs", cls.DB_FILENAME)
-        cls.creds_filename = "test_elastic_credentials.py"
 
-        # Cleanup previous test outputs
         for dir_to_remove in ["epic_encounters_test_project"]:
             try:
                 shutil.rmtree(dir_to_remove, ignore_errors=True)
@@ -55,27 +56,6 @@ class TestEpicEncountersGet:
                 "Critical error - cannot start with stale data."
                 raise RuntimeError(msg) from e
 
-        # Start Elasticsearch container
-        cls.es_container = ElasticContainer()
-        cls.es_container.stop()
-
-        if not cls.es_container.start():
-            msg = "Failed to start Elasticsearch container. Check if Docker is running."
-            raise RuntimeError(msg)
-
-        host, username, password = cls.es_container.get_credentials()
-
-        creds_content = f"""
-username = "{username}"
-password = "{password}"
-api_key = None
-hosts = ["{host}"]
-"""
-
-        with open(cls.creds_filename, "w") as f:
-            f.write(creds_content)
-
-        # Create config for population
         schema_path = os.path.abspath("test_files/elastic_schemas.json")
         config_populate = config_class(
             proj_name="epic_encounters_test_project",
@@ -91,13 +71,11 @@ hosts = ["{host}"]
             global_end_day=31,
         )
 
-        # Populate dummy data
         cls.patient_ids = populate_elastic_with_dummy_data(
             config_populate,
             n_patients=5,
         )
 
-        # Setup CohStack client and index
         cls.cs = initialize_cogstack_client(config_populate)
 
         indices = [
@@ -109,7 +87,6 @@ hosts = ["{host}"]
         ]
         cls.cs.elastic.indices.refresh(index=indices, ignore_unavailable=True)
 
-        # Generate and ingest epic_encounters data
         encounters_dfs = []
         for pid in cls.patient_ids:
             df = generate_epic_encounters_data(
@@ -134,7 +111,6 @@ hosts = ["{host}"]
         )
         cls.cs.elastic.indices.refresh(index="epic_encounters")
 
-        # Initialize database
         os.makedirs(os.path.dirname(cls.DB_PATH), exist_ok=True)
 
         if os.path.exists(cls.DB_PATH):
@@ -144,7 +120,6 @@ hosts = ["{host}"]
 
         cls.logger = setup_logger()
 
-        # Create main config
         cls.config_obj = config_class(
             proj_name=cls.PROJ_NAME,
             credentials_path=cls.creds_filename,
@@ -167,7 +142,6 @@ hosts = ["{host}"]
             all_patient_list=cls.patient_ids,
         )
 
-        # Run pat2vec pipeline
         cls.pat2vec_obj = main(
             cogstack=True,
             use_filter=False,
@@ -177,17 +151,7 @@ hosts = ["{host}"]
             config_obj=cls.config_obj,
         )
 
-        # Process first patient
         cls.pat2vec_obj.pat_maker(0)
-
-    @classmethod
-    def teardown_class(cls: type) -> None:
-        """Clean up after all tests - just stop ES container."""
-        try:
-            if hasattr(cls, "es_container") and cls.es_container is not None:
-                cls.es_container.stop()
-        except Exception as e:
-            pass
 
     def test_1_dummy_data_generation(self):
         """Test dummy data generation - verify patient IDs were created."""
@@ -228,23 +192,16 @@ hosts = ["{host}"]
                 msg = f"Error checking index {index}: {e}"
                 raise AssertionError(msg) from e
 
-        # Verify epic_encounters index has data
         es_count = self.cs.elastic.count(index="epic_encounters")["count"]
-        expected_encounter_count = (
-            len(self.patient_ids) * 2
-        )  # 5 patients x 2 encounters each
+        expected_encounter_count = len(self.patient_ids) * 2
         assert (
             es_count >= expected_encounter_count
         ), f"Expected at least {expected_encounter_count} epic_encounters, got {es_count}"
 
     def test_4_pat2vec_pipeline_execution(self):
         """Test pat2vec pipeline execution - verify patient was processed."""
-        assert (
-            self.pat2vec_obj.all_patient_list is not None
-        ), "Patient list should not be None"
-        assert (
-            len(self.pat2vec_obj.all_patient_list) > 0
-        ), "Patient list should have patients"
+        assert self.pat2vec_obj.all_patient_list is not None
+        assert len(self.pat2vec_obj.all_patient_list) > 0
 
     def test_5_feature_extraction(self):
         """Test feature extraction - verify features were extracted."""
@@ -278,8 +235,6 @@ hosts = ["{host}"]
 
     def test_merge_epic_encounters_data_functionality(self):
         """Test merge epic encounters data functionality - verify merge function creates CSV."""
-        from pat2vec.util.helper_functions import get_all_features
-
         all_pat_list = self.pat2vec_obj.all_patient_list
 
         merged_df = merge_epic_encounters_data(self.config_obj)
@@ -292,7 +247,6 @@ hosts = ["{host}"]
 
     def test_8_cleanup_verification(self):
         """Test cleanup verification - verify all temp files are cleaned up properly."""
-        # Perform cleanup before verification
         try:
             if os.path.exists(self.DB_PATH):
                 os.remove(self.DB_PATH)
@@ -306,20 +260,6 @@ hosts = ["{host}"]
         except Exception as e:
             msg = f"Failed to remove '{self.PROJ_NAME}' directory: {e}"
             raise AssertionError(msg) from e
-
-        try:
-            if os.path.exists(self.creds_filename):
-                os.remove(self.creds_filename)
-        except Exception as e:
-            msg = f"Failed to remove Elasticsearch credentials file '{self.creds_filename}': {e}"
-            raise AssertionError(msg) from e
-
-        # Verify cleanup
-        assert not os.path.exists(self.DB_PATH), "Database file should be removed"
-        assert not os.path.exists(self.PROJ_NAME), "Project directory should be removed"
-        assert not os.path.exists(
-            self.creds_filename
-        ), "Credentials file should be removed"
 
 
 def merge_epic_encounters_data(config_obj):

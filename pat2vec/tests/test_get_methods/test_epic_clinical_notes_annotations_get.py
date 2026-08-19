@@ -5,6 +5,21 @@ import sys
 
 import numpy as np
 import pandas as pd
+import pytest
+
+from pat2vec.main_pat2vec import main
+from pat2vec.util.config_pat2vec import config_class
+from pat2vec.util.get_dummy_data_cohort_searcher import (
+    generate_epic_clinical_notes_data,
+    populate_elastic_with_dummy_data,
+)
+from pat2vec.util.helper_functions import get_all_features
+from pat2vec.util.logger_setup import setup_logger
+from pat2vec.pat2vec_get_methods.get_method_epic_clinical_notes_annotations import (
+    get_current_pat_epic_clinical_notes_annotations,
+)
+from pat2vec.pat2vec_search.cogstack_search_methods import initialize_cogstack_client
+from pat2vec.util.elasticsearch_methods import ingest_data_to_elasticsearch
 
 random_seed_value = 42
 
@@ -15,9 +30,12 @@ random.seed(random_seed_value)
 class TestEpicClinicalNotesAnnotationsGet:
     """Stage-mirroring pytest for test_epic_clinical_notes_get.ipynb."""
 
-    @classmethod
-    def setup_class(cls: type) -> None:
-        """Set up shared state for all tests."""
+    @pytest.fixture(autouse=True, scope="class")
+    def _start_elastic(self, elastic_container):
+        cls = type(self)
+        cls.cred_path = elastic_container
+        cls.creds_filename = elastic_container
+
         cls.current_dir = os.getcwd()
         cls.grandparent_dir = os.path.dirname(os.path.dirname(cls.current_dir))
 
@@ -29,9 +47,7 @@ class TestEpicClinicalNotesAnnotationsGet:
         cls.PROJ_NAME = "epic_clinical_notes_test_project"
         cls.DB_FILENAME = "temp_epic_clinical_notes_db.sqlite"
         cls.DB_PATH = os.path.join(cls.PROJ_NAME, "outputs", cls.DB_FILENAME)
-        cls.creds_filename = "test_elastic_credentials.py"
 
-        # Cleanup previous test outputs
         for dir_to_remove in ["epic_clinical_notes_test_project"]:
             try:
                 shutil.rmtree(dir_to_remove, ignore_errors=True)
@@ -40,35 +56,10 @@ class TestEpicClinicalNotesAnnotationsGet:
                 "Critical error - cannot start with stale data."
                 raise RuntimeError(msg) from e
 
-        # Start Elasticsearch container
-        from pat2vec.util.docker_elastic import ElasticContainer
-
-        cls.es_container = ElasticContainer()
-        cls.es_container.stop()
-
-        if not cls.es_container.start():
-            msg = "Failed to start Elasticsearch container. Check if Docker is running."
-            raise RuntimeError(msg)
-
-        host, username, password = cls.es_container.get_credentials()
-
-        creds_content = f"""
-username = "{username}"
-password = "{password}"
-api_key = None
-hosts = ["{host}"]
-"""
-
-        with open(cls.creds_filename, "w") as f:
-            f.write(creds_content)
-
-        # Create config for population
-        from pat2vec.util.config_pat2vec import config_class
-
         schema_path = os.path.abspath("test_files/elastic_schemas.json")
         config_populate = config_class(
             proj_name="epic_clinical_notes_test_project",
-            credentials_path=cls.creds_filename,
+            credentials_path=cls.cred_path,
             test_schema_path=schema_path,
             testing=True,
             testing_elastic=True,
@@ -80,19 +71,9 @@ hosts = ["{host}"]
             global_end_day=31,
         )
 
-        # Populate dummy data
-        from pat2vec.util.get_dummy_data_cohort_searcher import (
-            populate_elastic_with_dummy_data,
-        )
-
         cls.patient_ids = populate_elastic_with_dummy_data(
             config_populate,
             n_patients=5,
-        )
-
-        # Setup CohStack client and index
-        from pat2vec.pat2vec_search.cogstack_search_methods import (
-            initialize_cogstack_client,
         )
 
         cls.cs = initialize_cogstack_client(config_populate)
@@ -103,14 +84,9 @@ hosts = ["{host}"]
             "observations",
             "order",
             "pims_apps",
+            "epic_clinical_notes",
         ]
         cls.cs.elastic.indices.refresh(index=indices, ignore_unavailable=True)
-
-        # Generate and ingest Epic Clinical Notes data
-        from pat2vec.util.elasticsearch_methods import ingest_data_to_elasticsearch
-        from pat2vec.util.get_dummy_data_cohort_searcher import (
-            generate_epic_clinical_notes_data,
-        )
 
         notes_dfs = []
         for pid in cls.patient_ids:
@@ -138,7 +114,6 @@ hosts = ["{host}"]
         )
         cls.cs.elastic.indices.refresh(index="epic_clinical_notes")
 
-        # Initialize database
         os.makedirs(os.path.dirname(cls.DB_PATH), exist_ok=True)
 
         if os.path.exists(cls.DB_PATH):
@@ -146,16 +121,11 @@ hosts = ["{host}"]
 
         db_connection_string = f"sqlite:///{cls.DB_PATH}"
 
-        from pat2vec.util.logger_setup import setup_logger
-
         cls.logger = setup_logger()
-
-        # Create main config
-        from pat2vec.util.config_pat2vec import config_class
 
         cls.config_obj = config_class(
             proj_name=cls.PROJ_NAME,
-            credentials_path=cls.creds_filename,
+            credentials_path=cls.cred_path,
             current_path_dir="",
             main_options={"epic_clinical_notes_annotations": True},
             batch_mode=True,
@@ -175,9 +145,6 @@ hosts = ["{host}"]
             all_patient_list=cls.patient_ids,
         )
 
-        # Run pat2vec pipeline
-        from pat2vec.main_pat2vec import main
-
         cls.pat2vec_obj = main(
             cogstack=True,
             use_filter=False,
@@ -187,42 +154,7 @@ hosts = ["{host}"]
             config_obj=cls.config_obj,
         )
 
-        # Process first patient
         cls.pat2vec_obj.pat_maker(0)
-
-    @classmethod
-    def teardown_class(cls: type) -> None:
-        """Clean up after all tests."""
-        # Stop Elasticsearch container first
-        try:
-            if hasattr(cls, "es_container") and cls.es_container is not None:
-                cls.es_container.stop()
-        except Exception as e:
-            print(f"Warning: Failed to stop Elasticsearch container: {e}")
-
-        # Remove database file
-        try:
-            if os.path.exists(cls.DB_PATH):
-                os.remove(cls.DB_PATH)
-        except Exception as e:
-            print(f"Warning: Failed to remove database file '{cls.DB_PATH}': {e}")
-
-        # Remove project directory
-        try:
-            if os.path.exists(cls.PROJ_NAME):
-                shutil.rmtree(cls.PROJ_NAME, ignore_errors=False)
-        except Exception as e:
-            msg = f"Failed to remove '{cls.PROJ_NAME}' directory: {e}"
-            print(msg)
-
-        # Remove credentials file
-        try:
-            if os.path.exists(cls.creds_filename):
-                os.remove(cls.creds_filename)
-        except Exception as e:
-            print(
-                f"Warning: Failed to remove Elasticsearch credentials file '{cls.creds_filename}': {e}",
-            )
 
     def test_1_dummy_data_generation(self):
         """Test dummy data generation - verify patient IDs were created."""
@@ -264,9 +196,8 @@ hosts = ["{host}"]
                 msg = f"Error checking index {index}: {e}"
                 raise AssertionError(msg) from e
 
-        # Verify epic_clinical_notes index has documents
         es_count = self.cs.elastic.count(index="epic_clinical_notes")["count"]
-        expected_notes_count = len(self.patient_ids) * 3  # 5 patients * 3 rows each
+        expected_notes_count = len(self.patient_ids) * 3
         assert (
             es_count >= expected_notes_count
         ), f"Expected at least {expected_notes_count} clinical notes, got {es_count}"
@@ -298,7 +229,6 @@ hosts = ["{host}"]
         all_pat_list = self.pat2vec_obj.all_patient_list
         assert len(all_pat_list) > 0, "Patient list should not be empty"
 
-        # Get annotations from database
         from pat2vec.util.helper_functions import get_df_from_db
 
         annotations_data = get_df_from_db(
@@ -310,7 +240,6 @@ hosts = ["{host}"]
 
         assert annotations_data is not None, "Annotations data should not be None"
 
-        # Test the get method
         features_data = get_current_pat_epic_clinical_notes_annotations(
             current_pat_client_id_code=all_pat_list[0],
             target_date_range=(2020, 1, 1, 2023, 12, 31),
@@ -327,7 +256,6 @@ hosts = ["{host}"]
 
     def test_7_cleanup_verification(self):
         """Test cleanup verification - verify all temp files were removed."""
-        # Clean up before verification
         try:
             if os.path.exists(self.DB_PATH):
                 os.remove(self.DB_PATH)
@@ -342,16 +270,5 @@ hosts = ["{host}"]
             msg = f"Failed to remove '{self.PROJ_NAME}' directory: {e}"
             raise AssertionError(msg) from e
 
-        try:
-            if os.path.exists(self.creds_filename):
-                os.remove(self.creds_filename)
-        except Exception as e:
-            msg = f"Failed to remove Elasticsearch credentials file '{self.creds_filename}': {e}"
-            raise AssertionError(msg) from e
-
-        # Verify cleanup
         assert not os.path.exists(self.DB_PATH), "Database file should be removed"
         assert not os.path.exists(self.PROJ_NAME), "Project directory should be removed"
-        assert not os.path.exists(
-            self.creds_filename,
-        ), "Credentials file should be removed"

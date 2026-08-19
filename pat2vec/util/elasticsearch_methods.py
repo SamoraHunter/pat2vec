@@ -30,6 +30,7 @@ def ingest_data_to_elasticsearch(
     """Ingests data from a DataFrame into Elasticsearch with error handling.
 
     Args:
+    ----
         temp_df: The DataFrame containing the data to be ingested.
         index_name: Name of the Elasticsearch index.
         index_mapping: Optional mapping for the index.
@@ -37,9 +38,11 @@ def ingest_data_to_elasticsearch(
         es_client: Optional Elasticsearch client instance.
 
     Returns:
+    -------
         A summary containing the number of successful and failed operations.
 
     Raises:
+    ------
         ConnectionError: If the Elasticsearch server is not reachable.
 
     """
@@ -195,7 +198,10 @@ def ingest_data_to_elasticsearch(
                 success_count += 1
 
         logger.info(f"Successfully ingested {success_count} documents.")
-        logger.warning(f"Failed to ingest {len(failed_docs)} documents.")
+        if failed_docs:
+            logger.warning(f"Failed to ingest {len(failed_docs)} documents.")
+        else:
+            logger.info("No documents failed to ingest.")
 
         # Log details of failed documents
         if failed_docs:
@@ -250,9 +256,11 @@ def handle_inconsistent_dtypes(df: pd.DataFrame) -> pd.DataFrame:
     like Elasticsearch.
 
     Args:
+    ----
         df: The DataFrame to process.
 
     Returns:
+    -------
         The DataFrame with columns cast to their majority data type.
 
     """
@@ -321,12 +329,14 @@ def guess_datetime_columns(df: pd.DataFrame, threshold: float = 0.5) -> list[str
     is considered a datetime column.
 
     Args:
+    ----
         df: The DataFrame to analyze.
         threshold: The minimum percentage of values in a column that must be
             parsable as datetime for it to be considered a datetime column.
             Defaults to 0.5.
 
     Returns:
+    -------
         A list of column names that are likely to be datetime columns.
 
     """
@@ -359,11 +369,13 @@ def get_guess_datetime_column(df: pd.DataFrame, threshold: float = 0.2) -> str |
     highest ratio, provided that ratio is above the specified threshold.
 
     Args:
+    ----
         df: The DataFrame to analyze.
         threshold: The minimum percentage of values that must be parsable as
             datetime for a column to be considered. Defaults to 0.2.
 
     Returns:
+    -------
         The name of the column most likely to contain datetimes, or None if no
         column meets the threshold.
 
@@ -405,6 +417,7 @@ def check_patients_existence(
     Supports checking multiple indices in a fallback manner.
 
     Args:
+    ----
         patient_ids: List of patient IDs to check.
         index_name: The Elasticsearch index to search against. Can be a string
             (single index) or a list of tuples [(index_name, id_field), ...].
@@ -412,6 +425,7 @@ def check_patients_existence(
         config_obj: Configuration object containing credentials path.
 
     Returns:
+    -------
         A list of patient IDs that were found in the index.
 
     """

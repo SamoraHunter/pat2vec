@@ -1277,8 +1277,6 @@ class main:
         row counts, columns, and MedCAT feature presence.
 
         """
-        print("\n=== DEBUG _get_patient_data_batches START ===")
-        print(f"Patient: {current_pat_client_id_code}")
         empty_return = pd.DataFrame()
         empty_return_epr = pd.DataFrame(columns=["updatetime", "body_analysed"])
         empty_return_mct = pd.DataFrame(
@@ -1523,7 +1521,7 @@ class main:
 
         batches = {}
 
-        print(f"DEBUG: About to fetch {len(batch_configs)} standard batches")
+        _logger.debug(f"About to fetch {len(batch_configs)} standard batches")
 
         # Fetch standard batches
         for config in batch_configs:
@@ -1549,20 +1547,24 @@ class main:
                     "batch_epic_clinical_notes",
                     "batch_epic_clinical_notes_annotations",
                 ):
-                    print(f"\n=== DEBUG {config['var']} ===")
-                    print(f"Result type: {type(res)}")
-                    print(f"Row count: {len(res) if res is not None else 'None'}")
+                    _logger.debug(f"\n=== DEBUG {config['var']} ===")
+                    _logger.debug(f"Result type: {type(res)}")
+                    _logger.debug(
+                        f"Row count: {len(res) if res is not None else 'None'}",
+                    )
                     if res is not None and not res.empty:
-                        print(f"Columns: {res.columns.tolist()}")
-                        print(f"Has pretty_name: {'pretty_name' in res.columns}")
-                        print(f"Has cui: {'cui' in res.columns}")
+                        _logger.debug(f"Columns: {res.columns.tolist()}")
+                        _logger.debug(
+                            f"Has pretty_name: {'pretty_name' in res.columns}",
+                        )
+                        _logger.debug(f"Has cui: {'cui' in res.columns}")
                         if "pretty_name" in res.columns:
-                            print(
+                            _logger.debug(
                                 f"Unique pretty_names: {res['pretty_name'].nunique()}",
                             )
                     else:
-                        print("WARNING: Batch is None or empty!")
-                    print("==========================================\n")
+                        _logger.warning("Batch is None or empty!")
+                    _logger.debug("==========================================\n")
 
                 id_col = (
                     config["args"].get("id_field_name", "document_PatientDurableKey")
@@ -1598,8 +1600,6 @@ class main:
                     batches[config["var"]] = batch_result
             else:
                 batches[config["var"]] = config["empty"]
-
-        print("\n=== DEBUG _get_patient_data_batches END ===")
 
         return batches
 

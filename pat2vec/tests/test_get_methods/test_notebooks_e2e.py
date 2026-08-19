@@ -12,9 +12,9 @@ import os
 import re
 import shutil
 import sys
-import tempfile
 
 import nbformat
+import pytest
 from nbconvert.preprocessors import ExecutePreprocessor
 
 
@@ -100,6 +100,379 @@ def has_empty_dataframe_text(cell_output: str) -> bool:
     return any(indicator in output_lower for indicator in indicators)
 
 
+@pytest.fixture(autouse=True, scope="class")
+def _start_elastic(elastic_container):
+    """Run all setup that depends on the shared ES container."""
+    TestNotebooksE2ECleanup.cred_path = elastic_container
+    TestNotebooksE2ECleanup.creds_filename = elastic_container
+
+
+class TestNotebooksE2ECleanup:
+    """Test cleanup functions for notebook tests."""
+
+    def test_8_cleanup_verification(self):
+        """Test cleanup verification - verify temp files and credentials are cleaned up."""
+        creds_path = "/workspaces/pat2vec/test_elastic_credentials.py"
+        cred_pattern = "/workspaces/pat2vec/test_elastic_credentials_*_get.py"
+
+        # Verify credentials file doesn't exist (fixture handles ES container stop)
+        try:
+            if os.path.exists(creds_path):
+                os.remove(creds_path)
+        except Exception as e:
+            msg = f"Failed to remove credential file '{creds_path}': {e}"
+            raise AssertionError(msg) from e
+
+        # Verify credential files matching pattern don't exist
+        for cred_file in glob.glob(cred_pattern):
+            try:
+                os.remove(cred_file)
+            except Exception as e:
+                msg = f"Failed to remove credential file '{cred_file}': {e}"
+                raise AssertionError(msg) from e
+
+        # Clean up any temp project directories
+        tmp_dir = "/tmp"
+        for item in os.listdir(tmp_dir):
+            if item.endswith("_test_project") and os.path.isdir(
+                os.path.join(tmp_dir, item)
+            ):
+                try:
+                    shutil.rmtree(os.path.join(tmp_dir, item))
+                except Exception as e:
+                    msg = f"Failed to remove temp directory '{item}': {e}"
+                    raise AssertionError(msg) from e
+
+
+# Reference test functions - these are the ones that should be executed by pytest
+def test_demo():
+    """Test demo notebook e2e execution."""
+    success, errors = _test_notebook_e2e("demo")
+
+    if not success:
+        for error in errors:
+            print(f"ERROR: {error}")
+        assert False, f"Demo notebook test failed: {'; '.join(errors)}"
+
+    cleanup_all_test_artifacts()
+
+
+def test_bmi():
+    """Test bmi notebook e2e execution."""
+    success, errors = _test_notebook_e2e("bmi")
+
+    if not success:
+        for error in errors:
+            print(f"ERROR: {error}")
+        assert False, f"BMI notebook test failed: {'; '.join(errors)}"
+
+    cleanup_all_test_artifacts()
+
+
+def test_bloods():
+    """Test bloods notebook e2e execution."""
+    success, errors = _test_notebook_e2e("bloods")
+
+    if not success:
+        for error in errors:
+            print(f"ERROR: {error}")
+        assert False, f"Bloods notebook test failed: {'; '.join(errors)}"
+
+    cleanup_all_test_artifacts()
+
+
+def test_drugs():
+    """Test drugs notebook e2e execution."""
+    success, errors = _test_notebook_e2e("drugs")
+
+    if not success:
+        for error in errors:
+            print(f"ERROR: {error}")
+        assert False, f"Drugs notebook test failed: {'; '.join(errors)}"
+
+    cleanup_all_test_artifacts()
+
+
+def test_diagnostics():
+    """Test diagnostics notebook e2e execution."""
+    success, errors = _test_notebook_e2e("diagnostics")
+
+    if not success:
+        for error in errors:
+            print(f"ERROR: {error}")
+        assert False, f"Diagnostics notebook test failed: {'; '.join(errors)}"
+
+    cleanup_all_test_artifacts()
+
+
+def test_core_02():
+    """Test core_02 notebook e2e execution."""
+    success, errors = _test_notebook_e2e("core_02")
+
+    if not success:
+        for error in errors:
+            print(f"ERROR: {error}")
+        assert False, f"Core 02 notebook test failed: {'; '.join(errors)}"
+
+    cleanup_all_test_artifacts()
+
+
+def test_bed():
+    """Test bed notebook e2e execution."""
+    success, errors = _test_notebook_e2e("bed")
+
+    if not success:
+        for error in errors:
+            print(f"ERROR: {error}")
+        assert False, f"Bed notebook test failed: {'; '.join(errors)}"
+
+    cleanup_all_test_artifacts()
+
+
+def test_vte_status():
+    """Test vte_status notebook e2e execution."""
+    success, errors = _test_notebook_e2e("vte_status")
+
+    if not success:
+        for error in errors:
+            print(f"ERROR: {error}")
+        assert False, f"VTE status notebook test failed: {'; '.join(errors)}"
+
+    cleanup_all_test_artifacts()
+
+
+def test_hosp_site():
+    """Test hosp_site notebook e2e execution."""
+    success, errors = _test_notebook_e2e("hosp_site")
+
+    if not success:
+        for error in errors:
+            print(f"ERROR: {error}")
+        assert False, f"Hosp site notebook test failed: {'; '.join(errors)}"
+
+    cleanup_all_test_artifacts()
+
+
+def test_core_resus():
+    """Test core_resus notebook e2e execution."""
+    success, errors = _test_notebook_e2e("core_resus")
+
+    if not success:
+        for error in errors:
+            print(f"ERROR: {error}")
+        assert False, f"Core resus notebook test failed: {'; '.join(errors)}"
+
+    cleanup_all_test_artifacts()
+
+
+def test_news():
+    """Test news notebook e2e execution."""
+    success, errors = _test_notebook_e2e("news")
+
+    if not success:
+        for error in errors:
+            print(f"ERROR: {error}")
+        assert False, f"News notebook test failed: {'; '.join(errors)}"
+
+    cleanup_all_test_artifacts()
+
+
+def test_smoking():
+    """Test smoking notebook e2e execution."""
+    success, errors = _test_notebook_e2e("smoking")
+
+    if not success:
+        for error in errors:
+            print(f"ERROR: {error}")
+        assert False, f"Smoking notebook test failed: {'; '.join(errors)}"
+
+    cleanup_all_test_artifacts()
+
+
+def test_annotations():
+    """Test annotations notebook e2e execution."""
+    success, errors = _test_notebook_e2e("annotations")
+
+    if not success:
+        for error in errors:
+            print(f"ERROR: {error}")
+        assert False, f"Annotations notebook test failed: {'; '.join(errors)}"
+
+    cleanup_all_test_artifacts()
+
+
+def test_appointments():
+    """Test appointments notebook e2e execution."""
+    success, errors = _test_notebook_e2e("appointments")
+
+    if not success:
+        for error in errors:
+            print(f"ERROR: {error}")
+        assert False, f"Appointments notebook test failed: {'; '.join(errors)}"
+
+    cleanup_all_test_artifacts()
+
+
+def test_textual_obs():
+    """Test textual_obs notebook e2e execution."""
+    success, errors = _test_notebook_e2e("textual_obs")
+
+    if not success:
+        for error in errors:
+            print(f"ERROR: {error}")
+        assert False, f"Textual obs notebook test failed: {'; '.join(errors)}"
+
+    cleanup_all_test_artifacts()
+
+
+def test_covid():
+    """Test covid notebook e2e execution."""
+    success, errors = _test_notebook_e2e("covid")
+
+    if not success:
+        for error in errors:
+            print(f"ERROR: {error}")
+        assert False, f"Covid notebook test failed: {'; '.join(errors)}"
+
+    cleanup_all_test_artifacts()
+
+
+def test_epic_encounters():
+    """Test epic_encounters notebook e2e execution."""
+    success, errors = _test_notebook_e2e("epic_encounters")
+
+    if not success:
+        for error in errors:
+            print(f"ERROR: {error}")
+        assert False, f"Epic encounters notebook test failed: {'; '.join(errors)}"
+
+    cleanup_all_test_artifacts()
+
+
+def test_epic_clinical_notes():
+    """Test epic_clinical_notes notebook e2e execution."""
+    success, errors = _test_notebook_e2e("epic_clinical_notes")
+
+    if not success:
+        for error in errors:
+            print(f"ERROR: {error}")
+        assert False, f"Epic clinical notes notebook test failed: {'; '.join(errors)}"
+
+    cleanup_all_test_artifacts()
+
+
+def test_epic_medical_history():
+    """Test epic_medical_history notebook e2e execution."""
+    success, errors = _test_notebook_e2e("epic_medical_history")
+
+    if not success:
+        for error in errors:
+            print(f"ERROR: {error}")
+        assert False, f"Epic medical history notebook test failed: {'; '.join(errors)}"
+
+    cleanup_all_test_artifacts()
+
+
+def test_epic_orders():
+    """Test epic_orders notebook e2e execution."""
+    success, errors = _test_notebook_e2e("epic_orders")
+
+    if not success:
+        for error in errors:
+            print(f"ERROR: {error}")
+        assert False, f"Epic orders notebook test failed: {'; '.join(errors)}"
+
+    cleanup_all_test_artifacts()
+
+
+def test_epic_lab_results():
+    """Test epic_lab_results notebook e2e execution."""
+    success, errors = _test_notebook_e2e("epic_lab_results")
+
+    if not success:
+        for error in errors:
+            print(f"ERROR: {error}")
+        assert False, f"Epic lab results notebook test failed: {'; '.join(errors)}"
+
+    cleanup_all_test_artifacts()
+
+
+def test_epic_patients():
+    """Test epic_patients notebook e2e execution."""
+    success, errors = _test_notebook_e2e("epic_patients")
+
+    if not success:
+        for error in errors:
+            print(f"ERROR: {error}")
+        assert False, f"Epic patients notebook test failed: {'; '.join(errors)}"
+
+    cleanup_all_test_artifacts()
+
+
+def test_epic_imaging_reports():
+    """Test epic_imaging_reports notebook e2e execution."""
+    success, errors = _test_notebook_e2e("epic_imaging_reports")
+
+    if not success:
+        for error in errors:
+            print(f"ERROR: {error}")
+        assert False, f"Epic imaging reports notebook test failed: {'; '.join(errors)}"
+
+    cleanup_all_test_artifacts()
+
+
+def test_epic_clinical_notes_appointments():
+    """Test epic_clinical_notes_appointments notebook e2e execution."""
+    success, errors = _test_notebook_e2e("epic_clinical_notes_appointments")
+
+    if not success:
+        for error in errors:
+            print(f"ERROR: {error}")
+        assert (
+            False
+        ), f"Epic clinical notes appointments notebook test failed: {'; '.join(errors)}"
+
+    cleanup_all_test_artifacts()
+
+
+def test_annotations_mrc():
+    """Test annotations_mrc notebook e2e execution."""
+    success, errors = _test_notebook_e2e("annotations_mrc")
+
+    if not success:
+        for error in errors:
+            print(f"ERROR: {error}")
+        assert False, f"Annotations MRC notebook test failed: {'; '.join(errors)}"
+
+    cleanup_all_test_artifacts()
+
+
+def test_negated_presence_annotations():
+    """Test negated_presence_annotations notebook e2e execution."""
+    success, errors = _test_notebook_e2e("negated_presence_annotations")
+
+    if not success:
+        for error in errors:
+            print(f"ERROR: {error}")
+        assert (
+            False
+        ), f"Negated presence annotations notebook test failed: {'; '.join(errors)}"
+
+    cleanup_all_test_artifacts()
+
+
+def test_annotations_reports():
+    """Test annotations_reports notebook e2e execution."""
+    success, errors = _test_notebook_e2e("annotations_reports")
+
+    if not success:
+        for error in errors:
+            print(f"ERROR: {error}")
+        assert False, f"Annotations reports notebook test failed: {'; '.join(errors)}"
+
+    cleanup_all_test_artifacts()
+
+
 def run_notebook(notebook_path: str, key: str) -> tuple[bool, list[str]]:
     """
     Execute a notebook and return (success, error_messages).
@@ -134,17 +507,17 @@ from pat2vec.util.docker_elastic import ElasticContainer
 es_container = ElasticContainer()
 if es_container.start():
     host, username, password = es_container.get_credentials()
-    
+
     # Write directly to the expected credentials file
     creds_content = f"""username = "{username}"
 password = "{password}"
 api_key = None
 hosts = ["{host}"]
 """
-    
+
     with open("/workspaces/pat2vec/test_elastic_credentials.py", "w") as f:
         f.write(creds_content)
-    
+
     print("Created test_elastic_credentials.py")
 else:
     raise RuntimeError("Failed to start Elasticsearch container for credential setup")
@@ -219,22 +592,6 @@ else:
             pass
 
 
-def cleanup_temp_dir(key: str) -> bool:
-    """Clean up temp directory if it exists."""
-    temp_dir = get_temp_dir(key)
-
-    try:
-        if os.path.exists(temp_dir):
-            shutil.rmtree(temp_dir, ignore_errors=True)
-    except Exception as e:
-        print(f"Warning: Failed to clean up {temp_dir}: {e}")
-
-    # Clean up credential files matching pattern for this key
-    _cleanup_credentials_for_key(key)
-
-    return True
-
-
 def _cleanup_credentials_for_key(key: str) -> None:
     """Clean up credentials file for a specific notebook key."""
 
@@ -287,7 +644,7 @@ def cleanup_all_test_artifacts() -> None:
         pass
 
 
-def test_notebook_e2e(notebook_key: str) -> tuple[bool, list[str]]:
+def _test_notebook_e2e(notebook_key: str) -> tuple[bool, list[str]]:
     """
     Run a complete notebook e2e test.
 
@@ -312,373 +669,3 @@ def test_notebook_e2e(notebook_key: str) -> tuple[bool, list[str]]:
     errors.extend(execute_errors)
 
     return (has_markdown and has_merge and success), errors
-
-
-def update_status_json(
-    key: str, status: str, error_msg: str = "", steps_done: list | None = None
-):
-    """Update status.json with current notebook state."""
-    status_path = "/workspaces/pat2vec/.ai/notebook_tests/status.json"
-
-    try:
-        with open(status_path, "r", encoding="utf-8") as f:
-            status_data = json.load(f)
-    except (FileNotFoundError, json.JSONDecodeError):
-        status_data = {}
-
-    if key not in status_data:
-        status_data[key] = {
-            "status": "pending",
-            "steps_done": [],
-            "steps_remaining": [],
-            "last_error": "",
-            "last_updated": "",
-        }
-
-    current_time = os.popen("date -u '+%Y-%m-%dT%H:%M:%S'").read().strip()
-
-    status_data[key]["status"] = status
-    if error_msg:
-        status_data[key]["last_error"] = error_msg
-
-    if steps_done:
-        status_data[key]["steps_done"].extend(steps_done)
-
-    status_data[key]["steps_remaining"] = []
-
-    if status == "done":
-        status_data[key]["steps_remaining"] = []
-
-    status_data[key]["last_updated"] = current_time
-
-    with open(status_path, "w", encoding="utf-8") as f:
-        json.dump(status_data, f, indent=2)
-
-
-# Reference test functions - these are the ones that should be executed by pytest
-def test_demo():
-    """Test demo notebook e2e execution."""
-    success, errors = test_notebook_e2e("demo")
-
-    if not success:
-        for error in errors:
-            print(f"ERROR: {error}")
-        assert False, f"Demo notebook test failed: {'; '.join(errors)}"
-
-    cleanup_all_test_artifacts()
-
-
-def test_bmi():
-    """Test bmi notebook e2e execution."""
-    success, errors = test_notebook_e2e("bmi")
-
-    if not success:
-        for error in errors:
-            print(f"ERROR: {error}")
-        assert False, f"BMI notebook test failed: {'; '.join(errors)}"
-
-    cleanup_all_test_artifacts()
-
-
-def test_bloods():
-    """Test bloods notebook e2e execution."""
-    success, errors = test_notebook_e2e("bloods")
-
-    if not success:
-        for error in errors:
-            print(f"ERROR: {error}")
-        assert False, f"Bloods notebook test failed: {'; '.join(errors)}"
-
-    cleanup_all_test_artifacts()
-
-
-def test_drugs():
-    """Test drugs notebook e2e execution."""
-    success, errors = test_notebook_e2e("drugs")
-
-    if not success:
-        for error in errors:
-            print(f"ERROR: {error}")
-        assert False, f"Drugs notebook test failed: {'; '.join(errors)}"
-
-    cleanup_all_test_artifacts()
-
-
-def test_diagnostics():
-    """Test diagnostics notebook e2e execution."""
-    success, errors = test_notebook_e2e("diagnostics")
-
-    if not success:
-        for error in errors:
-            print(f"ERROR: {error}")
-        assert False, f"Diagnostics notebook test failed: {'; '.join(errors)}"
-
-    cleanup_all_test_artifacts()
-
-
-def test_core_02():
-    """Test core_02 notebook e2e execution."""
-    success, errors = test_notebook_e2e("core_02")
-
-    if not success:
-        for error in errors:
-            print(f"ERROR: {error}")
-        assert False, f"Core 02 notebook test failed: {'; '.join(errors)}"
-
-    cleanup_all_test_artifacts()
-
-
-def test_bed():
-    """Test bed notebook e2e execution."""
-    success, errors = test_notebook_e2e("bed")
-
-    if not success:
-        for error in errors:
-            print(f"ERROR: {error}")
-        assert False, f"Bed notebook test failed: {'; '.join(errors)}"
-
-    cleanup_all_test_artifacts()
-
-
-def test_vte_status():
-    """Test vte_status notebook e2e execution."""
-    success, errors = test_notebook_e2e("vte_status")
-
-    if not success:
-        for error in errors:
-            print(f"ERROR: {error}")
-        assert False, f"VTE status notebook test failed: {'; '.join(errors)}"
-
-    cleanup_all_test_artifacts()
-
-
-def test_hosp_site():
-    """Test hosp_site notebook e2e execution."""
-    success, errors = test_notebook_e2e("hosp_site")
-
-    if not success:
-        for error in errors:
-            print(f"ERROR: {error}")
-        assert False, f"Hosp site notebook test failed: {'; '.join(errors)}"
-
-    cleanup_all_test_artifacts()
-
-
-def test_core_resus():
-    """Test core_resus notebook e2e execution."""
-    success, errors = test_notebook_e2e("core_resus")
-
-    if not success:
-        for error in errors:
-            print(f"ERROR: {error}")
-        assert False, f"Core resus notebook test failed: {'; '.join(errors)}"
-
-    cleanup_all_test_artifacts()
-
-
-def test_news():
-    """Test news notebook e2e execution."""
-    success, errors = test_notebook_e2e("news")
-
-    if not success:
-        for error in errors:
-            print(f"ERROR: {error}")
-        assert False, f"News notebook test failed: {'; '.join(errors)}"
-
-    cleanup_all_test_artifacts()
-
-
-def test_smoking():
-    """Test smoking notebook e2e execution."""
-    success, errors = test_notebook_e2e("smoking")
-
-    if not success:
-        for error in errors:
-            print(f"ERROR: {error}")
-        assert False, f"Smoking notebook test failed: {'; '.join(errors)}"
-
-    cleanup_all_test_artifacts()
-
-
-def test_annotations():
-    """Test annotations notebook e2e execution."""
-    success, errors = test_notebook_e2e("annotations")
-
-    if not success:
-        for error in errors:
-            print(f"ERROR: {error}")
-        assert False, f"Annotations notebook test failed: {'; '.join(errors)}"
-
-    cleanup_all_test_artifacts()
-
-
-def test_appointments():
-    """Test appointments notebook e2e execution."""
-    success, errors = test_notebook_e2e("appointments")
-
-    if not success:
-        for error in errors:
-            print(f"ERROR: {error}")
-        assert False, f"Appointments notebook test failed: {'; '.join(errors)}"
-
-    cleanup_all_test_artifacts()
-
-
-def test_textual_obs():
-    """Test textual_obs notebook e2e execution."""
-    success, errors = test_notebook_e2e("textual_obs")
-
-    if not success:
-        for error in errors:
-            print(f"ERROR: {error}")
-        assert False, f"Textual obs notebook test failed: {'; '.join(errors)}"
-
-    cleanup_all_test_artifacts()
-
-
-def test_covid():
-    """Test covid notebook e2e execution."""
-    success, errors = test_notebook_e2e("covid")
-
-    if not success:
-        for error in errors:
-            print(f"ERROR: {error}")
-        assert False, f"Covid notebook test failed: {'; '.join(errors)}"
-
-    cleanup_all_test_artifacts()
-
-
-def test_epic_encounters():
-    """Test epic_encounters notebook e2e execution."""
-    success, errors = test_notebook_e2e("epic_encounters")
-
-    if not success:
-        for error in errors:
-            print(f"ERROR: {error}")
-        assert False, f"Epic encounters notebook test failed: {'; '.join(errors)}"
-
-    cleanup_all_test_artifacts()
-
-
-def test_epic_clinical_notes():
-    """Test epic_clinical_notes notebook e2e execution."""
-    success, errors = test_notebook_e2e("epic_clinical_notes")
-
-    if not success:
-        for error in errors:
-            print(f"ERROR: {error}")
-        assert False, f"Epic clinical notes notebook test failed: {'; '.join(errors)}"
-
-    cleanup_all_test_artifacts()
-
-
-def test_epic_medical_history():
-    """Test epic_medical_history notebook e2e execution."""
-    success, errors = test_notebook_e2e("epic_medical_history")
-
-    if not success:
-        for error in errors:
-            print(f"ERROR: {error}")
-        assert False, f"Epic medical history notebook test failed: {'; '.join(errors)}"
-
-    cleanup_all_test_artifacts()
-
-
-def test_epic_orders():
-    """Test epic_orders notebook e2e execution."""
-    success, errors = test_notebook_e2e("epic_orders")
-
-    if not success:
-        for error in errors:
-            print(f"ERROR: {error}")
-        assert False, f"Epic orders notebook test failed: {'; '.join(errors)}"
-
-    cleanup_all_test_artifacts()
-
-
-def test_epic_lab_results():
-    """Test epic_lab_results notebook e2e execution."""
-    success, errors = test_notebook_e2e("epic_lab_results")
-
-    if not success:
-        for error in errors:
-            print(f"ERROR: {error}")
-        assert False, f"Epic lab results notebook test failed: {'; '.join(errors)}"
-
-    cleanup_all_test_artifacts()
-
-
-def test_epic_patients():
-    """Test epic_patients notebook e2e execution."""
-    success, errors = test_notebook_e2e("epic_patients")
-
-    if not success:
-        for error in errors:
-            print(f"ERROR: {error}")
-        assert False, f"Epic patients notebook test failed: {'; '.join(errors)}"
-
-    cleanup_all_test_artifacts()
-
-
-def test_epic_imaging_reports():
-    """Test epic_imaging_reports notebook e2e execution."""
-    success, errors = test_notebook_e2e("epic_imaging_reports")
-
-    if not success:
-        for error in errors:
-            print(f"ERROR: {error}")
-        assert False, f"Epic imaging reports notebook test failed: {'; '.join(errors)}"
-
-    cleanup_all_test_artifacts()
-
-
-def test_epic_clinical_notes_appointments():
-    """Test epic_clinical_notes_appointments notebook e2e execution."""
-    success, errors = test_notebook_e2e("epic_clinical_notes_appointments")
-
-    if not success:
-        for error in errors:
-            print(f"ERROR: {error}")
-        assert (
-            False
-        ), f"Epic clinical notes appointments notebook test failed: {'; '.join(errors)}"
-
-    cleanup_all_test_artifacts()
-
-
-def test_annotations_mrc():
-    """Test annotations_mrc notebook e2e execution."""
-    success, errors = test_notebook_e2e("annotations_mrc")
-
-    if not success:
-        for error in errors:
-            print(f"ERROR: {error}")
-        assert False, f"Annotations MRC notebook test failed: {'; '.join(errors)}"
-
-    cleanup_all_test_artifacts()
-
-
-def test_negated_presence_annotations():
-    """Test negated_presence_annotations notebook e2e execution."""
-    success, errors = test_notebook_e2e("negated_presence_annotations")
-
-    if not success:
-        for error in errors:
-            print(f"ERROR: {error}")
-        assert (
-            False
-        ), f"Negated presence annotations notebook test failed: {'; '.join(errors)}"
-
-    cleanup_all_test_artifacts()
-
-
-def test_annotations_reports():
-    """Test annotations_reports notebook e2e execution."""
-    success, errors = test_notebook_e2e("annotations_reports")
-
-    if not success:
-        for error in errors:
-            print(f"ERROR: {error}")
-        assert False, f"Annotations reports notebook test failed: {'; '.join(errors)}"
-
-    cleanup_all_test_artifacts()

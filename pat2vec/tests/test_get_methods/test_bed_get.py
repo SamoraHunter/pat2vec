@@ -5,6 +5,21 @@ import sys
 
 import numpy as np
 import pandas as pd
+import pytest
+
+from pat2vec.main_pat2vec import main
+from pat2vec.util.config_pat2vec import config_class
+from pat2vec.util.get_dummy_data_cohort_searcher import (
+    generate_bed_data,
+    populate_elastic_with_dummy_data,
+)
+from pat2vec.util.helper_functions import get_all_features
+from pat2vec.util.logger_setup import setup_logger
+from pat2vec.pat2vec_get_methods.get_method_bed import get_bed
+from pat2vec.pat2vec_search.cogstack_search_methods import (
+    initialize_cogstack_client,
+)
+from pat2vec.util.elasticsearch_methods import ingest_data_to_elasticsearch
 
 random_seed_value = 42
 
@@ -15,9 +30,13 @@ random.seed(random_seed_value)
 class TestBedGet:
     """Stage-mirroring pytest for test_bed_get.ipynb."""
 
+    @pytest.fixture(autouse=True, scope="class")
     @classmethod
-    def setup_class(cls: type) -> None:
-        """Set up shared state for all tests."""
+    def _start_elastic(cls, elastic_container):
+        """Run all setup that depends on the shared ES container."""
+        cls.cred_path = elastic_container
+        cls.creds_filename = elastic_container
+
         cls.current_dir = os.getcwd()
         cls.grandparent_dir = os.path.dirname(os.path.dirname(cls.current_dir))
 
@@ -29,46 +48,18 @@ class TestBedGet:
         cls.PROJ_NAME = "bed_test_project"
         cls.DB_FILENAME = "temp_bed_db.sqlite"
         cls.DB_PATH = os.path.join(cls.PROJ_NAME, "outputs", cls.DB_FILENAME)
-        cls.creds_filename = "test_elastic_credentials.py"
 
         # Cleanup previous test outputs
         for dir_to_remove in ["bed_test_project"]:
             try:
                 shutil.rmtree(dir_to_remove, ignore_errors=True)
             except Exception as e:
-                msg = f"Failed to clean up '{dir_to_remove}' directory: {e}. "
-                "Critical error - cannot start with stale data."
-                raise RuntimeError(msg) from e
-
-        # Start Elasticsearch container
-        from pat2vec.util.docker_elastic import ElasticContainer
-
-        cls.es_container = ElasticContainer()
-        cls.es_container.stop()
-
-        if not cls.es_container.start():
-            msg = "Failed to start Elasticsearch container. Check if Docker is running."
-            raise RuntimeError(msg)
-
-        host, username, password = cls.es_container.get_credentials()
-
-        creds_content = f"""
-username = "{username}"
-password = "{password}"
-api_key = None
-hosts = ["{host}"]
-"""
-
-        with open(cls.creds_filename, "w") as f:
-            f.write(creds_content)
-
-        # Create config for population
-        from pat2vec.util.config_pat2vec import config_class
+                raise RuntimeError(f"Failed to clean up '{dir_to_remove}': {e}") from e
 
         schema_path = os.path.abspath("test_files/elastic_schemas.json")
         config_populate = config_class(
             proj_name="bed_test_project",
-            credentials_path=cls.creds_filename,
+            credentials_path=cls.cred_path,
             test_schema_path=schema_path,
             testing=True,
             testing_elastic=True,
@@ -80,21 +71,9 @@ hosts = ["{host}"]
             global_end_day=31,
         )
 
-        # Populate dummy data
-        from pat2vec.util.get_dummy_data_cohort_searcher import (
-            populate_elastic_with_dummy_data,
-        )
-
         cls.patient_ids = populate_elastic_with_dummy_data(
-            config_populate,
-            n_patients=5,
+            config_populate, n_patients=5
         )
-
-        # Setup CohStack client and index
-        from pat2vec.pat2vec_search.cogstack_search_methods import (
-            initialize_cogstack_client,
-        )
-
         cls.cs = initialize_cogstack_client(config_populate)
 
         indices = [
@@ -105,10 +84,6 @@ hosts = ["{host}"]
             "pims_apps",
         ]
         cls.cs.elastic.indices.refresh(index=indices, ignore_unavailable=True)
-
-        # Generate and ingest BED data
-        from pat2vec.util.elasticsearch_methods import ingest_data_to_elasticsearch
-        from pat2vec.util.get_dummy_data_cohort_searcher import generate_bed_data
 
         bed_dfs = []
         for pid in cls.patient_ids:
@@ -126,28 +101,19 @@ hosts = ["{host}"]
             pd.concat(bed_dfs, ignore_index=True) if len(bed_dfs) > 1 else bed_dfs[0]
         )
         df_bed = df_bed.where(pd.notnull(df_bed), None)
-
         ingest_data_to_elasticsearch(df_bed, "observations", es_client=cls.cs.elastic)
         cls.cs.elastic.indices.refresh(index="observations")
 
-        # Initialize database
         os.makedirs(os.path.dirname(cls.DB_PATH), exist_ok=True)
-
         if os.path.exists(cls.DB_PATH):
             os.remove(cls.DB_PATH)
 
         db_connection_string = f"sqlite:///{cls.DB_PATH}"
-
-        from pat2vec.util.logger_setup import setup_logger
-
         cls.logger = setup_logger()
-
-        # Create main config
-        from pat2vec.util.config_pat2vec import config_class
 
         cls.config_obj = config_class(
             proj_name=cls.PROJ_NAME,
-            credentials_path=cls.creds_filename,
+            credentials_path=cls.cred_path,
             current_path_dir="",
             main_options={"bed": True},
             batch_mode=True,
@@ -167,9 +133,6 @@ hosts = ["{host}"]
             all_patient_list=cls.patient_ids,
         )
 
-        # Run pat2vec pipeline
-        from pat2vec.main_pat2vec import main
-
         cls.pat2vec_obj = main(
             cogstack=True,
             use_filter=False,
@@ -178,43 +141,9 @@ hosts = ["{host}"]
             hostname=None,
             config_obj=cls.config_obj,
         )
-
-        # Process first patient
         cls.pat2vec_obj.pat_maker(0)
 
-    @classmethod
-    def teardown_class(cls: type) -> None:
-        """Clean up after all tests."""
-        # Stop Elasticsearch container first
-        try:
-            if hasattr(cls, "es_container") and cls.es_container is not None:
-                cls.es_container.stop()
-        except Exception as e:
-            print(f"Warning: Failed to stop Elasticsearch container: {e}")
-
-        # Remove database file
-        try:
-            if os.path.exists(cls.DB_PATH):
-                os.remove(cls.DB_PATH)
-        except Exception as e:
-            print(f"Warning: Failed to remove database file '{cls.DB_PATH}': {e}")
-
-        # Remove project directory
-        try:
-            if os.path.exists(cls.PROJ_NAME):
-                shutil.rmtree(cls.PROJ_NAME, ignore_errors=False)
-        except Exception as e:
-            msg = f"Failed to remove '{cls.PROJ_NAME}' directory: {e}"
-            print(msg)
-
-        # Remove credentials file - do this in teardown_class AFTER all tests complete
-        try:
-            if os.path.exists(cls.creds_filename):
-                os.remove(cls.creds_filename)
-        except Exception as e:
-            print(
-                f"Warning: Failed to remove Elasticsearch credentials file '{cls.creds_filename}': {e}",
-            )
+    # --- teardown_class removed — session fixture handles container.stop() ---
 
     def test_1_dummy_data_generation(self):
         """Test dummy data generation - verify patient IDs were created."""
@@ -335,16 +264,6 @@ hosts = ["{host}"]
             msg = f"Failed to remove '{self.PROJ_NAME}' directory: {e}"
             raise AssertionError(msg) from e
 
-        try:
-            if os.path.exists(self.creds_filename):
-                os.remove(self.creds_filename)
-        except Exception as e:
-            msg = f"Failed to remove Elasticsearch credentials file '{self.creds_filename}': {e}"
-            raise AssertionError(msg) from e
-
         # Verify cleanup
         assert not os.path.exists(self.DB_PATH), "Database file should be removed"
         assert not os.path.exists(self.PROJ_NAME), "Project directory should be removed"
-        assert not os.path.exists(
-            self.creds_filename,
-        ), "Credentials file should be removed"

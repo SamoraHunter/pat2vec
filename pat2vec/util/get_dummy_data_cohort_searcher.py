@@ -3671,7 +3671,6 @@ def populate_elastic_with_dummy_data(
                     settings=settings,
                 )
                 logger.info(f"Created index: {index_name} with custom schema")
-            logger.warning("Could not initialize CogStack client for schema creation.")
         except Exception as e:
             logger.error(f"Failed to apply Elastic schemas: {e}")
 

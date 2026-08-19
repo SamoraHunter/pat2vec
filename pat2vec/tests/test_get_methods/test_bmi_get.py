@@ -5,10 +5,15 @@ import sys
 
 import numpy as np
 import pandas as pd
+import pytest
 
 from pat2vec.main_pat2vec import main
+from pat2vec.pat2vec_get_methods.get_method_bmi import get_bmi_features
+from pat2vec.pat2vec_search.cogstack_search_methods import (
+    initialize_cogstack_client,
+)
 from pat2vec.util.config_pat2vec import config_class
-from pat2vec.util.docker_elastic import ElasticContainer
+from pat2vec.util.elasticsearch_methods import ingest_data_to_elasticsearch
 from pat2vec.util.get_dummy_data_cohort_searcher import (
     generate_bmi_data,
     populate_elastic_with_dummy_data,
@@ -16,12 +21,6 @@ from pat2vec.util.get_dummy_data_cohort_searcher import (
 from pat2vec.util.helper_functions import get_all_features
 from pat2vec.util.logger_setup import setup_logger
 from pat2vec.util.post_processing_build_methods import merge_bmi_csv
-from pat2vec.pat2vec_get_methods.get_method_bmi import get_bmi_features
-from pat2vec.pat2vec_search.cogstack_search_methods import (
-    initialize_cogstack_client,
-)
-from pat2vec.util.helper_functions import get_all_features
-from pat2vec.util.elasticsearch_methods import ingest_data_to_elasticsearch
 
 random_seed_value = 42
 
@@ -32,9 +31,12 @@ random.seed(random_seed_value)
 class TestBMIGet:
     """Stage-mirroring pytest for test_bmi_get.ipynb."""
 
-    @classmethod
-    def setup_class(cls: type) -> None:
-        """Set up shared state for all tests."""
+    @pytest.fixture(autouse=True, scope="class")
+    def _start_elastic(self, elastic_container):
+        cls = type(self)
+        cls.cred_path = elastic_container
+        cls.creds_filename = elastic_container
+
         cls.current_dir = os.getcwd()
         cls.grandparent_dir = os.path.dirname(os.path.dirname(cls.current_dir))
 
@@ -46,8 +48,6 @@ class TestBMIGet:
         cls.PROJ_NAME = "bmi_test_project"
         cls.DB_FILENAME = "temp_bmi_db.sqlite"
         cls.DB_PATH = os.path.join(cls.PROJ_NAME, "outputs", cls.DB_FILENAME)
-        cls.creds_filename = "test_elastic_credentials.py"
-        cls.cred_path = os.path.join(cls.PROJ_NAME, cls.creds_filename)
 
         # Cleanup previous test outputs
         for dir_to_remove in ["bmi_test_project"]:
@@ -58,28 +58,6 @@ class TestBMIGet:
                 "Critical error - cannot start with stale data."
                 raise RuntimeError(msg) from e
 
-        # Start Elasticsearch container
-        cls.es_container = ElasticContainer()
-        cls.es_container.stop()
-
-        if not cls.es_container.start():
-            msg = "Failed to start Elasticsearch container. Check if Docker is running."
-            raise RuntimeError(msg)
-
-        host, username, password = cls.es_container.get_credentials()
-
-        creds_content = f"""
-username = "{username}"
-password = "{password}"
-api_key = None
-hosts = ["{host}"]
-"""
-
-        os.makedirs(cls.PROJ_NAME, exist_ok=True)
-        with open(cls.cred_path, "w") as f:
-            f.write(creds_content)
-
-        # Create config for population
         schema_path = os.path.abspath("test_files/elastic_schemas.json")
         config_populate = config_class(
             proj_name="bmi_test_project",
@@ -95,13 +73,11 @@ hosts = ["{host}"]
             global_end_day=31,
         )
 
-        # Populate dummy data
         cls.patient_ids = populate_elastic_with_dummy_data(
             config_populate,
             n_patients=5,
         )
 
-        # Setup CohStack client and index
         cls.cs = initialize_cogstack_client(config_populate)
 
         indices = [
@@ -113,7 +89,6 @@ hosts = ["{host}"]
         ]
         cls.cs.elastic.indices.refresh(index=indices, ignore_unavailable=True)
 
-        # Generate and ingest BMI data
         bmi_dfs = []
         for pid in cls.patient_ids:
             df = generate_bmi_data(
@@ -134,7 +109,6 @@ hosts = ["{host}"]
         ingest_data_to_elasticsearch(df_bmi, "observations", es_client=cls.cs.elastic)
         cls.cs.elastic.indices.refresh(index="observations")
 
-        # Initialize database
         os.makedirs(os.path.dirname(cls.DB_PATH), exist_ok=True)
 
         if os.path.exists(cls.DB_PATH):
@@ -144,7 +118,6 @@ hosts = ["{host}"]
 
         cls.logger = setup_logger()
 
-        # Create main config
         cls.config_obj = config_class(
             proj_name=cls.PROJ_NAME,
             credentials_path=cls.cred_path,
@@ -167,7 +140,6 @@ hosts = ["{host}"]
             all_patient_list=cls.patient_ids,
         )
 
-        # Run pat2vec pipeline
         cls.pat2vec_obj = main(
             cogstack=True,
             use_filter=False,
@@ -177,13 +149,7 @@ hosts = ["{host}"]
             config_obj=cls.config_obj,
         )
 
-        # Process first patient
         cls.pat2vec_obj.pat_maker(0)
-
-    @classmethod
-    def teardown_class(cls: type) -> None:
-        """Clean up after all tests - just stop ES container."""
-        cls.es_container.stop()
 
     def test_1_dummy_data_generation(self):
         """Test dummy data generation - verify patient IDs were created."""
@@ -248,7 +214,6 @@ hosts = ["{host}"]
 
     def test_bmi_data_retrieval(self):
         """Test BMI data retrieval - verify BMI features can be retrieved."""
-
         all_pat_list = self.pat2vec_obj.all_patient_list
         assert len(all_pat_list) > 0, "Patient list should not be empty"
 
@@ -270,7 +235,6 @@ hosts = ["{host}"]
 
     def test_merge_bmi_data_functionality(self):
         """Test merge BMI data functionality - verify merge function creates CSV."""
-
         all_pat_list = self.pat2vec_obj.all_patient_list
         merged_path = merge_bmi_csv(all_pat_list, self.config_obj, overwrite=True)
 
@@ -296,14 +260,6 @@ hosts = ["{host}"]
             msg = f"Failed to remove '{self.PROJ_NAME}' directory: {e}"
             raise AssertionError(msg) from e
 
-        try:
-            if os.path.exists(self.cred_path):
-                os.remove(self.cred_path)
-        except Exception as e:
-            msg = f"Failed to remove Elasticsearch credentials file '{self.cred_path}': {e}"
-            raise AssertionError(msg) from e
-
         # Verify cleanup
         assert not os.path.exists(self.DB_PATH), "Database file should be removed"
         assert not os.path.exists(self.PROJ_NAME), "Project directory should be removed"
-        assert not os.path.exists(self.cred_path), "Credentials file should be removed"

@@ -5,20 +5,18 @@ import sys
 
 import numpy as np
 import pandas as pd
+import pytest
 
 from pat2vec.main_pat2vec import main
-from pat2vec.util.config_pat2vec import config_class
-from pat2vec.util.docker_elastic import ElasticContainer
-from pat2vec.util.get_dummy_data_cohort_searcher import (
-    populate_elastic_with_dummy_data,
-)
-from pat2vec.util.helper_functions import get_all_features
-from pat2vec.util.logger_setup import setup_logger
 from pat2vec.pat2vec_get_methods.get_method_news import get_news
 from pat2vec.pat2vec_search.cogstack_search_methods import (
     initialize_cogstack_client,
 )
+from pat2vec.util.config_pat2vec import config_class
 from pat2vec.util.elasticsearch_methods import ingest_data_to_elasticsearch
+from pat2vec.util.get_dummy_data_cohort_searcher import populate_elastic_with_dummy_data
+from pat2vec.util.helper_functions import get_all_features
+from pat2vec.util.logger_setup import setup_logger
 
 random_seed_value = 42
 
@@ -29,8 +27,13 @@ random.seed(random_seed_value)
 class TestNEWSGet:
     """Stage-mirroring pytest for test_news_get.ipynb."""
 
-    @classmethod
-    def setup_class(cls: type) -> None:
+    @pytest.fixture(autouse=True, scope="class")
+    def _start_elastic(self, elastic_container):
+        """Run all setup that depends on the shared ES container."""
+        cls = type(self)
+        cls.cred_path = elastic_container
+        cls.creds_filename = elastic_container
+
         cls.current_dir = os.getcwd()
         cls.grandparent_dir = os.path.dirname(os.path.dirname(cls.current_dir))
 
@@ -42,39 +45,17 @@ class TestNEWSGet:
         cls.PROJ_NAME = "news_test_project"
         cls.DB_FILENAME = "temp_news_db.sqlite"
         cls.DB_PATH = os.path.join(cls.PROJ_NAME, "outputs", cls.DB_FILENAME)
-        cls.creds_filename = "test_elastic_credentials.py"
 
         for dir_to_remove in ["news_test_project"]:
             try:
                 shutil.rmtree(dir_to_remove, ignore_errors=True)
             except Exception as e:
-                msg = f"Failed to clean up '{dir_to_remove}' directory: {e}. "
-                "Critical error - cannot start with stale data."
-                raise RuntimeError(msg) from e
-
-        cls.es_container = ElasticContainer()
-        cls.es_container.stop()
-
-        if not cls.es_container.start():
-            msg = "Failed to start Elasticsearch container. Check if Docker is running."
-            raise RuntimeError(msg)
-
-        host, username, password = cls.es_container.get_credentials()
-
-        creds_content = f"""
-username = "{username}"
-password = "{password}"
-api_key = None
-hosts = ["{host}"]
-"""
-
-        with open(cls.creds_filename, "w") as f:
-            f.write(creds_content)
+                raise RuntimeError(f"Failed to clean up '{dir_to_remove}': {e}") from e
 
         schema_path = os.path.abspath("test_files/elastic_schemas.json")
         config_populate = config_class(
             proj_name="news_test_project",
-            credentials_path=cls.creds_filename,
+            credentials_path=cls.cred_path,
             test_schema_path=schema_path,
             testing=True,
             testing_elastic=True,
@@ -90,7 +71,6 @@ hosts = ["{host}"]
             config_populate,
             n_patients=5,
         )
-
         cls.cs = initialize_cogstack_client(config_populate)
 
         indices = [
@@ -160,7 +140,6 @@ hosts = ["{host}"]
         cls.cs.elastic.indices.refresh(index="observations")
 
         os.makedirs(os.path.dirname(cls.DB_PATH), exist_ok=True)
-
         if os.path.exists(cls.DB_PATH):
             os.remove(cls.DB_PATH)
 
@@ -170,7 +149,7 @@ hosts = ["{host}"]
 
         cls.config_obj = config_class(
             proj_name=cls.PROJ_NAME,
-            credentials_path=cls.creds_filename,
+            credentials_path=cls.cred_path,
             current_path_dir="",
             main_options={"news": True},
             batch_mode=True,
@@ -198,40 +177,10 @@ hosts = ["{host}"]
             hostname=None,
             config_obj=cls.config_obj,
         )
-
         cls.pat2vec_obj.pat_maker(0)
 
-    @classmethod
-    def teardown_class(cls: type) -> None:
-        # Stop Elasticsearch container first
-        try:
-            if hasattr(cls, "es_container") and cls.es_container is not None:
-                cls.es_container.stop()
-        except Exception as e:
-            print(f"Warning: Failed to stop Elasticsearch container: {e}")
-
-        try:
-            if os.path.exists(cls.DB_PATH):
-                os.remove(cls.DB_PATH)
-        except Exception as e:
-            print(f"Warning: Failed to remove database file '{cls.DB_PATH}': {e}")
-
-        try:
-            if os.path.exists(cls.PROJ_NAME):
-                shutil.rmtree(cls.PROJ_NAME, ignore_errors=False)
-        except Exception as e:
-            msg = f"Failed to remove '{cls.PROJ_NAME}' directory: {e}"
-            print(msg)
-
-        try:
-            if os.path.exists(cls.creds_filename):
-                os.remove(cls.creds_filename)
-        except Exception as e:
-            print(
-                f"Warning: Failed to remove Elasticsearch credentials file '{cls.creds_filename}': {e}",
-            )
-
     def test_1_dummy_data_generation(self):
+        """Test dummy data generation - verify patient IDs were created."""
         assert (
             len(self.patient_ids) == 5
         ), f"Expected 5 patients, got {len(self.patient_ids)}"
@@ -240,6 +189,7 @@ hosts = ["{host}"]
         ), "All patient IDs should be strings"
 
     def test_2_config_and_pipeline_setup(self):
+        """Test config and pipeline setup - verify configuration was created."""
         assert self.config_obj is not None, "Config object should not be None"
         assert (
             self.config_obj.main_options.get("news", False) is True
@@ -247,6 +197,7 @@ hosts = ["{host}"]
         assert self.pat2vec_obj is not None, "pat2vec object should not be None"
 
     def test_3_index_population_and_verification(self):
+        """Test index population and verification - verify documents were ingested."""
         indices = [
             "epr_documents",
             "basic_observations",
@@ -273,6 +224,7 @@ hosts = ["{host}"]
         ), f"Expected at least {expected_news_count} NEWS observations, got {es_count}"
 
     def test_4_pat2vec_pipeline_execution(self):
+        """Test pat2vec pipeline execution - verify patient was processed."""
         assert (
             self.pat2vec_obj.all_patient_list is not None
         ), "Patient list should not be None"
@@ -281,11 +233,13 @@ hosts = ["{host}"]
         ), "Patient list should have patients"
 
     def test_5_feature_extraction(self):
+        """Test feature extraction - verify features were extracted."""
         all_features = get_all_features(self.config_obj)
         assert all_features is not None, "All features should not be None"
         assert not all_features.empty, "Features DataFrame should not be empty"
 
     def test_news_data_retrieval(self):
+        """Test NEWS data retrieval - verify NEWS features can be retrieved."""
         all_pat_list = self.pat2vec_obj.all_patient_list
         assert len(all_pat_list) > 0, "Patient list should not be empty"
 
@@ -306,6 +260,7 @@ hosts = ["{host}"]
             assert not news_data.empty, "NEWS DataFrame should not be empty"
 
     def test_merge_news_data_functionality(self):
+        """Test merge NEWS data functionality - verify merge function creates CSV."""
         from pat2vec.util.post_processing_build_methods import merge_news_csv
 
         all_pat_list = self.pat2vec_obj.all_patient_list
@@ -317,6 +272,7 @@ hosts = ["{host}"]
         assert not merged_data.empty, "Merged NEWS DataFrame should not be empty"
 
     def test_8_cleanup_verification(self):
+        """Test cleanup verification - verify all temp files are cleaned up properly."""
         try:
             if os.path.exists(self.DB_PATH):
                 os.remove(self.DB_PATH)
@@ -331,15 +287,5 @@ hosts = ["{host}"]
             msg = f"Failed to remove '{self.PROJ_NAME}' directory: {e}"
             raise AssertionError(msg) from e
 
-        try:
-            if os.path.exists(self.creds_filename):
-                os.remove(self.creds_filename)
-        except Exception as e:
-            msg = f"Failed to remove Elasticsearch credentials file '{self.creds_filename}': {e}"
-            raise AssertionError(msg) from e
-
         assert not os.path.exists(self.DB_PATH), "Database file should be removed"
         assert not os.path.exists(self.PROJ_NAME), "Project directory should be removed"
-        assert not os.path.exists(
-            self.creds_filename
-        ), "Credentials file should be removed"

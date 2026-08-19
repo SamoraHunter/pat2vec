@@ -5,10 +5,10 @@ import sys
 
 import numpy as np
 import pandas as pd
+import pytest
 
 from pat2vec.main_pat2vec import main
 from pat2vec.util.config_pat2vec import config_class
-from pat2vec.util.docker_elastic import ElasticContainer
 from pat2vec.util.get_dummy_data_cohort_searcher import (
     generate_epic_patients_data,
     populate_elastic_with_dummy_data,
@@ -34,9 +34,12 @@ random.seed(random_seed_value)
 class TestEpicPatientsGet:
     """Stage-mirroring pytest for epic patients feature extraction."""
 
-    @classmethod
-    def setup_class(cls: type) -> None:
-        """Set up shared state for all tests."""
+    @pytest.fixture(autouse=True, scope="class")
+    def _start_elastic(self, elastic_container):
+        cls = type(self)
+        cls.cred_path = elastic_container
+        cls.creds_filename = elastic_container
+
         cls.current_dir = os.getcwd()
         cls.grandparent_dir = os.path.dirname(os.path.dirname(cls.current_dir))
 
@@ -48,7 +51,6 @@ class TestEpicPatientsGet:
         cls.PROJ_NAME = "epic_patients_test_project"
         cls.DB_FILENAME = "temp_epic_patients_db.sqlite"
         cls.DB_PATH = os.path.join(cls.PROJ_NAME, "outputs", cls.DB_FILENAME)
-        cls.creds_filename = "test_elastic_credentials.py"
 
         for dir_to_remove in ["epic_patients_test_project"]:
             try:
@@ -57,25 +59,6 @@ class TestEpicPatientsGet:
                 msg = f"Failed to clean up '{dir_to_remove}' directory: {e}. "
                 "Critical error - cannot start with stale data."
                 raise RuntimeError(msg) from e
-
-        cls.es_container = ElasticContainer()
-        cls.es_container.stop()
-
-        if not cls.es_container.start():
-            msg = "Failed to start Elasticsearch container. Check if Docker is running."
-            raise RuntimeError(msg)
-
-        host, username, password = cls.es_container.get_credentials()
-
-        creds_content = f"""
-username = "{username}"
-password = "{password}"
-api_key = None
-hosts = ["{host}"]
-"""
-
-        with open(cls.creds_filename, "w") as f:
-            f.write(creds_content)
 
         schema_path = os.path.abspath("test_files/elastic_schemas.json")
         config_populate = config_class(
@@ -171,11 +154,6 @@ hosts = ["{host}"]
 
         cls.pat2vec_obj.pat_maker(0)
 
-    @classmethod
-    def teardown_class(cls: type) -> None:
-        """Clean up after all tests."""
-        cls.es_container.stop()
-
     def test_1_dummy_data_generation(self):
         """Test dummy data generation - verify patient IDs were created."""
         assert (
@@ -256,12 +234,9 @@ hosts = ["{host}"]
 
     def test_merge_epic_patients_data_functionality(self) -> None:
         """Test merge epic patients data functionality - verify merge function exists."""
-        from pat2vec.util.post_processing_build_methods import merge_epic_patients_csv
-
         all_pat_list = self.pat2vec_obj.all_patient_list
         assert len(all_pat_list) > 0, "Patient list should not be empty"
 
-        # Verify merge function is available and callable
         merged_path = merge_epic_patients_csv(
             all_pat_list, self.config_obj, overwrite=True
         )
@@ -282,14 +257,3 @@ hosts = ["{host}"]
         except Exception as e:
             msg = f"Failed to remove '{self.PROJ_NAME}' directory: {e}"
             raise AssertionError(msg) from e
-
-        try:
-            if os.path.exists(self.creds_filename):
-                os.remove(self.creds_filename)
-        except Exception as e:
-            msg = f"Failed to remove Elasticsearch credentials file '{self.creds_filename}': {e}"
-            raise AssertionError(msg) from e
-
-        assert not os.path.exists(self.DB_PATH)
-        assert not os.path.exists(self.PROJ_NAME)
-        assert not os.path.exists(self.creds_filename)

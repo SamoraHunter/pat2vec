@@ -525,8 +525,8 @@ def save_raw_patient_batch(
                 connection.execute(del_query, {"pat_id": patient_id})
 
             # Debug output - show columns before and after drop
-            print(
-                f"DEBUG helper_functions: Before drop - columns: {df.columns.tolist()}",
+            logger.debug(
+                f"Before drop - columns: {df.columns.tolist()}",
             )
 
             # Drop Elasticsearch/MongoDB metadata columns and index column that conflict with SQLite
@@ -534,11 +534,11 @@ def save_raw_patient_batch(
             cols_to_drop = ["_id", "_index", "_score", "search_term", "index"]
             for col in cols_to_drop:
                 if col in df.columns:
-                    print(f"DEBUG helper_functions: Dropping column {col}")
+                    logger.debug(f"Dropping column {col}")
                     df = df.drop(columns=col)
 
-            print(
-                f"DEBUG helper_functions: After drop - columns: {df.columns.tolist()}",
+            logger.debug(
+                f"After drop - columns: {df.columns.tolist()}",
             )
 
             # Fix problematic backslashes in text columns that cause SQLite parameter binding issues
@@ -842,6 +842,7 @@ def get_df_from_db(
     patient_ids: list[str] | None = None,
     patient_id_column: str = "client_idcode",
     columns: list[str] | None = None,
+    warn_on_missing: bool = True,
 ) -> pd.DataFrame:
     """Generic helper to retrieve a DataFrame from the database backend.
 
@@ -856,6 +857,7 @@ def get_df_from_db(
         patient_ids: An optional list of patient IDs to filter the DataFrame.
         patient_id_column: The name of the patient ID column.
         columns: An optional list of columns to select.
+        warn_on_missing: When True (default) log a warning if the table does not exist; when False log at debug level instead (used for DB cache probes where a missing table is expected on first run).
 
     Returns:
     -------
@@ -880,7 +882,10 @@ def get_df_from_db(
             inspector = inspect(connection)
             if not inspector.has_table(target_table, schema=target_schema):
                 error_msg = f"Table '{target_table}' not found in database."
-                logger.warning(f"{error_msg} Returning empty DataFrame.")
+                if warn_on_missing:
+                    logger.warning(f"{error_msg} Returning empty DataFrame.")
+                else:
+                    logger.debug(f"{error_msg} Returning empty DataFrame.")
                 return pd.DataFrame()
 
             table_columns = [
