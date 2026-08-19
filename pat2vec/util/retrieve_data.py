@@ -72,7 +72,7 @@ DATA_TYPE_CONFIG: dict[str, dict[str, str]] = {
         "display_name_filter": "CORE_SmokingStatus",
     },
     "vte_status": {
-        "db_table": "raw_obs_core_vte_status",
+        "db_table": "raw_vte",
         "db_schema": "raw_data",
         "path_attr": "pre_obs_batch_path",
         "id_column": "client_idcode",
@@ -245,6 +245,7 @@ def retrieve_patient_data(
     """Retrieves patient data based on data type and storage backend configuration.
 
     Args:
+    ----
         client_idcode: The unique identifier for the patient.
         data_type: The type of data to retrieve (e.g., 'epr_docs', 'bloods', 'drugs').
         config_obj: The configuration object containing backend settings and paths.
@@ -252,6 +253,7 @@ def retrieve_patient_data(
             data from Elasticsearch if not found in database/CSV.
 
     Returns:
+    -------
         pd.DataFrame: A DataFrame containing the requested data, or an empty DataFrame
         if not found or if data_type is invalid.
 
@@ -344,12 +346,14 @@ def _fetch_epic_data_from_es(
     """Fetches Epic data from Elasticsearch if not found in database/CSV.
 
     Args:
+    ----
         client_idcode: The unique identifier for the patient.
         data_type: The type of Epic data (e.g., 'epic_imaging_reports').
         config_obj: Configuration object with search function and date settings.
         cohort_searcher_with_terms_and_search: Search function to use.
 
     Returns:
+    -------
         pd.DataFrame: A DataFrame containing the fetched data, or empty if not found.
 
     """
@@ -535,12 +539,14 @@ def _fetch_data_from_dummy_generator(
     """Fetch patient data using the dummy generator when in testing mode.
 
     Args:
+    ----
         client_idcode: The unique identifier for the patient.
         data_type: The type of data to retrieve.
         config_obj: Configuration object with date settings and other params.
         cohort_searcher_with_terms_and_search: The dummy search function to call.
 
     Returns:
+    -------
         pd.DataFrame: A DataFrame containing the generated dummy data.
 
     """

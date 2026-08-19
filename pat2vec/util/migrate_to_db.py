@@ -65,7 +65,7 @@ MAPPINGS = [
     (
         "pre_obs_batch_path",
         "raw_data",
-        "raw_obs_core_vte_status",
+        "raw_vte",
         "client_idcode",
         ["client_idcode", "observationdocument_recordeddtm"],
         "CORE_VTE_STATUS",

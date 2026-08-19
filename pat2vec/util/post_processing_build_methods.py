@@ -554,10 +554,12 @@ def retrieve_pat_bloods(client_idcode: str, config_obj: Any) -> pd.DataFrame:
     """Retrieve bloods data for the given client_idcode (from file or DB).
 
     Args:
+    ----
         client_idcode: Unique identifier for the patient.
         config_obj: Configuration object containing storage backend settings.
 
     Returns:
+    -------
         Bloods data for the given client_idcode, or an empty DataFrame if not found.
 
     """
@@ -586,10 +588,12 @@ def retrieve_pat_epr_docs(client_idcode: str, config_obj: Any) -> pd.DataFrame:
     """Retrieve EPR documents data for the given client_idcode (from file or DB).
 
     Args:
+    ----
         client_idcode: Unique identifier for the patient.
         config_obj: Configuration object containing storage backend settings.
 
     Returns:
+    -------
         EPR documents data for the given client_idcode, or an empty DataFrame if not found.
 
     """
@@ -638,6 +642,7 @@ def retrieve_pat_docs_mct_epr(
     columns (like timestamps and content) to create a more unified dataset.
 
     Args:
+    ----
         client_idcode: The unique identifier for the patient.
         config_obj: A configuration object containing paths to document batches.
         columns_epr: A list of columns to load from the EPR documents CSV.
@@ -649,6 +654,7 @@ def retrieve_pat_docs_mct_epr(
             unified set of columns.
 
     Returns:
+    -------
         A DataFrame containing the concatenated and optionally
                       merged document data for the patient. Returns an empty
                       DataFrame if no data is found for the patient in any
@@ -875,12 +881,14 @@ def join_docs_to_annots(
     """Merge two DataFrames based on the 'document_guid' column.
 
     Args:
+    ----
         annots_df: The DataFrame containing annotations.
         docs_temp: The DataFrame containing documents.
         drop_duplicates: If True, drops duplicated columns from `docs_temp`
             before merging.
 
     Returns:
+    -------
         A merged DataFrame.
 
     """
@@ -1349,14 +1357,17 @@ def merge_appointments_csv(
     """Merge all appointments data from database and raise ValueError if empty.
 
     Args:
+    ----
         all_pat_list: List of patient IDs to include in the merge
         config_obj: Configuration object with database connection info
         overwrite: If True, regenerate CSV even if it exists
 
     Returns:
+    -------
         Path to merged CSV file
 
     Raises:
+    ------
         ValueError: If no appointments data was found in database
 
     """
@@ -1624,7 +1635,7 @@ def merge_vte_status_csv(
     return _merge_observation_sub_type(
         all_pat_list,
         config_obj,
-        "raw_obs_core_vte_status",
+        "raw_vte",
         "vte_status",
         overwrite,
     )
@@ -1639,7 +1650,7 @@ def merge_hosp_site_csv(
     return _merge_observation_sub_type(
         all_pat_list,
         config_obj,
-        "raw_obs_core_hospitalsite",
+        "raw_hospsite",
         "hosp_site",
         overwrite,
     )

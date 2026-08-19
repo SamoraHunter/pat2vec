@@ -144,7 +144,8 @@ class main:
 
     This class relies heavily on the `config_obj` for its behavior.
 
-    Attributes:
+    Attributes
+    ----------
         config_obj: The configuration object that controls the pipeline. Can be an instance of
             config_class or None (will create a default instance internally).
         cs (CogStack): An instance of the CogStack client for data retrieval.
@@ -176,6 +177,7 @@ class main:
         configuration.
 
         Args:
+        ----
             cogstack: If True, connects to a CogStack Elasticsearch instance.
                 If False, a dummy searcher is used for testing.
             use_filter: If True, applies a CUI filter to the MedCAT model.
@@ -439,9 +441,11 @@ class main:
         Fetches medication records from the configured storage backend (database or file).
 
         Args:
+        ----
             patient_id: The unique identifier for the patient.
 
         Returns:
+        -------
             A DataFrame containing drug records for the patient, with columns such as
             drug name, dosage, administration time, and other relevant clinical information.
 
@@ -460,9 +464,11 @@ class main:
         blood-related tests from the configured storage backend.
 
         Args:
+        ----
             patient_id: The unique identifier for the patient.
 
         Returns:
+        -------
             A DataFrame containing blood test records with columns such as test name,
             result value, reference range, and collection time.
 
@@ -480,9 +486,11 @@ class main:
         Fetches clinical notes and documents stored in the EPR system.
 
         Args:
+        ----
             patient_id: The unique identifier for the patient.
 
         Returns:
+        -------
             A DataFrame containing EPR document records with columns such as document
             text, creation/update time, author, and document type.
 
@@ -501,9 +509,11 @@ class main:
         gender, and contact details.
 
         Args:
+        ----
             patient_id: The unique identifier for the patient.
 
         Returns:
+        -------
             A DataFrame containing demographic records with columns such as patient ID,
             name, DOB, gender, address, and other identifying information.
 
@@ -522,9 +532,11 @@ class main:
         MedCAT (Medical Concept Annotation Tool).
 
         Args:
+        ----
             patient_id: The unique identifier for the patient.
 
         Returns:
+        -------
             A DataFrame containing MCT document records with annotation data including
             identified concepts, CUIs, and entity context.
 
@@ -543,9 +555,11 @@ class main:
         and free-text fields.
 
         Args:
+        ----
             patient_id: The unique identifier for the patient.
 
         Returns:
+        -------
             A DataFrame containing textual observation records with columns such as
             observation text, category, and timestamp.
 
@@ -564,9 +578,11 @@ class main:
         other diagnostic summaries.
 
         Args:
+        ----
             patient_id: The unique identifier for the patient.
 
         Returns:
+        -------
             A DataFrame containing report records with columns such as report text,
             report type, author, and timestamp.
 
@@ -585,9 +601,11 @@ class main:
         and associated metadata.
 
         Args:
+        ----
             patient_id: The unique identifier for the patient.
 
         Returns:
+        -------
             A DataFrame containing diagnostic records with columns such as diagnosis
             code, description, onset date, and status.
 
@@ -606,9 +624,11 @@ class main:
         respiratory rate, oxygen saturation, blood pressure, and other parameters.
 
         Args:
+        ----
             patient_id: The unique identifier for the patient.
 
         Returns:
+        -------
             A DataFrame containing NEWS observation records with columns such as
             parameter name, value, timestamp, and clinician ID.
 
@@ -626,9 +646,11 @@ class main:
         Fetches height and weight measurements used to calculate BMI values.
 
         Args:
+        ----
             patient_id: The unique identifier for the patient.
 
         Returns:
+        -------
             A DataFrame containing BMI records with columns such as measurement time,
             height, weight, calculated BMI value, and measure type.
 
@@ -647,9 +669,11 @@ class main:
         and procedure bookings.
 
         Args:
+        ----
             patient_id: The unique identifier for the patient.
 
         Returns:
+        -------
             A DataFrame containing appointment records with columns such as appointment
             datetime, appointment type, provider, location, and status.
 
@@ -667,9 +691,11 @@ class main:
         Fetches SARS-CoV-2 test results including PCR tests and antibody tests.
 
         Args:
+        ----
             patient_id: The unique identifier for the patient.
 
         Returns:
+        -------
             A DataFrame containing COVID test records with columns such as test type,
             result, collection date, and test site.
 
@@ -688,9 +714,11 @@ class main:
         current smoker, or ex-smoker.
 
         Args:
+        ----
             patient_id: The unique identifier for the patient.
 
         Returns:
+        -------
             A DataFrame containing smoking status records with columns such as
             smoking category, documentation time, and source.
 
@@ -708,9 +736,11 @@ class main:
         Fetches pulse oximetry observations tracking SpO2 levels.
 
         Args:
+        ----
             patient_id: The unique identifier for the patient.
 
         Returns:
+        -------
             A DataFrame containing CORE_SpO2 records with columns such as oxygen
             saturation value, measurement time, and device.
 
@@ -728,9 +758,11 @@ class main:
         Fetches ward and bed location records tracking patient placements.
 
         Args:
+        ----
             patient_id: The unique identifier for the patient.
 
         Returns:
+        -------
             A DataFrame containing bed assignment records with columns such as
             bed number, ward, admission time, and discharge time.
 
@@ -749,9 +781,11 @@ class main:
         Fetches VTE risk score records and prophylaxis recommendations.
 
         Args:
+        ----
             patient_id: The unique identifier for the patient.
 
         Returns:
+        -------
             A DataFrame containing VTE assessment records with columns such as
             risk category, assessment time, and recommendation.
 
@@ -769,9 +803,11 @@ class main:
         Fetches records indicating which hospital or site provided care.
 
         Args:
+        ----
             patient_id: The unique identifier for the patient.
 
         Returns:
+        -------
             A DataFrame containing hospital site records with columns such as
             site name, site code, and time period.
 
@@ -789,9 +825,11 @@ class main:
         Fetches advance care directive and resuscitation order records.
 
         Args:
+        ----
             patient_id: The unique identifier for the patient.
 
         Returns:
+        -------
             A DataFrame containing resuscitation status records with columns such as
             code status, documentation time, and responsible clinician.
 
@@ -810,9 +848,11 @@ class main:
         drugs, diagnostics, etc.).
 
         Args:
+        ----
             patient_id: The unique identifier for the patient.
 
         Returns:
+        -------
             A DataFrame containing general observation records with various clinical
             measurements and assessment data.
 
@@ -831,9 +871,11 @@ class main:
         including inpatient admissions, outpatient visits, and ER visits.
 
         Args:
+        ----
             patient_id: The unique identifier for the patient.
 
         Returns:
+        -------
             A DataFrame containing encounter records with columns such as encounter
             type, admit/discharge time, location, and encounter number.
 
@@ -853,9 +895,11 @@ class main:
         testing mode is enabled.
 
         Args:
+        ----
             patient_id: The unique identifier for the patient.
 
         Returns:
+        -------
             A DataFrame containing encounter records with columns such as encounter
             type, admit/discharge time, location, and encounter number.
             Returns an empty DataFrame with proper columns if in testing mode and
@@ -895,9 +939,11 @@ class main:
         notes, consultation notes, and procedure notes.
 
         Args:
+        ----
             patient_id: The unique identifier for the patient.
 
         Returns:
+        -------
             A DataFrame containing clinical note records with columns such as note
             text, note type, creation time, and author. If not found in database,
             attempts to fetch from Elasticsearch if available.
@@ -917,9 +963,11 @@ class main:
         past diagnoses, procedures, and medications.
 
         Args:
+        ----
             patient_id: The unique identifier for the patient.
 
         Returns:
+        -------
             A DataFrame containing medical history records with columns such as
             condition/procedure description, onset date, and source. If not found in
             database, attempts to fetch from Elasticsearch if available.
@@ -939,9 +987,11 @@ class main:
         lab orders, and procedure orders.
 
         Args:
+        ----
             patient_id: The unique identifier for the patient.
 
         Returns:
+        -------
             A DataFrame containing order records with columns such as order type,
             ordered item, order time, and status. If not found in database,
             attempts to fetch from Elasticsearch if available.
@@ -961,9 +1011,11 @@ class main:
         urine tests, and other diagnostic laboratory results.
 
         Args:
+        ----
             patient_id: The unique identifier for the patient.
 
         Returns:
+        -------
             A DataFrame containing lab result records with columns such as test name,
             result value, reference range, and collection time. If not found in
             database, attempts to fetch from Elasticsearch if available.
@@ -984,9 +1036,11 @@ class main:
         testing mode is enabled.
 
         Args:
+        ----
             patient_id: The unique identifier for the patient.
 
         Returns:
+        -------
             A DataFrame containing lab result records with columns such as test name,
             result value, reference range, and collection time.
             Returns an empty DataFrame with proper columns if in testing mode and
@@ -1028,9 +1082,11 @@ class main:
         other diagnostic imaging reports.
 
         Args:
+        ----
             patient_id: The unique identifier for the patient.
 
         Returns:
+        -------
             A DataFrame containing imaging report records with columns such as report
             text, report type, creation time, and author. If not found in database,
             attempts to fetch from Elasticsearch if available.
@@ -1050,9 +1106,11 @@ class main:
         scheduled appointments and related clinical notes.
 
         Args:
+        ----
             patient_id: The unique identifier for the patient.
 
         Returns:
+        -------
             A DataFrame containing clinical notes appointments records with columns such as
             appointment datetime, appointment type, provider, location, and status.
             If not found in database, attempts to fetch from Elasticsearch if available.
@@ -1072,9 +1130,11 @@ class main:
         Epic system includingDemographics, contact information, and insurance details.
 
         Args:
+        ----
             patient_id: The unique identifier for the patient.
 
         Returns:
+        -------
             A DataFrame containing patient master data with columns such as full name,
             date of birth, gender, address, phone number, and primary language.
             If not found in database, attempts to fetch from Elasticsearch if available.
@@ -1095,9 +1155,11 @@ class main:
         the database/file backend or when testing mode is enabled.
 
         Args:
+        ----
             patient_id: The unique identifier for the patient.
 
         Returns:
+        -------
             A DataFrame containing patient master data with columns such as full name,
             date of birth, gender, address, phone number, and primary language.
             Returns an empty DataFrame with proper columns if in testing mode and
@@ -1143,7 +1205,8 @@ class main:
         If using file backend, reads and concatenates all individual patient
         CSV files from the current_pat_lines_path directory.
 
-        Returns:
+        Returns
+        -------
             A DataFrame containing feature vectors for all patients with columns
             representing extracted features across the specified time windows.
 
@@ -1157,9 +1220,11 @@ class main:
         pipeline for the specified patient across their defined time windows.
 
         Args:
+        ----
             patient_id: The unique identifier for the patient.
 
         Returns:
+        -------
             A DataFrame containing feature vectors for the patient with columns
             representing extracted features across all time windows. May be empty
             if no features have been generated for this patient.
@@ -1198,10 +1263,12 @@ class main:
             or `annotation_batch_configs` list within this method.
 
         Args:
+        ----
             current_pat_client_id_code: The unique identifier for the patient
                 for whom to fetch data.
 
         Returns:
+        -------
             A dictionary where keys are batch names (e.g., 'batch_epr') and
             values are the corresponding pandas DataFrames. If a data source is
             disabled or returns no data, the value will be an empty DataFrame.
@@ -1260,6 +1327,13 @@ class main:
             {
                 "option": "smoking",
                 "var": "batch_smoking",
+                "func": get_pat_batch_obs,
+                "args": {"search_term": "CORE_SmokingStatus"},
+                "empty": empty_return,
+            },
+            {
+                "option": "obs",
+                "var": "batch_obs_smoking",
                 "func": get_pat_batch_obs,
                 "args": {"search_term": "CORE_SmokingStatus"},
                 "empty": empty_return,
@@ -1552,10 +1626,11 @@ class main:
             "batch_appointments": ("raw_appointments", "HospitalID"),
             "batch_covid": ("raw_covid", "client_idcode"),
             "batch_smoking": ("raw_smoking", "client_idcode"),
+            "batch_obs_smoking": ("raw_obs_core_smokingstatus", "client_idcode"),
             "batch_core_02": ("raw_core_02", "client_idcode"),
             "batch_bednumber": ("raw_bed", "client_idcode"),
-            "batch_vte": ("raw_obs_core_vte_status", "client_idcode"),
-            "batch_hospsite": ("raw_obs_core_hospitalsite", "client_idcode"),
+            "batch_vte": ("raw_vte", "client_idcode"),
+            "batch_hospsite": ("raw_hospsite", "client_idcode"),
             "batch_resus": ("raw_resus", "client_idcode"),
             "batch_obs": ("raw_obs", "client_idcode"),
             "batch_epic_encounters": ("raw_epic_encounters", "client_idcode"),
@@ -1602,6 +1677,7 @@ class main:
             "batch_appointments": "appointments",
             "batch_covid": "covid",
             "batch_smoking": "smoking",
+            "batch_obs_smoking": "obs",
             "batch_core_02": "core_02",
             "batch_bednumber": "bed",
             "batch_vte": "vte_status",
@@ -1746,9 +1822,11 @@ class main:
         patient-specific date list. Otherwise, it returns the global date list.
 
         Args:
+        ----
             current_pat_client_id_code: The patient's unique identifier.
 
         Returns:
+        -------
             A list of date tuples, or None if the time window cannot be set up.
 
         """
@@ -1877,9 +1955,11 @@ class main:
         """Cleans timestamp columns for all document-related batches.
 
         Args:
+        ----
             batches: A dictionary of DataFrames, keyed by batch name.
 
         Returns:
+        -------
             The dictionary of DataFrames with cleaned timestamp columns.
 
         """
@@ -2015,6 +2095,7 @@ class main:
         """Iterates through time slices and calls main_batch to generate feature vectors.
 
         Args:
+        ----
             current_pat_client_id_code: The patient's unique identifier.
             date_list: The list of date tuples representing time slices.
             batches: A dictionary of pre-fetched data batches for the patient.
@@ -2104,6 +2185,7 @@ class main:
             feature vector CSV file.
 
         Args:
+        ----
             i (int): The index of the patient within `self.all_patient_list` to be
                 processed.
 
@@ -2120,6 +2202,7 @@ class main:
 
 
         Returns:
+        -------
             None: This method orchestrates the processing pipeline and manages file
                 I/O, but it does not return any value.
 

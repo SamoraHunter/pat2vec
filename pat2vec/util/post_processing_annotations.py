@@ -52,6 +52,7 @@ def filter_annot_dataframe2(
     """Filter a DataFrame based on specified filter arguments.
 
     Args:
+    ----
         dataframe: The DataFrame to filter.
         filter_args: A dictionary containing filter arguments.
             Keys are column names, and values are the filter criteria.
@@ -59,6 +60,7 @@ def filter_annot_dataframe2(
             'Time_Confidence', 'Presence_Confidence', 'Subject_Confidence', and 'acc'.
 
     Returns:
+    -------
         The filtered DataFrame.
 
     """
@@ -118,6 +120,7 @@ def produce_filtered_annotation_dataframe(
     """Filter annotation dataframe based on specified criteria.
 
     Args:
+    ----
         cui_filter: Whether to filter by CUI codes.
         meta_annot_filter: Whether to apply meta annotation filtering.
         pat_list: List of patient identifiers. If None, uses `config_obj.all_patient_list`.
@@ -127,6 +130,7 @@ def produce_filtered_annotation_dataframe(
         mct: If True, processes MCT annotation batches; otherwise, processes EPR.
 
     Returns:
+    -------
         pd.DataFrame: Filtered annotation dataframe.
 
     """
@@ -261,9 +265,11 @@ def extract_types_from_csv(directory: str) -> list[str]:
     """Extracts all unique 'types' from CSV files within a given directory and its subdirectories.
 
     Args:
+    ----
         directory: The path to the directory to search for CSV files.
 
     Returns:
+    -------
         A list of all unique 'types' found in the 'types' column of the CSV files.
 
     """
@@ -300,12 +306,14 @@ def join_icd10_codes_to_annot(
     DataFrame based on the 'cui' column in `df` and 'referencedComponentId' in the mapping.
 
     Args:
+    ----
         df: The annotation DataFrame.
         inner: If True, performs an inner merge; otherwise, performs a left merge.
         file_path: Optional path to the ICD-10 mapping file. If not provided, uses default
                    production data or falls back to test files.
 
     Returns:
+    -------
         The DataFrame with ICD-10 codes joined.
 
     """
@@ -393,12 +401,14 @@ def join_icd10_OPC4S_codes_to_annot(
     DataFrame based on the 'cui' column in `df` and 'conceptId' in the mapping.
 
     Args:
+    ----
         df: The annotation DataFrame.
         inner: If True, performs an inner merge; otherwise, performs a left merge.
         file_path: Optional path to the OPCS-4 mapping file. If not provided, uses default
                    production data or falls back to test files.
 
     Returns:
+    -------
         The DataFrame with ICD-10 and OPCS-4 codes joined.
 
     """
@@ -484,6 +494,7 @@ def filter_and_select_rows(
     """Filter a dataframe based on a filter_column and filter_list, and return either the earliest or latest rows.
 
     Args:
+    ----
         dataframe: Input dataframe.
         filter_list: List of values to filter the dataframe.
         verbosity: If > 0, print additional information during execution.
@@ -493,6 +504,7 @@ def filter_and_select_rows(
         n_rows: Number of rows to return if they exist.
 
     Returns:
+    -------
         pd.DataFrame: Filtered and selected rows from the input dataframe.
 
     """
@@ -540,6 +552,7 @@ def filter_dataframe_by_cui(
     """Filter an annotation DataFrame based on a list of CUI codes and a specified mode.
 
     Args:
+    ----
         dataframe: The input DataFrame.
         filter_list: List of CUI codes to filter the DataFrame.
         filter_column: The column containing filter.
@@ -549,6 +562,7 @@ def filter_dataframe_by_cui(
         time_column: The column containing time information.
 
     Returns:
+    -------
         pd.DataFrame: Filtered DataFrame based on the specified criteria.
 
     """
@@ -619,6 +633,7 @@ def check_list_presence(df, column, lst, annot_filter_arguments=None):
     optionally after applying annotation filters.
 
     Args:
+    ----
         df (pd.DataFrame): The input DataFrame.
         column (str): The name of the column to check for string presence.
         lst (list): A list of strings to search for.
@@ -626,6 +641,7 @@ def check_list_presence(df, column, lst, annot_filter_arguments=None):
             before checking for list presence. Defaults to None.
 
     Returns:
+    -------
         bool: True if any string from `lst` is found in `column` (case-insensitive), False otherwise.
 
     """
@@ -647,12 +663,14 @@ def filter_dataframe_n_lists(
     is present in *all* of the provided lists.
 
     Args:
+    ----
         df: The input DataFrame.
         column_name: The name of the column to filter.
         n_lists: A list of lists. A row is kept only if the value
             in `column_name` is present in every sublist within `n_lists`.
 
     Returns:
+    -------
         The filtered DataFrame.
 
     """
@@ -680,12 +698,14 @@ def get_all_target_annots(
     provided `n_lists`. The results are concatenated into a single DataFrame and saved.
 
     Args:
+    ----
         all_pat_list: A list of patient IDs to process.
         n_lists: A list of lists of CUI codes. Annotations are kept if their CUI is in all sublists.
         config_obj: A configuration object.
         annot_filter_arguments: Arguments to filter annotations.
 
     Returns:
+    -------
         pd.DataFrame: A DataFrame containing all target annotations.
 
     """
@@ -742,6 +762,7 @@ def retrieve_pat_annots_mct_epr(
     columns (e.g., timestamps, content) to create a more unified dataset.
 
     Args:
+    ----
         client_idcode: The unique identifier for the patient.
         config_obj: A configuration object containing paths to the
             various annotation batch files.
@@ -758,6 +779,7 @@ def retrieve_pat_annots_mct_epr(
             columns. Defaults to True.
 
     Returns:
+    -------
         pd.DataFrame: A DataFrame containing the concatenated and optionally
             merged annotation data for the patient. Returns an empty
             DataFrame if no data is found for the patient in any of the sources.
@@ -982,6 +1004,7 @@ def remove_file_from_paths(
     Otherwise, it removes CSV files.
 
     Args:
+    ----
         current_pat_idcode: The unique identifier of the patient whose files are to be removed.
         project_name: The name of the project. Used if `config_obj` is None.
         verbosity: Verbosity level for printing messages.
@@ -1031,7 +1054,7 @@ def remove_file_from_paths(
                     "raw_reports",
                     "raw_covid",
                     "raw_smoking",
-                    "raw_obs_core_vte_status",
+                    "raw_vte",
                     "raw_resus",
                     "raw_core_02",
                     "raw_bed",
