@@ -318,6 +318,44 @@ def get_or_create_annotations_for_text(
     return result
 
 
+def _resolve_sample_annotations_pickle() -> str:
+    """Resolves the path to ``sample_annotations.pickle`` independent of cwd.
+
+    Tries the working-directory-relative location first (legacy behaviour for
+    notebooks run from ``notebooks/test`` or the repository root), then falls
+    back to the repository ``test_files`` directory resolved relative to this
+    package. The fallback is required when the code runs from an arbitrary
+    working directory (e.g. a per-run temporary output directory).
+
+    Returns
+    -------
+        str: Path to ``sample_annotations.pickle``.
+
+    Raises
+    ------
+        FileNotFoundError: If the pickle file cannot be located.
+
+    """
+    candidates = [
+        os.path.join("test_files", "sample_annotations.pickle"),
+        os.path.abspath(
+            os.path.join(
+                os.path.dirname(__file__),
+                os.pardir,
+                os.pardir,
+                "test_files",
+                "sample_annotations.pickle",
+            ),
+        ),
+    ]
+    for candidate in candidates:
+        if os.path.exists(candidate):
+            return candidate
+
+    msg = f"sample_annotations.pickle not found. Tried: {candidates}"
+    raise FileNotFoundError(msg)
+
+
 def dummy_medcat_annotation_generator(
     text: str | None = None,
     document_id: int | None = None,
@@ -341,7 +379,9 @@ def dummy_medcat_annotation_generator(
         provided, entities will have accurate positions matching the document.
 
     """
-    pickle_file = os.path.join("test_files", "sample_annotations.pickle")
+    # Resolve the pickle path robustly (the working directory may not contain
+    # a 'test_files' folder, e.g. when run from a per-run temp output dir).
+    pickle_file = _resolve_sample_annotations_pickle()
     # Load the dictionary from the pickle file
     with open(pickle_file, "rb") as f:
         sample_annotations = pickle.load(f)

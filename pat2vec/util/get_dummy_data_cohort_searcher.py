@@ -3539,23 +3539,23 @@ def populate_elastic_with_dummy_data(
 
     from pat2vec.pat2vec_search.cogstack_search_methods import CogStack
 
-    # Try test-specific credentials first (backward compatibility for existing tests)
-    current_dir_creds = os.path.abspath("test_elastic_credentials.py")
+    # Priority 1: Use config's credentials_path if available (shared fixture mode)
+    creds_filename = getattr(
+        config_obj,
+        "credentials_path",
+        None,
+    )
 
-    if os.path.exists(current_dir_creds):
-        creds_filename = "test_elastic_credentials.py"
-        logger.debug(f"Using test-specific credentials: {current_dir_creds}")
+    if creds_filename:
+        creds_filename = os.path.abspath(creds_filename)
+        logger.debug(f"Using config credentials from: {creds_filename}")
     else:
-        # Fall back to config's credentials_path, or default
-        creds_filename = getattr(
-            config_obj,
-            "credentials_path",
-            None,
-        )
-        if creds_filename:
-            creds_filename = os.path.abspath(creds_filename)
-        else:
-            creds_filename = current_dir_creds
+        # Fallback to test-specific credentials in current directory for backward compatibility
+        current_dir_creds = os.path.abspath("test_elastic_credentials.py")
+
+        if os.path.exists(current_dir_creds):
+            creds_filename = "test_elastic_credentials.py"
+            logger.debug(f"Using test-specific credentials: {current_dir_creds}")
 
     creds_path = os.path.abspath(creds_filename)
 

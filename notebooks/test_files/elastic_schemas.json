@@ -173,11 +173,18 @@
     "epic_medical_history": {
         "mappings": {
             "properties": {
-                "client_idcode": {"type": "keyword"},
-                "obscatalogmasteritem_displayname": {
+                "document_PatientDurableKey": {"type": "keyword"},
+                "document_CreatedWhen": {"type": "date"},
+                "document_Diagnosis": {
                     "type": "text",
                     "fields": {"keyword": {"type": "keyword"}}},
-                "observationdocument_recordeddtm": {"type": "date"},
+                "document_DiagnosisConcepts": {
+                    "type": "text",
+                    "fields": {"keyword": {"type": "keyword"}}},
+                "document_Name": {
+                    "type": "text",
+                    "fields": {"keyword": {"type": "keyword"}}},
+                "document_Comment": {"type": "text"},
                 "id": {"type": "keyword"}}},
         "settings": {
             "index": {"refresh_interval": "5m", "routing_partition_size": "1"}}},

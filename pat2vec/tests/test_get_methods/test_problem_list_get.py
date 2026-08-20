@@ -77,15 +77,6 @@ class TestProblemListGet:
         )
         cls.cs = initialize_cogstack_client(config_populate)
 
-        # Cleanup indices before populating with problem_list data
-        indices_to_cleanup = ["problem_list"]
-        for idx in indices_to_cleanup:
-            try:
-                if cls.cs.elastic.indices.exists(index=idx):
-                    cls.cs.elastic.indices.delete(index=idx)
-            except Exception as e:
-                print(f"Warning: Failed to cleanup index '{idx}': {e}")
-
         # Generate and ingest Problem List data
         from pat2vec.util.elasticsearch_methods import ingest_data_to_elasticsearch
         from pat2vec.util.get_dummy_data_cohort_searcher import (

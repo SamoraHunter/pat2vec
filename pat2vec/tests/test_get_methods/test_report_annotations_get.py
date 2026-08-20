@@ -8,20 +8,20 @@ import pandas as pd
 import pytest
 
 from pat2vec.main_pat2vec import main
-from pat2vec.util.config_pat2vec import config_class
-from pat2vec.util.get_dummy_data_cohort_searcher import (
-    generate_reports_data,
-    populate_elastic_with_dummy_data,
-)
-from pat2vec.util.helper_functions import get_all_features
-from pat2vec.util.logger_setup import setup_logger
-from pat2vec.util.elasticsearch_methods import ingest_data_to_elasticsearch
 from pat2vec.pat2vec_get_methods.get_method_report_annotations import (
     get_current_pat_report_annotations,
 )
 from pat2vec.pat2vec_search.cogstack_search_methods import (
     initialize_cogstack_client,
 )
+from pat2vec.util.config_pat2vec import config_class
+from pat2vec.util.elasticsearch_methods import ingest_data_to_elasticsearch
+from pat2vec.util.get_dummy_data_cohort_searcher import (
+    generate_reports_data,
+    populate_elastic_with_dummy_data,
+)
+from pat2vec.util.helper_functions import get_all_features
+from pat2vec.util.logger_setup import setup_logger
 
 random_seed_value = 42
 
@@ -75,17 +75,9 @@ class TestReportAnnotationsGet:
 
         cls.cs = initialize_cogstack_client(config_populate)
 
-        indices = cls.cs.elastic.cat.indices(format="json")
-        user_indices = [
-            i["index"]
-            for i in indices
-            if not i["index"].startswith(".") and i["index"] != "hidden"
-        ]
-        if user_indices:
-            cls.cs.elastic.indices.delete(index=",".join(user_indices))
-
         cls.patient_ids = populate_elastic_with_dummy_data(
-            config_populate, n_patients=5
+            config_populate,
+            n_patients=5,
         )
 
         cls.cs.elastic.indices.refresh(

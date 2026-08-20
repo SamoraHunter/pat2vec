@@ -46,11 +46,13 @@ class TestEpicClinicalNotesAppointmentsAnnotationsGet:
         cls.pat2vec_dir = os.path.abspath(os.path.join(cls.grandparent_dir, "pat2vec"))
         sys.path.insert(0, cls.pat2vec_dir)
 
-        cls.PROJ_NAME = "epic_clinical_notes_appointments_test_project"
+        cls.PROJ_NAME = "epic_clinical_notes_appointments_annotations_test_project"
         cls.DB_FILENAME = "temp_epic_clinical_notes_appointments_db.sqlite"
         cls.DB_PATH = os.path.join(cls.PROJ_NAME, "outputs", cls.DB_FILENAME)
 
-        for dir_to_remove in ["epic_clinical_notes_appointments_test_project"]:
+        for dir_to_remove in [
+            "epic_clinical_notes_appointments_annotations_test_project"
+        ]:
             try:
                 shutil.rmtree(dir_to_remove, ignore_errors=True)
             except Exception as e:
@@ -60,7 +62,7 @@ class TestEpicClinicalNotesAppointmentsAnnotationsGet:
 
         schema_path = os.path.abspath("test_files/elastic_schemas.json")
         config_populate = config_class(
-            proj_name="epic_clinical_notes_appointments_test_project",
+            proj_name="epic_clinical_notes_appointments_annotations_test_project",
             credentials_path=cls.cred_path,
             test_schema_path=schema_path,
             testing=True,

@@ -71,11 +71,12 @@ class TestDrugsGet:
             global_end_day=31,
         )
 
+        cls.cs = initialize_cogstack_client(cls.config_populate)
+
         cls.patient_ids = populate_elastic_with_dummy_data(
             cls.config_populate,
             n_patients=5,
         )
-        cls.cs = initialize_cogstack_client(cls.config_populate)
 
         indices = [
             "epr_documents",

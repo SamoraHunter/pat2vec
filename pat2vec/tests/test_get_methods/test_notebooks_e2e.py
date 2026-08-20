@@ -56,20 +56,34 @@ def has_merge_function(notebook_path: str, key: str) -> bool:
 
     The key may have underscores (e.g., core_02) but the function might not
     (e.g., merge_core02_data). We check for both patterns.
+
+    Some notebooks use _csv suffix instead of _data, so we check both.
     """
     try:
         with open(notebook_path, "r", encoding="utf-8") as f:
             content = f.read()
 
-        # Pattern 1: exact match (key has no special characters)
-        pattern1 = rf"def\s+merge_{re.escape(key)}_data\s*\("
+        # Pattern 1: exact match with _data (key has no special characters)
+        pattern1_data = rf"def\s+merge_{re.escape(key)}_data\s*\("
 
-        # Pattern 2: key without underscores in function name
+        # Pattern 2: key without underscores in function name with _data
         # e.g., core_02 -> merge_core02_data
         key_no_underscores = key.replace("_", "")
-        pattern2 = rf"def\s+merge_{re.escape(key_no_underscores)}_data\s*\("
+        pattern2_data = rf"def\s+merge_{re.escape(key_no_underscores)}_data\s*\("
 
-        return bool(re.search(pattern1, content) or re.search(pattern2, content))
+        # Pattern 3: exact match with _csv (key has no special characters)
+        pattern1_csv = rf"def\s+merge_{re.escape(key)}_csv\s*\("
+
+        # Pattern 4: key without underscores in function name with _csv
+        # e.g., core_02 -> merge_core02_csv
+        pattern2_csv = rf"def\s+merge_{re.escape(key_no_underscores)}_csv\s*\("
+
+        return bool(
+            re.search(pattern1_data, content)
+            or re.search(pattern2_data, content)
+            or re.search(pattern1_csv, content)
+            or re.search(pattern2_csv, content)
+        )
     except Exception:
         return False
 

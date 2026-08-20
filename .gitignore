@@ -253,3 +253,9 @@ docstring_coverage_report.json
 .secrets
 snomed_methods/snomed_icd10_map/data/tls_Icd10cmHumanReadableMap_US1000124_20230901.tsv
 .ai/*
+
+# Notebook test artifacts (safety net: test notebooks write to a temp dir
+# via notebooks/test/nb_temp_setup.py; patterns below catch any leftovers)
+*_test_project/
+current_pat_demo_batches/
+test_elastic_credentials.py

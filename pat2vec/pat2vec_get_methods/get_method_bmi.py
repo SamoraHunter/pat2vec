@@ -127,8 +127,9 @@ def search_bmi_observations(
     )
 
     # Base search string for BMI-related observations
+    # Note: BMI data in Elasticsearch uses "OBS BMI Calculation" (not "OBS BMI")
     search_string = (
-        'obscatalogmasteritem_displayname:("OBS BMI" OR "OBS Weight" OR "OBS Height") AND '
+        'obscatalogmasteritem_displayname:("OBS BMI Calculation" OR "OBS Weight" OR "OBS Height") AND '
         f"{observations_time_field}:[{start_year}-{start_month}-{start_day} TO {end_year}-{end_month}-{end_day}]"
     )
 
