@@ -256,8 +256,24 @@ def get_pat_batch_epic_clinical_notes_annotations(
                         "body_analysed": ["Patient clinical notes"],
                         "updatetime": [config_obj.start_time],
                         "document_guid": ["dummy_doc_" + current_pat_client_id_code],
+                        "document_PatientDurableKey": [current_pat_client_id_code],
+                        "document_CreatedWhen": [config_obj.start_time],
+                        "id": ["dummy_id_" + current_pat_client_id_code],
                     },
                 )
+                # Save raw data to DB when ES fetch fails in testing mode
+                if config_obj.storage_backend == "database":
+                    try:
+                        save_raw_patient_batch(
+                            pat_batch,
+                            current_pat_client_id_code,
+                            "raw_epic_clinical_notes",
+                            config_obj,
+                        )
+                    except Exception as e:
+                        _logger.error(
+                            f"Failed to save raw epic clinical notes batch for {current_pat_client_id_code}: {e}",
+                        )
             else:
                 from pat2vec.util.post_processing_annotations import EMPTY_ANNOT_COLS
 

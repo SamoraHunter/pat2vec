@@ -72,6 +72,26 @@ def _fetch_epic_imaging_reports_from_elasticsearch(
             entered_list=[current_pat_client_id_code],
             search_string=f"document_CreatedWhen:[{start_year}-{start_month}-{start_day} TO {end_year}-{end_month}-{end_day}]",
         )
+        if results is None:
+            _logger.error("ES fetch returned None for epic_imaging_reports")
+        elif results.empty:
+            _logger.warning(
+                f"ES fetch returned empty DataFrame for Epic Imaging Reports. Patient: {current_pat_client_id_code}",
+            )
+        else:
+            _logger.info(
+                f"ES fetch got {len(results)} rows for Epic Imaging Reports. Patient: {current_pat_client_id_code}, columns: {list(results.columns)[:5]}",
+            )
+
+        # Debug: check what search_func returns by calling it directly and logging
+        if results is not None:
+            _logger.debug(
+                f"Results shape: {results.shape}, columns: {list(results.columns)}",
+            )
+            _logger.debug(
+                f"First row sample: {results.iloc[0].to_dict() if not results.empty else 'empty'}",
+            )
+
         if results is not None and not results.empty:
             if "document_PatientDurableKey" in results.columns:
                 results = results.rename(
@@ -182,12 +202,19 @@ def get_pat_batch_epic_imaging_reports_annotations(
 
         # If still empty and ES search function exists, fetch from Elasticsearch and save to DB
         if pat_batch.empty and cohort_searcher_with_terms_and_search is not None:
+            _logger.info(
+                f"Fetching epic_imaging_reports from ES for patient {current_pat_client_id_code}",
+            )
             pat_batch = _fetch_epic_imaging_reports_from_elasticsearch(
                 current_pat_client_id_code,
                 config_obj,
                 cohort_searcher_with_terms_and_search=cohort_searcher_with_terms_and_search,
                 t=t,
             )
+            if not pat_batch.empty:
+                _logger.info(
+                    f"Got {len(pat_batch)} rows from ES for epic_imaging_reports",
+                )
 
             # Save raw batch to database after fetching from ES
             if not pat_batch.empty and config_obj.storage_backend == "database":
@@ -244,8 +271,26 @@ def get_pat_batch_epic_imaging_reports_annotations(
                         "body_analysed": ["Patient imaging report"],
                         "updatetime": [config_obj.start_time],
                         "document_guid": ["dummy_doc_" + current_pat_client_id_code],
+                        "document_PatientDurableKey": [current_pat_client_id_code],
+                        "document_CreatedWhen": [config_obj.start_time],
+                        "id": [
+                            "dummy_id_" + current_pat_client_id_code,
+                        ],  # Added for database storage
                     },
                 )
+                # Save raw data to DB when ES fetch fails in testing mode
+                if config_obj.storage_backend == "database":
+                    try:
+                        save_raw_patient_batch(
+                            pat_batch,
+                            current_pat_client_id_code,
+                            "raw_epic_imaging_reports",
+                            config_obj,
+                        )
+                    except Exception as e:
+                        _logger.error(
+                            f"Failed to save raw epic imaging reports batch for {current_pat_client_id_code}: {e}",
+                        )
             else:
                 from pat2vec.util.post_processing_annotations import EMPTY_ANNOT_COLS
 
