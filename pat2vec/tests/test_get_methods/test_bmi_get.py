@@ -233,6 +233,27 @@ class TestBMIGet:
         else:
             assert not bmi_data.empty, "BMI DataFrame should not be empty"
 
+    def test_bmi_data_retrieval_content(self):
+        """Test BMI data retrieval content - verify columns and structure."""
+        all_pat_list = self.pat2vec_obj.all_patient_list
+        pat_batch = pd.DataFrame()
+
+        bmi_data = get_bmi_features(
+            current_pat_client_id_code=all_pat_list[0],
+            target_date_range=(2020, 1, 1, 2023, 12, 31),
+            pat_batch=pat_batch,
+            config_obj=self.config_obj,
+        )
+
+        assert bmi_data is not None, "BMI data should not be None"
+
+        if isinstance(bmi_data, list) and len(bmi_data) > 0:
+            assert not bmi_data[0].empty, "BMI DataFrame should not be empty"
+            assert len(bmi_data[0].columns) > 0, "BMI DataFrame should have columns"
+        elif not isinstance(bmi_data, list):
+            assert not bmi_data.empty, "BMI DataFrame should not be empty"
+            assert len(bmi_data.columns) > 0, "BMI DataFrame should have columns"
+
     def test_merge_bmi_data_functionality(self):
         """Test merge BMI data functionality - verify merge function creates CSV."""
         all_pat_list = self.pat2vec_obj.all_patient_list
@@ -242,8 +263,9 @@ class TestBMIGet:
 
         merged_data = pd.read_csv(merged_path)
         assert not merged_data.empty, "Merged BMI DataFrame should not be empty"
+        assert len(merged_data.columns) > 0, "Merged data should have columns"
 
-    def test_8_cleanup_verification(self):
+    def test_cleanup_verification(self):
         """Test cleanup verification - verify all temp files are cleaned up properly."""
         # Perform cleanup before verification (same as in notebook)
         try:
@@ -263,3 +285,10 @@ class TestBMIGet:
         # Verify cleanup
         assert not os.path.exists(self.DB_PATH), "Database file should be removed"
         assert not os.path.exists(self.PROJ_NAME), "Project directory should be removed"
+
+        creds_file = "test_elastic_credentials.py"
+        if os.path.exists(creds_file):
+            os.remove(creds_file)
+        assert not os.path.exists(
+            creds_file
+        ), "Elasticsearch credentials file should be removed"

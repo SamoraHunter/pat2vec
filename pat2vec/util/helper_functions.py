@@ -872,6 +872,7 @@ def get_df_from_db(
 
         with engine.connect() as connection:
             # Determine actual table name for inspection/reading
+            logger.debug(f"get_df_from_db called: schema={schema}, table={table}")
             if engine.name == "sqlite":
                 target_table = f"{schema}_{table}"
                 target_schema = None

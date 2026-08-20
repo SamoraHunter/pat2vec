@@ -1609,6 +1609,9 @@ class main:
         batches: dict[str, pd.DataFrame],
     ) -> None:
         """Saves fetched batches to the database if backend is enabled."""
+        _logger.info(
+            f"_save_batches_to_db called for {patient_id}, batches={list(batches.keys())}",
+        )
         if self.config_obj.storage_backend != "database":
             return
 
@@ -2260,7 +2263,13 @@ class main:
         if self.config_obj.storage_backend == "database":
             self._save_annotation_batches_to_db(current_pat_client_id_code, {})
 
+        _logger.info(
+            f"About to call _get_patient_data_batches for {current_pat_client_id_code}",
+        )
         batches = self._get_patient_data_batches(current_pat_client_id_code)
+        _logger.info(
+            f"_get_patient_data_batches returned: keys={list(batches.keys())}, batch_bmi shape={batches.get('batch_bmi', pd.DataFrame()).shape}",
+        )
 
         # Save raw batches to DB if applicable
         if self.config_obj.storage_backend == "database":

@@ -2303,7 +2303,8 @@ def cohort_searcher_with_terms_and_search_dummy(
     elif index_name == "observations":
         # Single entry point for the 'observations' index with nested triage
         if any(
-            term in search_string for term in ["OBS BMI", "OBS Weight", "OBS Height"]
+            term in search_string
+            for term in ["OBS BMI Calculation", "OBS Weight", "OBS Height"]
         ):
             if verbose:
                 logger.debug("Generating data for 'bmi'")

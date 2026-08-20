@@ -147,6 +147,9 @@ def get_pat_batch_bmi(
             batch_target = pd.read_csv(batch_obs_target_path)
 
         return batch_target
+        _logger.info(
+            f"get_pat_batch_bmi returning {len(batch_target)} rows for patient {current_pat_client_id_code}",
+        )
     except Exception as e:
         """"""
         _logger.error(f"Error retrieving batch BMI-related observations: {e}")
