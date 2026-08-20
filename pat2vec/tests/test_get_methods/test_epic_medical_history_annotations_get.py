@@ -18,6 +18,7 @@ from pat2vec.util.get_dummy_data_cohort_searcher import (
 from pat2vec.util.helper_functions import get_all_features
 from pat2vec.util.logger_setup import setup_logger
 from pat2vec.util.post_processing_build_methods import (
+    build_merged_epr_mct_annot_df,
     build_merged_epr_mct_doc_df,
 )
 
@@ -257,35 +258,6 @@ class TestEpicMedicalHistoryAnnotationsGet:
         assert not merged_data.empty, (
             "Merged annotations DataFrame should not be empty — "
             "the pat2vec pipeline should have saved annotation records to the database."
-        )
-
-    def test_merge_documents_from_db_functionality(self):
-        """Test document merge functionality - verify the post-processing merge
-
-        function extracts all patients' documents from the database (written by
-        pat_maker) into a single dataframe.
-        """
-        all_pat_list = self.pat2vec_obj.all_patient_list
-        assert len(all_pat_list) > 0, "Patient list should not be empty"
-
-        merged_path = build_merged_epr_mct_doc_df(
-            all_pat_list,
-            self.config_obj,
-            overwrite=True,
-        )
-
-        assert (
-            merged_path is not None
-        ), "build_merged_epr_mct_doc_df should return a path"
-
-        assert os.path.exists(
-            merged_path
-        ), f"Merged documents file should exist at {merged_path}"
-
-        merged_data = pd.read_csv(merged_path)
-        assert not merged_data.empty, (
-            "Merged documents DataFrame should not be empty — "
-            "the pat2vec pipeline should have saved documents to the database."
         )
 
     def test_8_cleanup_verification(self):

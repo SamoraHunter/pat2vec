@@ -23,6 +23,7 @@ from pat2vec.util.get_dummy_data_cohort_searcher import (
 from pat2vec.util.helper_functions import get_all_features, get_df_from_db
 from pat2vec.util.logger_setup import setup_logger
 from pat2vec.util.post_processing_build_methods import (
+    build_merged_epr_mct_annot_df,
     build_merged_epr_mct_doc_df,
 )
 
