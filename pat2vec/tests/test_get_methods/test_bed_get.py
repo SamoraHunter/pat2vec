@@ -8,18 +8,18 @@ import pandas as pd
 import pytest
 
 from pat2vec.main_pat2vec import main
+from pat2vec.pat2vec_get_methods.get_method_bed import get_bed
+from pat2vec.pat2vec_search.cogstack_search_methods import (
+    initialize_cogstack_client,
+)
 from pat2vec.util.config_pat2vec import config_class
+from pat2vec.util.elasticsearch_methods import ingest_data_to_elasticsearch
 from pat2vec.util.get_dummy_data_cohort_searcher import (
     generate_bed_data,
     populate_elastic_with_dummy_data,
 )
 from pat2vec.util.helper_functions import get_all_features
 from pat2vec.util.logger_setup import setup_logger
-from pat2vec.pat2vec_get_methods.get_method_bed import get_bed
-from pat2vec.pat2vec_search.cogstack_search_methods import (
-    initialize_cogstack_client,
-)
-from pat2vec.util.elasticsearch_methods import ingest_data_to_elasticsearch
 
 random_seed_value = 42
 
@@ -72,7 +72,8 @@ class TestBedGet:
         )
 
         cls.patient_ids = populate_elastic_with_dummy_data(
-            config_populate, n_patients=5
+            config_populate,
+            n_patients=5,
         )
         cls.cs = initialize_cogstack_client(config_populate)
 
@@ -103,6 +104,17 @@ class TestBedGet:
         df_bed = df_bed.where(pd.notnull(df_bed), None)
         ingest_data_to_elasticsearch(df_bed, "observations", es_client=cls.cs.elastic)
         cls.cs.elastic.indices.refresh(index="observations")
+
+        cls.expected_bed_values = [
+            "Bed 1",
+            "Bed 2",
+            "Bed 3",
+            "Side Room 1",
+            "Bay A Bed 1",
+            "Bay B Bed 4",
+            "HDU Bed 2",
+            "ITU Bed 5",
+        ]
 
         os.makedirs(os.path.dirname(cls.DB_PATH), exist_ok=True)
         if os.path.exists(cls.DB_PATH):
@@ -201,8 +213,6 @@ class TestBedGet:
 
     def test_5_feature_extraction(self):
         """Test feature extraction - verify features were extracted."""
-        from pat2vec.util.helper_functions import get_all_features
-
         all_features = get_all_features(self.config_obj)
 
         assert all_features is not None, "All features should not be None"
@@ -210,8 +220,6 @@ class TestBedGet:
 
     def test_bed_data_retrieval(self):
         """Test BED data retrieval - verify BED features can be retrieved."""
-        from pat2vec.pat2vec_get_methods.get_method_bed import get_bed
-
         all_pat_list = self.pat2vec_obj.all_patient_list
         assert len(all_pat_list) > 0, "Patient list should not be empty"
 
@@ -227,10 +235,35 @@ class TestBedGet:
         assert bed_data is not None, "BED data should not be None"
         assert not bed_data.empty, "BED DataFrame should not be empty"
 
-    def test_bed_features_structure(self):
-        """Test BED features structure - verify correct feature columns."""
-        from pat2vec.pat2vec_get_methods.get_method_bed import get_bed
+    def test_raw_observation_values(self):
+        """Verify bed observations contain expected values in Elasticsearch."""
+        response = self.cs.elastic.search(
+            index="observations",
+            body={"query": {"match_all": {}}, "size": 100},
+        )
+        hits = response["hits"]["hits"]
 
+        bed_docs = [
+            h["_source"]
+            for h in hits
+            if h["_source"].get("obscatalogmasteritem_displayname") == "CORE_BedNumber3"
+        ]
+
+        assert len(bed_docs) > 0, "Should have CORE_BedNumber3 observations"
+
+        sample = bed_docs[0]
+        assert (
+            "observation_valuetext_analysed" in sample
+        ), "Bed observations should have observation_valuetext_analysed field"
+
+        value = sample["observation_valuetext_analysed"]
+        if value is not None:
+            assert (
+                value in self.expected_bed_values
+            ), f"Bed value '{value}' not in expected values {self.expected_bed_values}"
+
+    def test_bed_features_with_value_verification(self):
+        """Test BED features with explicit value verification."""
         all_pat_list = self.pat2vec_obj.all_patient_list
         assert len(all_pat_list) > 0, "Patient list should not be empty"
 
@@ -245,7 +278,24 @@ class TestBedGet:
 
         assert bed_data is not None, "BED data should not be None"
         assert not bed_data.empty, "BED DataFrame should not be empty"
-        assert "client_idcode" in bed_data.columns, "BED data should have client_idcode"
+
+        assert (
+            "client_idcode" in bed_data.columns
+        ), "BED data should have client_idcode column"
+        assert (
+            bed_data["client_idcode"].iloc[0] == all_pat_list[0]
+        ), "client_idcode should match the patient being queried"
+
+        bed_feature_cols = [c for c in bed_data.columns if c.startswith("bed_")]
+
+        for col in bed_feature_cols:
+            assert bed_data[col].dtype in [
+                "int64",
+                "float64",
+            ], f"Bed feature '{col}' should be numeric"
+            assert (
+                bed_data[col].iloc[0] == 1
+            ), f"Bed feature '{col}' should have value 1, got {bed_data[col].iloc[0]}"
 
     def test_8_cleanup_verification(self):
         """Test cleanup verification - verify all temp files were removed."""

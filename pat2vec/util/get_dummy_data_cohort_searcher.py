@@ -3550,6 +3550,16 @@ def populate_elastic_with_dummy_data(
     if creds_filename:
         creds_filename = os.path.abspath(creds_filename)
         logger.debug(f"Using config credentials from: {creds_filename}")
+
+        # Fallback to test-specific credentials if config creds file doesn't exist
+        if not os.path.exists(creds_filename):
+            current_dir_creds = os.path.abspath("test_elastic_credentials.py")
+
+            if os.path.exists(current_dir_creds):
+                creds_filename = "test_elastic_credentials.py"
+                logger.debug(
+                    f"Config creds not found, using test credentials: {current_dir_creds}",
+                )
     else:
         # Fallback to test-specific credentials in current directory for backward compatibility
         current_dir_creds = os.path.abspath("test_elastic_credentials.py")

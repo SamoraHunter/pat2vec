@@ -27,6 +27,7 @@ class TestElasticPopulation(unittest.TestCase):
             global_end_year="2021",
             global_end_month="01",
             global_end_day="01",
+            credentials_path=self.creds_file,
         )
 
     def tearDown(self):

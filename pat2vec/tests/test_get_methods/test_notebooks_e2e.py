@@ -52,16 +52,26 @@ def has_markdown_cell_front(notebook_path: str) -> bool:
 
 
 def has_merge_function(notebook_path: str, key: str) -> bool:
-    """Check if notebook contains merge_*_data() function.
+    """Check if notebook contains merge_*_data() function or uses standardized builder.
 
     The key may have underscores (e.g., core_02) but the function might not
     (e.g., merge_core02_data). We check for both patterns.
 
     Some notebooks use _csv suffix instead of _data, so we check both.
+
+    Some notebooks now use build_merged_epr_mct_doc_df or build_merged_epr_mct_annot_df
+    from post_processing_build_methods.py instead of custom merge functions.
     """
     try:
         with open(notebook_path, "r", encoding="utf-8") as f:
             content = f.read()
+
+        # Check for standardized builder function (preferred pattern now)
+        if (
+            "build_merged_epr_mct_doc_df" in content
+            or "build_merged_epr_mct_annot_df" in content
+        ):
+            return True
 
         # Pattern 1: exact match with _data (key has no special characters)
         pattern1_data = rf"def\s+merge_{re.escape(key)}_data\s*\("

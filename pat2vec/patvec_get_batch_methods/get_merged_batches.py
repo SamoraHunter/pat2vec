@@ -1974,7 +1974,7 @@ def get_merged_pat_batch_bmi(
                 ],
                 term_name=config_obj.client_idcode_term_name,
                 entered_list=client_idcode_list,
-                search_string=f'obscatalogmasteritem_displayname:("OBS BMI" OR "OBS Weight" OR "OBS height") AND '
+                search_string=f'obscatalogmasteritem_displayname:("OBS BMI Calculation" OR "OBS Weight" OR "OBS Height") AND '
                 f"observationdocument_recordeddtm:[{global_start_year}-{global_start_month}-{global_start_day} TO {global_end_year}-{global_end_month}-{global_end_day}]",
             )
 
@@ -2047,7 +2047,7 @@ def get_merged_pat_batch_bmi(
                 ],
                 term_name=config_obj.client_idcode_term_name,
                 entered_list=client_idcode_list,
-                search_string=f'obscatalogmasteritem_displayname:("OBS BMI" OR "OBS Weight" OR "OBS height") AND '
+                search_string=f'obscatalogmasteritem_displayname:("OBS BMI Calculation" OR "OBS Weight" OR "OBS Height") AND '
                 f"observationdocument_recordeddtm:[{global_start_year}-{global_start_month}-{global_start_day} TO {global_end_year}-{global_end_month}-{global_end_day}]",
             )
 

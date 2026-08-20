@@ -32,8 +32,9 @@ class TestGetDummyDataMedcatAnnotation(unittest.TestCase):
     @patch("pat2vec.util.get_dummy_data_medcat_annotation.pickle.load")
     @patch("builtins.open", new_callable=mock_open)
     @patch("os.path.join")
+    @patch("os.path.exists", return_value=True)
     def test_dummy_medcat_annotation_generator(
-        self, mock_os_path_join, mock_open, mock_pickle_load
+        self, mock_os_path_exists, mock_os_path_join, mock_open, mock_pickle_load
     ):
         """Test that dummy_medcat_annotation_generator loads and samples correctly."""
         mock_os_path_join.return_value = "/fake/path/sample_annotations.pickle"
