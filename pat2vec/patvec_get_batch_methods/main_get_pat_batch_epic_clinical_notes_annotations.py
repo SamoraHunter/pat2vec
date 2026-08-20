@@ -68,7 +68,7 @@ def _fetch_epic_clinical_notes_from_elasticsearch(
         results = search_func(
             index_name="epic_clinical_notes",
             fields_list=None,
-            term_name="document_PatientDurableKey",
+            term_name="document_PatientDurableKey.keyword",
             entered_list=[current_pat_client_id_code],
             search_string=f"document_CreatedWhen:[{start_year}-{start_month}-{start_day} TO {end_year}-{end_month}-{end_day}]",
         )

@@ -2,12 +2,13 @@ import logging
 import os
 from typing import Any
 
+from sqlalchemy import inspect, text
+
 _logger = logging.getLogger(__name__)
 
 
 import pandas as pd
 from IPython.display import display
-from sqlalchemy import text
 
 from pat2vec.util.clinical_note_splitter import split_and_append_chunks
 from pat2vec.util.filter_dataframe_by_timestamp import filter_dataframe_by_timestamp
@@ -249,14 +250,27 @@ def get_pat_batch_epr_docs(
                                 db_schema = (
                                     None if engine.name == "sqlite" else schema_name
                                 )
-                                if overwrite_stored_pat_docs:
-                                    del_query = text(
-                                        f"DELETE FROM {db_table if engine.name == 'sqlite' else f'{schema_name}.{table_name}'} WHERE client_idcode = :pat_id",
+
+                                # Create table if it doesn't exist (similar to save_raw_patient_batch)
+                                inspector = inspect(connection)
+                                if not inspector.has_table(db_table, schema=db_schema):
+                                    create_df = batch_target.iloc[:0].copy()
+                                    create_df.to_sql(
+                                        name=db_table,
+                                        con=connection,
+                                        schema=db_schema,
+                                        if_exists="append",
+                                        index=False,
                                     )
-                                    connection.execute(
-                                        del_query,
-                                        {"pat_id": current_pat_client_id_code},
-                                    )
+
+                                # Delete existing data for this patient
+                                del_query = text(
+                                    f"DELETE FROM {db_table if engine.name == 'sqlite' else f'{schema_name}.{table_name}'} WHERE client_idcode = :pat_id",
+                                )
+                                connection.execute(
+                                    del_query,
+                                    {"pat_id": current_pat_client_id_code},
+                                )
                                 batch_target.to_sql(
                                     name=db_table,
                                     con=connection,

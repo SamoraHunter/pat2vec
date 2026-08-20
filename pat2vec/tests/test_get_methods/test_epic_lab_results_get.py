@@ -15,6 +15,7 @@ from pat2vec.util.get_dummy_data_cohort_searcher import (
 )
 from pat2vec.pat2vec_get_methods.get_method_epic_lab_results import get_epic_lab_results
 from pat2vec.pat2vec_search.cogstack_search_methods import initialize_cogstack_client
+from pat2vec.util.helper_functions import get_all_features
 from pat2vec.util.logger_setup import setup_logger
 from pat2vec.util.elasticsearch_methods import ingest_data_to_elasticsearch
 

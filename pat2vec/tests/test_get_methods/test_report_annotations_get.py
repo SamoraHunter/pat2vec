@@ -20,7 +20,7 @@ from pat2vec.util.get_dummy_data_cohort_searcher import (
     generate_reports_data,
     populate_elastic_with_dummy_data,
 )
-from pat2vec.util.helper_functions import get_all_features
+from pat2vec.util.helper_functions import get_all_features, get_df_from_db
 from pat2vec.util.logger_setup import setup_logger
 
 random_seed_value = 42
@@ -278,6 +278,44 @@ class TestReportAnnotationsGet:
         assert (
             annotations_data is not None
         ), "Report annotations data should not be None"
+
+    def test_merge_report_annotations_functionality(self):
+        """Test merge report annotations functionality - verify merge function creates CSV."""
+        all_pat_list = self.pat2vec_obj.all_patient_list
+
+        def merge_report_annotations_data(patient_ids, config_obj, overwrite=True):
+            """Merge all report annotations data from database and raise ValueError if empty."""
+            all_data = get_all_features(config_obj)
+
+            if all_data.empty:
+                raise ValueError(
+                    "merge_report_annotations_data() returned empty DataFrame — no data found in database",
+                )
+
+            output_dir = os.path.join(self.PROJ_NAME, "outputs")
+            os.makedirs(output_dir, exist_ok=True)
+            merged_path = os.path.join(output_dir, "report_annotations_data.csv")
+
+            if overwrite or not os.path.exists(merged_path):
+                all_data.to_csv(merged_path, index=False)
+
+            return all_data
+
+        merged_data = merge_report_annotations_data(
+            all_pat_list,
+            self.config_obj,
+            overwrite=True,
+        )
+
+        assert not merged_data.empty, "Merged DataFrame should not be empty"
+
+        output_dir = os.path.join(self.PROJ_NAME, "outputs")
+        csv_path = os.path.join(output_dir, "report_annotations_data.csv")
+
+        assert os.path.exists(csv_path), f"CSV file should exist at {csv_path}"
+
+        csv_data = pd.read_csv(csv_path)
+        assert not csv_data.empty, "CSV file should contain data"
 
     def test_8_cleanup_verification(self):
         """Test cleanup verification - verify all temp files were removed."""
