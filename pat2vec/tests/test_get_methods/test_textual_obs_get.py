@@ -219,48 +219,38 @@ class TestTextualObsGet:
         else:
             assert not data_retrieved.empty, "Textual_obs DataFrame should not be empty"
 
-    def test_merge_textual_obs_data_functionality(self):
-        """Test merge textual_obs data functionality - verify merge function creates CSV."""
+    def test_merge_textual_obs_functionality(self):
+        """Test document merge functionality - verify the post-processing merge
+
+        function extracts all patients' textual obs documents from the database
+        into a single dataframe.
+        """
+        from pat2vec.util.post_processing_build_methods import (
+            build_merged_epr_mct_doc_df,
+        )
+
         all_pat_list = self.pat2vec_obj.all_patient_list
-        merged_path = os.path.join(self.PROJ_NAME, "outputs", "textual_obs_data.csv")
+        assert len(all_pat_list) > 0, "Patient list should not be empty"
 
-        # Define merge function (mirroring notebook pattern)
-        def merge_textual_obs_data(patient_ids, config_obj, overwrite=True):
-            """Merge all textual_obs data from database and raise ValueError if empty."""
-            all_data = get_all_features(config_obj)
-
-            if all_data.empty:
-                raise ValueError(
-                    "merge_textual_obs_data() returned empty DataFrame — no data found in database",
-                )
-
-            output_dir = os.path.join(self.PROJ_NAME, "outputs")
-            os.makedirs(output_dir, exist_ok=True)
-            merged_path = os.path.join(output_dir, "textual_obs_data.csv")
-
-            if overwrite or not os.path.exists(merged_path):
-                all_data.to_csv(merged_path, index=False)
-
-            return all_data
-
-        # Call merge function
-        merged_data = merge_textual_obs_data(
+        merged_path = build_merged_epr_mct_doc_df(
             all_pat_list,
             self.config_obj,
             overwrite=True,
         )
 
-        assert not merged_data.empty, "Merged DataFrame should not be empty"
+        assert (
+            merged_path is not None
+        ), "build_merged_epr_mct_doc_df should return a path"
 
-        # Verify CSV was written
-        output_dir = os.path.join(self.PROJ_NAME, "outputs")
-        csv_path = os.path.join(output_dir, "textual_obs_data.csv")
+        assert os.path.exists(
+            merged_path,
+        ), f"Merged documents file should exist at {merged_path}"
 
-        assert os.path.exists(csv_path), f"CSV file should exist at {csv_path}"
-
-        # Read back and verify non-empty
-        csv_data = pd.read_csv(csv_path)
-        assert not csv_data.empty, "CSV file should contain data"
+        merged_data = pd.read_csv(merged_path)
+        assert not merged_data.empty, (
+            "Merged documents DataFrame should not be empty — "
+            "the pat2vec pipeline should have saved textual obs documents to the database."
+        )
 
     def test_8_cleanup_verification(self):
         """Test cleanup verification - verify all temp files are cleaned up properly."""

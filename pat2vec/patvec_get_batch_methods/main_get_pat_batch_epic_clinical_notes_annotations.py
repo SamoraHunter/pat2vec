@@ -77,10 +77,7 @@ def _fetch_epic_clinical_notes_from_elasticsearch(
                 results = results.rename(
                     columns={"document_PatientDurableKey": "client_idcode"},
                 )
-            if "document_CreatedWhen" in results.columns:
-                results.rename(
-                    # Note: document_CreatedWhen is NOT renamed - it matches the DB schema (MAPPINGS) directly
-                )
+            # Note: document_CreatedWhen is NOT renamed - it matches the DB schema (MAPPINGS) directly
             if "document_Content" in results.columns:
                 results = results.rename(
                     columns={"document_Content": "body_analysed"},
@@ -92,10 +89,7 @@ def _fetch_epic_clinical_notes_from_elasticsearch(
                 results = results.rename(
                     columns={"document_SourceId": "document_guid"},
                 )
-            if "document_Name" in results.columns:
-                results.rename(
-                    # Note: document_Name removed from ES field_map to avoid schema mismatch
-                )
+            # Note: document_Name removed from ES field_map to avoid schema mismatch
         return results if results is not None else pd.DataFrame()
     except Exception as e:
         _logger.error(

@@ -8,15 +8,18 @@ import pandas as pd
 import pytest
 
 from pat2vec.main_pat2vec import main
+from pat2vec.pat2vec_search.cogstack_search_methods import initialize_cogstack_client
 from pat2vec.util.config_pat2vec import config_class
+from pat2vec.util.elasticsearch_methods import ingest_data_to_elasticsearch
 from pat2vec.util.get_dummy_data_cohort_searcher import (
     generate_epic_medical_history_data,
     populate_elastic_with_dummy_data,
 )
 from pat2vec.util.helper_functions import get_all_features
-from pat2vec.pat2vec_search.cogstack_search_methods import initialize_cogstack_client
 from pat2vec.util.logger_setup import setup_logger
-from pat2vec.util.elasticsearch_methods import ingest_data_to_elasticsearch
+from pat2vec.util.post_processing_build_methods import (
+    build_merged_epr_mct_doc_df,
+)
 
 random_seed_value = 42
 
@@ -103,7 +106,8 @@ class TestEpicMedicalHistoryAnnotationsGet:
             else medical_history_dfs[0]
         )
         df_medical_history = df_medical_history.where(
-            pd.notnull(df_medical_history), None
+            pd.notnull(df_medical_history),
+            None,
         )
 
         ingest_data_to_elasticsearch(
@@ -227,16 +231,62 @@ class TestEpicMedicalHistoryAnnotationsGet:
         assert features_data is not None, "Features data should not be None"
         assert not features_data.empty, "Features DataFrame should not be empty"
 
-    def test_7_merge_epic_medical_history_annotations_functionality(self):
-        """Test merge Epic medical history annotations functionality."""
+    def test_merge_epic_medical_history_annotations_functionality(self):
+        """Test annotation merge functionality - verify the post-processing merge
+
+        function merges annotation table results into a single dataframe.
+        """
         all_pat_list = self.pat2vec_obj.all_patient_list
+        assert len(all_pat_list) > 0, "Patient list should not be empty"
 
-        merged_data = get_all_features(self.config_obj)
+        merged_path = build_merged_epr_mct_annot_df(
+            all_pat_list,
+            self.config_obj,
+            overwrite=True,
+        )
 
-        assert merged_data is not None, "Merged data should not be None"
         assert (
-            not merged_data.empty
-        ), "Merged epic_medical_history_annotations DataFrame should not be empty"
+            merged_path is not None
+        ), "build_merged_epr_mct_annot_df should return a path"
+
+        assert os.path.exists(
+            merged_path,
+        ), f"Merged annotations file should exist at {merged_path}"
+
+        merged_data = pd.read_csv(merged_path)
+        assert not merged_data.empty, (
+            "Merged annotations DataFrame should not be empty — "
+            "the pat2vec pipeline should have saved annotation records to the database."
+        )
+
+    def test_merge_documents_from_db_functionality(self):
+        """Test document merge functionality - verify the post-processing merge
+
+        function extracts all patients' documents from the database (written by
+        pat_maker) into a single dataframe.
+        """
+        all_pat_list = self.pat2vec_obj.all_patient_list
+        assert len(all_pat_list) > 0, "Patient list should not be empty"
+
+        merged_path = build_merged_epr_mct_doc_df(
+            all_pat_list,
+            self.config_obj,
+            overwrite=True,
+        )
+
+        assert (
+            merged_path is not None
+        ), "build_merged_epr_mct_doc_df should return a path"
+
+        assert os.path.exists(
+            merged_path
+        ), f"Merged documents file should exist at {merged_path}"
+
+        merged_data = pd.read_csv(merged_path)
+        assert not merged_data.empty, (
+            "Merged documents DataFrame should not be empty — "
+            "the pat2vec pipeline should have saved documents to the database."
+        )
 
     def test_8_cleanup_verification(self):
         """Test cleanup verification - verify all temp files were removed."""

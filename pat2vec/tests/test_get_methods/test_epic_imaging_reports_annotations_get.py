@@ -22,6 +22,9 @@ from pat2vec.util.get_dummy_data_cohort_searcher import (
 )
 from pat2vec.util.helper_functions import get_all_features
 from pat2vec.util.logger_setup import setup_logger
+from pat2vec.util.post_processing_build_methods import (
+    build_merged_epr_mct_doc_df,
+)
 
 random_seed_value = 42
 
@@ -225,66 +228,62 @@ class TestEpicImagingReportsAnnotationsGet:
         assert all_features is not None, "All features should not be None"
         assert not all_features.empty, "Features DataFrame should not be empty"
 
-    def test_6_merge_epic_imaging_reports_annotations_functionality(self):
-        """Test merge functionality - verify CSV creation and non-empty results."""
-        import pandas as pd
+    def test_merge_epic_imaging_reports_annotations_functionality(self):
+        """Test annotation merge functionality - verify the post-processing merge
 
-        from pat2vec.util.helper_functions import get_all_features
-
+        function merges annotation table results into a single dataframe.
+        """
         all_pat_list = self.pat2vec_obj.all_patient_list
+        assert len(all_pat_list) > 0, "Patient list should not be empty"
 
-        # Merge function for epic_imaging_reports_annotations
-        def merge_epic_imaging_reports_annotations_data(
-            patient_ids,
-            config_obj,
+        merged_path = build_merged_epr_mct_annot_df(
+            all_pat_list,
+            self.config_obj,
             overwrite=True,
-        ):
-            """Merge all epic_imaging_reports_annotations data from database."""
-            all_data = get_all_features(config_obj)
-
-            if all_data.empty:
-                raise ValueError(
-                    "merge_epic_imaging_reports_annotations_data() returned empty DataFrame",
-                )
-
-            output_dir = os.path.join(self.PROJ_NAME, "outputs")
-            os.makedirs(output_dir, exist_ok=True)
-            merged_path = os.path.join(
-                output_dir,
-                "epic_imaging_reports_annotations_data.csv",
-            )
-
-            if overwrite or not os.path.exists(merged_path):
-                all_data.to_csv(merged_path, index=False)
-
-            return all_data
-
-        # Call merge function and verify results
-        try:
-            merged_data = merge_epic_imaging_reports_annotations_data(
-                all_pat_list,
-                self.config_obj,
-                overwrite=True,
-            )
-        except ValueError as e:
-            msg = (
-                f"merge_epic_imaging_reports_annotations_data() raised ValueError: {e}."
-            )
-            raise AssertionError(msg) from e
-
-        assert not merged_data.empty, "Merged DataFrames should not be empty"
-
-        # Verify CSV was written
-        csv_path = os.path.join(
-            self.PROJ_NAME,
-            "outputs",
-            "epic_imaging_reports_annotations_data.csv",
         )
-        assert os.path.exists(csv_path), f"CSV file should exist at {csv_path}"
 
-        # Read back and verify non-empty
-        csv_data = pd.read_csv(csv_path)
-        assert not csv_data.empty, "CSV file should contain data"
+        assert (
+            merged_path is not None
+        ), "build_merged_epr_mct_annot_df should return a path"
+
+        assert os.path.exists(
+            merged_path,
+        ), f"Merged annotations file should exist at {merged_path}"
+
+        merged_data = pd.read_csv(merged_path)
+        assert not merged_data.empty, (
+            "Merged annotations DataFrame should not be empty — "
+            "the pat2vec pipeline should have saved annotation records to the database."
+        )
+
+    def test_merge_documents_from_db_functionality(self):
+        """Test document merge functionality - verify the post-processing merge
+
+        function extracts all patients' documents from the database (written by
+        pat_maker) into a single dataframe.
+        """
+        all_pat_list = self.pat2vec_obj.all_patient_list
+        assert len(all_pat_list) > 0, "Patient list should not be empty"
+
+        merged_path = build_merged_epr_mct_doc_df(
+            all_pat_list,
+            self.config_obj,
+            overwrite=True,
+        )
+
+        assert (
+            merged_path is not None
+        ), "build_merged_epr_mct_doc_df should return a path"
+
+        assert os.path.exists(
+            merged_path
+        ), f"Merged documents file should exist at {merged_path}"
+
+        merged_data = pd.read_csv(merged_path)
+        assert not merged_data.empty, (
+            "Merged documents DataFrame should not be empty — "
+            "the pat2vec pipeline should have saved documents to the database."
+        )
 
     def test_epic_imaging_reports_annotations_data_retrieval(self):
         """Test Epic Imaging Reports Annotations data retrieval."""

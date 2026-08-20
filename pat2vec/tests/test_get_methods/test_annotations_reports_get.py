@@ -8,16 +8,19 @@ import pandas as pd
 import pytest
 
 from pat2vec.main_pat2vec import main
+from pat2vec.pat2vec_search.cogstack_search_methods import (
+    initialize_cogstack_client,
+)
 from pat2vec.util.config_pat2vec import config_class
+from pat2vec.util.elasticsearch_methods import ingest_data_to_elasticsearch
 from pat2vec.util.get_dummy_data_cohort_searcher import (
     generate_reports_data,
     populate_elastic_with_dummy_data,
 )
 from pat2vec.util.helper_functions import get_all_features
 from pat2vec.util.logger_setup import setup_logger
-from pat2vec.util.elasticsearch_methods import ingest_data_to_elasticsearch
-from pat2vec.pat2vec_search.cogstack_search_methods import (
-    initialize_cogstack_client,
+from pat2vec.util.post_processing_build_methods import (
+    build_merged_epr_mct_doc_df,
 )
 
 random_seed_value = 42
@@ -71,7 +74,8 @@ class TestAnnotationsReportsGet:
         )
 
         cls.patient_ids = populate_elastic_with_dummy_data(
-            config_populate, n_patients=5
+            config_populate,
+            n_patients=5,
         )
         cls.cs = initialize_cogstack_client(config_populate)
 
@@ -103,7 +107,9 @@ class TestAnnotationsReportsGet:
         )
         df_reports = df_reports.where(pd.notnull(df_reports), None)
         ingest_data_to_elasticsearch(
-            df_reports, "basic_observations", es_client=cls.cs.elastic
+            df_reports,
+            "basic_observations",
+            es_client=cls.cs.elastic,
         )
         cls.cs.elastic.indices.refresh(index="basic_observations")
 
@@ -203,7 +209,6 @@ class TestAnnotationsReportsGet:
 
     def test_annotations_reports_data_retrieval(self):
         """Test annotations reports data retrieval - verify report annotations can be retrieved."""
-
         from pat2vec.pat2vec_get_methods.get_method_report_annotations import (
             get_current_pat_report_annotations,
         )
@@ -243,52 +248,62 @@ class TestAnnotationsReportsGet:
             annotations_data is not None
         ), "Report annotations data should not be None"
 
-    def test_merge_annotations_reports_data_functionality(self):
-        """Test merge annotations reports data functionality - verify merge function raises ValueError on empty."""
+    def test_merge_annotations_reports_functionality(self):
+        """Test annotation merge functionality - verify the post-processing merge
 
-        from pat2vec.pat2vec_get_methods.get_method_report_annotations import (
-            get_current_pat_report_annotations,
-        )
-        from pat2vec.util.helper_functions import get_df_from_db
-
+        function merges annotation table results into a single dataframe.
+        """
         all_pat_list = self.pat2vec_obj.all_patient_list
         assert len(all_pat_list) > 0, "Patient list should not be empty"
 
-        # Define merge function (mirroring test_negated_presence_annotations_get.py pattern)
-        def merge_annotations_reports_data(patient_ids, config_obj, overwrite=True):
-            """Merge all annotations reports data from database and raise ValueError if empty."""
-            all_data = get_all_features(config_obj)
-
-            if all_data.empty:
-                raise ValueError(
-                    "merge_annotations_reports_data() returned empty DataFrame — no data found in database"
-                )
-
-            output_dir = os.path.join(self.PROJ_NAME, "outputs")
-            os.makedirs(output_dir, exist_ok=True)
-            merged_path = os.path.join(output_dir, "annotations_reports_data.csv")
-
-            if overwrite or not os.path.exists(merged_path):
-                all_data.to_csv(merged_path, index=False)
-
-            return all_data
-
-        # Call merge function
-        merged_data = merge_annotations_reports_data(
-            all_pat_list, self.config_obj, overwrite=True
+        merged_path = build_merged_epr_mct_annot_df(
+            all_pat_list,
+            self.config_obj,
+            overwrite=True,
         )
 
-        assert not merged_data.empty, "Merged DataFrame should not be empty"
+        assert (
+            merged_path is not None
+        ), "build_merged_epr_mct_annot_df should return a path"
 
-        # Verify CSV was written
-        output_dir = os.path.join(self.PROJ_NAME, "outputs")
-        csv_path = os.path.join(output_dir, "annotations_reports_data.csv")
+        assert os.path.exists(
+            merged_path,
+        ), f"Merged annotations file should exist at {merged_path}"
 
-        assert os.path.exists(csv_path), f"CSV file should exist at {csv_path}"
+        merged_data = pd.read_csv(merged_path)
+        assert not merged_data.empty, (
+            "Merged annotations DataFrame should not be empty — "
+            "the pat2vec pipeline should have saved annotation records to the database."
+        )
 
-        # Read back and verify non-empty
-        csv_data = pd.read_csv(csv_path)
-        assert not csv_data.empty, "CSV file should contain data"
+    def test_merge_documents_from_db_functionality(self):
+        """Test document merge functionality - verify the post-processing merge
+
+        function extracts all patients' documents from the database (written by
+        pat_maker) into a single dataframe.
+        """
+        all_pat_list = self.pat2vec_obj.all_patient_list
+        assert len(all_pat_list) > 0, "Patient list should not be empty"
+
+        merged_path = build_merged_epr_mct_doc_df(
+            all_pat_list,
+            self.config_obj,
+            overwrite=True,
+        )
+
+        assert (
+            merged_path is not None
+        ), "build_merged_epr_mct_doc_df should return a path"
+
+        assert os.path.exists(
+            merged_path
+        ), f"Merged documents file should exist at {merged_path}"
+
+        merged_data = pd.read_csv(merged_path)
+        assert not merged_data.empty, (
+            "Merged documents DataFrame should not be empty — "
+            "the pat2vec pipeline should have saved documents to the database."
+        )
 
     def test_8_cleanup_verification(self):
         """Test cleanup verification - verify all temp files are cleaned up properly."""

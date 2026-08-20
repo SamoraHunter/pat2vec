@@ -22,6 +22,10 @@ from pat2vec.util.get_dummy_data_cohort_searcher import (
 )
 from pat2vec.util.helper_functions import get_all_features, get_df_from_db
 from pat2vec.util.logger_setup import setup_logger
+from pat2vec.util.post_processing_build_methods import (
+    build_merged_epr_mct_annot_df,
+    build_merged_epr_mct_doc_df,
+)
 
 random_seed_value = 42
 
@@ -56,7 +60,8 @@ class TestTextualObsAnnotationsGet:
             try:
                 shutil.rmtree(dir_to_remove, ignore_errors=True)
             except Exception as e:
-                raise RuntimeError(f"Failed to clean up '{dir_to_remove}': {e}") from e
+                err_msg = f"Failed to clean up '{dir_to_remove}': {e}"
+                raise RuntimeError(err_msg) from e
 
         schema_path = os.path.abspath("test_files/elastic_schemas.json")
         config_populate = config_class(
@@ -216,7 +221,6 @@ class TestTextualObsAnnotationsGet:
         assert len(all_pat_list) > 0, "Patient list should not be empty"
 
         # Get textual obs annotations from database
-        from pat2vec.util.helper_functions import get_df_from_db
 
         textual_obs_annotations = get_df_from_db(
             self.config_obj,
@@ -250,8 +254,6 @@ class TestTextualObsAnnotationsGet:
 
     def test_textual_obs_annotations_count_features(self):
         """Test textual obs annotations count features - verify pretty_name counts are calculated."""
-        from pat2vec.util.helper_functions import get_df_from_db
-
         all_pat_list = self.pat2vec_obj.all_patient_list
         assert len(all_pat_list) > 0, "Patient list should not be empty"
 
@@ -287,42 +289,61 @@ class TestTextualObsAnnotationsGet:
         ), "Textual obs annotations data should not be None"
 
     def test_merge_textual_obs_annotations_functionality(self):
-        """Test merge textual obs annotations functionality - verify merge function creates CSV."""
+        """Test annotation merge functionality - verify the post-processing merge
+
+        function merges annotation table results into a single dataframe.
+        """
         all_pat_list = self.pat2vec_obj.all_patient_list
+        assert len(all_pat_list) > 0, "Patient list should not be empty"
 
-        def merge_textual_obs_annotations_data(patient_ids, config_obj, overwrite=True):
-            """Merge all textual obs annotations data from database and raise ValueError if empty."""
-            all_data = get_all_features(config_obj)
-
-            if all_data.empty:
-                raise ValueError(
-                    "merge_textual_obs_annotations_data() returned empty DataFrame — no data found in database",
-                )
-
-            output_dir = os.path.join(self.PROJ_NAME, "outputs")
-            os.makedirs(output_dir, exist_ok=True)
-            merged_path = os.path.join(output_dir, "textual_obs_annotations_data.csv")
-
-            if overwrite or not os.path.exists(merged_path):
-                all_data.to_csv(merged_path, index=False)
-
-            return all_data
-
-        merged_data = merge_textual_obs_annotations_data(
+        merged_path = build_merged_epr_mct_annot_df(
             all_pat_list,
             self.config_obj,
             overwrite=True,
         )
 
-        assert not merged_data.empty, "Merged DataFrame should not be empty"
+        assert (
+            merged_path is not None
+        ), "build_merged_epr_mct_annot_df should return a path"
 
-        output_dir = os.path.join(self.PROJ_NAME, "outputs")
-        csv_path = os.path.join(output_dir, "textual_obs_annotations_data.csv")
+        assert os.path.exists(
+            merged_path,
+        ), f"Merged annotations file should exist at {merged_path}"
 
-        assert os.path.exists(csv_path), f"CSV file should exist at {csv_path}"
+        merged_data = pd.read_csv(merged_path)
+        assert not merged_data.empty, (
+            "Merged annotations DataFrame should not be empty — "
+            "the pat2vec pipeline should have saved annotation records to the database."
+        )
 
-        csv_data = pd.read_csv(csv_path)
-        assert not csv_data.empty, "CSV file should contain data"
+    def test_merge_documents_from_db_functionality(self):
+        """Test document merge functionality - verify the post-processing merge
+
+        function extracts all patients' documents from the database (written by
+        pat_maker) into a single dataframe.
+        """
+        all_pat_list = self.pat2vec_obj.all_patient_list
+        assert len(all_pat_list) > 0, "Patient list should not be empty"
+
+        merged_path = build_merged_epr_mct_doc_df(
+            all_pat_list,
+            self.config_obj,
+            overwrite=True,
+        )
+
+        assert (
+            merged_path is not None
+        ), "build_merged_epr_mct_doc_df should return a path"
+
+        assert os.path.exists(
+            merged_path
+        ), f"Merged documents file should exist at {merged_path}"
+
+        merged_data = pd.read_csv(merged_path)
+        assert not merged_data.empty, (
+            "Merged documents DataFrame should not be empty — "
+            "the pat2vec pipeline should have saved documents to the database."
+        )
 
     def test_8_cleanup_verification(self):
         """Test cleanup verification - verify all temp files were removed."""
