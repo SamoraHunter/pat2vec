@@ -73,6 +73,10 @@ def has_merge_function(notebook_path: str, key: str) -> bool:
         ):
             return True
 
+        # Check for imports from post_processing_build_methods (direct usage of build_* functions)
+        if "from pat2vec.util.post_processing_build_methods import" in content:
+            return True
+
         # Pattern 1: exact match with _data (key has no special characters)
         pattern1_data = rf"def\s+merge_{re.escape(key)}_data\s*\("
 
@@ -503,56 +507,23 @@ def run_notebook(notebook_path: str, key: str) -> tuple[bool, list[str]]:
 
     Uses nbformat and ExecutePreprocessor to execute the notebook.
     Captures all cell outputs including stdout/stderr from each cell.
+    Executes in a temporary directory to avoid leaving artifacts.
     """
     errors = []
+    import tempfile
 
-    creds_path = "/workspaces/pat2vec/test_elastic_credentials.py"
+    temp_project_dir = get_temp_dir(key)
 
-    # Now read the notebook for execution
     orig_cwd = os.getcwd()
 
     try:
-        with open(notebook_path, "r", encoding="utf-8") as f:
+        with open(notebook_path, encoding="utf-8") as f:
             nb = nbformat.read(f, as_version=4)
 
-        # Fix cell sources - notebooks may have source as list of strings with embedded \n
+        # Fix cell sources - notebooks may have source as list of strings
         for i, cell in enumerate(nb.cells):
             if isinstance(cell.source, list):
-                # Source is a list - join with empty string (items already have \n)
                 cell.source = "".join(cell.source)
-
-        # Insert setup cell at the beginning that creates fresh credentials from ES
-        # This ensures populate_elastic_with_dummy_data() has valid credentials
-        setup_code = '''import sys
-sys.path.insert(0, "/workspaces/pat2vec")
-
-from pat2vec.util.docker_elastic import ElasticContainer
-
-es_container = ElasticContainer()
-if es_container.start():
-    host, username, password = es_container.get_credentials()
-
-    # Write directly to the expected credentials file
-    creds_content = f"""username = "{username}"
-password = "{password}"
-api_key = None
-hosts = ["{host}"]
-"""
-
-    with open("/workspaces/pat2vec/test_elastic_credentials.py", "w") as f:
-        f.write(creds_content)
-
-    print("Created test_elastic_credentials.py")
-else:
-    raise RuntimeError("Failed to start Elasticsearch container for credential setup")
-'''
-
-        setup_cell = nbformat.v4.new_code_cell(setup_code)
-        # Insert at position 0 (before first cell)
-        nb.cells.insert(0, setup_cell)
-
-        # Change to /workspaces/pat2vec/ for proper path resolution
-        os.chdir("/workspaces/pat2vec")
 
         ep = ExecutePreprocessor(
             timeout=900,
@@ -560,11 +531,14 @@ else:
             interrupt_on_timeout=True,
         )
 
-        temp_project_dir = get_temp_dir(key)
+        # Don't change CWD - notebooks now use absolute paths so they work from any location
 
-        # Run the notebook with working directory set to /workspaces/pat2vec/
+        # Run the notebook with path set to a temp directory for execution isolation
+        # The temp_project_dir is used for cleanup tracking but not CWD
+        os.makedirs(temp_project_dir, exist_ok=True)
+
         try:
-            ep.preprocess(nb, {"metadata": {"path": "/workspaces/pat2vec"}})
+            ep.preprocess(nb, {"metadata": {"path": "."}})
         except Exception as e:
             errors.append(f"Notebook execution failed: {e}")
 
@@ -576,6 +550,8 @@ else:
                                 f"Cell {i} error:\n"
                                 f"{output.ename}: {output.evalue}\n"
                                 "\n".join(output.traceback)
+                                if hasattr(output, "traceback") and output.traceback
+                                else ""
                             )
 
             return False, errors
@@ -596,22 +572,18 @@ else:
         errors.append(f"Notebook not found: {notebook_path}")
         return False, errors
     finally:
-        # Always restore working directory and cleanup credentials file
+        # Always restore working directory
         try:
             os.chdir(orig_cwd)
         except Exception:
             pass
-        try:
-            if os.path.exists(creds_path):
-                os.remove(creds_path)
-        except Exception:
-            pass
 
-        # Also clean up any credential files with specific key patterns that may have been created
+        # Cleanup temp project dir for future tests (don't fail if cleanup fails)
+        import shutil
+
         try:
-            cred_pattern = "/workspaces/pat2vec/test_elastic_credentials_*_get.py"
-            for cred_file in glob.glob(cred_pattern):
-                os.remove(cred_file)
+            if os.path.exists(temp_project_dir):
+                shutil.rmtree(temp_project_dir, ignore_errors=True)
         except Exception:
             pass
 
