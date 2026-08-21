@@ -92,6 +92,7 @@ class TestEpicClinicalNotesAppointmentsAnnotationsGet:
             "observations",
             "order",
             "pims_apps",
+            "epic_clinical_notes_appointments",
         ]
         cls.cs.elastic.indices.refresh(index=indices, ignore_unavailable=True)
 
@@ -133,14 +134,17 @@ class TestEpicClinicalNotesAppointmentsAnnotationsGet:
         cls.config_obj = config_class(
             proj_name=cls.PROJ_NAME,
             credentials_path=cls.cred_path,
-            current_path_dir="",
-            main_options={"epic_clinical_notes_appointments_annotations": True},
+            main_options={
+                "annotations": True,  # Required to fetch and save EPR docs for merge
+                "epic_clinical_notes_appointments_annotations": True,
+            },
             batch_mode=True,
             verbosity=0,
             random_seed_val=random_seed_value,
             testing=True,
             testing_elastic=True,
             dummy_medcat_model=True,
+            overwrite_stored_pat_docs=True,
             use_controls=False,
             medcat=False,
             start_time=None,
@@ -338,10 +342,11 @@ class TestEpicClinicalNotesAppointmentsAnnotationsGet:
         ), "build_merged_epr_mct_doc_df should return a path"
 
         assert os.path.exists(
-            merged_path
+            merged_path,
         ), f"Merged documents file should exist at {merged_path}"
 
         merged_data = pd.read_csv(merged_path)
+
         assert not merged_data.empty, (
             "Merged documents DataFrame should not be empty — "
             "the pat2vec pipeline should have saved documents to the database."

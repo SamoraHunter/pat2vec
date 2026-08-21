@@ -215,7 +215,7 @@ def build_merged_epr_mct_annot_df(
     config_obj: Any,
     overwrite: bool = False,
 ) -> str | None:
-    """Builds a merged DataFrame of annotations from EPR and MCT sources (file or DB)."""
+    """Builds a merged DataFrame of annotations from EPR and MCT sources and textual obs and epic clinical notes, epic medical history, and other epic sources (file or DB)."""
     # Sanitise all_pat_list using dict.fromkeys (faster and more memory efficient than set for large lists)
     all_pat_list = list(dict.fromkeys(str(p) for p in all_pat_list if p is not None))
     gc.collect()

@@ -8,7 +8,14 @@ import pandas as pd
 import pytest
 
 from pat2vec.main_pat2vec import main
+from pat2vec.pat2vec_get_methods.get_method_epic_patients import (
+    get_epic_patients,
+)
+from pat2vec.pat2vec_search.cogstack_search_methods import (
+    initialize_cogstack_client,
+)
 from pat2vec.util.config_pat2vec import config_class
+from pat2vec.util.elasticsearch_methods import ingest_data_to_elasticsearch
 from pat2vec.util.get_dummy_data_cohort_searcher import (
     generate_epic_patients_data,
     populate_elastic_with_dummy_data,
@@ -16,14 +23,6 @@ from pat2vec.util.get_dummy_data_cohort_searcher import (
 from pat2vec.util.helper_functions import get_all_features
 from pat2vec.util.logger_setup import setup_logger
 from pat2vec.util.post_processing_build_methods import merge_epic_patients_csv
-from pat2vec.pat2vec_get_methods.get_method_epic_patients import (
-    get_epic_patients,
-    search_epic_patients,
-)
-from pat2vec.pat2vec_search.cogstack_search_methods import (
-    initialize_cogstack_client,
-)
-from pat2vec.util.elasticsearch_methods import ingest_data_to_elasticsearch
 
 random_seed_value = 42
 
@@ -238,7 +237,9 @@ class TestEpicPatientsGet:
         assert len(all_pat_list) > 0, "Patient list should not be empty"
 
         merged_path = merge_epic_patients_csv(
-            all_pat_list, self.config_obj, overwrite=True
+            all_pat_list,
+            self.config_obj,
+            overwrite=True,
         )
         assert os.path.exists(merged_path), "Merged file should exist"
 
@@ -257,3 +258,6 @@ class TestEpicPatientsGet:
         except Exception as e:
             msg = f"Failed to remove '{self.PROJ_NAME}' directory: {e}"
             raise AssertionError(msg) from e
+
+        assert not os.path.exists(self.DB_PATH), "Database file should be removed"
+        assert not os.path.exists(self.PROJ_NAME), "Project directory should be removed"

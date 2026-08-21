@@ -945,7 +945,10 @@ class config_class:
                         self.test_data_path = _internal_test_path
                     else:
                         # Fallback for source checkouts where test_files might be at repository root
-                        self.test_data_path = "test_files/treatment_docs.csv"
+                        # Use absolute path to ensure it works when CWD changes
+                        self.test_data_path = os.path.abspath(
+                            "test_files/treatment_docs.csv",
+                        )
 
                     logger.info(f"Defaulting test_data_path to: {self.test_data_path}")
                 else:
@@ -961,6 +964,8 @@ class config_class:
                 logger.info("Updating main options with implemented test options")
                 # Enforce implemented testing options
                 self._update_main_options()
+                # Ensure annotation modes auto-enable their raw data sources
+                self._ensure_annotation_raw_data_sync()
 
         if self.remote_dump:
             #: SFTP client object.
@@ -1349,6 +1354,7 @@ class config_class:
             "epic_patients": True,
             "epic_imaging_reports": True,
             "epic_clinical_notes_appointments": True,
+            "epic_clinical_notes_appointments_annotations": True,
         }
 
     def _update_main_options(self) -> None:
@@ -1363,8 +1369,41 @@ class config_class:
             if value and not test_options_dict.get(option, False):
                 self.main_options[option] = False
 
+    def _ensure_annotation_raw_data_sync(self) -> None:
+        """Ensures raw data options are enabled when annotation options are enabled.
+
+        When an annotation option is enabled (e.g., epic_clinical_notes_appointments_annotations)
+        but the corresponding raw data option is disabled, this method auto-enables it.
+        This is required because annotations depend on having access to raw document
+        data from Elasticsearch, especially when using database storage backend.
+        """
+        if self.storage_backend != "database":
+            return
+
+        annotation_to_raw_map = {
+            "epic_clinical_notes_annotations": "epic_clinical_notes",
+            "epic_clinical_notes_appointments_annotations": "epic_clinical_notes_appointments",
+            "epic_imaging_reports_annotations": "epic_imaging_reports",
+            "epic_medical_history_annotations": "epic_medical_history",
+            "epic_orders_annotations": "epic_orders",
+            "annotations": None,
+            "annotations_mrc": None,
+        }
+
+        for annotation_option, raw_option in annotation_to_raw_map.items():
+            if self.main_options.get(annotation_option, False):
+                if raw_option is not None and not self.main_options.get(
+                    raw_option,
+                    False,
+                ):
+                    self.main_options[raw_option] = True
+                    logger.info(
+                        f"Auto-enabled '{raw_option}' because '{annotation_option}' is enabled "
+                        "(required for annotation batch to fetch and save raw data).",
+                    )
+
     def _validate_and_fix_global_dates(self) -> None:
-        """Ensures global start date is before the global end date.
+        """Ensures global start date is before the end date.
 
         If the start date is after the end date, it swaps them to ensure
         compatibility with Elasticsearch range queries and warns the user.
