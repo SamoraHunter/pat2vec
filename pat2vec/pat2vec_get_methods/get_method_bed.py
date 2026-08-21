@@ -192,10 +192,7 @@ def get_bed(
     search_term = "CORE_BedNumber3"
     bed_time_field = "observationdocument_recordeddtm"
 
-    if pat_batch.empty:
-        return pd.DataFrame({"client_idcode": [current_pat_client_id_code]})
-
-    if batch_mode:
+    if batch_mode and not pat_batch.empty:
         current_pat_raw = filter_dataframe_by_timestamp(
             pat_batch,
             start_year,
@@ -206,7 +203,7 @@ def get_bed(
             end_day,
             bed_time_field,
         )
-    else:
+    elif cohort_searcher_with_terms_and_search is not None:
         current_pat_raw = search_bed_data(
             cohort_searcher_with_terms_and_search=cohort_searcher_with_terms_and_search,
             client_id_codes=current_pat_client_id_code,
@@ -222,6 +219,35 @@ def get_bed(
             output_filename=None,
             config_obj=config_obj,
         )
+    elif config_obj.storage_backend == "database":
+        from pat2vec.util.helper_functions import get_df_from_db
+
+        safe_search_term = "".join(
+            e for e in search_term if e.isalnum() or e == "_"
+        ).lower()
+        table_name = f"raw_obs_{safe_search_term}"
+        schema_name = "raw_data"
+
+        try:
+            current_pat_raw = get_df_from_db(
+                config_obj,
+                schema_name,
+                table_name,
+                patient_ids=[current_pat_client_id_code],
+                warn_on_missing=False,
+            )
+        except Exception as e:
+            _logger = None
+            import logging
+
+            _logger = logging.getLogger(__name__)
+            if _logger:
+                _logger.error(
+                    f"Failed to fetch bed data from database: {e}. Returning empty DataFrame.",
+                )
+            current_pat_raw = pd.DataFrame()
+    else:
+        current_pat_raw = pd.DataFrame()
 
     features = pd.DataFrame(
         data=[current_pat_client_id_code],
@@ -289,10 +315,7 @@ def get_bed_features(
     search_term = "CORE_BedNumber3"
     bed_time_field = "observationdocument_recordeddtm"
 
-    if pat_batch.empty:
-        return pd.DataFrame({"client_idcode": [current_pat_client_id_code]})
-
-    if batch_mode:
+    if batch_mode and not pat_batch.empty:
         current_pat_raw = filter_dataframe_by_timestamp(
             pat_batch,
             start_year,
@@ -303,7 +326,7 @@ def get_bed_features(
             end_day,
             bed_time_field,
         )
-    else:
+    elif cohort_searcher_with_terms_and_search is not None:
         current_pat_raw = search_bed_data(
             cohort_searcher_with_terms_and_search=cohort_searcher_with_terms_and_search,
             client_id_codes=current_pat_client_id_code,
@@ -319,6 +342,35 @@ def get_bed_features(
             output_filename=None,
             config_obj=config_obj,
         )
+    elif config_obj.storage_backend == "database":
+        from pat2vec.util.helper_functions import get_df_from_db
+
+        safe_search_term = "".join(
+            e for e in search_term if e.isalnum() or e == "_"
+        ).lower()
+        table_name = f"raw_obs_{safe_search_term}"
+        schema_name = "raw_data"
+
+        try:
+            current_pat_raw = get_df_from_db(
+                config_obj,
+                schema_name,
+                table_name,
+                patient_ids=[current_pat_client_id_code],
+                warn_on_missing=False,
+            )
+        except Exception as e:
+            _logger = None
+            import logging
+
+            _logger = logging.getLogger(__name__)
+            if _logger:
+                _logger.error(
+                    f"Failed to fetch bed data from database: {e}. Returning empty DataFrame.",
+                )
+            current_pat_raw = pd.DataFrame()
+    else:
+        current_pat_raw = pd.DataFrame()
 
     features = pd.DataFrame(
         data=[current_pat_client_id_code],

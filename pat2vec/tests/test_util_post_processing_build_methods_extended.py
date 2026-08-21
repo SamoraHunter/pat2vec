@@ -375,6 +375,7 @@ class TestPostProcessingBuildMethodsExtended:
                 patient_ids=None,
                 patient_id_column="client_idcode",
                 columns=None,
+                warn_on_missing=True,
             ):
                 # Return non-empty for epr docs, empty for epic tables
                 if "ann_epr_docs" in table:

@@ -121,9 +121,12 @@ def ingest_data_to_elasticsearch(
                     )
                     time.sleep(retry_interval)
                 else:
-                    raise ConnectionError(
+                    msg_0 = (
                         f"Elasticsearch connection failed after {max_retries} attempts. "
-                        f"Please ensure the Elasticsearch service is running and accessible.",
+                        f"Please ensure the Elasticsearch service is running and accessible."
+                    )
+                    raise ConnectionError(
+                        msg_0,
                     ) from e
 
         if not es_ping_success:

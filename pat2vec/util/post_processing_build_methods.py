@@ -89,6 +89,7 @@ def _generic_merged_builder(
                         patient_ids=chunk_pats,  # <-- whole chunk at once
                         patient_id_column=patient_id_col,
                         columns=fetch_cols,
+                        warn_on_missing=False,
                     )
 
                     if df.empty:
@@ -695,6 +696,7 @@ def retrieve_pat_docs_mct_epr(
                     table=table,
                     patient_ids=[client_idcode],
                     columns=cols,
+                    warn_on_missing=False,
                 )
                 if not df_temp.empty:
                     # Ensure the columns we want to use exist before assignment
@@ -1376,8 +1378,9 @@ def merge_appointments_csv(
     all_data = get_all_features(config_obj)
 
     if all_data.empty:
+        msg = "merge_appointments_csv() returned empty DataFrame — no data found in database"
         raise ValueError(
-            "merge_appointments_csv() returned empty DataFrame — no data found in database",
+            msg,
         )
 
     proj_name = config_obj.proj_name
