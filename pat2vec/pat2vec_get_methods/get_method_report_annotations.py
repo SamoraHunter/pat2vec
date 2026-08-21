@@ -118,7 +118,7 @@ def get_current_pat_report_annotations(
             processed_annotations = calculate_pretty_name_count_features(
                 filtered_report_annotations,
                 suffix="reports",
-                patient_id=current_pat_client_idcode,
+                patient_id=current_pat_client_id_code,
             )
 
         else:
