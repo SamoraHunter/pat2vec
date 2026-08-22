@@ -218,11 +218,12 @@ class TestAnnotationsReportsGet:
         all_pat_list = self.pat2vec_obj.all_patient_list
         assert len(all_pat_list) > 0, "Patient list should not be empty"
 
-        # Get report annotations from database (main index is 'reports')
+        # Get report annotations from database - after pat2vec pipeline runs,
+        # annotations are stored in the 'ann_reports' table with 'pretty_name'
         report_annotations = get_df_from_db(
             self.config_obj,
-            "raw_data",
-            "raw_reports",
+            "annotations",
+            "ann_reports",
             patient_ids=[all_pat_list[0]],
             warn_on_missing=False,
         )
