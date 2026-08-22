@@ -47,6 +47,7 @@ class TestRetrieveData(unittest.TestCase):
             "raw_epr_docs",
             patient_ids=[self.patient_id],
             patient_id_column="client_idcode",
+            warn_on_missing=False,
         )
 
     @patch("pandas.read_csv", side_effect=FileNotFoundError)

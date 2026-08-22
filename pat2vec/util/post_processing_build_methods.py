@@ -570,6 +570,7 @@ def retrieve_pat_bloods(client_idcode: str, config_obj: Any) -> pd.DataFrame:
             "raw_data",
             "raw_bloods",
             patient_ids=[client_idcode],
+            warn_on_missing=False,
         )
 
     pre_bloods_batch_path = config_obj.pre_bloods_batch_path
@@ -604,6 +605,7 @@ def retrieve_pat_epr_docs(client_idcode: str, config_obj: Any) -> pd.DataFrame:
             "raw_data",
             "raw_epr_docs",
             patient_ids=[client_idcode],
+            warn_on_missing=False,
         )
 
     pre_document_batch_path = config_obj.pre_document_batch_path

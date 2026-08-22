@@ -164,6 +164,7 @@ def produce_filtered_annotation_dataframe(
                 "annotations",
                 table_name,
                 patient_ids=pat_list,
+                warn_on_missing=False,
             )
 
         except Exception as e:
@@ -821,6 +822,7 @@ def retrieve_pat_annots_mct_epr(
                 table,
                 patient_ids=[client_idcode],
                 columns=cols,
+                warn_on_missing=False,
             )
 
             # If database is empty but file exists, try reading from file

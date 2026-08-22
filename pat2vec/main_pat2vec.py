@@ -1242,6 +1242,7 @@ class main:
             ),
             patient_ids=[patient_id],
             patient_id_column=self.config_obj.patient_id_column_name,
+            warn_on_missing=False,
         )
 
     def _get_patient_data_batches(

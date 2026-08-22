@@ -70,7 +70,13 @@ def _get_source_record(
             logger.debug(
                 f"Reading annotations from DB table {table_name} for patient {pat_id}",
             )
-        df = get_df_from_db(config_obj, "annotations", table_name, patient_ids=[pat_id])
+        df = get_df_from_db(
+            config_obj,
+            "annotations",
+            table_name,
+            patient_ids=[pat_id],
+            warn_on_missing=False,
+        )
 
         # If database is empty but files exist, try reading from file
         if df.empty:

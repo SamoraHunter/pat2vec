@@ -219,6 +219,7 @@ class TestReportAnnotationsGet:
             "raw_data",
             "raw_reports",
             patient_ids=[all_pat_list[0]],
+            warn_on_missing=False,
         )
 
         target_date_range = (
@@ -254,6 +255,7 @@ class TestReportAnnotationsGet:
             "raw_data",
             "raw_reports",
             patient_ids=all_pat_list[:2],
+            warn_on_missing=False,
         )
 
         target_date_range = (

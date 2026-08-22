@@ -80,6 +80,7 @@ class TestRetrieveData(unittest.TestCase):
             DATA_TYPE_CONFIG["epr_docs"]["db_table"],
             patient_ids=[self.patient_id],
             patient_id_column=DATA_TYPE_CONFIG["epr_docs"]["id_column"],
+            warn_on_missing=False,
         )
 
     @patch("pat2vec.util.retrieve_data.get_df_from_db")

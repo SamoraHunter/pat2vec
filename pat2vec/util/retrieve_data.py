@@ -291,6 +291,7 @@ def retrieve_patient_data(
             config["db_table"],
             patient_ids=[client_idcode],
             patient_id_column=config["id_column"],
+            warn_on_missing=False,
         )
         # For Epic types, try ES fallback if database is empty
         if df.empty and data_type.startswith("epic_"):

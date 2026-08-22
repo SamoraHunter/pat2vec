@@ -256,6 +256,7 @@ def get_merged_pat_batch_bloods(
                     schema_name,
                     table_name,
                     patient_ids=client_idcode_list,
+                    warn_on_missing=False,
                 )
                 if not df.empty:
                     # Assuming that if we find data, it's complete enough for this run,
@@ -470,6 +471,7 @@ def get_merged_pat_batch_drugs(
                     schema_name,
                     table_name,
                     patient_ids=client_idcode_list,
+                    warn_on_missing=False,
                 )
                 if not df.empty:
                     _logger.info(
@@ -688,6 +690,7 @@ def get_merged_pat_batch_diagnostics(
                     schema_name,
                     table_name,
                     patient_ids=client_idcode_list,
+                    warn_on_missing=False,
                 )
                 if not df.empty:
                     _logger.info(
@@ -907,6 +910,7 @@ def get_merged_pat_batch_mct_docs(
                     schema_name,
                     table_name,
                     patient_ids=client_idcode_list,
+                    warn_on_missing=False,
                 )
                 if not df.empty:
                     _logger.info(
@@ -1113,6 +1117,7 @@ def get_merged_pat_batch_epr_docs(
                     schema_name,
                     table_name,
                     patient_ids=client_idcode_list,
+                    warn_on_missing=False,
                 )
                 if not df.empty:
                     _logger.info(
@@ -1379,6 +1384,7 @@ def get_merged_pat_batch_textual_obs_docs(
                     schema_name,
                     table_name,
                     patient_ids=client_idcode_list,
+                    warn_on_missing=False,
                 )
                 if not df.empty:
                     _logger.info(
@@ -1562,6 +1568,7 @@ def get_merged_pat_batch_appointments(
                     table_name,
                     patient_ids=client_idcode_list,
                     patient_id_column="HospitalID",
+                    warn_on_missing=False,
                 )
                 if not df.empty:
                     _logger.info(
@@ -1782,6 +1789,7 @@ def get_merged_pat_batch_demo(
                     schema_name,
                     table_name,
                     patient_ids=client_idcode_list,
+                    warn_on_missing=False,
                 )
                 if not df.empty:
                     _logger.info(
@@ -1955,6 +1963,7 @@ def get_merged_pat_batch_bmi(
                     schema_name,
                     table_name,
                     patient_ids=client_idcode_list,
+                    warn_on_missing=False,
                 )
                 if not df.empty:
                     _logger.info(
@@ -2130,6 +2139,7 @@ def get_merged_pat_batch_obs(
                     schema_name,
                     table_name,
                     patient_ids=client_idcode_list,
+                    warn_on_missing=False,
                 )
                 if not df.empty:
                     _logger.info(
@@ -2306,6 +2316,7 @@ def get_merged_pat_batch_news(
                     schema_name,
                     table_name,
                     patient_ids=client_idcode_list,
+                    warn_on_missing=False,
                 )
                 if not df.empty:
                     _logger.info(
@@ -2481,6 +2492,7 @@ def get_merged_pat_batch_reports(
                     table_name,
                     patient_ids=client_idcode_list,
                     patient_id_column="HospitalID",
+                    warn_on_missing=False,
                 )
                 if not df.empty:
                     _logger.info(
