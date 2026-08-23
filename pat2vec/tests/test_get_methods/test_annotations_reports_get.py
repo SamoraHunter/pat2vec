@@ -208,8 +208,8 @@ class TestAnnotationsReportsGet:
         assert all_features is not None, "All features should not be None"
         assert not all_features.empty, "Features DataFrame should not be empty"
 
-    def test_annotations_reports_vector_non_empty(self):
-        """Verify pat_maker produced actual values in the feature vector.
+    def test_report_annotation_vector_validation(self):
+        """Verify pat_maker produced actual values in the report_annotation feature vector.
 
         Catches the case where vectorisation silently fails — the DataFrame
         has columns but all values are null or empty.
@@ -219,28 +219,27 @@ class TestAnnotationsReportsGet:
         assert all_features is not None, "get_all_features returned None"
         assert not all_features.empty, "Feature DataFrame is empty — no rows written"
 
-        # Find columns specific to this feature
         feature_cols = [
-            c
-            for c in all_features.columns
-            if "report" in c.lower()  # adjust to match actual column prefix
+            c for c in all_features.columns if "report_annotation" in c.lower()
         ]
+
         assert len(feature_cols) > 0, (
-            f"No report-related columns found in feature vector. "
+            f"No report_annotation columns found. "
             f"Available columns: {list(all_features.columns)}"
         )
 
-        # Every feature column must have at least one non-null value
         feature_data = all_features[feature_cols]
         non_null_counts = feature_data.notna().sum()
         totally_empty_cols = non_null_counts[non_null_counts == 0]
 
         assert len(totally_empty_cols) == 0, (
-            f"The following report-related columns are entirely null after pat_maker ran:\n"
+            f"The following report_annotation columns are entirely null after pat_maker ran:\n"
             f"{list(totally_empty_cols.index)}\n"
             "Vectorisation is silently failing — check the get method return value "
             "and how pat_maker consumes it."
         )
+
+        print(f"Found {len(feature_cols)} report_annotation feature columns")
 
     def test_annotations_reports_data_retrieval(self):
         """Test annotations reports data retrieval - verify report annotations can be retrieved."""

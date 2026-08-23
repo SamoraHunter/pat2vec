@@ -202,6 +202,39 @@ class TestCurrentPatAnnotationsMrcCsGet:
         assert all_features is not None, "All features should not be None"
         assert not all_features.empty, "Features DataFrame should not be empty"
 
+    def test_annotations_mrc_vector_validation(self):
+        """Verify pat_maker produced actual values in the pretty_name feature vector.
+
+        Catches the case where vectorisation silently fails — the DataFrame
+        has columns but all values are null or empty.
+        """
+        from pat2vec.util.helper_functions import get_all_features
+
+        all_features = get_all_features(self.config_obj)
+
+        assert all_features is not None, "get_all_features returned None"
+        assert not all_features.empty, "Feature DataFrame is empty — no rows written"
+
+        feature_cols = [c for c in all_features.columns if "pretty_name" in c.lower()]
+
+        assert len(feature_cols) > 0, (
+            f"No pretty_name annotation columns found. "
+            f"Available columns: {list(all_features.columns)}"
+        )
+
+        feature_data = all_features[feature_cols]
+        non_null_counts = feature_data.notna().sum()
+        totally_empty_cols = non_null_counts[non_null_counts == 0]
+
+        assert len(totally_empty_cols) == 0, (
+            f"The following pretty_name annotation columns are entirely null after pat_maker ran:\n"
+            f"{list(totally_empty_cols.index)}\n"
+            "Vectorisation is silently failing — check the get method return value "
+            "and how pat_maker consumes it."
+        )
+
+        print(f"Found {len(feature_cols)} pretty_name annotation feature columns")
+
     def test_annotations_mrc_data_retrieval(self):
         from pat2vec.pat2vec_get_methods.get_method_current_pat_annotations_mrc_cs import (
             get_current_pat_annotations_mrc_cs,
@@ -259,7 +292,8 @@ class TestCurrentPatAnnotationsMrcCsGet:
         }
 
         batch_mct_docs_annotations = self.cs.cogstack2df(
-            query=query, index="observations"
+            query=query,
+            index="observations",
         )
 
         annotations_data = get_current_pat_annotations_mrc_cs(

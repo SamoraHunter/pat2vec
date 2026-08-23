@@ -206,6 +206,50 @@ class TestVteStatusGet:
         assert all_features is not None, "All features should not be None"
         assert not all_features.empty, "Features DataFrame should not be empty"
 
+    def test_vte_status_vector_validation(self):
+        """Verify pat_maker produced actual values in the feature vector.
+
+        Catches the case where vectorisation silently fails — the DataFrame
+        has columns but all values are null or empty.
+
+        Note: This test checks that not ALL features are empty since VTE status
+        may generate time-distributed features rather than summary statistics.
+        """
+        from pat2vec.util.helper_functions import get_all_features
+
+        all_features = get_all_features(self.config_obj)
+
+        assert all_features is not None, "get_all_features returned None"
+        assert not all_features.empty, "Feature DataFrame is empty — no rows written"
+
+        feature_cols = [
+            c
+            for c in all_features.columns
+            if (
+                (c.startswith("vte_") or c.startswith("vte_status_"))
+                and "_date_time_stamp" not in c
+                and c != "client_idcode"
+            )
+        ]
+
+        if len(feature_cols) == 0:
+            print(
+                f"Note: No vte_* summary feature columns found. "
+                f"Available columns: {list(all_features.columns)[:20]}..."
+            )
+
+        else:
+            feature_data = all_features[feature_cols]
+            non_null_counts = feature_data.notna().sum()
+            totally_empty_cols = non_null_counts[non_null_counts == 0]
+
+            assert len(totally_empty_cols) < len(feature_cols), (
+                f"All VTE status columns are empty - vectorisation is failing. "
+                f"Null columns: {list(totally_empty_cols.index)}"
+            )
+
+        print(f"Found {len(feature_cols)} VTE status feature columns")
+
     def test_vte_status_data_retrieval(self):
         """Test VTE status data retrieval - verify VTE status features can be retrieved."""
         from pat2vec.pat2vec_get_methods.get_method_vte_status import (

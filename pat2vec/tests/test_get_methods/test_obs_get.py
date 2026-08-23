@@ -8,15 +8,15 @@ import pandas as pd
 import pytest
 
 from pat2vec.main_pat2vec import main
+from pat2vec.pat2vec_get_methods.get_method_obs import get_current_pat_obs
+from pat2vec.pat2vec_search.cogstack_search_methods import (
+    initialize_cogstack_client,
+)
 from pat2vec.util.config_pat2vec import config_class
 from pat2vec.util.elasticsearch_methods import ingest_data_to_elasticsearch
 from pat2vec.util.get_dummy_data_cohort_searcher import populate_elastic_with_dummy_data
 from pat2vec.util.helper_functions import get_all_features
 from pat2vec.util.logger_setup import setup_logger
-from pat2vec.pat2vec_get_methods.get_method_obs import get_current_pat_obs
-from pat2vec.pat2vec_search.cogstack_search_methods import (
-    initialize_cogstack_client,
-)
 
 random_seed_value = 42
 
@@ -69,7 +69,8 @@ class TestOBSGet:
         )
 
         cls.patient_ids = populate_elastic_with_dummy_data(
-            config_populate, n_patients=5
+            config_populate,
+            n_patients=5,
         )
         cls.cs = initialize_cogstack_client(config_populate)
 
@@ -226,6 +227,42 @@ class TestOBSGet:
 
         assert all_features is not None, "All features should not be None"
         assert not all_features.empty, "Features DataFrame should not be empty"
+
+    def test_obs_vector_validation(self):
+        """Verify pat_maker produced actual values in the feature vector.
+
+        Catches the case where vectorisation silently fails — the DataFrame
+        has columns but all values are null or empty.
+        """
+        all_features = get_all_features(self.config_obj)
+
+        assert all_features is not None, "get_all_features returned None"
+        assert not all_features.empty, "Feature DataFrame is empty — no rows written"
+
+        feature_cols = [
+            c
+            for c in all_features.columns
+            if (
+                c.startswith(("obs_", "bmi_"))
+                and c != "client_idcode"
+                and "_date_time_stamp" not in c
+            )
+        ]
+
+        assert (
+            len(feature_cols) > 0
+        ), f"No feature columns found. Available columns: {list(all_features.columns)}"
+
+        feature_data = all_features[feature_cols]
+        non_null_counts = feature_data.notna().sum()
+        totally_empty_cols = non_null_counts[non_null_counts == 0]
+
+        assert len(totally_empty_cols) < len(feature_cols), (
+            f"All features are empty - vectorisation is failing. "
+            f"Null columns: {list(totally_empty_cols.index)}"
+        )
+
+        print(f"Found {len(feature_cols)} observation feature columns")
 
     def test_obs_data_retrieval(self):
         """Test OBS data retrieval - verify observation features can be retrieved."""

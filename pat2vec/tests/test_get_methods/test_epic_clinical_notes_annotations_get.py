@@ -218,25 +218,38 @@ class TestEpicClinicalNotesAnnotationsGet:
         assert all_features is not None, "All features should not be None"
         assert not all_features.empty, "Features DataFrame should not be empty"
 
-        # Verify vector has actual values (not just NaN columns)
+    def test_epic_clinical_notes_annotations_vector_validation(self):
+        """Verify pat_maker produced actual values in the clinical_notes_annotation feature vector.
+
+        Catches the case where vectorisation silently fails — the DataFrame
+        has columns but all values are null or empty.
+        """
+        all_features = get_all_features(self.config_obj)
+
+        assert all_features is not None, "get_all_features returned None"
+        assert not all_features.empty, "Feature DataFrame is empty — no rows written"
+
         feature_cols = [
-            c
-            for c in all_features.columns
-            if "epic_clinical_notes" in c.lower() and "pretty_name" in c.lower()
+            c for c in all_features.columns if "clinical_notes_annotation" in c.lower()
         ]
 
         assert len(feature_cols) > 0, (
-            f"No epic_clinical_notes pretty_name columns found. "
+            f"No clinical_notes_annotation columns found. "
             f"Available columns: {list(all_features.columns)}"
         )
 
         feature_data = all_features[feature_cols]
         non_null_counts = feature_data.notna().sum()
+        totally_empty_cols = non_null_counts[non_null_counts == 0]
 
-        assert (non_null_counts > 0).all(), (
-            f"Some epic_clinical_notes feature columns are entirely null:\n"
-            f"{non_null_counts[non_null_counts == 0].index.tolist()}"
+        assert len(totally_empty_cols) == 0, (
+            f"The following clinical_notes_annotation columns are entirely null after pat_maker ran:\n"
+            f"{list(totally_empty_cols.index)}\n"
+            "Vectorisation is silently failing — check the get method return value "
+            "and how pat_maker consumes it."
         )
+
+        print(f"Found {len(feature_cols)} clinical_notes_annotation feature columns")
 
     def test_epic_clinical_notes_annotations_data_retrieval(self):
         """Test Epic Clinical Notes Annotations data retrieval."""

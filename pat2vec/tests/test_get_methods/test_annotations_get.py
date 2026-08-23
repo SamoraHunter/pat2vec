@@ -201,7 +201,7 @@ class TestAnnotationsGet:
         assert all_features is not None, "get_all_features returned None"
         assert not all_features.empty, "Feature DataFrame is empty — no rows written"
 
-        # Find column prefix for annotations features
+        # Find annotation feature columns (format: pretty_name_count_epr_{name})
         feature_cols = [c for c in all_features.columns if "pretty_name" in c.lower()]
         assert len(feature_cols) > 0, (
             f"No annotation columns found in feature vector. "
@@ -219,6 +219,8 @@ class TestAnnotationsGet:
             "Vectorisation is silently failing — check the get method return value "
             "and how pat_maker consumes it."
         )
+
+        print(f"Found {len(feature_cols)} annotation feature columns")
 
     def test_annotations_data_retrieval(self):
         """Test annotations data retrieval - verify annotations features can be retrieved."""

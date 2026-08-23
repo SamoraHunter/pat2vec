@@ -212,6 +212,35 @@ class TestBMIGet:
         assert all_features is not None, "All features should not be None"
         assert not all_features.empty, "Features DataFrame should not be empty"
 
+    def test_bmi_vector_validation(self):
+        """Verify pat_maker produced actual values in the BMI feature vector.
+
+        Catches the case where vectorisation silently fails — the DataFrame
+        has columns but all values are null or empty.
+        """
+        all_features = get_all_features(self.config_obj)
+
+        assert all_features is not None, "get_all_features returned None"
+        assert not all_features.empty, "Feature DataFrame is empty — no rows written"
+
+        feature_cols = [c for c in all_features.columns if c.startswith("bmi_")]
+
+        assert len(feature_cols) > 0, (
+            f"No BMI-related columns found in feature vector. "
+            f"Available columns: {list(all_features.columns)}"
+        )
+
+        feature_data = all_features[feature_cols]
+        non_null_counts = feature_data.notna().sum()
+        totally_empty_cols = non_null_counts[non_null_counts == 0]
+
+        assert len(totally_empty_cols) < len(feature_cols), (
+            f"All BMI columns are empty - vectorisation is failing. "
+            f"Null columns: {list(totally_empty_cols.index)}"
+        )
+
+        print(f"Found {len(feature_cols)} BMI feature columns")
+
     def test_bmi_data_retrieval(self):
         """Test BMI data retrieval - verify BMI features can be retrieved."""
         all_pat_list = self.pat2vec_obj.all_patient_list
@@ -290,5 +319,5 @@ class TestBMIGet:
         if os.path.exists(creds_file):
             os.remove(creds_file)
         assert not os.path.exists(
-            creds_file
+            creds_file,
         ), "Elasticsearch credentials file should be removed"

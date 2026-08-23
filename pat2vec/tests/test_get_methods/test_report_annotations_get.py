@@ -313,6 +313,39 @@ class TestReportAnnotationsGet:
             "the pat2vec pipeline should have saved annotation records to the database."
         )
 
+    def test_report_annotations_vector_validation(self):
+        """Verify pat_maker produced actual values in the report_annotation feature vector.
+
+        Catches the case where vectorisation silently fails — the DataFrame
+        has columns but all values are null or empty.
+        """
+        all_features = get_all_features(self.config_obj)
+
+        assert all_features is not None, "get_all_features returned None"
+        assert not all_features.empty, "Feature DataFrame is empty — no rows written"
+
+        feature_cols = [
+            c for c in all_features.columns if "report_annotation" in c.lower()
+        ]
+
+        assert len(feature_cols) > 0, (
+            f"No report_annotation columns found. "
+            f"Available columns: {list(all_features.columns)}"
+        )
+
+        feature_data = all_features[feature_cols]
+        non_null_counts = feature_data.notna().sum()
+        totally_empty_cols = non_null_counts[non_null_counts == 0]
+
+        assert len(totally_empty_cols) == 0, (
+            f"The following report_annotation columns are entirely null after pat_maker ran:\n"
+            f"{list(totally_empty_cols.index)}\n"
+            "Vectorisation is silently failing — check the get method return value "
+            "and how pat_maker consumes it."
+        )
+
+        print(f"Found {len(feature_cols)} report_annotation feature columns")
+
     def test_merge_documents_from_db_functionality(self):
         """Test document merge functionality - verify the post-processing merge
 
@@ -333,7 +366,7 @@ class TestReportAnnotationsGet:
         ), "build_merged_epr_mct_doc_df should return a path"
 
         assert os.path.exists(
-            merged_path
+            merged_path,
         ), f"Merged documents file should exist at {merged_path}"
 
         merged_data = pd.read_csv(merged_path)

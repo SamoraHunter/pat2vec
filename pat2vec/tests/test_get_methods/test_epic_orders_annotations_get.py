@@ -8,17 +8,17 @@ import pandas as pd
 import pytest
 
 from pat2vec.main_pat2vec import main
-from pat2vec.util.config_pat2vec import config_class
+from pat2vec.pat2vec_get_methods.get_method_epic_orders_annotations import (
+    get_current_pat_epic_orders_annotations,
+)
 from pat2vec.pat2vec_search.cogstack_search_methods import (
     initialize_cogstack_client,
 )
+from pat2vec.util.config_pat2vec import config_class
 from pat2vec.util.elasticsearch_methods import ingest_data_to_elasticsearch
 from pat2vec.util.get_dummy_data_cohort_searcher import (
     generate_epic_orders_data,
     populate_elastic_with_dummy_data,
-)
-from pat2vec.pat2vec_get_methods.get_method_epic_orders_annotations import (
-    get_current_pat_epic_orders_annotations,
 )
 from pat2vec.util.helper_functions import get_all_features, get_df_from_db
 from pat2vec.util.logger_setup import setup_logger
@@ -248,6 +248,39 @@ class TestEpicOrdersAnnotationsGet:
             assert not features_data[0].empty, "Features DataFrame should not be empty"
         else:
             assert not features_data.empty, "Features DataFrame should not be empty"
+
+    def test_epic_orders_annotations_vector_validation(self):
+        """Verify pat_maker produced actual values in the epic_orders_annotation feature vector.
+
+        Catches the case where vectorisation silently fails — the DataFrame
+        has columns but all values are null or empty.
+        """
+        all_features = get_all_features(self.config_obj)
+
+        assert all_features is not None, "get_all_features returned None"
+        assert not all_features.empty, "Feature DataFrame is empty — no rows written"
+
+        feature_cols = [
+            c for c in all_features.columns if "epic_orders_annotation" in c.lower()
+        ]
+
+        assert len(feature_cols) > 0, (
+            f"No epic_orders_annotation columns found. "
+            f"Available columns: {list(all_features.columns)}"
+        )
+
+        feature_data = all_features[feature_cols]
+        non_null_counts = feature_data.notna().sum()
+        totally_empty_cols = non_null_counts[non_null_counts == 0]
+
+        assert len(totally_empty_cols) == 0, (
+            f"The following epic_orders_annotation columns are entirely null after pat_maker ran:\n"
+            f"{list(totally_empty_cols.index)}\n"
+            "Vectorisation is silently failing — check the get method return value "
+            "and how pat_maker consumes it."
+        )
+
+        print(f"Found {len(feature_cols)} epic_orders_annotation feature columns")
 
     def test_8_cleanup_verification(self):
         """Test cleanup verification - verify all temp files are cleaned up properly."""
