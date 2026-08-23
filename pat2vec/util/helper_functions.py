@@ -693,7 +693,9 @@ def save_annotations_to_db(
                     # Refresh inspector: the cached state still reports the dropped table
                     inspector = inspect(connection)
 
-            if inspector.has_table(target_table, schema=target_schema):
+            # Only delete existing data if we have actual data to insert (not an empty DataFrame used for schema setup)
+            # This prevents overwriting real annotations that were just saved by get_pat_batch_* functions
+            if inspector.has_table(target_table, schema=target_schema) and not df.empty:
                 connection.execute(del_query, {"pat_id": patient_id})
 
             # Convert any list/dict/tuple columns to JSON strings for database compatibility

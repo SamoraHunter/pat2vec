@@ -106,21 +106,25 @@ def generate_epic_patients_data(
         ]
     df_holder_list = []
 
+    # Calculate valid DOB range based on test date window
+    min_birth_year = global_end_year - 90
+    max_birth_year = global_start_year - 18
+
     random_state_base = random_state
     for client_id_code in entered_list:
         patient_seed = random_state_base + hash(client_id_code) % (2**32)
         random.seed(patient_seed)
         np.random.seed(patient_seed)
 
-        age = generate_age_with_demographic_weighting()
-        gender = generate_gender_population_balanced()
-
-        dob_year = 2022 - age
+        # Generate DOB within the valid range based on test dates
+        dob_year = np.random.randint(min_birth_year, max_birth_year + 1)
         dob_month = np.random.randint(1, 13)
         dob_day = np.random.randint(1, 29)
 
         birthdate = pd.Timestamp(year=dob_year, month=dob_month, day=dob_day)
         dob_str = birthdate.strftime("%Y-%m-%dT%H:%M:%S")
+
+        gender = generate_gender_population_balanced()
 
         data = {
             "patient_DurableKey": [client_id_code] * num_rows,

@@ -78,8 +78,21 @@ def get_current_pat_annotations_mrc_cs(
         get_start_end_year_month(target_date_range, config_obj=config_obj)
     )
 
+    # Get all unique pretty names from the full batch for expected_names
+    # This ensures even when filtered results are empty, we have consistent feature structure
+    unique_pretty_names = None
+    if (
+        batch_mct_docs_annotations is not None
+        and not batch_mct_docs_annotations.empty
+        and "pretty_name" in batch_mct_docs_annotations.columns
+    ):
+        unique_pretty_names = (
+            batch_mct_docs_annotations["pretty_name"].dropna().unique()
+        )
+
     # display(batch_epr_docs_annotations)
 
+    filtered_batch_mct_docs_annotations = None
     if batch_mct_docs_annotations is not None and len(batch_mct_docs_annotations) > 0:
         filtered_batch_mct_docs_annotations = filter_dataframe_by_timestamp(
             batch_mct_docs_annotations,
@@ -93,24 +106,30 @@ def get_current_pat_annotations_mrc_cs(
             dropna=True,
         )
 
-        if len(filtered_batch_mct_docs_annotations) > 0:
-            df_pat_target = calculate_pretty_name_count_features(
-                filtered_batch_mct_docs_annotations,
-                suffix="mct",
-                patient_id=current_pat_client_id_code,
-            )
-        else:
-            if config_obj.verbosity >= 6:
-                print(
-                    "len(filtered_batch_mct_docs_annotations)>0",
-                    len(filtered_batch_mct_docs_annotations) > 0,
-                )
-            df_pat_target = pd.DataFrame(
-                data=[current_pat_client_id_code],
-                columns=["client_idcode"],
-            )
-
+    if (
+        filtered_batch_mct_docs_annotations is not None
+        and len(filtered_batch_mct_docs_annotations) > 0
+    ):
+        df_pat_target = calculate_pretty_name_count_features(
+            filtered_batch_mct_docs_annotations,
+            suffix="mct",
+            patient_id=current_pat_client_id_code,
+            expected_names=unique_pretty_names,
+        )
+    elif unique_pretty_names is not None and len(unique_pretty_names) > 0:
+        # When filtered annotations are empty but we have expected names,
+        # create zero-valued columns for each unique pretty_name from source
+        feature_columns = [
+            f"pretty_name_count_mct_{name}" for name in unique_pretty_names
+        ]
+        df_pat_target = pd.DataFrame(
+            {
+                "client_idcode": [current_pat_client_id_code],
+                **{col: [0.0] for col in feature_columns},
+            },
+        )
     else:
+        # No pretty names available - return just client_idcode
         df_pat_target = pd.DataFrame(
             data=[current_pat_client_id_code],
             columns=["client_idcode"],

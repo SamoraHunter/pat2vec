@@ -204,14 +204,19 @@ def get_current_pat_bloods(
 
     bloods_time_field = config_obj.bloods_time_field
 
-    if pat_batch.empty and batch_mode:
-        if config_obj.verbosity >= 1:
-            logger.info(
-                f"pat_batch is empty for {current_pat_client_id_code}. Returning empty DataFrame.",
-            )
-        return pd.DataFrame({"client_idcode": [current_pat_client_id_code]})
+    print(
+        f"DEBUG: Date range: {start_year}-{start_month}-{start_day} to {end_year}-{end_month}-{end_day}",
+    )
+    print(
+        f"DEBUG: get_current_pat_bloods - batch_mode={batch_mode}, pat_batch.empty={pat_batch.empty}, len(pat_batch)={len(pat_batch)}",
+    )
 
     if batch_mode:
+        # If pat_batch is truly empty (no columns), there's no data to filter
+        # This can happen when test creates an empty DataFrame manually
+        if pat_batch.empty and len(pat_batch.columns) == 0:
+            return pd.DataFrame({"client_idcode": [current_pat_client_id_code]})
+
         current_pat_bloods = filter_dataframe_by_timestamp(
             pat_batch,
             start_year,
@@ -221,6 +226,9 @@ def get_current_pat_bloods(
             start_day,
             end_day,
             bloods_time_field,
+        )
+        print(
+            f"DEBUG: After filtering - len={len(current_pat_bloods)}, columns={list(current_pat_bloods.columns)[:5]}",
         )
         if config_obj.verbosity >= 1:
             logger.info(

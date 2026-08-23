@@ -87,18 +87,36 @@ def get_current_pat_epic_orders_annotations(
         get_start_end_year_month(target_date_range, config_obj=config_obj)
     )
 
-    if epic_orders_annotations is not None:
-        # Handle empty DataFrames or DataFrames without timestamp column
-        if epic_orders_annotations.empty or (
-            "updatetime" not in epic_orders_annotations.columns
-            and "document_CreatedWhen" not in epic_orders_annotations.columns
-        ):
-            # Empty or missing required columns - return just client_idcode
-            return pd.DataFrame(
-                data=[current_pat_client_id_code],
-                columns=["client_idcode"],
-            )
+    # Get all unique pretty names from the full batch for expected_names
+    # This ensures even when filtered results are empty, we have consistent feature structure
+    # NOTE: We capture this BEFORE any potential early returns to preserve feature structure
+    unique_pretty_names = None
+    if (
+        epic_orders_annotations is not None
+        and "pretty_name" in epic_orders_annotations.columns
+    ):
+        try:
+            unique_pretty_names = [
+                v
+                for v in epic_orders_annotations["pretty_name"].dropna().unique()
+                if pd.notna(v) and str(v).strip() != ""
+            ]
+        except (KeyError, AttributeError):
+            unique_pretty_names = None
 
+    # Handle early return cases: None input or missing required columns
+    if epic_orders_annotations is None:
+        df_pat_target = pd.DataFrame(
+            data=[current_pat_client_id_code],
+            columns=["client_idcode"],
+        )
+    elif "pretty_name" not in epic_orders_annotations.columns:
+        # Missing pretty_name column - cannot extract features
+        df_pat_target = pd.DataFrame(
+            data=[current_pat_client_id_code],
+            columns=["client_idcode"],
+        )
+    else:
         # Handle column name mismatch: annotations use 'updatetime' but we check for 'document_CreatedWhen'
         time_column = "document_CreatedWhen"
         alternative_columns = [
@@ -115,44 +133,55 @@ def get_current_pat_epic_orders_annotations(
 
         # If no timestamp column found, return empty result
         if not found_col:
-            return pd.DataFrame(
-                data=[current_pat_client_id_code],
-                columns=["client_idcode"],
-            )
-
-        if found_col and found_col != time_column:
-            epic_orders_annotations = epic_orders_annotations.rename(
-                columns={found_col: time_column},
-            )
-
-        filtered_annots = filter_dataframe_by_timestamp(
-            epic_orders_annotations,
-            start_year,
-            start_month,
-            end_year,
-            end_month,
-            start_day,
-            end_day,
-            time_column,
-            dropna=True,
-        )
-
-        if len(filtered_annots) > 0:
-            df_pat_target = calculate_pretty_name_count_features(
-                filtered_annots,
-                suffix="epic_orders",
-                patient_id=current_pat_client_id_code,
-            )
-        else:
             df_pat_target = pd.DataFrame(
                 data=[current_pat_client_id_code],
                 columns=["client_idcode"],
             )
-    else:
-        df_pat_target = pd.DataFrame(
-            data=[current_pat_client_id_code],
-            columns=["client_idcode"],
-        )
+        else:
+            if found_col and found_col != time_column:
+                epic_orders_annotations = epic_orders_annotations.rename(
+                    columns={found_col: time_column},
+                )
+
+            filtered_annots = filter_dataframe_by_timestamp(
+                epic_orders_annotations,
+                start_year,
+                start_month,
+                end_year,
+                end_month,
+                start_day,
+                end_day,
+                time_column,
+                dropna=True,
+            )
+
+            if len(filtered_annots) > 0:
+                df_pat_target = calculate_pretty_name_count_features(
+                    filtered_annots,
+                    suffix="epic_orders",
+                    patient_id=current_pat_client_id_code,
+                    expected_names=unique_pretty_names,
+                )
+            else:
+                # When filtered annotations are empty, create feature DataFrame
+                if unique_pretty_names is not None and len(unique_pretty_names) > 0:
+                    # Create zero-valued columns for each unique pretty_name from source
+                    feature_columns = [
+                        f"pretty_name_count_epic_orders_{name}"
+                        for name in unique_pretty_names
+                    ]
+                    df_pat_target = pd.DataFrame(
+                        {
+                            "client_idcode": [current_pat_client_id_code],
+                            **{col: [0.0] for col in feature_columns},
+                        },
+                    )
+                else:
+                    # No pretty names available - return just client_idcode
+                    df_pat_target = pd.DataFrame(
+                        data=[current_pat_client_id_code],
+                        columns=["client_idcode"],
+                    )
 
     if config_obj.verbosity >= 6:
         display(df_pat_target)

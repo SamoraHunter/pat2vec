@@ -77,6 +77,21 @@ def get_current_pat_report_annotations(
         get_start_end_year_month(target_date_range, config_obj=config_obj)
     )
 
+    # Get all unique pretty names from the full batch for expected_names
+    # This ensures even when filtered results are empty, we have consistent feature structure
+    unique_pretty_names = None
+    if (
+        report_annotations is not None
+        and not report_annotations.empty
+        and "pretty_name" in report_annotations.columns
+    ):
+        # Get all unique pretty names, then filter out NULL/empty ones
+        all_values = report_annotations["pretty_name"].unique()
+        # Filter to non-null, non-empty strings
+        unique_pretty_names = [
+            v for v in all_values if pd.notna(v) and str(v).strip() != ""
+        ]
+
     if report_annotations is not None:
         # Use reports_time_field from config, default to "updatetime"
         time_column = getattr(config_obj, "reports_time_field", "updatetime")
@@ -119,18 +134,28 @@ def get_current_pat_report_annotations(
                 filtered_report_annotations,
                 suffix="reports",
                 patient_id=current_pat_client_id_code,
+                expected_names=unique_pretty_names,
             )
 
         else:
-            if config_obj.verbosity >= 6:
-                print(
-                    "len(filtered_report_annotations)>0",
-                    len(filtered_report_annotations) > 0,
+            # When filtered annotations are empty, create feature DataFrame
+            if unique_pretty_names is not None and len(unique_pretty_names) > 0:
+                # Create zero-valued columns for each unique pretty_name from source
+                feature_columns = [
+                    f"pretty_name_count_reports_{name}" for name in unique_pretty_names
+                ]
+                processed_annotations = pd.DataFrame(
+                    {
+                        "client_idcode": [current_pat_client_id_code],
+                        **{col: [0.0] for col in feature_columns},
+                    },
                 )
-            processed_annotations = pd.DataFrame(
-                data=[current_pat_client_id_code],
-                columns=["client_idcode"],
-            )
+            else:
+                # No pretty names available - return just client_idcode
+                processed_annotations = pd.DataFrame(
+                    data=[current_pat_client_id_code],
+                    columns=["client_idcode"],
+                )
 
     else:
         processed_annotations = pd.DataFrame(

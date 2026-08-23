@@ -141,6 +141,12 @@ def search_epic_patients(
     if additional_custom_search_string:
         search_string += f" {additional_custom_search_string}"
 
+    # For epic_patients, do NOT use date filtering because birth dates are static
+    # and not related to the test period. Just filter by patient ID.
+    # Use a wildcard range that covers all possible dates to ensure we get all records.
+    if index_name == "epic_patients":
+        search_string = f"{time_field}:[* TO *]"
+
     fields_to_use = fields_override or EPIC_PATIENTS_FIELDS
 
     results = cohort_searcher_with_terms_and_search(

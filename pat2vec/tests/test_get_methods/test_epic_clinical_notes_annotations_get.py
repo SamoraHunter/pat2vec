@@ -218,6 +218,26 @@ class TestEpicClinicalNotesAnnotationsGet:
         assert all_features is not None, "All features should not be None"
         assert not all_features.empty, "Features DataFrame should not be empty"
 
+        # Verify vector has actual values (not just NaN columns)
+        feature_cols = [
+            c
+            for c in all_features.columns
+            if "epic_clinical_notes" in c.lower() and "pretty_name" in c.lower()
+        ]
+
+        assert len(feature_cols) > 0, (
+            f"No epic_clinical_notes pretty_name columns found. "
+            f"Available columns: {list(all_features.columns)}"
+        )
+
+        feature_data = all_features[feature_cols]
+        non_null_counts = feature_data.notna().sum()
+
+        assert (non_null_counts > 0).all(), (
+            f"Some epic_clinical_notes feature columns are entirely null:\n"
+            f"{non_null_counts[non_null_counts == 0].index.tolist()}"
+        )
+
     def test_epic_clinical_notes_annotations_data_retrieval(self):
         """Test Epic Clinical Notes Annotations data retrieval."""
         all_pat_list = self.pat2vec_obj.all_patient_list

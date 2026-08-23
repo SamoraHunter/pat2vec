@@ -214,6 +214,47 @@ class TestDrugsGet:
         assert all_features is not None, "All features should not be None"
         assert not all_features.empty, "Features DataFrame should not be empty"
 
+    def test_drugs_vector_non_empty(self):
+        """Verify pat_maker produced actual values in the drugs feature vector.
+
+        Catches the case where vectorisation silently fails — the DataFrame
+        has columns but all values are null or empty.
+        """
+        all_features = get_all_features(self.config_obj)
+
+        assert all_features is not None, "get_all_features returned None"
+        assert not all_features.empty, "Feature DataFrame is empty — no rows written"
+
+        # Find drugs-related columns (excluding client_idcode and date columns)
+        feature_cols = [
+            c
+            for c in all_features.columns
+            if (
+                "drug" in c.lower()
+                or "_num-drug-order" in c.lower()
+                or "_days-since-last-drug" in c.lower()
+            )
+            and "client_idcode" not in c.lower()
+            and "date" not in c.lower()
+        ]
+
+        assert len(feature_cols) > 0, (
+            f"No drugs-related columns found in feature vector. "
+            f"Available columns: {list(all_features.columns)}"
+        )
+
+        # Every feature column must have at least one non-null value
+        feature_data = all_features[feature_cols]
+        non_null_counts = feature_data.notna().sum()
+        totally_empty_cols = non_null_counts[non_null_counts == 0]
+
+        assert len(totally_empty_cols) == 0, (
+            f"The following drugs-related columns are entirely null after pat_maker ran:\n"
+            f"{list(totally_empty_cols.index)}\n"
+            "Vectorisation is silently failing — check the get method return value "
+            "and how pat_maker consumes it."
+        )
+
     def test_drugs_data_retrieval(self):
         """Test drugs data retrieval - verify drugs features can be retrieved."""
         all_pat_list = self.pat2vec_obj.all_patient_list

@@ -225,7 +225,10 @@ def get_bed(
         safe_search_term = "".join(
             e for e in search_term if e.isalnum() or e == "_"
         ).lower()
-        table_name = f"raw_obs_{safe_search_term}"
+        table_name_map = {
+            "core_bednumber3": "raw_bed",
+        }
+        table_name = table_name_map.get(safe_search_term, f"raw_obs_{safe_search_term}")
         schema_name = "raw_data"
 
         try:
@@ -262,8 +265,6 @@ def get_bed(
     ].copy()
 
     features_data = features_data.dropna(subset=["observation_valuetext_analysed"])
-
-    "bed".lower()
 
     if len(features_data) > 0:
         all_bed_terms = list(features_data["observation_valuetext_analysed"].unique())
@@ -348,7 +349,10 @@ def get_bed_features(
         safe_search_term = "".join(
             e for e in search_term if e.isalnum() or e == "_"
         ).lower()
-        table_name = f"raw_obs_{safe_search_term}"
+        table_name_map = {
+            "core_bednumber3": "raw_bed",
+        }
+        table_name = table_name_map.get(safe_search_term, f"raw_obs_{safe_search_term}")
         schema_name = "raw_data"
 
         try:

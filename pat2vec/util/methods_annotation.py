@@ -1307,6 +1307,7 @@ def calculate_pretty_name_count_features(
     df_copy: pd.DataFrame,
     suffix: str = "epr",
     patient_id: str | None = None,
+    expected_names: list[str] | None = None,
 ) -> pd.DataFrame | None:
     """Calculates count-based features from the 'pretty_name' column.
 
@@ -1318,6 +1319,8 @@ def calculate_pretty_name_count_features(
         df_copy: The input DataFrame, expected to have a 'pretty_name' column.
         suffix: A suffix to append to the feature name.
         patient_id: Optional patient ID to include in the result DataFrame.
+        expected_names: Optional list of expected pretty_name values. Used when all
+            names are NULL or missing to ensure consistent feature structure.
 
     Returns:
     -------
@@ -1330,26 +1333,64 @@ def calculate_pretty_name_count_features(
 
     """
     if len(df_copy) > 0:
-        # Group by 'pretty_name' and calculate counts
-        counts = df_copy.groupby("pretty_name").size()
+        # Check if 'pretty_name' column exists before attempting groupby
+        if "pretty_name" not in df_copy.columns:
+            if expected_names is not None and patient_id is not None:
+                # Create zero-valued features from expected_names even without actual data
+                counts = pd.Series([0] * len(expected_names), index=expected_names)
+                result_vector = counts.to_frame().T
+                result_vector.columns = [
+                    f"pretty_name_count_{suffix}_{col}" for col in result_vector.columns
+                ]
+                result_vector = result_vector.reset_index(drop=True)
+                result_vector = result_vector.astype(float)
+                result_vector.insert(0, "client_idcode", patient_id)
+            else:
+                # No pretty_name column and no expected_names - return just client_idcode if provided
+                result_vector = pd.DataFrame()
+                if patient_id is not None:
+                    result_vector["client_idcode"] = [patient_id]
+        else:
+            # Group by 'pretty_name' and calculate counts
+            counts = df_copy.groupby("pretty_name").size()
 
-        # Convert to a single-row DataFrame (vector)
-        result_vector = counts.to_frame().T
+            # If all pretty_names are NULL or empty, create zero-valued features from expected_names
+            if counts.empty and expected_names is not None:
+                # Create a Series with zeros for each expected name
+                counts = pd.Series([0] * len(expected_names), index=expected_names)
 
-        # Format feature names as 'pretty_name_count_{suffix}_{pretty_name}'
-        # This matches the expectation in integration tests.
-        result_vector.columns = [
-            f"pretty_name_count_{suffix}_{col}" for col in result_vector.columns
-        ]
+            # Convert to a single-row DataFrame (vector)
+            result_vector = counts.to_frame().T
 
-        result_vector = result_vector.reset_index(drop=True)
+            # Format feature names as 'pretty_name_count_{suffix}_{pretty_name}'
+            # This matches the expectation in integration tests.
+            result_vector.columns = [
+                f"pretty_name_count_{suffix}_{col}" for col in result_vector.columns
+            ]
 
-        # Convert all values to float
-        result_vector = result_vector.astype(float)
+            result_vector = result_vector.reset_index(drop=True)
 
-        if patient_id is not None:
-            result_vector.insert(0, "client_idcode", patient_id)
+            # Convert all values to float
+            result_vector = result_vector.astype(float)
+
+            if patient_id is not None:
+                result_vector.insert(0, "client_idcode", patient_id)
     else:
-        result_vector = None
+        # When input DataFrame is empty but expected_names are provided,
+        # create a DataFrame with zeros for each expected name.
+        # Otherwise, return a DataFrame with only client_idcode (no features).
+        if expected_names is not None:
+            counts = pd.Series([0] * len(expected_names), index=expected_names)
+            result_vector = counts.to_frame().T
+            result_vector.columns = [
+                f"pretty_name_count_{suffix}_{col}" for col in result_vector.columns
+            ]
+            result_vector = result_vector.reset_index(drop=True)
+            result_vector = result_vector.astype(float)
+        else:
+            # No expected names - return empty DataFrame with just client_idcode if provided
+            result_vector = pd.DataFrame()
+            if patient_id is not None:
+                result_vector["client_idcode"] = [patient_id]
 
     return result_vector

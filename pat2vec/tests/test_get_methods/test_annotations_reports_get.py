@@ -208,6 +208,40 @@ class TestAnnotationsReportsGet:
         assert all_features is not None, "All features should not be None"
         assert not all_features.empty, "Features DataFrame should not be empty"
 
+    def test_annotations_reports_vector_non_empty(self):
+        """Verify pat_maker produced actual values in the feature vector.
+
+        Catches the case where vectorisation silently fails — the DataFrame
+        has columns but all values are null or empty.
+        """
+        all_features = get_all_features(self.config_obj)
+
+        assert all_features is not None, "get_all_features returned None"
+        assert not all_features.empty, "Feature DataFrame is empty — no rows written"
+
+        # Find columns specific to this feature
+        feature_cols = [
+            c
+            for c in all_features.columns
+            if "report" in c.lower()  # adjust to match actual column prefix
+        ]
+        assert len(feature_cols) > 0, (
+            f"No report-related columns found in feature vector. "
+            f"Available columns: {list(all_features.columns)}"
+        )
+
+        # Every feature column must have at least one non-null value
+        feature_data = all_features[feature_cols]
+        non_null_counts = feature_data.notna().sum()
+        totally_empty_cols = non_null_counts[non_null_counts == 0]
+
+        assert len(totally_empty_cols) == 0, (
+            f"The following report-related columns are entirely null after pat_maker ran:\n"
+            f"{list(totally_empty_cols.index)}\n"
+            "Vectorisation is silently failing — check the get method return value "
+            "and how pat_maker consumes it."
+        )
+
     def test_annotations_reports_data_retrieval(self):
         """Test annotations reports data retrieval - verify report annotations can be retrieved."""
         from pat2vec.pat2vec_get_methods.get_method_report_annotations import (
@@ -299,7 +333,7 @@ class TestAnnotationsReportsGet:
         ), "build_merged_epr_mct_doc_df should return a path"
 
         assert os.path.exists(
-            merged_path
+            merged_path,
         ), f"Merged documents file should exist at {merged_path}"
 
         merged_data = pd.read_csv(merged_path)

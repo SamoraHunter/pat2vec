@@ -432,40 +432,31 @@ def main_batch(
                     },
                 ]
 
-                for i, config in enumerate(feature_configs):
-                    if main_options.get(config["option"]):
-                        # Add debug logging for epic clinical notes annotations
-                        if (
-                            config["batch_key"]
-                            == "batch_epic_clinical_notes_annotations"
-                        ):
-                            print(
-                                "\n=== DEBUG: Processing epic clinical notes annotations ===",
-                            )
-                            print(f"Patient: {current_pat_client_id_code}")
-                            print(f"Batches keys available: {list(batches.keys())}")
-                            batch_data = batches.get(config["batch_key"])
-                            if batch_data is not None:
-                                print(f"Batch data type: {type(batch_data)}")
-                                print(
-                                    f"Batch row count: {len(batch_data) if batch_data is not None else 0}",
-                                )
-                                if batch_data is not None and not batch_data.empty:
-                                    print(
-                                        f"Batch columns (first 15): {batch_data.columns.tolist()[:15]}",
-                                    )
-                                    print(
-                                        f"Has pretty_name column: {'pretty_name' in batch_data.columns}",
-                                    )
-                                    print(
-                                        f"Has cui column: {'cui' in batch_data.columns}",
-                                    )
-                                else:
-                                    print("WARNING: Batch data is None or empty!")
-                            else:
-                                print("ERROR: Batch not found in batches dict!")
-                            print("==========================================\n")
+                obs_subtypes = [
+                    ("smoking", "batch_smoking"),
+                    ("core_02", "batch_core_02"),
+                    ("bed", "batch_bednumber"),
+                    ("vte_status", "batch_vte"),
+                    ("hosp_site", "batch_hospsite"),
+                    ("core_resus", "batch_resus"),
+                ]
 
+                if main_options.get("obs"):
+                    for sub_option, batch_key in obs_subtypes:
+                        feature_configs.append(
+                            {
+                                "option": sub_option,
+                                "pbar": f"obs_{sub_option}",
+                                "func": SUBTYPE_FUNCTIONS.get(sub_option),
+                                "batch_arg": "pat_batch",
+                                "batch_key": batch_key,
+                            },
+                        )
+
+                for i, config in enumerate(feature_configs):
+                    option = config["option"]
+                    opt_val = main_options.get(option)
+                    if opt_val:
                         update_pbar(
                             p_bar_entry,
                             start_time,
@@ -474,8 +465,6 @@ def main_batch(
                             t,
                             config_obj,
                         )
-
-                        # Dynamically build the arguments dictionary for each function
                         args = {
                             "current_pat_client_id_code": current_pat_client_id_code,
                             "target_date_range": target_date_range,
@@ -497,33 +486,6 @@ def main_batch(
 
                         # Call the function with the prepared arguments
                         feature_df = config["func"](**args)
-
-                        # Add debug logging after processing
-                        if (
-                            config["batch_key"]
-                            == "batch_epic_clinical_notes_annotations"
-                        ):
-                            print(
-                                "=== DEBUG: After epic clinical notes annotations processing ===",
-                            )
-                            print(f"Feature df type: {type(feature_df)}")
-                            print(
-                                f"Feature df shape: {feature_df.shape if feature_df is not None else 'None'}",
-                            )
-                            if feature_df is not None and hasattr(
-                                feature_df,
-                                "columns",
-                            ):
-                                print(
-                                    f"Feature columns (first 10): {list(feature_df.columns)[:10]}",
-                                )
-                                has_medcat = any(
-                                    "pretty_name" in col for col in feature_df.columns
-                                )
-                                print(f"Has MedCAT features: {has_medcat}")
-                            else:
-                                print("ERROR: Feature df is None or missing columns!")
-                            print("==========================================\n")
 
                         patient_vector.append(feature_df)
 

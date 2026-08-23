@@ -74,6 +74,11 @@ def get_pat_batch_obs(
             ).lower()
             table_name_map = {
                 "core_spso2": "raw_core_02",
+                "core_smokingstatus": "raw_smoking",
+                "core_vte_status": "raw_vte",
+                "core_resus_status": "raw_resus",
+                "core_bednumber3": "raw_bed",
+                "core_hospitalsite": "raw_hospsite",
             }
             table_name = table_name_map.get(
                 safe_search_term,
@@ -138,6 +143,11 @@ def get_pat_batch_obs(
                     ).lower()
                     table_name_map = {
                         "core_spso2": "raw_core_02",
+                        "core_smokingstatus": "raw_smoking",
+                        "core_vte_status": "raw_vte",
+                        "core_resus_status": "raw_resus",
+                        "core_bednumber3": "raw_bed",
+                        "core_hospitalsite": "raw_hospsite",
                     }
                     table_name = table_name_map.get(
                         safe_search_term,

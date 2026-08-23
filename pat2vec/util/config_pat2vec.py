@@ -964,8 +964,11 @@ class config_class:
                 logger.info("Updating main options with implemented test options")
                 # Enforce implemented testing options
                 self._update_main_options()
-                # Ensure annotation modes auto-enable their raw data sources
-                self._ensure_annotation_raw_data_sync()
+
+        # Ensure annotation modes auto-enable their raw data sources
+        # This must run even in testing_elastic mode for features like epic_orders_annotations to work correctly
+        if not self.testing_elastic or self.storage_backend == "database":
+            self._ensure_annotation_raw_data_sync()
 
         if self.remote_dump:
             #: SFTP client object.
@@ -1047,14 +1050,26 @@ class config_class:
             self.sftp_obj = None
 
         if global_start_year is None:
-            (
-                self.global_start_year,
-                self.global_start_month,
-                self.global_end_year,
-                self.global_end_month,
-                self.global_start_day,
-                self.global_end_day,
-            ) = ("1995", "01", "2023", "11", "01", "01")
+            # For testing_elastic mode, use more recent dates that align with dummy data generators
+            # Dummy data generators typically use 2020-2023 or similar ranges for realistic test scenarios
+            if self.testing_elastic:
+                (
+                    self.global_start_year,
+                    self.global_start_month,
+                    self.global_start_day,
+                    self.global_end_year,
+                    self.global_end_month,
+                    self.global_end_day,
+                ) = ("2020", "01", "01", "2023", "12", "31")
+            else:
+                (
+                    self.global_start_year,
+                    self.global_start_month,
+                    self.global_end_year,
+                    self.global_end_month,
+                    self.global_start_day,
+                    self.global_end_day,
+                ) = ("1995", "01", "2023", "11", "01", "01")
         else:
             self.global_start_year = str(
                 global_start_year if global_start_year is not None else "1995",
@@ -1112,10 +1127,54 @@ class config_class:
             and self.start_date < self.global_start_date
         ):
             logger.info(
-                f"Testing with elastic: adjusting start_date from {self.start_date} to {self.global_start_date}",
+                f"Testing with elastic: adjusting start_date from {self.start_date} to align with global period",
             )
-            # Update the start_date to match global_start
-            self.start_date = self.global_start_date
+
+            # For lookback mode (default), start_date is treated as the END of the time window.
+            # To cover global period (e.g., 2020-01-01 to 2023-12-31), we need:
+            # - If using a small interval: set start_date after global_end so the full range is included
+            # - For lookback: chronological_start = start_date - time_delta, chronological_end = start_date
+            #   We want this to cover [global_start_date, global_end_date]
+
+            if self.lookback:
+                # With lookback=True, start_date represents the END of the time window.
+                # For testing_elastic with sparse dummy data, we need to ensure date_list
+                # covers all of global_start_date to global_end_date.
+
+                if self.global_start_date and self.global_end_date:
+                    duration_days = (
+                        self.global_end_date.date() - self.global_start_date.date()
+                    ).days
+
+                    logger.info(
+                        f"Period duration from {self.global_start_date.date()} to {self.global_end_date.date()}: {duration_days} days",
+                    )
+
+                    # For lookback mode, start_date is the end of the window.
+                    # To cover [global_start, global_end], we need:
+                    # - Window end (start_date) >= global_end
+                    # - Window start (start_date - time_delta) <= global_start
+
+                    # Set start_date to be 1 day after global_end so window covers it exactly
+                    self.start_date = self.global_end_date + relativedelta(days=1)
+
+                    # Set years/months/days to span the full period plus one extra day
+                    self.years = 0
+                    self.months = 0
+                    self.days = duration_days + 1
+
+                    logger.info(
+                        f"Adjusted time window: start_date={self.start_date}, days={self.days}",
+                    )
+            else:
+                # For non-lookback mode, start_date is BEFORE the window
+                # Just set it to global_start_date as before
+                self.start_date = self.global_start_date
+
+            logger.info(
+                f"Adjusted start_date to {self.start_date} for testing_elastic",
+            )
+
             # Recalculate date_list since start_date changed
             if not self.individual_patient_window:
                 self.date_list = generate_date_list(
@@ -1380,6 +1439,8 @@ class config_class:
         if self.storage_backend != "database":
             return
 
+        # Map from annotation options to their corresponding raw options
+        # (if annotation is enabled, enable the raw option)
         annotation_to_raw_map = {
             "epic_clinical_notes_annotations": "epic_clinical_notes",
             "epic_clinical_notes_appointments_annotations": "epic_clinical_notes_appointments",
@@ -1400,6 +1461,26 @@ class config_class:
                     logger.info(
                         f"Auto-enabled '{raw_option}' because '{annotation_option}' is enabled "
                         "(required for annotation batch to fetch and save raw data).",
+                    )
+
+        # Map from raw options to their corresponding annotation options
+        # (if raw option is enabled, also enable the annotation option)
+        # This handles cases where old code enables "epic_orders" instead of "epic_orders_annotations"
+        raw_to_annotation_map = {
+            "epic_clinical_notes": "epic_clinical_notes_annotations",
+            "epic_clinical_notes_appointments": "epic_clinical_notes_appointments_annotations",
+            "epic_imaging_reports": "epic_imaging_reports_annotations",
+            "epic_medical_history": "epic_medical_history_annotations",
+            "epic_orders": "epic_orders_annotations",
+        }
+
+        for raw_option, annotation_option in raw_to_annotation_map.items():
+            if self.main_options.get(raw_option, False):
+                if not self.main_options.get(annotation_option, False):
+                    self.main_options[annotation_option] = True
+                    logger.info(
+                        f"Auto-enabled '{annotation_option}' because '{raw_option}' is enabled "
+                        "(annotations are required for this data source).",
                     )
 
     def _validate_and_fix_global_dates(self) -> None:

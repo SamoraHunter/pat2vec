@@ -66,7 +66,7 @@ class TestEpicOrdersGet:
             all_patient_list=["P_TEST_EPIC_ORDERS_001", "P_TEST_EPIC_ORDERS_002"],
             batch_mode=True,
             main_options={
-                "epic_orders": True,
+                "epic_orders_annotations": True,
             },
         )
 
@@ -76,7 +76,7 @@ class TestEpicOrdersGet:
         ), "Storage backend should be database"
         assert config_obj.batch_mode is True, "Batch mode enabled for epic_orders test"
         assert (
-            config_obj.main_options.get("epic_orders", False) is True
+            config_obj.main_options.get("epic_orders_annotations", False) is True
         ), "Epic Orders option should be enabled in config"
 
     def test_3_database_ingestion(self):
@@ -111,7 +111,7 @@ class TestEpicOrdersGet:
             all_patient_list=["P_TEST_EPIC_ORDERS_001"],
             batch_mode=True,
             main_options={
-                "epic_orders": True,
+                "epic_orders_annotations": True,
             },
         )
 
@@ -153,7 +153,7 @@ class TestEpicOrdersGet:
             all_patient_list=["P_TEST_EPIC_ORDERS_001"],
             batch_mode=True,
             main_options={
-                "epic_orders": True,
+                "epic_orders_annotations": True,
             },
         )
 
@@ -194,7 +194,7 @@ class TestEpicOrdersGet:
             all_patient_list=["P_TEST_EPIC_ORDERS_001"],
             batch_mode=True,
             main_options={
-                "epic_orders": True,
+                "epic_orders_annotations": True,
             },
         )
 
@@ -240,7 +240,7 @@ class TestEpicOrdersGet:
             all_patient_list=["P_TEST_EPIC_ORDERS_001"],
             batch_mode=True,
             main_options={
-                "epic_orders": True,
+                "epic_orders_annotations": True,
             },
         )
 
@@ -288,7 +288,7 @@ class TestEpicOrdersGet:
             all_patient_list=["P_TEST_EPIC_ORDERS_001"],
             batch_mode=True,
             main_options={
-                "epic_orders": True,
+                "epic_orders_annotations": True,
             },
         )
 
@@ -341,7 +341,7 @@ class TestEpicOrdersGet:
                 all_patient_list=[patient_id],
                 batch_mode=True,
                 main_options={
-                    "epic_orders": True,
+                    "epic_orders_annotations": True,
                 },
             )
 
@@ -372,7 +372,7 @@ class TestEpicOrdersGet:
             all_patient_list=["P_TEST_EPIC_ORDERS_001"],
             batch_mode=True,
             main_options={
-                "epic_orders": True,
+                "epic_orders_annotations": True,
             },
         )
 

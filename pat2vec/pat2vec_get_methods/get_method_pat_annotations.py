@@ -108,6 +108,18 @@ def get_current_pat_annotations(
         get_start_end_year_month(target_date_range, config_obj=config_obj)
     )
 
+    # Get all unique pretty names from the full batch for expected_names
+    # This ensures even when filtered results are empty, we have consistent feature structure
+    unique_pretty_names = None
+    if (
+        batch_epr_docs_annotations is not None
+        and not batch_epr_docs_annotations.empty
+        and "pretty_name" in batch_epr_docs_annotations.columns
+    ):
+        unique_pretty_names = (
+            batch_epr_docs_annotations["pretty_name"].dropna().unique()
+        )
+
     # Filter the batch_epr_docs_annotations DataFrame based on the target_date_range
     if batch_epr_docs_annotations is not None:
         # Standardize time column names to 'updatetime' for EPR document annotations
@@ -144,19 +156,27 @@ def get_current_pat_annotations(
                 filtered_batch_epr_docs_annotations,
                 suffix="epr",
                 patient_id=current_pat_client_id_code,
+                expected_names=unique_pretty_names,
             )
-
         else:
-            # If filtered annotations don't exist, create a DataFrame with the client_idcode
-            if config_obj.verbosity >= 6:
-                print(
-                    "len(filtered_batch_epr_docs_annotations)>0",
-                    len(filtered_batch_epr_docs_annotations) > 0,
+            # When filtered annotations are empty, create feature DataFrame
+            if unique_pretty_names is not None and len(unique_pretty_names) > 0:
+                # Create zero-valued columns for each unique pretty_name from source
+                feature_columns = [
+                    f"pretty_name_count_epr_{name}" for name in unique_pretty_names
+                ]
+                df_pat_target = pd.DataFrame(
+                    {
+                        "client_idcode": [current_pat_client_id_code],
+                        **{col: [0.0] for col in feature_columns},
+                    },
                 )
-            df_pat_target = pd.DataFrame(
-                data=[current_pat_client_id_code],
-                columns=["client_idcode"],
-            )
+            else:
+                # No pretty names available - return just client_idcode
+                df_pat_target = pd.DataFrame(
+                    data=[current_pat_client_id_code],
+                    columns=["client_idcode"],
+                )
 
     else:
         # If the batch_epr_docs_annotations DataFrame is None, create a DataFrame with the client_idcode

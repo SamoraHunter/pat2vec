@@ -397,21 +397,8 @@ def get_current_pat_drugs(
     )
 
     if pat_batch.empty:
-        return pd.DataFrame({"client_idcode": [current_pat_client_id_code]})
-
-    # Get drug orders
-    if batch_mode:
-        drugs = filter_dataframe_by_timestamp(
-            pat_batch,
-            start_year,
-            start_month,
-            end_year,
-            end_month,
-            start_day,
-            end_day,
-            drug_time_field,
-        )
-    else:
+        if batch_mode:
+            return pd.DataFrame({"client_idcode": [current_pat_client_id_code]})
         drugs = search_drug_orders(
             cohort_searcher_with_terms_and_search=cohort_searcher_with_terms_and_search,
             client_id_codes=current_pat_client_id_code,
@@ -425,6 +412,35 @@ def get_current_pat_drugs(
             output_filename=None,
             config_obj=config_obj,
         )
+    else:
+        if batch_mode:
+            drugs = filter_dataframe_by_timestamp(
+                pat_batch,
+                start_year,
+                start_month,
+                end_year,
+                end_month,
+                start_day,
+                end_day,
+                drug_time_field,
+            )
+        else:
+            drugs = search_drug_orders(
+                cohort_searcher_with_terms_and_search=cohort_searcher_with_terms_and_search,
+                client_id_codes=current_pat_client_id_code,
+                drug_time_field=drug_time_field,
+                start_year=start_year,
+                start_month=start_month,
+                start_day=start_day,
+                end_year=end_year,
+                end_month=end_month,
+                end_day=end_day,
+                output_filename=None,
+                config_obj=config_obj,
+            )
+
+    if len(drugs) == 0:
+        return pd.DataFrame({"client_idcode": [current_pat_client_id_code]})
 
     # --- Integrate Epic Orders for Drugs if enabled --- #
     # This integration is for drugs, so we filter Epic orders

@@ -1538,6 +1538,23 @@ class main:
                     "cohort_searcher_with_terms_and_search": self.cohort_searcher_with_terms_and_search,
                     **config["args"],
                 }
+                # Add date range from config for epic methods that need it
+                if config["option"] in (
+                    "epic_patients",
+                    "epic_encounters",
+                    "epic_lab_results",
+                    "epic_orders",
+                    "epic_medical_history",
+                    "epic_imaging_reports",
+                    "epic_clinical_notes_appointments",
+                ):
+                    call_kwargs["start_year"] = self.config_obj.global_start_year
+                    call_kwargs["start_month"] = self.config_obj.global_start_month
+                    call_kwargs["start_day"] = self.config_obj.global_start_day
+                    call_kwargs["end_year"] = self.config_obj.global_end_year
+                    call_kwargs["end_month"] = self.config_obj.global_end_month
+                    call_kwargs["end_day"] = self.config_obj.global_end_day
+
                 if id_arg_name == "patient_durable_keys":
                     call_kwargs["output_filename"] = None
 

@@ -125,4 +125,13 @@ class TestMethodsAnnotation(unittest.TestCase):
         self.assertEqual(res.at[0, "pretty_name_count_test_Asthma"], 2.0)
         self.assertEqual(res.at[0, "pretty_name_count_test_Diabetes"], 1.0)
 
-        self.assertIsNone(calculate_pretty_name_count_features(pd.DataFrame()))
+        # Empty DataFrame without patient_id returns empty DataFrame
+        res_empty = calculate_pretty_name_count_features(pd.DataFrame())
+        self.assertTrue(res_empty.empty or len(res_empty) == 0)
+
+        # Empty DataFrame with patient_id returns DataFrame with client_idcode only
+        res_with_id = calculate_pretty_name_count_features(
+            pd.DataFrame(), suffix="test", patient_id="P1"
+        )
+        self.assertIn("client_idcode", res_with_id.columns)
+        self.assertEqual(res_with_id.at[0, "client_idcode"], "P1")

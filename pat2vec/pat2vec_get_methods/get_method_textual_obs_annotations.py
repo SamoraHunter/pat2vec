@@ -99,6 +99,16 @@ def get_current_pat_textual_obs_annotations(
         get_start_end_year_month(target_date_range, config_obj=config_obj)
     )
 
+    # Get all unique pretty names from the full batch for expected_names
+    # This ensures even when filtered results are empty, we have consistent feature structure
+    unique_pretty_names = None
+    if (
+        textual_obs_annotations is not None
+        and not textual_obs_annotations.empty
+        and "pretty_name" in textual_obs_annotations.columns
+    ):
+        unique_pretty_names = textual_obs_annotations["pretty_name"].dropna().unique()
+
     # filter the textual observation annotations based on the provided target date range
     if textual_obs_annotations is not None:
         # Use textual_obs_time_field from config, default to "basicobs_entered"
@@ -143,19 +153,29 @@ def get_current_pat_textual_obs_annotations(
                 filtered_textual_obs_annotations,
                 suffix="textual_obs",
                 patient_id=current_pat_client_id_code,
+                expected_names=unique_pretty_names,
             )
 
         else:
-            # if there are no filtered annotations, create a DataFrame with the client ID code
-            if config_obj.verbosity >= 6:
-                print(
-                    "len(filtered_report_annotations)>0",
-                    len(filtered_textual_obs_annotations) > 0,
+            # When filtered annotations are empty, create feature DataFrame
+            if unique_pretty_names is not None and len(unique_pretty_names) > 0:
+                # Create zero-valued columns for each unique pretty_name from source
+                feature_columns = [
+                    f"pretty_name_count_textual_obs_{name}"
+                    for name in unique_pretty_names
+                ]
+                processed_annotations = pd.DataFrame(
+                    {
+                        "client_idcode": [current_pat_client_id_code],
+                        **{col: [0.0] for col in feature_columns},
+                    },
                 )
-            processed_annotations = pd.DataFrame(
-                data=[current_pat_client_id_code],
-                columns=["client_idcode"],
-            )
+            else:
+                # No pretty names available - return just client_idcode
+                processed_annotations = pd.DataFrame(
+                    data=[current_pat_client_id_code],
+                    columns=["client_idcode"],
+                )
 
     else:
         # if the textual observation annotations are None, create a DataFrame with the client ID code
