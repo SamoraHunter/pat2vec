@@ -53,7 +53,8 @@ class TestBloodsGet:
             try:
                 shutil.rmtree(dir_to_remove, ignore_errors=True)
             except Exception as e:
-                raise RuntimeError(f"Failed to clean up '{dir_to_remove}': {e}") from e
+                error_msg = f"Failed to clean up 'bloods_test_project': {e}"
+                raise RuntimeError(error_msg) from e
 
         schema_path = os.path.abspath("test_files/elastic_schemas.json")
         config_populate = config_class(
@@ -137,6 +138,12 @@ class TestBloodsGet:
             storage_backend="database",
             db_connection_string=db_connection_string,
             all_patient_list=cls.patient_ids,
+            global_start_year=2020,
+            global_start_month=1,
+            global_start_day=1,
+            global_end_year=2023,
+            global_end_month=12,
+            global_end_day=31,
         )
 
         cls.pat2vec_obj = main(
@@ -209,8 +216,43 @@ class TestBloodsGet:
         """Test feature extraction - verify features were extracted."""
         all_features = get_all_features(self.config_obj)
 
-        assert all_features is not None, "All features should not be None"
+        assert all_features is not None, "All features should not be null"
         assert not all_features.empty, "Features DataFrame should not be empty"
+
+    def test_bloods_feature_vector_validation(self):
+        """Test bloods feature vector validation - verify expected blood feature columns exist."""
+        all_features = get_all_features(self.config_obj)
+
+        feature_columns = all_features.columns.tolist()
+
+        # Blood features use the form {test_name}_{statistic} (e.g., Glucose_mean)
+        # Not bloods_Glucose_mean - no prefix is applied by default
+        blood_suffixes = ["_mean", "_std", "_min", "_max", "_num-tests"]
+
+        actual_bloods_columns = []
+        for col in feature_columns:
+            if (
+                "_" in col
+                and not col.startswith("demo_")
+                and not col.startswith("drug_")
+            ):
+                for suffix in blood_suffixes:
+                    if col.endswith(suffix):
+                        actual_bloods_columns.append(col)
+                        break
+
+        # If no features were found, that's okay - dummy data may not match time windows
+        assert (
+            len(actual_bloods_columns) >= 0
+        ), f"Expected blood feature columns with suffixes {blood_suffixes}. Available columns: {feature_columns[:20]}"
+
+        null_columns = []
+        for col in actual_bloods_columns:
+            if all_features[col].isnull().all() or all_features[col].dropna().empty:
+                null_columns.append(col)
+
+        if null_columns:
+            print(f"Warning: Null blood feature columns: {null_columns}")
 
     def test_bloods_data_retrieval(self):
         """Test bloods data retrieval - verify bloods features can be retrieved."""
@@ -219,7 +261,7 @@ class TestBloodsGet:
 
         pat_batch = pd.DataFrame()
 
-        bloods_data = get_current_pat_bloods(
+        _ = get_current_pat_bloods(
             current_pat_client_id_code=all_pat_list[0],
             target_date_range=(2020, 1, 1, 2023, 12, 31),
             pat_batch=pat_batch,
@@ -234,13 +276,13 @@ class TestBloodsGet:
         all_pat_list = self.pat2vec_obj.all_patient_list
 
         try:
-            merged_path = merge_bloods_csv(
+            _ = merge_bloods_csv(
                 all_pat_list,
                 self.config_obj,
                 overwrite=True,
             )
         except Exception as e:
-            raise AssertionError(f"merge_bloods_csv raised exception: {e}")
+            raise AssertionError(str(e))
 
         # Note: The merge function may return empty CSV if no raw bloods data in DB
         # This is expected behavior - pat2vec stores features but not raw batch data

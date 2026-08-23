@@ -68,6 +68,15 @@ from pat2vec.util.methods_get import (
     write_remote,
 )
 
+SUBTYPE_FUNCTIONS = {
+    "smoking": get_smoking,
+    "core_02": get_core_02,
+    "bed": get_bed,
+    "vte_status": get_vte_status,
+    "hosp_site": get_hosp_site,
+    "core_resus": get_core_resus,
+}
+
 
 def main_batch(
     current_pat_client_id_code,

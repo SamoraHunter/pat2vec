@@ -83,25 +83,25 @@ Here is an example configuration snippet:
 ```python
 # 1. Define your feature set
 main_options_dict = {
-    'demo': True,           # Demographic information
-    'bmi': True,            # BMI information
-    'bloods': True,         # Blood-related information
-    'drugs': True,          # Drug-related information
-    'diagnostics': True,    # Diagnostic information
-    'core_02': True,        # core_02 information
-    'bed': True,            # Bed information
-    'vte_status': True,     # VTE status information
-    'hosp_site': True,      # Hospital site information
-    'core_resus': True,     # Core resuscitation information
-    'news': True,           # NEWS (National Early Warning Score)
-    'smoking': True,        # Smoking-related information
-    'annotations': True,    # EPR document annotations via MedCAT
-    'annotations_mrc': True,# MRC annotations via MedCat
-    'negated_presence_annotations': False,  # Negated presence annotations
-    'appointments': False,  # Appointments information
-    'annotations_reports': False,  # Reports information
-    'covid': False,         # COVID-19 test results
-    'textual_obs': False,   # Textual observations
+    "demo": True,  # Demographic information
+    "bmi": True,  # BMI information
+    "bloods": True,  # Blood-related information
+    "drugs": True,  # Drug-related information
+    "diagnostics": True,  # Diagnostic information
+    "core_02": True,  # core_02 information
+    "bed": True,  # Bed information
+    "vte_status": True,  # VTE status information
+    "hosp_site": True,  # Hospital site information
+    "core_resus": True,  # Core resuscitation information
+    "news": True,  # NEWS (National Early Warning Score)
+    "smoking": True,  # Smoking-related information
+    "annotations": True,  # EPR document annotations via MedCAT
+    "annotations_mrc": True,  # MRC annotations via MedCat
+    "negated_presence_annotations": False,  # Negated presence annotations
+    "appointments": False,  # Appointments information
+    "annotations_reports": False,  # Reports information
+    "covid": False,  # COVID-19 test results
+    "textual_obs": False,  # Textual observations
 }
 
 # 2. Pass the dictionary to your config_class instance

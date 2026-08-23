@@ -18,22 +18,22 @@ Feature extraction is controlled through the `main_options_dict` dictionary, whe
 
 ```python
 main_options_dict = {
-    'demo': True,           # Demographics (age, ethnicity, death status)
-    'bmi': True,            # Body Mass Index measurements
-    'bloods': True,         # Blood test results and biochemistry
-    'drugs': True,          # Medication orders and prescriptions
-    'diagnostics': True,    # Diagnostic orders and procedures
-    'core_02': True,        # Core oxygen saturation data
-    'bed': True,            # Bed occupancy information
-    'vte_status': True,     # Venous thromboembolism status
-    'hosp_site': True,      # Hospital site/location data
-    'core_resus': True,     # Core resuscitation information
-    'news': True,           # National Early Warning Score
-    'smoking': True,        # Smoking status and history
-    'annotations': True,    # Clinical note annotations via MedCat
-    'annotations_mrc': True,# MRC clinical observations
-    'appointments': False,  # Appointment scheduling data
-    'textual_obs': False,   # Free-text clinical observations
+    "demo": True,  # Demographics (age, ethnicity, death status)
+    "bmi": True,  # Body Mass Index measurements
+    "bloods": True,  # Blood test results and biochemistry
+    "drugs": True,  # Medication orders and prescriptions
+    "diagnostics": True,  # Diagnostic orders and procedures
+    "core_02": True,  # Core oxygen saturation data
+    "bed": True,  # Bed occupancy information
+    "vte_status": True,  # Venous thromboembolism status
+    "hosp_site": True,  # Hospital site/location data
+    "core_resus": True,  # Core resuscitation information
+    "news": True,  # National Early Warning Score
+    "smoking": True,  # Smoking status and history
+    "annotations": True,  # Clinical note annotations via MedCat
+    "annotations_mrc": True,  # MRC clinical observations
+    "appointments": False,  # Appointment scheduling data
+    "textual_obs": False,  # Free-text clinical observations
 }
 ```
 
@@ -49,12 +49,12 @@ The time window system defines how patient data is temporally organized:
 
 ```python
 config_obj = config_class(
-    start_date=datetime(2019, 1, 1),    # Starting point
-    years=2,                            # 2-year window
+    start_date=datetime(2019, 1, 1),  # Starting point
+    years=2,  # 2-year window
     months=0,
     days=0,
     time_window_interval_delta=relativedelta(months=6),  # 6-month intervals
-    lookback=False                      # Forward-looking from start_date
+    lookback=False,  # Forward-looking from start_date
 )
 ```
 
@@ -65,8 +65,8 @@ For patient-specific time windows based on clinical events:
 config_obj = config_class(
     individual_patient_window=True,
     individual_patient_window_df=patient_dates_df,
-    individual_patient_window_start_column_name='event_date',
-    individual_patient_id_column_name='patient_id',
+    individual_patient_window_start_column_name="event_date",
+    individual_patient_id_column_name="patient_id",
     # ... other parameters
 )
 ```
@@ -83,18 +83,18 @@ config_obj = config_class(
 ```python
 # Filter specific document types
 data_type_filter_dict = {
-    'filter_term_lists': {
-        'epr_docs': ['Discharge Summary', 'Progress Note'],
-        'bloods': ['hemoglobin', 'glucose']
+    "filter_term_lists": {
+        "epr_docs": ["Discharge Summary", "Progress Note"],
+        "bloods": ["hemoglobin", "glucose"],
     }
 }
 
 # Annotation filtering
 annot_filter_arguments = {
-    'acc': 0.8,  # Minimum MedCat accuracy
-    'types': ['finding', 'disorder', 'procedure'],
-    'Presence_Value': ['True'],
-    'Presence_Confidence': 0.8
+    "acc": 0.8,  # Minimum MedCat accuracy
+    "types": ["finding", "disorder", "procedure"],
+    "Presence_Value": ["True"],
+    "Presence_Confidence": 0.8,
 }
 ```
 
@@ -111,22 +111,22 @@ For a typical clinical research study analyzing medication effects:
 
 ```python
 config_obj = config_class(
-    proj_name='medication_study_2024',
-    treatment_doc_filename='cohort_patients.csv',
+    proj_name="medication_study_2024",
+    treatment_doc_filename="cohort_patients.csv",
     main_options={
-        'demo': True,
-        'drugs': True,
-        'bloods': True,
-        'annotations': True,
-        'diagnostics': True,
+        "demo": True,
+        "drugs": True,
+        "bloods": True,
+        "annotations": True,
+        "diagnostics": True,
         # Disable unnecessary features
-        'bmi': False,
-        'appointments': False
+        "bmi": False,
+        "appointments": False,
     },
     start_date=datetime(2020, 1, 1),
     years=3,
     time_window_interval_delta=relativedelta(months=3),
-    lookback=False
+    lookback=False,
 )
 ```
 
@@ -135,12 +135,12 @@ For development work with dummy data:
 
 ```python
 config_obj = config_class(
-    proj_name='test_run',
+    proj_name="test_run",
     testing=True,
     dummy_medcat_model=True,
     sample_treatment_docs=10,  # Use only 10 patients
-    verbosity=5,               # Maximum debug output
-    main_options=get_test_options_dict()  # Only implemented features
+    verbosity=5,  # Maximum debug output
+    main_options=get_test_options_dict(),  # Only implemented features
 )
 ```
 
@@ -149,11 +149,11 @@ For large-scale production runs:
 
 ```python
 config_obj = config_class(
-    proj_name='full_cohort_analysis',
-    strip_list=True,           # Skip already processed patients
-    prefetch_pat_batches=False, # Avoid memory issues
-    verbosity=1,               # Minimal logging
-    shuffle_pat_list=False     # Maintain consistent ordering
+    proj_name="full_cohort_analysis",
+    strip_list=True,  # Skip already processed patients
+    prefetch_pat_batches=False,  # Avoid memory issues
+    verbosity=1,  # Minimal logging
+    shuffle_pat_list=False,  # Maintain consistent ordering
 )
 ```
 
@@ -178,7 +178,7 @@ The config class includes built-in validation:
 config_obj = config_class(
     use_controls=True,
     treatment_control_ratio_n=2,  # 2:1 control:treatment ratio
-    all_epr_patient_list_path='all_patients.csv'
+    all_epr_patient_list_path="all_patients.csv",
 )
 ```
 

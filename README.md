@@ -294,8 +294,8 @@ To use a specific database (e.g. PostgreSQL):
 ```python
 config_obj = config_class(
     # ... other options ...
-    storage_backend='database',  # Default is 'database'
-    db_connection_string='postgresql://user:password@localhost/pat2vec_db'  # SQLite used by default when not specified
+    storage_backend="database",  # Default is 'database'
+    db_connection_string="postgresql://user:password@localhost/pat2vec_db",  # SQLite used by default when not specified
 )
 ```
 

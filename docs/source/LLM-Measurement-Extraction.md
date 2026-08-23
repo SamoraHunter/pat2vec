@@ -54,24 +54,25 @@ sequenceDiagram
 from pat2vec.util.llm.llm_measurement_extraction import extract_measurements_llm
 import pandas as pd
 
+
 # Define a simple caller for your LLM (e.g., Ollama or OpenAI)
 def my_llm_caller(prompt):
     return model.invoke(prompt).content
 
+
 # Input data
-df = pd.DataFrame({
-    "body_analysed": [
-        "Patient is 80kg. BP recorded at 140/90. Temperature 38.2C.",
-        "Biopsy size 2.1 x 1.5 cm."
-    ]
-})
+df = pd.DataFrame(
+    {
+        "body_analysed": [
+            "Patient is 80kg. BP recorded at 140/90. Temperature 38.2C.",
+            "Biopsy size 2.1 x 1.5 cm.",
+        ]
+    }
+)
 
 # Run extraction
 measurements_df = extract_measurements_llm(
-    data=df,
-    llm_caller=my_llm_caller,
-    text_column="body_analysed",
-    verbose=1
+    data=df, llm_caller=my_llm_caller, text_column="body_analysed", verbose=1
 )
 ```
 

@@ -58,9 +58,11 @@ You can use the high-level `validate_annotations` helper to process a DataFrame.
 ```python
 from med_llm_utils import validate_annotations
 
+
 # Define your LLM caller (e.g., a LangChain model or a simple function)
 def my_llm_caller(prompt):
     return llm.invoke(prompt)
+
 
 # Run validation
 results_df = validate_annotations(
@@ -68,7 +70,7 @@ results_df = validate_annotations(
     config_obj=config,
     llm_caller=my_llm_caller,
     concepts_to_validate=["C0011847", "Diabetes"],
-    debug_mode=True
+    debug_mode=True,
 )
 ```
 

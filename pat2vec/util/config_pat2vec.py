@@ -867,13 +867,23 @@ class config_class:
             #: The name of the output folder.
             self.output_folder = "outputs"
 
-            #: An instance of the PathsClass for managing directory paths.
-            self.PathsClass_instance = PathsClass(
-                self.root_path,
-                self.suffix,
-                self.output_folder,
-                create_dirs=True,
-            )
+            if storage_backend == "file":
+                #: An instance of the PathsClass for managing directory paths.
+                self.PathsClass_instance = PathsClass(
+                    self.root_path,
+                    self.suffix,
+                    self.output_folder,
+                    create_dirs=True,
+                )
+            else:
+                # For database backend, create PathsClass but without creating directories
+                # since data is stored in SQLite instead of file batches
+                self.PathsClass_instance = PathsClass(
+                    self.root_path,
+                    self.suffix,
+                    self.output_folder,
+                    create_dirs=False,
+                )
 
         logger.info(f"Setting start_date to: {start_date}")
         #: The anchor date for generating time windows.

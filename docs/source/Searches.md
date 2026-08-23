@@ -38,7 +38,7 @@ from pat2vec.main_pat2vec import main
 config_obj = config_class(
     testing=False,  # Set to False for production use
     verbosity=9,
-    proj_name='blood_analysis_project'
+    proj_name="blood_analysis_project",
 )
 
 # Initialize pat2vec object
@@ -51,12 +51,12 @@ pat2vec_obj = main(config_obj=config_obj, cogstack=True)
 from pat2vec import search_bloods_data
 
 # Define patient IDs
-patient_ids = ['PATIENT001', 'PATIENT002', 'PATIENT003']
+patient_ids = ["PATIENT001", "PATIENT002", "PATIENT003"]
 
 # Search for blood test data
 df_bloods = search_bloods_data(
     cohort_searcher_with_terms_and_search=pat2vec_obj.cohort_searcher_with_terms_and_search,
-    client_id_codes=patient_ids
+    client_id_codes=patient_ids,
 )
 
 # View the results
@@ -78,7 +78,7 @@ df_bloods = search_bloods_data(
     start_day=1,
     end_year=2023,
     end_month=12,
-    end_day=31
+    end_day=31,
 )
 ```
 
@@ -91,7 +91,7 @@ Add additional search criteria using the `additional_custom_search_string` param
 df_bloods = search_bloods_data(
     cohort_searcher_with_terms_and_search=pat2vec_obj.cohort_searcher_with_terms_and_search,
     client_id_codes=patient_ids,
-    additional_custom_search_string='AND basicobs_itemname_analysed:("Hemoglobin" OR "Creatinine")'
+    additional_custom_search_string='AND basicobs_itemname_analysed:("Hemoglobin" OR "Creatinine")',
 )
 ```
 
@@ -104,7 +104,7 @@ df_bloods = search_bloods_data(
     cohort_searcher_with_terms_and_search=pat2vec_obj.cohort_searcher_with_terms_and_search,
     client_id_codes=patient_ids,
     client_idcode_name="patient_id.keyword",  # Different patient ID field
-    bloods_time_field="test_date"             # Different timestamp field
+    bloods_time_field="test_date",  # Different timestamp field
 )
 ```
 
@@ -134,28 +134,36 @@ print(f"Retrieved {len(df_bloods)} blood test records")
 
 # View unique test types
 print("Available blood tests:")
-print(df_bloods['basicobs_itemname_analysed'].unique())
+print(df_bloods["basicobs_itemname_analysed"].unique())
 
 # Check date range of results
-print(f"Date range: {df_bloods['basicobs_entered'].min()} to {df_bloods['basicobs_entered'].max()}")
+print(
+    f"Date range: {df_bloods['basicobs_entered'].min()} to {df_bloods['basicobs_entered'].max()}"
+)
 ```
 
 ### Data Processing Examples
 
 ```python
 # Convert date strings to datetime
-df_bloods['basicobs_entered'] = pd.to_datetime(df_bloods['basicobs_entered'])
+df_bloods["basicobs_entered"] = pd.to_datetime(df_bloods["basicobs_entered"])
 
 # Filter for specific test types
 hemoglobin_results = df_bloods[
-    df_bloods['basicobs_itemname_analysed'].str.contains('Hemoglobin', na=False)
+    df_bloods["basicobs_itemname_analysed"].str.contains("Hemoglobin", na=False)
 ]
 
 # Group by patient and test type
-patient_summary = df_bloods.groupby(['client_idcode', 'basicobs_itemname_analysed']).agg({
-    'basicobs_value_numeric': ['count', 'mean', 'std'],
-    'basicobs_entered': ['min', 'max']
-}).round(2)
+patient_summary = (
+    df_bloods.groupby(["client_idcode", "basicobs_itemname_analysed"])
+    .agg(
+        {
+            "basicobs_value_numeric": ["count", "mean", "std"],
+            "basicobs_entered": ["min", "max"],
+        }
+    )
+    .round(2)
+)
 ```
 
 ## Error Handling
@@ -166,7 +174,7 @@ The function includes built-in validation and will raise helpful error messages:
 try:
     df_bloods = search_bloods_data(
         cohort_searcher_with_terms_and_search=pat2vec_obj.cohort_searcher_with_terms_and_search,
-        client_id_codes=patient_ids
+        client_id_codes=patient_ids,
     )
 except ValueError as e:
     print(f"Search error: {e}")
@@ -182,12 +190,12 @@ from pat2vec import search_demographics, search_drug_orders
 # Get multiple data types for the same patients
 df_demographics = search_demographics(
     cohort_searcher_with_terms_and_search=pat2vec_obj.cohort_searcher_with_terms_and_search,
-    client_id_codes=patient_ids
+    client_id_codes=patient_ids,
 )
 
 df_drugs = search_drug_orders(
     cohort_searcher_with_terms_and_search=pat2vec_obj.cohort_searcher_with_terms_and_search,
-    client_id_codes=patient_ids
+    client_id_codes=patient_ids,
 )
 
 # Combine datasets for comprehensive patient profiles
@@ -222,9 +230,7 @@ Use the `check_patients_existence` function to verify which IDs from a candidate
 from pat2vec.pat2vec_search.cogstack_search_methods import check_patients_existence
 
 found_ids = check_patients_existence(
-    patient_ids=["ID1", "ID2"],
-    index_name="epr_documents",
-    config_obj=config
+    patient_ids=["ID1", "ID2"], index_name="epr_documents", config_obj=config
 )
 ```
 
