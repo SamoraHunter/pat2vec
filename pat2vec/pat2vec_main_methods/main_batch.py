@@ -16,6 +16,7 @@ from pat2vec.pat2vec_get_methods.get_method_bloods import get_current_pat_bloods
 from pat2vec.pat2vec_get_methods.get_method_bmi import get_bmi_features
 from pat2vec.pat2vec_get_methods.get_method_core02 import get_core_02
 from pat2vec.pat2vec_get_methods.get_method_core_resus import get_core_resus
+from pat2vec.pat2vec_get_methods.get_method_covid import get_covid
 from pat2vec.pat2vec_get_methods.get_method_current_pat_annotations_mrc_cs import (
     get_current_pat_annotations_mrc_cs,
 )
@@ -221,6 +222,7 @@ def main_batch(
                     get_core_resus,
                     get_news,
                     get_smoking,
+                    get_covid,
                     get_current_pat_report_annotations,
                     get_current_pat_textual_obs_annotations,
                     get_appointments,
@@ -339,6 +341,13 @@ def main_batch(
                         "func": get_smoking,
                         "batch_arg": "pat_batch",
                         "batch_key": "batch_smoking",
+                    },
+                    {
+                        "option": "covid",
+                        "pbar": "covid",
+                        "func": get_covid,
+                        "batch_arg": "pat_batch",
+                        "batch_key": "batch_covid",
                     },
                     {
                         "option": "appointments",

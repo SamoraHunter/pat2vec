@@ -2481,6 +2481,22 @@ def cohort_searcher_with_terms_and_search_dummy(
                 fields_list=fields_list,
             )
 
+        elif "SARS CoV-2" in search_string and "COVID-19" in search_string:
+            if verbose:
+                logger.debug("Generating data for 'covid'")
+            num_rows = random.randint(1, 5)  # Ensure at least 1 row for COVID
+            df = generate_covid_observations_data(
+                num_rows,
+                entered_list,
+                global_start_year,
+                global_start_month,
+                fields_list=fields_list,
+                global_end_year=global_end_year,
+                global_end_month=global_end_month,
+                global_start_day=final_global_start_day,
+                global_end_day=final_global_end_day,
+            )
+
         else:  # Generic fallback for any other 'observations' request
             if verbose:
                 logger.debug("Generating data for generic 'observations'")

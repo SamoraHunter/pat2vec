@@ -80,10 +80,17 @@ def get_pat_batch_obs(
                 "core_bednumber3": "raw_bed",
                 "core_hospitalsite": "raw_hospsite",
             }
-            table_name = table_name_map.get(
-                safe_search_term,
-                f"raw_obs_{safe_search_term}",
-            )
+            # COVID search term is special - map to raw_covid table
+            if (
+                "sars" in safe_search_term.lower()
+                or "covid" in safe_search_term.lower()
+            ):
+                table_name = "raw_covid"
+            else:
+                table_name = table_name_map.get(
+                    safe_search_term,
+                    f"raw_obs_{safe_search_term}",
+                )
             schema_name = "raw_data"
 
             if not config_obj.overwrite_stored_pat_observations:
@@ -117,17 +124,34 @@ def get_pat_batch_obs(
         should_fetch = True
 
     try:
+        # Check if this is a COVID query - use basic_observations index for that
+        is_covid_query = "sars" in search_term.lower() or "covid" in search_term.lower()
+
+        query_index_name = "basic_observations" if is_covid_query else "observations"
+
+        query_fields_list = [
+            "observation_guid",
+            "client_idcode",
+            "obscatalogmasteritem_displayname",
+            "observation_valuetext_analysed",
+            "observationdocument_recordeddtm",
+            "clientvisit_visitidcode",
+        ]
+        if is_covid_query:
+            # Use basic_observations schema for COVID
+            query_fields_list = [
+                "observation_guid",
+                "client_idcode",
+                "basicobs_itemname_analysed",
+                "basicobs_value_analysed",
+                "basicobs_entered",
+                "clientvisit_visitidcode",
+            ]
+
         if should_fetch:
             batch_target = cohort_searcher_with_terms_and_search(
-                index_name="observations",
-                fields_list=[
-                    "observation_guid",
-                    "client_idcode",
-                    "obscatalogmasteritem_displayname",
-                    "observation_valuetext_analysed",
-                    "observationdocument_recordeddtm",
-                    "clientvisit_visitidcode",
-                ],
+                index_name=query_index_name,
+                fields_list=query_fields_list,
                 term_name=config_obj.client_idcode_term_name,
                 entered_list=[current_pat_client_id_code],
                 search_string=f'obscatalogmasteritem_displayname:("{search_term}") AND '
@@ -149,10 +173,17 @@ def get_pat_batch_obs(
                         "core_bednumber3": "raw_bed",
                         "core_hospitalsite": "raw_hospsite",
                     }
-                    table_name = table_name_map.get(
-                        safe_search_term,
-                        f"raw_obs_{safe_search_term}",
-                    )
+                    # COVID search term is special - map to raw_covid table
+                    if (
+                        "sars" in safe_search_term.lower()
+                        or "covid" in safe_search_term.lower()
+                    ):
+                        table_name = "raw_covid"
+                    else:
+                        table_name = table_name_map.get(
+                            safe_search_term,
+                            f"raw_obs_{safe_search_term}",
+                        )
                     save_raw_patient_batch(
                         batch_target,
                         current_pat_client_id_code,

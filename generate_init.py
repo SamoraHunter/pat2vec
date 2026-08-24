@@ -12,6 +12,7 @@ def generate_init_file_content(package_path="pat2vec"):
     and generates the content for the __init__.py file.
 
     Args:
+    ----
         package_path (str): The path to the package root. Defaults to "pat2vec".
 
     """

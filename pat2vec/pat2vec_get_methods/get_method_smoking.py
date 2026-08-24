@@ -162,7 +162,7 @@ def prepare_smoking_data(raw_data: pd.DataFrame) -> pd.DataFrame:
 
     """
     data = raw_data[raw_data["obscatalogmasteritem_displayname"] == SEARCH_TERM].copy()
-    return data.dropna()
+    return data.dropna(subset=["observation_valuetext_analysed"])
 
 
 def calculate_smoking_features(
@@ -189,8 +189,8 @@ def calculate_smoking_features(
     """
     term = "smoking_status"
     categories = {
-        "current": "Current Smoker",
-        "non": "Non-Smoker",
+        "current": "Current smoker",
+        "non": "Never smoked|Ex-smoker",
     }
 
     features = pd.DataFrame({"client_idcode": [current_pat_client_id_code]})
