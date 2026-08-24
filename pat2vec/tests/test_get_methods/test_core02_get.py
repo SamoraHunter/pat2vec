@@ -223,7 +223,8 @@ class TestCore02Get:
         has columns but all values are null or empty.
 
         Note: Features are dynamic one-hot encoded column names based on
-        CORE_SpO2 observation values (e.g., '95_pct', 'low', 'normal').
+        CORE_SpO2 (oxygen saturation) observation values from observations table,
+        such as '95_pct', 'low', 'normal' representing the saturation level categories.
         """
         all_features = get_all_features(self.config_obj)
 

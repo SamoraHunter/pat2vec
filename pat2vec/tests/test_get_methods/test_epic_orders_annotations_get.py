@@ -255,7 +255,9 @@ class TestEpicOrdersAnnotationsGet:
         Catches the case where vectorisation silently fails — the DataFrame
         has columns but all values are null or empty.
 
-        Epic orders annotations use pattern: pretty_name_count_epic_orders_{pretty_name_value}
+        Epic orders annotations use pattern:
+        pretty_name_count_epic_orders_{pretty_name_value} where pretty_name_value
+        is derived from the 'pretty_name' field in the annotations database (ann_epic_orders table).
         """
         all_features = get_all_features(self.config_obj)
 
@@ -283,8 +285,6 @@ class TestEpicOrdersAnnotationsGet:
         )
 
         print(f"Found {len(feature_cols)} epic_orders annotation feature columns")
-
-        print(f"Found {len(feature_cols)} epic_orders_annotation feature columns")
 
     def test_8_cleanup_verification(self):
         """Test cleanup verification - verify all temp files are cleaned up properly."""

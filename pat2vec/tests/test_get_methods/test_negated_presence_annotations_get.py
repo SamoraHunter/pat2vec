@@ -55,7 +55,8 @@ class TestNegatedPresenceAnnotationsGet:
             try:
                 shutil.rmtree(dir_to_remove, ignore_errors=True)
             except Exception as e:
-                raise RuntimeError(f"Failed to clean up '{dir_to_remove}': {e}") from e
+                msg = f"Failed to clean up '{dir_to_remove}': {e}"
+                raise RuntimeError(msg) from e
 
         schema_path = os.path.abspath("test_files/elastic_schemas.json")
         config_populate = config_class(

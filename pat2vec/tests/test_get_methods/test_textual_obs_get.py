@@ -207,6 +207,9 @@ class TestTextualObsGet:
 
         Catches the case where vectorisation silently fails — the DataFrame
         has columns but all values are null or empty.
+
+        Textual obs features use pattern: {category}_textual_obs_{value} where
+        category and value are derived from the textual observation entries.
         """
         all_features = get_all_features(self.config_obj)
 

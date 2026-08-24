@@ -51,7 +51,8 @@ class TestOBSGet:
             try:
                 shutil.rmtree(dir_to_remove, ignore_errors=True)
             except Exception as e:
-                raise RuntimeError(f"Failed to clean up '{dir_to_remove}': {e}") from e
+                msg = f"Failed to clean up '{dir_to_remove}': {e}"
+                raise RuntimeError(msg) from e
 
         schema_path = os.path.abspath("test_files/elastic_schemas.json")
         config_populate = config_class(
@@ -233,6 +234,10 @@ class TestOBSGet:
 
         Catches the case where vectorisation silently fails — the DataFrame
         has columns but all values are null or empty.
+
+        Observation features use patterns:
+        - obs_{category}_{value}: One-hot encoded indicators for observation categories
+        - bmi_*: BMI-related statistics (mean, median, std, etc.) when BMI feature is enabled
         """
         all_features = get_all_features(self.config_obj)
 

@@ -207,13 +207,13 @@ class TestVteStatusGet:
         assert not all_features.empty, "Features DataFrame should not be empty"
 
     def test_vte_status_vector_validation(self):
-        """Verify pat_maker produced actual values in the feature vector.
+        """Verify pat_maker produced actual values in the vte_status feature vector.
 
         Catches the case where vectorisation silently fails — the DataFrame
         has columns but all values are null or empty.
-
-        Note: This test checks that not ALL features are empty since VTE status
-        may generate time-distributed features rather than summary statistics.
+        Uses the actual feature engineering logic from get_method_vte_status.py:
+        - calculate_vte_features produces: vte_status_mean, vte_status_median,
+          vte_status_std, vte_status_max, vte_status_min, vte_status_n (6 columns)
         """
         all_features = get_all_features(self.config_obj)
 
@@ -223,28 +223,22 @@ class TestVteStatusGet:
         feature_cols = [
             c
             for c in all_features.columns
-            if (
-                (c.startswith(("vte_", "vte_status_")))
-                and "_date_time_stamp" not in c
-                and c != "client_idcode"
-            )
+            if c.startswith("vte_status_") and "_date_time_stamp" not in c
         ]
 
-        if len(feature_cols) == 0:
-            print(
-                f"Note: No vte_* summary feature columns found. "
-                f"Available columns: {list(all_features.columns)[:20]}...",
-            )
+        assert len(feature_cols) > 0, (
+            f"No VTE status-related columns found in feature vector. "
+            f"Available columns: {list(all_features.columns)}"
+        )
 
-        else:
-            feature_data = all_features[feature_cols]
-            non_null_counts = feature_data.notna().sum()
-            totally_empty_cols = non_null_counts[non_null_counts == 0]
+        feature_data = all_features[feature_cols]
+        non_null_counts = feature_data.notna().sum()
+        totally_empty_cols = non_null_counts[non_null_counts == 0]
 
-            assert len(totally_empty_cols) < len(feature_cols), (
-                f"All VTE status columns are empty - vectorisation is failing. "
-                f"Null columns: {list(totally_empty_cols.index)}"
-            )
+        assert len(totally_empty_cols) < len(feature_cols), (
+            f"All VTE status columns are empty - vectorisation is failing. "
+            f"Null columns: {list(totally_empty_cols.index)}"
+        )
 
         print(f"Found {len(feature_cols)} VTE status feature columns")
 

@@ -8,18 +8,18 @@ import pandas as pd
 import pytest
 
 from pat2vec.main_pat2vec import main
+from pat2vec.pat2vec_get_methods.get_method_covid import get_covid
+from pat2vec.pat2vec_search.cogstack_search_methods import (
+    initialize_cogstack_client,
+)
 from pat2vec.util.config_pat2vec import config_class
+from pat2vec.util.elasticsearch_methods import ingest_data_to_elasticsearch
 from pat2vec.util.get_dummy_data_cohort_searcher import (
     generate_covid_observations_data,
     populate_elastic_with_dummy_data,
 )
 from pat2vec.util.helper_functions import get_all_features
 from pat2vec.util.logger_setup import setup_logger
-from pat2vec.pat2vec_get_methods.get_method_covid import get_covid
-from pat2vec.pat2vec_search.cogstack_search_methods import (
-    initialize_cogstack_client,
-)
-from pat2vec.util.elasticsearch_methods import ingest_data_to_elasticsearch
 
 random_seed_value = 42
 
@@ -54,7 +54,8 @@ class TestCovidGet:
             try:
                 shutil.rmtree(dir_to_remove, ignore_errors=True)
             except Exception as e:
-                raise RuntimeError(f"Failed to clean up '{dir_to_remove}': {e}") from e
+                msg = f"Failed to clean up '{dir_to_remove}': {e}"
+                raise RuntimeError(msg) from e
 
         schema_path = os.path.abspath("test_files/elastic_schemas.json")
         config_populate = config_class(
@@ -72,7 +73,8 @@ class TestCovidGet:
         )
 
         cls.patient_ids = populate_elastic_with_dummy_data(
-            config_populate, n_patients=5
+            config_populate,
+            n_patients=5,
         )
         cls.cs = initialize_cogstack_client(config_populate)
 
@@ -214,7 +216,9 @@ class TestCovidGet:
         Catches the case where vectorisation silently fails — the DataFrame
         has columns but all values are null or empty.
 
-        COVID features use pattern: covid_positive
+        COVID features use pattern:
+        - covid_positive: Binary indicator (0/1) for whether patient had positive
+          SARS-CoV-2 test result in the date range
         """
         all_features = get_all_features(self.config_obj)
 
@@ -266,16 +270,14 @@ class TestCovidGet:
 
     def test_merge_covid_data_functionality(self):
         """Test merge COVID data functionality - verify merge function creates CSV."""
-
-        all_pat_list = self.pat2vec_obj.all_patient_list
+        _ = self.pat2vec_obj.all_patient_list
 
         # Define and call merge function
         merged_data = get_all_features(self.config_obj)
 
         if merged_data.empty:
-            raise ValueError(
-                "merge_covid_data() returned empty DataFrame — no data found in database"
-            )
+            error_msg = "merge_covid_data() returned empty DataFrame — no data found in database"
+            raise ValueError(error_msg)
 
         # Write CSV to project temp directory
         output_dir = os.path.join(self.PROJ_NAME, "outputs")

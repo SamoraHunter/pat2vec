@@ -210,6 +210,11 @@ class TestAppointmentsGet:
 
         Catches the case where vectorisation silently fails — the DataFrame
         has columns but all values are null or empty.
+
+        Appointments features use patterns:
+        - ConsultantCode_{consultant_code}: Binary indicator for each consultant code
+        - ClinicCode_{clinic_code}: Binary indicator for each clinic code
+        - AppointmentType_{appointment_type}: Binary indicator for each appointment type
         """
         all_features = get_all_features(self.config_obj)
 

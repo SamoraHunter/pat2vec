@@ -217,6 +217,10 @@ class TestBMIGet:
 
         Catches the case where vectorisation silently fails — the DataFrame
         has columns but all values are null or empty.
+        Uses the actual feature engineering logic: get_bmi_features produces:
+        - BMI: bmi_mean, bmi_median, bmi_std, bmi_high, bmi_low, bmi_extreme, bmi_max, bmi_min (8 columns)
+        - Weight: weight_mean, weight_median, weight_std, weight_max, weight_min (5 columns)
+        - Height: height_mean, height_median, height_std, height_max, height_min (5 columns)
         """
         all_features = get_all_features(self.config_obj)
 
@@ -234,6 +238,7 @@ class TestBMIGet:
             f"Available columns: {list(all_features.columns)}"
         )
 
+        # At least some feature columns must have values (some stats like std can be NaN with single observations)
         feature_data = all_features[feature_cols]
         non_null_counts = feature_data.notna().sum()
         totally_empty_cols = non_null_counts[non_null_counts == 0]

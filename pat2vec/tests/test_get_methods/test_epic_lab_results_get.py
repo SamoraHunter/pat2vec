@@ -221,7 +221,11 @@ class TestEpicLabResultsGet:
         Catches the case where vectorisation silently fails — the DataFrame
         has columns but all values are null or empty.
 
-        Features use pattern: epic_lab_name_{name} and epic_lab_abnormal_{level}
+        Features use patterns:
+        - epic_lab_name_{lab_test}: Binary indicator for each lab test name (e.g.,
+          epic_lab_name_Blood_Culture, epic_lab_name_Urinalysis)
+        - epic_lab_abnormal_{level}: Indicator of abnormal result level (e.g.,
+          epic_lab_abnormal_High, epic_lab_abnormal_Low)
         """
         all_features = get_all_features(self.config_obj)
 

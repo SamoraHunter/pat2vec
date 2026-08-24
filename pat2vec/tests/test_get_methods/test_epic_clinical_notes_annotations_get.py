@@ -224,7 +224,9 @@ class TestEpicClinicalNotesAnnotationsGet:
         Catches the case where vectorisation silently fails — the DataFrame
         has columns but all values are null or empty.
 
-        Epic clinical notes annotations use pattern: pretty_name_count_epic_clinical_notes_{pretty_name_value}
+        Epic clinical notes annotations use pattern:
+        pretty_name_count_epic_clinical_notes_{pretty_name_value} where pretty_name_value
+        is derived from the 'pretty_name' field in the annotations database (ann_epic_clinical_notes table).
         """
         all_features = get_all_features(self.config_obj)
 
@@ -252,7 +254,7 @@ class TestEpicClinicalNotesAnnotationsGet:
         )
 
         print(
-            f"Found {len(feature_cols)} epic_clinical_notes annotation feature columns"
+            f"Found {len(feature_cols)} epic_clinical_notes annotation feature columns",
         )
 
     def test_epic_clinical_notes_annotations_data_retrieval(self):

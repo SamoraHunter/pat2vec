@@ -60,7 +60,8 @@ class TestReportAnnotationsGet:
             try:
                 shutil.rmtree(dir_to_remove, ignore_errors=True)
             except Exception as e:
-                raise RuntimeError(f"Failed to clean up '{dir_to_remove}': {e}") from e
+                msg = f"Failed to clean up '{dir_to_remove}': {e}"
+                raise RuntimeError(msg) from e
 
         schema_path = os.path.abspath("test_files/elastic_schemas.json")
         config_populate = config_class(
@@ -320,6 +321,8 @@ class TestReportAnnotationsGet:
         has columns but all values are null or empty.
 
         Reports annotations use pattern: pretty_name_count_reports_{pretty_name_value}
+        where pretty_name_value is determined from the 'pretty_name' field in the
+        annotations database (ann_reports table) for filtered annotations.
         """
         all_features = get_all_features(self.config_obj)
 

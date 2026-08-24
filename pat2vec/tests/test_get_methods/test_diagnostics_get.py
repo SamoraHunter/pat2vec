@@ -8,19 +8,19 @@ import pandas as pd
 import pytest
 
 from pat2vec.main_pat2vec import main
-from pat2vec.util.config_pat2vec import config_class
-from pat2vec.util.get_dummy_data_cohort_searcher import (
-    populate_elastic_with_dummy_data,
-)
-from pat2vec.util.helper_functions import get_all_features
-from pat2vec.util.logger_setup import setup_logger
 from pat2vec.pat2vec_get_methods.get_method_diagnostics import (
     get_current_pat_diagnostics,
 )
 from pat2vec.pat2vec_search.cogstack_search_methods import (
     initialize_cogstack_client,
 )
+from pat2vec.util.config_pat2vec import config_class
 from pat2vec.util.elasticsearch_methods import ingest_data_to_elasticsearch
+from pat2vec.util.get_dummy_data_cohort_searcher import (
+    populate_elastic_with_dummy_data,
+)
+from pat2vec.util.helper_functions import get_all_features
+from pat2vec.util.logger_setup import setup_logger
 
 random_seed_value = 42
 
@@ -55,7 +55,8 @@ class TestDiagnosticsGet:
             try:
                 shutil.rmtree(dir_to_remove, ignore_errors=True)
             except Exception as e:
-                raise RuntimeError(f"Failed to clean up '{dir_to_remove}': {e}") from e
+                msg = f"Failed to clean up '{dir_to_remove}': {e}"
+                raise RuntimeError(msg) from e
 
         schema_path = os.path.abspath("test_files/elastic_schemas.json")
         config_populate = config_class(
@@ -73,7 +74,8 @@ class TestDiagnosticsGet:
         )
 
         cls.patient_ids = populate_elastic_with_dummy_data(
-            config_populate, n_patients=5
+            config_populate,
+            n_patients=5,
         )
         cls.cs = initialize_cogstack_client(config_populate)
 
@@ -86,7 +88,6 @@ class TestDiagnosticsGet:
         ]
         cls.cs.elastic.indices.refresh(index=indices, ignore_unavailable=True)
 
-        from pat2vec.util.elasticsearch_methods import ingest_data_to_elasticsearch
         from pat2vec.util.get_dummy_data_cohort_searcher import (
             generate_diagnostic_orders_data,
         )
@@ -210,8 +211,6 @@ class TestDiagnosticsGet:
 
     def test_5_feature_extraction(self):
         """Test feature extraction - verify features were extracted."""
-        from pat2vec.util.helper_functions import get_all_features
-
         all_features = get_all_features(self.config_obj)
 
         assert all_features is not None, "All features should not be None"
@@ -222,9 +221,11 @@ class TestDiagnosticsGet:
 
         Catches the case where vectorisation silently fails — the DataFrame
         has columns but all values are null or empty.
-        """
-        from pat2vec.util.helper_functions import get_all_features
 
+        Diagnostics features use pattern: {order_name}_num-diagnostic-order and
+        {order_name}_days-since-last-diagnostic-{order_name} (where order_name is
+        derived from the diagnostic test name, e.g., "MRI", "CT Scan", etc.).
+        """
         all_features = get_all_features(self.config_obj)
 
         assert all_features is not None, "get_all_features returned None"
@@ -256,10 +257,6 @@ class TestDiagnosticsGet:
 
     def test_diagnostics_data_retrieval(self):
         """Test diagnostics data retrieval - verify diagnostics features can be retrieved."""
-        from pat2vec.pat2vec_get_methods.get_method_diagnostics import (
-            get_current_pat_diagnostics,
-        )
-
         all_pat_list = self.pat2vec_obj.all_patient_list
         assert len(all_pat_list) > 0, "Patient list should not be empty"
 

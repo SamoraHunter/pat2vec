@@ -55,7 +55,8 @@ class TestCoreResusGet:
             try:
                 shutil.rmtree(dir_to_remove, ignore_errors=True)
             except Exception as e:
-                raise RuntimeError(f"Failed to clean up '{dir_to_remove}': {e}") from e
+                msg = f"Failed to clean up '{dir_to_remove}': {e}"
+                raise RuntimeError(msg) from e
 
         schema_path = os.path.abspath("test_files/elastic_schemas.json")
         config_populate = config_class(
@@ -223,7 +224,11 @@ class TestCoreResusGet:
         Catches the case where vectorisation silently fails — the DataFrame
         has columns but all values are null or empty.
 
-        Core resus features use pattern: core_resus_status_{For|Not for} cardiopulmonary resuscitation
+        Core resus features use pattern:
+        - core_resus_status_For cardiopulmonary resuscitation: Binary indicator (0/1)
+          if patient has Do Not Resuscitate order
+        - core_resus_status_Not for cardiopulmonary resuscitation: Binary indicator (0/1)
+          if patient has DNR/DNI order
         """
         all_features = get_all_features(self.config_obj)
 

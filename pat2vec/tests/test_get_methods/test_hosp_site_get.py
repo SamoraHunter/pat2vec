@@ -220,7 +220,11 @@ class TestHospSiteGet:
 
         Catches the case where vectorisation silently fails — the DataFrame
         has columns but all values are null or empty.
+
         Note: This test checks for non-null hosp_site features, not just date stamps.
+        Hospital site features use patterns:
+        - hosp_site_dh: Binary indicator (0/1) if patient had records at DH hospital
+        - hosp_site_ph: Binary indicator (0/1) if patient had records at PRUH hospital
         """
         all_features = get_all_features(self.config_obj)
 

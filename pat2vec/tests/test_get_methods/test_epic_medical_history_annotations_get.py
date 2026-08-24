@@ -227,7 +227,9 @@ class TestEpicMedicalHistoryAnnotationsGet:
         Catches the case where vectorisation silently fails — the DataFrame
         has columns but all values are null or empty.
 
-        Epic medical history annotations use pattern: pretty_name_count_epic_medical_history_{pretty_name_value}
+        Epic medical history annotations use pattern:
+        pretty_name_count_epic_medical_history_{pretty_name_value} where pretty_name_value
+        is derived from the 'pretty_name' field in the annotations database (ann_epic_medical_history table).
         """
         all_features = get_all_features(self.config_obj)
 
@@ -255,7 +257,7 @@ class TestEpicMedicalHistoryAnnotationsGet:
         )
 
         print(
-            f"Found {len(feature_cols)} epic_medical_history annotation feature columns"
+            f"Found {len(feature_cols)} epic_medical_history annotation feature columns",
         )
 
     def test_6_epic_medical_history_annotations_data_retrieval(self):
