@@ -8,6 +8,10 @@ import pandas as pd
 import pytest
 
 from pat2vec.main_pat2vec import main
+from pat2vec.pat2vec_get_methods.get_method_hosp_site import get_hosp_site
+from pat2vec.pat2vec_search.cogstack_search_methods import (
+    initialize_cogstack_client,
+)
 from pat2vec.util.config_pat2vec import config_class
 from pat2vec.util.elasticsearch_methods import ingest_data_to_elasticsearch
 from pat2vec.util.get_dummy_data_cohort_searcher import (
@@ -17,10 +21,6 @@ from pat2vec.util.get_dummy_data_cohort_searcher import (
 from pat2vec.util.helper_functions import get_all_features
 from pat2vec.util.logger_setup import setup_logger
 from pat2vec.util.post_processing_build_methods import merge_hosp_site_csv
-from pat2vec.pat2vec_get_methods.get_method_hosp_site import get_hosp_site
-from pat2vec.pat2vec_search.cogstack_search_methods import (
-    initialize_cogstack_client,
-)
 
 random_seed_value = 42
 
@@ -55,7 +55,8 @@ class TestHospSiteGet:
             try:
                 shutil.rmtree(dir_to_remove, ignore_errors=True)
             except Exception as e:
-                raise RuntimeError(f"Failed to clean up '{dir_to_remove}': {e}") from e
+                error_msg = f"Failed to clean up '{dir_to_remove}': {e}"
+                raise RuntimeError(error_msg) from e
 
         schema_path = os.path.abspath("test_files/elastic_schemas.json")
         config_populate = config_class(
@@ -73,7 +74,8 @@ class TestHospSiteGet:
         )
 
         cls.patient_ids = populate_elastic_with_dummy_data(
-            config_populate, n_patients=5
+            config_populate,
+            n_patients=5,
         )
         cls.cs = initialize_cogstack_client(config_populate)
 
@@ -105,7 +107,9 @@ class TestHospSiteGet:
         )
         df_hosp_site = df_hosp_site.where(pd.notnull(df_hosp_site), None)
         ingest_data_to_elasticsearch(
-            df_hosp_site, "observations", es_client=cls.cs.elastic
+            df_hosp_site,
+            "observations",
+            es_client=cls.cs.elastic,
         )
         cls.cs.elastic.indices.refresh(index="observations")
 
@@ -206,17 +210,53 @@ class TestHospSiteGet:
 
     def test_5_feature_extraction(self) -> None:
         """Test feature extraction - verify features were extracted."""
-        from pat2vec.util.helper_functions import get_all_features
-
         all_features = get_all_features(self.config_obj)
 
         assert all_features is not None, "All features should not be None"
         assert not all_features.empty, "Features DataFrame should not be empty"
 
+    def test_hosp_site_vector_validation(self) -> None:
+        """Verify pat_maker produced actual values in the hosp_site feature vector.
+
+        Catches the case where vectorisation silently fails — the DataFrame
+        has columns but all values are null or empty.
+        Note: This test checks for non-null hosp_site features, not just date stamps.
+        """
+        all_features = get_all_features(self.config_obj)
+
+        assert all_features is not None, "get_all_features returned None"
+        assert not all_features.empty, "Feature DataFrame is empty — no rows written"
+
+        feature_cols = [
+            c
+            for c in all_features.columns
+            if (
+                c.startswith("hosp_site_")
+                and "_date_time_stamp" not in c
+                and c != "client_idcode"
+            )
+        ]
+
+        if len(feature_cols) == 0:
+            print(
+                f"Note: No hosp_site_* summary feature columns found. "
+                f"Available columns: {list(all_features.columns)[:20]}...",
+            )
+
+        else:
+            feature_data = all_features[feature_cols]
+            non_null_counts = feature_data.notna().sum()
+            totally_empty_cols = non_null_counts[non_null_counts == 0]
+
+            assert len(totally_empty_cols) < len(feature_cols), (
+                f"All hosp_site columns are empty - vectorisation is failing. "
+                f"Null columns: {list(totally_empty_cols.index)}"
+            )
+
+        print(f"Found {len(feature_cols)} hosp_site feature columns")
+
     def test_hosp_site_data_retrieval(self) -> None:
         """Test hosp_site data retrieval - verify hosp_site features can be retrieved."""
-        from pat2vec.pat2vec_get_methods.get_method_hosp_site import get_hosp_site
-
         all_pat_list = self.pat2vec_obj.all_patient_list
         assert len(all_pat_list) > 0, "Patient list should not be empty"
 
@@ -240,10 +280,6 @@ class TestHospSiteGet:
 
     def test_merge_hosp_site_data_functionality(self) -> None:
         """Test merge hosp_site data functionality - verify merge function creates CSV."""
-        from pat2vec.util.post_processing_build_methods import (
-            merge_hosp_site_csv,
-        )
-
         all_pat_list = self.pat2vec_obj.all_patient_list
         merged_path = merge_hosp_site_csv(all_pat_list, self.config_obj, overwrite=True)
 

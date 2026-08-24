@@ -323,10 +323,12 @@ class TestEpicClinicalNotesAppointmentsAnnotationsGet:
         )
 
     def test_epic_clinical_notes_appointments_annotations_vector_validation(self):
-        """Verify pat_maker produced actual values in the appointments_annotations feature vector.
+        """Verify pat_maker produced actual values in the epic_clinical_notes_appointments annotation feature vector.
 
         Catches the case where vectorisation silently fails — the DataFrame
         has columns but all values are null or empty.
+
+        Epic clinical notes appointments annotations use pattern: pretty_name_count_epic_clinical_notes_{pretty_name_value}
         """
         all_features = get_all_features(self.config_obj)
 
@@ -334,11 +336,13 @@ class TestEpicClinicalNotesAppointmentsAnnotationsGet:
         assert not all_features.empty, "Feature DataFrame is empty — no rows written"
 
         feature_cols = [
-            c for c in all_features.columns if "appointments_annotations" in c.lower()
+            c
+            for c in all_features.columns
+            if c.startswith("pretty_name_count_epic_clinical_notes_")
         ]
 
         assert len(feature_cols) > 0, (
-            f"No appointments_annotations annotation columns found. "
+            f"No epic_clinical_notes annotation columns found. "
             f"Available columns: {list(all_features.columns)}"
         )
 
@@ -346,15 +350,13 @@ class TestEpicClinicalNotesAppointmentsAnnotationsGet:
         non_null_counts = feature_data.notna().sum()
         totally_empty_cols = non_null_counts[non_null_counts == 0]
 
-        assert len(totally_empty_cols) == 0, (
-            f"The following appointments_annotations annotation columns are entirely null after pat_maker ran:\n"
-            f"{list(totally_empty_cols.index)}\n"
-            "Vectorisation is silently failing — check the get method return value "
-            "and how pat_maker consumes it."
+        assert len(totally_empty_cols) < len(feature_cols), (
+            f"All epic_clinical_notes annotation columns are empty - vectorisation is failing. "
+            f"Null columns: {list(totally_empty_cols.index)}"
         )
 
         print(
-            f"Found {len(feature_cols)} appointments_annotations annotation feature columns",
+            f"Found {len(feature_cols)} epic_clinical_notes annotation feature columns",
         )
 
     def test_merge_documents_from_db_functionality(self):

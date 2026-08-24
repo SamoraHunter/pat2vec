@@ -8,7 +8,12 @@ import pandas as pd
 import pytest
 
 from pat2vec.main_pat2vec import main
+from pat2vec.pat2vec_get_methods.get_method_smoking import get_smoking_features
+from pat2vec.pat2vec_search.cogstack_search_methods import (
+    initialize_cogstack_client,
+)
 from pat2vec.util.config_pat2vec import config_class
+from pat2vec.util.elasticsearch_methods import ingest_data_to_elasticsearch
 from pat2vec.util.get_dummy_data_cohort_searcher import (
     generate_smoking_data,
     populate_elastic_with_dummy_data,
@@ -16,11 +21,6 @@ from pat2vec.util.get_dummy_data_cohort_searcher import (
 from pat2vec.util.helper_functions import get_all_features
 from pat2vec.util.logger_setup import setup_logger
 from pat2vec.util.post_processing_build_methods import merge_smoking_csv
-from pat2vec.pat2vec_get_methods.get_method_smoking import get_smoking_features
-from pat2vec.pat2vec_search.cogstack_search_methods import (
-    initialize_cogstack_client,
-)
-from pat2vec.util.elasticsearch_methods import ingest_data_to_elasticsearch
 
 random_seed_value = 42
 
@@ -114,7 +114,9 @@ class TestSmokingGet:
         df_smoking = df_smoking.where(pd.notnull(df_smoking), None)
 
         ingest_data_to_elasticsearch(
-            df_smoking, "observations", es_client=cls.cs.elastic
+            df_smoking,
+            "observations",
+            es_client=cls.cs.elastic,
         )
         cls.cs.elastic.indices.refresh(index="observations")
 
@@ -225,9 +227,42 @@ class TestSmokingGet:
         assert all_features is not None, "All features should not be None"
         assert not all_features.empty, "Features DataFrame should not be empty"
 
+    def test_smoking_vector_validation(self):
+        """Verify pat_maker produced actual values in the smoking feature vector.
+
+        Catches the case where vectorisation silently fails — the DataFrame
+        has columns but all values are null or empty.
+        Smoking features use pattern: smoking_status_{current|non}
+        """
+        all_features = get_all_features(self.config_obj)
+
+        assert all_features is not None, "get_all_features returned None"
+        assert not all_features.empty, "Feature DataFrame is empty — no rows written"
+
+        feature_cols = [
+            c
+            for c in all_features.columns
+            if "smoking" in c.lower() and c != "client_idcode"
+        ]
+
+        assert len(feature_cols) > 0, (
+            f"No smoking-related columns found in feature vector. "
+            f"Available columns: {list(all_features.columns)}"
+        )
+
+        feature_data = all_features[feature_cols]
+        non_null_counts = feature_data.notna().sum()
+        totally_empty_cols = non_null_counts[non_null_counts == 0]
+
+        assert len(totally_empty_cols) < len(feature_cols), (
+            f"All smoking columns are empty - vectorisation is failing. "
+            f"Null columns: {list(totally_empty_cols.index)}"
+        )
+
+        print(f"Found {len(feature_cols)} smoking feature columns")
+
     def test_smoking_data_retrieval(self):
         """Test smoking data retrieval - verify smoking features can be retrieved."""
-
         all_pat_list = self.pat2vec_obj.all_patient_list
         assert len(all_pat_list) > 0, "Patient list should not be empty"
 
@@ -249,7 +284,6 @@ class TestSmokingGet:
 
     def test_merge_smoking_data_functionality(self):
         """Test merge smoking data functionality - verify merge function creates CSV."""
-
         all_pat_list = self.pat2vec_obj.all_patient_list
         merged_path = merge_smoking_csv(all_pat_list, self.config_obj, overwrite=True)
 

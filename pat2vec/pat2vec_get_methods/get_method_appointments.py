@@ -261,7 +261,8 @@ def get_appointments(
     if len(current_pat_raw) == 0:
         return pd.DataFrame({"client_idcode": [current_pat_client_id_code]})
 
-    current_pat_raw = current_pat_raw[current_pat_raw["Attended"].astype(int) == 1]
+    if "Attended" in current_pat_raw.columns:
+        current_pat_raw = current_pat_raw[current_pat_raw["Attended"].astype(int) == 1]
 
     if not current_pat_raw.empty:
         # One-hot encode and sum up attendances per patient

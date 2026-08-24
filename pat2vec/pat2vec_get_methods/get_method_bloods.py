@@ -204,13 +204,6 @@ def get_current_pat_bloods(
 
     bloods_time_field = config_obj.bloods_time_field
 
-    print(
-        f"DEBUG: Date range: {start_year}-{start_month}-{start_day} to {end_year}-{end_month}-{end_day}",
-    )
-    print(
-        f"DEBUG: get_current_pat_bloods - batch_mode={batch_mode}, pat_batch.empty={pat_batch.empty}, len(pat_batch)={len(pat_batch)}",
-    )
-
     if batch_mode:
         # If pat_batch is truly empty (no columns), there's no data to filter
         # This can happen when test creates an empty DataFrame manually
@@ -226,9 +219,6 @@ def get_current_pat_bloods(
             start_day,
             end_day,
             bloods_time_field,
-        )
-        print(
-            f"DEBUG: After filtering - len={len(current_pat_bloods)}, columns={list(current_pat_bloods.columns)[:5]}",
         )
         if config_obj.verbosity >= 1:
             logger.info(
@@ -257,7 +247,7 @@ def get_current_pat_bloods(
     # --- Integrate Epic Lab Results if enabled ---
     if config_obj.main_options.get("epic_lab_results", False):
         if config_obj.verbosity >= 1:
-            print("Fetching Epic Lab Results for bloods.")
+            logger.info("Fetching Epic Lab Results for bloods.")
 
         epic_lab_data = search_epic_lab_results(
             cohort_searcher_with_terms_and_search=cohort_searcher_with_terms_and_search,

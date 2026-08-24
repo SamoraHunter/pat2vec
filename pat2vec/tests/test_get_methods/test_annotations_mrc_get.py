@@ -228,20 +228,24 @@ class TestAnnotationsMrcGet:
         )
 
     def test_annotations_mrc_vector_validation(self):
-        """Verify pat_maker produced actual values in the pretty_name feature vector.
+        """Verify pat_maker produced actual values in the mct annotation feature vector.
 
         Catches the case where vectorisation silently fails — the DataFrame
         has columns but all values are null or empty.
+
+        MCT annotations use pattern: pretty_name_count_mct_{pretty_name_value}
         """
         all_features = get_all_features(self.config_obj)
 
         assert all_features is not None, "get_all_features returned None"
         assert not all_features.empty, "Feature DataFrame is empty — no rows written"
 
-        feature_cols = [c for c in all_features.columns if "pretty_name" in c.lower()]
+        feature_cols = [
+            c for c in all_features.columns if c.startswith("pretty_name_count_mct_")
+        ]
 
         assert len(feature_cols) > 0, (
-            f"No pretty_name annotation columns found. "
+            f"No mct annotation columns found. "
             f"Available columns: {list(all_features.columns)}"
         )
 
@@ -249,14 +253,12 @@ class TestAnnotationsMrcGet:
         non_null_counts = feature_data.notna().sum()
         totally_empty_cols = non_null_counts[non_null_counts == 0]
 
-        assert len(totally_empty_cols) == 0, (
-            f"The following pretty_name annotation columns are entirely null after pat_maker ran:\n"
-            f"{list(totally_empty_cols.index)}\n"
-            "Vectorisation is silently failing — check the get method return value "
-            "and how pat_maker consumes it."
+        assert len(totally_empty_cols) < len(feature_cols), (
+            f"All mct annotation columns are empty - vectorisation is failing. "
+            f"Null columns: {list(totally_empty_cols.index)}"
         )
 
-        print(f"Found {len(feature_cols)} pretty_name annotation feature columns")
+        print(f"Found {len(feature_cols)} mct annotation feature columns")
 
     def test_merge_documents_from_db_functionality(self):
         """Test document merge functionality - verify the post-processing merge

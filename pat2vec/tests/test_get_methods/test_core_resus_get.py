@@ -8,6 +8,10 @@ import pandas as pd
 import pytest
 
 from pat2vec.main_pat2vec import main
+from pat2vec.pat2vec_get_methods.get_method_core_resus import get_core_resus
+from pat2vec.pat2vec_search.cogstack_search_methods import (
+    initialize_cogstack_client,
+)
 from pat2vec.util.config_pat2vec import config_class
 from pat2vec.util.elasticsearch_methods import ingest_data_to_elasticsearch
 from pat2vec.util.get_dummy_data_cohort_searcher import (
@@ -17,10 +21,6 @@ from pat2vec.util.get_dummy_data_cohort_searcher import (
 from pat2vec.util.helper_functions import get_all_features
 from pat2vec.util.logger_setup import setup_logger
 from pat2vec.util.post_processing_build_methods import merge_core_resus_csv
-from pat2vec.pat2vec_get_methods.get_method_core_resus import get_core_resus
-from pat2vec.pat2vec_search.cogstack_search_methods import (
-    initialize_cogstack_client,
-)
 
 random_seed_value = 42
 
@@ -73,7 +73,8 @@ class TestCoreResusGet:
         )
 
         cls.patient_ids = populate_elastic_with_dummy_data(
-            config_populate, n_patients=5
+            config_populate,
+            n_patients=5,
         )
         cls.cs = initialize_cogstack_client(config_populate)
 
@@ -211,15 +212,58 @@ class TestCoreResusGet:
 
     def test_5_feature_extraction(self):
         """Test feature extraction - verify features were extracted."""
-
         all_features = get_all_features(self.config_obj)
 
         assert all_features is not None, "All features should not be None"
         assert not all_features.empty, "Features DataFrame should not be empty"
 
+    def test_core_resus_vector_validation(self):
+        """Verify pat_maker produced actual values in the core_resus feature vector.
+
+        Catches the case where vectorisation silently fails — the DataFrame
+        has columns but all values are null or empty.
+
+        Core resus features use pattern: core_resus_status_{For|Not for} cardiopulmonary resuscitation
+        """
+        all_features = get_all_features(self.config_obj)
+
+        assert all_features is not None, "get_all_features returned None"
+        assert not all_features.empty, "Feature DataFrame is empty — no rows written"
+
+        feature_cols = [
+            c
+            for c in all_features.columns
+            if (
+                c.startswith("core_resus_status")
+                and any(
+                    c.endswith(suffix)
+                    for suffix in [
+                        "_For cardiopulmonary resuscitation",
+                        "_Not for cardiopulmonary resuscitation",
+                    ]
+                )
+                and c != "client_idcode"
+            )
+        ]
+
+        assert len(feature_cols) > 0, (
+            f"No core_resus_status columns found. "
+            f"Available columns: {list(all_features.columns)}"
+        )
+
+        feature_data = all_features[feature_cols]
+        non_null_counts = feature_data.notna().sum()
+        totally_empty_cols = non_null_counts[non_null_counts == 0]
+
+        assert len(totally_empty_cols) < len(feature_cols), (
+            f"All core_resus status columns are empty - vectorisation is failing. "
+            f"Null columns: {list(totally_empty_cols.index)}"
+        )
+
+        print(f"Found {len(feature_cols)} core_resus feature columns")
+
     def test_core_resus_data_retrieval(self):
         """Test core resus data retrieval - verify CORE_RESUS features can be retrieved."""
-
         all_pat_list = self.pat2vec_obj.all_patient_list
         assert len(all_pat_list) > 0, "Patient list should not be empty"
 
@@ -243,7 +287,6 @@ class TestCoreResusGet:
 
     def test_merge_core_resus_data_functionality(self):
         """Test merge core resus data functionality - verify merge function creates CSV."""
-
         all_pat_list = self.pat2vec_obj.all_patient_list
         merged_path = merge_core_resus_csv(
             all_pat_list,

@@ -348,8 +348,6 @@ def get_vte_status_features(
     start_year, start_month, end_year, end_month, start_day, end_day = (
         get_start_end_year_month(target_date_range, config_obj=config_obj)
     )
-    search_term = "CORE_VTE_STATUS"
-    vte_time_field = "observationdocument_recordeddtm"
 
     if pat_batch.empty:
         return pd.DataFrame({"client_idcode": [current_pat_client_id_code]})
@@ -364,18 +362,19 @@ def get_vte_status_features(
             vte_time_field,
         )
     else:
-        current_pat_raw = search_vte_status_data(
+        current_pat_raw = search_vte(
             cohort_searcher_with_terms_and_search=cohort_searcher_with_terms_and_search,
             client_id_codes=current_pat_client_id_code,
-            client_idcode_name=config_obj.client_idcode_term_name,
-            vte_time_field=vte_time_field,
+            observations_time_field=vte_time_field,
             start_year=start_year,
             start_month=start_month,
             start_day=start_day,
             end_year=end_year,
             end_month=end_month,
             end_day=end_day,
-            search_term=search_term,
+            additional_custom_search_string=None,
+            client_idcode_term_name=config_obj.client_idcode_term_name,
+            index_name="observations",
             output_filename=None,
             config_obj=config_obj,
         )

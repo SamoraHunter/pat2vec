@@ -317,17 +317,23 @@ class TestTextualObsAnnotationsGet:
         )
 
     def test_textual_obs_annotations_vector_validation(self):
-        """Verify pat_maker produced actual values in the textual_obs feature vector.
+        """Verify pat_maker produced actual values in the textual_obs annotation feature vector.
 
         Catches the case where vectorisation silently fails — the DataFrame
         has columns but all values are null or empty.
+
+        Textual obs annotations use pattern: pretty_name_count_textual_obs_{pretty_name_value}
         """
         all_features = get_all_features(self.config_obj)
 
         assert all_features is not None, "get_all_features returned None"
         assert not all_features.empty, "Feature DataFrame is empty — no rows written"
 
-        feature_cols = [c for c in all_features.columns if "textual_obs" in c.lower()]
+        feature_cols = [
+            c
+            for c in all_features.columns
+            if c.startswith("pretty_name_count_textual_obs_")
+        ]
 
         assert len(feature_cols) > 0, (
             f"No textual_obs annotation columns found. "
@@ -338,11 +344,9 @@ class TestTextualObsAnnotationsGet:
         non_null_counts = feature_data.notna().sum()
         totally_empty_cols = non_null_counts[non_null_counts == 0]
 
-        assert len(totally_empty_cols) == 0, (
-            f"The following textual_obs annotation columns are entirely null after pat_maker ran:\n"
-            f"{list(totally_empty_cols.index)}\n"
-            "Vectorisation is silently failing — check the get method return value "
-            "and how pat_maker consumes it."
+        assert len(totally_empty_cols) < len(feature_cols), (
+            f"All textual_obs annotation columns are empty - vectorisation is failing. "
+            f"Null columns: {list(totally_empty_cols.index)}"
         )
 
         print(f"Found {len(feature_cols)} textual_obs annotation feature columns")

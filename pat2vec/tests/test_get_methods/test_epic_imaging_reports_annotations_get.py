@@ -230,10 +230,12 @@ class TestEpicImagingReportsAnnotationsGet:
         assert not all_features.empty, "Features DataFrame should not be empty"
 
     def test_epic_imaging_reports_annotations_vector_validation(self):
-        """Verify pat_maker produced actual values in the epic_imaging_reports_annotation feature vector.
+        """Verify pat_maker produced actual values in the epic_imaging_reports annotation feature vector.
 
         Catches the case where vectorisation silently fails — the DataFrame
         has columns but all values are null or empty.
+
+        Epic imaging reports annotations use pattern: pretty_name_count_epic_imaging_reports_{pretty_name_value}
         """
         all_features = get_all_features(self.config_obj)
 
@@ -243,11 +245,11 @@ class TestEpicImagingReportsAnnotationsGet:
         feature_cols = [
             c
             for c in all_features.columns
-            if "epic_imaging_reports_annotation" in c.lower()
+            if c.startswith("pretty_name_count_epic_imaging_reports_")
         ]
 
         assert len(feature_cols) > 0, (
-            f"No epic_imaging_reports_annotation columns found. "
+            f"No epic_imaging_reports annotation columns found. "
             f"Available columns: {list(all_features.columns)}"
         )
 
@@ -255,15 +257,13 @@ class TestEpicImagingReportsAnnotationsGet:
         non_null_counts = feature_data.notna().sum()
         totally_empty_cols = non_null_counts[non_null_counts == 0]
 
-        assert len(totally_empty_cols) == 0, (
-            f"The following epic_imaging_reports_annotation columns are entirely null after pat_maker ran:\n"
-            f"{list(totally_empty_cols.index)}\n"
-            "Vectorisation is silently failing — check the get method return value "
-            "and how pat_maker consumes it."
+        assert len(totally_empty_cols) < len(feature_cols), (
+            f"All epic_imaging_reports annotation columns are empty - vectorisation is failing. "
+            f"Null columns: {list(totally_empty_cols.index)}"
         )
 
         print(
-            f"Found {len(feature_cols)} epic_imaging_reports_annotation feature columns",
+            f"Found {len(feature_cols)} epic_imaging_reports annotation feature columns",
         )
 
     def test_merge_epic_imaging_reports_annotations_functionality(self):

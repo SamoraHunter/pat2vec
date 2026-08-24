@@ -253,7 +253,7 @@ def get_bed(
         current_pat_raw = pd.DataFrame()
 
     features = pd.DataFrame(
-        data=[current_pat_client_id_code],
+        data=[[current_pat_client_id_code]],
         columns=["client_idcode"],
     )
 
@@ -377,7 +377,7 @@ def get_bed_features(
         current_pat_raw = pd.DataFrame()
 
     features = pd.DataFrame(
-        data=[current_pat_client_id_code],
+        data=[[current_pat_client_id_code]],
         columns=["client_idcode"],
     )
 

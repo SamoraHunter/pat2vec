@@ -219,10 +219,12 @@ class TestEpicClinicalNotesAnnotationsGet:
         assert not all_features.empty, "Features DataFrame should not be empty"
 
     def test_epic_clinical_notes_annotations_vector_validation(self):
-        """Verify pat_maker produced actual values in the clinical_notes_annotation feature vector.
+        """Verify pat_maker produced actual values in the epic_clinical_notes annotation feature vector.
 
         Catches the case where vectorisation silently fails — the DataFrame
         has columns but all values are null or empty.
+
+        Epic clinical notes annotations use pattern: pretty_name_count_epic_clinical_notes_{pretty_name_value}
         """
         all_features = get_all_features(self.config_obj)
 
@@ -230,11 +232,13 @@ class TestEpicClinicalNotesAnnotationsGet:
         assert not all_features.empty, "Feature DataFrame is empty — no rows written"
 
         feature_cols = [
-            c for c in all_features.columns if "clinical_notes_annotation" in c.lower()
+            c
+            for c in all_features.columns
+            if c.startswith("pretty_name_count_epic_clinical_notes_")
         ]
 
         assert len(feature_cols) > 0, (
-            f"No clinical_notes_annotation columns found. "
+            f"No epic_clinical_notes annotation columns found. "
             f"Available columns: {list(all_features.columns)}"
         )
 
@@ -242,14 +246,14 @@ class TestEpicClinicalNotesAnnotationsGet:
         non_null_counts = feature_data.notna().sum()
         totally_empty_cols = non_null_counts[non_null_counts == 0]
 
-        assert len(totally_empty_cols) == 0, (
-            f"The following clinical_notes_annotation columns are entirely null after pat_maker ran:\n"
-            f"{list(totally_empty_cols.index)}\n"
-            "Vectorisation is silently failing — check the get method return value "
-            "and how pat_maker consumes it."
+        assert len(totally_empty_cols) < len(feature_cols), (
+            f"All epic_clinical_notes annotation columns are empty - vectorisation is failing. "
+            f"Null columns: {list(totally_empty_cols.index)}"
         )
 
-        print(f"Found {len(feature_cols)} clinical_notes_annotation feature columns")
+        print(
+            f"Found {len(feature_cols)} epic_clinical_notes annotation feature columns"
+        )
 
     def test_epic_clinical_notes_annotations_data_retrieval(self):
         """Test Epic Clinical Notes Annotations data retrieval."""

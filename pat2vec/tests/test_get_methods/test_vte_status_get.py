@@ -8,18 +8,18 @@ import pandas as pd
 import pytest
 
 from pat2vec.main_pat2vec import main
+from pat2vec.pat2vec_get_methods.get_method_vte_status import get_vte_status_features
+from pat2vec.pat2vec_search.cogstack_search_methods import (
+    initialize_cogstack_client,
+)
 from pat2vec.util.config_pat2vec import config_class
+from pat2vec.util.elasticsearch_methods import ingest_data_to_elasticsearch
 from pat2vec.util.get_dummy_data_cohort_searcher import (
     generate_vte_status_data,
     populate_elastic_with_dummy_data,
 )
 from pat2vec.util.helper_functions import get_all_features
 from pat2vec.util.logger_setup import setup_logger
-from pat2vec.pat2vec_get_methods.get_method_vte_status import get_vte_status_features
-from pat2vec.pat2vec_search.cogstack_search_methods import (
-    initialize_cogstack_client,
-)
-from pat2vec.util.elasticsearch_methods import ingest_data_to_elasticsearch
 
 random_seed_value = 42
 
@@ -54,7 +54,8 @@ class TestVteStatusGet:
             try:
                 shutil.rmtree(dir_to_remove, ignore_errors=True)
             except Exception as e:
-                raise RuntimeError(f"Failed to clean up '{dir_to_remove}': {e}") from e
+                error_msg = f"Failed to clean up '{dir_to_remove}': {e}"
+                raise RuntimeError(error_msg) from e
 
         schema_path = os.path.abspath("test_files/elastic_schemas.json")
         config_populate = config_class(
@@ -72,7 +73,8 @@ class TestVteStatusGet:
         )
 
         cls.patient_ids = populate_elastic_with_dummy_data(
-            config_populate, n_patients=5
+            config_populate,
+            n_patients=5,
         )
         cls.cs = initialize_cogstack_client(config_populate)
 
@@ -199,8 +201,6 @@ class TestVteStatusGet:
 
     def test_5_feature_extraction(self):
         """Test feature extraction - verify features were extracted."""
-        from pat2vec.util.helper_functions import get_all_features
-
         all_features = get_all_features(self.config_obj)
 
         assert all_features is not None, "All features should not be None"
@@ -215,8 +215,6 @@ class TestVteStatusGet:
         Note: This test checks that not ALL features are empty since VTE status
         may generate time-distributed features rather than summary statistics.
         """
-        from pat2vec.util.helper_functions import get_all_features
-
         all_features = get_all_features(self.config_obj)
 
         assert all_features is not None, "get_all_features returned None"
@@ -226,7 +224,7 @@ class TestVteStatusGet:
             c
             for c in all_features.columns
             if (
-                (c.startswith("vte_") or c.startswith("vte_status_"))
+                (c.startswith(("vte_", "vte_status_")))
                 and "_date_time_stamp" not in c
                 and c != "client_idcode"
             )
@@ -235,7 +233,7 @@ class TestVteStatusGet:
         if len(feature_cols) == 0:
             print(
                 f"Note: No vte_* summary feature columns found. "
-                f"Available columns: {list(all_features.columns)[:20]}..."
+                f"Available columns: {list(all_features.columns)[:20]}...",
             )
 
         else:
@@ -252,10 +250,6 @@ class TestVteStatusGet:
 
     def test_vte_status_data_retrieval(self):
         """Test VTE status data retrieval - verify VTE status features can be retrieved."""
-        from pat2vec.pat2vec_get_methods.get_method_vte_status import (
-            get_vte_status_features,
-        )
-
         all_pat_list = self.pat2vec_obj.all_patient_list
         assert len(all_pat_list) > 0, "Patient list should not be empty"
 

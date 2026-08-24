@@ -216,6 +216,40 @@ class TestCore02Get:
         assert all_features is not None, "All features should not be None"
         assert not all_features.empty, "Features DataFrame should not be empty"
 
+    def test_core02_vector_validation(self):
+        """Verify pat_maker produced actual values in the core_02 feature vector.
+
+        Catches the case where vectorisation silently fails — the DataFrame
+        has columns but all values are null or empty.
+        """
+        all_features = get_all_features(self.config_obj)
+
+        assert all_features is not None, "get_all_features returned None"
+        assert not all_features.empty, "Feature DataFrame is empty — no rows written"
+
+        feature_cols = [
+            c
+            for c in all_features.columns
+            if ("core_02" in c.lower() or "core02" in c.lower())
+            and c != "client_idcode"
+        ]
+
+        assert len(feature_cols) > 0, (
+            f"No core_02-related columns found in feature vector. "
+            f"Available columns: {list(all_features.columns)}"
+        )
+
+        feature_data = all_features[feature_cols]
+        non_null_counts = feature_data.notna().sum()
+        totally_empty_cols = non_null_counts[non_null_counts == 0]
+
+        assert len(totally_empty_cols) < len(feature_cols), (
+            f"All core_02 columns are empty - vectorisation is failing. "
+            f"Null columns: {list(totally_empty_cols.index)}"
+        )
+
+        print(f"Found {len(feature_cols)} core_02 feature columns")
+
     def test_core02_data_retrieval(self):
         """Test CORE_SpO2 data retrieval - verify CORE_SpO2 features can be retrieved."""
         all_pat_list = self.pat2vec_obj.all_patient_list

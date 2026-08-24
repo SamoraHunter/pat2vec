@@ -106,7 +106,9 @@ class TestAppointmentsGet:
         df_appointments = df_appointments.where(pd.notnull(df_appointments), None)
 
         ingest_data_to_elasticsearch(
-            df_appointments, "pims_apps", es_client=cls.cs.elastic
+            df_appointments,
+            "pims_apps",
+            es_client=cls.cs.elastic,
         )
         cls.cs.elastic.indices.refresh(index="pims_apps")
 
@@ -203,6 +205,39 @@ class TestAppointmentsGet:
         assert all_features is not None, "All features should not be None"
         assert not all_features.empty, "Features DataFrame should not be empty"
 
+    def test_appointments_vector_validation(self):
+        """Verify pat_maker produced actual values in the appointments feature vector.
+
+        Catches the case where vectorisation silently fails — the DataFrame
+        has columns but all values are null or empty.
+        """
+        all_features = get_all_features(self.config_obj)
+
+        assert all_features is not None, "get_all_features returned None"
+        assert not all_features.empty, "Feature DataFrame is empty — no rows written"
+
+        feature_cols = [
+            c
+            for c in all_features.columns
+            if "appointments" in c.lower() and c != "client_idcode"
+        ]
+
+        assert len(feature_cols) > 0, (
+            f"No appointments-related columns found in feature vector. "
+            f"Available columns: {list(all_features.columns)}"
+        )
+
+        feature_data = all_features[feature_cols]
+        non_null_counts = feature_data.notna().sum()
+        totally_empty_cols = non_null_counts[non_null_counts == 0]
+
+        assert len(totally_empty_cols) < len(feature_cols), (
+            f"All appointments columns are empty - vectorisation is failing. "
+            f"Null columns: {list(totally_empty_cols.index)}"
+        )
+
+        print(f"Found {len(feature_cols)} appointments feature columns")
+
     def test_appointments_data_retrieval(self):
         all_pat_list = self.pat2vec_obj.all_patient_list
         assert len(all_pat_list) > 0, "Patient list should not be empty"
@@ -229,7 +264,9 @@ class TestAppointmentsGet:
     def test_merge_appointments_data_functionality(self):
         all_pat_list = self.pat2vec_obj.all_patient_list
         merged_path = merge_appointments_csv(
-            all_pat_list, self.config_obj, overwrite=True
+            all_pat_list,
+            self.config_obj,
+            overwrite=True,
         )
         assert os.path.exists(merged_path), f"Merged file should exist at {merged_path}"
         merged_data = pd.read_csv(merged_path)
