@@ -223,7 +223,11 @@ class TestBMIGet:
         assert all_features is not None, "get_all_features returned None"
         assert not all_features.empty, "Feature DataFrame is empty — no rows written"
 
-        feature_cols = [c for c in all_features.columns if c.startswith("bmi_")]
+        feature_cols = [
+            c
+            for c in all_features.columns
+            if any(c.startswith(prefix) for prefix in ["bmi_", "weight_", "height_"])
+        ]
 
         assert len(feature_cols) > 0, (
             f"No BMI-related columns found in feature vector. "

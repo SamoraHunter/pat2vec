@@ -219,7 +219,10 @@ class TestAppointmentsGet:
         feature_cols = [
             c
             for c in all_features.columns
-            if "appointments" in c.lower() and c != "client_idcode"
+            if any(
+                c.startswith(prefix)
+                for prefix in ["ConsultantCode_", "ClinicCode_", "AppointmentType_"]
+            )
         ]
 
         assert len(feature_cols) > 0, (

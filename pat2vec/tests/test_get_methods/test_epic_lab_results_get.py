@@ -220,6 +220,8 @@ class TestEpicLabResultsGet:
 
         Catches the case where vectorisation silently fails — the DataFrame
         has columns but all values are null or empty.
+
+        Features use pattern: epic_lab_name_{name} and epic_lab_abnormal_{level}
         """
         all_features = get_all_features(self.config_obj)
 
@@ -229,11 +231,11 @@ class TestEpicLabResultsGet:
         feature_cols = [
             c
             for c in all_features.columns
-            if "epic_lab_results" in c.lower() and c != "client_idcode"
+            if c.startswith("epic_lab_") and c != "client_idcode"
         ]
 
         assert len(feature_cols) > 0, (
-            f"No epic_lab_results-related columns found in feature vector. "
+            f"No epic_lab-related columns found in feature vector. "
             f"Available columns: {list(all_features.columns)}"
         )
 
@@ -242,11 +244,11 @@ class TestEpicLabResultsGet:
         totally_empty_cols = non_null_counts[non_null_counts == 0]
 
         assert len(totally_empty_cols) < len(feature_cols), (
-            f"All epic_lab_results columns are empty - vectorisation is failing. "
+            f"All epic_lab columns are empty - vectorisation is failing. "
             f"Null columns: {list(totally_empty_cols.index)}"
         )
 
-        print(f"Found {len(feature_cols)} epic_lab_results feature columns")
+        print(f"Found {len(feature_cols)} epic_lab feature columns")
 
     def test_epic_lab_results_data_retrieval(self):
         """Test epic_lab_results data retrieval - verify features can be retrieved."""

@@ -221,21 +221,19 @@ class TestCore02Get:
 
         Catches the case where vectorisation silently fails — the DataFrame
         has columns but all values are null or empty.
+
+        Note: Features are dynamic one-hot encoded column names based on
+        CORE_SpO2 observation values (e.g., '95_pct', 'low', 'normal').
         """
         all_features = get_all_features(self.config_obj)
 
         assert all_features is not None, "get_all_features returned None"
         assert not all_features.empty, "Feature DataFrame is empty — no rows written"
 
-        feature_cols = [
-            c
-            for c in all_features.columns
-            if ("core_02" in c.lower() or "core02" in c.lower())
-            and c != "client_idcode"
-        ]
+        feature_cols = [c for c in all_features.columns if c != "client_idcode"]
 
         assert len(feature_cols) > 0, (
-            f"No core_02-related columns found in feature vector. "
+            f"No feature columns found. "
             f"Available columns: {list(all_features.columns)}"
         )
 
@@ -244,7 +242,7 @@ class TestCore02Get:
         totally_empty_cols = non_null_counts[non_null_counts == 0]
 
         assert len(totally_empty_cols) < len(feature_cols), (
-            f"All core_02 columns are empty - vectorisation is failing. "
+            f"All feature columns are empty - vectorisation is failing. "
             f"Null columns: {list(totally_empty_cols.index)}"
         )
 

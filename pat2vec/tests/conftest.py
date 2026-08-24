@@ -191,13 +191,45 @@ def _cleanup_test_artifacts():
 from pat2vec.util.docker_elastic import ElasticContainer
 
 
+def _get_worker_port_offset() -> int:
+    """Get port offset based on pytest-xdist worker or unique identifier.
+
+    This ensures parallel tests don't conflict when running multiple ES containers.
+
+    Returns 0 if not running in a worker environment.
+    """
+    # Check for pytest-xdist worker ID
+    worker_id = os.environ.get("PYTEST_XDIST_WORKER")
+    if worker_id:
+        # Extract numeric part like 'gw0', 'gw1', etc.
+        try:
+            return int(worker_id.replace("gw", "").replace("w", ""))
+        except (ValueError, AttributeError):
+            pass
+
+    # Check for parallel-test worker ID (used by pytest-parallel)
+    parallel_worker = os.environ.get("PARALLEL_TEST_WORKER")
+    if parallel_worker:
+        try:
+            return int(parallel_worker)
+        except (ValueError, AttributeError):
+            pass
+
+    # No worker environment detected
+    return 0
+
+
 @pytest.fixture(scope="session")
 def elastic_container(tmp_path_factory):
     """Single ES container shared across all get-method test classes.
     Yields the credential file path so each class can build its own
     config exactly as before — nothing else in each class changes.
+
+    Uses dynamic port allocation based on pytest worker ID to support
+    parallel test execution without port conflicts.
     """
-    container = ElasticContainer()
+    worker_offset = _get_worker_port_offset()
+    container = ElasticContainer(port_offset=worker_offset)
     container.stop()  # clear any stale container from a previous run
 
     if not container.start():
