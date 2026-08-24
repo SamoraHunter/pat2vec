@@ -106,7 +106,7 @@ class config_class:
         individual_patient_id_column_name: str | None = None,
         individual_patient_window_controls_method: str = "full",  # full, random
         dropna_doc_timestamps: bool = True,
-        time_window_interval_delta: relativedelta = relativedelta(days=1),
+        time_window_interval_delta: relativedelta = relativedelta(years=31),
         feature_engineering_arg_dict: dict[str, Any] | None = None,
         split_clinical_notes: bool = True,
         lookback: bool = True,
