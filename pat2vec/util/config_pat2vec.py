@@ -610,42 +610,51 @@ class config_class:
 
             logger.info(f"self.bloods_time_field: {self.bloods_time_field}")
 
+        default_main_options = {
+            "demo": True,
+            "bmi": False,
+            "bloods": False,
+            "drugs": False,
+            "diagnostics": False,
+            "core_02": False,
+            "bed": False,
+            "vte_status": False,
+            "hosp_site": False,
+            "core_resus": False,
+            "obs": False,
+            "news": False,
+            "smoking": False,
+            "annotations": False,
+            "annotations_mrc": False,
+            "negated_presence_annotations": False,
+            "appointments": False,
+            "annotations_reports": False,
+            "covid": False,
+            "textual_obs": False,
+            # Epic Options
+            "epic_encounters": False,
+            "epic_clinical_notes": False,
+            "epic_medical_history": False,
+            "epic_orders": False,
+            "epic_orders_annotations": False,
+            "epic_lab_results": False,
+            "epic_patients": False,
+            "epic_imaging_reports": False,
+            "epic_clinical_notes_appointments": False,
+            # Epic Annotation Options (required when using epic raw data with database backend)
+            "epic_clinical_notes_annotations": False,
+            "epic_medical_history_annotations": False,
+            "epic_imaging_reports_annotations": False,
+        }
+
+        if main_options is not None:
+            self._validate_main_options(main_options, default_main_options)
+
         if self.main_options is None:
             if self.verbosity >= 1:
                 logger.info("Default main_options set!")
 
-            self.main_options = {
-                "demo": True,
-                "bmi": False,
-                "bloods": False,
-                "drugs": False,
-                "diagnostics": False,
-                "core_02": False,
-                "bed": False,
-                "vte_status": False,
-                "hosp_site": False,
-                "core_resus": False,
-                "obs": False,
-                "news": False,
-                "smoking": False,
-                "annotations": False,
-                "annotations_mrc": False,
-                "negated_presence_annotations": False,
-                "appointments": False,
-                "annotations_reports": False,
-                "covid": False,
-                "textual_obs": False,
-                # Epic Options
-                "epic_encounters": False,
-                "epic_clinical_notes": False,
-                "epic_medical_history": False,
-                "epic_orders": False,
-                "epic_orders_annotations": False,
-                "epic_lab_results": False,
-                "epic_patients": False,
-                "epic_imaging_reports": False,
-                "epic_clinical_notes_appointments": False,
-            }
+            self.main_options = default_main_options
             if self.verbosity >= 1:
                 logger.info(self.main_options)
 
@@ -1425,6 +1434,87 @@ class config_class:
             "epic_clinical_notes_appointments": True,
             "epic_clinical_notes_appointments_annotations": True,
         }
+
+    def _validate_main_options(
+        self,
+        user_options: dict[str, bool],
+        valid_options: dict[str, bool],
+    ) -> None:
+        """Validates user-provided main_options against valid options.
+
+        Args:
+        ----
+            user_options: Dictionary of options provided by the user.
+            valid_options: Dictionary of valid option names with default values.
+
+        Raises:
+        ------
+            ValueError: If any user-provided option is not in the valid options list.
+
+        """
+        valid_keys = set(valid_options.keys())
+        user_keys = set(user_options.keys())
+
+        invalid_keys = user_keys - valid_keys
+
+        if invalid_keys:
+            sorted_invalid = sorted(invalid_keys)
+            sorted_valid = sorted(valid_keys)
+
+            error_lines = [
+                f"Invalid main_options key(s): {', '.join(sorted_invalid)}",
+            ]
+
+            for invalid_key in sorted_invalid:
+                suggestions = [
+                    valid_key
+                    for valid_key in sorted_valid
+                    if self._levenshtein_distance(invalid_key, valid_key) <= 3
+                ]
+                if suggestions:
+                    error_lines.append(
+                        f"  - '{invalid_key}' not found. Did you mean: {', '.join(sorted(suggestions))}?",
+                    )
+                else:
+                    error_lines.append(
+                        f"  - '{invalid_key}' not found. No close matches found.",
+                    )
+
+            error_lines.append(f"\nValid options are: {', '.join(sorted_valid)}")
+
+            msg = "\n".join(error_lines)
+            raise ValueError(msg)
+
+    def _levenshtein_distance(self, s1: str, s2: str) -> int:
+        """Calculates the Levenshtein distance between two strings.
+
+        Args:
+        ----
+            s1: First string.
+            s2: Second string.
+
+        Returns:
+        -------
+            The edit distance between s1 and s2.
+
+        """
+        if len(s1) < len(s2):
+            return self._levenshtein_distance(s2, s1)
+
+        if len(s2) == 0:
+            return len(s1)
+
+        previous_row = range(len(s2) + 1)
+        for i, c1 in enumerate(s1):
+            current_row = [i + 1]
+            for j, c2 in enumerate(s2):
+                insertions = previous_row[j + 1] + 1
+                deletions = current_row[j] + 1
+                substitutions = previous_row[j] + (c1 != c2)
+                current_row.append(min(insertions, deletions, substitutions))
+            previous_row = current_row
+
+        return previous_row[-1]
 
     def _update_main_options(self) -> None:
         """Disables main options that are not implemented for testing.

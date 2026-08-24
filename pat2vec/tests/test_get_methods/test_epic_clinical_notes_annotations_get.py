@@ -244,8 +244,7 @@ class TestEpicClinicalNotesAnnotationsGet:
             f"Available columns: {list(all_features.columns)}"
         )
 
-        feature_data = all_features[feature_cols]
-        non_null_counts = feature_data.notna().sum()
+        non_null_counts = all_features[feature_cols].notna().sum()
         totally_empty_cols = non_null_counts[non_null_counts == 0]
 
         assert len(totally_empty_cols) < len(feature_cols), (
@@ -253,8 +252,34 @@ class TestEpicClinicalNotesAnnotationsGet:
             f"Null columns: {list(totally_empty_cols.index)}"
         )
 
+        feature_values = all_features[feature_cols].fillna(0).to_numpy().astype(float)
+        if feature_values.sum() <= 0:
+            error_msg = (
+                "FATAL ERROR: all epic_clinical_notes annotation feature values are zero or negative. "
+                "Feature extraction produced no meaningful numeric output."
+            )
+            raise RuntimeError(error_msg)
+
         print(
             f"Found {len(feature_cols)} epic_clinical_notes annotation feature columns",
+        )
+        print("Non-null counts per feature column:")
+        for col in sorted(feature_cols):
+            val = all_features[col].notna().sum()
+            print(f"  {col}: {val} non-null values")
+
+        annotation_values = (
+            all_features[feature_cols].fillna(0).to_numpy().astype(float)
+        )
+        if annotation_values.sum() <= 0:
+            error_msg = (
+                "FATAL ERROR: all epic_clinical_notes annotation feature values in the "
+                "feature store are zero. Ingested data was not extracted."
+            )
+            raise RuntimeError(error_msg)
+
+        print(
+            f"Total annotation counts in feature store: {int(annotation_values.sum())}",
         )
 
     def test_epic_clinical_notes_annotations_data_retrieval(self):

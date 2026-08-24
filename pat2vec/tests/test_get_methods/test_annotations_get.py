@@ -1,6 +1,5 @@
 import os
 import random
-import shutil
 import sys
 
 import numpy as np
@@ -9,6 +8,10 @@ import pytest
 
 from pat2vec.main_pat2vec import main
 from pat2vec.pat2vec_search.cogstack_search_methods import initialize_cogstack_client
+from pat2vec.tests.test_get_methods.temp_setup import (
+    cleanup_test_temp_dir,
+    setup_test_temp_dir,
+)
 from pat2vec.util.config_pat2vec import config_class
 from pat2vec.util.get_dummy_data_cohort_searcher import populate_elastic_with_dummy_data
 from pat2vec.util.helper_functions import get_all_features
@@ -16,10 +19,6 @@ from pat2vec.util.logger_setup import setup_logger
 from pat2vec.util.post_processing_build_methods import (
     build_merged_epr_mct_annot_df,
     build_merged_epr_mct_doc_df,
-)
-from pat2vec.tests.test_get_methods.temp_setup import (
-    cleanup_test_temp_dir,
-    setup_test_temp_dir,
 )
 
 random_seed_value = 42
@@ -42,9 +41,15 @@ class TestAnnotationsGet:
         temp_dir, repo_root = setup_test_temp_dir()
         cls.temp_dir = temp_dir
 
-        request.addfinalizer(lambda: cleanup_test_temp_dir(cls.temp_dir))
+        # Store original cwd and change to temp dir for relative paths
+        cls._original_cwd = os.getcwd()
+        os.chdir(temp_dir)
 
-        current_dir = os.getcwd()
+        def _cleanup():
+            os.chdir(cls._original_cwd)
+            cleanup_test_temp_dir(cls.temp_dir)
+
+        request.addfinalizer(_cleanup)
 
         sys.path.insert(0, os.path.join(repo_root, "pat2vec"))
         sys.path.append(repo_root)
@@ -55,8 +60,8 @@ class TestAnnotationsGet:
         cls.DB_FILENAME = "temp_annotations_db.sqlite"
         cls.DB_PATH = os.path.join(cls.PROJ_NAME, "outputs", cls.DB_FILENAME)
 
-        # Create config for population
-        schema_path = os.path.abspath("test_files/elastic_schemas.json")
+        # Create config for population using absolute schema path from repo_root
+        schema_path = os.path.join(repo_root, "test_files", "elastic_schemas.json")
         config_populate = config_class(
             proj_name="annotations_test_project",
             credentials_path=cls.cred_path,

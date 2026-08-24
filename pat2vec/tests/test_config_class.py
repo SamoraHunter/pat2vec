@@ -223,3 +223,57 @@ class TestConfigClass(unittest.TestCase):
                 password="pw",
                 testing=True,
             )
+
+    def test_invalid_main_options_raises_error(self):
+        """Test that invalid main_options keys raise ValueError with suggestions."""
+        with self.assertRaisesRegex(ValueError, "Invalid main_options key"):
+            with patch("builtins.print"):
+                config_class(
+                    proj_name="test",
+                    main_options={"invalid_key": True},
+                    testing=True,
+                )
+
+    def test_invalid_main_options_with_suggestions(self):
+        """Test that close typos suggest correct options."""
+        with self.assertRaisesRegex(ValueError, "Did you mean: demo"):
+            with patch("builtins.print"):
+                config_class(
+                    proj_name="test",
+                    main_options={"demoo": True},
+                    testing=True,
+                )
+
+    def test_invalid_main_options_multiple_errors(self):
+        """Test validation reports multiple invalid keys."""
+        with self.assertRaisesRegex(
+            ValueError, "Invalid main_options key.*demo1, demo2"
+        ):
+            with patch("builtins.print"):
+                config_class(
+                    proj_name="test",
+                    main_options={"demo1": True, "demo2": False},
+                    testing=True,
+                )
+
+    def test_valid_main_options_accepted(self):
+        """Test that valid main_options are accepted."""
+        with patch("builtins.print"):
+            config = config_class(
+                proj_name="test",
+                main_options={"demo": True, "bloods": False},
+                testing=True,
+            )
+        self.assertTrue(config.main_options["demo"])
+        self.assertFalse(config.main_options["bloods"])
+
+    def test_partial_main_options_replaced(self):
+        """Test that partial main_options completely replace defaults (existing behavior)."""
+        with patch("builtins.print"):
+            config = config_class(
+                proj_name="test",
+                main_options={"drugs": True},
+                testing=True,
+            )
+        self.assertTrue(config.main_options["drugs"])
+        # Other options are NOT set when using partial main_options - this is existing behavior

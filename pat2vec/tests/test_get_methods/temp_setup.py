@@ -1,8 +1,8 @@
 """Temporary output-directory setup for pat2vec pytest tests.
 
-Calling ``setup_test_temp_dir()`` redirects all relative-path artifacts
-(.project directories, SQLite databases, credentials files, logs) into a
-per-test temporary folder instead of the repository working tree.
+Calling ``setup_test_temp_dir()`` creates a temporary directory for test outputs
+instead of leaving them in the repository working tree. It returns the temp dir
+path so tests can explicitly change into it using ``os.chdir(temp_dir)`` if needed.
 
 Usage (uniform first fixture for every test class):
 
@@ -12,11 +12,14 @@ Usage (uniform first fixture for every test class):
         cls = type(self)
         cls.temp_dir, cls.repo_root = setup_test_temp_dir()
 
+        # Optionally change to temp directory for relative path handling:
+        cls._original_cwd = os.getcwd()
+        os.chdir(cls.temp_dir)
+
         # ... rest of your test setup
 
-Yield:
------
         cleanup_test_temp_dir(cls.temp_dir)
+        os.chdir(cls._original_cwd)
 
 The location of the per-test temp dir can be moved by setting the
 ``P2V_TEST_OUTPUT_DIR`` environment variable (a fresh subdirectory is
@@ -40,7 +43,7 @@ PAT2VEC_PKG_DIR = os.path.join(REPO_ROOT, "pat2vec")
 
 
 def setup_test_temp_dir(prefix: str = "pat2vec_test_") -> tuple:
-    """Create a per-test temp output directory, chdir into it, fix sys.path.
+    """Create a per-test temp output directory without changing cwd.
 
     Args:
     ----
@@ -52,7 +55,7 @@ def setup_test_temp_dir(prefix: str = "pat2vec_test_") -> tuple:
 
     Raises:
     ------
-        OSError: If the temp directory cannot be created or entered.
+        OSError: If the temp directory cannot be created.
 
     """
     base = os.environ.get("P2V_TEST_OUTPUT_DIR", "").strip()
@@ -62,7 +65,8 @@ def setup_test_temp_dir(prefix: str = "pat2vec_test_") -> tuple:
     else:
         temp_dir = tempfile.mkdtemp(prefix=prefix)
 
-    os.chdir(temp_dir)
+    # Set environment variable for tests to locate the temp directory
+    os.environ["P2V_TEST_OUTPUT_DIR"] = temp_dir
 
     for path in (PAT2VEC_PKG_DIR, REPO_ROOT, TEST_DIR):
         if path not in sys.path:

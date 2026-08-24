@@ -328,8 +328,14 @@ class TestEpicClinicalNotesAppointmentsAnnotationsGet:
         Catches the case where vectorisation silently fails — the DataFrame
         has columns but all values are null or empty.
 
+        Improved validation:
+        - Checks all columns have non-null values (no entirely null columns)
+        - Verifies feature values are meaningful (sum > 0) to catch cases where
+          extraction produces zeros only
+        - Reports per-column non-null counts for debugging
+
         Epic clinical notes appointments annotations use pattern:
-        pretty_name_count_epic_clinical_notes_{pretty_name_value} where pretty_name_value
+        pretty_name_count_epic_clinical_notes_appointments_{pretty_name_value} where pretty_name_value
         is derived from the 'pretty_name' field in the annotations database (ann_epic_clinical_notes_appointments table).
         """
         all_features = get_all_features(self.config_obj)
@@ -340,26 +346,37 @@ class TestEpicClinicalNotesAppointmentsAnnotationsGet:
         feature_cols = [
             c
             for c in all_features.columns
-            if c.startswith("pretty_name_count_epic_clinical_notes_")
+            if c.startswith("pretty_name_count_epic_clinical_notes_appointments_")
         ]
 
         assert len(feature_cols) > 0, (
-            f"No epic_clinical_notes annotation columns found. "
+            f"No epic_clinical_notes_appointments annotation columns found. "
             f"Available columns: {list(all_features.columns)}"
         )
 
-        feature_data = all_features[feature_cols]
-        non_null_counts = feature_data.notna().sum()
-        totally_empty_cols = non_null_counts[non_null_counts == 0]
+        non_null_counts = all_features[feature_cols].notna().sum()
+        totally_empty = non_null_counts[non_null_counts == 0]
 
-        assert len(totally_empty_cols) < len(feature_cols), (
-            f"All epic_clinical_notes annotation columns are empty - vectorisation is failing. "
-            f"Null columns: {list(totally_empty_cols.index)}"
+        assert len(totally_empty) == 0, (
+            f"The following epic_clinical_notes_appointments annotation feature columns are entirely null:\n"
+            f"{list(totally_empty.index)}\n"
+            "Vectorisation is silently failing — check the get method return value."
         )
+
+        feature_values = all_features[feature_cols].fillna(0).to_numpy().astype(float)
+        if feature_values.sum() <= 0:
+            error_msg = (
+                "FATAL ERROR: all epic_clinical_notes_appointments annotation feature values are zero. "
+                "Feature extraction produced no meaningful numeric output."
+            )
+            raise AssertionError(error_msg)
 
         print(
-            f"Found {len(feature_cols)} epic_clinical_notes annotation feature columns",
+            f"Found {len(feature_cols)} epic_clinical_notes_appointments annotation feature columns:",
         )
+        for col in sorted(feature_cols):
+            val = all_features[col].notna().sum()
+            print(f"  {col}: {val} non-null values")
 
     def test_merge_documents_from_db_functionality(self):
         """Test document merge functionality - verify the post-processing merge

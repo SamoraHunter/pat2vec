@@ -247,6 +247,15 @@ class TestCore02Get:
             f"Null columns: {list(totally_empty_cols.index)}"
         )
 
+        for col in feature_cols:
+            col_values = all_features[col].dropna()
+            if len(col_values) > 0:
+                invalid_values = col_values[~col_values.isin([0, 1])]
+                assert len(invalid_values) == 0, (
+                    f"Feature column '{col}' contains non-binary values. "
+                    f"Actual: {invalid_values.tolist()}, Expected: [0, 1]"
+                )
+
         print(f"Found {len(feature_cols)} core_02 feature columns")
 
     def test_core02_data_retrieval(self):
