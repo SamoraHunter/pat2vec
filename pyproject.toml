@@ -84,7 +84,8 @@ dev = [
     "sphinxcontrib-mermaid",
     "python-dotenv",
     "black",
-    "black[jupyter]"
+    "black[jupyter]",
+    "pytest-xdist"
 ]
 
 [tool.pytest.ini_options]

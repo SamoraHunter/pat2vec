@@ -103,10 +103,8 @@ class TestCovidGet:
             else covid_dfs[0]
         )
         df_covid = df_covid.where(pd.notnull(df_covid), None)
-        ingest_data_to_elasticsearch(
-            df_covid, "basic_observations", es_client=cls.cs.elastic
-        )
-        cls.cs.elastic.indices.refresh(index="basic_observations")
+        ingest_data_to_elasticsearch(df_covid, "observations", es_client=cls.cs.elastic)
+        cls.cs.elastic.indices.refresh(index="observations")
 
         os.makedirs(os.path.dirname(cls.DB_PATH), exist_ok=True)
         if os.path.exists(cls.DB_PATH):
