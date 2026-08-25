@@ -237,6 +237,53 @@ class TestCurrentPatAnnotationsMrcCsGet:
 
         print(f"Found {len(feature_cols)} mct annotation feature columns")
 
+    def test_annotations_mrc_expected_values(self):
+        """Validate specific expected MRC annotation feature values.
+
+        With random_seed=42 and generate_observations_MRC_text_data:
+        - Each patient has 3 observations with obscatalogmasteritem_displayname = "AoMRC_ClinicalSummary_FT"
+        - These annotations go through MedCAT which extracts pretty_name labels
+        - Feature computation creates count-based features: pretty_name_count_mct_{pretty_name}
+
+        Expected values (based on dummy data and annotation processing):
+        - At least some pretty_name_count_mct_* columns should have non-zero counts
+        - All feature values should be non-negative integers or floats representing counts
+        """
+        from pat2vec.util.helper_functions import get_all_features
+
+        all_features = get_all_features(self.config_obj)
+
+        assert all_features is not None, "get_all_features returned None"
+        assert not all_features.empty, "Feature DataFrame is empty"
+
+        feature_cols = [
+            c for c in all_features.columns if c.startswith("pretty_name_count_mct_")
+        ]
+
+        assert (
+            len(feature_cols) > 0
+        ), f"No MRC annotation columns found. Available: {list(all_features.columns)}"
+
+        feature_data = all_features[feature_cols]
+
+        for col in feature_cols:
+            values = all_features[col].dropna()
+
+            if len(values) == 0:
+                continue
+
+            assert (
+                values >= 0
+            ).all(), f"Column '{col}' should have non-negative count values, got min={values.min()}"
+
+        non_null_counts = feature_data.notna().sum()
+        totally_empty_cols = non_null_counts[non_null_counts == 0]
+
+        assert len(totally_empty_cols) < len(feature_cols), (
+            f"All annotation columns are empty - vectorisation is failing. "
+            f"Null columns: {list(totally_empty_cols.index)}"
+        )
+
     def test_annotations_mrc_data_retrieval(self):
         from pat2vec.pat2vec_get_methods.get_method_current_pat_annotations_mrc_cs import (
             get_current_pat_annotations_mrc_cs,

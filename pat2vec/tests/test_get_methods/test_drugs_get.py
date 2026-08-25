@@ -253,6 +253,99 @@ class TestDrugsGet:
             f"Null columns: {list(totally_empty_cols.index)}"
         )
 
+    def test_drugs_expected_values(self):
+        """Validate specific expected drug feature values.
+
+        With random_seed=42, the test setup generates deterministic dummy data.
+        This test validates that when drug features are present, they meet expected
+        constraints:
+        - Count-based features (_num-drug-order) must be positive integers if present
+        - Day-based features should have non-negative numeric values
+        - All feature columns contain valid numeric types (not booleans)
+
+        Note: Drug features require Epic orders integration or drug_orders index
+        data. In the default test configuration, drugs are pulled from Epic orders,
+        and the actual feature names depend on the order names in the data.
+        """
+        all_features = get_all_features(self.config_obj)
+
+        assert all_features is not None, "get_all_features returned None"
+        assert not all_features.empty, "Feature DataFrame is empty"
+
+        feature_cols = [
+            c
+            for c in all_features.columns
+            if (
+                "drug" in c.lower()
+                or "_num-drug-order" in c.lower()
+                or "_days-since-last-drug" in c.lower()
+                or "_days-between-first-last-drug" in c.lower()
+            )
+            and "client_idcode" not in c.lower()
+            and "date" not in c.lower()
+        ]
+
+        assert (
+            len(feature_cols) > 0
+        ), f"No drugs-related columns found. Available: {list(all_features.columns)}"
+
+        drug_count_cols = [c for c in feature_cols if "_num-drug-order" in c.lower()]
+
+        if drug_count_cols:
+            for patient_id in self.patient_ids:
+                row = all_features[all_features["client_idcode"] == patient_id]
+                if row.empty:
+                    continue
+
+                for col in drug_count_cols:
+                    val = row[col].iloc[0]
+
+                    assert pd.notna(val), f"{patient_id}: {col} is null"
+                    int_val = int(val)
+
+                    assert int_val >= 1, (
+                        f"{patient_id}: {col} should have count >= 1 (at least 1 drug order), "
+                        f"got {int_val}"
+                    )
+        else:
+            print(
+                "No _num-drug-order columns found - drugs may not be enabled in Epic orders integration"
+            )
+
+        for col in feature_cols:
+            values = all_features[col].dropna()
+
+            if "_num-drug-order" in col.lower():
+                assert len(values) > 0, f"{col} should have at least one non-null value"
+                int_values = [int(v) for v in values]
+                assert all(
+                    isinstance(v, int) and v >= 1 for v in int_values
+                ), f"{col} should have positive integer counts (>= 1), got {[type(v).__name__ + str(v) for v in values]}"
+
+            elif (
+                "_days-since-last-drug" in col.lower()
+                or "_days-between-first-last-drug" in col.lower()
+            ):
+                if len(values) > 0:
+                    assert all(
+                        pd.notna(v)
+                        and isinstance(v, (int, float))
+                        and not isinstance(v, bool)
+                        for v in values
+                    ), f"{col} should have valid numeric day values"
+                    assert all(
+                        v >= 0 for v in values
+                    ), f"{col} should have non-negative days, got min={values.min()}"
+
+            else:
+                if len(values) > 0:
+                    assert all(
+                        pd.notna(v)
+                        and isinstance(v, (int, float))
+                        and not isinstance(v, bool)
+                        for v in values
+                    ), f"{col} should have valid numeric values"
+
     def test_drugs_data_retrieval(self):
         """Test drugs data retrieval - verify drugs features can be retrieved."""
         all_pat_list = self.pat2vec_obj.all_patient_list

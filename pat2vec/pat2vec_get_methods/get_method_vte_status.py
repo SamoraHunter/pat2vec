@@ -19,6 +19,7 @@ VTE_FIELDS = [
 ]
 
 SEARCH_TERM = "CORE_VTE_STATUS"
+VTE_TIME_FIELD = "observationdocument_recordeddtm"
 
 
 def search_vte(
@@ -162,8 +163,7 @@ def prepare_vte_data(raw_data: pd.DataFrame) -> pd.DataFrame:
         ValueError: If `raw_data` is None or empty.
 
     """
-    data = raw_data[raw_data["obscatalogmasteritem_displayname"] == SEARCH_TERM].copy()
-    return data.dropna()
+    return raw_data[raw_data["obscatalogmasteritem_displayname"] == SEARCH_TERM].copy()
 
 
 def calculate_vte_features(
@@ -359,13 +359,13 @@ def get_vte_status_features(
             start_month,
             end_day,
             end_month,
-            vte_time_field,
+            VTE_TIME_FIELD,
         )
     else:
         current_pat_raw = search_vte(
             cohort_searcher_with_terms_and_search=cohort_searcher_with_terms_and_search,
             client_id_codes=current_pat_client_id_code,
-            observations_time_field=vte_time_field,
+            observations_time_field=VTE_TIME_FIELD,
             start_year=start_year,
             start_month=start_month,
             start_day=start_day,

@@ -284,7 +284,24 @@ class TestEpicOrdersAnnotationsGet:
             f"Null columns: {list(totally_empty_cols.index)}"
         )
 
+        min_non_null_threshold = 1
+        non_null_cols = [
+            col
+            for col in feature_cols
+            if non_null_counts[col] >= min_non_null_threshold
+        ]
+        assert len(non_null_cols) >= min_non_null_threshold, (
+            f"Expected at least {min_non_null_threshold} non-null epic_orders annotation feature columns, "
+            f"got only {len(non_null_cols)}. "
+            "Vectorisation may be producing zeros but not extracting meaningful features."
+        )
+
         print(f"Found {len(feature_cols)} epic_orders annotation feature columns")
+        print("Non-null counts per feature column:")
+        for col in sorted(feature_cols):
+            val = all_features[col].notna().sum()
+            status = "OK" if val > 0 else "EMPTY"
+            print(f"  {col}: {val} non-null values [{status}]")
 
     def test_8_cleanup_verification(self):
         """Test cleanup verification - verify all temp files are cleaned up properly."""
@@ -301,3 +318,59 @@ class TestEpicOrdersAnnotationsGet:
         except Exception as e:
             msg = f"Failed to remove '{self.PROJ_NAME}' directory: {e}"
             raise AssertionError(msg) from e
+
+
+def merge_epic_orders_annotations_data(config_obj):
+    """Merge all epic_orders_annotations data and raise ValueError if empty.
+
+    Args:
+        config_obj: Configuration object with database connection info
+
+    Returns:
+        pd.DataFrame: Merged epic_orders_annotations feature data
+
+    Raises:
+        ValueError: If no epic_orders_annotations data was extracted or returned
+
+    """
+    from pat2vec.pat2vec_get_methods.get_method_epic_orders_annotations import (
+        get_current_pat_epic_orders_annotations,
+    )
+
+    all_pat_list = config_obj.all_patient_list
+    merged_dfs = []
+
+    for current_pat_client_code in all_pat_list:
+        annotations_data = get_df_from_db(
+            config_obj,
+            "annotations",
+            "ann_epic_orders",
+            patient_ids=[current_pat_client_code],
+        )
+
+        result = get_current_pat_epic_orders_annotations(
+            current_pat_client_id_code=current_pat_client_code,
+            target_date_range=(2020, 1, 1, 2023, 12, 31),
+            epic_orders_annotations=annotations_data,
+            config_obj=config_obj,
+        )
+
+        if result is not None and not (isinstance(result, list) and len(result) == 0):
+            if isinstance(result, list):
+                for df in result:
+                    if df is not None and not df.empty:
+                        merged_dfs.append(df)
+            elif not result.empty:
+                merged_dfs.append(result)
+
+    merged_df = (
+        pd.concat(merged_dfs, ignore_index=True)
+        if len(merged_dfs) > 1
+        else (merged_dfs[0] if merged_dfs else pd.DataFrame())
+    )
+
+    error_msg = "merge_epic_orders_annotations_data() returned empty DataFrame — no data found in database"
+    if merged_df.empty:
+        raise ValueError(error_msg)
+
+    return merged_df

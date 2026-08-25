@@ -221,9 +221,23 @@ def get_appointments(
     appointments_time_field = config_obj.appointments_time_field
 
     if pat_batch.empty:
-        return pd.DataFrame({"client_idcode": [current_pat_client_id_code]})
-
-    if batch_mode:
+        if batch_mode and cohort_searcher_with_terms_and_search is not None:
+            current_pat_raw = search_appointments(
+                cohort_searcher_with_terms_and_search=cohort_searcher_with_terms_and_search,
+                client_id_codes=current_pat_client_id_code,
+                appointments_time_field=appointments_time_field,
+                start_year=start_year,
+                start_month=start_month,
+                start_day=start_day,
+                end_year=end_year,
+                end_month=end_month,
+                end_day=end_day,
+                output_filename=None,
+                config_obj=config_obj,
+            )
+        else:
+            return pd.DataFrame({"client_idcode": [current_pat_client_id_code]})
+    elif batch_mode:
         current_pat_raw = filter_dataframe_by_timestamp(
             pat_batch,
             start_year,

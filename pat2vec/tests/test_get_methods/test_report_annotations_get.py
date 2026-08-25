@@ -210,6 +210,56 @@ class TestReportAnnotationsGet:
         assert all_features is not None, "All features should not be None"
         assert not all_features.empty, "Features DataFrame should not be empty"
 
+    def test_report_annotations_expected_values(self):
+        """Validate specific expected report annotation feature values.
+
+        With random_seed=42 and generate_reports_data, the dummy MedCAT
+        annotation generator produces deterministic annotations. The reports data
+        contains 'pretty_name' fields with clinical findings like 'Cough', 'Dyspnea',
+        'Fever with chills', etc.
+
+        This test validates that:
+        - Annotation feature columns exist with the correct prefix pattern (pretty_name_count_reports_*)
+        - Feature values are valid non-negative integers (counts)
+        - The expected features match actual output from dummy data generation
+        """
+        all_features = get_all_features(self.config_obj)
+
+        assert all_features is not None, "get_all_features returned None"
+        assert not all_features.empty, "Feature DataFrame is empty"
+
+        report_feature_cols = [
+            c
+            for c in all_features.columns
+            if c.startswith("pretty_name_count_reports_")
+        ]
+
+        assert len(report_feature_cols) > 0, (
+            f"No report annotation columns found. "
+            f"Available: {list(all_features.columns)}"
+        )
+
+        expected_report_annotations = ["Cough (finding)", "Dyspnea (finding)"]
+
+        for patient_id in self.patient_ids:
+            row = all_features[all_features["client_idcode"] == patient_id]
+            if row.empty:
+                continue
+
+            for expected_annotation in expected_report_annotations:
+                expected_col = f"pretty_name_count_reports_{expected_annotation}"
+                assert expected_col in all_features.columns, (
+                    f"Expected column '{expected_col}' not found. "
+                    f"Available: {report_feature_cols[:5]}..."
+                )
+
+                value = row[expected_col].iloc[0]
+                assert pd.notna(value), f"{patient_id}: {expected_col} is null"
+                int_value = int(value)
+                assert (
+                    int_value >= 0
+                ), f"{patient_id}: {expected_col} should have non-negative count, got {int_value}"
+
     def test_report_annotations_data_retrieval(self):
         """Test report annotations data retrieval - verify annotations can be retrieved."""
         all_pat_list = self.pat2vec_obj.all_patient_list

@@ -269,6 +269,74 @@ class TestOBSGet:
 
         print(f"Found {len(feature_cols)} observation feature columns")
 
+    def test_obs_expected_values(self):
+        """Validate specific expected observation feature values.
+
+        With random_seed=42, the test setup creates deterministic dummy data:
+        - 3 search terms: "Test Observation", "Laboratory Test", "Clinical Note"
+        - 3 rows per search term per patient (9 observations per patient)
+        - observation_valuetext_analysed contains random floats [0, 100)
+
+        Feature computation creates averaged statistics for each search term:
+        - obs_test_observation_*: Statistics from "Test Observation" entries
+        - obs_laboratory_test_*: Statistics from "Laboratory Test" entries
+        - obs_clinical_note_*: Statistics from "Clinical Note" entries
+
+        Expected values:
+        - Feature columns should include obs_<term>_<stat> for each search term
+        - Statistical features (mean, std, etc.) should be valid numeric values
+        """
+        all_features = get_all_features(self.config_obj)
+
+        assert all_features is not None, "get_all_features returned None"
+        assert not all_features.empty, "Feature DataFrame is empty"
+
+        feature_cols = [
+            c
+            for c in all_features.columns
+            if (
+                c.startswith(("obs_", "bmi_"))
+                and c != "client_idcode"
+                and "_date_time_stamp" not in c
+            )
+        ]
+
+        assert len(feature_cols) > 0, (
+            f"No observation feature columns found. "
+            f"Available: {list(all_features.columns)}"
+        )
+
+        for col in feature_cols:
+            values = all_features[col].dropna()
+
+            if "_num-" in col.lower() or "_count" in col.lower():
+                assert len(values) > 0, f"{col} should have at least one non-null value"
+                int_values = [int(v) for v in values]
+                assert all(
+                    v >= 0 for v in int_values
+                ), f"{col} should have non-negative counts, got {[int(v) for v in values]}"
+
+            elif any(
+                suffix in col.lower()
+                for suffix in ["_mean", "_median", "_std", "_min", "_max"]
+            ):
+                if len(values) > 0:
+                    assert all(
+                        pd.notna(v)
+                        and isinstance(v, (int, float))
+                        and not isinstance(v, bool)
+                        for v in values
+                    ), f"{col} should have valid numeric values"
+
+            else:
+                if len(values) > 0:
+                    assert all(
+                        pd.notna(v)
+                        and isinstance(v, (int, float))
+                        and not isinstance(v, bool)
+                        for v in values
+                    ), f"{col} should have valid numeric values"
+
     def test_obs_data_retrieval(self):
         """Test OBS data retrieval - verify observation features can be retrieved."""
         all_pat_list = self.pat2vec_obj.all_patient_list

@@ -1627,9 +1627,15 @@ class main:
         batches: dict[str, pd.DataFrame],
     ) -> None:
         """Saves fetched batches to the database if backend is enabled."""
-        _logger.info(
-            f"_save_batches_to_db called for {patient_id}, batches={list(batches.keys())}",
+        print(
+            f"DDEBUG _save_batches_to_db: patient={patient_id}, batches keys: {list(batches.keys())}",
         )
+        if "batch_appointments" in batches:
+            print(
+                f"DDEBUG batch_appointments exists, shape: {batches['batch_appointments'].shape}",
+            )
+        else:
+            print("DDEBUG: batch_appointments NOT in batches!")
         if self.config_obj.storage_backend != "database":
             return
 
@@ -1737,10 +1743,22 @@ class main:
 
             # The logic: save if (not empty) OR (enabled AND empty)
             # Simplifying: if empty and not enabled → skip, otherwise save
+            if batch_key == "batch_appointments":
+                _logger.debug(
+                    f"  Saving batch_appointments: enabled={is_enabled}, shape={batches[batch_key].shape}",
+                )
+
+            if batch_key == "batch_appointments":
+                print(
+                    f"DDEBUG: Saving batch_appointments - enabled={is_enabled}, shape={batches[batch_key].shape}",
+                )
+
             if batches[batch_key].empty and not is_enabled:
+                print("DDEBUG: Skipping batch_appointments (empty and not enabled)")
                 continue  # Skip disabled sources with empty data
 
             # All other cases: non-empty or enabled empty
+            print("DDEBUG: Would save batch_appointments to DB")
             save_raw_patient_batch(
                 batches[batch_key],
                 patient_id,
@@ -2228,6 +2246,7 @@ class main:
                 I/O, but it does not return any value.
 
         """
+        print("DDEBUG pat_maker STARTED with i=", i)
         if i >= len(self.all_patient_list):
             _logger.warning(
                 f"Patient index {i} out of bounds (list size: {len(self.all_patient_list)}). Cannot process.",
@@ -2286,11 +2305,13 @@ class main:
         )
         batches = self._get_patient_data_batches(current_pat_client_id_code)
         _logger.info(
-            f"_get_patient_data_batches returned: keys={list(batches.keys())}, batch_bmi shape={batches.get('batch_bmi', pd.DataFrame()).shape}",
+            f"_get_patient_data_batches returned: keys={list(batches.keys())}, batch_bmi shape={batches.get('batch_bmi', pd.DataFrame()).shape}, batch_vte shape={batches.get('batch_vte', pd.DataFrame()).shape}",
         )
 
         # Save raw batches to DB if applicable
+        print(f"DDEBUG: storage_backend={self.config_obj.storage_backend}")
         if self.config_obj.storage_backend == "database":
+            print("DDEBUG: Would call _save_batches_to_db")
             self._save_batches_to_db(current_pat_client_id_code, batches)
 
         update_pbar(

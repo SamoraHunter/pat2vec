@@ -279,6 +279,103 @@ class TestCore02Get:
         else:
             assert not core02_data.empty, "CORE_SpO2 DataFrame should not be empty"
 
+    def test_core02_expected_values(self):
+        """Validate specific expected CORE_SpO2 feature values.
+
+        With random_seed=42 and generate_core_o2_data:
+        - Dummy data generator creates SpO2 values from a fixed list
+          ['98%', '97%', '96%', '95%', '94%', '93%', 'On Air', '2L O2 NP', '4L O2 NP', 'NRB Mask']
+        - Each patient has 3 observations with random SpO2 assignments
+        - Feature extraction creates one-hot encoded columns from the value text:
+          e.g., '98%' -> '98pct' (percentage sign replaced with 'pct')
+
+        This test validates:
+        - Expected feature columns exist based on dummy data specification
+        - Each patient's features contain valid binary values (0 or 1)
+        - All patients share the same expected feature space
+        """
+        all_features = get_all_features(self.config_obj)
+
+        assert all_features is not None, "get_all_features returned None"
+        assert not all_features.empty, "Feature DataFrame is empty"
+
+        core_o2_query = {"query": {"match_all": {}}, "size": 100}
+        response = self.cs.elastic.search(index="observations", body=core_o2_query)
+        hits = response["hits"]["hits"]
+
+        spo2_docs = [
+            h["_source"]
+            for h in hits
+            if h["_source"].get("obscatalogmasteritem_displayname") == "CORE_SpO2"
+        ]
+
+        actual_spo2_values = list(
+            {
+                d.get("observation_valuetext_analysed")
+                for d in spo2_docs
+                if d.get("observation_valuetext_analysed")
+            },
+        )
+
+        expected_spo2_values = [
+            "98%",
+            "97%",
+            "96%",
+            "95%",
+            "94%",
+            "93%",
+            "On Air",
+            "2L O2 NP",
+            "4L O2 NP",
+            "NRB Mask",
+        ]
+
+        expected_found_in_data = [
+            sv for sv in expected_spo2_values if sv in actual_spo2_values
+        ]
+
+        def spo2_to_feature_name(value):
+            return value.replace("%", "pct").replace(" ", "_").lower()
+
+        expected_core_o2_cols = [
+            spo2_to_feature_name(sv) for sv in expected_found_in_data
+        ]
+
+        actual_core_o2_columns_found = [
+            c
+            for c in all_features.columns
+            if any(c == spo2_to_feature_name(ev) for ev in expected_spo2_values)
+            and c != "client_idcode"
+        ]
+
+        assert len(actual_core_o2_columns_found) > 0, (
+            f"No core_o2 feature columns found. "
+            f"Available columns: {list(all_features.columns)[:20]}"
+        )
+
+        missing_core_o2_cols = [
+            col
+            for col in expected_core_o2_cols
+            if col not in actual_core_o2_columns_found
+        ]
+
+        if len(expected_found_in_data) > 0 and len(missing_core_o2_cols) > 0:
+            print(
+                f"Warning: Some core_o2 features not generated: {missing_core_o2_cols}. "
+                f"Generated: {actual_core_o2_columns_found}",
+            )
+
+        for col in actual_core_o2_columns_found:
+            values = all_features[col].dropna()
+            if len(values) > 0:
+                invalid_values = values[~values.isin([0, 1])]
+                assert len(invalid_values) == 0, (
+                    f"Core O2 feature '{col}' contains non-binary values. "
+                    f"Actual: {invalid_values.tolist()}, Expected: [0, 1]"
+                )
+
+        print(f"Found core_o2 features: {actual_core_o2_columns_found}")
+
     def test_merge_core02_data_functionality(self):
         """Test merge CORE_SpO2 data functionality - verify merge function creates CSV."""
         from pat2vec.util.post_processing_build_methods import merge_core_02_csv

@@ -131,6 +131,10 @@ def get_pat_batch_appointments(
                 search_string=f"{appointments_time_field}:[{global_start_year}-{global_start_month}-{global_start_day} TO {global_end_year}-{global_end_month}-{global_end_day}]",
             )
 
+            print(
+                f"DDEBUG: ES returned {len(batch_target)} rows for patient {current_pat_client_id_code}",
+            )
+
             if (
                 config_obj.store_pat_batch_observations
                 or config_obj.overwrite_stored_pat_observations

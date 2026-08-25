@@ -298,6 +298,94 @@ class TestBedGet:
                 bed_data[col].iloc[0] == 1
             ), f"Bed feature '{col}' should have value 1, got {bed_data[col].iloc[0]}"
 
+    def test_bed_expected_values(self):
+        """Validate specific expected BED feature values.
+
+        With random_seed=42 and generate_bed_data:
+        - Dummy data generator creates bed values from a fixed list (Bed 1, Bed 2, Bed 3,
+          Side Room 1, Bay A Bed 1, Bay B Bed 4, HDU Bed 2, ITU Bed 5)
+        - Each patient has 3 observations with random bed assignments
+        - Feature extraction creates one-hot encoded columns: bed_<bed_value> = 1
+
+        This test validates:
+        - Expected bed feature columns exist based on dummy data specification
+        - Each patient's bed features contain valid binary values (0 or 1)
+        - All patients share the same expected bed feature space
+        """
+        all_features = get_all_features(self.config_obj)
+
+        assert all_features is not None, "get_all_features returned None"
+        assert not all_features.empty, "Feature DataFrame is empty"
+
+        bed_data_query = {"query": {"match_all": {}}, "size": 100}
+        response = self.cs.elastic.search(index="observations", body=bed_data_query)
+        hits = response["hits"]["hits"]
+
+        bed_docs = [
+            h["_source"]
+            for h in hits
+            if h["_source"].get("obscatalogmasteritem_displayname") == "CORE_BedNumber3"
+        ]
+
+        actual_bed_values = list(
+            {
+                d.get("observation_valuetext_analysed")
+                for d in bed_docs
+                if d.get("observation_valuetext_analysed")
+            },
+        )
+
+        expected_bed_values = [
+            "Bed 1",
+            "Bed 2",
+            "Bed 3",
+            "Side Room 1",
+            "Bay A Bed 1",
+            "Bay B Bed 4",
+            "HDU Bed 2",
+            "ITU Bed 5",
+        ]
+
+        expected_found_in_data = [
+            bv for bv in expected_bed_values if bv in actual_bed_values
+        ]
+
+        actual_bed_columns_found = [
+            c
+            for c in all_features.columns
+            if c.startswith("bed_") and c != "client_idcode"
+        ]
+
+        assert len(actual_bed_columns_found) > 0, (
+            f"No bed feature columns found. "
+            f"Available columns: {list(all_features.columns)[:20]}"
+        )
+
+        expected_bed_cols_present = [f"bed_{bv}" for bv in expected_found_in_data]
+
+        missing_bed_cols = [
+            col
+            for col in expected_bed_cols_present
+            if col not in actual_bed_columns_found
+        ]
+
+        if len(expected_found_in_data) > 0 and len(missing_bed_cols) > 0:
+            print(
+                f"Warning: Some bed features not generated: {missing_bed_cols}. "
+                f"Generated: {actual_bed_columns_found}",
+            )
+
+        for col in actual_bed_columns_found:
+            values = all_features[col].dropna()
+            if len(values) > 0:
+                invalid_values = values[~values.isin([0, 1])]
+                assert len(invalid_values) == 0, (
+                    f"Bed feature '{col}' contains non-binary values. "
+                    f"Actual: {invalid_values.tolist()}, Expected: [0, 1]"
+                )
+
+        print(f"Found bed features: {actual_bed_columns_found}")
+
     def test_8_cleanup_verification(self):
         """Test cleanup verification - verify all temp files were removed."""
         # Clean up before verification

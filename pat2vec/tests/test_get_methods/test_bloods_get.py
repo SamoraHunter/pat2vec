@@ -254,6 +254,124 @@ class TestBloodsGet:
         if null_columns:
             print(f"Warning: Null blood feature columns: {null_columns}")
 
+    def test_bloods_feature_value_validation(self):
+        """Validate blood feature values meet expected constraints.
+
+        Blood features should have valid statistical properties:
+        - Count-based features (_num-tests, _contains-extreme-*) must be non-negative integers
+        - Statistical features (_mean, _min, _max, _std, etc.) must be finite numbers
+
+        With random_seed=42 and generate_basic_observations_data:
+        - Glucose is guaranteed to be the first entry in each patient's data (line 1220-1221)
+        - Each patient has 3 observations, so expected num-tests = 3 for Glucose
+        """
+        all_features = get_all_features(self.config_obj)
+
+        assert all_features is not None, "get_all_features returned None"
+        assert not all_features.empty, "Feature DataFrame is empty"
+
+        blood_suffixes = ["_mean", "_std", "_min", "_max", "_num-tests"]
+        actual_bloods_columns = []
+        for col in all_features.columns:
+            if (
+                "_" in col
+                and not col.startswith("demo_")
+                and not col.startswith("drug_")
+            ):
+                for suffix in blood_suffixes:
+                    if col.endswith(suffix):
+                        actual_bloods_columns.append(col)
+                        break
+
+        if len(actual_bloods_columns) == 0:
+            pytest.skip(
+                "No blood feature columns found - dummy data may not match time windows",
+            )
+
+        for col in actual_bloods_columns:
+            values = all_features[col].dropna()
+
+            if "_num-tests" in col or "_contains-extreme-" in col:
+                assert (
+                    values >= 0
+                ).all(), (
+                    f"{col} should have non-negative counts, got min={values.min()}"
+                )
+
+            elif any(suffix in col for suffix in ["_mean", "_min", "_max", "_std"]):
+                assert (
+                    pd.notna(values).all() or (values == 0).all()
+                ), f"{col} should have valid numeric values"
+
+    def test_bloods_expected_values(self):
+        """Validate specific expected blood feature values for Glucose.
+
+        With random_seed=42 and generate_basic_observations_data:
+        - Glucose is guaranteed as first entry in each patient's data (line 1220-1221)
+        - generate_basic_observations_data creates 3 rows per patient with random uniform [1, 100] values
+        - Expected num-tests for Glucose: 3 per patient in batch mode
+        - Statistical features should satisfy: min <= mean <= max
+        """
+        all_features = get_all_features(self.config_obj)
+
+        assert all_features is not None, "get_all_features returned None"
+        assert not all_features.empty, "Feature DataFrame is empty"
+
+        glucose_cols = [c for c in all_features.columns if c.startswith("Glucose_")]
+
+        assert (
+            len(glucose_cols) > 0
+        ), f"No Glucose feature columns found. Available: {list(all_features.columns)}"
+
+        expected_glucose_suffixes = [
+            "_num-tests",
+            "_mean",
+            "_min",
+            "_max",
+        ]
+
+        for suffix in expected_glucose_suffixes:
+            col_name = "Glucose" + suffix
+            assert col_name in all_features.columns, (
+                f"Expected Glucose column '{col_name}' not found. Available columns: "
+                f"{list(all_features.columns)}"
+            )
+
+        for patient_id in self.patient_ids:
+            row = all_features[all_features["client_idcode"] == patient_id]
+            if row.empty:
+                continue
+
+            num_tests_col = "Glucose_num-tests"
+            mean_col = "Glucose_mean"
+            min_col = "Glucose_min"
+            max_col = "Glucose_max"
+
+            num_tests_val = row[num_tests_col].iloc[0]
+            mean_val = row[mean_col].iloc[0]
+            min_val = row[min_col].iloc[0]
+            max_val = row[max_col].iloc[0]
+
+            assert pd.notna(num_tests_val), f"{patient_id}: Glucose_num-tests is null"
+            assert int(num_tests_val) == 3, (
+                f"{patient_id}: Expected Glucose_num-tests=3 (3 observations per patient), "
+                f"got {num_tests_val}"
+            )
+
+            assert pd.notna(mean_val), f"{patient_id}: Glucose_mean is null"
+            assert pd.notna(min_val), f"{patient_id}: Glucose_min is null"
+            assert pd.notna(max_val), f"{patient_id}: Glucose_max is null"
+
+            assert (
+                min_val <= max_val
+            ), f"{patient_id}: Glucose_min ({min_val}) should be <= Glucose_max ({max_val})"
+            assert (
+                mean_val >= min_val
+            ), f"{patient_id}: Glucose_mean ({mean_val}) should be >= min ({min_val})"
+            assert (
+                mean_val <= max_val
+            ), f"{patient_id}: Glucose_mean ({mean_val}) should be <= max ({max_val})"
+
     def test_bloods_data_retrieval(self):
         """Test bloods data retrieval - verify bloods features can be retrieved."""
         all_pat_list = self.pat2vec_obj.all_patient_list

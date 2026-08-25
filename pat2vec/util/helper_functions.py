@@ -489,19 +489,31 @@ def save_raw_patient_batch(
         id_column: The column name for the patient ID in this table.
 
     """
+    logger.debug(
+        f"save_raw_patient_batch called: patient_id={patient_id}, table_name={table_name}, id_column={id_column}",
+    )
     if config_obj.storage_backend != "database":
+        logger.debug("  Skipped: storage_backend != database")
         return
 
     try:
         engine = config_obj.db_engine
         if not engine:
+            logger.debug("  Skipped: engine is None")
             return
 
         schema_name = "raw_data"
 
         # Ensure ID column is present
         if id_column not in df.columns:
+            logger.debug(
+                f"  Adding {id_column}={patient_id} (existing columns: {list(df.columns)})",
+            )
             df[id_column] = patient_id
+        else:
+            logger.debug(
+                f"  {id_column} already exists. Values sample: {df[id_column].head().tolist()}",
+            )
 
         with engine.begin() as connection:
             if engine.name == "sqlite":
@@ -523,6 +535,8 @@ def save_raw_patient_batch(
             inspector = inspect(connection)
             if inspector.has_table(target_table, schema=target_schema):
                 connection.execute(del_query, {"pat_id": patient_id})
+            else:
+                logger.debug(f"  Creating new table: {target_table}")
 
             # Debug output - show columns before and after drop
             logger.debug(
@@ -541,6 +555,12 @@ def save_raw_patient_batch(
                 f"After drop - columns: {df.columns.tolist()}",
             )
 
+            logger.debug(f"  Final DataFrame shape before save: {df.shape}")
+            if not df.empty:
+                logger.debug(
+                    f"  Sample data ({id_column} column): {df[id_column].head().tolist() if id_column in df.columns else 'missing'}",
+                )
+
             # Fix problematic backslashes in text columns that cause SQLite parameter binding issues
             text_cols = [
                 "observation_valuetext_analysed",
@@ -558,6 +578,8 @@ def save_raw_patient_batch(
                             json.dumps(x) if isinstance(x, (list, dict, tuple)) else x
                         ),
                     )
+
+            logger.debug(f"  After JSON conversion, final shape={df.shape}")
 
             # Create table if it doesn't exist (even with empty DataFrame to ensure schema)
             if not inspector.has_table(target_table, schema=target_schema):
@@ -588,6 +610,7 @@ def save_raw_patient_batch(
 
             # Save actual data if not empty
             if not df.empty:
+                logger.debug(f"  Saving to table {target_table} with {len(df)} rows")
                 df.to_sql(
                     name=target_table,
                     con=connection,
@@ -595,6 +618,7 @@ def save_raw_patient_batch(
                     if_exists="append",
                     index=False,
                 )
+                logger.debug(f"  Successfully saved to {target_table}")
 
                 # Ensure index on ID column
                 ensure_index(

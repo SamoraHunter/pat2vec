@@ -238,6 +238,55 @@ class TestDemoGet:
             f"Null columns: {list(totally_empty_cols.index)}"
         )
 
+    def test_demo_expected_values(self):
+        """Validate specific expected demographic feature values.
+
+        With random_seed=42, generate_epr_documents_personal_data produces deterministic
+        demographic data for patients:
+        - Each patient has exactly 1 personal data document
+        - The data includes fields like Age, Male/Female gender
+
+        Feature computation creates binary indicators based on this data.
+        This test validates that the computed features match expected patterns.
+
+        Expected values (based on dummy data generation):
+        - demo_age_* columns should have valid positive numeric values (age)
+        - demo_male and demo_female should be 0 or 1 (binary gender indicators)
+        """
+        all_features = get_all_features(self.config_obj)
+
+        assert not all_features.empty, "Feature DataFrame is empty"
+
+        # Find demo-related feature columns
+        feature_cols = [
+            c
+            for c in all_features.columns
+            if any(x in c.lower() for x in ["age", "male", "dead", "census"])
+            and c != "client_idcode"
+        ]
+
+        assert (
+            len(feature_cols) > 0
+        ), f"No demo-related columns found. Available: {list(all_features.columns)}"
+
+        # Validate feature values meet expected constraints
+        for col in feature_cols:
+            values = all_features[col].dropna()
+            if len(values) == 0:
+                continue
+
+            col_lower = col.lower()
+
+            if "age" in col_lower:
+                assert (
+                    values > 0
+                ).all(), f"Column '{col}' should have positive age values, got min={values.min()}"
+            elif "male" in col_lower or "female" in col_lower or "gender" in col_lower:
+                int_values = [int(v) for v in values]
+                assert all(
+                    v in [0, 1] for v in int_values
+                ), f"Column '{col}' should have binary values (0 or 1)"
+
     def test_merge_demo_data_functionality(self):
         """Test merge demo data functionality - verify merge function creates CSV."""
         from pat2vec.util.post_processing_build_methods import merge_demographics_csv

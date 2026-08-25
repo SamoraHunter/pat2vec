@@ -149,12 +149,19 @@ def get_pat_batch_obs(
             ]
 
         if should_fetch:
+            # For COVID queries, use basicobs_itemname_analysed field in basic_observations index
+            search_field = (
+                "basicobs_itemname_analysed"
+                if is_covid_query
+                else "obscatalogmasteritem_displayname"
+            )
+
             batch_target = cohort_searcher_with_terms_and_search(
                 index_name=query_index_name,
                 fields_list=query_fields_list,
                 term_name=config_obj.client_idcode_term_name,
                 entered_list=[current_pat_client_id_code],
-                search_string=f'obscatalogmasteritem_displayname:("{search_term}") AND '
+                search_string=f'{search_field}:("{search_term}") AND '
                 f"observationdocument_recordeddtm:[{global_start_year}-{global_start_month}-{global_start_day} TO {global_end_year}-{global_end_month}-{global_end_day}]",
             )
             if (

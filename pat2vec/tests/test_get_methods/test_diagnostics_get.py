@@ -255,6 +255,59 @@ class TestDiagnosticsGet:
             f"Null columns: {list(totally_empty_cols.index)}"
         )
 
+    def test_diagnostics_expected_values(self):
+        """Validate specific expected diagnostic feature values.
+
+        With random_seed=42, generate_diagnostic_orders_data produces deterministic
+        results for diagnostic orders:
+        - 3 rows per patient with order_name randomly selected from diagnostic_names
+        - Features created: {ordername}_num-diagnostic-order, {ordername}_days-since-last-diagnostic-{ordername}
+
+        Expected feature columns for each patient:
+        - Count-based features (_num-diagnostic-order) must be positive integers (3 per diagnostic name)
+        - Days-since-last features should be non-negative integers
+        """
+        all_features = get_all_features(self.config_obj)
+
+        assert all_features is not None, "get_all_features returned None"
+        assert not all_features.empty, "Feature DataFrame is empty"
+
+        feature_cols = [
+            c
+            for c in all_features.columns
+            if (
+                "num-diagnostic-order" in c.lower()
+                or "days-since-last-diagnostic" in c.lower()
+            )
+            and c != "client_idcode"
+        ]
+
+        assert (
+            len(feature_cols) > 0
+        ), f"No diagnostics-related columns found. Available: {list(all_features.columns)}"
+
+        for col in feature_cols:
+            values = all_features[col].dropna()
+
+            if "_num-diagnostic-order" in col.lower():
+                assert len(values) > 0, f"{col} should have at least one non-null value"
+                int_values = [int(v) for v in values]
+                assert all(
+                    v >= 1 for v in int_values
+                ), f"{col} should have positive count values, got {[int(v) for v in values]}"
+                assert all(
+                    isinstance(v, int)
+                    or (isinstance(float(str(v)), float) and float(str(v)).is_integer())
+                    for v in values
+                ), f"{col} should be integer type, got {[type(v).__name__ for v in values]}"
+
+            elif "_days-since-last-diagnostic" in col.lower():
+                if len(values) > 0:
+                    int_values = [int(v) for v in values]
+                    assert all(
+                        v >= 0 for v in int_values
+                    ), f"{col} should have non-negative days, got {[int(v) for v in values]}"
+
     def test_diagnostics_data_retrieval(self):
         """Test diagnostics data retrieval - verify diagnostics features can be retrieved."""
         all_pat_list = self.pat2vec_obj.all_patient_list

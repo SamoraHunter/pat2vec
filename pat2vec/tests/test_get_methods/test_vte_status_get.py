@@ -242,6 +242,178 @@ class TestVteStatusGet:
 
         print(f"Found {len(feature_cols)} VTE status feature columns")
 
+    def test_vte_status_expected_values(self):
+        """Validate specific expected VTE status feature values.
+
+        With random_seed=42, generate_vte_data produces deterministic results:
+        - 3 observations per patient with values randomly selected from:
+          ['High risk of VTE High risk of bleeding', 'High risk of VTE Low risk of bleeding']
+        - calculate_vte_features maps these to: 1 and 0 respectively
+        - Creates statistical features: mean, median, std, max, min, n
+
+        Expected feature columns for each patient:
+        - vte_status_mean: Average of mapped values (between 0 and 1)
+        - vte_status_median: Median of mapped values (0 or 1)
+        - vte_status_std: Standard deviation
+        - vte_status_max: Maximum value (0 or 1)
+        - vte_status_min: Minimum value (0 or 1)
+        - vte_status_n: Count of non-null observations
+
+        All statistical values should be valid numeric types.
+
+        Note: The count n may be less than 3 if some observations contain NaN values
+        due to the use of maybe_nan() in dummy data generation.
+        """
+        all_features = get_all_features(self.config_obj)
+
+        assert all_features is not None, "get_all_features returned None"
+        assert not all_features.empty, "Feature DataFrame is empty"
+
+        feature_cols = [
+            c
+            for c in all_features.columns
+            if c.startswith("vte_status_") and "_date_time_stamp" not in c
+        ]
+
+        assert (
+            len(feature_cols) > 0
+        ), f"No VTE status-related columns found. Available: {list(all_features.columns)}"
+
+        for col in feature_cols:
+            values = all_features[col].dropna()
+
+            if len(values) == 0:
+                continue
+
+            suffix = col.split("_")[-1]
+
+            if suffix == "n":
+                assert (
+                    values >= 1
+                ).all(), (
+                    f"{col} should have positive count values, got min={values.min()}"
+                )
+                int_values = [int(v) for v in values]
+                assert all(
+                    isinstance(v, int) for v in int_values
+                ), f"{col} should be integer type"
+
+            elif suffix == "mean":
+                assert (
+                    (values >= 0) & (values <= 1)
+                ).all(), f"{col} mean should be between 0 and 1, got range [{values.min()}, {values.max()}]"
+
+            elif suffix in {"max", "min"}:
+                int_values = [int(v) for v in values]
+                assert all(
+                    v in [0, 1] for v in int_values
+                ), f"{col} should be 0 or 1 (binary), got {[int(v) for v in values]}"
+
+            elif suffix == "std":
+                assert (
+                    values >= 0
+                ).all(), f"{col} std should be non-negative, got min={values.min()}"
+                assert all(
+                    pd.notna(v)
+                    and isinstance(v, (int, float))
+                    and not isinstance(v, bool)
+                    for v in values
+                ), f"{col} should have valid numeric values"
+
+            elif suffix == "median":
+                int_values = [int(v) for v in values]
+                assert all(
+                    v in [0, 1] for v in int_values
+                ), f"{col} median should be 0 or 1 (binary), got {[int(v) for v in values]}"
+
+        for patient_id in self.patient_ids:
+            row = all_features[all_features["client_idcode"] == patient_id]
+            if not row.empty:
+                max_val = int(row["vte_status_max"].iloc[0])
+                min_val = int(row["vte_status_min"].iloc[0])
+                assert (
+                    max_val >= min_val
+                ), f"Patient {patient_id}: vte_status_max ({max_val}) should be >= vte_status_min ({min_val})"
+
+    def test_vte_status_value_mapping(self):
+        """Validate VTE status value mapping produces correct statistical features.
+
+        This test validates that the feature computation correctly maps
+        VTE status strings to binary values and computes accurate statistics:
+
+        - 'High risk of VTE High risk of bleeding' -> 1
+        - 'High risk of VTE Low risk of bleeding' -> 0
+
+        With random_seed=42, generate_vte_data produces deterministic
+        combinations of these two statuses (with possible NaN values).
+        This test validates that the computed mean reflects the actual
+        proportion of high-risk (value=1) observations.
+        """
+        all_features = get_all_features(self.config_obj)
+
+        assert (
+            "vte_status_mean" in all_features.columns
+        ), f"vte_status_mean column missing. Available: {list(all_features.columns)}"
+        assert (
+            "vte_status_n" in all_features.columns
+        ), f"vte_status_n column missing. Available: {list(all_features.columns)}"
+
+        for patient_id in self.patient_ids:
+            row = all_features[all_features["client_idcode"] == patient_id]
+            if row.empty:
+                continue
+
+            mean_val = row["vte_status_mean"].iloc[0]
+            n_val = int(row["vte_status_n"].iloc[0])
+            max_val = int(row["vte_status_max"].iloc[0])
+            min_val = int(row["vte_status_min"].iloc[0])
+
+            assert pd.notna(mean_val), f"{patient_id}: vte_status_mean is null"
+            assert (
+                0 <= mean_val <= 1
+            ), f"{patient_id}: vte_status_mean ({mean_val}) should be between 0 and 1"
+
+            assert n_val >= 1, f"{patient_id}: vte_status_n should be at least 1"
+
+            assert pd.notna(max_val), f"{patient_id}: vte_status_max is null"
+            assert pd.notna(min_val), f"{patient_id}: vte_status_min is null"
+
+            assert max_val in [
+                0,
+                1,
+            ], f"{patient_id}: vte_status_max should be 0 or 1 (binary), got {max_val}"
+            assert min_val in [
+                0,
+                1,
+            ], f"{patient_id}: vte_status_min should be 0 or 1 (binary), got {min_val}"
+
+            assert (
+                max_val >= min_val
+            ), f"{patient_id}: vte_status_max ({max_val}) >= vte_status_min ({min_val})"
+
+            if max_val == min_val:
+                assert (
+                    mean_val == max_val
+                ), f"{patient_id}: All values are the same (all {max_val}), so mean should equal max/min"
+
+            expected_proportion = mean_val
+            high_risk_count = round(expected_proportion * n_val)
+
+            if high_risk_count == 0:
+                assert (
+                    min_val == 0
+                ), f"{patient_id}: All values should be 0 (low risk), got max={max_val}"
+                assert (
+                    max_val == 0
+                ), f"{patient_id}: All values should be 0 (low risk), got max={max_val}"
+            elif high_risk_count == n_val:
+                assert (
+                    min_val == 1
+                ), f"{patient_id}: All values should be 1 (high risk), got min={min_val}"
+                assert (
+                    max_val == 1
+                ), f"{patient_id}: All values should be 1 (high risk), got min={min_val}"
+
     def test_vte_status_data_retrieval(self):
         """Test VTE status data retrieval - verify VTE status features can be retrieved."""
         all_pat_list = self.pat2vec_obj.all_patient_list

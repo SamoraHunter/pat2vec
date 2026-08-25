@@ -247,6 +247,51 @@ class TestCovidGet:
 
         print(f"Found {len(feature_cols)} covid feature columns")
 
+    def test_covid_expected_values(self):
+        """Validate specific expected COVID-19 feature values.
+
+        With random_seed=42, generate_covid_observations_data produces
+        deterministic results for the first 15 observations (3 per patient × 5 patients).
+        The random choice ["Positive", "Negative"] with seed 42 yields:
+        ['Positive', 'Positive', 'Negative', 'Positive', 'Positive', ...]
+
+        Since at least one "Positive" result exists in each patient's data,
+        calculate_covid_features sets covid_positive = 1 for all patients.
+        """
+        all_features = get_all_features(self.config_obj)
+
+        print(f"\n=== DEBUG: Available columns ===")
+        print(list(all_features.columns))
+        print(f"\n=== DEBUG: all_features shape ===")
+        print(all_features.shape)
+        if "covid_positive" in all_features.columns:
+            print(f"\n=== DEBUG: covid_positive values ===")
+            for patient_id in self.patient_ids:
+                row = all_features[all_features["client_idcode"] == patient_id]
+                if not row.empty:
+                    val = row["covid_positive"].iloc[0]
+                    print(f"  {patient_id}: {val}")
+        else:
+            print("\n=== DEBUG: covid_positive column NOT FOUND ===")
+
+        assert (
+            "covid_positive" in all_features.columns
+        ), f"covid_positive column missing. Available: {list(all_features.columns)}"
+
+        for patient_id in self.patient_ids:
+            row = all_features[all_features["client_idcode"] == patient_id]
+            if not row.empty:
+                covid_val = row["covid_positive"].iloc[0]
+
+                assert pd.notna(
+                    covid_val
+                ), f"Patient {patient_id}: covid_positive is null"
+
+                assert int(covid_val) == 1, (
+                    f"Patient {patient_id}: Expected covid_positive=1 "
+                    f"(has 'Positive' entries in dummy data with seed=42), got {covid_val}"
+                )
+
     def test_6_covid_data_retrieval(self):
         """Test COVID data retrieval - verify COVID features can be retrieved."""
         all_pat_list = self.pat2vec_obj.all_patient_list

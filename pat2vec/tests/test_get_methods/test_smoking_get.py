@@ -233,6 +233,13 @@ class TestSmokingGet:
         Catches the case where vectorisation silently fails — the DataFrame
         has columns but all values are null or empty.
         Smoking features use pattern: smoking_status_{current|non}
+
+        Additionally validates expected feature values based on deterministic
+        dummy data generation with random_seed=42:
+        - generate_smoking_data produces ['Never smoked', NaN, 'Never smoked']
+          for each patient (3 rows per patient, 5 patients = 15 observations)
+        - calculate_smoking_features sets smoking_status_current=0 and
+          smoking_status_non=1 for all patients
         """
         all_features = get_all_features(self.config_obj)
 
@@ -260,6 +267,51 @@ class TestSmokingGet:
         )
 
         print(f"Found {len(feature_cols)} smoking feature columns")
+
+    def test_smoking_expected_values(self):
+        """Validate specific expected smoking feature values.
+
+        With random_seed=42, generate_smoking_data produces deterministic results:
+        - 3 observations per patient with values: ['Never smoked', NaN, 'Never smoked']
+        - calculate_smoking_features creates smoking_status_current and smoking_status_non
+
+        Expected values for all patients:
+        - smoking_status_current = 0 (no "Current smoker" entries)
+        - smoking_status_non = 1 (has "Never smoked" or "Ex-smoker" entries)
+
+        This test validates that feature computation correctly identifies
+        the expected binary features based on actual observation data.
+        """
+        all_features = get_all_features(self.config_obj)
+
+        assert (
+            "smoking_status_current" in all_features.columns
+        ), f"smoking_status_current column missing. Available: {list(all_features.columns)}"
+        assert (
+            "smoking_status_non" in all_features.columns
+        ), f"smoking_status_non column missing. Available: {list(all_features.columns)}"
+
+        for patient_id in self.patient_ids:
+            row = all_features[all_features["client_idcode"] == patient_id]
+            if not row.empty:
+                current_val = row["smoking_status_current"].iloc[0]
+                non_val = row["smoking_status_non"].iloc[0]
+
+                assert pd.notna(
+                    current_val
+                ), f"Patient {patient_id}: smoking_status_current is null"
+                assert int(current_val) == 0, (
+                    f"Patient {patient_id}: Expected smoking_status_current=0 "
+                    f"(no 'Current smoker' entries in dummy data), got {current_val}"
+                )
+
+                assert pd.notna(
+                    non_val
+                ), f"Patient {patient_id}: smoking_status_non is null"
+                assert int(non_val) == 1, (
+                    f"Patient {patient_id}: Expected smoking_status_non=1 "
+                    f"(has 'Never smoked' entries in dummy data), got {non_val}"
+                )
 
     def test_smoking_data_retrieval(self):
         """Test smoking data retrieval - verify smoking features can be retrieved."""

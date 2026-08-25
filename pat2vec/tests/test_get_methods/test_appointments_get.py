@@ -246,6 +246,68 @@ class TestAppointmentsGet:
 
         print(f"Found {len(feature_cols)} appointments feature columns")
 
+    def test_appointments_expected_values(self):
+        """Validate specific expected appointment feature values.
+
+        With random_seed=42, generate_appointments_data produces deterministic results:
+        - 3 appointments per patient with random ConsultantCode, ClinicCode, AppointmentType
+        - Feature computation creates one-hot encoded binary indicators
+
+        Expected features for each patient:
+        - ConsultantCode_*: Binary (0/1) indicators for each consultant code found
+        - ClinicCode_*: Binary (0/1) indicators for each clinic code found
+        - AppointmentType_*: Binary (0/1) indicators for each appointment type found
+
+        All binary feature values should be:
+        - Valid integers (0 or 1)
+        - Non-null for at least one patient
+        """
+        all_features = get_all_features(self.config_obj)
+
+        assert all_features is not None, "get_all_features returned None"
+        assert not all_features.empty, "Feature DataFrame is empty"
+
+        feature_cols = [
+            c
+            for c in all_features.columns
+            if any(
+                c.startswith(prefix)
+                for prefix in ["ConsultantCode_", "ClinicCode_", "AppointmentType_"]
+            )
+        ]
+
+        assert (
+            len(feature_cols) > 0
+        ), f"No appointments-related columns found. Available: {list(all_features.columns)}"
+
+        for patient_id in self.patient_ids:
+            row = all_features[all_features["client_idcode"] == patient_id]
+            if row.empty:
+                continue
+
+            for col in feature_cols:
+                val = row[col].iloc[0]
+
+                assert pd.notna(
+                    val,
+                ), f"{patient_id}: {col} should have a value, got null"
+                int_val = int(val)
+
+                assert int_val in [
+                    0,
+                    1,
+                ], f"{patient_id}: {col} should be binary (0 or 1), got {int_val}"
+
+        non_zero_cols = []
+        for col in feature_cols:
+            if all_features[col].sum() > 0:
+                non_zero_cols.append(col)
+
+        assert len(non_zero_cols) > 0, (
+            f"All appointment feature columns are zero - no features were detected. "
+            f"Total columns: {len(feature_cols)}"
+        )
+
     def test_appointments_data_retrieval(self):
         all_pat_list = self.pat2vec_obj.all_patient_list
         assert len(all_pat_list) > 0, "Patient list should not be empty"

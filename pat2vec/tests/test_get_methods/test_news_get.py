@@ -259,6 +259,115 @@ class TestNEWSGet:
         else:
             assert not news_data.empty, "NEWS DataFrame should not be empty"
 
+    def test_news_expected_values(self):
+        """Validate specific expected NEWS feature values.
+
+        With random_seed=42 and generate_news_data:
+        - 16 news components are searched (NEWS2_Score, NEWS_Systolic_BP, etc.)
+        - 3 rows per search term per patient
+        - observation_valuetext_analysed contains random integers [0, 15]
+        - Feature computation creates statistical summaries: mean, median, std, max, min, n
+
+        Expected values:
+        - Each news component should have statistical feature columns
+        - Statistical features should be valid numeric values (min <= mean <= max)
+        - Count features (_n) should be non-negative integers
+        """
+        all_features = get_all_features(self.config_obj)
+
+        assert all_features is not None, "get_all_features returned None"
+        assert not all_features.empty, "Feature DataFrame is empty"
+
+        feature_cols = [
+            c
+            for c in all_features.columns
+            if c.startswith("news_") and "client_idcode" not in c
+        ]
+
+        assert (
+            len(feature_cols) > 0
+        ), f"No NEWS-related columns found. Available: {list(all_features.columns)}"
+
+        expected_suffixes = ["_mean", "_median", "_std", "_max", "_min", "_n"]
+
+        for col in feature_cols:
+            values = all_features[col].dropna()
+
+            if col.endswith("_n"):
+                assert len(values) > 0, f"{col} should have at least one non-null value"
+                int_values = [int(v) for v in values]
+                assert all(
+                    v >= 0 for v in int_values
+                ), f"{col} should have non-negative counts, got {[int(v) for v in values]}"
+
+            elif any(suffix in col for suffix in expected_suffixes):
+                if len(values) > 0:
+                    assert all(
+                        pd.notna(v)
+                        and isinstance(v, (int, float))
+                        and not isinstance(v, bool)
+                        for v in values
+                    ), f"{col} should have valid numeric values"
+
+            else:
+                if len(values) > 0:
+                    assert all(
+                        pd.notna(v)
+                        and isinstance(v, (int, float))
+                        and not isinstance(v, bool)
+                        for v in values
+                    ), f"{col} should have valid numeric values"
+
+        component_map = {
+            "news_score": "NEWS2_Score",
+            "news_systolic_bp": "NEWS_Systolic_BP",
+            "news_diastolic_bp": "NEWS_Diastolic_BP",
+            "news_respiration_rate": "NEWS_Respiration_Rate",
+            "news_heart_rate": "NEWS_Heart_Rate",
+            "news_oxygen_saturation": "NEWS_Oxygen_Saturation",
+            "news_temperature": "NEWS Temperature",
+            "news_avpu": "NEWS_AVPU",
+        }
+
+        for feature_name, display_name in component_map.items():
+            base_cols = [c for c in all_features.columns if c.startswith(feature_name)]
+
+            assert len(base_cols) > 0, (
+                f"No columns found for {feature_name} ({display_name}). "
+                f"Available: {[c for c in all_features.columns if 'news' in c]}"
+            )
+
+        for patient_id in self.patient_ids:
+            row = all_features[all_features["client_idcode"] == patient_id]
+            if row.empty:
+                continue
+
+            news_score_cols = [c for c in row.columns if c.startswith("news_score")]
+
+            if len(news_score_cols) > 0:
+                mean_col = "news_score_mean"
+                min_col = "news_score_min"
+                max_col = "news_score_max"
+
+                if all(col in row.columns for col in [mean_col, min_col, max_col]):
+                    mean_val = row[mean_col].iloc[0]
+                    min_val = row[min_col].iloc[0]
+                    max_val = row[max_col].iloc[0]
+
+                    assert pd.notna(mean_val), f"{patient_id}: news_score_mean is null"
+                    assert pd.notna(min_val), f"{patient_id}: news_score_min is null"
+                    assert pd.notna(max_val), f"{patient_id}: news_score_max is null"
+
+                    assert (
+                        min_val <= max_val
+                    ), f"{patient_id}: news_score_min ({min_val}) should be <= news_score_max ({max_val})"
+                    assert (
+                        mean_val >= min_val
+                    ), f"{patient_id}: news_score_mean ({mean_val}) should be >= min ({min_val})"
+                    assert (
+                        mean_val <= max_val
+                    ), f"{patient_id}: news_score_mean ({mean_val}) should be <= max ({max_val})"
+
     def test_merge_news_data_functionality(self):
         """Test merge NEWS data functionality - verify merge function creates CSV."""
         from pat2vec.util.post_processing_build_methods import merge_news_csv
