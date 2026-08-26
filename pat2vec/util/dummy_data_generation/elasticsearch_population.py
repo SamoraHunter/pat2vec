@@ -290,11 +290,15 @@ def populate_elastic_with_dummy_data(
                 "treatment_docs.csv",
             )
             root_path = getattr(config_obj, "root_path", "")
-            if root_path:
+            if root_path and root_path != "":
                 os.makedirs(root_path, exist_ok=True)
                 output_path = os.path.join(root_path, filename)
             else:
-                output_path = filename
+                msg = (
+                    "testing_elastic workflow requires config_obj.root_path to be set. "
+                    f"Treatment docs cannot be saved to {filename} without a valid root_path."
+                )
+                raise ValueError(msg)
             logger.info(
                 f"Saving generated cohort to {output_path} for testing_elastic workflow.",
             )
