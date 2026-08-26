@@ -711,7 +711,10 @@ def generate_epic_medical_history_data(
                 for _ in range(num_rows)
             ],
             "document_Diagnosis": [faker.word() for _ in range(num_rows)],
-            "document_DiagnosisConcepts": [faker.word() for _ in range(num_rows)],
+            "document_DiagnosisConcepts": [
+                f"{faker.word()}, {faker.sentence(nb_words=5)} {faker.word()} disorder"
+                for _ in range(num_rows)
+            ],
             "document_Name": [faker.sentence(nb_words=2) for _ in range(num_rows)],
             "document_Comment": [faker.sentence() for _ in range(num_rows)],
             "id": [faker.uuid4() for _ in range(num_rows)],

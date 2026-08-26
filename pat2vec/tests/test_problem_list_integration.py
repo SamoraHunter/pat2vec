@@ -50,7 +50,7 @@ class TestProblemListIntegration(unittest.TestCase):
             all_patient_list=[self.test_patient_id],  # type: ignore
             batch_mode=True,  # type: ignore
             main_options={
-                "problem_list": True,
+                "epic_medical_history": True,
             },
             days=0,
         )

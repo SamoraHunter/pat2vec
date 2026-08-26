@@ -368,8 +368,6 @@ def generate_epic_lab_results_data(
             created_date_offset = collected_date_offset + np.random.randint(1, 48)
             created_date = admission_date + timedelta(hours=created_date_offset)
 
-            epic_id_prefix = f"LAB{faker.random_number(digits=6)}"
-
             for test in panel:
                 collected_str = collected_date.strftime("%Y-%m-%dT%H:%M:%S")
                 created_str = created_date.strftime("%Y-%m-%dT%H:%M:%S")
@@ -387,8 +385,7 @@ def generate_epic_lab_results_data(
                             test["value"] if test["value"] is not None else ""
                         ),
                         "document_CollectedDate": collected_str,
-                        "document_LabResultEpicId": epic_id_prefix
-                        + str(faker.random_number(digits=2)),
+                        "document_LabResultEpicId": str(faker.random_number(digits=8)),
                         "document_Fields.valueText": value_text,
                         "id": faker.uuid4(),
                     },

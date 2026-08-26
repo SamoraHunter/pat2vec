@@ -8,6 +8,52 @@ from pat2vec.util.methods_annotation import calculate_pretty_name_count_features
 from pat2vec.util.methods_get import update_pbar
 
 
+def _extract_problem_list_annotations(
+    filtered_annotations: pd.DataFrame | None,
+    patient_id: str,
+    unique_names: list[str] | None,
+) -> pd.DataFrame:
+    """Extracts problem_list features from epic_medical_history annotations.
+
+    Filters annotations that have document_ProblemListEpicId (problem list entries)
+    and creates count-based features for them.
+    """
+    if filtered_annotations is None or filtered_annotations.empty:
+        return pd.DataFrame(data=[patient_id], columns=["client_idcode"])
+
+    # Check if document_ProblemListEpicId column exists
+    if "document_ProblemListEpicId" not in filtered_annotations.columns:
+        return pd.DataFrame(data=[patient_id], columns=["client_idcode"])
+
+    # Filter only problem list entries (those with document_ProblemListEpicId populated)
+    problem_list_mask = filtered_annotations["document_ProblemListEpicId"].notna()
+    problem_list_annotations = filtered_annotations[problem_list_mask]
+
+    if problem_list_annotations.empty:
+        return pd.DataFrame(data=[patient_id], columns=["client_idcode"])
+
+    # Count features based on pretty_name for problem list entries
+    if unique_names is not None and len(unique_names) > 0:
+        feature_columns = [
+            f"problem_list_count_epic_medical_history_{name}" for name in unique_names
+        ]
+        result_df = pd.DataFrame(
+            {"client_idcode": [patient_id], **{col: [0.0] for col in feature_columns}},
+        )
+
+        # Count actual occurrences
+        if "pretty_name" in problem_list_annotations.columns:
+            pretty_name_counts = problem_list_annotations["pretty_name"].value_counts()
+            for name, count in pretty_name_counts.items():
+                col_name = f"problem_list_count_epic_medical_history_{name}"
+                if col_name in result_df.columns:
+                    result_df[col_name] = count
+
+        return result_df
+
+    return pd.DataFrame(data=[patient_id], columns=["client_idcode"])
+
+
 def get_current_pat_epic_medical_history_annotations(
     current_pat_client_id_code: str,
     target_date_range: tuple,
@@ -213,6 +259,20 @@ def get_current_pat_epic_medical_history_annotations(
         processed_annotations = pd.DataFrame(
             data=[current_pat_client_id_code],
             columns=["client_idcode"],
+        )
+
+    # Extract problem_list features from epic_medical_history annotations
+    # Problem list entries have document_ProblemListEpicId populated
+    problem_list_features = _extract_problem_list_annotations(
+        filtered_epic_medical_history_annotations,
+        current_pat_client_id_code,
+        unique_pretty_names,
+    )
+    if not problem_list_features.empty:
+        processed_annotations = processed_annotations.merge(
+            problem_list_features,
+            on="client_idcode",
+            how="left",
         )
 
     if config_obj.verbosity >= 6:

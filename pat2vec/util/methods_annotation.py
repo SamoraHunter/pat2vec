@@ -885,7 +885,7 @@ def multi_annots_to_df_epic_clinical_notes_appointments(
     config_obj: Any,
     t: Any,
     text_column: str = "document_Content",
-    time_column: str = "document_UpdatedWhen",
+    time_column: str = "updatetime",
     include_text_sample: bool = False,
     guid_column: str = "id",
     testing: bool = False,

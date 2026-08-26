@@ -78,9 +78,14 @@ def _fetch_epic_clinical_notes_from_elasticsearch(
                 results = results.rename(
                     columns={"document_PatientDurableKey": "client_idcode"},
                 )
+            # Handle time column - rename either UpdatedWhen or CreatedWhen to updatetime
             if "document_UpdatedWhen" in results.columns:
                 results = results.rename(
                     columns={"document_UpdatedWhen": "updatetime"},
+                )
+            elif "document_CreatedWhen" in results.columns:
+                results = results.rename(
+                    columns={"document_CreatedWhen": "updatetime"},
                 )
             if "document_Content" in results.columns:
                 results = results.rename(
