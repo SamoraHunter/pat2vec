@@ -36,7 +36,7 @@ def get_current_pat_epic_clinical_notes_appointments_annotations(
             the time period to filter annotations by.
         epic_clinical_notes_appointments_annotations: DataFrame containing Epic clinical notes appointments
             annotations for a batch of patients. Must be pre-annotated using MedCAT
-            and contain 'document_CreatedWhen' column for timestamp filtering,
+            and contain 'document_UpdatedWhen' column for timestamp filtering,
             'pretty_name', 'cui' for feature extraction.
         config_obj: Configuration object with settings such as `verbosity` and
             `start_time`. Cannot be None.
@@ -107,17 +107,17 @@ def get_current_pat_epic_clinical_notes_appointments_annotations(
         time_column = getattr(
             config_obj,
             "epic_clinical_notes_appointments_time_field",
-            "document_CreatedWhen",
+            "document_UpdatedWhen",
         )
 
+        found_col = None
         if time_column not in epic_clinical_notes_appointments_annotations.columns:
             alternative_columns = [
                 "updatetime",
                 "basicobs_entered",
                 "observationdocument_recordeddtm",
-                "document_CreatedWhen",
+                "document_UpdatedWhen",
             ]
-            found_col = None
             for alt_col in alternative_columns:
                 if alt_col in epic_clinical_notes_appointments_annotations.columns:
                     found_col = alt_col
@@ -129,6 +129,12 @@ def get_current_pat_epic_clinical_notes_appointments_annotations(
                         columns={found_col: time_column},
                     )
                 )
+
+        if time_column not in epic_clinical_notes_appointments_annotations.columns:
+            return pd.DataFrame(
+                data=[current_pat_client_id_code],
+                columns=["client_idcode"],
+            )
 
         filtered_epic_clinical_notes_appointments_annotations = (
             filter_dataframe_by_timestamp(

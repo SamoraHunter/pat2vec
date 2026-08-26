@@ -25,7 +25,7 @@ def search_epic_clinical_notes_appointments(
     cohort_searcher_with_terms_and_search=None,
     patient_durable_keys=None,
     id_field_name="document_PatientDurableKey",
-    time_field="document_CreatedWhen",
+    time_field="document_UpdatedWhen",
     fields_override: list[str] | None = None,
     start_year: int | str = 1995,
     start_month: int | str = 1,
@@ -56,7 +56,7 @@ def search_epic_clinical_notes_appointments(
         id_field_name: Name of the field containing patient identifiers in the index.
             Defaults to "document_PatientDurableKey".
         time_field: Name of the timestamp field to filter on. Defaults to
-            "document_CreatedWhen".
+            "document_UpdatedWhen".
         fields_override: Optional list of specific fields to retrieve. If None, uses
             default EPIC_CLINICAL_NOTES_APPOINTMENTS_FIELDS.
         start_year: Start year for the date range filter. Defaults to 1995.
@@ -80,8 +80,7 @@ def search_epic_clinical_notes_appointments(
     Returns:
     -------
         pd.DataFrame: A DataFrame containing the search results with columns for
-            document_PatientDurableKey, document_CreatedWhen, document_UpdatedWhen,
-            document_Name, document_Content, and other specified fields.
+            document_PatientDurableKey, document_UpdatedWhen, and other specified fields.
 
     Raises:
     ------
@@ -163,6 +162,20 @@ def search_epic_clinical_notes_appointments(
         print(f"Saving data to {output_filename}")
         results.to_csv(output_filename, index=False)
 
+    # Rename ES columns to match database schema expectations for raw_epic_clinical_notes_appointments
+    column_mapping = {
+        "document_CreatedWhen": "updatetime",
+        "document_UpdatedWhen": "document_UpdatedWhen",  # Keep for compatibility
+        "id": "document_guid",
+        "document_Name": "document_description",
+        "document_Content": "body_analysed",
+        "document_PatientDurableKey": "client_idcode",
+    }
+
+    for old_col, new_col in column_mapping.items():
+        if old_col in results.columns:
+            results = results.rename(columns={old_col: new_col})
+
     return results
 
 
@@ -216,7 +229,7 @@ def get_epic_clinical_notes_appointments(
     )
 
     id_field_name = "document_PatientDurableKey"
-    time_field = "document_CreatedWhen"
+    time_field = "document_UpdatedWhen"
 
     if pat_batch.empty and batch_mode:
         return pd.DataFrame({"client_idcode": [current_pat_client_id_code]})

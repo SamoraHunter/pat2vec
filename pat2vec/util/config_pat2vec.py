@@ -641,6 +641,7 @@ class config_class:
             "epic_patients": False,
             "epic_imaging_reports": False,
             "epic_clinical_notes_appointments": False,
+            "epic_clinical_notes_appointments_annotations": False,
             # Epic Annotation Options (required when using epic raw data with database backend)
             "epic_clinical_notes_annotations": False,
             "epic_medical_history_annotations": False,
@@ -649,14 +650,18 @@ class config_class:
 
         if main_options is not None:
             self._validate_main_options(main_options, default_main_options)
-
-        if self.main_options is None:
-            if self.verbosity >= 1:
-                logger.info("Default main_options set!")
-
+            self.main_options = {**default_main_options, **main_options}
+        else:
             self.main_options = default_main_options
-            if self.verbosity >= 1:
-                logger.info(self.main_options)
+
+        if self.verbosity >= 1:
+            logger.info("main_options set!")
+            logger.info(self.main_options)
+
+        logger.debug("=== main_options enabled/disabled ===")
+        for option, enabled in self.main_options.items():
+            status = "ENABLED" if enabled else "DISABLED"
+            logger.debug(f"  {option}: {status}")
 
         if self.annot_filter_options is None:
             self.filter_arguments = {

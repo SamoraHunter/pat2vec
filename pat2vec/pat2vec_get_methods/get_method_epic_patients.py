@@ -163,6 +163,17 @@ def search_epic_patients(
         print(f"Saving epic patient data to {output_filename}")
         results.to_csv(output_filename, index=False)
 
+    # Rename ES columns to match database schema expectations
+    column_mapping = {
+        "patient_DurableKey": "client_idcode",
+        "patient_CreatedWhen": "patient_CreatedWhen",  # Already correct per MAPPINGS
+        "id": "document_guid",
+    }
+
+    for old_col, new_col in column_mapping.items():
+        if old_col in results.columns:
+            results = results.rename(columns={old_col: new_col})
+
     return results
 
 

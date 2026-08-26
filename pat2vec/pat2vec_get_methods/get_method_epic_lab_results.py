@@ -157,6 +157,19 @@ def search_epic_lab_results(
         print(f"Saving epic lab results data to {output_filename}")
         results.to_csv(output_filename, index=False)
 
+    # Rename ES columns to match database schema expectations
+    column_mapping = {
+        "document_PatientDurableKey": "client_idcode",
+        "document_CollectedDate": "document_CollectedDate",  # Already correct per MAPPINGS
+        "id": "document_guid",
+        "document_Name": "document_description",
+        "document_Content": "body_analysed",
+    }
+
+    for old_col, new_col in column_mapping.items():
+        if old_col in results.columns:
+            results = results.rename(columns={old_col: new_col})
+
     return results
 
 

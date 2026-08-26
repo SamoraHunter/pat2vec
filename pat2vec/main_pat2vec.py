@@ -2288,6 +2288,18 @@ class main:
         _logger.info(
             f"_get_patient_data_batches returned: keys={list(batches.keys())}, batch_bmi shape={batches.get('batch_bmi', pd.DataFrame()).shape}, batch_vte shape={batches.get('batch_vte', pd.DataFrame()).shape}",
         )
+        # Debug logging for EPR docs and annotations
+        _logger.info(
+            f"DEBUG: batch_epr shape={batches.get('batch_epr', pd.DataFrame()).shape}, columns={list(batches.get('batch_epr', pd.DataFrame()).columns)}",
+        )
+        batch_epr = batches.get("batch_epr", pd.DataFrame())
+        if not batch_epr.empty:
+            _logger.info(
+                f"DEBUG: batch_epr sample body_analysed: {batch_epr.iloc[0].get('body_analysed', 'N/A')[:100] if len(batch_epr) > 0 else 'no rows'}",
+            )
+        _logger.info(
+            f"DEBUG: batch_epr_docs_annotations shape={batches.get('batch_epr_docs_annotations', pd.DataFrame()).shape}, columns={list(batches.get('batch_epr_docs_annotations', pd.DataFrame()).columns)[:5] if not batches.get('batch_epr_docs_annotations', pd.DataFrame()).empty else 'empty'}",
+        )
 
         # Save raw batches and annotation batches to DB if applicable
         print(f"DDEBUG: storage_backend={self.config_obj.storage_backend}")
