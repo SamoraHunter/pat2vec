@@ -32,7 +32,7 @@ class TestAppointmentsGet:
     """Stage-mirroring pytest for test_appointments_get.ipynb."""
 
     @pytest.fixture(autouse=True, scope="class")
-    def _start_elastic(self, elastic_container):
+    def _start_elastic(self, elastic_container, tmp_path_factory):
         cls = type(self)
         cls.cred_path = elastic_container
         cls.creds_filename = elastic_container
@@ -45,16 +45,16 @@ class TestAppointmentsGet:
         cls.pat2vec_dir = os.path.abspath(os.path.join(cls.grandparent_dir, "pat2vec"))
         sys.path.insert(0, cls.pat2vec_dir)
 
+        cls.TEMP_DIR = str(tmp_path_factory.mktemp("appointments_test_project"))
+
         cls.PROJ_NAME = "appointments_test_project"
         cls.DB_FILENAME = "temp_appointments_db.sqlite"
-        cls.DB_PATH = os.path.join(cls.PROJ_NAME, "outputs", cls.DB_FILENAME)
+        cls.DB_PATH = os.path.join(
+            cls.TEMP_DIR, cls.PROJ_NAME, "outputs", cls.DB_FILENAME
+        )
 
-        for dir_to_remove in ["appointments_test_project"]:
-            try:
-                shutil.rmtree(dir_to_remove, ignore_errors=True)
-            except Exception as e:
-                msg = f"Failed to clean up '{dir_to_remove}': {e}"
-                raise RuntimeError(msg) from e
+        temp_proj_dir_populate = os.path.join(cls.TEMP_DIR, cls.PROJ_NAME)
+        os.makedirs(temp_proj_dir_populate, exist_ok=True)
 
         schema_path = os.path.abspath("test_files/elastic_schemas.json")
         config_populate = config_class(
@@ -119,10 +119,12 @@ class TestAppointmentsGet:
         db_connection_string = f"sqlite:///{cls.DB_PATH}"
         cls.logger = setup_logger()
 
+        temp_proj_dir_main = os.path.join(cls.TEMP_DIR, cls.PROJ_NAME)
+
         cls.config_obj = config_class(
             proj_name=cls.PROJ_NAME,
             credentials_path=cls.cred_path,
-            current_path_dir="",
+            root_path=temp_proj_dir_main,
             main_options={"appointments": True},
             batch_mode=True,
             verbosity=0,
@@ -353,11 +355,11 @@ class TestAppointmentsGet:
             raise AssertionError(msg) from e
 
         try:
-            if os.path.exists(self.PROJ_NAME):
-                shutil.rmtree(self.PROJ_NAME, ignore_errors=False)
+            if os.path.exists(self.TEMP_DIR):
+                shutil.rmtree(self.TEMP_DIR, ignore_errors=False)
         except Exception as e:
-            msg = f"Failed to remove '{self.PROJ_NAME}' directory: {e}"
+            msg = f"Failed to remove '{self.TEMP_DIR}' directory: {e}"
             raise AssertionError(msg) from e
 
         assert not os.path.exists(self.DB_PATH), "Database file should be removed"
-        assert not os.path.exists(self.PROJ_NAME), "Project directory should be removed"
+        assert not os.path.exists(self.TEMP_DIR), "Project directory should be removed"

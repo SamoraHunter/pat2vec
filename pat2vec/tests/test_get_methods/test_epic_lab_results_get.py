@@ -29,7 +29,7 @@ class TestEpicLabResultsGet:
     """Stage-mirroring pytest for epic_lab_results get method."""
 
     @pytest.fixture(autouse=True, scope="class")
-    def _start_elastic(self, elastic_container):
+    def _start_elastic(self, elastic_container, tmp_path_factory):
         cls = type(self)
         cls.cred_path = elastic_container
         cls.creds_filename = elastic_container
@@ -44,19 +44,15 @@ class TestEpicLabResultsGet:
 
         cls.PROJ_NAME = "epic_lab_results_test_project"
         cls.DB_FILENAME = "temp_epic_lab_results_db.sqlite"
-        cls.DB_PATH = os.path.join(cls.PROJ_NAME, "outputs", cls.DB_FILENAME)
-
-        for dir_to_remove in ["epic_lab_results_test_project"]:
-            try:
-                shutil.rmtree(dir_to_remove, ignore_errors=True)
-            except Exception as e:
-                msg = f"Failed to clean up '{dir_to_remove}' directory: {e}. "
-                "Critical error - cannot start with stale data."
-                raise RuntimeError(msg) from e
+        cls.TEMP_DIR = str(tmp_path_factory.mktemp("epic_lab_results_test_project"))
+        cls.DB_PATH = os.path.join(
+            cls.TEMP_DIR, cls.PROJ_NAME, "outputs", cls.DB_FILENAME
+        )
 
         schema_path = os.path.abspath("test_files/elastic_schemas.json")
+        temp_proj_dir_populate = os.path.join(cls.TEMP_DIR, cls.PROJ_NAME)
         config_populate = config_class(
-            proj_name="epic_lab_results_test_project",
+            proj_name=cls.PROJ_NAME,
             credentials_path=cls.cred_path,
             test_schema_path=schema_path,
             testing=True,
@@ -67,6 +63,7 @@ class TestEpicLabResultsGet:
             global_end_year=2023,
             global_end_month=12,
             global_end_day=31,
+            root_path=temp_proj_dir_populate,
         )
 
         cls.patient_ids = populate_elastic_with_dummy_data(
@@ -121,6 +118,7 @@ class TestEpicLabResultsGet:
 
         cls.logger = setup_logger()
 
+        temp_proj_dir_main = os.path.join(cls.TEMP_DIR, cls.PROJ_NAME)
         cls.config_obj = config_class(
             proj_name=cls.PROJ_NAME,
             credentials_path=cls.cred_path,
@@ -141,6 +139,7 @@ class TestEpicLabResultsGet:
             storage_backend="database",
             db_connection_string=db_connection_string,
             all_patient_list=cls.patient_ids,
+            root_path=temp_proj_dir_main,
         )
 
         cls.pat2vec_obj = main(

@@ -2993,7 +2993,7 @@ def run_generate_patient_timeline_and_append(
 
 def get_patient_timeline_dummy(
     client_idcode: str,
-    output_path: str = os.path.join("test_files", "dummy_timeline.csv"),
+    output_path: str | None = None,
 ) -> str | None:
     """Retrieves a random patient timeline from a pre-generated CSV file.
 
@@ -3001,7 +3001,8 @@ def get_patient_timeline_dummy(
     ----
         client_idcode: The client ID to search for (currently unused, as a
             random row is always selected).
-        output_path: The path to the CSV file containing dummy timelines.
+        output_path: Optional path to the CSV file containing dummy timelines.
+            If None, uses the default location relative to the pat2vec module.
 
     Returns:
     -------
@@ -3013,6 +3014,21 @@ def get_patient_timeline_dummy(
         None
 
     """
+    if output_path is None:
+        try:
+            import pat2vec
+
+            pat2vec_dir = os.path.dirname(pat2vec.__file__)
+            output_path = os.path.join(
+                pat2vec_dir,
+                "..",
+                "test_files",
+                "dummy_timeline.csv",
+            )
+            output_path = os.path.abspath(output_path)
+        except Exception:
+            output_path = os.path.abspath("test_files/dummy_timeline.csv")
+
     try:
         df: pd.DataFrame = pd.read_csv(output_path)
     except FileNotFoundError:

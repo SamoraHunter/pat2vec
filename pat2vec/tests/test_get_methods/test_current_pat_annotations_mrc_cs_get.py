@@ -27,7 +27,7 @@ class TestCurrentPatAnnotationsMrcCsGet:
     """Stage-mirroring pytest for current_pat_annotations_mrc_cs get method."""
 
     @pytest.fixture(autouse=True, scope="class")
-    def _start_elastic(self, elastic_container):
+    def _start_elastic(self, elastic_container, tmp_path_factory):
         cls = type(self)
         cls.cred_path = elastic_container
         cls.creds_filename = elastic_container
@@ -42,16 +42,27 @@ class TestCurrentPatAnnotationsMrcCsGet:
 
         cls.PROJ_NAME = "mrc_cs_test_project"
         cls.DB_FILENAME = "temp_current_pat_annotations_mrc_cs_db.sqlite"
-        cls.DB_PATH = os.path.join(cls.PROJ_NAME, "outputs", cls.DB_FILENAME)
+        cls.TEMP_DIR = str(tmp_path_factory.mktemp("mrc_cs_test_project"))
+        cls.DB_PATH = os.path.join(
+            cls.TEMP_DIR, cls.PROJ_NAME, "outputs", cls.DB_FILENAME
+        )
 
-        for dir_to_remove in ["mrc_cs_test_project"]:
-            try:
-                shutil.rmtree(dir_to_remove, ignore_errors=True)
-            except Exception as e:
-                msg = f"Failed to clean up '{dir_to_remove}': {e}"
-                raise RuntimeError(msg) from e
-
+        temp_proj_dir_populate = os.path.join(cls.TEMP_DIR, cls.PROJ_NAME)
         schema_path = os.path.abspath("test_files/elastic_schemas.json")
+        config_populate = config_class(
+            proj_name="mrc_cs_test_project",
+            credentials_path=cls.cred_path,
+            test_schema_path=schema_path,
+            testing=True,
+            testing_elastic=True,
+            global_start_year=2020,
+            global_start_month=1,
+            global_start_day=1,
+            global_end_year=2023,
+            global_end_month=12,
+            global_end_day=31,
+            root_path=temp_proj_dir_populate,
+        )
         config_populate = config_class(
             proj_name="mrc_cs_test_project",
             credentials_path=cls.cred_path,

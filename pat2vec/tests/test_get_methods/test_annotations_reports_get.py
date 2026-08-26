@@ -34,7 +34,7 @@ class TestAnnotationsReportsGet:
     """Stage-mirroring pytest for test_annotations_reports_get.ipynb."""
 
     @pytest.fixture(autouse=True, scope="class")
-    def _start_elastic(self, elastic_container):
+    def _start_elastic(self, elastic_container, tmp_path_factory):
         """Run all setup that depends on the shared ES container."""
         cls = type(self)
         cls.cred_path = elastic_container
@@ -50,17 +50,15 @@ class TestAnnotationsReportsGet:
 
         cls.PROJ_NAME = "annotations_reports_test_project"
         cls.DB_FILENAME = "temp_annotations_reports_db.sqlite"
-        cls.DB_PATH = os.path.join(cls.PROJ_NAME, "outputs", cls.DB_FILENAME)
-
-        # Cleanup previous test outputs
-        for dir_to_remove in ["annotations_reports_test_project"]:
-            try:
-                shutil.rmtree(dir_to_remove, ignore_errors=True)
-            except Exception as e:
-                msg = f"Failed to clean up '{dir_to_remove}': {e}"
-                raise RuntimeError(msg) from e
+        cls.TEMP_DIR = str(tmp_path_factory.mktemp("annotations_test_project"))
+        cls.DB_PATH = os.path.join(
+            cls.TEMP_DIR, cls.PROJ_NAME, "outputs", cls.DB_FILENAME
+        )
 
         schema_path = os.path.abspath("test_files/elastic_schemas.json")
+        temp_proj_dir_populate = os.path.join(
+            cls.TEMP_DIR, "annotations_reports_test_project_populate"
+        )
         config_populate = config_class(
             proj_name="annotations_reports_test_project",
             credentials_path=cls.creds_filename,
@@ -73,6 +71,7 @@ class TestAnnotationsReportsGet:
             global_end_year=2023,
             global_end_month=12,
             global_end_day=31,
+            root_path=temp_proj_dir_populate,
         )
 
         cls.patient_ids = populate_elastic_with_dummy_data(
@@ -122,6 +121,7 @@ class TestAnnotationsReportsGet:
         db_connection_string = f"sqlite:///{cls.DB_PATH}"
         cls.logger = setup_logger()
 
+        temp_proj_dir_main = os.path.join(cls.TEMP_DIR, cls.PROJ_NAME)
         cls.config_obj = config_class(
             proj_name=cls.PROJ_NAME,
             credentials_path=cls.creds_filename,
@@ -141,6 +141,7 @@ class TestAnnotationsReportsGet:
             shuffle_pat_list=False,
             storage_backend="database",
             db_connection_string=db_connection_string,
+            root_path=temp_proj_dir_main,
             all_patient_list=cls.patient_ids,
         )
 
@@ -357,12 +358,12 @@ class TestAnnotationsReportsGet:
             raise AssertionError(msg) from e
 
         try:
-            if os.path.exists(self.PROJ_NAME):
-                shutil.rmtree(self.PROJ_NAME, ignore_errors=False)
+            if os.path.exists(self.TEMP_DIR):
+                shutil.rmtree(self.TEMP_DIR, ignore_errors=False)
         except Exception as e:
-            msg = f"Failed to remove '{self.PROJ_NAME}' directory: {e}"
+            msg = f"Failed to remove '{self.TEMP_DIR}' directory: {e}"
             raise AssertionError(msg) from e
 
         # Verify cleanup
         assert not os.path.exists(self.DB_PATH), "Database file should be removed"
-        assert not os.path.exists(self.PROJ_NAME), "Project directory should be removed"
+        assert not os.path.exists(self.TEMP_DIR), "Temp directory should be removed"

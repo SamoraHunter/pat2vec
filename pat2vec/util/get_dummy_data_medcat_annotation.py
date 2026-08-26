@@ -336,18 +336,32 @@ def _resolve_sample_annotations_pickle() -> str:
         FileNotFoundError: If the pickle file cannot be located.
 
     """
-    candidates = [
-        os.path.join("test_files", "sample_annotations.pickle"),
-        os.path.abspath(
+    try:
+        import pat2vec
+
+        pat2vec_dir = os.path.dirname(pat2vec.__file__)
+        candidates = [
+            os.path.abspath("test_files/sample_annotations.pickle"),
             os.path.join(
-                os.path.dirname(__file__),
-                os.pardir,
-                os.pardir,
+                pat2vec_dir,
+                "..",
                 "test_files",
                 "sample_annotations.pickle",
             ),
-        ),
-    ]
+        ]
+    except Exception:
+        candidates = [
+            os.path.join("test_files", "sample_annotations.pickle"),
+            os.path.abspath(
+                os.path.join(
+                    os.path.dirname(__file__),
+                    os.pardir,
+                    os.pardir,
+                    "test_files",
+                    "sample_annotations.pickle",
+                ),
+            ),
+        ]
     for candidate in candidates:
         if os.path.exists(candidate):
             return candidate

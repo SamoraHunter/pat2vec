@@ -20,6 +20,7 @@ from pat2vec.pat2vec_search.cogstack_search_methods import (
 from pat2vec.util.helper_functions import get_all_features
 from pat2vec.util.logger_setup import setup_logger
 from pat2vec.util.elasticsearch_methods import ingest_data_to_elasticsearch
+from pathlib import Path
 
 random_seed_value = 42
 
@@ -31,7 +32,7 @@ class TestEpicEncountersGet:
     """Stage-mirroring pytest for test_epic_encounters_get.ipynb."""
 
     @pytest.fixture(autouse=True, scope="class")
-    def _start_elastic(self, elastic_container):
+    def _start_elastic(self, elastic_container, tmp_path_factory):
         cls = type(self)
         cls.cred_path = elastic_container
         cls.creds_filename = elastic_container
@@ -46,15 +47,12 @@ class TestEpicEncountersGet:
 
         cls.PROJ_NAME = "epic_encounters_test_project"
         cls.DB_FILENAME = "temp_epic_encounters_db.sqlite"
-        cls.DB_PATH = os.path.join(cls.PROJ_NAME, "outputs", cls.DB_FILENAME)
+        cls.TEMP_DIR = str(tmp_path_factory.mktemp("epic_encounters_test_project"))
 
-        for dir_to_remove in ["epic_encounters_test_project"]:
-            try:
-                shutil.rmtree(dir_to_remove, ignore_errors=True)
-            except Exception as e:
-                msg = f"Failed to clean up '{dir_to_remove}' directory: {e}. "
-                "Critical error - cannot start with stale data."
-                raise RuntimeError(msg) from e
+        temp_proj_dir_populate = os.path.join(cls.TEMP_DIR, cls.PROJ_NAME)
+        temp_proj_dir_main = os.path.join(cls.TEMP_DIR, cls.PROJ_NAME)
+
+        cls.DB_PATH = os.path.join(temp_proj_dir_main, "outputs", cls.DB_FILENAME)
 
         schema_path = os.path.abspath("test_files/elastic_schemas.json")
         config_populate = config_class(
@@ -69,6 +67,7 @@ class TestEpicEncountersGet:
             global_end_year=2023,
             global_end_month=12,
             global_end_day=31,
+            root_path=temp_proj_dir_populate,
         )
 
         cls.patient_ids = populate_elastic_with_dummy_data(
@@ -140,6 +139,7 @@ class TestEpicEncountersGet:
             storage_backend="database",
             db_connection_string=db_connection_string,
             all_patient_list=cls.patient_ids,
+            root_path=temp_proj_dir_main,
         )
 
         cls.pat2vec_obj = main(
@@ -255,10 +255,10 @@ class TestEpicEncountersGet:
             raise AssertionError(msg) from e
 
         try:
-            if os.path.exists(self.PROJ_NAME):
-                shutil.rmtree(self.PROJ_NAME, ignore_errors=False)
+            if os.path.exists(self.TEMP_DIR):
+                shutil.rmtree(self.TEMP_DIR, ignore_errors=False)
         except Exception as e:
-            msg = f"Failed to remove '{self.PROJ_NAME}' directory: {e}"
+            msg = f"Failed to remove '{self.TEMP_DIR}' directory: {e}"
             raise AssertionError(msg) from e
 
 

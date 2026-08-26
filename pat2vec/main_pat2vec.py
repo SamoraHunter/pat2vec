@@ -1774,82 +1774,63 @@ class main:
     ) -> None:
         """Saves annotation batches to the database if backend is enabled.
 
-        This ensures that annotation tables are created with proper schema
-        even when no annotations are generated (e.g., in testing mode).
+        This ensures that annotation tables are created and populated with actual
+        annotation data from the fetched batches.
         """
         if self.config_obj.storage_backend != "database":
             return
 
         from pat2vec.util.helper_functions import save_annotations_to_db
-        from pat2vec.util.post_processing_annotations import EMPTY_ANNOT_COLS
 
-        # Define table names and their corresponding option keys for ALL annotation sources
-        annotation_configs = [
-            {
-                "table": "ann_epr_docs",
-                "option": "annotations",
-            },
-            {
-                "table": "ann_mct_docs",
-                "option": "annotations_mrc",
-            },
-            {
-                "table": "ann_textual_obs",
-                "option": "textual_obs",
-            },
-            {
-                "table": "ann_reports",
-                "option": "annotations_reports",
-            },
-            {
-                "table": "ann_epic_clinical_notes",
-                "option": "epic_clinical_notes_annotations",
-            },
-            {
-                "table": "ann_epic_medical_history",
-                "option": "epic_medical_history_annotations",
-            },
-            {
-                "table": "ann_epic_imaging_reports",
-                "option": "epic_imaging_reports_annotations",
-            },
-            {
-                "table": "ann_epic_orders",
-                "option": "epic_orders_annotations",
-            },
-            {
-                "table": "ann_epic_clinical_notes_appointments",
-                "option": "epic_clinical_notes_appointments_annotations",
-            },
-        ]
+        batch_to_annotation_table = {
+            "batch_epr_docs_annotations": ("ann_epr_docs", "annotations"),
+            "batch_epr_docs_annotations_mct": ("ann_mct_docs", "annotations_mrc"),
+            "batch_textual_obs_annotations": ("ann_textual_obs", "textual_obs"),
+            "batch_reports_docs_annotations": ("ann_reports", "annotations_reports"),
+            "batch_epic_clinical_notes_annotations": (
+                "ann_epic_clinical_notes",
+                "epic_clinical_notes_annotations",
+            ),
+            "batch_epic_medical_history_annotations": (
+                "ann_epic_medical_history",
+                "epic_medical_history_annotations",
+            ),
+            "batch_epic_imaging_reports_annotations": (
+                "ann_epic_imaging_reports",
+                "epic_imaging_reports_annotations",
+            ),
+            "batch_epic_orders_annotations": (
+                "ann_epic_orders",
+                "epic_orders_annotations",
+            ),
+            "batch_epic_clinical_notes_appointments_annotations": (
+                "ann_epic_clinical_notes_appointments",
+                "epic_clinical_notes_appointments_annotations",
+            ),
+        }
 
-        for config in annotation_configs:
-            table_name = config.get("table")
-            option = config.get("option")
-
-            if not table_name or option is None:
+        for batch_key, (table_name, option) in batch_to_annotation_table.items():
+            if batch_key not in batches:
                 continue
+
+            batch_data = batches[batch_key]
 
             # Check if source option is enabled
             is_enabled = self.config_obj.main_options.get(option, False)
 
-            # Skip disabled sources
-            if not is_enabled:
+            if batch_data.empty and not is_enabled:
                 continue
-
-            empty_df = pd.DataFrame(columns=EMPTY_ANNOT_COLS)
-            empty_df["client_idcode"] = patient_id
 
             try:
                 save_annotations_to_db(
-                    empty_df,
+                    batch_data,
                     patient_id,
                     table_name,
                     self.config_obj,
                     id_column="client_idcode",
                 )
             except Exception as e:
-                _logger.error(f"Failed to create annotation table {table_name}: {e}")
+                _logger.error(f"Failed to save annotations to table {table_name}: {e}")
 
     def _setup_patient_time_window(
         self,
@@ -2296,7 +2277,7 @@ class main:
             self.config_obj.skipped_counter,
         )
 
-        # Create annotation tables before fetching batches to ensure they exist for get_df_from_db
+        # 2. Save annotation tables to DB if applicable
         if self.config_obj.storage_backend == "database":
             self._save_annotation_batches_to_db(current_pat_client_id_code, {})
 
@@ -2308,11 +2289,13 @@ class main:
             f"_get_patient_data_batches returned: keys={list(batches.keys())}, batch_bmi shape={batches.get('batch_bmi', pd.DataFrame()).shape}, batch_vte shape={batches.get('batch_vte', pd.DataFrame()).shape}",
         )
 
-        # Save raw batches to DB if applicable
+        # Save raw batches and annotation batches to DB if applicable
         print(f"DDEBUG: storage_backend={self.config_obj.storage_backend}")
         if self.config_obj.storage_backend == "database":
             print("DDEBUG: Would call _save_batches_to_db")
             self._save_batches_to_db(current_pat_client_id_code, batches)
+            print("DDEBUG: Would call _save_annotation_batches_to_db")
+            self._save_annotation_batches_to_db(current_pat_client_id_code, batches)
 
         update_pbar(
             current_pat_client_id_code,

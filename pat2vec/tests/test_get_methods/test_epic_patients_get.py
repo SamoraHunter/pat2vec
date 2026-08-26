@@ -14,6 +14,8 @@ from pat2vec.pat2vec_get_methods.get_method_epic_patients import (
 from pat2vec.pat2vec_search.cogstack_search_methods import (
     initialize_cogstack_client,
 )
+from pathlib import Path
+
 from pat2vec.util.config_pat2vec import config_class
 from pat2vec.util.elasticsearch_methods import ingest_data_to_elasticsearch
 from pat2vec.util.get_dummy_data_cohort_searcher import (

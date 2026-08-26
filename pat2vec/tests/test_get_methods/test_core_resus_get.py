@@ -32,7 +32,7 @@ class TestCoreResusGet:
     """Stage-mirroring pytest for test_core_resus_get.ipynb."""
 
     @pytest.fixture(autouse=True, scope="class")
-    def _start_elastic(self, elastic_container):
+    def _start_elastic(self, elastic_container, tmp_path_factory):
         """Run all setup that depends on the shared ES container."""
         cls = type(self)
         cls.cred_path = elastic_container
@@ -48,23 +48,20 @@ class TestCoreResusGet:
 
         cls.PROJ_NAME = "core_resus_test_project"
         cls.DB_FILENAME = "temp_core_resus_db.sqlite"
-        cls.DB_PATH = os.path.join(cls.PROJ_NAME, "outputs", cls.DB_FILENAME)
-
-        # Cleanup previous test outputs
-        for dir_to_remove in ["core_resus_test_project"]:
-            try:
-                shutil.rmtree(dir_to_remove, ignore_errors=True)
-            except Exception as e:
-                msg = f"Failed to clean up '{dir_to_remove}': {e}"
-                raise RuntimeError(msg) from e
+        cls.TEMP_DIR = str(tmp_path_factory.mktemp("core_resus_test_project"))
+        cls.DB_PATH = os.path.join(
+            cls.TEMP_DIR, cls.PROJ_NAME, "outputs", cls.DB_FILENAME
+        )
 
         schema_path = os.path.abspath("test_files/elastic_schemas.json")
+        temp_proj_dir_populate = os.path.join(cls.TEMP_DIR, cls.PROJ_NAME)
         config_populate = config_class(
             proj_name="core_resus_test_project",
             credentials_path=cls.cred_path,
             test_schema_path=schema_path,
             testing=True,
             testing_elastic=True,
+            root_path=temp_proj_dir_populate,
             global_start_year=2020,
             global_start_month=1,
             global_start_day=1,
@@ -121,10 +118,12 @@ class TestCoreResusGet:
         db_connection_string = f"sqlite:///{cls.DB_PATH}"
         cls.logger = setup_logger()
 
+        temp_proj_dir_main = os.path.join(cls.TEMP_DIR, cls.PROJ_NAME)
         cls.config_obj = config_class(
             proj_name=cls.PROJ_NAME,
             credentials_path=cls.cred_path,
             current_path_dir="",
+            root_path=temp_proj_dir_main,
             main_options={"core_resus": True},
             batch_mode=True,
             verbosity=0,
@@ -374,14 +373,14 @@ class TestCoreResusGet:
             raise AssertionError(msg) from e
 
         try:
-            if os.path.exists(self.PROJ_NAME):
-                shutil.rmtree(self.PROJ_NAME, ignore_errors=False)
+            if os.path.exists(self.TEMP_DIR):
+                shutil.rmtree(self.TEMP_DIR, ignore_errors=False)
         except Exception as e:
-            msg = f"Failed to remove '{self.PROJ_NAME}' directory: {e}"
+            msg = f"Failed to remove '{self.TEMP_DIR}' directory: {e}"
             raise AssertionError(msg) from e
 
         # Credentials file cleanup is handled by the fixture (not verified here)
 
         # Verify cleanup
         assert not os.path.exists(self.DB_PATH), "Database file should be removed"
-        assert not os.path.exists(self.PROJ_NAME), "Project directory should be removed"
+        assert not os.path.exists(self.TEMP_DIR), "Temp directory should be removed"

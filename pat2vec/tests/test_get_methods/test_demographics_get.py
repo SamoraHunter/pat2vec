@@ -20,6 +20,7 @@ from pat2vec.pat2vec_search.cogstack_search_methods import (
     initialize_cogstack_client,
 )
 from pat2vec.util.elasticsearch_methods import ingest_data_to_elasticsearch
+from pathlib import Path
 
 random_seed_value = 42
 
@@ -31,7 +32,7 @@ class TestDemographicsGet:
     """Stage-mirroring pytest for demographics get method."""
 
     @pytest.fixture(autouse=True, scope="class")
-    def _start_elastic(self, elastic_container):
+    def _start_elastic(self, elastic_container, tmp_path_factory):
         """Run all setup that depends on the shared ES container."""
         cls = type(self)
         cls.cred_path = elastic_container
@@ -47,14 +48,14 @@ class TestDemographicsGet:
 
         cls.PROJ_NAME = "demographics_test_project"
         cls.DB_FILENAME = "temp_demographics_db.sqlite"
-        cls.DB_PATH = os.path.join(cls.PROJ_NAME, "outputs", cls.DB_FILENAME)
 
-        # Cleanup previous test outputs
-        for dir_to_remove in ["demographics_test_project"]:
-            try:
-                shutil.rmtree(dir_to_remove, ignore_errors=True)
-            except Exception as e:
-                raise RuntimeError(f"Failed to clean up '{dir_to_remove}': {e}") from e
+        temp_proj_dir_populate = str(
+            tmp_path_factory.mktemp("demographics_test_project")
+        )
+        cls.TEMP_DIR = temp_proj_dir_populate
+        cls.DB_PATH = os.path.join(
+            cls.TEMP_DIR, cls.PROJ_NAME, "outputs", cls.DB_FILENAME
+        )
 
         schema_path = os.path.abspath("test_files/elastic_schemas.json")
         config_populate = config_class(
