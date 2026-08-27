@@ -173,16 +173,16 @@ def prepare_drug_datetime(
 ) -> pd.DataFrame:
     """Prepares the datetime column for drug data processing.
 
-    Creates a 'datetime' column by either copying the specified time field
-    (in batch mode) or converting it to datetime objects. This function is
-    essential for normalizing drug order timestamps before feature calculation.
+    Creates a 'datetime' column by converting the specified time field
+    to datetime objects. This function is essential for normalizing drug
+    order timestamps before feature calculation.
 
     Args:
     ----
         drugs_data (pd.DataFrame): Raw drug order data containing raw timestamp fields.
         drug_time_field (str): The name of the time field to process (e.g., 'order_createdwhen').
         batch_mode (bool): Whether the function is running in batch mode. In batch mode,
-            the datetime column is copied directly without conversion. Defaults to False.
+            string dates are converted to datetime objects. Defaults to False.
 
     Returns:
     -------
@@ -197,7 +197,11 @@ def prepare_drug_datetime(
     data = drugs_data.copy()
 
     if batch_mode:
-        data["datetime"] = data[drug_time_field].copy()
+        data["datetime"] = pd.to_datetime(
+            data[drug_time_field],
+            utc=True,
+            errors="coerce",
+        )
     else:
         data["datetime"] = pd.Series(data[drug_time_field]).dropna().apply(convert_date)
 

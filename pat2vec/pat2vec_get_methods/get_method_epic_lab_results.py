@@ -248,18 +248,22 @@ def get_epic_lab_results(
     if len(current_pat_raw) == 0:
         return features
 
-    # Extract binary features based on document_Name
-    if "document_Name" in current_pat_raw.columns:
-        unique_lab_names = current_pat_raw["document_Name"].dropna().unique()
+    # Extract binary features based on document_Name/document_description (renamed column)
+    lab_name_col = (
+        "document_Name"
+        if "document_Name" in current_pat_raw.columns
+        else "document_description"
+    )
+    if lab_name_col in current_pat_raw.columns:
+        unique_lab_names = current_pat_raw[lab_name_col].dropna().unique()
         for name_val in unique_lab_names:
             sanitized_name = "".join(c if c.isalnum() else "_" for c in name_val)
             features[f"epic_lab_name_{sanitized_name}"] = 1
 
-    # Extract binary features based on document_AbnormalLevel
-    if "document_AbnormalLevel" in current_pat_raw.columns:
-        unique_abnormal_levels = (
-            current_pat_raw["document_AbnormalLevel"].dropna().unique()
-        )
+    # Extract binary features based on document_AbnormalLevel (may not exist in dummy data)
+    abnormal_col = "document_AbnormalLevel"
+    if abnormal_col in current_pat_raw.columns:
+        unique_abnormal_levels = current_pat_raw[abnormal_col].dropna().unique()
         for level_val in unique_abnormal_levels:
             sanitized_level = "".join(c if c.isalnum() else "_" for c in level_val)
             features[f"epic_lab_abnormal_{sanitized_level}"] = 1

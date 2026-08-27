@@ -172,8 +172,8 @@ def prepare_diagnostic_datetime(
 ) -> pd.DataFrame:
     """Prepares the datetime column for diagnostic data processing.
 
-    Creates a 'datetime' column by either copying the specified time field
-    (in batch mode) or converting it to datetime objects.
+    Creates a 'datetime' column by either converting the specified time field
+    to datetime objects (in batch mode) or using convert_date function.
 
     Args:
     ----
@@ -190,7 +190,11 @@ def prepare_diagnostic_datetime(
     data = diagnostics_data.copy()
 
     if batch_mode:
-        data["datetime"] = data[diagnostic_time_field].copy()
+        data["datetime"] = pd.to_datetime(
+            data[diagnostic_time_field],
+            utc=True,
+            errors="coerce",
+        )
     else:
         data["datetime"] = (
             pd.Series(data[diagnostic_time_field]).dropna().apply(convert_date)

@@ -258,6 +258,33 @@ EPIC_ORDERS_FIELDS = [
     "id",
 ]
 
+EPIC_CLINICAL_NOTES_FIELDS = [
+    "document_PatientDurableKey",
+    "document_CreatedWhen",
+    "document_UpdatedWhen",
+    "document_Name",
+    "document_Content",
+    "id",
+]
+
+EPIC_MEDICAL_HISTORY_FIELDS = [
+    "document_PatientDurableKey",
+    "document_CreatedWhen",
+    "document_UpdatedWhen",
+    "document_Name",
+    "document_Content",
+    "id",
+]
+
+EPIC_IMAGING_REPORTS_FIELDS = [
+    "document_PatientDurableKey",
+    "document_CreatedWhen",
+    "document_UpdatedWhen",
+    "document_Name",
+    "document_Content",
+    "id",
+]
+
 
 class IndexConfig:
     """Configuration for a single Elasticsearch index."""
@@ -455,7 +482,7 @@ def get_all_index_configs() -> dict[str, IndexConfig]:
 
     configs["get_epic_imaging_reports"] = IndexConfig(
         index_pattern="epic_imaging_reports",
-        fields=[],
+        fields=EPIC_IMAGING_REPORTS_FIELDS,
         time_field=None,
         description="Epic imaging reports (now only via annotations)",
     )
@@ -483,14 +510,14 @@ def get_all_index_configs() -> dict[str, IndexConfig]:
 
     configs["get_epic_medical_history"] = IndexConfig(
         index_pattern="epic_medical_history",
-        fields=[],
+        fields=EPIC_MEDICAL_HISTORY_FIELDS,
         time_field=None,
         description="Epic medical history (now only via annotations)",
     )
 
     configs["get_epic_clinical_notes"] = IndexConfig(
         index_pattern="epic_clinical_notes",
-        fields=[],
+        fields=EPIC_CLINICAL_NOTES_FIELDS,
         time_field=None,
         description="Epic clinical notes (now only via annotations)",
     )
@@ -606,8 +633,11 @@ __all__ = [
     "DRUG_FIELDS",
     "EMPTY_ANNOT_COLS",
     "EPIC_CLINICAL_NOTES_APPOINTMENTS_FIELDS",
+    "EPIC_CLINICAL_NOTES_FIELDS",
     "EPIC_ENCOUNTER_FIELDS",
+    "EPIC_IMAGING_REPORTS_FIELDS",
     "EPIC_LAB_RESULTS_FIELDS",
+    "EPIC_MEDICAL_HISTORY_FIELDS",
     "EPIC_ORDERS_FIELDS",
     "EPIC_PATIENTS_FIELDS",
     "HOSP_SITE_FIELDS",
