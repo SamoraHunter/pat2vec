@@ -563,6 +563,7 @@ def generate_epic_clinical_notes_data(
         fields_list = [
             "document_PatientDurableKey",
             "document_CreatedWhen",
+            "document_UpdatedWhen",
             "document_Content",
             "document_Name",
             "document_EncounterEpicCsn",
@@ -618,6 +619,7 @@ def generate_epic_clinical_notes_data(
                 {
                     "document_PatientDurableKey": client_id_code,
                     "document_CreatedWhen": doc_date.strftime("%Y-%m-%dT%H:%M:%S"),
+                    "document_UpdatedWhen": doc_date.strftime("%Y-%m-%dT%H:%M:%S"),
                     "document_Content": content,
                     "document_Name": document_name,
                     "document_EncounterEpicCsn": faker.random_number(digits=10),
@@ -638,6 +640,7 @@ def generate_epic_clinical_notes_data(
         else [
             "document_PatientDurableKey",
             "document_CreatedWhen",
+            "document_UpdatedWhen",
             "document_Content",
             "document_Name",
             "document_Comment",

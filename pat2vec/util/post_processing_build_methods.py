@@ -459,24 +459,88 @@ def build_merged_epr_mct_doc_df(
     """Builds a merged CSV of documents from EPR and MCT sources (file or DB)."""
 
     def doc_processor(df: pd.DataFrame) -> pd.DataFrame:
-        for col1, col2 in [
-            ("updatetime", "observationdocument_recordeddtm"),
-            ("updatetime", "basicobs_entered"),
-            ("observationdocument_recordeddtm", "updatetime"),
-            ("document_guid", "observation_guid"),
-            ("document_guid", "basicobs_guid"),
-            ("document_guid", "id"),
-            ("document_description", "obscatalogmasteritem_displayname"),
-            ("document_description", "basicobs_itemname_analysed"),
-            ("document_description", "document_Name"),
-            ("body_analysed", "observation_valuetext_analysed"),
-            ("body_analysed", "textualObs"),
-            ("body_analysed", "document_Content"),
-            ("body_analysed", "document_Comment"),
-            ("updatetime", "document_CreatedWhen"),
-        ]:
-            if col1 in df.columns and col2 in df.columns:
-                df[col1] = df[col1].fillna(df[col2])
+        # First ensure all standard cols exist (even if empty)
+        for col in DOC_STANDARD_COLS:
+            if col not in df.columns:
+                df[col] = pd.NA
+
+        # Source-specific column mapping
+        # For epic clinical notes, map available columns to standard names
+        source_mapping = {
+            "epic_clinical_notes": [
+                ("document_description", ["document_Name"]),
+                ("body_analysed", ["body_analysed", "document_Content"]),
+                (
+                    "updatetime",
+                    ["updatetime", "document_CreatedWhen", "document_ServiceDate"],
+                ),
+                ("document_guid", ["document_guid", "id"]),
+            ],
+            "default": [
+                (
+                    "document_description",
+                    [
+                        "obscatalogmasteritem_displayname",
+                        "basicobs_itemname_analysed",
+                        "document_Name",
+                    ],
+                ),
+                (
+                    "body_analysed",
+                    [
+                        "observation_valuetext_analysed",
+                        "textualObs",
+                        "document_Content",
+                    ],
+                ),
+                (
+                    "updatetime",
+                    [
+                        "observationdocument_recordeddtm",
+                        "basicobs_entered",
+                        "document_CreatedWhen",
+                    ],
+                ),
+                (
+                    "document_guid",
+                    ["document_guid", "observation_guid", "basicobs_guid", "id"],
+                ),
+            ],
+        }
+
+        source_name = (
+            df["document_batch_source"].iloc[0]
+            if "document_batch_source" in df.columns and not df.empty
+            else "default"
+        )
+        mappings = source_mapping.get(source_name, source_mapping["default"])
+
+        for target_col, source_cols in mappings:
+            if target_col not in df.columns:
+                continue
+            for src_col in source_cols:
+                if src_col in df.columns:
+                    mask = pd.isna(df[target_col])
+                    if mask.any():
+                        df.loc[mask, target_col] = df.loc[mask, src_col].values
+                    break
+
+        # Clean up: drop raw source columns that were only used for mapping
+        cols_to_drop = [
+            "observationdocument_recordeddtm",
+            "basicobs_entered",
+            "obscatalogmasteritem_displayname",
+            "observation_valuetext_analysed",
+            "textualObs",
+            "basicobs_guid",
+            "document_Content",
+            "document_CreatedWhen",
+            "document_Name",
+        ]
+        for col in cols_to_drop:
+            if col in df.columns and col not in DOC_STANDARD_COLS:
+                df = df.drop(columns=[col])
+
         return optimize_dtypes(df)
 
     DOC_STANDARD_COLS = [

@@ -83,6 +83,8 @@ def _fetch_epic_clinical_notes_from_elasticsearch(
                 results = results.rename(
                     columns={"document_UpdatedWhen": "updatetime"},
                 )
+                if "document_CreatedWhen" in results.columns:
+                    results = results.drop(columns=["document_CreatedWhen"])
             elif "document_CreatedWhen" in results.columns:
                 results = results.rename(
                     columns={"document_CreatedWhen": "updatetime"},

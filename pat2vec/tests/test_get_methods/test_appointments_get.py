@@ -223,6 +223,7 @@ class TestAppointmentsGet:
         assert all_features is not None, "get_all_features returned None"
         assert not all_features.empty, "Feature DataFrame is empty — no rows written"
 
+        # Filter to only appointments-related columns (exclude demographics)
         feature_cols = [
             c
             for c in all_features.columns
@@ -230,6 +231,7 @@ class TestAppointmentsGet:
                 c.startswith(prefix)
                 for prefix in ["ConsultantCode_", "ClinicCode_", "AppointmentType_"]
             )
+            and c != "client_idcode"
         ]
 
         assert len(feature_cols) > 0, (

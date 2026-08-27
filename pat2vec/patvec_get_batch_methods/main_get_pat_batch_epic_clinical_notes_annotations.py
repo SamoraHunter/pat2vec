@@ -65,19 +65,46 @@ def _fetch_epic_clinical_notes_from_elasticsearch(
             else getattr(config_obj, "cohort_searcher_with_terms_and_search", None)
         )
 
-        results = search_func(
-            index_name="epic_clinical_notes",
-            fields_list=None,
-            term_name="document_PatientDurableKey.keyword",
-            entered_list=[current_pat_client_id_code],
-            search_string=f"document_UpdatedWhen:[{start_year}-{start_month}-{start_day} TO {end_year}-{end_month}-{end_day}]",
-        )
+        # Try with .keyword suffix first (standard for exact match), then without
+        term_names_to_try = [
+            "document_PatientDurableKey.keyword",
+            "document_PatientDurableKey",
+        ]
+
+        results = pd.DataFrame()
+        for term_name in term_names_to_try:
+            _logger.debug(
+                f"Fetching from ES for patient {current_pat_client_id_code} with field '{term_name}', date range: {start_year}-{start_month}-{start_day} to {end_year}-{end_month}-{end_day}",
+            )
+            results = search_func(
+                index_name="epic_clinical_notes",
+                fields_list=None,
+                term_name=term_name,
+                entered_list=[current_pat_client_id_code],
+                search_string=f"document_UpdatedWhen:[{start_year}-{start_month}-{start_day} TO {end_year}-{end_month}-{end_day}]",
+            )
+            _logger.debug(
+                f"After ES fetch with '{term_name}' (with date filter): results={type(results)}, empty={results.empty if results is not None else 'N/A'}",
+            )
+            if results is not None and not results.empty:
+                break
+
         if results is not None and not results.empty:
             if "document_PatientDurableKey" in results.columns:
                 results = results.rename(
                     columns={"document_PatientDurableKey": "client_idcode"},
                 )
-            # Note: document_UpdatedWhen is NOT renamed - it matches the DB schema (MAPPINGS) directly
+            # Handle time column - rename either UpdatedWhen or CreatedWhen to updatetime
+            if "document_UpdatedWhen" in results.columns:
+                results = results.rename(
+                    columns={"document_UpdatedWhen": "updatetime"},
+                )
+                if "document_CreatedWhen" in results.columns:
+                    results = results.drop(columns=["document_CreatedWhen"])
+            elif "document_CreatedWhen" in results.columns:
+                results = results.rename(
+                    columns={"document_CreatedWhen": "updatetime"},
+                )
             if "document_Content" in results.columns:
                 results = results.rename(
                     columns={"document_Content": "body_analysed"},
@@ -186,7 +213,13 @@ def get_pat_batch_epic_clinical_notes_annotations(
                 pat_batch = pd.DataFrame()
 
         # If still empty, fetch from Elasticsearch using provided search function
+        _logger.debug(
+            f"ES fetch check: pat_batch.empty={pat_batch.empty}, cohort_searcher_available={cohort_searcher_with_terms_and_search is not None}",
+        )
         if pat_batch.empty and cohort_searcher_with_terms_and_search is not None:
+            _logger.info(
+                f"Fetching from Elasticsearch for patient {current_pat_client_id_code}",
+            )
             pat_batch = _fetch_epic_clinical_notes_from_elasticsearch(
                 current_pat_client_id_code,
                 config_obj,
@@ -207,6 +240,10 @@ def get_pat_batch_epic_clinical_notes_annotations(
                     _logger.error(
                         f"Failed to save raw epic clinical notes batch for {current_pat_client_id_code}: {e}",
                     )
+
+        _logger.debug(
+            f"After DB/file fetch, pat_batch.empty={pat_batch.empty}, shape={pat_batch.shape if not pat_batch.empty else 'N/A'}",
+        )
 
         if config_obj.verbosity >= 6:
             print(
@@ -257,7 +294,7 @@ def get_pat_batch_epic_clinical_notes_annotations(
                         "updatetime": [config_obj.start_time],
                         "document_guid": ["dummy_doc_" + current_pat_client_id_code],
                         "document_PatientDurableKey": [current_pat_client_id_code],
-                        "document_UpdatedWhen": [config_obj.start_time],
+                        "document_CreatedWhen": [config_obj.start_time],
                         "id": ["dummy_id_" + current_pat_client_id_code],
                     },
                 )

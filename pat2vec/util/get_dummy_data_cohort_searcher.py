@@ -1537,6 +1537,7 @@ def generate_epic_clinical_notes_data(
         fields_list = [
             "document_PatientDurableKey",
             "document_CreatedWhen",
+            "document_UpdatedWhen",
             "document_Content",
             "document_Name",
             "document_EncounterEpicCsn",
@@ -1558,6 +1559,17 @@ def generate_epic_clinical_notes_data(
         data = {
             "document_PatientDurableKey": [client_id_code] * num_rows,
             "document_CreatedWhen": [
+                create_random_date_from_globals(
+                    global_start_year,
+                    global_start_month,
+                    global_end_year,
+                    global_end_month,
+                    global_start_day,
+                    global_end_day,
+                ).strftime("%Y-%m-%dT%H:%M:%S")
+                for _ in range(num_rows)
+            ],
+            "document_UpdatedWhen": [
                 create_random_date_from_globals(
                     global_start_year,
                     global_start_month,

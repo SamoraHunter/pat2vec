@@ -231,10 +231,17 @@ class TestCore02Get:
         assert all_features is not None, "get_all_features returned None"
         assert not all_features.empty, "Feature DataFrame is empty — no rows written"
 
-        feature_cols = [c for c in all_features.columns if c != "client_idcode"]
+        # Filter to only CORE_SpO2 feature columns (non-demo columns)
+        # These contain numeric observation values with 'pct' suffix or descriptive terms
+        feature_cols = [
+            c
+            for c in all_features.columns
+            if c != "client_idcode"
+            and not any(c.startswith(prefix) for prefix in ["male", "dead", "census_"])
+        ]
 
         assert len(feature_cols) > 0, (
-            f"No feature columns found. "
+            f"No core_02 feature columns found. "
             f"Available columns: {list(all_features.columns)}"
         )
 
@@ -243,7 +250,7 @@ class TestCore02Get:
         totally_empty_cols = non_null_counts[non_null_counts == 0]
 
         assert len(totally_empty_cols) < len(feature_cols), (
-            f"All feature columns are empty - vectorisation is failing. "
+            f"All core_02 feature columns are empty - vectorisation is failing. "
             f"Null columns: {list(totally_empty_cols.index)}"
         )
 
@@ -252,7 +259,7 @@ class TestCore02Get:
             if len(col_values) > 0:
                 invalid_values = col_values[~col_values.isin([0, 1])]
                 assert len(invalid_values) == 0, (
-                    f"Feature column '{col}' contains non-binary values. "
+                    f"Core_02 feature column '{col}' contains non-binary values. "
                     f"Actual: {invalid_values.tolist()}, Expected: [0, 1]"
                 )
 

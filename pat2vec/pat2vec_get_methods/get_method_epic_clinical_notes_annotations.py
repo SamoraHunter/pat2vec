@@ -34,7 +34,7 @@ def get_current_pat_epic_clinical_notes_annotations(
         target_date_range: A tuple containing (start_date, end_date) defining
             the time period to filter annotations by.
         epic_clinical_notes_annotations: DataFrame containing Epic clinical notes
-            annotations for a batch of patients. Must contain 'document_UpdatedWhen'
+            annotations for a batch of patients. Must contain 'updatetime'
             column for timestamp filtering and 'pretty_name', 'cui' for feature extraction.
         config_obj: Configuration object with settings such as `verbosity` and
             `start_time`. Cannot be None.
@@ -104,7 +104,7 @@ def get_current_pat_epic_clinical_notes_annotations(
     time_column = getattr(
         config_obj,
         "epic_clinical_notes_time_field",
-        "document_UpdatedWhen",
+        "updatetime",
     )
 
     # Get all unique pretty names from the full batch for expected_names

@@ -12,11 +12,6 @@ from pat2vec.util.parse_date import validate_input_dates
 EPIC_CLINICAL_NOTES_APPOINTMENTS_FIELDS = [
     "document_PatientDurableKey",
     "document_CreatedWhen",
-    "document_UpdatedWhen",
-    "document_Name",
-    "document_Content",
-    "document_EncounterEpicCsn",
-    "document_EncounterKey",
     "id",
 ]
 
@@ -56,7 +51,7 @@ def search_epic_clinical_notes_appointments(
         id_field_name: Name of the field containing patient identifiers in the index.
             Defaults to "document_PatientDurableKey".
         time_field: Name of the timestamp field to filter on. Defaults to
-            "document_UpdatedWhen".
+            "updatetime".
         fields_override: Optional list of specific fields to retrieve. If None, uses
             default EPIC_CLINICAL_NOTES_APPOINTMENTS_FIELDS.
         start_year: Start year for the date range filter. Defaults to 1995.
@@ -80,7 +75,7 @@ def search_epic_clinical_notes_appointments(
     Returns:
     -------
         pd.DataFrame: A DataFrame containing the search results with columns for
-            document_PatientDurableKey, document_UpdatedWhen, and other specified fields.
+            client_idcode, updatetime, and other renamed fields.
 
     Raises:
     ------
@@ -165,7 +160,7 @@ def search_epic_clinical_notes_appointments(
     # Rename ES columns to match database schema expectations for raw_epic_clinical_notes_appointments
     column_mapping = {
         "document_CreatedWhen": "updatetime",
-        "document_UpdatedWhen": "document_UpdatedWhen",  # Keep for compatibility
+        "document_UpdatedWhen": "updatetime",
         "id": "document_guid",
         "document_Name": "document_description",
         "document_Content": "body_analysed",
@@ -228,8 +223,11 @@ def get_epic_clinical_notes_appointments(
         get_start_end_year_month(target_date_range, config_obj=config_obj)
     )
 
-    id_field_name = "document_PatientDurableKey"
-    time_field = "document_UpdatedWhen"
+    id_field_name = "client_idcode"
+
+    # For ES search, use document_UpdatedWhen; for DB filtering after rename, use updatetime
+    time_field_es = "document_UpdatedWhen"
+    time_field_db = "updatetime"
 
     if pat_batch.empty and batch_mode:
         return pd.DataFrame({"client_idcode": [current_pat_client_id_code]})
@@ -243,14 +241,14 @@ def get_epic_clinical_notes_appointments(
             end_month,
             start_day,
             end_day,
-            time_field,
+            time_field_db,
         )
     else:
         current_pat_raw = search_epic_clinical_notes_appointments(
             cohort_searcher_with_terms_and_search=cohort_searcher_with_terms_and_search,
             patient_durable_keys=current_pat_client_id_code,
             id_field_name=id_field_name,
-            time_field=time_field,
+            time_field=time_field_es,
             output_filename=None,
             config_obj=config_obj,
             t=t,

@@ -93,7 +93,6 @@ def get_pat_batch_epr_docs_annotations(
         # If data came from DB, it may still have original ES column names (document_Content instead of body_analysed)
         column_aliases = {
             "body_analysed": ["document_Content"],
-            "updatetime": ["document_CreatedWhen"],
             "document_guid": ["id"],
         }
         for std_col, es_cols in column_aliases.items():

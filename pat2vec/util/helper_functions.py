@@ -488,32 +488,26 @@ def save_raw_patient_batch(
         config_obj: The configuration object.
         id_column: The column name for the patient ID in this table.
 
+    Raises:
+    ------
+        RuntimeError: If database save fails.
+
     """
-    logger.debug(
-        f"save_raw_patient_batch called: patient_id={patient_id}, table_name={table_name}, id_column={id_column}",
-    )
+    if config_obj.verbosity >= 6:
+        logger.debug(f"Saving raw batch for {patient_id}, table: {table_name}")
     if config_obj.storage_backend != "database":
-        logger.debug("  Skipped: storage_backend != database")
         return
 
     try:
         engine = config_obj.db_engine
         if not engine:
-            logger.debug("  Skipped: engine is None")
             return
 
         schema_name = "raw_data"
 
         # Ensure ID column is present
         if id_column not in df.columns:
-            logger.debug(
-                f"  Adding {id_column}={patient_id} (existing columns: {list(df.columns)})",
-            )
             df[id_column] = patient_id
-        else:
-            logger.debug(
-                f"  {id_column} already exists. Values sample: {df[id_column].head().tolist()}",
-            )
 
         with engine.begin() as connection:
             if engine.name == "sqlite":
@@ -536,39 +530,23 @@ def save_raw_patient_batch(
             if inspector.has_table(target_table, schema=target_schema):
                 connection.execute(del_query, {"pat_id": patient_id})
             else:
-                logger.debug(f"  Creating new table: {target_table}")
+                logger.info(f"  Creating new table: {target_table}")
 
-            # Debug output - show columns before and after drop
-            logger.debug(
-                f"Before drop - columns: {df.columns.tolist()}",
-            )
-
-            # Drop Elasticsearch/MongoDB metadata columns and index column that conflict with SQLite
-            # Note: updatetime is preserved for all raw_data tables as it's required for temporal processing
+            # Drop Elasticsearch/MongoDB metadata columns and duplicate time-related fields
             cols_to_drop = ["_id", "_index", "_score", "search_term", "index"]
             for col in cols_to_drop:
                 if col in df.columns:
-                    logger.debug(f"Dropping column {col}")
                     df = df.drop(columns=col)
 
-            logger.debug(
-                f"After drop - columns: {df.columns.tolist()}",
-            )
-
-            logger.debug(f"  Final DataFrame shape before save: {df.shape}")
-            if not df.empty:
-                logger.debug(
-                    f"  Sample data ({id_column} column): {df[id_column].head().tolist() if id_column in df.columns else 'missing'}",
-                )
-
-            # Fix problematic backslashes in text columns that cause SQLite parameter binding issues
-            text_cols = [
-                "observation_valuetext_analysed",
-                "obscatalogmasteritem_displayname",
+            # Handle duplicate time columns - keep only updatetime, drop any other time-related fields
+            time_columns = [
+                "document_UpdatedWhen",
+                "document_CreatedWhen",
+                "updatetime",
             ]
-            for col in text_cols:
-                if col in df.columns:
-                    df[col] = df[col].astype(str).str.replace("\\", "", regex=False)
+            for col in time_columns:
+                if col in df.columns and col != "updatetime":
+                    df = df.drop(columns=col)
 
             # Convert any list/dict/tuple columns to JSON strings for database compatibility
             for col in df.columns:
@@ -578,8 +556,6 @@ def save_raw_patient_batch(
                             json.dumps(x) if isinstance(x, (list, dict, tuple)) else x
                         ),
                     )
-
-            logger.debug(f"  After JSON conversion, final shape={df.shape}")
 
             # Create table if it doesn't exist (even with empty DataFrame to ensure schema)
             if not inspector.has_table(target_table, schema=target_schema):
@@ -596,8 +572,11 @@ def save_raw_patient_batch(
                         expected_cols.insert(0, id_column)
                     create_df = pd.DataFrame({col: [] for col in expected_cols})
                 else:
-                    # DataFrame has columns (possibly no data) - use those columns
+                    # DataFrame has columns (possibly no data) - use those columns to ensure table schema matches ES fields
                     create_df = df.iloc[:0].copy()
+                    logger.debug(
+                        f"Creating table {target_table} with columns: {list(create_df.columns)}",
+                    )
                 create_df.to_sql(
                     name=target_table,
                     con=connection,
@@ -606,11 +585,45 @@ def save_raw_patient_batch(
                     index=False,
                 )
 
-            # Save actual data if not empty
+            # Schema evolution: for existing tables, check if new columns exist in incoming data
+            existing_cols = [
+                c["name"]
+                for c in inspector.get_columns(target_table, schema=target_schema)
+            ]
+            new_cols = [col for col in df.columns if col not in existing_cols]
+            if new_cols:
+                logger.debug(
+                    f"Table {target_table} needs schema evolution. Adding columns: {new_cols}",
+                )
+                for col in new_cols:
+                    # Determine column type based on first non-null value or default to TEXT
+                    sample_values = df[col].dropna()
+                    if len(sample_values) > 0:
+                        sample_val = sample_values.iloc[0]
+                        if isinstance(sample_val, (int, np.integer)):
+                            col_type = "INTEGER"
+                        elif isinstance(sample_val, (float, np.floating)):
+                            col_type = "REAL"
+                        else:
+                            col_type = "TEXT"
+                    else:
+                        col_type = "TEXT"
+
+                    try:
+                        connection.execute(
+                            text(
+                                f'ALTER TABLE "{target_table}" ADD COLUMN "{col}" {col_type}',
+                            ),
+                        )
+                        logger.debug(f"Added column '{col}' to table {target_table}")
+                    except Exception as alter_error:
+                        logger.warning(
+                            f"Could not add column '{col}' to table {target_table}: {alter_error}",
+                        )
 
             # Save actual data if not empty
             if not df.empty:
-                logger.debug(f"  Saving to table {target_table} with {len(df)} rows")
+                logger.info(f"Saving {len(df)} rows to table {target_table}")
                 df.to_sql(
                     name=target_table,
                     con=connection,
@@ -618,7 +631,6 @@ def save_raw_patient_batch(
                     if_exists="append",
                     index=False,
                 )
-                logger.debug(f"  Successfully saved to {target_table}")
 
                 # Ensure index on ID column
                 ensure_index(
@@ -629,7 +641,9 @@ def save_raw_patient_batch(
                     engine.name,
                 )
     except Exception as e:
-        logger.error(f"Failed to save raw batch {table_name} for {patient_id}: {e}")
+        err_msg = f"Failed to save raw batch {table_name} for {patient_id}"
+        logger.critical(f"{err_msg}: {e}")
+        raise RuntimeError(err_msg) from e
 
 
 def save_annotations_to_db(
@@ -898,7 +912,8 @@ def get_df_from_db(
 
         with engine.connect() as connection:
             # Determine actual table name for inspection/reading
-            logger.debug(f"get_df_from_db called: schema={schema}, table={table}")
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug(f"get_df_from_db called: schema={schema}, table={table}")
             if engine.name == "sqlite":
                 target_table = f"{schema}_{table}"
                 target_schema = None

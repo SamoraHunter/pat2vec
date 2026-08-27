@@ -70,17 +70,20 @@ def _fetch_epic_medical_history_from_elasticsearch(
             fields_list=None,
             term_name="document_PatientDurableKey",
             entered_list=[current_pat_client_id_code],
-            search_string=f"document_UpdatedWhen:[{start_year}-{start_month}-{start_day} TO {end_year}-{end_month}-{end_day}]",
+            search_string=f"document_CreatedWhen:[{start_year}-{start_month}-{start_day} TO {end_year}-{end_month}-{end_day}]",
         )
         if results is not None and not results.empty:
             if "document_PatientDurableKey" in results.columns:
                 results = results.rename(
                     columns={"document_PatientDurableKey": "client_idcode"},
                 )
+            # Rename ES time columns to match DB schema (epic_medical_history uses updatetime per MAPPINGS)
             if "document_UpdatedWhen" in results.columns:
-                results = results.rename(
-                    columns={"document_UpdatedWhen": "updatetime"},
-                )
+                results = results.rename(columns={"document_UpdatedWhen": "updatetime"})
+                if "document_CreatedWhen" in results.columns:
+                    results = results.drop(columns=["document_CreatedWhen"])
+            elif "document_CreatedWhen" in results.columns:
+                results = results.rename(columns={"document_CreatedWhen": "updatetime"})
             if "document_Comment" in results.columns:
                 results = results.rename(
                     columns={"document_Comment": "body_analysed"},

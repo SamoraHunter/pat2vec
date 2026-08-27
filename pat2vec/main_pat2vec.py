@@ -1522,7 +1522,14 @@ class main:
 
         batches = {}
 
-        _logger.debug(f"About to fetch {len(batch_configs)} standard batches")
+        enabled_batch_names = [
+            config["var"]
+            for config in batch_configs + annotation_batch_configs
+            if self.config_obj.main_options.get(config["option"], False)
+        ]
+        _logger.info(
+            f"Fetching {len(enabled_batch_names)} batch(es) for patient {current_pat_client_id_code}: {enabled_batch_names}",
+        )
 
         # Fetch standard batches
         for config in batch_configs:
@@ -1669,23 +1676,6 @@ class main:
             "batch_epic_imaging_reports": ("raw_epic_imaging_reports", "client_idcode"),
             "batch_epic_clinical_notes_appointments": (
                 "raw_epic_clinical_notes_appointments",
-                "client_idcode",
-            ),
-            "batch_epic_clinical_notes_annotations": (
-                "ann_epic_clinical_notes",
-                "client_idcode",
-            ),
-            "batch_epic_medical_history_annotations": (
-                "ann_epic_medical_history",
-                "client_idcode",
-            ),
-            "batch_epic_orders_annotations": ("ann_epic_orders", "client_idcode"),
-            "batch_epic_imaging_reports_annotations": (
-                "ann_epic_imaging_reports",
-                "client_idcode",
-            ),
-            "batch_epic_clinical_notes_appointments_annotations": (
-                "ann_epic_clinical_notes_appointments",
                 "client_idcode",
             ),
         }
@@ -2288,17 +2278,17 @@ class main:
         _logger.info(
             f"_get_patient_data_batches returned: keys={list(batches.keys())}, batch_bmi shape={batches.get('batch_bmi', pd.DataFrame()).shape}, batch_vte shape={batches.get('batch_vte', pd.DataFrame()).shape}",
         )
-        # Debug logging for EPR docs and annotations
+        # Batch summary
         _logger.info(
-            f"DEBUG: batch_epr shape={batches.get('batch_epr', pd.DataFrame()).shape}, columns={list(batches.get('batch_epr', pd.DataFrame()).columns)}",
+            f"batch_epr shape={batches.get('batch_epr', pd.DataFrame()).shape}, columns={list(batches.get('batch_epr', pd.DataFrame()).columns)}",
         )
         batch_epr = batches.get("batch_epr", pd.DataFrame())
         if not batch_epr.empty:
             _logger.info(
-                f"DEBUG: batch_epr sample body_analysed: {batch_epr.iloc[0].get('body_analysed', 'N/A')[:100] if len(batch_epr) > 0 else 'no rows'}",
+                f"batch_epr sample body_analysed: {batch_epr.iloc[0].get('body_analysed', 'N/A')[:100] if len(batch_epr) > 0 else 'no rows'}",
             )
         _logger.info(
-            f"DEBUG: batch_epr_docs_annotations shape={batches.get('batch_epr_docs_annotations', pd.DataFrame()).shape}, columns={list(batches.get('batch_epr_docs_annotations', pd.DataFrame()).columns)[:5] if not batches.get('batch_epr_docs_annotations', pd.DataFrame()).empty else 'empty'}",
+            f"batch_epr_docs_annotations shape={batches.get('batch_epr_docs_annotations', pd.DataFrame()).shape}, columns={list(batches.get('batch_epr_docs_annotations', pd.DataFrame()).columns)[:5] if not batches.get('batch_epr_docs_annotations', pd.DataFrame()).empty else 'empty'}",
         )
 
         # Save raw batches and annotation batches to DB if applicable
