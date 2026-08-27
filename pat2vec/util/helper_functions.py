@@ -945,7 +945,11 @@ def get_df_from_db(
             if columns is not None:
                 available_columns = [c for c in columns if c in table_columns]
                 missing_columns = [c for c in columns if c not in table_columns]
-                if missing_columns:
+                if (
+                    missing_columns
+                    and logger.isEnabledFor(logging.DEBUG)
+                    and config_obj.verbosity > 5
+                ):
                     logger.debug(
                         f"Columns {missing_columns} not found. Available: {len(table_columns)} cols",
                     )

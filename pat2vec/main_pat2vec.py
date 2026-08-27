@@ -1782,7 +1782,7 @@ class main:
             A list of date tuples, or None if the time window cannot be set up.
 
         """
-        if self.config_obj.verbosity >= 4:
+        if self.config_obj.verbosity >= 5:
             _logger.debug(
                 "main_pat2vec>self.config_obj.individual_patient_window: %s",
                 self.config_obj.individual_patient_window,
@@ -1806,7 +1806,7 @@ class main:
                     int(self.config_obj.initial_global_end_month),
                     int(self.config_obj.initial_global_end_day),
                 )
-                if self.config_obj.verbosity >= 4:
+                if self.config_obj.verbosity >= 5:
                     _logger.debug(
                         f"Control pat full {current_pat_client_id_code} ipw dates set:",
                     )
@@ -2065,11 +2065,11 @@ class main:
         # The only_check_last logic from the original function is implicitly handled by this loop.
         for date_slice in date_list:
             try:
-                if self.config_obj.verbosity > 5:
+                if self.config_obj.verbosity > 6:
                     _logger.debug(
                         f"Processing date {date_slice} for patient {current_pat_client_id_code}...",
                     )
-                if self.config_obj.verbosity > 3:
+                if self.config_obj.verbosity > 5:
                     _logger.debug(
                         f"_process_patient_slices: cohort_searcher_with_terms_and_search = {self.cohort_searcher_with_terms_and_search}",
                     )

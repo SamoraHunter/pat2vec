@@ -156,7 +156,7 @@ def get_pat_batch_epr_docs(
                     )
                     is not None
                 ):
-                    if config_obj.verbosity > 1:
+                    if config_obj.verbosity > 5:
                         _logger.debug("append_regex_term_counts...")
                         display(batch_target)
                     batch_target = append_regex_term_counts(
@@ -180,7 +180,7 @@ def get_pat_batch_epr_docs(
             if config_obj.store_pat_batch_docs or overwrite_stored_pat_docs:
                 # batch_target.dropna(subset='body_analysed', inplace=True)
 
-                if config_obj.verbosity >= 3:
+                if config_obj.verbosity > 5:
                     _logger.debug("get_epr_docs_predropna: %d", len(batch_target))
 
                 col_list_drop_nan = ["body_analysed", "updatetime", "client_idcode"]
@@ -190,7 +190,7 @@ def get_pat_batch_epr_docs(
                 if not batch_target.empty and valid_cols:
                     batch_target = batch_target.dropna(subset=valid_cols).copy()
 
-                if config_obj.verbosity >= 3:
+                if config_obj.verbosity > 5:
                     _logger.debug("get_epr_docs_postdropna: %d", len(batch_target))
 
                 if split_clinical_notes_bool and not batch_target.empty:

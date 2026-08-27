@@ -73,10 +73,11 @@ def _fetch_epic_clinical_notes_from_elasticsearch(
 
         results = pd.DataFrame()
         for term_name in term_names_to_try:
-            # Verbose ES fetch check
-            _logger.debug(
-                f"Fetching ES ({term_name[:30]}) patient {current_pat_client_id_code}",
-            )
+            # Verbose ES fetch check - only show at verbosity > 5
+            if _logger.isEnabledFor(logging.DEBUG) and self.config_obj.verbosity > 5:
+                _logger.debug(
+                    f"Fetching ES ({term_name[:30]}) patient {current_pat_client_id_code}",
+                )
             results = search_func(
                 index_name="epic_clinical_notes",
                 fields_list=None,
@@ -84,14 +85,15 @@ def _fetch_epic_clinical_notes_from_elasticsearch(
                 entered_list=[current_pat_client_id_code],
                 search_string=f"document_UpdatedWhen:[{start_year}-{start_month}-{start_day} TO {end_year}-{end_month}-{end_day}]",
             )
-            # Verbose ES result check
-            _logger.debug(
-                (
-                    f"ES fetch ({term_name[:30]}) result: {len(results)} rows"
-                    if results is not None
-                    else "ES fetch result: None"
-                ),
-            )
+            # Verbose ES result check - only show at verbosity > 5
+            if _logger.isEnabledFor(logging.DEBUG) and config_obj.verbosity > 5:
+                _logger.debug(
+                    (
+                        f"ES fetch ({term_name[:30]}) result: {len(results)} rows"
+                        if results is not None
+                        else "ES fetch result: None"
+                    ),
+                )
             if results is not None and not results.empty:
                 break
 

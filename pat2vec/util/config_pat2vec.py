@@ -654,14 +654,14 @@ class config_class:
         else:
             self.main_options = default_main_options
 
-        if self.verbosity >= 1:
+        if self.verbosity > 1:
             logger.info("main_options set!")
             logger.info(self.main_options)
 
-        logger.info("=== main_options enabled/disabled ===")
-        for option, enabled in self.main_options.items():
-            status = "ENABLED" if enabled else "DISABLED"
-            logger.info(f"  {option}: {status}")
+            logger.info("=== main_options enabled/disabled ===")
+            for option, enabled in self.main_options.items():
+                status = "ENABLED" if enabled else "DISABLED"
+                logger.info(f"  {option}: {status}")
 
         if self.annot_filter_options is None:
             self.filter_arguments = {
@@ -1372,7 +1372,7 @@ class config_class:
             self.n_pat_lines = None
             self.date_list = None  # We will generate this in main_pat2vec under individiual patient window
 
-        if self.verbosity > 1:
+        if self.verbosity > 3:
             logger.info(f"global_start_year = {self.global_start_year}")
             logger.info(f"global_start_month = {self.global_start_month}")
             logger.info(f"global_end_year = {self.global_end_year}")
