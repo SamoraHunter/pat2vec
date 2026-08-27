@@ -24,75 +24,102 @@ flowchart TD
     O --> Q[Get MCT Documents]
     O --> R[Get Textual Observations]
     O --> S[Get Reports]
-    O --> T[Get Clinical Data]
+    O --> T[Get Epic Clinical Data]
 
-    T --> U[Smoking Status]
-    T --> V[Core SpO2]
-    T --> W[Bed Number]
-    T --> X[VTE Status]
-    T --> Y[Hospital Site]
-    T --> Z[RESUS Status]
-    T --> AA[NEWS Scores]
-    T --> BB[BMI Data]
-    T --> CC[Diagnostics]
-    T --> DD[Drugs/Medications]
-    T --> EE[Demographics]
-    T --> FF[Blood Results]
-    T --> GG[Appointments]
+    T --> U[Epic Clinical Notes]
+    T --> V[Epic Medical History]
+    T --> W[Epic Imaging Reports]
+    T --> X[Epic Orders]
+    T --> Y[Epic Lab Results]
+    T --> Z[Epic Patients]
+    T --> AA[Epic Encounters]
+    T --> AB[Smoking Status]
+    T --> AC[Core SpO2]
+    T --> AD[Bed Number]
+    T --> AE[VTE Status]
+    T --> AF[Hospital Site]
+    T --> AG[RESUS Status]
+    T --> AH[NEWS Scores]
+    T --> AI[BMI Data]
+    T --> AJ[Diagnostics]
+    T --> AK[Drugs/Medications]
+    T --> AL[Demographics]
+    T --> AM[Blood Results]
+    T --> AN[Appointments]
 
-    P --> HH[NLP Annotation Phase]
-    Q --> HH
-    R --> HH
-    S --> HH
+    P --> AO[NLP Annotation Phase]
+    Q --> AO
+    R --> AO
+    S --> AO
+    U --> AO
+    V --> AO
+    W --> AO
 
-    HH --> II[Annotate EPR Documents]
-    HH --> JJ[Annotate MCT Documents]
-    HH --> KK[Annotate Textual Observations]
-    HH --> LL[Annotate Reports]
+    AO --> AP[Annotate EPR Documents]
+    AO --> AQ[Annotate MCT Documents]
+    AO --> AR[Annotate Textual Observations]
+    AO --> AS[Annotate Reports]
+    AO --> AT[Annotate Epic Clinical Notes]
+    AO --> AU[Annotate Epic Medical History]
+    AO --> AV[Annotate Epic Imaging Reports]
+    AO --> AW[Annotate Epic Orders]
 
-    U --> MM[Data Cleaning Phase]
-    V --> MM
-    W --> MM
-    X --> MM
-    Y --> MM
-    Z --> MM
-    AA --> MM
-    BB --> MM
-    CC --> MM
-    DD --> MM
-    EE --> MM
-    FF --> MM
-    GG --> MM
-    II --> MM
-    JJ --> MM
-    KK --> MM
-    LL --> MM
+    U --> AX[Epic Data Cleaning Phase]
+    V --> AX
+    W --> AX
+    X --> AX
+    Y --> AX
+    Z --> AX
+    AA --> AX
+    AB --> AX
+    AC --> AX
+    AD --> AX
+    AE --> AX
+    AF --> AX
+    AG --> AX
+    AH --> AX
+    AI --> AX
+    AJ --> AX
+    AK --> AX
+    AL --> AX
+    AM --> AX
+    AN --> AX
 
-    MM --> NN{Drop NA Timestamps?}
-    NN -->|Yes| OO[Clean Timestamp Data]
-    NN -->|No| PP[Keep All Data]
+    AP --> AY[Data Cleaning Phase]
+    AQ --> AY
+    AR --> AY
+    AS --> AY
+    AT --> AY
+    AU --> AY
+    AV --> AY
+    AW --> AY
+    AX --> AY
 
-    OO --> QQ[Time Window Processing Loop]
-    PP --> QQ
+    AY --> AZ{Drop NA Timestamps?}
+    AZ -->|Yes| BA[Clean Timestamp Data]
+    AZ -->|No| BB[Keep All Data]
 
-    QQ --> RR{Calculate Vectors?}
-    RR -->|Yes| SS[Call main_batch for Each Date]
-    RR -->|No| TT[Skip Vector Calculation]
+    BA --> BC[Time Window Processing Loop]
+    BB --> BC
 
-    SS --> UU[Feature Engineering]
-    UU --> VV[Generate Patient Vectors]
-    VV --> WW[Save Results]
+    BC --> BD{Calculate Vectors?}
+    BD -->|Yes| BE[Call main_batch for Each Date]
+    BD -->|No| BF[Skip Vector Calculation]
 
-    TT --> XX[Continue to Next Patient]
-    WW --> XX
-    M --> XX
+    BE --> BG[Feature Engineering]
+    BG --> BH[Generate Patient Vectors]
+    BH --> BI[Save Results]
 
-    XX --> YY{More Patients?}
-    YY -->|Yes| G
-    YY -->|No| ZZ[Pipeline Complete]
+    BF --> BJ[Continue to Next Patient]
+    BI --> BJ
+    M --> BJ
+
+    BJ --> BK{More Patients?}
+    BK -->|Yes| G
+    BK -->|No| BL[Pipeline Complete]
 
     style A fill:#e1f5fe
-    style ZZ fill:#c8e6c9
-    style HH fill:#fff3e0
-    style MM fill:#f3e5f5
-    style UU fill:#e8f5e8
+    style BL fill:#c8e6c9
+    style AO fill:#fff3e0
+    style AY fill:#f3e5f5
+    style BG fill:#e8f5e8

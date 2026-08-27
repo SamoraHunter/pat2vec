@@ -3,7 +3,6 @@ flowchart TD
     classDef process   fill:#f3e5f5,stroke:#4a148c,stroke-width:1.5px
     classDef source    fill:#fff3e0,stroke:#e65100,stroke-width:1.5px
     classDef helper    fill:#e8f5e9,stroke:#1b5e20,stroke-width:1.5px
-    classDef annot     fill:#fce4ec,stroke:#880e4f,stroke-width:1.5px
     classDef filecache fill:#fffde7,stroke:#f57f17,stroke-width:1.5px
 
     subgraph Config [Configuration]
@@ -89,16 +88,27 @@ flowchart TD
             T_Site[raw_hospsite]:::db
             T_Resus[raw_resus]:::db
             T_Obs[raw_obs]:::db
+            T_EpicClinicalNotes[raw_epic_clinical_notes]:::db
+            T_EpicMedHistory[raw_epic_medical_history]:::db
+            T_EpicImaging[raw_epic_imaging_reports]:::db
+            T_EpicOrders[raw_epic_orders]:::db
+            T_EpicLabResults[raw_epic_lab_results]:::db
+            T_EpicPatients[raw_epic_patients]:::db
+            T_EpicEncounters[raw_epic_encounters]:::db
         end
 
         subgraph AnnotTablesProxy [annotations schema]
             AnnotProxy[annotations tables]:::annot
         end
         subgraph AnnotTables [Schema: annotations]
+            direction TB
             A_EPR[ann_epr_docs]:::annot
             A_MCT[ann_mct_docs]:::annot
             A_Rep[ann_reports]:::annot
             A_Txt[ann_textual_obs]:::annot
+            A_EpicClinicalNotes[ann_epic_clinical_notes]:::annot
+            A_EpicImaging[ann_epic_imaging_reports]:::annot
+            A_EpicOrders[ann_epic_orders]:::annot
         end
 
         subgraph FeatTables [Schema: features]
@@ -108,7 +118,7 @@ flowchart TD
 
     %% Config wiring
     ConfObj       -.->|Configures| PatMaker
-    ParamBackend  -.->|Sets backend| PatMaker
+    ParamBackend  -.->|Sets Backend| PatMaker
     OverwriteFlag -.->|Controls fetch and write| GetPatBloods
     StoreFlag     -.->|Controls write-through| GetPatBloods
     %% Flow Logic
@@ -136,8 +146,6 @@ flowchart TD
     PatMaker -->|1b. Per-patient fetch| GetPatBloods
     PatMaker -->|1b. Per-patient fetch| GetPatDrugs
     PatMaker -->|1b. Per-patient fetch| GetPatDocs
-    PatMaker -->|2. Persist Raw Data| SaveRaw
-    SaveRaw -->|INSERT/UPDATE| RawTables
 
     %% Merged batch: DB cache check
     GetMergedBloods -->|Cache lookup| GetDF
@@ -152,9 +160,24 @@ flowchart TD
     GetMergedOther  -->|Cache lookup| GetDF
     GetDF           -->|Query by patient IDs| RawProxy
     RawProxy        -.->|Cached rows| GetDF
-    PatMaker -->|3. Calculate Annotations| CalcAnnot
-    CalcAnnot -.->|Using MedCAT| MedCAT
-    CalcAnnot -.->|Output| AnnotTables
+
+    %% Orchestrator triggers Epic batches
+    PatMaker -->|1a. Bulk prefetch all patients| GetMergedEpicClinicalNotes
+    PatMaker -->|1a. Bulk prefetch all patients| GetMergedEpicMedHistory
+    PatMaker -->|1a. Bulk prefetch all patients| GetMergedEpicImaging
+    PatMaker -->|1a. Bulk prefetch all patients| GetMergedEpicOrders
+    PatMaker -->|1a. Bulk prefetch all patients| GetMergedEpicLabResults
+    PatMaker -->|1a. Bulk prefetch all patients| GetMergedEpicPatients
+    PatMaker -->|1a. Bulk prefetch all patients| GetMergedEpicEncounters
+
+    %% Merged Epic batches: DB cache check
+    GetMergedEpicClinicalNotes -->|Cache lookup| GetDF
+    GetMergedEpicMedHistory  -->|Cache lookup| GetDF
+    GetMergedEpicImaging     -->|Cache lookup| GetDF
+    GetMergedEpicOrders      -->|Cache lookup| GetDF
+    GetMergedEpicLabResults  -->|Cache lookup| GetDF
+    GetMergedEpicPatients    -->|Cache lookup| GetDF
+    GetMergedEpicEncounters  -->|Cache lookup| GetDF
 
     %% Merged batch: ES fetch
     GetMergedBloods -->|If missing - fetch| ES
@@ -167,6 +190,15 @@ flowchart TD
     GetMergedNews   -->|If missing - fetch| ES
     GetMergedApps   -->|If missing - fetch| ES
     GetMergedOther  -->|If missing - fetch| ES
+
+    %% Merged Epic: ES fetch
+    GetMergedEpicClinicalNotes -->|If missing - fetch| ES
+    GetMergedEpicMedHistory  -->|If missing - fetch| ES
+    GetMergedEpicImaging     -->|If missing - fetch| ES
+    GetMergedEpicOrders      -->|If missing - fetch| ES
+    GetMergedEpicLabResults  -->|If missing - fetch| ES
+
+    %% File cache
     ES              -.->|Raw data| GetMergedBloods
     ES              -.->|Raw data| GetMergedDrugs
     ES              -.->|Raw data| GetMergedDiag
@@ -177,17 +209,12 @@ flowchart TD
     GetMergedBloods -->|File backend write| FC_Merged
     FC_Merged       -.->|File backend read| GetMergedBloods
 
-    %% Merged batch: DB write-through
-    GetMergedBloods -->|Write merged result| RawProxy
-    GetMergedDrugs  -->|Write merged result| RawProxy
-    GetMergedDiag   -->|Write merged result| RawProxy
-    GetMergedEPR    -->|Write merged result| RawProxy
-    GetMergedMCT    -->|Write merged result| RawProxy
-    GetMergedDemo   -->|Write merged result| RawProxy
-    GetMergedBMI    -->|Write merged result| RawProxy
-    GetMergedNews   -->|Write merged result| RawProxy
-    GetMergedApps   -->|Write merged result| RawProxy
-    GetMergedOther  -->|Write merged result| RawProxy
+    %% Merged Epic: DB write-through
+    GetMergedEpicClinicalNotes -->|Write merged result| RawProxy
+    GetMergedEpicMedHistory  -->|Write merged result| RawProxy
+    GetMergedEpicImaging     -->|Write merged result| RawProxy
+    GetMergedEpicOrders      -->|Write merged result| RawProxy
+    GetMergedEpicLabResults  -->|Write merged result| RawProxy
 
     %% Per-patient batch: DB cache check
     GetPatBloods -->|1. DB cache lookup| GetDF
@@ -237,6 +264,13 @@ flowchart TD
     GetPatBloods    -->|batches dict| Process
     GetPatDrugs     -->|batches dict| Process
     GetPatDocs      -->|batches dict| Process
+
+    %% Epic batches to main_batch
+    GetMergedEpicClinicalNotes -->|batches dict| Process
+    GetMergedEpicMedHistory  -->|batches dict| Process
+    GetMergedEpicImaging     -->|batches dict| Process
+    GetMergedEpicOrders      -->|batches dict| Process
+    GetMergedEpicLabResults  -->|batches dict| Process
 
     %% Annotations
     Process   -->|4. Annotation results| SaveAnnot

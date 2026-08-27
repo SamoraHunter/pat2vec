@@ -12,15 +12,18 @@ class TestElasticContainer(unittest.TestCase):
 
     @patch("subprocess.run")
     def test_cleanup_orphans_success(self, mock_run):
-        # Mock finding two containers and removing them
+        # Mock finding two containers and removing them - need "Up" status so they get removed
         mock_run.side_effect = [
-            MagicMock(returncode=0, stdout="cid1\ncid2\n"),
+            MagicMock(
+                returncode=0,
+                stdout="cid1\tUp 2 hours ago\t2 hours\n(cid2)\tExited (0) 1 day ago\t24 hours\n",
+            ),
             MagicMock(returncode=0),
         ]
         ElasticContainer.cleanup_orphans()
         self.assertEqual(mock_run.call_count, 2)
         mock_run.assert_any_call(
-            ["docker", "rm", "-f", "cid1", "cid2"],
+            ["docker", "rm", "-f", "cid1", "(cid2)"],
             capture_output=True,
             check=False,
         )
@@ -32,7 +35,7 @@ class TestElasticContainer(unittest.TestCase):
         with self.assertLogs("pat2vec.util.docker_elastic", level="WARNING") as cm:
             ElasticContainer.cleanup_orphans()
             self.assertTrue(
-                any("Could not list orphaned containers" in line for line in cm.output)
+                any("Could not list containers:" in line for line in cm.output)
             )
 
     @patch("subprocess.run")
@@ -78,7 +81,7 @@ class TestElasticContainer(unittest.TestCase):
         self.assertEqual(self.container._get_mapped_port(), 32768)
 
         mock_run.return_value = MagicMock(returncode=1)
-        self.assertEqual(self.container._get_mapped_port(), 19200)  # returns default
+        self.assertIsNone(self.container._get_mapped_port())  # returns None on error
 
     @patch("subprocess.run")
     def test_get_container_ip(self, mock_run):

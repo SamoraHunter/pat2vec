@@ -7,84 +7,94 @@ graph TB
     end
 
     subgraph "Data Sources"
-        F[Cogstack ElasticSearch] --> G[EPR Documents]
-        F --> H[MCT Documents]
-        F --> I[Clinical Observations]
-        F --> J[Blood Results]
-        F --> K[Medications/Drugs]
-        F --> L[Demographics]
-        F --> M[Appointments]
+        ES[Cogstack ElasticSearch] --> EPR[EPR Documents]
+        ES --> MCT[MCT Documents]
+        ES --> OBS[Clinical Observations]
+        ES --> BL[Blood Results]
+        ES --> DRUGS[Medications/Drugs]
+        ES --> DEMO[Demographics]
+        ES --> APPS[Appointments]
+        ES --> EPI_CLINICAL[Epic Clinical Notes]
+        ES --> EPI_MEDHIST[Epic Medical History]
+        ES --> EPI_IMAGING[Epic Imaging Reports]
+        ES --> EPI_ORDERS[Epic Orders]
+        ES --> EPI_LAB[Epic Lab Results]
     end
 
     subgraph "NLP Processing"
-        N[MedCat NLP Engine] --> O[CUI Extraction]
-        N --> P[Entity Recognition]
-        N --> Q[Negation Detection]
-        G --> N
-        H --> N
-        I --> N
+        NLP[MedCat NLP Engine] --> CUI[CUI Extraction]
+        NLP --> ENT[Entity Recognition]
+        NLP --> NEG[Negation Detection]
+        EPR --> NLP
+        MCT --> NLP
+        OBS --> NLP
     end
 
     subgraph "Core Processing Engine"
-        R[main class] --> S[pat_maker function]
-        S --> T[Batch Retrieval Methods]
-        S --> U[Annotation Methods]
-        S --> V[main_batch function]
+        MAIN[main class] --> MAKER[pat_maker function]
+            MAKER --> RETRIEVE[Batch Retrieval Methods]
+            MAKER --> ANNOTATE[Annotation Methods]
+            MAKER --> BATCH[main_batch function]
 
-        T --> W[get_pat_batch_epr_docs]
-        T --> X[get_pat_batch_mct_docs]
-        T --> Y[get_pat_batch_obs]
-        T --> Z[get_pat_batch_drugs]
-        T --> AA[get_pat_batch_bloods]
-        T --> BB[get_pat_batch_demo]
+        RETRIEVE --> EPR_GET[get_pat_batch_epr_docs]
+        RETRIEVE --> MCT_GET[get_pat_batch_mct_docs]
+        RETRIEVE --> OBS_GET[get_pat_batch_obs]
+        RETRIEVE --> DRUGS_GET[get_pat_batch_drugs]
+        RETRIEVE --> BL_GET[get_pat_batch_bloods]
+        RETRIEVE --> DEMO_GET[get_pat_batch_demo]
 
-        U --> CC[get_pat_batch_epr_docs_annotations]
-        U --> DD[get_pat_batch_mct_docs_annotations]
-        U --> EE[get_pat_batch_textual_obs_annotations]
-    end
+        ANNOTATE --> EPR_ANNOT[get_pat_batch_epr_docs_annotations]
+            ANNOTATE --> MCT_ANNOT[get_pat_batch_mct_docs_annotations]
+            ANNOTATE --> OBS_ANNOT[get_pat_batch_textual_obs_annotations]
+            ANNOTATE --> EPI_CLIN_ANNOT[get_pat_batch_epic_clinical_notes_annotations]
+            ANNOTATE --> EPI_MEDHIST_ANNOT[get_pat_batch_epic_medical_history_annotations]
+            ANNOTATE --> EPI_IMAGING_ANNOT[get_pat_batch_epic_imaging_reports_annotations]
+            ANNOTATE --> EPI_ORDERS_ANNOT[get_pat_batch_epic_orders_annotations]
+        end
 
     subgraph "Feature Engineering"
-        V --> FF[Drug Features]
-        V --> GG[Clinical Features]
-        V --> HH[Temporal Features]
-        V --> II[NLP Features]
+        BATCH --> DRUG_FEATS[Drug Features]
+        BATCH --> CLIN_FEATS[Clinical Features]
+        BATCH --> TEMP_FEATS[Temporal Features]
+        BATCH --> NLP_FEATS[NLP Features]
 
-        FF --> JJ[Drug Count]
-        FF --> KK[Days Since Last Drug]
-        FF --> LL[Days Between First/Last]
+        DRUG_FEATS --> DRUG_COUNT[Drug Count]
+        DRUG_FEATS --> DAYS_SINCE[Days Since Last Drug]
+        DRUG_FEATS --> DAYS_BETWEEN[Days Between First/Last]
 
-        GG --> MM[Vital Signs]
-        GG --> NN[Lab Results]
-        GG --> OO[Demographics]
+        CLIN_FEATS --> VITALS[Vital Signs]
+        CLIN_FEATS --> LAB_RESULTS[Lab Results]
+        CLIN_FEATS --> DEMOGRAPHICS[Demographics]
+        CLIN_FEATS --> EPI_LAB_FEAT[Epic Lab Results]
 
-        HH --> PP[Time Windows]
-        HH --> QQ[Date Ranges]
+        TEMP_FEATS --> WINDOW[Time Windows]
+        TEMP_FEATS --> DATERANGES[Date Ranges]
 
-        II --> RR[CUI Vectors]
-        II --> SS[Entity Counts]
-        II --> TT[Negation Flags]
+        NLP_FEATS --> CUI_VECTORS[CUI Vectors]
+        NLP_FEATS --> ENT_COUNTS[Entity Counts]
+        NLP_FEATS --> NEG_FLAGS[Negation Flags]
     end
 
     subgraph "Output Layer"
-        UU[Patient Vectors] --> VV[CSV Files]
-        UU --> WW[Annotation Files]
-        UU --> XX[Feature Matrices]
+        OUTPUT[Patient Vectors] --> CSV[CSV Files]
+        OUTPUT --> ANNOT_OUT[Annotation Files]
+        OUTPUT --> FEAT_MATRIX[Feature Matrices]
     end
 
-    B --> R
-    F --> T
-    N --> U
-    O --> II
-    P --> II
-    Q --> II
+    A --> MAIN
+    ES --> RETRIEVE
+    NLP --> ANNOTATE
+    CUI --> NLP_FEATS
+    ENT --> NLP_FEATS
+    NEG --> NLP_FEATS
 
-    FF --> UU
-    GG --> UU
-    HH --> UU
-    II --> UU
+    DRUG_FEATS --> OUTPUT
+    CLIN_FEATS --> OUTPUT
+    TEMP_FEATS --> OUTPUT
+    NLP_FEATS --> OUTPUT
 
     style A fill:#e3f2fd
-    style N fill:#fff3e0
-    style R fill:#f3e5f5
-    style V fill:#e8f5e8
-    style UU fill:#c8e6c9
+    style NLP fill:#fff3e0
+    style MAIN fill:#f3e5f5
+    style BATCH fill:#e8f5e8
+    style OUTPUT fill:#c8e6c9

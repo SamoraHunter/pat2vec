@@ -36,12 +36,18 @@ def calculate_interval(
 
     end_date = start_date + total_delta
 
-    # If interval exceeds or equals total duration, we get exactly 1 vector
-    # Convert to approximate days for comparison (years*365 + months*30 + days)
+    # If total duration is effectively zero or negative, no intervals fit
     def delta_to_approx_days(delta):
         return delta.years * 365 + delta.months * 30 + delta.days
 
-    if delta_to_approx_days(interval_delta) >= delta_to_approx_days(total_delta):
+    if delta_to_approx_days(total_delta) <= 0:
+        return 0
+
+    # If interval is larger than total duration, no complete intervals fit
+    if delta_to_approx_days(interval_delta) > delta_to_approx_days(total_delta):
+        return 0
+
+    if delta_to_approx_days(interval_delta) == delta_to_approx_days(total_delta):
         return 1
 
     current_date = start_date

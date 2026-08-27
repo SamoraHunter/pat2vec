@@ -74,7 +74,7 @@ def _fetch_epic_clinical_notes_from_elasticsearch(
         results = pd.DataFrame()
         for term_name in term_names_to_try:
             # Verbose ES fetch check - only show at verbosity > 5
-            if _logger.isEnabledFor(logging.DEBUG) and self.config_obj.verbosity > 5:
+            if _logger.isEnabledFor(logging.DEBUG) and config_obj.verbosity > 5:
                 _logger.debug(
                     f"Fetching ES ({term_name[:30]}) patient {current_pat_client_id_code}",
                 )

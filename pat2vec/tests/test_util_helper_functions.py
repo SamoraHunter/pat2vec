@@ -113,6 +113,7 @@ class TestHelperFunctions(unittest.TestCase):
         mock_config.storage_backend = "database"
         mock_config.db_engine = MagicMock()
         mock_config.db_engine.name = "sqlite"
+        mock_config.verbosity = 0
 
         mock_inspect.return_value.has_table.return_value = True
         mock_conn = MagicMock()
@@ -138,7 +139,9 @@ class TestHelperFunctions(unittest.TestCase):
         mock_config.storage_backend = "database"
         mock_config.db_engine = MagicMock()
         mock_config.db_engine.name = "sqlite"
+        mock_config.verbosity = 0
         mock_inspect.return_value.has_table.return_value = True
+
         mock_conn = MagicMock()
         mock_config.db_engine.begin.return_value.__enter__.return_value = mock_conn
 

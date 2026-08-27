@@ -1573,15 +1573,6 @@ class main:
         batches: dict[str, pd.DataFrame],
     ) -> None:
         """Saves fetched batches to the database if backend is enabled."""
-        print(
-            f"_debug_internal _save_batches_to_db: patient={patient_id}, batches keys: {list(batches.keys())}",
-        )
-        if "batch_appointments" in batches:
-            print(
-                f"_debug_internal batch_appointments exists, shape: {batches['batch_appointments'].shape}",
-            )
-        else:
-            print("_debug_internal: batch_appointments NOT in batches!")
         if self.config_obj.storage_backend != "database":
             return
 
@@ -1672,24 +1663,8 @@ class main:
 
             # The logic: save if (not empty) OR (enabled AND empty)
             # Simplifying: if empty and not enabled → skip, otherwise save
-            if batch_key == "batch_appointments":
-                _logger.debug(
-                    f"  Saving batch_appointments: enabled={is_enabled}, shape={batches[batch_key].shape}",
-                )
-
-            if batch_key == "batch_appointments":
-                print(
-                    f"_debug_internal: Saving batch_appointments - enabled={is_enabled}, shape={batches[batch_key].shape}",
-                )
-
             if batches[batch_key].empty and not is_enabled:
-                print(
-                    "_debug_internal: Skipping batch_appointments (empty and not enabled)",
-                )
                 continue  # Skip disabled sources with empty data
-
-            # All other cases: non-empty or enabled empty
-            print("_debug_internal: Would save batch_appointments to DB")
             save_raw_patient_batch(
                 batches[batch_key],
                 patient_id,
@@ -2235,11 +2210,8 @@ class main:
         )
 
         # Save raw batches and annotation batches to DB if applicable
-        print(f"_debug_internal: storage_backend={self.config_obj.storage_backend}")
         if self.config_obj.storage_backend == "database":
-            print("_debug_internal: Would call _save_batches_to_db")
             self._save_batches_to_db(current_pat_client_id_code, batches)
-            print("_debug_internal: Would call _save_annotation_batches_to_db")
             self._save_annotation_batches_to_db(current_pat_client_id_code, batches)
 
         update_pbar(
