@@ -172,4 +172,6 @@ def get_pat_batch_mct_docs_annotations(
             _logger.error(
                 f"Could not write MCT annotations to DB for patient {current_pat_client_id_code}: {e}",
             )
+            raise
+
     return batch_target

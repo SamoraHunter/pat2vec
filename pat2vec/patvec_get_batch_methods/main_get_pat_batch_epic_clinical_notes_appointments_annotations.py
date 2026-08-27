@@ -211,6 +211,7 @@ def get_pat_batch_epic_clinical_notes_appointments_annotations(
                     _logger.error(
                         f"Failed to save raw epic clinical notes appointments batch for {current_pat_client_id_code}: {e}",
                     )
+                    raise
 
         # When no raw data is found, handle testing mode with dummy MedCAT
         if pat_batch.empty:
@@ -338,5 +339,6 @@ def get_pat_batch_epic_clinical_notes_appointments_annotations(
             _logger.error(
                 f"Could not write appointments annotations to DB for patient {current_pat_client_id_code}: {e}",
             )
+            raise
 
     return batch_target

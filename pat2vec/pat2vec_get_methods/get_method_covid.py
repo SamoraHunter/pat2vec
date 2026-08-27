@@ -5,18 +5,10 @@ import numpy as np
 import pandas as pd
 from IPython.display import display
 
+from pat2vec.util.elasticsearch_index_config import COVID_FIELDS
 from pat2vec.util.filter_dataframe_by_timestamp import filter_dataframe_by_timestamp
 from pat2vec.util.get_start_end_year_month import get_start_end_year_month
 from pat2vec.util.parse_date import validate_input_dates
-
-COVID_FIELDS = [
-    "observation_guid",
-    "client_idcode",
-    "basicobs_itemname_analysed",
-    "basicobs_value_analysed",
-    "basicobs_entered",
-    "clientvisit_visitidcode",
-]
 
 SEARCH_TERM_ES = r"SARS CoV-2 \(COVID-19\) RNA"
 SEARCH_TERM_PLAIN = "SARS CoV-2 (COVID-19) RNA"

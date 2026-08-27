@@ -8,6 +8,7 @@ _logger = logging.getLogger(__name__)
 import pandas as pd
 from sqlalchemy import text
 
+from pat2vec.util.elasticsearch_index_config import DRUG_FIELDS
 from pat2vec.util.helper_functions import get_df_from_db
 from pat2vec.util.methods_get import exist_check
 
@@ -95,17 +96,7 @@ def get_pat_batch_drugs(
         if should_fetch:
             batch_target = cohort_searcher_with_terms_and_search(
                 index_name="order",
-                fields_list=[
-                    "client_idcode",
-                    "order_guid",
-                    "order_name",
-                    "order_summaryline",
-                    "order_holdreasontext",
-                    "order_entered",
-                    "clientvisit_visitidcode",
-                    "order_performeddtm",
-                    "order_createdwhen",
-                ],
+                fields_list=DRUG_FIELDS,
                 term_name=config_obj.client_idcode_term_name,
                 entered_list=[current_pat_client_id_code],
                 search_string=f'order_typecode:"medication" AND '

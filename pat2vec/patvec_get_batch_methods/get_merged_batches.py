@@ -270,14 +270,7 @@ def get_merged_pat_batch_bloods(
             _logger.info("Fetching bloods data from Elasticsearch.")
             batch_target = cohort_searcher_with_terms_and_search(
                 index_name="basic_observations",
-                fields_list=[
-                    "client_idcode",
-                    "basicobs_itemname_analysed",
-                    "basicobs_value_numeric",
-                    "basicobs_entered",
-                    "clientvisit_serviceguid",
-                    "updatetime",
-                ],
+                fields_list=BLOODS_FIELDS,
                 term_name=config_obj.client_idcode_term_name,
                 entered_list=client_idcode_list,
                 search_string=f"basicobs_value_numeric:* AND {bloods_time_field}:[{global_start_year}-{global_start_month}-{global_start_day} TO {global_end_year}-{global_end_month}-{global_end_day}]",
@@ -360,14 +353,7 @@ def get_merged_pat_batch_bloods(
         try:
             batch_target = cohort_searcher_with_terms_and_search(
                 index_name="basic_observations",
-                fields_list=[
-                    "client_idcode",
-                    "basicobs_itemname_analysed",
-                    "basicobs_value_numeric",
-                    "basicobs_entered",
-                    "clientvisit_serviceguid",
-                    "updatetime",
-                ],
+                fields_list=BLOODS_FIELDS,
                 term_name=config_obj.client_idcode_term_name,
                 entered_list=client_idcode_list,
                 search_string=f"basicobs_value_numeric:* AND {bloods_time_field}:[{global_start_year}-{global_start_month}-{global_start_day} TO {global_end_year}-{global_end_month}-{global_end_day}]",
@@ -483,17 +469,7 @@ def get_merged_pat_batch_drugs(
             _logger.info("Fetching drugs data from Elasticsearch.")
             batch_target = cohort_searcher_with_terms_and_search(
                 index_name="order",
-                fields_list=[
-                    "client_idcode",
-                    "order_guid",
-                    "order_name",
-                    "order_summaryline",
-                    "order_holdreasontext",
-                    "order_entered",
-                    "clientvisit_visitidcode",
-                    "order_performeddtm",
-                    "order_createdwhen",
-                ],
+                fields_list=DRUG_FIELDS,
                 term_name=config_obj.client_idcode_term_name,
                 entered_list=client_idcode_list,
                 search_string=f'order_typecode:"medication" AND {drug_time_field}:[{global_start_year}-{global_start_month}-{global_start_day} TO {global_end_year}-{global_end_month}-{global_end_day}]',
@@ -579,17 +555,7 @@ def get_merged_pat_batch_drugs(
         try:
             batch_target = cohort_searcher_with_terms_and_search(
                 index_name="order",
-                fields_list=[
-                    "client_idcode",
-                    "order_guid",
-                    "order_name",
-                    "order_summaryline",
-                    "order_holdreasontext",
-                    "order_entered",
-                    "clientvisit_visitidcode",
-                    "order_performeddtm",
-                    "order_createdwhen",
-                ],
+                fields_list=DRUG_FIELDS,
                 term_name=config_obj.client_idcode_term_name,
                 entered_list=client_idcode_list,
                 search_string=f'order_typecode:"medication" AND {drug_time_field}:[{global_start_year}-{global_start_month}-{global_start_day} TO {global_end_year}-{global_end_month}-{global_end_day}]',
@@ -700,17 +666,7 @@ def get_merged_pat_batch_diagnostics(
 
             batch_target = cohort_searcher_with_terms_and_search(
                 index_name="order",
-                fields_list=[
-                    "client_idcode",
-                    "order_guid",
-                    "order_name",
-                    "order_summaryline",
-                    "order_holdreasontext",
-                    "order_entered",
-                    "clientvisit_visitidcode",
-                    "order_performeddtm",
-                    "order_createdwhen",
-                ],
+                fields_list=DRUG_FIELDS,
                 term_name=config_obj.client_idcode_term_name,
                 entered_list=client_idcode_list,
                 search_string=f'order_typecode:"diagnostic" AND {diagnostic_time_field}:[{global_start_year}-{global_start_month}-{global_start_day} TO {global_end_year}-{global_end_month}-{global_end_day}]',
@@ -796,17 +752,7 @@ def get_merged_pat_batch_diagnostics(
         try:
             batch_target = cohort_searcher_with_terms_and_search(
                 index_name="order",
-                fields_list=[
-                    "client_idcode",
-                    "order_guid",
-                    "order_name",
-                    "order_summaryline",
-                    "order_holdreasontext",
-                    "order_entered",
-                    "clientvisit_visitidcode",
-                    "order_performeddtm",
-                    "order_createdwhen",
-                ],
+                fields_list=DRUG_FIELDS,
                 term_name=config_obj.client_idcode_term_name,
                 entered_list=client_idcode_list,
                 search_string=f'order_typecode:"diagnostic" AND {diagnostic_time_field}:[{global_start_year}-{global_start_month}-{global_start_day} TO {global_end_year}-{global_end_month}-{global_end_day}]',
@@ -920,14 +866,7 @@ def get_merged_pat_batch_mct_docs(
 
             batch_target = cohort_searcher_with_terms_and_search(
                 index_name="observations",
-                fields_list=[
-                    "observation_guid",
-                    "client_idcode",
-                    "obscatalogmasteritem_displayname",
-                    "observation_valuetext_analysed",
-                    "observationdocument_recordeddtm",
-                    "clientvisit_visitidcode",
-                ],
+                fields_list=OBS_FIELDS,
                 term_name=config_obj.client_idcode_term_name,
                 entered_list=client_idcode_list,
                 search_string=f'obscatalogmasteritem_displayname:("AoMRC_ClinicalSummary_FT") AND '
@@ -1015,14 +954,7 @@ def get_merged_pat_batch_mct_docs(
         try:
             batch_target = cohort_searcher_with_terms_and_search(
                 index_name="observations",
-                fields_list=[
-                    "observation_guid",
-                    "client_idcode",
-                    "obscatalogmasteritem_displayname",
-                    "observation_valuetext_analysed",
-                    "observationdocument_recordeddtm",
-                    "clientvisit_visitidcode",
-                ],
+                fields_list=OBS_FIELDS,
                 term_name=config_obj.client_idcode_term_name,
                 entered_list=client_idcode_list,
                 search_string=f'obscatalogmasteritem_displayname:("AoMRC_ClinicalSummary_FT") AND '
@@ -1127,14 +1059,7 @@ def get_merged_pat_batch_epr_docs(
 
             batch_target = cohort_searcher_with_terms_and_search(
                 index_name="epr_documents",
-                fields_list=[
-                    "client_idcode",
-                    "document_guid",
-                    "document_description",
-                    "body_analysed",
-                    "updatetime",
-                    "clientvisit_visitidcode",
-                ],
+                fields_list=EPR_DOCS_FIELDS,
                 term_name=config_obj.client_idcode_term_name,
                 entered_list=client_idcode_list,
                 search_string=f"updatetime:[{global_start_year}-{global_start_month}-{global_start_day} TO {global_end_year}-{global_end_month}-{global_end_day}]",
@@ -1246,14 +1171,7 @@ def get_merged_pat_batch_epr_docs(
         try:
             batch_target = cohort_searcher_with_terms_and_search(
                 index_name="epr_documents",
-                fields_list=[
-                    "client_idcode",
-                    "document_guid",
-                    "document_description",
-                    "body_analysed",
-                    "updatetime",
-                    "clientvisit_visitidcode",
-                ],
+                fields_list=EPR_DOCS_FIELDS,
                 term_name=config_obj.client_idcode_term_name,
                 entered_list=client_idcode_list,
                 search_string=f"updatetime:[{global_start_year}-{global_start_month}-{global_start_day} TO {global_end_year}-{global_end_month}-{global_end_day}]",
@@ -1394,17 +1312,7 @@ def get_merged_pat_batch_textual_obs_docs(
 
             batch_target = cohort_searcher_with_terms_and_search(
                 index_name="basic_observations",
-                fields_list=[
-                    "client_idcode",
-                    "basicobs_itemname_analysed",
-                    "basicobs_value_numeric",
-                    "basicobs_value_analysed",
-                    "basicobs_entered",
-                    "clientvisit_serviceguid",
-                    "basicobs_guid",
-                    "updatetime",
-                    "textualObs",
-                ],
+                fields_list=TEXTUAL_OBS_FIELDS,
                 term_name=config_obj.client_idcode_term_name,
                 entered_list=client_idcode_list,
                 search_string=f"{bloods_time_field}:[{global_start_year}-{global_start_month}-{global_start_day} TO {global_end_year}-{global_end_month}-{global_end_day}]",
@@ -1473,17 +1381,7 @@ def get_merged_pat_batch_textual_obs_docs(
         try:
             batch_target = cohort_searcher_with_terms_and_search(
                 index_name="basic_observations",
-                fields_list=[
-                    "client_idcode",
-                    "basicobs_itemname_analysed",
-                    "basicobs_value_numeric",
-                    "basicobs_value_analysed",
-                    "basicobs_entered",
-                    "clientvisit_serviceguid",
-                    "basicobs_guid",
-                    "updatetime",
-                    "textualObs",
-                ],
+                fields_list=TEXTUAL_OBS_FIELDS,
                 term_name=config_obj.client_idcode_term_name,
                 entered_list=client_idcode_list,
                 search_string=f"{bloods_time_field}:[{global_start_year}-{global_start_month}-{global_start_day} TO {global_end_year}-{global_end_month}-{global_end_day}]",
@@ -1578,38 +1476,7 @@ def get_merged_pat_batch_appointments(
 
             batch_target = cohort_searcher_with_terms_and_search(
                 index_name="pims_apps*",
-                fields_list=[
-                    "Popular",
-                    "AppointmentType",
-                    "AttendanceReference",
-                    "ClinicCode",
-                    "ClinicDesc",
-                    "Consultant",
-                    "DateModified",
-                    "DNA",
-                    "HospitalID",
-                    "PatNHSNo",
-                    "Specialty",
-                    "AppointmentDateTime",
-                    "Attended",
-                    "CancDesc",
-                    "CancRefNo",
-                    "ConsultantCode",
-                    "DateCreated",
-                    "Ethnicity",
-                    "Gender",
-                    "NHSNoStatusCode",
-                    "NotSpec",
-                    "PatDateOfBirth",
-                    "PatForename",
-                    "PatPostCode",
-                    "PatSurname",
-                    "PiMsPatRefNo",
-                    "Primarykeyfieldname",
-                    "Primarykeyfieldvalue",
-                    "SessionCode",
-                    "SpecialtyCode",
-                ],
+                fields_list=APPOINTMENT_FIELDS,
                 term_name="HospitalID.keyword",
                 entered_list=client_idcode_list,
                 search_string=f"{appointments_time_field}:[{global_start_year}-{global_start_month}-{global_start_day} TO {global_end_year}-{global_end_month}-{global_end_day}]",
@@ -1677,38 +1544,7 @@ def get_merged_pat_batch_appointments(
         try:
             batch_target = cohort_searcher_with_terms_and_search(
                 index_name="pims_apps*",
-                fields_list=[
-                    "Popular",
-                    "AppointmentType",
-                    "AttendanceReference",
-                    "ClinicCode",
-                    "ClinicDesc",
-                    "Consultant",
-                    "DateModified",
-                    "DNA",
-                    "HospitalID",
-                    "PatNHSNo",
-                    "Specialty",
-                    "AppointmentDateTime",
-                    "Attended",
-                    "CancDesc",
-                    "CancRefNo",
-                    "ConsultantCode",
-                    "DateCreated",
-                    "Ethnicity",
-                    "Gender",
-                    "NHSNoStatusCode",
-                    "NotSpec",
-                    "PatDateOfBirth",
-                    "PatForename",
-                    "PatPostCode",
-                    "PatSurname",
-                    "PiMsPatRefNo",
-                    "Primarykeyfieldname",
-                    "Primarykeyfieldvalue",
-                    "SessionCode",
-                    "SpecialtyCode",
-                ],
+                fields_list=APPOINTMENT_FIELDS,
                 term_name="HospitalID.keyword",
                 entered_list=client_idcode_list,
                 search_string=f"{appointments_time_field}:[{global_start_year}-{global_start_month}-{global_start_day} TO {global_end_year}-{global_end_month}-{global_end_day}]",
@@ -1799,16 +1635,7 @@ def get_merged_pat_batch_demo(
 
             batch_target = cohort_searcher_with_terms_and_search(
                 index_name="epr_documents",
-                fields_list=[
-                    "client_idcode",
-                    "client_firstname",
-                    "client_lastname",
-                    "client_dob",
-                    "client_gendercode",
-                    "client_racecode",
-                    "client_deceaseddtm",
-                    "updatetime",
-                ],
+                fields_list=DEMOGRAPHICS_FIELDS,
                 term_name=config_obj.client_idcode_term_name,
                 entered_list=client_idcode_list,
                 search_string=f"updatetime:[{global_start_year}-{global_start_month}-{global_start_day} TO {global_end_year}-{global_end_month}-{global_end_day}]",
@@ -1873,16 +1700,7 @@ def get_merged_pat_batch_demo(
         try:
             batch_target = cohort_searcher_with_terms_and_search(
                 index_name="epr_documents",
-                fields_list=[
-                    "client_idcode",
-                    "client_firstname",
-                    "client_lastname",
-                    "client_dob",
-                    "client_gendercode",
-                    "client_racecode",
-                    "client_deceaseddtm",
-                    "updatetime",
-                ],
+                fields_list=DEMOGRAPHICS_FIELDS,
                 term_name=config_obj.client_idcode_term_name,
                 entered_list=client_idcode_list,
                 search_string=f"updatetime:[{global_start_year}-{global_start_month}-{global_start_day} TO {global_end_year}-{global_end_month}-{global_end_day}]",
@@ -1973,14 +1791,7 @@ def get_merged_pat_batch_bmi(
 
             batch_target = cohort_searcher_with_terms_and_search(
                 index_name="observations",
-                fields_list=[
-                    "observation_guid",
-                    "client_idcode",
-                    "obscatalogmasteritem_displayname",
-                    "observation_valuetext_analysed",
-                    "observationdocument_recordeddtm",
-                    "clientvisit_visitidcode",
-                ],
+                fields_list=OBS_FIELDS,
                 term_name=config_obj.client_idcode_term_name,
                 entered_list=client_idcode_list,
                 search_string=f'obscatalogmasteritem_displayname:("OBS BMI Calculation" OR "OBS Weight" OR "OBS Height") AND '
@@ -2046,14 +1857,7 @@ def get_merged_pat_batch_bmi(
         try:
             batch_target = cohort_searcher_with_terms_and_search(
                 index_name="observations",
-                fields_list=[
-                    "observation_guid",
-                    "client_idcode",
-                    "obscatalogmasteritem_displayname",
-                    "observation_valuetext_analysed",
-                    "observationdocument_recordeddtm",
-                    "clientvisit_visitidcode",
-                ],
+                fields_list=OBS_FIELDS,
                 term_name=config_obj.client_idcode_term_name,
                 entered_list=client_idcode_list,
                 search_string=f'obscatalogmasteritem_displayname:("OBS BMI Calculation" OR "OBS Weight" OR "OBS Height") AND '
@@ -2149,14 +1953,7 @@ def get_merged_pat_batch_obs(
 
             batch_target = cohort_searcher_with_terms_and_search(
                 index_name="observations",
-                fields_list=[
-                    "observation_guid",
-                    "client_idcode",
-                    "obscatalogmasteritem_displayname",
-                    "observation_valuetext_analysed",
-                    "observationdocument_recordeddtm",
-                    "clientvisit_visitidcode",
-                ],
+                fields_list=OBS_FIELDS,
                 term_name=config_obj.client_idcode_term_name,
                 entered_list=client_idcode_list,
                 search_string=f'obscatalogmasteritem_displayname:("{search_term}") AND '
@@ -2227,14 +2024,7 @@ def get_merged_pat_batch_obs(
         try:
             batch_target = cohort_searcher_with_terms_and_search(
                 index_name="observations",
-                fields_list=[
-                    "observation_guid",
-                    "client_idcode",
-                    "obscatalogmasteritem_displayname",
-                    "observation_valuetext_analysed",
-                    "observationdocument_recordeddtm",
-                    "clientvisit_visitidcode",
-                ],
+                fields_list=OBS_FIELDS,
                 term_name=config_obj.client_idcode_term_name,
                 entered_list=client_idcode_list,
                 search_string=f'obscatalogmasteritem_displayname:("{search_term}") AND '
@@ -2326,14 +2116,7 @@ def get_merged_pat_batch_news(
 
             batch_target = cohort_searcher_with_terms_and_search(
                 index_name="observations",
-                fields_list=[
-                    "observation_guid",
-                    "client_idcode",
-                    "obscatalogmasteritem_displayname",
-                    "observation_valuetext_analysed",
-                    "observationdocument_recordeddtm",
-                    "clientvisit_visitidcode",
-                ],
+                fields_list=OBS_FIELDS,
                 term_name=config_obj.client_idcode_term_name,
                 entered_list=client_idcode_list,
                 search_string=f"obscatalogmasteritem_displayname:(NEWS*) AND "
@@ -2399,14 +2182,7 @@ def get_merged_pat_batch_news(
         try:
             batch_target = cohort_searcher_with_terms_and_search(
                 index_name="observations",
-                fields_list=[
-                    "observation_guid",
-                    "client_idcode",
-                    "obscatalogmasteritem_displayname",
-                    "observation_valuetext_analysed",
-                    "observationdocument_recordeddtm",
-                    "clientvisit_visitidcode",
-                ],
+                fields_list=OBS_FIELDS,
                 term_name=config_obj.client_idcode_term_name,
                 entered_list=client_idcode_list,
                 search_string=f"obscatalogmasteritem_displayname:(NEWS*) AND "
@@ -2581,14 +2357,7 @@ def get_merged_pat_batch_reports(
         try:
             batch_target = cohort_searcher_with_terms_and_search(
                 index_name="basic_observations",
-                fields_list=[
-                    "client_idcode",
-                    "updatetime",
-                    "textualObs",
-                    "basicobs_guid",
-                    "basicobs_value_analysed",
-                    "basicobs_itemname_analysed",
-                ],
+                fields_list=REPORTS_FIELDS,
                 term_name=config_obj.client_idcode_term_name,
                 entered_list=client_idcode_list,
                 search_string=f"basicobs_itemname_analysed:{search_term} AND updatetime:[{global_start_year}-{global_start_month}-{global_start_day} TO {global_end_year}-{global_end_month}-{global_end_day}]",

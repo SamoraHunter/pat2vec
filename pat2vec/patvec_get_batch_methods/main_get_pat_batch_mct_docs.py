@@ -10,6 +10,7 @@ import pandas as pd
 from sqlalchemy import text
 
 from pat2vec.util.clinical_note_splitter import split_and_append_chunks
+from pat2vec.util.elasticsearch_index_config import OBS_FIELDS
 from pat2vec.util.filter_methods import apply_data_type_mct_docs_filters
 from pat2vec.util.helper_functions import get_df_from_db
 from pat2vec.util.methods_get import exist_check
@@ -94,14 +95,7 @@ def get_pat_batch_mct_docs(
         if should_fetch:
             batch_target = cohort_searcher_with_terms_and_search(
                 index_name="observations",
-                fields_list=[
-                    "observation_guid",
-                    "client_idcode",
-                    "obscatalogmasteritem_displayname",
-                    "observation_valuetext_analysed",
-                    "observationdocument_recordeddtm",
-                    "clientvisit_visitidcode",
-                ],
+                fields_list=OBS_FIELDS,
                 term_name=config_obj.client_idcode_term_name,
                 entered_list=[current_pat_client_id_code],
                 search_string=f'obscatalogmasteritem_displayname:("AoMRC_ClinicalSummary_FT") AND '

@@ -173,4 +173,6 @@ def get_pat_batch_textual_obs_annotations(
             _logger.error(
                 f"Could not write textual obs annotations to DB for patient {current_pat_client_id_code}: {e}",
             )
+            raise
+
     return batch_target

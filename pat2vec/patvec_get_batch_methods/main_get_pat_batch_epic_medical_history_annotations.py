@@ -207,6 +207,7 @@ def get_pat_batch_epic_medical_history_annotations(
                     _logger.error(
                         f"Failed to save raw epic medical history batch for {current_pat_client_id_code}: {e}",
                     )
+                    raise
 
         if config_obj.verbosity >= 6:
             print(
@@ -325,4 +326,6 @@ def get_pat_batch_epic_medical_history_annotations(
             _logger.error(
                 f"Could not write epic medical history annotations to DB for patient {current_pat_client_id_code}: {e}",
             )
+            raise
+
     return batch_target

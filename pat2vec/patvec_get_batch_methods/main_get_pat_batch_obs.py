@@ -7,6 +7,7 @@ _logger = logging.getLogger(__name__)
 
 import pandas as pd
 
+from pat2vec.util.elasticsearch_index_config import OBS_COVID_FIELDS, OBS_FIELDS
 from pat2vec.util.helper_functions import (
     get_df_from_db,
     sanitize_for_path,
@@ -129,24 +130,10 @@ def get_pat_batch_obs(
 
         query_index_name = "basic_observations" if is_covid_query else "observations"
 
-        query_fields_list = [
-            "observation_guid",
-            "client_idcode",
-            "obscatalogmasteritem_displayname",
-            "observation_valuetext_analysed",
-            "observationdocument_recordeddtm",
-            "clientvisit_visitidcode",
-        ]
+        query_fields_list = OBS_FIELDS.copy()
         if is_covid_query:
             # Use basic_observations schema for COVID
-            query_fields_list = [
-                "observation_guid",
-                "client_idcode",
-                "basicobs_itemname_analysed",
-                "basicobs_value_analysed",
-                "basicobs_entered",
-                "clientvisit_visitidcode",
-            ]
+            query_fields_list = OBS_COVID_FIELDS.copy()
 
         if should_fetch:
             # For COVID queries, use basicobs_itemname_analysed field in basic_observations index

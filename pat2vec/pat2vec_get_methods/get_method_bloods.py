@@ -9,20 +9,12 @@ from IPython.display import display
 from pat2vec.pat2vec_get_methods.get_method_epic_lab_results import (
     search_epic_lab_results,
 )
+from pat2vec.util.elasticsearch_index_config import BLOODS_FIELDS
 from pat2vec.util.filter_dataframe_by_timestamp import filter_dataframe_by_timestamp
 from pat2vec.util.get_start_end_year_month import get_start_end_year_month
 from pat2vec.util.parse_date import validate_input_dates
 
 logger = logging.getLogger(__name__)
-
-BLOODS_FIELDS = [
-    "client_idcode",
-    "basicobs_itemname_analysed",
-    "basicobs_value_numeric",
-    "basicobs_entered",
-    "clientvisit_serviceguid",
-    "updatetime",
-]
 
 
 def search_bloods_data(

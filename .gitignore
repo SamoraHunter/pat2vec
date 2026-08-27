@@ -258,4 +258,8 @@ snomed_methods/snomed_icd10_map/data/tls_Icd10cmHumanReadableMap_US1000124_20230
 # via notebooks/test/nb_temp_setup.py; patterns below catch any leftovers)
 *_test_project/
 current_pat_demo_batches/
+TEMP_test_config.py
 test_elastic_credentials.py
+
+# Centralized Elasticsearch configuration (auto-generated for review)
+ELASTICSEARCH_INDEX_CONFIG.json

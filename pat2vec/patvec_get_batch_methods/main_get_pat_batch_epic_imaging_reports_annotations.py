@@ -229,6 +229,7 @@ def get_pat_batch_epic_imaging_reports_annotations(
                     _logger.error(
                         f"Failed to save raw epic imaging reports batch for {current_pat_client_id_code}: {e}",
                     )
+                    raise
 
         if config_obj.verbosity >= 6:
             print(
@@ -365,4 +366,5 @@ def get_pat_batch_epic_imaging_reports_annotations(
             _logger.error(
                 f"Could not write epic imaging reports annotations to DB for patient {current_pat_client_id_code}: {e}",
             )
+            raise
     return batch_target

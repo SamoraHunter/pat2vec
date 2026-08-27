@@ -240,6 +240,7 @@ def get_pat_batch_epic_clinical_notes_annotations(
                     _logger.error(
                         f"Failed to save raw epic clinical notes batch for {current_pat_client_id_code}: {e}",
                     )
+                    raise
 
         _logger.debug(
             f"After DB/file fetch, pat_batch.empty={pat_batch.empty}, shape={pat_batch.shape if not pat_batch.empty else 'N/A'}",
@@ -311,6 +312,7 @@ def get_pat_batch_epic_clinical_notes_annotations(
                         _logger.error(
                             f"Failed to save raw epic clinical notes batch for {current_pat_client_id_code}: {e}",
                         )
+                        raise
             else:
                 from pat2vec.util.post_processing_annotations import EMPTY_ANNOT_COLS
 
@@ -392,6 +394,7 @@ def get_pat_batch_epic_clinical_notes_annotations(
             _logger.error(
                 f"Could not write epic clinical notes annotations to DB for patient {current_pat_client_id_code}: {e}",
             )
+            raise
     else:
         print("DEBUG: Skipping database storage (should_store=False or empty batch)")
 

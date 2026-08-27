@@ -3,18 +3,10 @@ import os
 import pandas as pd
 from IPython.display import display
 
+from pat2vec.util.elasticsearch_index_config import CORE_RESUS_FIELDS
 from pat2vec.util.filter_dataframe_by_timestamp import filter_dataframe_by_timestamp
 from pat2vec.util.get_start_end_year_month import get_start_end_year_month
 from pat2vec.util.parse_date import validate_input_dates
-
-CORE_RESUS_FIELDS = [
-    "observation_guid",
-    "client_idcode",
-    "obscatalogmasteritem_displayname",
-    "observation_valuetext_analysed",
-    "observationdocument_recordeddtm",
-    "clientvisit_visitidcode",
-]
 
 
 def search_core_resus_observations(
@@ -307,13 +299,3 @@ def get_core_resus(
         display(features)
 
     return features
-
-
-CORE_RESUS_FIELDS = [
-    "observation_guid",
-    "client_idcode",
-    "obscatalogmasteritem_displayname",
-    "observation_valuetext_analysed",
-    "observationdocument_recordeddtm",
-    "clientvisit_visitidcode",
-]

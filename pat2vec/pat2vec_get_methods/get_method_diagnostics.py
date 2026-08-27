@@ -7,22 +7,11 @@ import pandas as pd
 from IPython.display import display
 
 from pat2vec.pat2vec_get_methods.get_method_epic_orders import search_epic_orders
+from pat2vec.util.elasticsearch_index_config import DIAGNOSTICS_FIELDS
 from pat2vec.util.filter_dataframe_by_timestamp import filter_dataframe_by_timestamp
 from pat2vec.util.get_start_end_year_month import get_start_end_year_month
 from pat2vec.util.methods_get import convert_date
 from pat2vec.util.parse_date import validate_input_dates
-
-DIAGNOSTICS_FIELDS = [
-    "client_idcode",
-    "order_guid",
-    "order_name",
-    "order_summaryline",
-    "order_holdreasontext",
-    "order_entered",
-    "clientvisit_visitidcode",
-    "order_performeddtm",
-    "order_createdwhen",
-]
 
 COLUMNS_TO_DROP = [
     "_index",

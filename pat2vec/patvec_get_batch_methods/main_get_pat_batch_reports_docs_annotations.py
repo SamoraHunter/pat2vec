@@ -185,4 +185,6 @@ def get_pat_batch_reports_docs_annotations(
             _logger.error(
                 f"Could not write report annotations to DB for patient {current_pat_client_id_code}: {e}",
             )
+            raise
+
     return batch_target

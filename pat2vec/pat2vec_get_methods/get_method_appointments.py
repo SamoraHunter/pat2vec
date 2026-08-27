@@ -3,42 +3,10 @@ import os
 import pandas as pd
 from IPython.display import display
 
+from pat2vec.util.elasticsearch_index_config import APPOINTMENT_FIELDS
 from pat2vec.util.filter_dataframe_by_timestamp import filter_dataframe_by_timestamp
 from pat2vec.util.get_start_end_year_month import get_start_end_year_month
 from pat2vec.util.parse_date import validate_input_dates
-
-APPOINTMENT_FIELDS = [
-    "Popular",
-    "AppointmentType",
-    "AttendanceReference",
-    "ClinicCode",
-    "ClinicDesc",
-    "Consultant",
-    "DateModified",
-    "DNA",
-    "HospitalID",
-    "PatNHSNo",
-    "Specialty",
-    "AppointmentDateTime",
-    "Attended",
-    "CancDesc",
-    "CancRefNo",
-    "ConsultantCode",
-    "DateCreated",
-    "Ethnicity",
-    "Gender",
-    "NHSNoStatusCode",
-    "NotSpec",
-    "PatDateOfBirth",
-    "PatForename",
-    "PatPostCode",
-    "PatSurname",
-    "PiMsPatRefNo",
-    "Primarykeyfieldname",
-    "Primarykeyfieldvalue",
-    "SessionCode",
-    "SpecialtyCode",
-]
 
 
 def search_appointments(

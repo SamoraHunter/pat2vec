@@ -196,4 +196,6 @@ def get_pat_batch_epr_docs_annotations(
             _logger.error(
                 f"Could not write EPR annotations to DB for patient {current_pat_client_id_code}: {e}",
             )
+            raise
+
     return batch_target

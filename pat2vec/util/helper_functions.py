@@ -7,6 +7,7 @@ import warnings
 from pathlib import Path
 from typing import Any  # Keep typing imports together
 
+import numpy as np
 import pandas as pd
 import psutil
 from sqlalchemy import inspect, text
@@ -800,6 +801,7 @@ def save_annotations_to_db(
         logger.error(
             f"Failed to save annotation batch {table_name} for {patient_id}: {e}",
         )
+        raise
 
 
 def get_all_features(config_obj: Any) -> pd.DataFrame:

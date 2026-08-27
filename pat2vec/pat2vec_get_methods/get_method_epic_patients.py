@@ -4,25 +4,11 @@ import pandas as pd
 from IPython.display import display
 from tqdm import tqdm
 
+from pat2vec.util.elasticsearch_index_config import EPIC_PATIENTS_FIELDS
 from pat2vec.util.filter_dataframe_by_timestamp import filter_dataframe_by_timestamp
 from pat2vec.util.get_start_end_year_month import get_start_end_year_month
 from pat2vec.util.methods_get import update_pbar
 from pat2vec.util.parse_date import validate_input_dates
-
-EPIC_PATIENTS_FIELDS = [
-    "patient_DurableKey",
-    "patient_CreatedWhen",
-    "patient_BirthDate",  # Added to match generator
-    "patient_Age",
-    "patient_Gender",
-    "patient_Ethnicity",
-    "patient_SmokingStatus",
-    "patient_MaritalStatus",
-    "patient_IsCancer",
-    "patient_IsFetus",
-    "patient_DateOfDeath",
-    "id",
-]
 
 
 def search_epic_patients(

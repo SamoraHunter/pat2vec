@@ -8,6 +8,7 @@ _logger = logging.getLogger(__name__)
 import pandas as pd
 from sqlalchemy import text
 
+from pat2vec.util.elasticsearch_index_config import DEMOGRAPHICS_FIELDS
 from pat2vec.util.helper_functions import get_df_from_db
 from pat2vec.util.methods_get import exist_check
 
@@ -91,16 +92,7 @@ def get_pat_batch_demo(
         if should_fetch:
             batch_target = cohort_searcher_with_terms_and_search(
                 index_name="epr_documents",
-                fields_list=[
-                    "client_idcode",
-                    "client_firstname",
-                    "client_lastname",
-                    "client_dob",
-                    "client_gendercode",
-                    "client_racecode",
-                    "client_deceaseddtm",
-                    "updatetime",
-                ],
+                fields_list=DEMOGRAPHICS_FIELDS,
                 term_name=config_obj.client_idcode_term_name,
                 entered_list=[current_pat_client_id_code],
                 search_string=f"updatetime:[{global_start_year}-{global_start_month}-{global_start_day} TO {global_end_year}-{global_end_month}-{global_end_day}]",

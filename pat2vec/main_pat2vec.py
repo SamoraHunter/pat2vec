@@ -305,37 +305,38 @@ class main:
             try:
                 engine = config_obj.db_engine
                 if not engine:
-                    _logger.warning(
-                        "Database engine not initialized. Cannot fetch existing patients.",
-                    )
-                    self.stripped_list_start = []
-                else:
-                    inspector = inspect(engine)
-                    t_feat = (
-                        "features_features" if engine.name == "sqlite" else "features"
-                    )
-                    s_feat = None if engine.name == "sqlite" else "features"
+                    msg = "Database storage backend is enabled but db_engine is None."
+                    _logger.error(msg)
+                    raise RuntimeError(
+                        msg,
+                    )  # Fail fast - cannot proceed without database connection
+                inspector = inspect(engine)
+                t_feat = "features_features" if engine.name == "sqlite" else "features"
+                s_feat = None if engine.name == "sqlite" else "features"
 
-                    if inspector.has_table(t_feat, schema=s_feat):
-                        with engine.connect() as connection:
-                            full_t = (
-                                f'"{t_feat}"'
-                                if engine.name == "sqlite"
-                                else '"features"."features"'
-                            )
-                            id_col = config_obj.patient_id_column_name
-                            result = connection.execute(
-                                text(f'SELECT DISTINCT "{id_col}" FROM {full_t}'),
-                            )
-                            self.stripped_list_start = [str(row[0]) for row in result]
-                            _logger.info(
-                                f"Found {len(self.stripped_list_start)} existing patients in database.",
-                            )
-                    else:
-                        self.stripped_list_start = []
+                if inspector.has_table(t_feat, schema=s_feat):
+                    with engine.connect() as connection:
+                        full_t = (
+                            f'"{t_feat}"'
+                            if engine.name == "sqlite"
+                            else '"features"."features"'
+                        )
+                        id_col = config_obj.patient_id_column_name
+                        result = connection.execute(
+                            text(f'SELECT DISTINCT "{id_col}" FROM {full_t}'),
+                        )
+                        self.stripped_list_start = [str(row[0]) for row in result]
+                        _logger.info(
+                            f"Found {len(self.stripped_list_start)} existing patients in database.",
+                        )
+                else:
+                    self.stripped_list_start = []
             except Exception as e:
-                _logger.warning(f"Could not fetch existing patients from DB: {e}")
-                self.stripped_list_start = []
+                msg = f"Critical failure fetching existing patients from database: {e}"
+                _logger.error(msg)
+                raise RuntimeError(
+                    msg,
+                )  # Fail fast - cannot run pipeline without progress tracking
         else:
             self.stripped_list_start = []
 
@@ -914,7 +915,7 @@ class main:
                 config_obj=self.config_obj,
                 t=self.t if hasattr(self, "t") else None,
             )
-        except Exception:
+        except Exception as e:
             if self.config_obj.testing and not self.config_obj.testing_elastic:
                 empty_df = pd.DataFrame(
                     columns=[
@@ -929,8 +930,18 @@ class main:
                     ],
                 )
                 empty_df["activity_PatientDurableKey"] = [patient_id]
+                _logger.warning(
+                    f"get_epic_encounters in testing mode: returning placeholder DataFrame for {patient_id}",
+                )
                 return empty_df
-            return pd.DataFrame()
+            msg = (
+                f"Failed to fetch epic encounters for patient {patient_id}: {e}. "
+                "This indicates a data source issue and should not be silently handled."
+            )
+            _logger.error(msg)
+            raise RuntimeError(
+                msg,
+            )  # Fail fast - cannot proceed without required data
 
     def get_raw_epic_clinical_notes(self, patient_id: str) -> pd.DataFrame:
         """Retrieves raw Epic clinical notes data for a specific patient.
@@ -1821,6 +1832,7 @@ class main:
                 )
             except Exception as e:
                 _logger.error(f"Failed to save annotations to table {table_name}: {e}")
+                raise
 
     def _setup_patient_time_window(
         self,
@@ -2065,9 +2077,13 @@ class main:
 
                         batches[config["key"]] = batch
                     except Exception as e:
-                        _logger.error(f"Error cleaning batch {config['key']}: {e}")
+                        msg = f"Critical error cleaning batch {config['key']}: {e}"
+                        _logger.error(msg)
                         _logger.error(f"Batch type: {type(batch)}")
                         _logger.error(f"Batch columns: {batch.columns}")
+                        raise RuntimeError(
+                            msg,
+                        )  # Fail fast - cannot proceed with uncleaned batches
 
         if self.config_obj.verbosity > 3:
             _logger.debug("Post-batch timestamp NaN drop counts:")

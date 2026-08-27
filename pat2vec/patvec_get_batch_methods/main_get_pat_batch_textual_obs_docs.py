@@ -8,6 +8,7 @@ _logger = logging.getLogger(__name__)
 import pandas as pd
 from sqlalchemy import text
 
+from pat2vec.util.elasticsearch_index_config import TEXTUAL_OBS_FIELDS
 from pat2vec.util.helper_functions import get_df_from_db
 from pat2vec.util.methods_get import exist_check
 
@@ -97,17 +98,7 @@ def get_pat_batch_textual_obs_docs(
         if should_fetch:
             batch_target = cohort_searcher_with_terms_and_search(
                 index_name="basic_observations",
-                fields_list=[
-                    "client_idcode",
-                    "basicobs_itemname_analysed",
-                    "basicobs_value_numeric",
-                    "basicobs_value_analysed",
-                    "basicobs_entered",
-                    "clientvisit_serviceguid",
-                    "basicobs_guid",
-                    "updatetime",
-                    "textualObs",
-                ],
+                fields_list=TEXTUAL_OBS_FIELDS,
                 term_name=config_obj.client_idcode_term_name,
                 entered_list=[current_pat_client_id_code],
                 search_string=""

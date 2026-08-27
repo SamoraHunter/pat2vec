@@ -4,22 +4,11 @@ import pandas as pd
 from IPython.display import display
 from tqdm import tqdm
 
+from pat2vec.util.elasticsearch_index_config import EPIC_ORDERS_FIELDS
 from pat2vec.util.filter_dataframe_by_timestamp import filter_dataframe_by_timestamp
 from pat2vec.util.get_start_end_year_month import get_start_end_year_month
 from pat2vec.util.methods_get import update_pbar
 from pat2vec.util.parse_date import validate_input_dates
-
-EPIC_ORDERS_FIELDS = [
-    "document_PatientDurableKey",
-    "document_CreatedWhen",
-    "document_UpdatedWhen",
-    "document_Name",
-    "document_Content",
-    "document_OrderClass",
-    "document_OrderDate",
-    "document_OrderStatus",
-    "id",
-]
 
 
 def search_epic_orders(

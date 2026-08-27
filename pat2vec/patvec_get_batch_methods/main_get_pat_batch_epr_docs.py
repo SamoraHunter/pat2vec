@@ -11,6 +11,7 @@ import pandas as pd
 from IPython.display import display
 
 from pat2vec.util.clinical_note_splitter import split_and_append_chunks
+from pat2vec.util.elasticsearch_index_config import EPR_DOCS_FIELDS
 from pat2vec.util.filter_dataframe_by_timestamp import filter_dataframe_by_timestamp
 from pat2vec.util.filter_methods import filter_dataframe_by_fuzzy_terms
 from pat2vec.util.helper_functions import get_df_from_db
@@ -120,14 +121,7 @@ def get_pat_batch_epr_docs(
         if should_fetch:
             batch_target = cohort_searcher_with_terms_and_search(
                 index_name="epr_documents",
-                fields_list=[
-                    "client_idcode",
-                    "document_guid",
-                    "document_description",
-                    "body_analysed",
-                    "updatetime",
-                    "clientvisit_visitidcode",
-                ],
+                fields_list=EPR_DOCS_FIELDS,
                 term_name=config_obj.client_idcode_term_name,
                 entered_list=[current_pat_client_id_code],
                 search_string=f"updatetime:[{global_start_year}-{global_start_month}-{global_start_day} TO {global_end_year}-{global_end_month}-{global_end_day}]",

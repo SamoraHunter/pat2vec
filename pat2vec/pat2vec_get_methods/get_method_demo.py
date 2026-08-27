@@ -7,21 +7,11 @@ from IPython.display import display
 from pat2vec.pat2vec_search.cogstack_search_methods import (
     cohort_searcher_with_terms_and_search,
 )
+from pat2vec.util.elasticsearch_index_config import DEMOGRAPHICS_FIELDS
 from pat2vec.util.ethnicity_abstractor import EthnicityAbstractor
 from pat2vec.util.get_start_end_year_month import get_start_end_year_month
 from pat2vec.util.parse_date import validate_input_dates
 from pat2vec.util.pre_processing import calculate_age_append, demo_to_latest
-
-DEMOGRAPHICS_FIELDS = [
-    "client_idcode",
-    "client_firstname",
-    "client_lastname",
-    "client_dob",
-    "client_gendercode",
-    "client_racecode",
-    "client_deceaseddtm",
-    "updatetime",
-]
 
 
 def search_demographics(

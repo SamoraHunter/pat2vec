@@ -248,6 +248,7 @@ def get_pat_batch_epic_orders_annotations(
                     _logger.error(
                         f"Failed to save raw epic orders batch for {current_pat_client_id_code}: {e}",
                     )
+                    raise
 
         if config_obj.verbosity >= 6:
             print(f"DEBUG: Got {len(pat_batch)} rows from raw epic_orders source")
@@ -426,4 +427,6 @@ def get_pat_batch_epic_orders_annotations(
             _logger.error(
                 f"Could not write epic orders annotations to DB for patient {current_pat_client_id_code}: {e}",
             )
+            raise
+
     return batch_target
