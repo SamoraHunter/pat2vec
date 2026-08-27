@@ -1,12 +1,12 @@
+from __future__ import annotations
+
 import logging
-from datetime import datetime
 from typing import Any
 
+from dateutil.relativedelta import relativedelta
 from zoneinfo import ZoneInfo
 
 _logger = logging.getLogger(__name__)
-
-from dateutil.relativedelta import relativedelta
 
 
 def generate_date_list(
