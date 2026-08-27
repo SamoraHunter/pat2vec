@@ -257,8 +257,8 @@ def get_pat_batch_epic_clinical_notes_annotations(
         )
 
         if config_obj.verbosity >= 6:
-            print(
-                f"DEBUG: Got {len(pat_batch)} rows from raw epic_clinical_notes source",
+            _logger.debug(
+                f"Got {len(pat_batch)} rows from raw epic_clinical_notes source",
             )
 
         # When no raw data is found, create annotation table and handle testing mode
@@ -336,8 +336,8 @@ def get_pat_batch_epic_clinical_notes_annotations(
             t=t,
         )
 
-    print(
-        f"\nDEBUG: After annotation generation, batch_target shape: {batch_target.shape if batch_target is not None else 'None'}",
+    _logger.debug(
+        f"After annotation generation, batch_target shape: {batch_target.shape if batch_target is not None else 'None'}",
     )
 
     should_store = (
@@ -398,9 +398,9 @@ def get_pat_batch_epic_clinical_notes_annotations(
                     if_exists="append",
                     index=False,
                 )
-            print(
-                f"DEBUG: Successfully wrote epic clinical notes annotations to DB for patient {current_pat_client_id_code}",
-            )
+                _logger.debug(
+                    f"Successfully wrote epic clinical notes annotations to DB for patient {current_pat_client_id_code}",
+                )
         except Exception as e:
             _logger.error(
                 f"Could not write epic clinical notes annotations to DB for patient {current_pat_client_id_code}: {e}",

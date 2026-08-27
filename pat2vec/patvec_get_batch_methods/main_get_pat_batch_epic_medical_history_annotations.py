@@ -209,8 +209,8 @@ def get_pat_batch_epic_medical_history_annotations(
                     raise
 
         if config_obj.verbosity >= 6:
-            print(
-                f"DEBUG: Got {len(pat_batch)} rows from raw epic_medical_history source",
+            _logger.debug(
+                f"Got {len(pat_batch)} rows from raw epic_medical_history source",
             )
 
         if pat_batch.empty:

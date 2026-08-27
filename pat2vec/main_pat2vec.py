@@ -2135,7 +2135,7 @@ class main:
                 I/O, but it does not return any value.
 
         """
-        print("_debug_internal pat_maker STARTED with i=", i)
+        _logger.debug(f"_debug_internal pat_maker STARTED with i={i}")
         if i >= len(self.all_patient_list):
             _logger.warning(
                 f"Patient index {i} out of bounds (list size: {len(self.all_patient_list)}). Cannot process.",

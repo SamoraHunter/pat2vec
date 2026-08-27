@@ -1,3 +1,4 @@
+import logging
 from collections.abc import Callable
 
 import pandas as pd
@@ -6,6 +7,8 @@ from pat2vec.util.filter_dataframe_by_timestamp import filter_dataframe_by_times
 from pat2vec.util.get_start_end_year_month import get_start_end_year_month
 from pat2vec.util.methods_annotation import calculate_pretty_name_count_features
 from pat2vec.util.methods_get import update_pbar
+
+_logger = logging.getLogger(__name__)
 
 
 def get_current_pat_epic_imaging_reports_annotations(
@@ -211,23 +214,22 @@ def get_current_pat_epic_imaging_reports_annotations(
             columns=["client_idcode"],
         )
 
-    if config_obj.verbosity >= 6:
-        print(
-            f"DEBUG: Processing epic_imaging_reports_annotations for patient {current_pat_client_id_code}",
+    _logger.debug(
+        f"Processing epic_imaging_reports_annotations for patient {current_pat_client_id_code}",
+    )
+    _logger.debug(f"Input annotations shape: {epic_imaging_reports_annotations.shape}")
+    _logger.debug(f"Time column used: {time_column}")
+
+    if config_obj.verbosity >= 7:
+        _logger.debug("Filtering epic imaging reports annotations...")
+        _logger.debug(
+            f"Start: {start_year}-{start_month}-{start_day}, End: {end_year}-{end_month}-{end_day}",
         )
-        print(f"Input annotations shape: {epic_imaging_reports_annotations.shape}")
-        print(f"Time column used: {time_column}")
 
-        if config_obj.verbosity >= 7:
-            print("Filtering epic imaging reports annotations...")
-            print(
-                f"Start: {start_year}-{start_month}-{start_day}, End: {end_year}-{end_month}-{end_day}",
-            )
-
-        if processed_annotations is not None:
-            print(f"Processed annotations shape: {processed_annotations.shape}")
-            print(
-                f"Processed columns (first 10): {processed_annotations.columns.tolist()[:10]}",
-            )
+    if processed_annotations is not None:
+        _logger.debug(f"Processed annotations shape: {processed_annotations.shape}")
+        _logger.debug(
+            f"Processed columns (first 10): {processed_annotations.columns.tolist()[:10]}",
+        )
 
     return processed_annotations
