@@ -2341,7 +2341,7 @@ def cohort_searcher_with_terms_and_search_dummy(
             # But generate dates within the range that would be filtered (June 14-17 to cover possible date slices)
             base_date = datetime(2023, 6, 15)
             print(
-                f"DEBUG cohort_searcher: Generating BMI data with num_rows={num_rows}, base_date={base_date}",
+                f"cohort_searcher: Generating BMI data with num_rows={num_rows}, base_date={base_date}",
             )
             df = generate_bmi_data(
                 num_rows,

@@ -80,10 +80,9 @@ def get_pat_batch_textual_obs_docs(
                 if not df.empty:
                     return df
         except Exception as e:
-            _logger.error(
-                f"Error with database backend for textual obs for patient {current_pat_client_id_code}: {e}",
-            )
-            return pd.DataFrame()
+            msg = f"Critical failure fetching data from database for patient {current_pat_client_id_code}: {e}"
+            _logger.error(msg)
+            raise RuntimeError(msg)
 
     existence_check = exist_check(batch_obs_target_path, config_obj)
 
@@ -148,7 +147,9 @@ def get_pat_batch_textual_obs_docs(
                                     index=False,
                                 )
                     except Exception as e:
-                        _logger.error(f"Failed to save textual obs batch to DB: {e}")
+                        msg = f"Failed to save data batch for patient {current_pat_client_id_code} to database: {e}"
+                        _logger.error(msg)
+                        raise RuntimeError(msg)
                 elif not batch_target.empty:
                     os.makedirs(os.path.dirname(batch_obs_target_path), exist_ok=True)
                     batch_target.to_csv(batch_obs_target_path)
@@ -158,6 +159,6 @@ def get_pat_batch_textual_obs_docs(
 
         return batch_target
     except Exception as e:
-        """"""
-        _logger.error(f"Error retrieving batch textualObs: {e}")
-        return pd.DataFrame()
+        msg = f"Critical failure retrieving batch for patient {current_pat_client_id_code}: {e}"
+        _logger.error(msg)
+        raise RuntimeError(msg)

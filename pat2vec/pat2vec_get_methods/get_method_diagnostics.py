@@ -249,7 +249,7 @@ def calculate_diagnostic_features(
                 print(
                     f"Error calculating days since last diagnostic for {col_name}: {e}",
                 )
-                features[f"{col_name}_days-since-last-diagnostic-order"] = None
+                features[f"{col_name}_days-since-last-diagnostic-order"] = pd.NA
 
         if df_len >= 2:
             # Days between earliest and latest (fixed logic from original)
@@ -265,7 +265,7 @@ def calculate_diagnostic_features(
                 print(
                     f"Error calculating days between first-last diagnostic for {col_name}: {e}",
                 )
-                features[f"{col_name}_days-between-first-last-diagnostic"] = None
+                features[f"{col_name}_days-between-first-last-diagnostic"] = pd.NA
 
     return features
 

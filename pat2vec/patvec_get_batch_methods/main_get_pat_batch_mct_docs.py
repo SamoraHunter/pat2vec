@@ -229,7 +229,9 @@ def get_pat_batch_mct_docs(
                                     index=False,
                                 )
                     except Exception as e:
-                        _logger.error(f"Failed to save MCT docs batch to DB: {e}")
+                        msg = f"Failed to save data batch for patient {current_pat_client_id_code} to database: {e}"
+                        _logger.error(msg)
+                        raise RuntimeError(msg)
                 elif not batch_target.empty:
                     os.makedirs(
                         os.path.dirname(batch_epr_target_path_mct),
@@ -240,6 +242,6 @@ def get_pat_batch_mct_docs(
             batch_target = pd.read_csv(batch_epr_target_path_mct)
         return batch_target
     except Exception as e:
-        """"""
-        _logger.error(f"Error retrieving batch MCT documents: {e}")
-        return pd.DataFrame()
+        msg = f"Critical failure retrieving batch for patient {current_pat_client_id_code}: {e}"
+        _logger.error(msg)
+        raise RuntimeError(msg)

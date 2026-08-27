@@ -105,10 +105,9 @@ def get_pat_batch_obs(
                 if not df.empty:
                     return df
         except Exception as e:
-            _logger.error(
-                f"Error with database backend for observation '{search_term}' for patient {current_pat_client_id_code}: {e}",
-            )
-            return pd.DataFrame()
+            msg = f"Critical failure fetching data from database for patient {current_pat_client_id_code}: {e}"
+            _logger.error(msg)
+            raise RuntimeError(msg)
 
     sanitized_search_term = sanitize_for_path(search_term)
     batch_obs_target_path = os.path.join(

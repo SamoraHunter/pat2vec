@@ -3,16 +3,26 @@ import os
 from datetime import datetime
 
 
-def setup_logger(log_level: str = "INFO", logs_dir: str = "logs") -> logging.Logger:
+def setup_logger(
+    log_level: str = "INFO",
+    logs_dir: str = "logs",
+    verbose: bool = False,
+) -> logging.Logger:
     """Sets up a logger that writes to a file and the console.
 
     This function configures a logger with two handlers:
 
     1.  A file handler that saves DEBUG level logs to a timestamped file in a
         specified `logs` directory.
-    2.  A stream handler that prints INFO level logs to the console.
+    2.  A stream handler that prints INFO level logs to the console (or DEBUG if verbose=True).
 
-    Returns
+    Args:
+    ----
+        log_level: Minimum log level for console output ('DEBUG', 'INFO', etc.). Default is 'INFO'.
+        logs_dir: Directory to save log files. Default is 'logs'.
+        verbose: If True, enable verbose logging with more detailed information.
+
+    Returns:
     -------
         The configured logger instance.
 
@@ -45,7 +55,10 @@ def setup_logger(log_level: str = "INFO", logs_dir: str = "logs") -> logging.Log
 
     # --- Console Handler ---
     console_handler = logging.StreamHandler()
-    console_handler.setLevel(getattr(logging, log_level.upper()))
+    if verbose:
+        console_handler.setLevel(logging.DEBUG)
+    else:
+        console_handler.setLevel(getattr(logging, log_level.upper()))
     console_formatter = logging.Formatter(
         "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     )

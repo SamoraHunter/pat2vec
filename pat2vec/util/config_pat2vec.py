@@ -658,10 +658,10 @@ class config_class:
             logger.info("main_options set!")
             logger.info(self.main_options)
 
-        logger.debug("=== main_options enabled/disabled ===")
+        logger.info("=== main_options enabled/disabled ===")
         for option, enabled in self.main_options.items():
             status = "ENABLED" if enabled else "DISABLED"
-            logger.debug(f"  {option}: {status}")
+            logger.info(f"  {option}: {status}")
 
         if self.annot_filter_options is None:
             self.filter_arguments = {
@@ -1373,14 +1373,12 @@ class config_class:
             self.date_list = None  # We will generate this in main_pat2vec under individiual patient window
 
         if self.verbosity > 1:
-            logger.debug(f"Debug message: global_start_year = {self.global_start_year}")
-            logger.debug(
-                f"Debug message: global_start_month = {self.global_start_month}",
-            )
-            logger.debug(f"Debug message: global_end_year = {self.global_end_year}")
-            logger.debug(f"Debug message: global_end_month = {self.global_end_month}")
-            logger.debug(f"Debug message: global_start_day = {self.global_start_day}")
-            logger.debug(f"Debug message: global_end_day = {self.global_end_day}")
+            logger.info(f"global_start_year = {self.global_start_year}")
+            logger.info(f"global_start_month = {self.global_start_month}")
+            logger.info(f"global_end_year = {self.global_end_year}")
+            logger.info(f"global_end_month = {self.global_end_month}")
+            logger.info(f"global_start_day = {self.global_start_day}")
+            logger.info(f"global_end_day = {self.global_end_day}")
 
             if self.individual_patient_window:
                 if self.patient_dict:

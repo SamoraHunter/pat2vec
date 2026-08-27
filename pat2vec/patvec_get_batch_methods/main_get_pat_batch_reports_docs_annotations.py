@@ -129,10 +129,11 @@ def get_pat_batch_reports_docs_annotations(
         try:
             engine = config_obj.db_engine
             if not engine:
-                _logger.error(
-                    "Database engine not initialized in config_obj for EPR annotations.",
+                error_msg = (
+                    "Database engine not initialized in config_obj for EPR annotations. "
+                    "Annotations output is enabled but database storage cannot proceed without a valid database engine."
                 )
-                return batch_target
+                raise RuntimeError(error_msg)
 
             with engine.begin() as connection:
                 table_name = "ann_reports"

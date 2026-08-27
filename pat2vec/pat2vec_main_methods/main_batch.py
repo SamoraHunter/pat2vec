@@ -505,7 +505,7 @@ def main_batch(
                         # Call the function with the prepared arguments
                         feature_df = config["func"](**args)
                         print(
-                            f"DEBUG: option={option}, feature_df columns={list(feature_df.columns)}, shape={feature_df.shape}",
+                            f"option={option}, feature_df columns={list(feature_df.columns)}, shape={feature_df.shape}",
                         )
 
                         patient_vector.append(feature_df)

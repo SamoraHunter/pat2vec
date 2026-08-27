@@ -84,18 +84,15 @@ def get_current_pat_epic_clinical_notes_annotations(
     start_time = config_obj.start_time
 
     p_bar_entry = "annotations_epic_clinical_notes"
-    try:
-        update_pbar(
-            current_pat_client_id_code,
-            start_time,
-            0,
-            p_bar_entry,
-            t,
-            config_obj,
-            config_obj.skipped_counter,
-        )
-    except Exception:
-        pass
+    update_pbar(
+        current_pat_client_id_code,
+        start_time,
+        0,
+        p_bar_entry,
+        t,
+        config_obj,
+        config_obj.skipped_counter,
+    )
 
     start_year, start_month, end_year, end_month, start_day, end_day = (
         get_start_end_year_month(target_date_range, config_obj=config_obj)
@@ -197,7 +194,7 @@ def get_current_pat_epic_clinical_notes_annotations(
         print(f"Time column used: {time_column}")
 
         if config_obj.verbosity >= 7:
-            print("DEBUG: Filtering epic clinical notes annotations...")
+            print("Filtering epic clinical notes annotations...")
             print(
                 f"Start: {start_year}-{start_month}-{start_day}, End: {end_year}-{end_month}-{end_day}",
             )

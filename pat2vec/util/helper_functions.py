@@ -25,6 +25,8 @@ except ImportError:
     MAPPINGS = []
     EMPTY_ANNOT_COLS = []
 
+_warned_missing_tables: set[str] = set()
+
 
 def get_ram_usage():
     """Returns current RAM usage in GB."""
@@ -834,9 +836,12 @@ def get_all_features(config_obj: Any) -> pd.DataFrame:
             with engine.connect() as connection:
                 inspector = inspect(connection)
                 if not inspector.has_table(target_table, schema=target_schema):
-                    logger.warning(
-                        f"Table '{target_table}' not found in database. Returning empty DataFrame.",
-                    )
+                    warn_key = f"features.{target_table}"
+                    if warn_key not in _warned_missing_tables:
+                        logger.warning(
+                            f"Table '{target_table}' not found in database. Returning empty DataFrame.",
+                        )
+                        _warned_missing_tables.add(warn_key)
                     return pd.DataFrame()
 
                 df = pd.read_sql_table(target_table, connection, schema=target_schema)
@@ -844,7 +849,6 @@ def get_all_features(config_obj: Any) -> pd.DataFrame:
                 # Check for packed JSON features and unpack if present
                 if "features_json" in df.columns:
                     logger.debug("Unpacking 'features_json' column...")
-                    # Only unpack non-null rows
                     json_mask = df["features_json"].notna()
                     if json_mask.any():
                         unpacked = pd.json_normalize(
@@ -914,8 +918,6 @@ def get_df_from_db(
 
         with engine.connect() as connection:
             # Determine actual table name for inspection/reading
-            if logger.isEnabledFor(logging.DEBUG):
-                logger.debug(f"get_df_from_db called: schema={schema}, table={table}")
             if engine.name == "sqlite":
                 target_table = f"{schema}_{table}"
                 target_schema = None
@@ -926,8 +928,11 @@ def get_df_from_db(
             inspector = inspect(connection)
             if not inspector.has_table(target_table, schema=target_schema):
                 error_msg = f"Table '{target_table}' not found in database."
+                warn_key = f"{schema}.{table}"
                 if warn_on_missing:
-                    logger.warning(f"{error_msg} Returning empty DataFrame.")
+                    if warn_key not in _warned_missing_tables:
+                        logger.warning(f"{error_msg} Returning empty DataFrame.")
+                        _warned_missing_tables.add(warn_key)
                 else:
                     logger.debug(f"{error_msg} Returning empty DataFrame.")
                 return pd.DataFrame()
@@ -942,7 +947,7 @@ def get_df_from_db(
                 missing_columns = [c for c in columns if c not in table_columns]
                 if missing_columns:
                     logger.debug(
-                        f"Columns {missing_columns} not found in table '{target_table}'. Available: {table_columns}",
+                        f"Columns {missing_columns} not found. Available: {len(table_columns)} cols",
                     )
                 columns_to_use = available_columns or None
             else:

@@ -219,7 +219,7 @@ def get_current_pat_epic_imaging_reports_annotations(
         print(f"Time column used: {time_column}")
 
         if config_obj.verbosity >= 7:
-            print("DEBUG: Filtering epic imaging reports annotations...")
+            print("Filtering epic imaging reports annotations...")
             print(
                 f"Start: {start_year}-{start_month}-{start_day}, End: {end_year}-{end_month}-{end_day}",
             )

@@ -83,14 +83,9 @@ def _fetch_epic_imaging_reports_from_elasticsearch(
                 f"ES fetch got {len(results)} rows for Epic Imaging Reports. Patient: {current_pat_client_id_code}, columns: {list(results.columns)[:5]}",
             )
 
-        # Debug: check what search_func returns by calling it directly and logging
-        if results is not None:
-            _logger.debug(
-                f"Results shape: {results.shape}, columns: {list(results.columns)}",
-            )
-            _logger.debug(
-                f"First row sample: {results.iloc[0].to_dict() if not results.empty else 'empty'}",
-            )
+        # Debug: reduced for cleaner logs - only show non-empty
+        if results is not None and not results.empty:
+            _logger.debug(f"ES result: {len(results)} rows")
 
         if results is not None and not results.empty:
             if "document_PatientDurableKey" in results.columns:
@@ -110,16 +105,12 @@ def _fetch_epic_imaging_reports_from_elasticsearch(
                 results = results.rename(
                     columns={"document_SourceId": "document_guid"},
                 )
-            if "document_Name" in results.columns:
-                results.rename(
-                    # Note: document_Name removed from ES field_map to avoid schema mismatch
-                )
+            # document_Name intentionally not processed (see comment)
         return results if results is not None else pd.DataFrame()
     except Exception as e:
-        _logger.error(
-            f"Error fetching epic imaging reports from ES for {current_pat_client_id_code}: {e}",
-        )
-        return pd.DataFrame()
+        msg = f"Critical failure fetching data from ES for patient {current_pat_client_id_code}: {e}"
+        _logger.error(msg)
+        raise RuntimeError(msg)
 
 
 def get_pat_batch_epic_imaging_reports_annotations(
@@ -257,9 +248,9 @@ def get_pat_batch_epic_imaging_reports_annotations(
                         id_column="client_idcode",
                     )
                 except Exception as e:
-                    _logger.warning(
-                        f"Could not create annotation table for epic_imaging_reports: {e}",
-                    )
+                    msg = f"Failed to save annotations for patient {current_pat_client_id_code}: {e}"
+                    _logger.error(msg)
+                    raise RuntimeError(msg)
 
             if getattr(config_obj, "testing", False) and getattr(
                 config_obj,
@@ -317,10 +308,11 @@ def get_pat_batch_epic_imaging_reports_annotations(
         try:
             engine = config_obj.db_engine
             if not engine:
-                _logger.error(
-                    "Database engine not initialized in config_obj for epic imaging reports annotations.",
+                error_msg = (
+                    "Database engine not initialized in config_obj for epic imaging reports annotations. "
+                    "Annotations output is enabled but database storage cannot proceed without a valid database engine."
                 )
-                return batch_target
+                raise RuntimeError(error_msg)
 
             with engine.begin() as connection:
                 table_name = "ann_epic_imaging_reports"

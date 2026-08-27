@@ -75,7 +75,7 @@ def get_pat_batch_appointments(
             _logger.error(
                 f"Error with database backend for appointments for patient {current_pat_client_id_code}: {e}",
             )
-            return pd.DataFrame()
+            raise RuntimeError(msg)
 
     appointments_target_path = os.path.join(
         config_obj.pre_appointments_batch_path,
@@ -191,4 +191,4 @@ def get_pat_batch_appointments(
     except Exception as e:
         """"""
         _logger.error(f"Error retrieving batch appointments orders: {e}")
-        return pd.DataFrame()
+        raise RuntimeError(msg)

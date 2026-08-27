@@ -240,9 +240,10 @@ class main:
                 _logger.warning("cohort_searcher_with_terms_and_search is disabled.")
             self.cohort_searcher_with_terms_and_search = None
 
-        _logger.debug(
-            f"DEBUG: Final self.cohort_searcher_with_terms_and_search = {self.cohort_searcher_with_terms_and_search}",
-        )
+        if self.config_obj.verbosity > 3:
+            _logger.debug(
+                f"Final cohort_searcher_with_terms_and_search = {self.cohort_searcher_with_terms_and_search}",
+            )
         # Respect all_patient_list if explicitly provided in config
         if (
             hasattr(self.config_obj, "all_patient_list")
@@ -305,38 +306,37 @@ class main:
             try:
                 engine = config_obj.db_engine
                 if not engine:
-                    msg = "Database storage backend is enabled but db_engine is None."
-                    _logger.error(msg)
-                    raise RuntimeError(
-                        msg,
-                    )  # Fail fast - cannot proceed without database connection
-                inspector = inspect(engine)
-                t_feat = "features_features" if engine.name == "sqlite" else "features"
-                s_feat = None if engine.name == "sqlite" else "features"
-
-                if inspector.has_table(t_feat, schema=s_feat):
-                    with engine.connect() as connection:
-                        full_t = (
-                            f'"{t_feat}"'
-                            if engine.name == "sqlite"
-                            else '"features"."features"'
-                        )
-                        id_col = config_obj.patient_id_column_name
-                        result = connection.execute(
-                            text(f'SELECT DISTINCT "{id_col}" FROM {full_t}'),
-                        )
-                        self.stripped_list_start = [str(row[0]) for row in result]
-                        _logger.info(
-                            f"Found {len(self.stripped_list_start)} existing patients in database.",
-                        )
-                else:
+                    _logger.warning(
+                        "Database engine not initialized. Cannot fetch existing patients.",
+                    )
                     self.stripped_list_start = []
+                else:
+                    inspector = inspect(engine)
+                    t_feat = (
+                        "features_features" if engine.name == "sqlite" else "features"
+                    )
+                    s_feat = None if engine.name == "sqlite" else "features"
+
+                    if inspector.has_table(t_feat, schema=s_feat):
+                        with engine.connect() as connection:
+                            full_t = (
+                                f'"{t_feat}"'
+                                if engine.name == "sqlite"
+                                else '"features"."features"'
+                            )
+                            id_col = config_obj.patient_id_column_name
+                            result = connection.execute(
+                                text(f'SELECT DISTINCT "{id_col}" FROM {full_t}'),
+                            )
+                            self.stripped_list_start = [str(row[0]) for row in result]
+                            _logger.info(
+                                f"Found {len(self.stripped_list_start)} existing patients in database.",
+                            )
+                    else:
+                        self.stripped_list_start = []
             except Exception as e:
-                msg = f"Critical failure fetching existing patients from database: {e}"
-                _logger.error(msg)
-                raise RuntimeError(
-                    msg,
-                )  # Fail fast - cannot run pipeline without progress tracking
+                _logger.warning(f"Could not fetch existing patients from DB: {e}")
+                self.stripped_list_start = []
         else:
             self.stripped_list_start = []
 
@@ -903,45 +903,16 @@ class main:
         -------
             A DataFrame containing encounter records with columns such as encounter
             type, admit/discharge time, location, and encounter number.
-            Returns an empty DataFrame with proper columns if in testing mode and
-            no data is found.
+            Returns an empty DataFrame if no data is found (handled by search function).
 
         """
-        try:
-            return search_epic_encounters(
-                cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search,
-                patient_durable_keys=patient_id,
-                id_field_name="activity_PatientDurableKey",
-                config_obj=self.config_obj,
-                t=self.t if hasattr(self, "t") else None,
-            )
-        except Exception as e:
-            if self.config_obj.testing and not self.config_obj.testing_elastic:
-                empty_df = pd.DataFrame(
-                    columns=[
-                        "activity_PatientDurableKey",
-                        "activity_AdmissionDate",
-                        "activity_DischargeDate",
-                        "activity_Department",
-                        "activity_Type",
-                        "activity_VisitClass",
-                        "activity_HospitalService",
-                        "id",
-                    ],
-                )
-                empty_df["activity_PatientDurableKey"] = [patient_id]
-                _logger.warning(
-                    f"get_epic_encounters in testing mode: returning placeholder DataFrame for {patient_id}",
-                )
-                return empty_df
-            msg = (
-                f"Failed to fetch epic encounters for patient {patient_id}: {e}. "
-                "This indicates a data source issue and should not be silently handled."
-            )
-            _logger.error(msg)
-            raise RuntimeError(
-                msg,
-            )  # Fail fast - cannot proceed without required data
+        return search_epic_encounters(
+            cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search,
+            patient_durable_keys=patient_id,
+            id_field_name="activity_PatientDurableKey",
+            config_obj=self.config_obj,
+            t=self.t if hasattr(self, "t") else None,
+        )
 
     def get_raw_epic_clinical_notes(self, patient_id: str) -> pd.DataFrame:
         """Retrieves raw Epic clinical notes data for a specific patient.
@@ -1054,37 +1025,16 @@ class main:
         -------
             A DataFrame containing lab result records with columns such as test name,
             result value, reference range, and collection time.
-            Returns an empty DataFrame with proper columns if in testing mode and
-            no data is found.
+            Returns an empty DataFrame if no data is found (handled by search function).
 
         """
-        try:
-            return search_epic_lab_results(
-                cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search,
-                patient_durable_keys=patient_id,
-                id_field_name="document_PatientDurableKey",
-                config_obj=self.config_obj,
-                t=self.t if hasattr(self, "t") else None,
-            )
-        except Exception:
-            if self.config_obj.testing and not self.config_obj.testing_elastic:
-                empty_df = pd.DataFrame(
-                    columns=[
-                        "document_PatientDurableKey",
-                        "document_CreatedWhen",
-                        "document_CollectedDate",
-                        "document_UpdatedWhen",
-                        "document_Name",
-                        "document_Content",
-                        "document_AbnormalLevel",
-                        "document_LabResultEpicId",
-                        "document_Fields.valueText",
-                        "id",
-                    ],
-                )
-                empty_df["document_PatientDurableKey"] = [patient_id]
-                return empty_df
-            return pd.DataFrame()
+        return search_epic_lab_results(
+            cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search,
+            patient_durable_keys=patient_id,
+            id_field_name="document_PatientDurableKey",
+            config_obj=self.config_obj,
+            t=self.t if hasattr(self, "t") else None,
+        )
 
     def get_raw_epic_imaging_reports(self, patient_id: str) -> pd.DataFrame:
         """Retrieves raw Epic imaging reports data for a specific patient.
@@ -1173,38 +1123,16 @@ class main:
         -------
             A DataFrame containing patient master data with columns such as full name,
             date of birth, gender, address, phone number, and primary language.
-            Returns an empty DataFrame with proper columns if in testing mode and
-            no data is found.
+            Returns an empty DataFrame if no data is found (handled by search function).
 
         """
-        try:
-            return search_epic_patients(
-                cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search,
-                patient_durable_keys=patient_id,
-                id_field_name="patient_DurableKey",
-                config_obj=self.config_obj,
-                t=self.t if hasattr(self, "t") else None,
-            )
-        except Exception:
-            if self.config_obj.testing and not self.config_obj.testing_elastic:
-                empty_df = pd.DataFrame(
-                    columns=[
-                        "patient_DurableKey",
-                        "patient_BirthDate",
-                        "patient_Age",
-                        "patient_Gender",
-                        "patient_Ethnicity",
-                        "patient_SmokingStatus",
-                        "patient_MaritalStatus",
-                        "patient_IsCancer",
-                        "patient_IsFetus",
-                        "patient_DateOfDeath",
-                        "id",
-                    ],
-                )
-                empty_df["patient_DurableKey"] = [patient_id]
-                return empty_df
-            return pd.DataFrame()
+        return search_epic_patients(
+            cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search,
+            patient_durable_keys=patient_id,
+            id_field_name="patient_DurableKey",
+            config_obj=self.config_obj,
+            t=self.t if hasattr(self, "t") else None,
+        )
 
     def get_all_features(self) -> pd.DataFrame:
         """Retrieves all patient features from the configured storage backend.
@@ -1646,14 +1574,14 @@ class main:
     ) -> None:
         """Saves fetched batches to the database if backend is enabled."""
         print(
-            f"DDEBUG _save_batches_to_db: patient={patient_id}, batches keys: {list(batches.keys())}",
+            f"_debug_internal _save_batches_to_db: patient={patient_id}, batches keys: {list(batches.keys())}",
         )
         if "batch_appointments" in batches:
             print(
-                f"DDEBUG batch_appointments exists, shape: {batches['batch_appointments'].shape}",
+                f"_debug_internal batch_appointments exists, shape: {batches['batch_appointments'].shape}",
             )
         else:
-            print("DDEBUG: batch_appointments NOT in batches!")
+            print("_debug_internal: batch_appointments NOT in batches!")
         if self.config_obj.storage_backend != "database":
             return
 
@@ -1751,15 +1679,17 @@ class main:
 
             if batch_key == "batch_appointments":
                 print(
-                    f"DDEBUG: Saving batch_appointments - enabled={is_enabled}, shape={batches[batch_key].shape}",
+                    f"_debug_internal: Saving batch_appointments - enabled={is_enabled}, shape={batches[batch_key].shape}",
                 )
 
             if batches[batch_key].empty and not is_enabled:
-                print("DDEBUG: Skipping batch_appointments (empty and not enabled)")
+                print(
+                    "_debug_internal: Skipping batch_appointments (empty and not enabled)",
+                )
                 continue  # Skip disabled sources with empty data
 
             # All other cases: non-empty or enabled empty
-            print("DDEBUG: Would save batch_appointments to DB")
+            print("_debug_internal: Would save batch_appointments to DB")
             save_raw_patient_batch(
                 batches[batch_key],
                 patient_id,
@@ -2077,35 +2007,31 @@ class main:
 
                         batches[config["key"]] = batch
                     except Exception as e:
-                        msg = f"Critical error cleaning batch {config['key']}: {e}"
-                        _logger.error(msg)
+                        _logger.error(f"Error cleaning batch {config['key']}: {e}")
                         _logger.error(f"Batch type: {type(batch)}")
                         _logger.error(f"Batch columns: {batch.columns}")
-                        raise RuntimeError(
-                            msg,
-                        )  # Fail fast - cannot proceed with uncleaned batches
 
         if self.config_obj.verbosity > 3:
-            _logger.debug("Post-batch timestamp NaN drop counts:")
-            _logger.debug("EPR: %d", len(batches["batch_epr"]))
-            _logger.debug("MCT: %d", len(batches["batch_mct"]))
-            _logger.debug(
+            _logger.info("Post-batch timestamp NaN drop counts:")
+            _logger.info("EPR: %d", len(batches["batch_epr"]))
+            _logger.info("MCT: %d", len(batches["batch_mct"]))
+            _logger.info(
                 "EPR annotations: %d",
                 len(batches["batch_epr_docs_annotations"]),
             )
-            _logger.debug(
+            _logger.info(
                 "EPR annotations mct: %d",
                 len(batches["batch_epr_docs_annotations_mct"]),
             )
-            _logger.debug(
+            _logger.info(
                 "textual obs docs: %d",
                 len(batches["batch_textual_obs_docs"]),
             )
-            _logger.debug(
+            _logger.info(
                 "textual obs annotations: %d",
                 len(batches["batch_textual_obs_annotations"]),
             )
-            _logger.debug(
+            _logger.info(
                 "batch_report_docs_annotations: %d",
                 len(batches["batch_reports_docs_annotations"]),
             )
@@ -2143,9 +2069,10 @@ class main:
                     _logger.debug(
                         f"Processing date {date_slice} for patient {current_pat_client_id_code}...",
                     )
-                _logger.debug(
-                    f"DEBUG: _process_patient_slices: cohort_searcher_with_terms_and_search = {self.cohort_searcher_with_terms_and_search}",
-                )
+                if self.config_obj.verbosity > 3:
+                    _logger.debug(
+                        f"_process_patient_slices: cohort_searcher_with_terms_and_search = {self.cohort_searcher_with_terms_and_search}",
+                    )
 
                 if self.config_obj.calculate_vectors:
                     self.config_obj.last_lines = main_batch(
@@ -2233,21 +2160,21 @@ class main:
                 I/O, but it does not return any value.
 
         """
-        print("DDEBUG pat_maker STARTED with i=", i)
+        print("_debug_internal pat_maker STARTED with i=", i)
         if i >= len(self.all_patient_list):
             _logger.warning(
                 f"Patient index {i} out of bounds (list size: {len(self.all_patient_list)}). Cannot process.",
             )
             return
 
-        if self.config_obj.verbosity > 3:
+        if self.config_obj.verbosity > 4:
             _logger.debug(f"Processing patient {i} at {self.all_patient_list[i]}...")
 
         current_pat_client_id_code = str(self.all_patient_list[i])
 
         # Check if patient has already been processed
         if current_pat_client_id_code in self.stripped_list_start:
-            if self.config_obj.verbosity >= 4:
+            if self.config_obj.verbosity >= 5:
                 _logger.debug(f"Patient {i} in stripped_list_start")
             if self.config_obj.multi_process is False:
                 self.config_obj.skipped_counter += 1
@@ -2308,11 +2235,11 @@ class main:
         )
 
         # Save raw batches and annotation batches to DB if applicable
-        print(f"DDEBUG: storage_backend={self.config_obj.storage_backend}")
+        print(f"_debug_internal: storage_backend={self.config_obj.storage_backend}")
         if self.config_obj.storage_backend == "database":
-            print("DDEBUG: Would call _save_batches_to_db")
+            print("_debug_internal: Would call _save_batches_to_db")
             self._save_batches_to_db(current_pat_client_id_code, batches)
-            print("DDEBUG: Would call _save_annotation_batches_to_db")
+            print("_debug_internal: Would call _save_annotation_batches_to_db")
             self._save_annotation_batches_to_db(current_pat_client_id_code, batches)
 
         update_pbar(

@@ -262,7 +262,7 @@ def calculate_drug_features(
                     features[f"{col_name}_days-since-last-drug-order"] = delta.days
                 except Exception as e:
                     print(f"Error calculating days since last drug for {col_name}: {e}")
-                    features[f"{col_name}_days-since-last-drug-order"] = None
+                    features[f"{col_name}_days-since-last-drug-order"] = pd.NA
 
         if df_len >= 2 and drugs_arg_dict.get("_days-between-first-last-drug"):
             try:
@@ -275,7 +275,7 @@ def calculate_drug_features(
                 print(
                     f"Error calculating days between first-last drug for {col_name}: {e}",
                 )
-                features[f"{col_name}_days-between-first-last-drug"] = None
+                features[f"{col_name}_days-between-first-last-drug"] = pd.NA
 
     return features
 

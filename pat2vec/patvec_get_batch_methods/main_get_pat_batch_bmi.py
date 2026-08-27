@@ -73,7 +73,7 @@ def get_pat_batch_bmi(
             _logger.error(
                 f"Error with database backend for BMI for patient {current_pat_client_id_code}: {e}",
             )
-            return pd.DataFrame()
+            raise RuntimeError(msg)
 
     batch_obs_target_path = os.path.join(
         config_obj.pre_bmi_batch_path,
@@ -133,7 +133,9 @@ def get_pat_batch_bmi(
                                     index=False,
                                 )
                     except Exception as e:
-                        _logger.error(f"Failed to save BMI batch to DB: {e}")
+                        msg = f"Failed to save data batch for patient {current_pat_client_id_code} to database: {e}"
+                        _logger.error(msg)
+                        raise RuntimeError(msg)
                 elif not batch_target.empty:
                     os.makedirs(os.path.dirname(batch_obs_target_path), exist_ok=True)
                     batch_target.to_csv(batch_obs_target_path)
@@ -147,4 +149,4 @@ def get_pat_batch_bmi(
     except Exception as e:
         """"""
         _logger.error(f"Error retrieving batch BMI-related observations: {e}")
-        return pd.DataFrame()
+        raise RuntimeError(msg)

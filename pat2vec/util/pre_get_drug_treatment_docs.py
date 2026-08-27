@@ -273,7 +273,7 @@ def get_treatment_records_by_drug_order_name(
 
     if verbose >= 9:
         logger.debug(
-            f"[DEBUG] Retrieved {len(drug_treatment_docs)} records from database.",
+            f"[Retrieved {len(drug_treatment_docs)} records from database.",
         )
 
     # Function to find matching columns for the search term
@@ -289,7 +289,7 @@ def get_treatment_records_by_drug_order_name(
                     matched_cols.append(field)
                     if verbose >= 20:
                         logger.debug(
-                            f"[DEBUG] Match found! Term: '{search_term}' | Column: '{field}' | Score: {match_score}",
+                            f"[Match found! Term: '{search_term}' | Column: '{field}' | Score: {match_score}",
                         )
         return matched_cols or None
 

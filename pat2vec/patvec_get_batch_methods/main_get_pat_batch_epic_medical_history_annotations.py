@@ -101,10 +101,9 @@ def _fetch_epic_medical_history_from_elasticsearch(
                 )
         return results if results is not None else pd.DataFrame()
     except Exception as e:
-        _logger.error(
-            f"Error fetching epic medical history from ES for {current_pat_client_id_code}: {e}",
-        )
-        return pd.DataFrame()
+        msg = f"Critical failure fetching data from ES for patient {current_pat_client_id_code}: {e}"
+        _logger.error(msg)
+        raise RuntimeError(msg)
 
 
 def get_pat_batch_epic_medical_history_annotations(
@@ -235,9 +234,9 @@ def get_pat_batch_epic_medical_history_annotations(
                         id_column="client_idcode",
                     )
                 except Exception as e:
-                    _logger.warning(
-                        f"Could not create annotation table for epic_medical_history: {e}",
-                    )
+                    msg = f"Failed to save annotations for patient {current_pat_client_id_code}: {e}"
+                    _logger.error(msg)
+                    raise RuntimeError(msg)
 
             if getattr(config_obj, "testing", False) and getattr(
                 config_obj,
@@ -277,10 +276,11 @@ def get_pat_batch_epic_medical_history_annotations(
         try:
             engine = config_obj.db_engine
             if not engine:
-                _logger.error(
-                    "Database engine not initialized in config_obj for epic medical history annotations.",
+                error_msg = (
+                    "Database engine not initialized in config_obj for epic medical history annotations. "
+                    "Annotations output is enabled but database storage cannot proceed without a valid database engine."
                 )
-                return batch_target
+                raise RuntimeError(error_msg)
 
             with engine.begin() as connection:
                 table_name = "ann_epic_medical_history"

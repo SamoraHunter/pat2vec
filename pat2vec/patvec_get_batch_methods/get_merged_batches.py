@@ -2278,15 +2278,7 @@ def get_merged_pat_batch_reports(
 
             batch_target = cohort_searcher_with_terms_and_search(
                 index_name="basic_observations",
-                fields_list=[
-                    "client_idcode",
-                    "HospitalID",
-                    "updatetime",
-                    "textualObs",
-                    "basicobs_guid",
-                    "basicobs_value_analysed",
-                    "basicobs_itemname_analysed",
-                ],
+                fields_list=REPORTS_FIELDS,
                 term_name=config_obj.client_idcode_term_name,
                 entered_list=client_idcode_list,
                 search_string=f"basicobs_itemname_analysed:{search_term} AND updatetime:[{global_start_year}-{global_start_month}-{global_start_day} TO {global_end_year}-{global_end_month}-{global_end_day}]",

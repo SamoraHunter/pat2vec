@@ -73,8 +73,9 @@ def _fetch_epic_clinical_notes_from_elasticsearch(
 
         results = pd.DataFrame()
         for term_name in term_names_to_try:
+            # Verbose ES fetch check
             _logger.debug(
-                f"Fetching from ES for patient {current_pat_client_id_code} with field '{term_name}', date range: {start_year}-{start_month}-{start_day} to {end_year}-{end_month}-{end_day}",
+                f"Fetching ES ({term_name[:30]}) patient {current_pat_client_id_code}",
             )
             results = search_func(
                 index_name="epic_clinical_notes",
@@ -83,8 +84,13 @@ def _fetch_epic_clinical_notes_from_elasticsearch(
                 entered_list=[current_pat_client_id_code],
                 search_string=f"document_UpdatedWhen:[{start_year}-{start_month}-{start_day} TO {end_year}-{end_month}-{end_day}]",
             )
+            # Verbose ES result check
             _logger.debug(
-                f"After ES fetch with '{term_name}' (with date filter): results={type(results)}, empty={results.empty if results is not None else 'N/A'}",
+                (
+                    f"ES fetch ({term_name[:30]}) result: {len(results)} rows"
+                    if results is not None
+                    else "ES fetch result: None"
+                ),
             )
             if results is not None and not results.empty:
                 break
@@ -119,10 +125,9 @@ def _fetch_epic_clinical_notes_from_elasticsearch(
             # Note: document_Name removed from ES field_map to avoid schema mismatch
         return results if results is not None else pd.DataFrame()
     except Exception as e:
-        _logger.error(
-            f"Error fetching epic clinical notes from ES for {current_pat_client_id_code}: {e}",
-        )
-        return pd.DataFrame()
+        msg = f"Critical failure fetching epic clinical notes from ES for patient {current_pat_client_id_code}: {e}"
+        _logger.error(msg)
+        raise RuntimeError(msg)
 
 
 def get_pat_batch_epic_clinical_notes_annotations(
@@ -153,9 +158,12 @@ def get_pat_batch_epic_clinical_notes_annotations(
         A DataFrame containing the annotations for the patient's Epic clinical notes.
 
     """
-    print("\n=== DEBUG get_pat_batch_epic_clinical_notes_annotations START ===")
-    print(f"Patient: {current_pat_client_id_code}")
-    print(f"Storage backend: {config_obj.storage_backend if config_obj else 'None'}")
+    if config_obj.verbosity > 3:
+        print("\n=== get_pat_batch_epic_clinical_notes_annotations START ===")
+        print(f"Patient: {current_pat_client_id_code}")
+        print(
+            f"Storage backend: {config_obj.storage_backend if config_obj else 'None'}",
+        )
 
     if cat is None:
         print("WARNING: cat (MedCAT) is None! Annotations cannot be generated.")
@@ -213,9 +221,8 @@ def get_pat_batch_epic_clinical_notes_annotations(
                 pat_batch = pd.DataFrame()
 
         # If still empty, fetch from Elasticsearch using provided search function
-        _logger.debug(
-            f"ES fetch check: pat_batch.empty={pat_batch.empty}, cohort_searcher_available={cohort_searcher_with_terms_and_search is not None}",
-        )
+        # ES fetch check - only log at INFO when actually fetching
+
         if pat_batch.empty and cohort_searcher_with_terms_and_search is not None:
             _logger.info(
                 f"Fetching from Elasticsearch for patient {current_pat_client_id_code}",
@@ -242,8 +249,9 @@ def get_pat_batch_epic_clinical_notes_annotations(
                     )
                     raise
 
+        # Post-fetch status - only log if empty or when verbose
         _logger.debug(
-            f"After DB/file fetch, pat_batch.empty={pat_batch.empty}, shape={pat_batch.shape if not pat_batch.empty else 'N/A'}",
+            f"Batch shape: {pat_batch.shape if not pat_batch.empty else 'empty'}",
         )
 
         if config_obj.verbosity >= 6:
@@ -275,9 +283,9 @@ def get_pat_batch_epic_clinical_notes_annotations(
                         id_column="client_idcode",
                     )
                 except Exception as e:
-                    _logger.warning(
-                        f"Could not create annotation table for epic_clinical_notes: {e}",
-                    )
+                    msg = f"Failed to save epic clinical notes annotations for patient {current_pat_client_id_code}: {e}"
+                    _logger.error(msg)
+                    raise RuntimeError(msg)
 
             # If testing with dummy MedCAT, generate dummy annotations even without raw data
             if getattr(config_obj, "testing", False) and getattr(
@@ -342,10 +350,11 @@ def get_pat_batch_epic_clinical_notes_annotations(
         try:
             engine = config_obj.db_engine
             if not engine:
-                _logger.error(
-                    "Database engine not initialized in config_obj for epic clinical notes annotations.",
+                error_msg = (
+                    "Database engine not initialized in config_obj for epic clinical notes annotations. "
+                    "Annotations output is enabled but database storage cannot proceed without a valid database engine."
                 )
-                return batch_target
+                raise RuntimeError(error_msg)
 
             with engine.begin() as connection:
                 table_name = "ann_epic_clinical_notes"
@@ -396,8 +405,10 @@ def get_pat_batch_epic_clinical_notes_annotations(
             )
             raise
     else:
-        print("DEBUG: Skipping database storage (should_store=False or empty batch)")
+        if config_obj.verbosity > 3:
+            print("Skipping database storage (should_store=False or empty batch)")
 
-    print("\n=== DEBUG get_pat_batch_epic_clinical_notes_annotations END ===\n")
+    if config_obj.verbosity > 3:
+        print("\n=== get_pat_batch_epic_clinical_notes_annotations END ===\n")
 
     return batch_target
