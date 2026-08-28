@@ -6,6 +6,26 @@ _logger = logging.getLogger(__name__)
 
 import pandas as pd
 
+try:
+    from IPython.display import clear_output
+
+    JUPYTER_AVAILABLE = True
+except ImportError:
+    JUPYTER_AVAILABLE = False
+
+
+def _clear_output_if_verbosity_high(config_obj, step_counter):
+    """Clear Jupyter output when verbosity is high to prevent crashes."""
+    if not JUPYTER_AVAILABLE:
+        return
+    verbosity = getattr(config_obj, "verbosity", 0)
+    if verbosity >= 5 and step_counter % 10 == 0:
+        try:
+            clear_output(wait=True)
+        except Exception:
+            pass
+
+
 from pat2vec.pat2vec_get_methods import (
     get_current_pat_epic_imaging_reports_annotations,
     get_current_pat_epic_medical_history_annotations,
@@ -507,6 +527,9 @@ def main_batch(
                         print(
                             f"option={option}, feature_df columns={list(feature_df.columns)}, shape={feature_df.shape}",
                         )
+
+                        # Clear Jupyter output periodically when verbosity is high
+                        _clear_output_if_verbosity_high(config_obj, i)
 
                         patient_vector.append(feature_df)
 

@@ -12,39 +12,36 @@ from .main_pat2vec import (
     main,
 )
 from .pat2vec_get_methods.get_method_appointments import (
-    APPOINTMENT_FIELDS,
     get_appointments,
+    get_appointments_features,
     search_appointments,
 )
 from .pat2vec_get_methods.get_method_bed import (
-    BED_FIELDS,
+    get_bed,
+    get_bed_features,
+    search_bed_data,
 )
 from .pat2vec_get_methods.get_method_bloods import (
-    BLOODS_FIELDS,
     get_current_pat_bloods,
     search_bloods_data,
 )
 from .pat2vec_get_methods.get_method_bmi import (
-    BMI_FIELDS,
     calculate_bmi_features,
     get_bmi_features,
     search_bmi_observations,
 )
 from .pat2vec_get_methods.get_method_core02 import (
-    CORE_O2_FIELDS,
     calculate_core_o2_features,
     clean_observation_value,
     get_core_02,
     search_core_o2_observations,
 )
 from .pat2vec_get_methods.get_method_core_resus import (
-    CORE_RESUS_FIELDS,
     calculate_core_resus_features,
     get_core_resus,
     search_core_resus_observations,
 )
 from .pat2vec_get_methods.get_method_covid import (
-    COVID_FIELDS,
     SEARCH_TERM_ES,
     SEARCH_TERM_PLAIN,
     calculate_covid_features,
@@ -55,7 +52,6 @@ from .pat2vec_get_methods.get_method_current_pat_annotations_mrc_cs import (
     get_current_pat_annotations_mrc_cs,
 )
 from .pat2vec_get_methods.get_method_demo import (
-    DEMOGRAPHICS_FIELDS,
     get_demographics3,
     get_demographics_data,
     process_demographics_data,
@@ -67,7 +63,6 @@ from .pat2vec_get_methods.get_method_demographics import (
 )
 from .pat2vec_get_methods.get_method_diagnostics import (
     COLUMNS_TO_DROP,
-    DIAGNOSTICS_FIELDS,
     calculate_diagnostic_features,
     create_diagnostic_features_dataframe,
     get_current_pat_diagnostics,
@@ -75,18 +70,20 @@ from .pat2vec_get_methods.get_method_diagnostics import (
     search_diagnostic_orders,
 )
 from .pat2vec_get_methods.get_method_drugs import (
-    DRUG_FIELDS,
     calculate_drug_features,
     create_drug_features_dataframe,
     get_current_pat_drugs,
     prepare_drug_datetime,
     search_drug_orders,
 )
+from .pat2vec_get_methods.get_method_epic_clinical_notes import (
+    get_epic_clinical_notes,
+    search_epic_clinical_notes,
+)
 from .pat2vec_get_methods.get_method_epic_clinical_notes_annotations import (
     get_current_pat_epic_clinical_notes_annotations,
 )
 from .pat2vec_get_methods.get_method_epic_clinical_notes_appointments import (
-    EPIC_CLINICAL_NOTES_APPOINTMENTS_FIELDS,
     get_epic_clinical_notes_appointments,
     search_epic_clinical_notes_appointments,
 )
@@ -94,23 +91,28 @@ from .pat2vec_get_methods.get_method_epic_clinical_notes_appointments_annotation
     get_current_pat_epic_clinical_notes_appointments_annotations,
 )
 from .pat2vec_get_methods.get_method_epic_encounters import (
-    EPIC_ENCOUNTER_FIELDS,
     get_epic_encounters,
     search_epic_encounters,
+)
+from .pat2vec_get_methods.get_method_epic_imaging_reports import (
+    get_epic_imaging_reports,
+    search_epic_imaging_reports,
 )
 from .pat2vec_get_methods.get_method_epic_imaging_reports_annotations import (
     get_current_pat_epic_imaging_reports_annotations,
 )
 from .pat2vec_get_methods.get_method_epic_lab_results import (
-    EPIC_LAB_RESULTS_FIELDS,
     get_epic_lab_results,
     search_epic_lab_results,
+)
+from .pat2vec_get_methods.get_method_epic_medical_history import (
+    get_epic_medical_history,
+    search_epic_medical_history,
 )
 from .pat2vec_get_methods.get_method_epic_medical_history_annotations import (
     get_current_pat_epic_medical_history_annotations,
 )
 from .pat2vec_get_methods.get_method_epic_orders import (
-    EPIC_ORDERS_FIELDS,
     get_epic_orders,
     search_epic_orders,
 )
@@ -118,12 +120,10 @@ from .pat2vec_get_methods.get_method_epic_orders_annotations import (
     get_current_pat_epic_orders_annotations,
 )
 from .pat2vec_get_methods.get_method_epic_patients import (
-    EPIC_PATIENTS_FIELDS,
     get_epic_patients,
     search_epic_patients,
 )
 from .pat2vec_get_methods.get_method_hosp_site import (
-    HOSP_SITE_FIELDS,
     SEARCH_TERM,
     calculate_hospital_site_features,
     get_hosp_site,
@@ -148,9 +148,9 @@ from .pat2vec_get_methods.get_method_report_annotations import (
     get_current_pat_report_annotations,
 )
 from .pat2vec_get_methods.get_method_smoking import (
-    SMOKING_FIELDS,
     calculate_smoking_features,
     get_smoking,
+    get_smoking_features,
     prepare_smoking_data,
     search_smoking,
 )
@@ -158,9 +158,10 @@ from .pat2vec_get_methods.get_method_textual_obs_annotations import (
     get_current_pat_textual_obs_annotations,
 )
 from .pat2vec_get_methods.get_method_vte_status import (
-    VTE_FIELDS,
+    VTE_TIME_FIELD,
     calculate_vte_features,
     get_vte_status,
+    get_vte_status_features,
     prepare_vte_data,
     search_vte,
 )
@@ -171,6 +172,7 @@ from .pat2vec_get_methods.test_get_method_demo import (
     TestSearchDemographics,
 )
 from .pat2vec_main_methods.main_batch import (
+    SUBTYPE_FUNCTIONS,
     main_batch,
 )
 from .pat2vec_pat_list.get_patient_treatment_list import (
@@ -541,6 +543,41 @@ from .util.dummy_data_generation.sequence_generators import (
     generate_patient_timeline_faker,
     run_generate_patient_timeline_and_append,
 )
+from .util.elasticsearch_index_config import (
+    APPOINTMENT_FIELDS,
+    BED_FIELDS,
+    BLOODS_FIELDS,
+    BMI_FIELDS,
+    CORE_O2_FIELDS,
+    CORE_RESUS_FIELDS,
+    COVID_FIELDS,
+    DEMOGRAPHICS_FIELDS,
+    DIAGNOSTICS_FIELDS,
+    DRUG_FIELDS,
+    EMPTY_ANNOT_COLS,
+    EPIC_CLINICAL_NOTES_APPOINTMENTS_FIELDS,
+    EPIC_CLINICAL_NOTES_FIELDS,
+    EPIC_ENCOUNTER_FIELDS,
+    EPIC_IMAGING_REPORTS_FIELDS,
+    EPIC_LAB_RESULTS_FIELDS,
+    EPIC_MEDICAL_HISTORY_FIELDS,
+    EPIC_ORDERS_FIELDS,
+    EPIC_PATIENTS_FIELDS,
+    EPR_DOCS_FIELDS,
+    HOSP_SITE_FIELDS,
+    NEWS_FIELDS,
+    OBS_COVID_FIELDS,
+    OBS_FIELDS,
+    REPORTS_FIELDS,
+    SMOKING_FIELDS,
+    TEXTUAL_OBS_FIELDS,
+    VTE_FIELDS,
+    IndexConfig,
+    get_all_index_configs,
+    get_index_config_for_method,
+    print_index_config_summary,
+    validate_configs_against_cluster,
+)
 from .util.elasticsearch_methods import (
     get_guess_datetime_column,
     guess_datetime_columns,
@@ -760,7 +797,6 @@ from .util.patient_identifier_conversion import (
     extract_source_id,
 )
 from .util.post_processing_annotations import (
-    EMPTY_ANNOT_COLS,
     check_list_presence,
     extract_types_from_csv,
     filter_and_select_rows,
@@ -924,10 +960,14 @@ __all__ = [
     "EMERGENCY_TIME_WINDOW",
     "EMPTY_ANNOT_COLS",
     "EPIC_CLINICAL_NOTES_APPOINTMENTS_FIELDS",
+    "EPIC_CLINICAL_NOTES_FIELDS",
     "EPIC_ENCOUNTER_FIELDS",
+    "EPIC_IMAGING_REPORTS_FIELDS",
     "EPIC_LAB_RESULTS_FIELDS",
+    "EPIC_MEDICAL_HISTORY_FIELDS",
     "EPIC_ORDERS_FIELDS",
     "EPIC_PATIENTS_FIELDS",
+    "EPR_DOCS_FIELDS",
     "GEO_ZONES",
     "GET_METHOD_DEFAULT_FIELDS_MAP",
     "GET_METHOD_INDEX_MAP",
@@ -941,10 +981,13 @@ __all__ = [
     "MAPPINGS",
     "MAX_NEWS_COMPONENTS",
     "MEDICAL_CONDITIONS",
+    "NEWS_FIELDS",
     "NEWS_HDU_THRESHOLD",
     "NEWS_ITU_THRESHOLD",
     "NOTE_PREFIXES",
     "NOTE_TYPE_DISTRIBUTION",
+    "OBS_COVID_FIELDS",
+    "OBS_FIELDS",
     "ORDER_CONTENT_TEMPLATES",
     "ORDER_STATUS_DISTRIBUTION",
     "OXYGEN_DELIVERY_METHODS",
@@ -955,6 +998,7 @@ __all__ = [
     "REALISTIC_ADMISSION_TYPES",
     "REALISTIC_MODALITY_DIST",
     "REALISTIC_ORDER_DISTRIBUTION",
+    "REPORTS_FIELDS",
     "SEARCH_TERM",
     "SEARCH_TERM_ES",
     "SEARCH_TERM_PLAIN",
@@ -964,9 +1008,12 @@ __all__ = [
     "SPECIALTIES_BY_TYPE",
     "SPECIALTY_CODES",
     "SPECIALTY_DISTRIBUTION",
+    "SUBTYPE_FUNCTIONS",
     "SUPPLEMENTAL_OXYGEN_VALUES",
     "SUPPLEMENTAL_OXYGEN_WEIGHTS",
+    "TEXTUAL_OBS_FIELDS",
     "VTE_FIELDS",
+    "VTE_TIME_FIELD",
     "WARD_PROBS_INIT",
     "WARD_TYPES_LIST",
     "WARD_TYPE_WEIGHTS",
@@ -977,6 +1024,7 @@ __all__ = [
     "DeIdAnonymizer",
     "ElasticContainer",
     "EthnicityAbstractor",
+    "IndexConfig",
     "PathsClass",
     "TestGetDemographics3",
     "TestGetMethodDemo",
@@ -1184,6 +1232,7 @@ __all__ = [
     "generate_vte_data",
     "get_all_features",
     "get_all_fields_for_method",
+    "get_all_index_configs",
     "get_all_method_default_fields",
     "get_all_method_indices",
     "get_all_patient_list",
@@ -1191,7 +1240,9 @@ __all__ = [
     "get_all_target_annots",
     "get_annots_joined_to_docs",
     "get_appointments",
+    "get_appointments_features",
     "get_bed",
+    "get_bed_features",
     "get_bmi_features",
     "get_cat",
     "get_core_02",
@@ -1219,15 +1270,19 @@ __all__ = [
     "get_df_from_db",
     "get_df_from_db_with_temporal_filter",
     "get_empty_date_vector",
+    "get_epic_clinical_notes",
     "get_epic_clinical_notes_appointments",
     "get_epic_encounters",
+    "get_epic_imaging_reports",
     "get_epic_lab_results",
+    "get_epic_medical_history",
     "get_epic_orders",
     "get_epic_patients",
     "get_expected_columns_for_table",
     "get_free_gpu",
     "get_guess_datetime_column",
     "get_hosp_site",
+    "get_index_config_for_method",
     "get_index_for_method",
     "get_merged_pat_batch_appointments",
     "get_merged_pat_batch_bloods",
@@ -1279,11 +1334,13 @@ __all__ = [
     "get_ram_usage",
     "get_search_client_idcode_list_from_nhs_number_list",
     "get_smoking",
+    "get_smoking_features",
     "get_start_end_year_month",
     "get_treatment_docs_by_iterative_multi_term_cohort_searcher_no_terms_fuzzy",
     "get_treatment_records_by_drug_order_name",
     "get_treatment_records_by_drug_order_name_epic",
     "get_vte_status",
+    "get_vte_status_features",
     "group_images_by_suffix",
     "guess_datetime_columns",
     "handle_inconsistent_dtypes",
@@ -1378,6 +1435,7 @@ __all__ = [
     "prepare_hospital_site_data",
     "prepare_smoking_data",
     "prepare_vte_data",
+    "print_index_config_summary",
     "process_chunk",
     "process_csv_files",
     "process_csv_files_multi",
@@ -1421,9 +1479,12 @@ __all__ = [
     "search_demographics",
     "search_diagnostic_orders",
     "search_drug_orders",
+    "search_epic_clinical_notes",
     "search_epic_clinical_notes_appointments",
     "search_epic_encounters",
+    "search_epic_imaging_reports",
     "search_epic_lab_results",
+    "search_epic_medical_history",
     "search_epic_orders",
     "search_epic_patients",
     "search_hospital_site",
@@ -1451,6 +1512,7 @@ __all__ = [
     "update_global_start_date",
     "update_pbar",
     "validate_and_fix_global_dates",
+    "validate_configs_against_cluster",
     "validate_input_dates",
     "verify_split_data_concatenated",
     "verify_split_data_individual",

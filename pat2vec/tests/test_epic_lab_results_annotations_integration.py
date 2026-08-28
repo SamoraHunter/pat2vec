@@ -7,6 +7,8 @@ import tqdm
 from pat2vec.pat2vec_get_methods.get_method_pat_annotations import (
     get_current_pat_annotations,
 )
+
+# Also need epic_lab_results for annotations to work
 from pat2vec.util.config_pat2vec import config_class
 from pat2vec.util.get_dummy_data_cohort_searcher import (
     dummy_CAT,
@@ -60,7 +62,7 @@ class TestEpicLabResultsAnnotationsIntegration(unittest.TestCase):
             batch_mode=True,
             main_options={
                 "epic_lab_results": True,
-                "epic_lab_results_annotations": True,
+                "annotations": True,
             },
             days=0,
         )

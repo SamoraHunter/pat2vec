@@ -8,6 +8,13 @@ from typing import Any
 import pandas as pd
 from sqlalchemy import inspect, text
 
+try:
+    from IPython.display import clear_output
+
+    JUPYTER_AVAILABLE = True
+except ImportError:
+    JUPYTER_AVAILABLE = False
+
 # from pat2vec.pat2vec_search.cogstack_search_methods import *
 from tqdm import trange
 
@@ -118,6 +125,35 @@ from pat2vec.util.methods_get_medcat import get_cat
 from pat2vec.util.retrieve_data import retrieve_patient_data
 
 _logger = logging.getLogger(__name__)
+
+
+def _clear_jupyter_output_if_needed(
+    config_obj: Any,
+    counter: int,
+    interval: int = 10,
+) -> None:
+    """Clears Jupyter notebook output periodically when verbosity is high.
+
+    When verbosity/debug logging is enabled, the vast amount of debug output
+    can cause Jupyter notebooks to crash due to memory exhaustion. This function
+    periodically clears the notebook output to prevent this.
+
+    Args:
+    ----
+        config_obj: Configuration object containing verbosity setting.
+        counter: Current iteration counter.
+        interval: Clear output every n iterations (default 10).
+
+    """
+    if not JUPYTER_AVAILABLE:
+        return
+
+    if hasattr(config_obj, "verbosity") and config_obj.verbosity >= 5:
+        if counter % interval == 0:
+            try:
+                clear_output(wait=True)
+            except Exception:
+                pass
 
 
 class main:
@@ -1470,9 +1506,17 @@ class main:
             f"Fetching {len(enabled_batch_names)} batch(es) for patient {current_pat_client_id_code}: {enabled_batch_names}",
         )
 
+        batch_counter = 0
         # Fetch standard batches
         for config in batch_configs:
             if self.config_obj.main_options.get(config["option"], False):
+                batch_counter += 1
+                _clear_jupyter_output_if_needed(
+                    self.config_obj,
+                    batch_counter,
+                    interval=3,
+                )
+
                 id_arg_name = config.get("id_arg", "current_pat_client_id_code")
                 call_kwargs = {
                     id_arg_name: (
@@ -1545,9 +1589,17 @@ class main:
             else:
                 batches[config["var"]] = config["empty"]
 
+        annotation_batch_counter = 0
         # Fetch annotation batches
         for config in annotation_batch_configs:
             if self.config_obj.main_options.get(config["option"], False):
+                annotation_batch_counter += 1
+                _clear_jupyter_output_if_needed(
+                    self.config_obj,
+                    annotation_batch_counter,
+                    interval=3,
+                )
+
                 batch_result = config["func"](
                     current_pat_client_id_code,
                     config_obj=self.config_obj,
@@ -2037,8 +2089,11 @@ class main:
                 )
             return
 
+        slice_counter = 0
         # The only_check_last logic from the original function is implicitly handled by this loop.
         for date_slice in date_list:
+            slice_counter += 1
+            _clear_jupyter_output_if_needed(self.config_obj, slice_counter, interval=10)
             try:
                 if self.config_obj.verbosity > 6:
                     _logger.debug(
@@ -2208,6 +2263,7 @@ class main:
         _logger.info(
             f"batch_epr_docs_annotations shape={batches.get('batch_epr_docs_annotations', pd.DataFrame()).shape}, columns={list(batches.get('batch_epr_docs_annotations', pd.DataFrame()).columns)[:5] if not batches.get('batch_epr_docs_annotations', pd.DataFrame()).empty else 'empty'}",
         )
+        _clear_jupyter_output_if_needed(self.config_obj, i, interval=5)
 
         # Save raw batches and annotation batches to DB if applicable
         if self.config_obj.storage_backend == "database":
