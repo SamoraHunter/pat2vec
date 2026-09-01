@@ -106,7 +106,9 @@ class config_class:
         individual_patient_id_column_name: str | None = None,
         individual_patient_window_controls_method: str = "full",  # full, random
         dropna_doc_timestamps: bool = True,
-        time_window_interval_delta: relativedelta = relativedelta(years=31),
+        time_window_interval_delta: relativedelta = relativedelta(
+            days=31,
+        ),  # This must be 1 by default otherwise testing is too slow.
         feature_engineering_arg_dict: dict[str, Any] | None = None,
         split_clinical_notes: bool = True,
         lookback: bool = True,
@@ -342,6 +344,9 @@ class config_class:
                 self.db_engine = create_engine(self.db_connection_string)
                 # For file-based SQLite, check_same_thread=False is often crucial in notebooks
                 if self.db_engine.name == "sqlite":
+                    db_path = self.db_connection_string.replace("sqlite:///", "")
+                    if not db_path.startswith(":"):
+                        os.makedirs(os.path.dirname(db_path), exist_ok=True)
                     self.db_engine = create_engine(
                         self.db_connection_string,
                         connect_args={"check_same_thread": False},
@@ -585,6 +590,15 @@ class config_class:
 
         #: The time field to use for bloods.
         self.bloods_time_field = "basicobs_entered"
+
+        #: The time field to use for epic clinical notes.
+        self.epic_clinical_notes_time_field = "updatetime"
+
+        #: The time field to use for epic clinical notes appointments.
+        self.epic_clinical_notes_appointments_time_field = "AppointmentDateTime"
+
+        #: The time field to use for epic orders.
+        self.epic_orders_time_field = "document_UpdatedWhen"
 
         if client_idcode_term_name is None:
             if testing_elastic:
