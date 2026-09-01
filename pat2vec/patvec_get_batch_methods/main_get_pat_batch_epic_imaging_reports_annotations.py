@@ -6,6 +6,7 @@ _logger = logging.getLogger(__name__)
 
 
 import pandas as pd
+from sqlalchemy import text
 
 from pat2vec.util.helper_functions import (
     get_df_from_db,
@@ -344,7 +345,7 @@ def get_pat_batch_epic_imaging_reports_annotations(
 
                 if config_obj.overwrite_stored_pat_docs:
                     connection.execute(
-                        f'DELETE FROM "{db_table}" WHERE client_idcode = :pat_id',
+                        text(f'DELETE FROM "{db_table}" WHERE client_idcode = :pat_id'),
                         {"pat_id": current_pat_client_id_code},
                     )
                 batch_to_save.to_sql(

@@ -162,10 +162,14 @@ class TestAppointmentsGet:
         ), "All patient IDs should be strings"
 
     def test_2_config_and_pipeline_setup(self):
+        print(f"\nDEBUG TEST 2: main_options = {self.config_obj.main_options}")
+        print(
+            f"DEBUG TEST 2: appointments value = {self.config_obj.main_options.get('appointments', 'NOT FOUND')}"
+        )
         assert self.config_obj is not None, "Config object should not be None"
         assert (
             self.config_obj.main_options.get("appointments", False) is True
-        ), "Appointments option should be enabled in config"
+        ), f"Appointments option should be enabled in config. Got: {self.config_obj.main_options}"
         assert self.pat2vec_obj is not None, "pat2vec object should not be None"
 
     def test_3_index_population_and_verification(self):

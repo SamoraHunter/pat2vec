@@ -117,13 +117,14 @@ def get_current_pat_epic_orders_annotations(
             columns=["client_idcode"],
         )
     else:
-        # Handle column name mismatch: annotations use 'updatetime' but we check for 'document_CreatedWhen'
-        time_column = "document_CreatedWhen"
+        # Handle column name mismatch: annotations use 'updatetime' but ES returns might have document_CreatedWhen/document_UpdatedWhen
+        time_column = "updatetime"
         alternative_columns = [
             "updatetime",
             "basicobs_entered",
             "observationdocument_recordeddtm",
             "document_CreatedWhen",
+            "document_UpdatedWhen",
         ]
         found_col = None
         for alt_col in alternative_columns:
@@ -163,25 +164,11 @@ def get_current_pat_epic_orders_annotations(
                     expected_names=unique_pretty_names,
                 )
             else:
-                # When filtered annotations are empty, create feature DataFrame
-                if unique_pretty_names is not None and len(unique_pretty_names) > 0:
-                    # Create zero-valued columns for each unique pretty_name from source
-                    feature_columns = [
-                        f"pretty_name_count_epic_orders_{name}"
-                        for name in unique_pretty_names
-                    ]
-                    df_pat_target = pd.DataFrame(
-                        {
-                            "client_idcode": [current_pat_client_id_code],
-                            **{col: [0.0] for col in feature_columns},
-                        },
-                    )
-                else:
-                    # No pretty names available - return just client_idcode
-                    df_pat_target = pd.DataFrame(
-                        data=[current_pat_client_id_code],
-                        columns=["client_idcode"],
-                    )
+                # When filtered annotations are empty, return just client_idcode (no features)
+                df_pat_target = pd.DataFrame(
+                    data=[current_pat_client_id_code],
+                    columns=["client_idcode"],
+                )
 
     if config_obj.verbosity >= 6:
         display(df_pat_target)

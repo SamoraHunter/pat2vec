@@ -98,6 +98,11 @@ def generate_observations_MRC_text_data(
             df[field] = None
 
     df = df[fields_list]
+
+    # Replace any np.nan values with None to ensure proper JSON serialization
+    # This prevents Elasticsearch indexing errors from NaN tokens
+    df = df.where(pd.notnull(df), None)
+
     return df.reset_index(drop=True)
 
 
@@ -181,4 +186,9 @@ def generate_observations_Reports_text_data(
             df[field] = None
 
     df = df[fields_list]
+
+    # Replace any np.nan values with None to ensure proper JSON serialization
+    # This prevents Elasticsearch indexing errors from NaN tokens
+    df = df.where(pd.notnull(df), None)
+
     return df.reset_index(drop=True)

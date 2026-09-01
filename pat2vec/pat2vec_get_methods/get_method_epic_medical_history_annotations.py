@@ -232,25 +232,11 @@ def get_current_pat_epic_medical_history_annotations(
                 expected_names=unique_pretty_names,
             )
         else:
-            # When filtered annotations are empty, create feature DataFrame
-            if unique_pretty_names is not None and len(unique_pretty_names) > 0:
-                # Create zero-valued columns for each unique pretty_name from source
-                feature_columns = [
-                    f"pretty_name_count_epic_medical_history_{name}"
-                    for name in unique_pretty_names
-                ]
-                processed_annotations = pd.DataFrame(
-                    {
-                        "client_idcode": [current_pat_client_id_code],
-                        **{col: [0.0] for col in feature_columns},
-                    },
-                )
-            else:
-                # No pretty names available - return just client_idcode
-                processed_annotations = pd.DataFrame(
-                    data=[current_pat_client_id_code],
-                    columns=["client_idcode"],
-                )
+            # When filtered annotations are empty, return just client_idcode (no features)
+            processed_annotations = pd.DataFrame(
+                data=[current_pat_client_id_code],
+                columns=["client_idcode"],
+            )
 
     else:
         processed_annotations = pd.DataFrame(

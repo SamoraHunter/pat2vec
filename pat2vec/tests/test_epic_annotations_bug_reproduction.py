@@ -203,6 +203,9 @@ class TestEpicTablesCreation(unittest.TestCase):
     def test_save_raw_with_columns_preserves_schema(self):
         """
         Test that save_raw_patient_batch preserves column schema when creating table.
+
+        Note: document_UpdatedWhen and document_CreatedWhen are both renamed to updatetime,
+        so only one timestamp column should exist in the final table.
         """
         config = config_class(
             storage_backend="database",
@@ -217,7 +220,7 @@ class TestEpicTablesCreation(unittest.TestCase):
                 "client_idcode": [],
                 "updatetime": [],
                 "document_Content": [],
-                "document_CreatedWhen": [],
+                "document_CreatedWhen": [],  # This will be renamed to updatetime
             }
         )
 
@@ -236,17 +239,23 @@ class TestEpicTablesCreation(unittest.TestCase):
 
         self.assertTrue(table_found, "Table should be created")
 
-        # Check columns were preserved
+        # Check columns were preserved (document_CreatedWhen is renamed to updatetime)
         columns = [c["name"] for c in inspector.get_columns(table_name)]
 
         expected_cols = [
             "client_idcode",
-            "updatetime",
+            "updatetime",  # Only one updatetime column
             "document_Content",
-            "document_CreatedWhen",
         ]
         for col in expected_cols:
             self.assertIn(col, columns, f"Expected column {col} not found in table")
+
+        # document_CreatedWhen should NOT exist (it's renamed to updatetime)
+        self.assertNotIn(
+            "document_CreatedWhen",
+            columns,
+            "document_CreatedWhen should be renamed to updatetime and not appear separately",
+        )
 
 
 class TestMedCATDummyAnnotations(unittest.TestCase):

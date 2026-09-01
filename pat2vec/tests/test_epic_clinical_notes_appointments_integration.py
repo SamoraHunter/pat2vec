@@ -57,7 +57,7 @@ class TestEpicClinicalNotesAppointmentsIntegration(unittest.TestCase):
             },
         )
         self.config.epic_clinical_notes_appointments_time_field = (
-            "document_CreatedWhen"  # Align with dummy data
+            "updatetime"  # Align with database column name (data from ES is renamed)
         )
         self.engine = self.config.db_engine
 

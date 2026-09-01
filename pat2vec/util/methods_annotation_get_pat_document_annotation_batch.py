@@ -176,8 +176,10 @@ def get_pat_document_annotation_batch(
             time_col = "updatetime"
         elif "document_CreatedWhen" in pat_batch.columns:
             time_col = "document_CreatedWhen"
+        elif "document_ReportedDate" in pat_batch.columns:
+            time_col = "document_ReportedDate"
         else:
-            msg = f"No time column found. Expected 'updatetime' or 'document_CreatedWhen'. Available columns: {list(pat_batch.columns)}"
+            msg = f"No time column found. Expected 'updatetime', 'document_CreatedWhen', or 'document_ReportedDate'. Available columns: {list(pat_batch.columns)}"
             raise KeyError(
                 msg,
             )
@@ -273,8 +275,10 @@ def get_pat_document_annotation_batch_epic_imaging_reports(
         time_column = "updatetime"
     elif "document_CreatedWhen" in pat_batch.columns:
         time_column = "document_CreatedWhen"
+    elif "document_ReportedDate" in pat_batch.columns:
+        time_column = "document_ReportedDate"
     else:
-        msg = f"Neither 'updatetime' nor 'document_CreatedWhen' column found in DataFrame. Available columns: {list(pat_batch.columns)}"
+        msg = f"Neither 'updatetime', 'document_CreatedWhen', nor 'document_ReportedDate' column found in DataFrame. Available columns: {list(pat_batch.columns)}"
         raise KeyError(
             msg,
         )

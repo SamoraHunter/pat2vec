@@ -48,25 +48,31 @@ class TestMethodsGetMedcat(unittest.TestCase):
             mock_cat_cls.load_model_pack.assert_called_with("/import/path.zip")
 
     @patch("os.path.exists")
-    @patch("os.listdir")
+    @patch("pathlib.Path.iterdir")
     @patch("pat2vec.util.methods_get_medcat.CAT")
-    def test_get_cat_auto_detection(self, mock_cat_cls, mock_listdir, mock_exists):
+    def test_get_cat_auto_detection(self, mock_cat_cls, mock_iterdir, mock_exists):
         """Test the 'auto' detection logic that searches sys.path."""
+        from pathlib import Path
+
         self.mock_config.override_medcat_model_path = "auto"
 
         # Setup: simulate finding a zip file in a 'medcat_models' directory in one of the sys.path entries
         test_sys_path = "/sys/path/entry"
+        test_mcd_dir = os.path.join(test_sys_path, "medcat_models")
 
         def side_effect_exists(path):
-            return path == os.path.join(test_sys_path, "medcat_models")
+            return path == test_mcd_dir
 
         mock_exists.side_effect = side_effect_exists
-        mock_listdir.return_value = ["model1.zip"]
+        # Mock Path.iterdir() to yield MagicMock entries with .name attribute
+        mock_file1 = MagicMock()
+        mock_file1.name = "model1.zip"
+        mock_iterdir.return_value = [mock_file1]
 
         with patch.object(sys, "path", [test_sys_path]):
             get_cat(self.mock_config)
 
-        expected_path = os.path.join(test_sys_path, "medcat_models", "model1.zip")
+        expected_path = os.path.join(test_mcd_dir, "model1.zip")
         mock_cat_cls.load_model_pack.assert_called_with(expected_path)
 
     def test_get_cat_no_path_raises_error(self):

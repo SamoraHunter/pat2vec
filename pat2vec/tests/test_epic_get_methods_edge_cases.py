@@ -78,16 +78,12 @@ class TestEpicDatabaseRetrievalEdgeCases(unittest.TestCase):
 
         # Create table with minimal schema
         with config.db_engine.begin() as connection:
-            connection.execute(
-                text(
-                    """
+            connection.execute(text("""
                 CREATE TABLE "raw_data_raw_epic_lab_results" (
                     "client_idcode" TEXT,
                     "document_Name" TEXT
                 )
-            """
-                )
-            )
+            """))
 
         # Save some data
         df = pd.DataFrame(
@@ -123,16 +119,12 @@ class TestEpicDatabaseRetrievalEdgeCases(unittest.TestCase):
 
         # Create table first
         with config.db_engine.begin() as connection:
-            connection.execute(
-                text(
-                    """
+            connection.execute(text("""
                 CREATE TABLE "raw_data_test_table" (
                     "client_idcode" TEXT,
                     "value" INTEGER
                 )
-            """
-                )
-            )
+            """))
 
         # Retrieve non-existent patient
         df = get_df_from_db(
@@ -196,16 +188,12 @@ class TestEpicDatabaseRetrievalEdgeCases(unittest.TestCase):
 
         # Create and populate table using correct SQLAlchemy text API
         with config.db_engine.begin() as connection:
-            connection.execute(
-                text(
-                    """
+            connection.execute(text("""
                 CREATE TABLE "raw_data_test_iso" (
                     "client_idcode" TEXT,
                     "value" INTEGER
                 )
-            """
-                )
-            )
+            """))
             connection.execute(
                 text('INSERT INTO "raw_data_test_iso" VALUES (:pat, :val)'),
                 {"pat": "TEST_PAT", "val": 42},

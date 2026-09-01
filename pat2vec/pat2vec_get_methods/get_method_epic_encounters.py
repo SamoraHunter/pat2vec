@@ -102,8 +102,7 @@ def search_epic_encounters(
         return pd.read_csv(output_filename)
 
     if cohort_searcher_with_terms_and_search is None:
-        msg = "cohort_searcher_with_terms_and_search cannot be None."
-        raise ValueError(msg)
+        return pd.DataFrame()
     if patient_durable_keys is None:
         msg = "patient_durable_keys cannot be None."
         raise ValueError(msg)

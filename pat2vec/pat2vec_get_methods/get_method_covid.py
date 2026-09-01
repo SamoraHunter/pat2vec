@@ -112,7 +112,9 @@ def search_covid(
 
     search_string = (
         f'basicobs_itemname_analysed:("{SEARCH_TERM_ES}") AND '
-        f"{observations_time_field}:[{start_year}-{start_month}-{start_day} TO {end_year}-{end_month}-{end_day}]"
+        f"{observations_time_field}: "
+        f"[{int(start_year):04d}-{int(start_month):02d}-{int(start_day):02d} TO "
+        f"{int(end_year):04d}-{int(end_month):02d}-{int(end_day):02d}]"
     )
     if additional_custom_search_string:
         search_string += f" {additional_custom_search_string}"
@@ -210,21 +212,15 @@ def get_covid(
         msg = "config_obj cannot be None. Provide a valid configuration."
         raise ValueError(msg)
 
-    batch_mode = config_obj.batch_mode
     start_year, start_month, end_year, end_month, start_day, end_day = (
         get_start_end_year_month(target_date_range, config_obj=config_obj)
     )
 
-    if pat_batch.empty:
-        return pd.DataFrame(
-            {
-                "client_idcode": [current_pat_client_id_code],
-                "covid_positive": 0 if config_obj.negate_biochem else np.nan,
-            },
-        )
+    batch_mode = getattr(config_obj, "batch_mode", False)
+    covid_time_field = getattr(config_obj, "covid_time_field", "basicobs_entered")
 
     if batch_mode:
-        raw_data = filter_dataframe_by_timestamp(
+        current_pat_covid = filter_dataframe_by_timestamp(
             pat_batch,
             start_year,
             start_month,
@@ -232,9 +228,17 @@ def get_covid(
             end_month,
             start_day,
             end_day,
-            "basicobs_entered",
+            covid_time_field,
         )
+        raw_data = current_pat_covid
     else:
+        if pat_batch.empty and len(pat_batch.columns) == 0:
+            return pd.DataFrame(
+                {
+                    "client_idcode": [current_pat_client_id_code],
+                    "covid_positive": 0 if config_obj.negate_biochem else np.nan,
+                },
+            )
         raw_data = search_covid(
             cohort_searcher_with_terms_and_search=cohort_searcher_with_terms_and_search,
             client_id_codes=current_pat_client_id_code,

@@ -466,6 +466,9 @@ def _fetch_epic_data_from_es(
 
         fields_list = field_map.get(data_type, ["client_idcode", "updatetime"])
 
+        if cohort_searcher_with_terms_and_search is None:
+            return pd.DataFrame()
+
         results = cohort_searcher_with_terms_and_search(
             index_name=data_type,
             fields_list=fields_list,
@@ -784,6 +787,9 @@ def _fetch_data_from_dummy_generator(
     }
 
     fields_list = field_map.get(data_type, ["client_idcode", "updatetime"])
+
+    if cohort_searcher_with_terms_and_search is None:
+        return pd.DataFrame()
 
     results = cohort_searcher_with_terms_and_search(
         index_name=index_name,

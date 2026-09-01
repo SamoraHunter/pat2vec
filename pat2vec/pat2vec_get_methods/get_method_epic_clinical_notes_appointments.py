@@ -222,7 +222,8 @@ def get_epic_clinical_notes_appointments(
 
     id_field_name = "client_idcode"
 
-    # For ES search, use document_UpdatedWhen; for DB filtering after rename, use updatetime
+    # When filtering from DB, data has already been renamed to updatetime
+    # When querying ES, use document_UpdatedWhen (the default ES field name)
     time_field_es = "document_UpdatedWhen"
     time_field_db = "updatetime"
 

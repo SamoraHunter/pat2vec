@@ -6,7 +6,6 @@ import pandas as pd
 
 from pat2vec.util.config_pat2vec import config_class
 from pat2vec.util.filter_methods import apply_data_type_epr_docs_filters
-from pat2vec.util.get_dummy_data_cohort_searcher import generate_epr_documents_data
 from pat2vec.util.helper_functions import (
     get_all_features,
     get_df_from_db,
@@ -26,6 +25,14 @@ class TestRegexExtractionIntegration(unittest.TestCase):
     """
 
     def setUp(self):
+        from pat2vec.util.config_pat2vec import config_class
+        from pat2vec.util.helper_functions import (
+            get_all_features,
+            get_df_from_db,
+            save_patient_features,
+            save_raw_patient_batch,
+        )
+
         self.test_patient_id = "P_REGEX_TEST"
         self.base_date = datetime(2023, 6, 15)
         self.target_date_range = (
@@ -55,6 +62,10 @@ class TestRegexExtractionIntegration(unittest.TestCase):
 
     @patch("pat2vec.util.get_dummy_data_cohort_searcher.pipeline")
     def test_regex_extraction_lifecycle(self, mock_pipeline):
+        from pat2vec.util.get_dummy_data_cohort_searcher import (
+            generate_epr_documents_data,
+        )
+
         # 0. Mock transformer to produce text with the target keyword
         mock_gen = MagicMock()
         mock_gen.return_value = [{"generated_text": "Patient with history of Asthma."}]

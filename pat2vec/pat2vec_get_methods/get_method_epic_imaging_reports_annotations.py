@@ -168,6 +168,24 @@ def get_current_pat_epic_imaging_reports_annotations(
                     )
                 )
 
+        if time_column not in epic_imaging_reports_annotations.columns:
+            _logger.warning(
+                f"None of the expected timestamp columns found in epic_imaging_reports_annotations: {list(epic_imaging_reports_annotations.columns)}",
+            )
+            if unique_pretty_names is not None:
+                processed_annotations = calculate_pretty_name_count_features(
+                    pd.DataFrame(columns=["client_idcode", "pretty_name"]),
+                    suffix="epic_imaging_reports",
+                    patient_id=current_pat_client_id_code,
+                    expected_names=unique_pretty_names,
+                )
+            else:
+                processed_annotations = pd.DataFrame(
+                    data=[current_pat_client_id_code],
+                    columns=["client_idcode"],
+                )
+            return processed_annotations
+
         filtered_epic_imaging_reports_annotations = filter_dataframe_by_timestamp(
             epic_imaging_reports_annotations,
             start_year,
@@ -188,25 +206,13 @@ def get_current_pat_epic_imaging_reports_annotations(
                 expected_names=unique_pretty_names,
             )
         else:
-            # When filtered annotations are empty, create feature DataFrame
-            if unique_pretty_names is not None and len(unique_pretty_names) > 0:
-                # Create zero-valued columns for each unique pretty_name from source
-                feature_columns = [
-                    f"pretty_name_count_epic_imaging_reports_{name}"
-                    for name in unique_pretty_names
-                ]
-                processed_annotations = pd.DataFrame(
-                    {
-                        "client_idcode": [current_pat_client_id_code],
-                        **{col: [0.0] for col in feature_columns},
-                    },
-                )
-            else:
-                # No pretty names available - return just client_idcode
-                processed_annotations = pd.DataFrame(
-                    data=[current_pat_client_id_code],
-                    columns=["client_idcode"],
-                )
+            # When filtered annotations are empty, return zero-valued features if unique_pretty_names is available
+            processed_annotations = calculate_pretty_name_count_features(
+                pd.DataFrame(columns=["client_idcode", "pretty_name"]),
+                suffix="epic_imaging_reports",
+                patient_id=current_pat_client_id_code,
+                expected_names=unique_pretty_names,
+            )
 
     else:
         processed_annotations = pd.DataFrame(

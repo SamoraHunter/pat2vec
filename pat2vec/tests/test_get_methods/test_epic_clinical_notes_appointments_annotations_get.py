@@ -145,6 +145,7 @@ class TestEpicClinicalNotesAppointmentsAnnotationsGet:
             testing_elastic=True,
             dummy_medcat_model=True,
             overwrite_stored_pat_docs=True,
+            overwrite_stored_pat_observations=True,
             use_controls=False,
             medcat=False,
             start_time=None,

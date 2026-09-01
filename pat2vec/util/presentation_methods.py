@@ -1,5 +1,6 @@
 import logging
 import os
+from pathlib import Path
 
 from pptx import Presentation
 from pptx.util import Inches
@@ -25,9 +26,9 @@ def group_images_by_suffix(folder_path: str) -> dict[str, list[str]]:
     """
     image_groups = {}
 
-    for file_name in os.listdir(folder_path):
-        if file_name.endswith((".png", ".jpg", ".jpeg")):
-            suffix = file_name.split("_")[-1].split(".")[0]
+    for entry in Path(folder_path).iterdir():
+        if entry.is_file() and entry.name.endswith((".png", ".jpg", ".jpeg")):
+            suffix = entry.name.split("_")[-1].split(".")[0]
             image_groups.setdefault(suffix, []).append(file_name)
 
     return image_groups
@@ -123,9 +124,9 @@ def create_powerpoint_from_images(folder_path: str) -> None:
 
     """
     images = [
-        file_name
-        for file_name in os.listdir(folder_path)
-        if file_name.endswith((".png", ".jpg", ".jpeg"))
+        entry.name
+        for entry in Path(folder_path).iterdir()
+        if entry.is_file() and entry.name.endswith((".png", ".jpg", ".jpeg"))
     ]
 
     output_path = os.path.join(folder_path, "output_presentation.pptx")

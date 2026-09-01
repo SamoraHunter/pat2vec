@@ -181,7 +181,7 @@ def calculate_smoking_features(
     """
     term = "smoking_status"
     categories = {
-        "current": "Current smoker",
+        "current": "Current smoker|Smoker",
         "non": "Never smoked|Ex-smoker",
     }
 

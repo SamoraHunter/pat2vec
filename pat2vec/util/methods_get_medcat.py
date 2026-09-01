@@ -1,6 +1,7 @@
 import logging
 import os
 import sys
+from pathlib import Path
 from typing import Any, Union
 
 try:
@@ -92,7 +93,9 @@ def get_cat(config_obj: Any) -> Union["CAT", dummy_CAT] | None:  # type: ignore
             for directory in sys.path:
                 medcat_models_path = os.path.join(directory, "medcat_models")
                 if os.path.exists(medcat_models_path):
-                    files_in_dir = os.listdir(medcat_models_path)
+                    files_in_dir = [
+                        entry.name for entry in Path(medcat_models_path).iterdir()
+                    ]
                     zip_files = [file for file in files_in_dir if file.endswith(".zip")]
                     if zip_files:
                         model_path = os.path.join(medcat_models_path, zip_files[0])

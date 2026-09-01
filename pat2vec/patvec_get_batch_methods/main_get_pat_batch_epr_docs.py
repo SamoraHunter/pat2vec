@@ -118,12 +118,20 @@ def get_pat_batch_epr_docs(
 
     try:
         if should_fetch:
+            _logger.info(
+                f"EPR search: patients={[current_pat_client_id_code]}, "
+                f"date_range=[{global_start_year}-{global_start_month}-{global_start_day} TO {global_end_year}-{global_end_month}-{global_end_day}], "
+                f"client_idcode_term_name={config_obj.client_idcode_term_name}",
+            )
             batch_target = cohort_searcher_with_terms_and_search(
                 index_name="epr_documents",
                 fields_list=EPR_DOCS_FIELDS,
                 term_name=config_obj.client_idcode_term_name,
                 entered_list=[current_pat_client_id_code],
                 search_string=f"updatetime:[{global_start_year}-{global_start_month}-{global_start_day} TO {global_end_year}-{global_end_month}-{global_end_day}]",
+            )
+            _logger.info(
+                f"EPR search result: shape={batch_target.shape}, columns={list(batch_target.columns) if not batch_target.empty else 'empty'}, sample_updatetime={batch_target['updatetime'].iloc[0] if not batch_target.empty and 'updatetime' in batch_target.columns else 'N/A'}",
             )
 
             if config_obj.data_type_filter_dict is not None and not batch_target.empty:

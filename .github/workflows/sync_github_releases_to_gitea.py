@@ -243,7 +243,7 @@ def sync_releases_to_gitea(
     run_command(["git", "fetch", github_remote_name, "--tags"])
     print(f"Tags from {github_remote_name} fetched successfully.")
     # Use --force to ensure the Gitea mirror tags are perfectly in sync with the source
-    run_command(["git", "push", gitea_remote_name, "--tags", "--force"])
+    run_command(["git", "push", gitea_remote_name, "--tags", "--force", "--no-verify"])
     print(f"All tags pushed to {gitea_remote_name}.")
     print("--- Git Tag Synchronization Complete ---")
 

@@ -1,3 +1,7 @@
+import logging
+
+_logger = logging.getLogger(__name__)
+
 import os
 
 import pandas as pd
@@ -22,7 +26,7 @@ def search_appointments(
     end_day="12",
     additional_custom_search_string=None,
     index_name: str = "pims_apps*",
-    term_name: str = "HospitalID.keyword",
+    term_name: str = "HospitalID",
     output_filename: str | None = "appointments_search_results.csv",
     overwrite: bool = False,
     config_obj: object | None = None,
@@ -170,9 +174,12 @@ def get_appointments(
     -------
         pd.DataFrame: A DataFrame containing pims_apps features for the
             specified patient. If no data is found, a DataFrame with only the
-            'client_idcode' is returned.
 
     """
+    print(
+        f"DEBUG get_appointments CALLED: client={current_pat_client_id_code}, date_range={target_date_range}",
+    )
+
     if config_obj is None:
         msg = "config_obj cannot be None. Please provide a valid configuration."
         raise ValueError(
@@ -187,6 +194,17 @@ def get_appointments(
     )
 
     appointments_time_field = config_obj.appointments_time_field
+
+    print(
+        f"DEBUG get_appointments: batch_mode={batch_mode}, pat_batch.empty={pat_batch.empty}",
+    )
+    if not pat_batch.empty:
+        print(
+            f"DEBUG get_appointments: pat_batch.shape={pat_batch.shape}, columns={list(pat_batch.columns)}",
+        )
+        print(
+            f"DEBUG appointments search: {start_year}-{start_month}-{start_day} to {end_year}-{end_month}-{end_day}, time_field={appointments_time_field}",
+        )
 
     if pat_batch.empty:
         if batch_mode and cohort_searcher_with_terms_and_search is not None:
@@ -232,11 +250,20 @@ def get_appointments(
         )
 
     if "HospitalID" in current_pat_raw.columns:
+        _logger.debug(
+            f"Renaming HospitalID to client_idcode, shape before: {current_pat_raw.shape}",
+        )
         current_pat_raw = current_pat_raw.rename(
             columns={"HospitalID": "client_idcode"},
         )
 
     # Ensure client_idcode is present for grouping
+    # Drop any existing client_idcode first to avoid duplicates
+    client_code_cols = [c for c in current_pat_raw.columns if c == "client_idcode"]
+    if len(client_code_cols) > 1:
+        # Keep only the first occurrence, remove duplicates
+        current_pat_raw = current_pat_raw.loc[:, ~current_pat_raw.columns.duplicated()]
+
     if "client_idcode" not in current_pat_raw.columns:
         current_pat_raw["client_idcode"] = current_pat_client_id_code
 
@@ -248,36 +275,73 @@ def get_appointments(
 
     if not current_pat_raw.empty:
         # One-hot encode and sum up attendances per patient
-        consultant_features = (
-            pd.get_dummies(
-                current_pat_raw,
-                columns=["ConsultantCode"],
-                prefix="ConsultantCode",
-            )
-            .groupby("client_idcode")
-            .sum(numeric_only=True)
-            .reset_index()
+        consultant_features = pd.DataFrame(
+            {"client_idcode": [current_pat_client_id_code]},
         )
-        clinic_features = (
-            pd.get_dummies(
-                current_pat_raw,
-                columns=["ClinicCode"],
-                prefix="ClinicCode",
-            )
-            .groupby("client_idcode")
-            .sum(numeric_only=True)
-            .reset_index()
+        clinic_features = pd.DataFrame({"client_idcode": [current_pat_client_id_code]})
+        appointment_type_features = pd.DataFrame(
+            {"client_idcode": [current_pat_client_id_code]},
         )
-        appointment_type_features = (
-            pd.get_dummies(
-                current_pat_raw,
-                columns=["AppointmentType"],
-                prefix="AppointmentType",
+
+        if "ConsultantCode" in current_pat_raw.columns:
+            consultant_features = (
+                pd.get_dummies(
+                    current_pat_raw,
+                    columns=["ConsultantCode"],
+                    prefix="ConsultantCode",
+                )
+                .groupby("client_idcode")
+                .sum(numeric_only=True)
+                .reset_index()
             )
-            .groupby("client_idcode")
-            .sum(numeric_only=True)
-            .reset_index()
-        )
+            # Convert counts to binary (0 or 1) for presence/absence indicators
+            consultant_cols = [
+                c
+                for c in consultant_features.columns
+                if c.startswith("ConsultantCode_")
+            ]
+            for col in consultant_cols:
+                consultant_features[col] = (consultant_features[col] > 0).astype(int)
+
+        if "ClinicCode" in current_pat_raw.columns:
+            clinic_features = (
+                pd.get_dummies(
+                    current_pat_raw,
+                    columns=["ClinicCode"],
+                    prefix="ClinicCode",
+                )
+                .groupby("client_idcode")
+                .sum(numeric_only=True)
+                .reset_index()
+            )
+            # Convert counts to binary (0 or 1) for presence/absence indicators
+            clinic_cols = [
+                c for c in clinic_features.columns if c.startswith("ClinicCode_")
+            ]
+            for col in clinic_cols:
+                clinic_features[col] = (clinic_features[col] > 0).astype(int)
+
+        if "AppointmentType" in current_pat_raw.columns:
+            appointment_type_features = (
+                pd.get_dummies(
+                    current_pat_raw,
+                    columns=["AppointmentType"],
+                    prefix="AppointmentType",
+                )
+                .groupby("client_idcode")
+                .sum(numeric_only=True)
+                .reset_index()
+            )
+            # Convert counts to binary (0 or 1) for presence/absence indicators
+            type_cols = [
+                c
+                for c in appointment_type_features.columns
+                if c.startswith("AppointmentType_")
+            ]
+            for col in type_cols:
+                appointment_type_features[col] = (
+                    appointment_type_features[col] > 0
+                ).astype(int)
 
         # Merge all features
         features = consultant_features.merge(

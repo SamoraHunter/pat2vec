@@ -3,7 +3,10 @@ from datetime import datetime, timedelta
 
 from pat2vec.pat2vec_get_methods.get_method_covid import get_covid
 from pat2vec.util.config_pat2vec import config_class
-from pat2vec.util.get_dummy_data_cohort_searcher import generate_covid_data
+from pat2vec.util.get_dummy_data_cohort_searcher import (
+    cohort_searcher_with_terms_and_search_dummy,
+    generate_covid_data,
+)
 from pat2vec.util.helper_functions import (
     get_all_features,
     get_df_from_db,
@@ -95,6 +98,7 @@ class TestCOVIDIntegration(unittest.TestCase):
             self.target_date_range_inclusive,
             db_raw_covid,
             config_obj=self.config,
+            cohort_searcher_with_terms_and_search=cohort_searcher_with_terms_and_search_dummy,
         )
         self.assertFalse(
             features_inclusive.empty,
@@ -119,6 +123,7 @@ class TestCOVIDIntegration(unittest.TestCase):
             self.target_date_range_exclusive,
             db_raw_covid,
             config_obj=self.config,
+            cohort_searcher_with_terms_and_search=cohort_searcher_with_terms_and_search_dummy,
         )
 
         # If no rows match the temporal filter, numeric features should be absent, zero, or NaN

@@ -151,8 +151,10 @@ class TestEpicImagingReportsAnnotationsGet:
             annot_filter_options={},
             shuffle_pat_list=False,
             storage_backend="database",
+            overwrite_stored_pat_docs=True,
             db_connection_string=db_connection_string,
             all_patient_list=cls.patient_ids,
+            store_pat_batch_docs=True,
         )
 
         cls.pat2vec_obj = main(

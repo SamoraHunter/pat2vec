@@ -2,9 +2,9 @@ from __future__ import annotations
 
 import logging
 from typing import Any
+from zoneinfo import ZoneInfo
 
 from dateutil.relativedelta import relativedelta
-from zoneinfo import ZoneInfo
 
 _logger = logging.getLogger(__name__)
 

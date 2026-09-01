@@ -145,7 +145,7 @@ class TestEpicOrdersAnnotationsIntegration(unittest.TestCase):
             self.config,
             mock_tqdm,
             text_column="document_Content",
-            time_column="document_CreatedWhen",
+            time_column="updatetime",  # Data from DB has been renamed to updatetime
             guid_column="id",
         )
         # Explicitly persist annotations to the DB

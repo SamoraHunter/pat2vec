@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 def search_bloods_data(
     cohort_searcher_with_terms_and_search=None,
     client_id_codes=None,
-    client_idcode_name="client_idcode.keyword",
+    client_idcode_name="client_idcode",
     bloods_time_field="basicobs_entered",
     fields_override: list[str] | None = None,
     start_year: int | str = 1995,

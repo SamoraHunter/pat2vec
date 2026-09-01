@@ -104,6 +104,7 @@ class TestBloodsGet:
                 global_start_month=int(config_populate.global_start_month),
                 global_end_year=int(config_populate.global_end_year),
                 global_end_month=int(config_populate.global_end_month),
+                test_name="Blood Glucose",
             )
             bloods_dfs.append(df)
 

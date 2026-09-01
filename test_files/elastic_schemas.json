@@ -22,7 +22,7 @@
         "mappings": {
             "properties": {
                 "basicobs_entered": {"type": "date"},
-                "basicobs_guid": {"type": "keyword"},
+                "observation_guid": {"type": "keyword"},
                 "basicobs_itemname_analysed": {
                     "type": "text",
                     "fields": {"keyword": {"type": "keyword", "ignore_above": 256}}},

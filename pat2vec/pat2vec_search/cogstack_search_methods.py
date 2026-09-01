@@ -290,6 +290,15 @@ class CogStack:
             df = pd.DataFrame(temp_results, columns=df_headers)
         else:
             df = pd.DataFrame(temp_results)
+
+        _logger.info(
+            f"cogstack2df: retrieved {len(temp_results)} docs from index={index}",
+        )
+        if len(temp_results) > 0 and "client_idcode" in temp_results[0]:
+            _logger.info(
+                f"cogstack2df sample client_idcode values: {[r['client_idcode'] for r in temp_results[:3]]}",
+            )
+
         return df
 
     def get_index_fields(self, index_name: str) -> list[str]:
@@ -541,6 +550,12 @@ def cohort_searcher_with_terms_and_search(
         },
         "_source": fields_list,
     }
+    _logger.info(f"cohsearch: index={index_name}, query={query['query']['bool']}, ")
+
+    # Log the actual search terms being used
+    if entered_list:
+        _logger.info(f"Querying for term '{term_name}' with values {entered_list}")
+
     return cs.cogstack2df(query=query, index=index_name, column_headers=fields_list)
 
 

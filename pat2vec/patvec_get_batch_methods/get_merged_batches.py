@@ -11,6 +11,16 @@ _logger = logging.getLogger(__name__)
 import pandas as pd
 
 from pat2vec.util.clinical_note_splitter import split_and_append_chunks
+from pat2vec.util.elasticsearch_index_config import (
+    APPOINTMENT_FIELDS,
+    BLOODS_FIELDS,
+    DEMOGRAPHICS_FIELDS,
+    DRUG_FIELDS,
+    EPR_DOCS_FIELDS,
+    OBS_FIELDS,
+    REPORTS_FIELDS,
+    TEXTUAL_OBS_FIELDS,
+)
 from pat2vec.util.filter_dataframe_by_timestamp import filter_dataframe_by_timestamp
 from pat2vec.util.filter_methods import (
     apply_bloods_data_type_filter,

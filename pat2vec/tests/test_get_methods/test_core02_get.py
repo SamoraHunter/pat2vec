@@ -233,11 +233,14 @@ class TestCore02Get:
 
         # Filter to only CORE_SpO2 feature columns (non-demo columns)
         # These contain numeric observation values with 'pct' suffix or descriptive terms
+        # Exclude demo features like age, gender, etc.
         feature_cols = [
             c
             for c in all_features.columns
             if c != "client_idcode"
-            and not any(c.startswith(prefix) for prefix in ["male", "dead", "census_"])
+            and not any(
+                c.startswith(prefix) for prefix in ["male", "dead", "census_", "age"]
+            )
         ]
 
         assert len(feature_cols) > 0, (

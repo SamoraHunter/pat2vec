@@ -7,7 +7,7 @@ _logger = logging.getLogger(__name__)
 
 
 import pandas as pd
-from sqlalchemy import text
+from sqlalchemy import inspect, text
 
 from pat2vec.util.helper_functions import get_df_from_db
 from pat2vec.util.methods_annotation_get_pat_document_annotation_batch import (
@@ -155,13 +155,15 @@ def get_pat_batch_mct_docs_annotations(
                             )
 
                 if config_obj.overwrite_stored_pat_docs:
-                    del_query = text(
-                        f'DELETE FROM "{db_table if engine.name == "sqlite" else f"{schema_name}.{table_name}"}" WHERE client_idcode = :pat_id',
-                    )
-                    connection.execute(
-                        del_query,
-                        {"pat_id": current_pat_client_id_code},
-                    )
+                    inspector = inspect(connection)
+                    if inspector.has_table(db_table, schema=db_schema):
+                        del_query = text(
+                            f'DELETE FROM "{db_table if engine.name == "sqlite" else f"{schema_name}.{table_name}" + ""}" WHERE client_idcode = :pat_id',
+                        )
+                        connection.execute(
+                            del_query,
+                            {"pat_id": current_pat_client_id_code},
+                        )
                 batch_to_save.to_sql(
                     name=db_table,
                     con=connection,

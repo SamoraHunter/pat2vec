@@ -148,6 +148,15 @@ def search_epic_orders(
         print(f"Saving epic orders data to {output_filename}")
         results.to_csv(output_filename, index=False)
 
+    column_mapping = {
+        "document_CreatedWhen": "updatetime",
+        "document_UpdatedWhen": "updatetime",
+    }
+
+    for old_col, new_col in column_mapping.items():
+        if old_col in results.columns:
+            results = results.rename(columns={old_col: new_col})
+
     return results
 
 
@@ -198,28 +207,47 @@ def get_epic_orders(
     )
 
     id_field_name = "document_PatientDurableKey"
-    time_field = "document_UpdatedWhen"
+
+    # ES search time field; DB filtering uses updatetime (renamed from ES fields)
+    time_field_es = getattr(
+        config_obj,
+        "epic_orders_time_field",
+        "document_UpdatedWhen",
+    )
 
     if pat_batch.empty and batch_mode:
         return pd.DataFrame({"client_idcode": [current_pat_client_id_code]})
 
     if batch_mode:
+        # When data comes from database, timestamp columns are renamed to updatetime
+        # For direct DataFrame input (e.g., tests), rename ES-style timestamp columns
+        df_for_filter = pat_batch.copy()
+        if "document_CreatedWhen" in df_for_filter.columns:
+            df_for_filter = df_for_filter.rename(
+                columns={"document_CreatedWhen": "updatetime"},
+            )
+        elif "document_UpdatedWhen" in df_for_filter.columns:
+            df_for_filter = df_for_filter.rename(
+                columns={"document_UpdatedWhen": "updatetime"},
+            )
+
         current_pat_raw = filter_dataframe_by_timestamp(
-            pat_batch,
+            df_for_filter,
             start_year,
             start_month,
             end_year,
             end_month,
             start_day,
             end_day,
-            time_field,
+            "updatetime",
         )
     else:
+        # For ES search, use the configured time field
         current_pat_raw = search_epic_orders(
             cohort_searcher_with_terms_and_search=cohort_searcher_with_terms_and_search,
             patient_durable_keys=current_pat_client_id_code,
             id_field_name=id_field_name,
-            time_field=time_field,
+            time_field=time_field_es,
             output_filename=None,
             config_obj=config_obj,
             t=t,
