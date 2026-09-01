@@ -2197,10 +2197,14 @@ class main:
             )
             return
 
-        if self.config_obj.verbosity > 4:
+        if self.config_obj.verbosity >= 5:
             _logger.debug(f"Processing patient {i} at {self.all_patient_list[i]}...")
 
         current_pat_client_id_code = str(self.all_patient_list[i])
+
+        print(
+            f"DEBUG pat_maker: Processing patient {current_pat_client_id_code}, batch_mode={self.config_obj.batch_mode}",
+        )
 
         # Check if patient has already been processed
         if current_pat_client_id_code in self.stripped_list_start:
@@ -2248,8 +2252,21 @@ class main:
             f"About to call _get_patient_data_batches for {current_pat_client_id_code}",
         )
         batches = self._get_patient_data_batches(current_pat_client_id_code)
+        print(
+            f"DEBUG _get_patient_data_batches: keys={list(batches.keys())}, batch_appointments shape={batches.get('batch_appointments', pd.DataFrame()).shape}",
+        )
+        if "batch_appointments" in batches and not batches["batch_appointments"].empty:
+            print(
+                f"DEBUG batch_appointments columns: {list(batches['batch_appointments'].columns)}",
+            )
         _logger.info(
             f"_get_patient_data_batches returned: keys={list(batches.keys())}, batch_bmi shape={batches.get('batch_bmi', pd.DataFrame()).shape}, batch_vte shape={batches.get('batch_vte', pd.DataFrame()).shape}",
+        )
+        print(
+            f"DEBUG batch_appointments shape={batches.get('batch_appointments', pd.DataFrame()).shape}",
+        )
+        print(
+            f"DEBUG batch_bloods shape={batches.get('batch_bloods', pd.DataFrame()).shape}",
         )
         # Batch summary
         _logger.info(
