@@ -14,7 +14,9 @@ from pat2vec.tests.test_get_methods.temp_setup import (
 )
 from pat2vec.util.config_pat2vec import config_class
 from pat2vec.util.get_dummy_data_cohort_searcher import populate_elastic_with_dummy_data
+from pat2vec.util.get_dummy_data_cohort_searcher import generate_epr_documents_data
 from pat2vec.util.helper_functions import get_all_features
+from pat2vec.util.helper_functions import save_raw_patient_batch
 from pat2vec.util.logger_setup import setup_logger
 from pat2vec.util.post_processing_build_methods import (
     build_merged_epr_mct_annot_df,
@@ -102,7 +104,84 @@ class TestAnnotationsGet:
 
         db_connection_string = f"sqlite:///{cls.DB_PATH}"
 
+        # Set the same db_connection_string on config_populate so EPR docs can be saved during population
+        config_populate.db_connection_string = db_connection_string
+        from pat2vec.util.get_dummy_data_cohort_searcher import (
+            cohort_searcher_with_terms_and_search_dummy,
+        )
+
+        config_populate.cohort_searcher_with_terms_and_search = (
+            cohort_searcher_with_terms_and_search_dummy
+        )
+
+        # Recreate the engine since db_connection_string was set after initialization
+        if not config_populate.db_engine or "sqlite:///:memory:" in str(
+            config_populate.db_engine.url
+        ):
+            from sqlalchemy import create_engine
+            from sqlalchemy.pool import StaticPool
+
+            config_populate.db_engine = create_engine(
+                db_connection_string,
+                connect_args={"check_same_thread": False},
+                poolclass=StaticPool if "sqlite" in db_connection_string else None,
+            )
+
         cls.logger = setup_logger()
+        # Generate and save EPR documents data to DB for annotation processing
+        epr_docs_df = generate_epr_documents_data(
+            num_rows=random.randint(1, 5),
+            entered_list=cls.patient_ids,
+            global_start_year=int(config_populate.global_start_year),
+            global_start_month=int(config_populate.global_start_month),
+            global_end_year=int(config_populate.global_end_year),
+            global_end_month=int(config_populate.global_end_month),
+            global_end_day=int(config_populate.global_end_day),
+        )
+        epr_docs_df = epr_docs_df.where(pd.notnull(epr_docs_df), None)
+        for patient_id in cls.patient_ids:
+            # Use cls.config_obj which has the correct db_connection_string for DB operations
+            save_raw_patient_batch(
+                epr_docs_df[epr_docs_df["client_idcode"] == patient_id],
+                patient_id,
+                "raw_epr_docs",
+                config_populate,
+            )
+
+        # Generate and save appointments data for appointments feature extraction
+        from pat2vec.util.get_dummy_data_cohort_searcher import (
+            generate_appointments_data,
+        )
+
+        app_df_list = []
+        for pid in cls.patient_ids:
+            df = generate_appointments_data(
+                num_rows=3,
+                entered_list=[pid],
+                global_start_year=int(config_populate.global_start_year),
+                global_start_month=int(config_populate.global_start_month),
+                global_end_year=int(config_populate.global_end_year),
+                global_end_month=int(config_populate.global_end_month),
+            )
+            app_df_list.append(df)
+        app_df = (
+            pd.concat(app_df_list, ignore_index=True) if app_df_list else pd.DataFrame()
+        )
+        app_df = app_df.where(pd.notnull(app_df), None)
+        for patient_id in cls.patient_ids:
+            df_filter = (
+                app_df[app_df["HospitalID"] == patient_id]
+                if not app_df.empty
+                else pd.DataFrame()
+            )
+            # Use cls.config_obj which has the correct db_connection_string for DB operations
+            save_raw_patient_batch(
+                df_filter,
+                patient_id,
+                "raw_appointments",
+                config_populate,
+                id_column="HospitalID",
+            )
 
         # Create main config
         cls.config_obj = config_class(
