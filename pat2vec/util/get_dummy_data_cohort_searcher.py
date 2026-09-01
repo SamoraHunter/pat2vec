@@ -745,6 +745,7 @@ def generate_observations_Reports_text_data(
     if fields_list is None:
         fields_list = [
             "basicobs_guid",
+            "observation_guid",
             "client_idcode",
             "basicobs_itemname_analysed",
             "basicobs_value_analysed",
@@ -762,7 +763,10 @@ def generate_observations_Reports_text_data(
         current_pat_client_id_code = entered_list[i]
 
         data = {
-            "basicobs_guid": [faker.uuid4() for _ in range(num_rows)],
+            "observation_guid": [faker.uuid4() for _ in range(num_rows)],
+            "basicobs_guid": [
+                faker.uuid4() for _ in range(num_rows)
+            ],  # Alias for backward compatibility
             "client_idcode": [current_pat_client_id_code for _ in range(num_rows)],
             "basicobs_itemname_analysed": "Report",
             "basicobs_value_analysed": "",
@@ -1084,6 +1088,7 @@ def generate_basic_observations_data(
     global_end_month: int = 12,
     global_end_day: int = 31,
     fields_list: list[str] | None = None,
+    test_name: str | None = None,
     base_date: datetime | None = None,
 ) -> pd.DataFrame:
     """Generates dummy data for the 'basic_observations' index.
@@ -1127,7 +1132,7 @@ def generate_basic_observations_data(
             "order_entered",
             "clientvisit_visitidcode",
             "updatetime",
-            "basicobs_guid",
+            "observation_guid",
         ]
 
     # logger.debug("generate_basic_observations_data")
@@ -1190,7 +1195,7 @@ def generate_basic_observations_data(
                 for _ in range(num_rows)
             ]
         data = {
-            "basicobs_guid": [faker.uuid4() for _ in range(num_rows)],
+            "observation_guid": [faker.uuid4() for _ in range(num_rows)],
             "client_idcode": [current_pat_client_id_code] * num_rows,
             "basicobs_itemname_analysed": [
                 faker.random_element(blood_test_names) for _ in range(num_rows)
@@ -1276,6 +1281,7 @@ def generate_basic_observations_textual_obs_data(
             "_id",
             "_index",
             "_score",
+            "observation_guid",
             "basicobs_guid",
             "updatetime",
             "textualObs",
@@ -1310,7 +1316,10 @@ def generate_basic_observations_textual_obs_data(
             "_index": [None for i in range(num_rows)],
             "_score": [None for i in range(num_rows)],
             "clientvisit_visitidcode": [str(uuid.uuid4()) for _ in range(num_rows)],
-            "basicobs_guid": [faker.uuid4() for _ in range(num_rows)],
+            "observation_guid": [faker.uuid4() for _ in range(num_rows)],
+            "basicobs_guid": [
+                faker.uuid4() for _ in range(num_rows)
+            ],  # Alias for backward compatibility
             "updatetime": [
                 create_random_date_from_globals(
                     global_start_year,
@@ -3175,7 +3184,7 @@ def generate_covid_observations_data(
 
     for client_id_code in entered_list:
         data = {
-            "basicobs_guid": [faker.uuid4() for _ in range(num_rows)],
+            "observation_guid": [faker.uuid4() for _ in range(num_rows)],
             "client_idcode": [client_id_code for _ in range(num_rows)],
             "basicobs_itemname_analysed": [SEARCH_TERM_PLAIN for _ in range(num_rows)],
             "basicobs_value_analysed": [
