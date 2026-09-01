@@ -26,8 +26,9 @@ class MockTransformers:
         raise RuntimeError(msg)
 
 
-# Store original function reference for cleanup
+# Store original function references for cleanup
 _original_generate_epr_documents_data = None
+_original_gds_generate_epr_documents_data = None
 
 
 def _make_use_gpt_default_false(func):
@@ -109,15 +110,21 @@ def pytest_configure(config):
             del sys.modules[name]
 
     # Monkey-patch generate_epr_documents_data to default to use_GPT=False in tests
-    global _original_generate_epr_documents_data
+    global _original_generate_epr_documents_data, _original_gds_generate_epr_documents_data
 
+    from pat2vec.util import get_dummy_data_cohort_searcher as gds
     from pat2vec.util.dummy_data_generation import epr_documents as ed
 
+    # Patch the function in dummy_data_generation.epr_documents (for imports from there)
     _original_generate_epr_documents_data = ed.generate_epr_documents_data
-
-    # Replace the function with our wrapper that has False default for use_GPT
     ed.generate_epr_documents_data = _make_use_gpt_default_false(
         ed.generate_epr_documents_data,
+    )
+
+    # Also patch get_dummy_data_cohort_searcher which has its own copy
+    _original_gds_generate_epr_documents_data = gds.generate_epr_documents_data
+    gds.generate_epr_documents_data = _make_use_gpt_default_false(
+        gds.generate_epr_documents_data,
     )
 
 
@@ -134,8 +141,8 @@ def pytest_unconfigure(config):
         except ImportError:
             pass
 
-    # Restore original function
-    global _original_generate_epr_documents_data
+    # Restore original function in dummy_data_generation.epr_documents
+    global _original_generate_epr_documents_data, _original_gds_generate_epr_documents_data
     if (
         _original_generate_epr_documents_data
         and "pat2vec.util.dummy_data_generation.epr_documents" in sys.modules
@@ -144,6 +151,18 @@ def pytest_unconfigure(config):
             from pat2vec.util.dummy_data_generation import epr_documents as ed
 
             ed.generate_epr_documents_data = _original_generate_epr_documents_data
+        except (ImportError, AttributeError):
+            pass
+
+    # Restore original function in get_dummy_data_cohort_searcher
+    if (
+        _original_gds_generate_epr_documents_data is not None
+        and "pat2vec.util.get_dummy_data_cohort_searcher" in sys.modules
+    ):
+        try:
+            from pat2vec.util import get_dummy_data_cohort_searcher as gds
+
+            gds.generate_epr_documents_data = _original_gds_generate_epr_documents_data
         except (ImportError, AttributeError):
             pass
 
