@@ -15,7 +15,13 @@ from pat2vec.pat2vec_search.cogstack_search_methods import (
 from pat2vec.util.config_pat2vec import config_class
 from pat2vec.util.elasticsearch_methods import ingest_data_to_elasticsearch
 from pat2vec.util.get_dummy_data_cohort_searcher import (
+    generate_basic_observations_data,
+    generate_bmi_data,
+    generate_diagnostic_orders_data,
+    generate_drug_orders_data,
+    generate_epr_documents_data,
     generate_epr_documents_personal_data,
+    generate_news_data,
     populate_elastic_with_dummy_data,
 )
 from pat2vec.util.helper_functions import get_all_features
@@ -85,6 +91,118 @@ class TestDemoGet:
             "order",
             "pims_apps",
         ]
+
+        # Ensure data is ingested using the SAME client (cls.cs) that will be used in tests
+        df_epr = generate_epr_documents_data(
+            num_rows=random.randint(1, 5),
+            entered_list=cls.patient_ids,
+            global_start_year=int(config_populate.global_start_year),
+            global_start_month=int(config_populate.global_start_month),
+            global_end_year=int(config_populate.global_end_year),
+            global_end_month=int(config_populate.global_end_month),
+            use_GPT=False,
+        )
+        df_epr_personal = generate_epr_documents_personal_data(
+            num_rows=1,
+            entered_list=cls.patient_ids,
+            global_start_year=int(config_populate.global_start_year),
+            global_start_month=int(config_populate.global_start_month),
+            global_end_year=int(config_populate.global_end_year),
+            global_end_month=int(config_populate.global_end_month),
+        )
+        df_epr_merged = pd.merge(
+            df_epr,
+            df_epr_personal.drop(columns=["updatetime"]),
+            on="client_idcode",
+            how="left",
+        )
+        df_epr_merged = df_epr_merged.where(pd.notnull(df_epr_merged), None)
+        ingest_data_to_elasticsearch(
+            df_epr_merged, "epr_documents", es_client=cls.cs.elastic
+        )
+
+        df_basic_obs = generate_basic_observations_data(
+            num_rows=random.randint(1, 10),
+            entered_list=cls.patient_ids,
+            global_start_year=int(config_populate.global_start_year),
+            global_start_month=int(config_populate.global_start_month),
+            global_end_year=int(config_populate.global_end_year),
+            global_end_month=int(config_populate.global_end_month),
+        )
+        df_basic_all = df_basic_obs.copy()
+        for col in df_basic_all.select_dtypes(include=[np.number]).columns:
+            df_basic_all[col] = df_basic_all[col].astype(object)
+        df_basic_all = df_basic_all.where(pd.notnull(df_basic_all), None)
+        ingest_data_to_elasticsearch(
+            df_basic_all, "basic_observations", es_client=cls.cs.elastic
+        )
+
+        obs_dfs = []
+        try:
+            obs_dfs.append(
+                generate_bmi_data(
+                    num_rows=random.randint(1, 5),
+                    entered_list=cls.patient_ids,
+                    global_start_year=int(config_populate.global_start_year),
+                    global_start_month=int(config_populate.global_start_month),
+                    global_end_year=int(config_populate.global_end_year),
+                    global_end_month=int(config_populate.global_end_month),
+                )
+            )
+        except Exception:
+            pass
+        try:
+            obs_dfs.append(
+                generate_news_data(
+                    num_rows=random.randint(1, 5),
+                    entered_list=cls.patient_ids,
+                    global_start_year=int(config_populate.global_start_year),
+                    global_start_month=int(config_populate.global_start_month),
+                    global_end_year=int(config_populate.global_end_year),
+                    global_end_month=int(config_populate.global_end_month),
+                )
+            )
+        except Exception:
+            pass
+        if obs_dfs:
+            df_obs = pd.concat(obs_dfs, ignore_index=True)
+            df_obs = df_obs.where(pd.notnull(df_obs), None)
+            ingest_data_to_elasticsearch(
+                df_obs, "observations", es_client=cls.cs.elastic
+            )
+
+        order_dfs = []
+        try:
+            order_dfs.append(
+                generate_drug_orders_data(
+                    num_rows=random.randint(1, 5),
+                    entered_list=cls.patient_ids,
+                    global_start_year=int(config_populate.global_start_year),
+                    global_start_month=int(config_populate.global_start_month),
+                    global_end_year=int(config_populate.global_end_year),
+                    global_end_month=int(config_populate.global_end_month),
+                )
+            )
+        except Exception:
+            pass
+        try:
+            order_dfs.append(
+                generate_diagnostic_orders_data(
+                    num_rows=random.randint(1, 5),
+                    entered_list=cls.patient_ids,
+                    global_start_year=int(config_populate.global_start_year),
+                    global_start_month=int(config_populate.global_start_month),
+                    global_end_year=int(config_populate.global_end_year),
+                    global_end_month=int(config_populate.global_end_month),
+                )
+            )
+        except Exception:
+            pass
+        if order_dfs:
+            df_orders = pd.concat(order_dfs, ignore_index=True)
+            df_orders = df_orders.where(pd.notnull(df_orders), None)
+            ingest_data_to_elasticsearch(df_orders, "order", es_client=cls.cs.elastic)
+
         cls.cs.elastic.indices.refresh(index=indices, ignore_unavailable=True)
 
         demo_dfs = []
@@ -133,6 +251,7 @@ class TestDemoGet:
             storage_backend="database",
             db_connection_string=db_connection_string,
             all_patient_list=cls.patient_ids,
+            store_pat_batch_docs=True,
         )
 
         cls.pat2vec_obj = main(
