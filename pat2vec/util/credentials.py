@@ -1,9 +1,7 @@
-from typing import List
-
 # CogStack login details
 # Any questions on what these details are please contact your local CogStack administrator.
 
-hosts: List[str] = [  # Dummy Elasticsearch URL
+hosts: list[str] = [  # Dummy Elasticsearch URL
     "https://localhost:9200",
 ]  # This is a list of your CogStack ElasticSearch instances.
 

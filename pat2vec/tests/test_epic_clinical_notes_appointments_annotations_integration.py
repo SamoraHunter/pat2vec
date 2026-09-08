@@ -26,8 +26,7 @@ from pat2vec.util.methods_get_medcat import get_cat
 
 
 class TestEpicClinicalNotesAppointmentsAnnotationsIntegration(unittest.TestCase):
-    """
-    Comprehensive integration test for Epic Clinical Notes Appointments Annotations lifecycle:
+    """Comprehensive integration test for Epic Clinical Notes Appointments Annotations lifecycle:
     1. Synthetic data generation (raw Epic Clinical Notes Appointments).
     2. Ingestion of raw data into DB.
     3. Annotation processing and storage of annotations into DB.
@@ -72,7 +71,8 @@ class TestEpicClinicalNotesAppointmentsAnnotationsIntegration(unittest.TestCase)
             return_value=MagicMock(),
         ).start()
         self.mock_get_cat = patch(
-            f"{__name__}.get_cat", return_value=self.mock_cat
+            f"{__name__}.get_cat",
+            return_value=self.mock_cat,
         ).start()
         self.addCleanup(patch.stopall)
 
@@ -81,14 +81,15 @@ class TestEpicClinicalNotesAppointmentsAnnotationsIntegration(unittest.TestCase)
 
     @patch("pat2vec.util.get_dummy_data_cohort_searcher.pipeline")
     def test_epic_clinical_notes_appointments_annotations_full_integration_lifecycle(
-        self, mock_pipeline
+        self,
+        mock_pipeline,
     ):
         # 0. Mock transformer pipeline to avoid external network calls
         mock_gen = MagicMock()
         mock_gen.return_value = [
             {
-                "generated_text": "Sample clinical appointment note text mentioning Fever."
-            }
+                "generated_text": "Sample clinical appointment note text mentioning Fever.",
+            },
         ]
         mock_pipeline.return_value = mock_gen
 
@@ -101,8 +102,10 @@ class TestEpicClinicalNotesAppointmentsAnnotationsIntegration(unittest.TestCase)
             global_end_year=self.base_date.year,
             global_end_month=self.base_date.month,
         )
-        # Ensure the generated data falls within the inclusive date range
-        raw_notes_app_df["document_CreatedWhen"] = [
+        # Ensure the generated data falls within the inclusive date range.
+        # Note: save_raw_patient_batch renames both document_UpdatedWhen and
+        # document_CreatedWhen to 'updatetime', keeping UpdatedWhen's value.
+        raw_notes_app_df["document_UpdatedWhen"] = [
             (self.base_date + timedelta(days=i - 2)).strftime("%Y-%m-%dT%H:%M:%S")
             for i in range(len(raw_notes_app_df))
         ]
@@ -138,7 +141,11 @@ class TestEpicClinicalNotesAppointmentsAnnotationsIntegration(unittest.TestCase)
             text_column="document_Content",
         )
         annotated_df = multi_annots_to_df_epic_clinical_notes_appointments(
-            self.test_patient_id, db_raw_notes_app, multi_annots, self.config, mock_tqdm
+            self.test_patient_id,
+            db_raw_notes_app,
+            multi_annots,
+            self.config,
+            mock_tqdm,
         )
         # For SQLite, the schema name is prepended to the table name
         annot_table = "annotations_ann_epic_clinical_notes_appointments"

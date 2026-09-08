@@ -107,8 +107,8 @@ class config_class:
         individual_patient_window_controls_method: str = "full",  # full, random
         dropna_doc_timestamps: bool = True,
         time_window_interval_delta: relativedelta = relativedelta(
-            days=31,
-        ),  # This must be 1 by default otherwise testing is too slow.
+            years=31,
+        ),
         feature_engineering_arg_dict: dict[str, Any] | None = None,
         split_clinical_notes: bool = True,
         lookback: bool = True,

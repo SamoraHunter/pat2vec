@@ -2,9 +2,9 @@ from __future__ import annotations
 
 import logging
 from typing import Any
+from zoneinfo import ZoneInfo
 
 from dateutil.relativedelta import relativedelta
-from zoneinfo import ZoneInfo
 
 _logger = logging.getLogger(__name__)
 
@@ -100,13 +100,13 @@ def generate_date_list(
     )
 
     # Use logging instead of print
-    if getattr(config_obj, "verbosity", 0) >= 1:
+    if getattr(config_obj, "verbosity", 0) >= 6:
         if final_start_date > chronological_start:
-            _logger.info(
+            _logger.debug(
                 f"Adjusted start date from {chronological_start.date()} to {final_start_date.date()} due to global limit.",
             )
         if final_end_date < chronological_end:
-            _logger.info(
+            _logger.debug(
                 f"Adjusted end date from {chronological_end.date()} to {final_end_date.date()} due to global limit.",
             )
 
@@ -157,12 +157,12 @@ def generate_date_list(
             f"Maximum iterations ({max_iterations}) reached, stopping date generation",
         )
 
-    # Log the results for debugging
-    if getattr(config_obj, "verbosity", 0) >= 1:
-        _logger.info(
+    # Log the results for debugging at high verbosity only
+    if getattr(config_obj, "verbosity", 0) >= 6:
+        _logger.debug(
             f"Generated {len(date_list)} dates from {final_start_date.date()} to {final_end_date.date()}",
         )
-        if date_list:
-            _logger.info(f"First date: {date_list[0]}, Last date: {date_list[-1]}")
+        if date_list and config_obj.verbosity >= 7:
+            _logger.debug(f"First date: {date_list[0]}, Last date: {date_list[-1]}")
 
     return date_list

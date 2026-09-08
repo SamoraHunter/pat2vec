@@ -18,8 +18,7 @@ from pat2vec.util.helper_functions import (
 
 
 class TestEpicClinicalNotesAppointmentsIntegration(unittest.TestCase):
-    """
-    Comprehensive integration test for Epic Clinical Notes Appointments lifecycle:
+    """Comprehensive integration test for Epic Clinical Notes Appointments lifecycle:
     1. Synthetic data generation (raw Epic Clinical Note Appointments).
     2. Ingestion of raw data into DB.
     3. Feature vectorization using the 'get' method.
@@ -66,12 +65,13 @@ class TestEpicClinicalNotesAppointmentsIntegration(unittest.TestCase):
 
     @patch("pat2vec.util.get_dummy_data_cohort_searcher.pipeline")
     def test_epic_clinical_notes_appointments_full_integration_lifecycle(
-        self, mock_pipeline
+        self,
+        mock_pipeline,
     ):
         # 0. Mock transformer pipeline to avoid external network calls and SSLErrors
         mock_gen = MagicMock()
         mock_gen.return_value = [
-            {"generated_text": "Sample clinical appointment note."}
+            {"generated_text": "Sample clinical appointment note."},
         ]
         mock_pipeline.return_value = mock_gen
 
@@ -86,8 +86,9 @@ class TestEpicClinicalNotesAppointmentsIntegration(unittest.TestCase):
         )
 
         # Ensure the generated data falls within the inclusive date range.
-        # This source typically uses 'document_CreatedWhen' for temporal filtering.
-        time_field = "document_CreatedWhen"
+        # Note: save_raw_patient_batch renames both document_UpdatedWhen and
+        # document_CreatedWhen to 'updatetime', keeping UpdatedWhen's value (as it's processed second).
+        time_field = "document_UpdatedWhen"
         raw_notes_app_df[time_field] = [
             (self.base_date + timedelta(days=i - 2)).strftime("%Y-%m-%dT%H:%M:%S")
             for i in range(len(raw_notes_app_df))

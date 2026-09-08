@@ -547,11 +547,12 @@ def save_raw_patient_batch(
             if "document_CreatedWhen" in df.columns:
                 df = df.rename(columns={"document_CreatedWhen": "updatetime"})
             # Remove any remaining duplicate updatetime columns by index
+            # pop(0) removes the FIRST element, keeping the latter (UpdatedWhen)
             updatetime_idx = [
                 i for i, col in enumerate(df.columns) if col == "updatetime"
             ]
             while len(updatetime_idx) > 1:
-                drop_idx = updatetime_idx.pop()
+                drop_idx = updatetime_idx.pop(0)
                 df = df.iloc[:, [i for i in range(len(df.columns)) if i != drop_idx]]
 
             # Convert any list/dict/tuple columns to JSON strings for database compatibility

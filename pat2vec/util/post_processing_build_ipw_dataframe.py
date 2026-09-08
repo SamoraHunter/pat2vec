@@ -1,6 +1,5 @@
 import logging
 import os
-from pathlib import Path
 from typing import Any
 
 import pandas as pd
@@ -152,10 +151,7 @@ def build_ipw_dataframe(
             except Exception as e:
                 logger.error(f"Could not fetch patient list from database: {e}")
         else:  # file-based
-            pat_list = [
-                entry.name
-                for entry in Path(config_obj.pre_document_batch_path).iterdir()
-            ]
+            pat_list = os.listdir(config_obj.pre_document_batch_path)
             pat_list_stripped = [
                 os.path.splitext(file)[0] for file in pat_list if file.endswith(".csv")
             ]

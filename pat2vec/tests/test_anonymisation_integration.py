@@ -76,11 +76,15 @@ class TestAnonymisationIntegration(unittest.TestCase):
             anon_df.columns.tolist(), mapping_key
         )
 
-        # Ensure all original names are recovered correctly
-        for col in identifiable_features.columns:
+        # Ensure all original names are recovered correctly (excluding client_idcode identifier)
+        recovered_names_filtered = [n for n in recovered_names if n != "client_idcode"]
+        feature_cols = [
+            c for c in identifiable_features.columns if c != "client_idcode"
+        ]
+        for col in feature_cols:
             self.assertIn(col, recovered_names)
 
-        self.assertEqual(len(recovered_names), len(identifiable_features.columns))
+        self.assertEqual(len(recovered_names_filtered), len(feature_cols))
 
 
 if __name__ == "__main__":

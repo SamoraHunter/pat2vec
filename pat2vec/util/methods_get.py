@@ -78,7 +78,7 @@ def list_dir_wrapper(path: str, config_obj: Any = None) -> list[str]:
 
         return res
     if os.path.exists(path):
-        return [entry.name for entry in Path(path).iterdir()]
+        return os.listdir(path)
     return []
 
 

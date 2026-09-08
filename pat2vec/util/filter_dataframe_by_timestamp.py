@@ -41,6 +41,9 @@ def filter_dataframe_by_timestamp(
         within the specified date range.
 
     """
+    if len(df) == 0:
+        return df.copy()
+
     # Work on a copy to avoid modifying the original DataFrame
     df_copy = df.copy()
 

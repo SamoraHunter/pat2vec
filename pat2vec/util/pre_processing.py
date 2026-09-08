@@ -6,7 +6,6 @@ import logging
 import os
 import random
 from datetime import datetime
-from pathlib import Path
 from typing import Any
 
 import numpy as np
@@ -582,9 +581,9 @@ def get_all_patient_list(config_obj: Any) -> list[str]:
             f"Scanning directory for patient files: {config_obj.pre_document_batch_path}",
         )
         patient_ids = []
-        for entry in Path(config_obj.pre_document_batch_path).iterdir():
-            if entry.is_file() and entry.name.endswith(".csv"):
-                patient_ids.append(entry.stem)
+        for entry in os.listdir(config_obj.pre_document_batch_path):
+            if entry.endswith(".csv"):
+                patient_ids.append(os.path.splitext(entry)[0])
         return patient_ids
 
     logger.warning(

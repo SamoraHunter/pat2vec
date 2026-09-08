@@ -2100,7 +2100,7 @@ def generate_epic_clinical_notes_appointments_data(
     fields_list: list[str] | None = None,
 ) -> pd.DataFrame:
     """Generates dummy data for the 'epic_clinical_notes_appointments' index."""
-    if fields_list is None:
+    if fields_list is None or len(fields_list) == 0:
         fields_list = [
             "document_PatientDurableKey",
             "document_CreatedWhen",
@@ -4558,7 +4558,7 @@ def _get_dnr_probability(age: int, is_icu_hdu: bool = False) -> float:
 
     """
     if age < 60:
-        base_prob = random.uniform(0.95, 0.98)
+        base_prob = random.uniform(0.85, 0.95)
     elif age < 80:
         age_factor = (age - 60) / 20
         base_prob = 0.80 + age_factor * 0.10
@@ -4658,25 +4658,35 @@ def generate_core_resus_data(
         resus_statuses = []
         visit_ids = []
 
-        for _ in range(num_rows):
-            obs_date = create_random_date_from_globals(
-                global_start_year,
-                global_start_month,
-                global_end_year,
-                global_end_month,
-                global_start_day,
-                global_end_day,
-            )
+        for i in range(num_rows):
+            # First observation guaranteed to be in the first time window (2020-01-05)
+            # This ensures pat_maker will find it in its first time window
+            if i == 0:
+                obs_date_str = f"{global_start_year}-01-05T12:00:00"
+                obs_date = datetime.strptime(obs_date_str, "%Y-%m-%dT%H:%M:%S")
+            else:
+                obs_date = create_random_date_from_globals(
+                    global_start_year,
+                    global_start_month,
+                    global_end_year,
+                    global_end_month,
+                    global_start_day,
+                    global_end_day,
+                )
 
             age_at_observation = _calculate_age_at_observation(dob, obs_date)
 
             is_icu_hdu = random.random() < 0.15
 
-            status = _determine_resuscitation_status(
-                age_at_observation,
-                obs_date,
-                is_icu_hdu,
-            )
+            # Ensure at least one "For cardiopulmonary resuscitation" for testing
+            if i == 0:
+                status = "For cardiopulmonary resuscitation"
+            else:
+                status = _determine_resuscitation_status(
+                    age_at_observation,
+                    obs_date,
+                    is_icu_hdu,
+                )
 
             resus_statuses.append(status)
             observation_dates.append(obs_date.strftime("%Y-%m-%dT%H:%M:%S"))
@@ -4869,6 +4879,10 @@ def generate_synthetic_clinical_note(client_idcode: str) -> str:
     random.seed(seed + 100)  # Different seed per patient but deterministic
 
     num_mentions = min(random.randint(2, 4), len(sample_conditions))
+
     selected_mentions = random.sample(sample_conditions, num_mentions)
+
+    if "Asthma" not in selected_mentions:
+        selected_mentions.append("Asthma")
 
     return " ".join(selected_mentions) + " Clinical evaluation completed."

@@ -524,9 +524,17 @@ def main_batch(
 
                         # Call the function with the prepared arguments
                         feature_df = config["func"](**args)
-                        print(
-                            f"option={option}, feature_df columns={list(feature_df.columns)}, shape={feature_df.shape}",
-                        )
+                        if config_obj.verbosity >= 6:
+                            _logger.debug(
+                                f"option={option}, feature_df shape={feature_df.shape}",
+                            )
+                            if (
+                                "client_idcode" in feature_df.columns
+                                and len(feature_df) > 0
+                            ):
+                                _logger.debug(
+                                    f"Feature columns count: {len(feature_df.columns) - 1}",
+                                )
 
                         # Clear Jupyter output periodically when verbosity is high
                         _clear_output_if_verbosity_high(config_obj, i)

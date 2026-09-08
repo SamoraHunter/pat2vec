@@ -6,7 +6,7 @@ set -e
 cd "$(dirname "$0")/.."
 
 # Relative path to Python in the venv
-VENV_PYTHON="./pat2vec_env/bin/python"
+VENV_PYTHON="./pat2vec_env_0/bin/python"
 
 ARGS=(hook-impl --config=.pre-commit-config.yaml --hook-type=pre-commit)
 

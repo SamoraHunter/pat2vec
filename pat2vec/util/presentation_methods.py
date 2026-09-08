@@ -29,7 +29,7 @@ def group_images_by_suffix(folder_path: str) -> dict[str, list[str]]:
     for entry in Path(folder_path).iterdir():
         if entry.is_file() and entry.name.endswith((".png", ".jpg", ".jpeg")):
             suffix = entry.name.split("_")[-1].split(".")[0]
-            image_groups.setdefault(suffix, []).append(file_name)
+            image_groups.setdefault(suffix, []).append(entry.name)
 
     return image_groups
 

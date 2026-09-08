@@ -39,7 +39,7 @@ class TestConfigClass(unittest.TestCase):
         self.assertTrue(config.testing)
         self.assertFalse(config.medcat)
         self.assertTrue(config.lookback)
-        self.assertEqual(config.time_window_interval_delta, relativedelta(days=1))
+        self.assertEqual(config.time_window_interval_delta, relativedelta(years=31))
         self.assertIsNotNone(config.main_options)
         self.assertIsNotNone(config.filter_arguments)
         self.assertIsNotNone(config.feature_engineering_arg_dict)

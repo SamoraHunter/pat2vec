@@ -17,15 +17,22 @@ class TestPresentationMethods(unittest.TestCase):
     def tearDown(self):
         shutil.rmtree(self.test_dir)
 
-    @patch("os.listdir")
-    def test_group_images_by_suffix(self, mock_listdir):
+    @patch("pathlib.Path.iterdir")
+    def test_group_images_by_suffix(self, mock_iterdir):
         """Test correctly grouping image files by their patient ID suffix."""
-        mock_listdir.return_value = [
-            "plot_roc_P1.png",
-            "plot_pr_P1.png",
-            "plot_roc_P2.png",
-            "readme.txt",
-        ]
+        mock_entry1 = MagicMock()
+        mock_entry1.is_file.return_value = True
+        mock_entry1.name = "plot_roc_P1.png"
+        mock_entry2 = MagicMock()
+        mock_entry2.is_file.return_value == True
+        mock_entry2.name = "plot_pr_P1.png"
+        mock_entry3 = MagicMock()
+        mock_entry3.is_file.return_value = True
+        mock_entry3.name = "plot_roc_P2.png"
+        mock_entry4 = MagicMock()
+        mock_entry4.is_file.return_value = False
+        mock_entry4.name = "readme.txt"
+        mock_iterdir.return_value = [mock_entry1, mock_entry2, mock_entry3, mock_entry4]
 
         groups = group_images_by_suffix(self.test_dir)
 

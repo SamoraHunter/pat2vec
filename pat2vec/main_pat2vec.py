@@ -1550,22 +1550,19 @@ class main:
 
                 res = config["func"](**call_kwargs)
 
-                # Add debug logging for epic clinical notes
+                # Add debug logging for epic clinical notes at high verbosity only
                 if config["var"] in (
                     "batch_epic_clinical_notes",
                     "batch_epic_clinical_notes_annotations",
                 ):
                     _logger.debug(f"\n=== DEBUG {config['var']} ===")
-                    _logger.debug(f"Result type: {type(res)}")
                     _logger.debug(
                         f"Row count: {len(res) if res is not None else 'None'}",
                     )
                     if res is not None and not res.empty:
-                        _logger.debug(f"Columns: {res.columns.tolist()}")
                         _logger.debug(
-                            f"Has pretty_name: {'pretty_name' in res.columns}",
+                            f"Columns count: {len(res.columns)}, Has pretty_name: {'pretty_name' in res.columns}, Has cui: {'cui' in res.columns}",
                         )
-                        _logger.debug(f"Has cui: {'cui' in res.columns}")
                         if "pretty_name" in res.columns:
                             _logger.debug(
                                 f"Unique pretty_names: {res['pretty_name'].nunique()}",
@@ -2202,21 +2199,22 @@ class main:
 
         current_pat_client_id_code = str(self.all_patient_list[i])
 
-        print(
-            f"DEBUG pat_maker: Processing patient {current_pat_client_id_code}, batch_mode={self.config_obj.batch_mode}",
-        )
+        if self.config_obj.verbosity >= 4:
+            _logger.debug(
+                f"Processing patient {current_pat_client_id_code}, batch_mode={self.config_obj.batch_mode}",
+            )
 
         # Check if patient has already been processed
         if current_pat_client_id_code in self.stripped_list_start:
-            if self.config_obj.verbosity >= 5:
+            if self.config_obj.verbosity >= 6:
                 _logger.debug(f"Patient {i} in stripped_list_start")
             if self.config_obj.multi_process is False:
                 self.config_obj.skipped_counter += 1
             else:
                 with self.config_obj.skipped_counter.get_lock():  # type: ignore
                     self.config_obj.skipped_counter.value += 1  # type: ignore
-            if self.config_obj.verbosity > 0:
-                _logger.info(
+            if self.config_obj.verbosity >= 5:
+                _logger.debug(
                     f"Patient {current_pat_client_id_code} already processed, skipping.",
                 )
             self.t.update(1)
@@ -2252,33 +2250,38 @@ class main:
             f"About to call _get_patient_data_batches for {current_pat_client_id_code}",
         )
         batches = self._get_patient_data_batches(current_pat_client_id_code)
-        print(
-            f"DEBUG _get_patient_data_batches: keys={list(batches.keys())}, batch_appointments shape={batches.get('batch_appointments', pd.DataFrame()).shape}",
-        )
-        if "batch_appointments" in batches and not batches["batch_appointments"].empty:
-            print(
-                f"DEBUG batch_appointments columns: {list(batches['batch_appointments'].columns)}",
+        if self.config_obj.verbosity >= 6:
+            _logger.debug(
+                f"keys={list(batches.keys())}, batch_appointments shape={batches.get('batch_appointments', pd.DataFrame()).shape}",
             )
+        if "batch_appointments" in batches and not batches["batch_appointments"].empty:
+            if self.config_obj.verbosity >= 7:
+                _logger.debug(
+                    f"batch_appointments columns: {list(batches['batch_appointments'].columns)}",
+                )
         _logger.info(
             f"_get_patient_data_batches returned: keys={list(batches.keys())}, batch_bmi shape={batches.get('batch_bmi', pd.DataFrame()).shape}, batch_vte shape={batches.get('batch_vte', pd.DataFrame()).shape}",
         )
-        print(
-            f"DEBUG batch_appointments shape={batches.get('batch_appointments', pd.DataFrame()).shape}",
-        )
-        print(
-            f"DEBUG batch_bloods shape={batches.get('batch_bloods', pd.DataFrame()).shape}",
-        )
-        # Batch summary
-        _logger.info(
-            f"batch_epr shape={batches.get('batch_epr', pd.DataFrame()).shape}, columns={list(batches.get('batch_epr', pd.DataFrame()).columns)}",
-        )
+        if self.config_obj.verbosity >= 6:
+            _logger.debug(
+                f"batch_appointments shape={batches.get('batch_appointments', pd.DataFrame()).shape}",
+            )
+            _logger.debug(
+                f"batch_bloods shape={batches.get('batch_bloods', pd.DataFrame()).shape}",
+            )
+        # Batch summary - only log columns at high verbosity
+        if self.config_obj.verbosity >= 6:
+            _logger.debug(
+                f"batch_epr shape={batches.get('batch_epr', pd.DataFrame()).shape}, columns={list(batches.get('batch_epr', pd.DataFrame()).columns)}",
+            )
         batch_epr = batches.get("batch_epr", pd.DataFrame())
         if not batch_epr.empty:
-            _logger.info(
-                f"batch_epr sample body_analysed: {batch_epr.iloc[0].get('body_analysed', 'N/A')[:100] if len(batch_epr) > 0 else 'no rows'}",
-            )
+            if self.config_obj.verbosity >= 7:
+                _logger.debug(
+                    f"batch_epr sample body_analysed: {batch_epr.iloc[0].get('body_analysed', 'N/A')[:100] if len(batch_epr) > 0 else 'no rows'}",
+                )
         _logger.info(
-            f"batch_epr_docs_annotations shape={batches.get('batch_epr_docs_annotations', pd.DataFrame()).shape}, columns={list(batches.get('batch_epr_docs_annotations', pd.DataFrame()).columns)[:5] if not batches.get('batch_epr_docs_annotations', pd.DataFrame()).empty else 'empty'}",
+            f"batch_epr_docs_annotations shape={batches.get('batch_epr_docs_annotations', pd.DataFrame()).shape}, columns_count={len(list(batches.get('batch_epr_docs_annotations', pd.DataFrame()).columns)) if not batches.get('batch_epr_docs_annotations', pd.DataFrame()).empty else 0}",
         )
         _clear_jupyter_output_if_needed(self.config_obj, i, interval=5)
 

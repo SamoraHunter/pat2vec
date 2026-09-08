@@ -27,7 +27,7 @@ def generate_epic_clinical_notes_appointments_data(
     fields_list: list[str] | None = None,
 ) -> pd.DataFrame:
     """Generates dummy data for the 'epic_clinical_notes_appointments' index."""
-    if fields_list is None:
+    if fields_list is None or len(fields_list) == 0:
         fields_list = [
             "document_PatientDurableKey",
             "document_CreatedWhen",

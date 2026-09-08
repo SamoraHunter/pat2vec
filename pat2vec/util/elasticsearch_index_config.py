@@ -136,6 +136,7 @@ EPIC_CLINICAL_NOTES_APPOINTMENTS_FIELDS = [
     "document_PatientDurableKey",
     "document_CreatedWhen",
     "id",
+    "document_Name",
 ]
 
 EPIC_ENCOUNTER_FIELDS = [

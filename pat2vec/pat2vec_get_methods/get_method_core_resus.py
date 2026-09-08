@@ -183,11 +183,10 @@ def calculate_core_resus_features(
                 == "Not for cardiopulmonary resuscitation"
             ],
         )
-    elif negate_biochem:
-        # Set 0 values when negate_biochem is True and no data available
+    else:
+        # Set 0 values when no data available (default behavior)
         features[f"{term_prefix}_For cardiopulmonary resuscitation"] = 0
         features[f"{term_prefix}_Not for cardiopulmonary resuscitation"] = 0
-    # If negate_biochem is False and no data, don't add features (pass)
 
     return features
 

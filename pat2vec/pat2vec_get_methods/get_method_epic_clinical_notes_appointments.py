@@ -220,7 +220,7 @@ def get_epic_clinical_notes_appointments(
         get_start_end_year_month(target_date_range, config_obj=config_obj)
     )
 
-    id_field_name = "client_idcode"
+    id_field_name = "document_PatientDurableKey"
 
     # When filtering from DB, data has already been renamed to updatetime
     # When querying ES, use document_UpdatedWhen (the default ES field name)
@@ -257,19 +257,29 @@ def get_epic_clinical_notes_appointments(
             columns={id_field_name: "client_idcode"},
         )
 
-    features = pd.DataFrame(
-        data=[current_pat_client_id_code],
-        columns=["client_idcode"],
-    )
-
-    if len(current_pat_raw) == 0:
-        return features
-
-    if "document_Name" in current_pat_raw.columns:
-        unique_names = current_pat_raw["document_Name"].dropna().unique()
+    if len(current_pat_raw) > 0 and "document_description" in current_pat_raw.columns:
+        unique_names = current_pat_raw["document_description"].dropna().unique()
+        features = pd.DataFrame(
+            data=[current_pat_client_id_code],
+            columns=["client_idcode"],
+        )
         for name_val in unique_names:
             sanitized_name = "".join(c if c.isalnum() else "_" for c in str(name_val))
             features[f"epic_note_appt_name_{sanitized_name}"] = 1
+    elif len(current_pat_raw) > 0 and "document_Name" in current_pat_raw.columns:
+        unique_names = current_pat_raw["document_Name"].dropna().unique()
+        features = pd.DataFrame(
+            data=[current_pat_client_id_code],
+            columns=["client_idcode"],
+        )
+        for name_val in unique_names:
+            sanitized_name = "".join(c if c.isalnum() else "_" for c in str(name_val))
+            features[f"epic_note_appt_name_{sanitized_name}"] = 1
+    else:
+        features = pd.DataFrame(
+            data=[current_pat_client_id_code],
+            columns=["client_idcode"],
+        )
 
     if config_obj.verbosity >= 6:
         display(features)

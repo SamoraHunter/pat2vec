@@ -24,6 +24,7 @@ ignore = [
     "FBT001",  # Boolean-typed positional arg - sometimes intentional
     "FBT002",  # Boolean default positional arg - sometimes intentional
     "PTH118",  # Use Path with operator instead of os.path.join
+    "PTH208",  # Consider using path.iterdir() instead of os.listdir() - but test mocks require os.listdir
     "PTH110",  # Use Path.parent instead of os.path.dirname
     "ERA001",  # Commented-out code
     "S311",  # Random module - sometimes intentional for testing

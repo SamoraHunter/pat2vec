@@ -349,6 +349,15 @@ def get_appointments(
             on="client_idcode",
             how="outer",
         ).merge(appointment_type_features, on="client_idcode", how="outer")
+        # Fill any missing columns with 0 for binary feature columns
+        expected_cols = [
+            c
+            for c in features.columns
+            if (c.startswith(("ConsultantCode_", "ClinicCode_", "AppointmentType_")))
+        ]
+        for col in expected_cols:
+            if col in features.columns:
+                features[col] = features[col].fillna(0).astype(int)
     else:
         features = pd.DataFrame({"client_idcode": [current_pat_client_id_code]})
 
