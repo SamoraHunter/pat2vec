@@ -841,7 +841,165 @@ def convert_durable_keys_to_source_ids(
     return list(dict.fromkeys(all_source_ids)), missing_dk
 
 
+def convert_client_idcode_to_nhs_number(
+    client_idcodes: list[str],
+    pat2vec_obj,
+) -> tuple[list[str], list[str]]:
+    """Convert a list of client_idcodes (hospital numbers) to NHS numbers using epr_documents.
+
+    For legacy data in the epr_documents index:
+    - client_idcode = Hospital number
+    - client_universalnumber = NHS number
+
+    Args:
+        client_idcodes: A list of hospital number strings (client_idcode values)
+        pat2vec_obj: An initialized pat2vec object with cohort_searcher_with_terms_and_search method.
+
+    Returns:
+        A tuple of (nhs_numbers, missing_client_idcodes). nhs_numbers is a list of unique
+        NHS number strings. missing_client_idcodes are those not found or without NHS numbers.
+
+    """
+    from pat2vec.util.elasticsearch_index_config import EPR_DOCS_FIELDS
+
+    start_year = str(pat2vec_obj.config_obj.global_start_year).zfill(4)
+    start_month = str(pat2vec_obj.config_obj.global_start_month).zfill(2)
+    start_day = str(pat2vec_obj.config_obj.global_start_day).zfill(2)
+    end_year = str(pat2vec_obj.config_obj.global_end_year).zfill(4)
+    end_month = str(pat2vec_obj.config_obj.global_end_month).zfill(2)
+    end_day = str(pat2vec_obj.config_obj.global_end_day).zfill(2)
+
+    search_string = (
+        f"updatetime:[{start_year}-{start_month}-{start_day} TO {end_year}-"
+        f"{end_month}-{end_day}]"
+    )
+
+    fields_to_use = list(EPR_DOCS_FIELDS)
+    if "client_universalnumber" not in fields_to_use:
+        fields_to_use.append("client_universalnumber")
+    if "client_idcode" not in fields_to_use:
+        fields_to_use.insert(0, "client_idcode")
+
+    df = pat2vec_obj.cohort_searcher_with_terms_and_search(
+        index_name="epr_documents",
+        fields_list=fields_to_use,
+        term_name=pat2vec_obj.config_obj.client_idcode_term_name,
+        entered_list=client_idcodes,
+        search_string=search_string,
+    )
+
+    if df.empty:
+        print(f"Client ID code size diff: input={len(client_idcodes)}, output=0")
+        return [], client_idcodes.copy()
+
+    if "updatetime" in df.columns and not df.empty:
+        df = df.copy()
+        df["updatetime"] = pd.to_datetime(df["updatetime"], utc=True)
+        df = df.sort_values("updatetime", ascending=False)
+        df = df.drop_duplicates(subset=["client_idcode"], keep="first")
+
+    nhs_numbers = []
+    for nhs in df["client_universalnumber"].dropna():
+        if isinstance(nhs, (list, tuple)):
+            nhs_numbers.extend(
+                [str(x).strip() for x in nhs if pd.notna(x) and str(x).strip()],
+            )
+        elif pd.notna(nhs) and str(nhs).strip():
+            nhs_numbers.append(str(nhs).strip())
+
+    unique_nhs = list(dict.fromkeys(nhs_numbers))
+
+    found_ids_with_nhs = df[df["client_universalnumber"].notna()][
+        "client_idcode"
+    ].unique()
+    missing_ids = [cid for cid in client_idcodes if cid not in found_ids_with_nhs]
+
+    print(
+        f"Client ID code size diff: input={len(client_idcodes)}, output={len(unique_nhs)}",
+    )
+
+    return unique_nhs, missing_ids
+
+
+def convert_nhs_number_to_client_idcode(
+    nhs_numbers: list[str],
+    pat2vec_obj,
+) -> tuple[list[str], list[str]]:
+    """Convert a list of NHS numbers to client_idcodes (hospital numbers) using epr_documents.
+
+    For legacy data in the epr_documents index:
+    - client_idcode = Hospital number
+    - client_universalnumber = NHS number
+
+    Args:
+        nhs_numbers: A list of NHS number strings
+        pat2vec_obj: An initialized pat2vec object with cohort_searcher_with_terms_and_search method.
+
+    Returns:
+        A tuple of (client_idcodes, missing_nhs_numbers). client_idcodes is a list of unique
+        hospital numbers. missing_nhs_numbers are those not found in epr_documents.
+
+    """
+    from pat2vec.util.elasticsearch_index_config import EPR_DOCS_FIELDS
+
+    start_year = str(pat2vec_obj.config_obj.global_start_year).zfill(4)
+    start_month = str(pat2vec_obj.config_obj.global_start_month).zfill(2)
+    start_day = str(pat2vec_obj.config_obj.global_start_day).zfill(2)
+    end_year = str(pat2vec_obj.config_obj.global_end_year).zfill(4)
+    end_month = str(pat2vec_obj.config_obj.global_end_month).zfill(2)
+    end_day = str(pat2vec_obj.config_obj.global_end_day).zfill(2)
+
+    search_string = (
+        f"updatetime:[{start_year}-{start_month}-{start_day} TO {end_year}-"
+        f"{end_month}-{end_day}]"
+    )
+
+    fields_to_use = list(EPR_DOCS_FIELDS)
+    if "client_universalnumber" not in fields_to_use:
+        fields_to_use.append("client_universalnumber")
+    if "client_idcode" not in fields_to_use:
+        fields_to_use.insert(0, "client_idcode")
+
+    df = pat2vec_obj.cohort_searcher_with_terms_and_search(
+        index_name="epr_documents",
+        fields_list=fields_to_use,
+        term_name="client_universalnumber",
+        entered_list=nhs_numbers,
+        search_string=search_string,
+    )
+
+    if df.empty:
+        print(f"NHS number size diff: input={len(nhs_numbers)}, output=0")
+        return [], nhs_numbers.copy()
+
+    if "updatetime" in df.columns and not df.empty:
+        df = df.copy()
+        df["updatetime"] = pd.to_datetime(df["updatetime"], utc=True)
+        df = df.sort_values("updatetime", ascending=False)
+        df = df.drop_duplicates(subset=["client_universalnumber"], keep="first")
+
+    client_idcodes = []
+    for cid in df["client_idcode"].dropna():
+        if isinstance(cid, (list, tuple)):
+            client_idcodes.extend(
+                [str(x).strip() for x in cid if pd.notna(x) and str(x).strip()],
+            )
+        elif pd.notna(cid) and str(cid).strip():
+            client_idcodes.append(str(cid).strip())
+
+    unique_cid = list(dict.fromkeys(client_idcodes))
+
+    found_nhs = df["client_universalnumber"].dropna().unique()
+    found_nhs_str = [str(n).strip() for n in found_nhs if pd.notna(n)]
+    missing_nhs = [nhs for nhs in nhs_numbers if str(nhs).strip() not in found_nhs_str]
+
+    print(f"NHS number size diff: input={len(nhs_numbers)}, output={len(unique_cid)}")
+
+    return unique_cid, missing_nhs
+
+
 __all__ = [
+    "convert_client_idcode_to_nhs_number",
     "convert_durable_key_to_hospital_numbers",
     "convert_durable_key_to_mrn",
     "convert_durable_key_to_nhs_numbers",
@@ -854,6 +1012,7 @@ __all__ = [
     "convert_hospital_numbers_to_durable_keys",
     "convert_mrn_to_durable_key",
     "convert_mrns_to_durable_keys",
+    "convert_nhs_number_to_client_idcode",
     "convert_nhs_number_to_durable_key",
     "convert_nhs_numbers_to_durable_keys",
     "convert_source_id_to_durable_key",
