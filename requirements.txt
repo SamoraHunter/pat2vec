@@ -1,0 +1,60 @@
+# Production dependencies for pat2vec
+# Generated automatically from pyproject.toml on /workspaces/pat2vec
+# To update: python scripts/generate_requirements.py
+
+# Core dependencies (production required)
+accelerate
+colorama
+eland
+elasticsearch
+faker
+fuzzywuzzy
+huggingface-hub
+ipykernel
+medcat
+numpy
+pandas
+paramiko
+peft
+polars
+psycopg2-binary
+python-pptx
+rapidfuzz
+scikit-learn
+seaborn
+sqlalchemy
+torch
+transformers
+
+# Optional features ('all' group)
+bokeh
+dask
+datasets
+jupyterlab
+lifelines
+matplotlib-venn
+nltk
+numba
+openpyxl
+pydot
+pyodbc
+python-tds
+statsmodels
+umls-api
+wordcloud
+
+# Development and testing (not for production)
+black
+myst-parser
+nbconvert
+nbformat
+nbmake
+nbstripout
+pre-commit
+pytest
+pytest-cov
+python-dotenv
+sphinx
+sphinx-autodoc-typehints
+sphinx-rtd-theme
+sphinxcontrib-mermaid

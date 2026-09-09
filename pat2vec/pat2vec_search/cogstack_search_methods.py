@@ -3145,8 +3145,40 @@ def initialize_cogstack_client(config_obj=None):
                 )
                 return None
 
-    _logger.info("Initializing CogStack client...")
-    _logger.info(f"Username: {creds.get('username')}")
+    import os
+
+    is_test_mode = (
+        config_obj
+        and getattr(config_obj, "testing", False)
+        and not getattr(config_obj, "testing_elastic", False)
+    ) or bool(os.environ.get("PYTEST_CURRENT_TEST"))
+
+    if is_test_mode:
+        _logger.info(
+            "Skipping credential validation in test mode. Using placeholder credentials.",
+        )
+        creds["username"] = creds.get("username") or "test_user"
+        creds["password"] = creds.get("password") or "test_password"
+        creds["hosts"] = creds.get("hosts", []) or ["http://localhost:19200"]
+    else:
+        _logger.info("Initializing CogStack client...")
+        _logger.info(f"Username: {creds.get('username')}")
+
+        from pat2vec.util.credentials import validate_credentials
+
+        is_valid, errors = validate_credentials(
+            username_arg=creds.get("username"),
+            password_arg=creds.get("password"),
+            hosts_arg=creds.get("hosts", []),
+        )
+        if not is_valid:
+            _logger.error("Credential validation failed:")
+            for err in errors:
+                _logger.error(f"  - {err}")
+            _logger.error(
+                "CogStack client will not be initialized due to invalid credentials.",
+            )
+            return None
 
     if creds.get("api_key"):
         _logger.info("Using API key authentication")

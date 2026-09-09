@@ -64,7 +64,7 @@ def prefetch_batches(pat2vec_obj: Any) -> list[BatchConfig]:
 
     """
     if pat2vec_obj is None:
-        print("[ERROR] pat2vec_obj cannot be None")
+        _logger.error("[ERROR] pat2vec_obj cannot be None")
         return None
 
     # Check verbosity setting
@@ -196,7 +196,7 @@ def prefetch_batches(pat2vec_obj: Any) -> list[BatchConfig]:
     for config in tqdm.tqdm(enabled_configs, desc="Processing batch types"):
         try:
             if verbose > 0:
-                print(f"[INFO] Processing {config.name} batch")
+                _logger.info(f"[INFO] Processing {config.name} batch")
 
             # Prepare function arguments
             func_kwargs = {
@@ -227,10 +227,12 @@ def prefetch_batches(pat2vec_obj: Any) -> list[BatchConfig]:
                 )
 
             if verbose > 0:
-                print(f"[INFO] Successfully processed and saved {config.name} batch")
+                _logger.info(
+                    f"[INFO] Successfully processed and saved {config.name} batch",
+                )
 
         except Exception as e:
             # Always print errors regardless of verbosity
-            print(f"[ERROR] Error processing {config.name} batch: {e!s}")
+            _logger.error(f"[ERROR] Error processing {config.name} batch: {e!s}")
 
     return enabled_configs

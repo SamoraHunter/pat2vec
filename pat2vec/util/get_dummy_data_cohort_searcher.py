@@ -1074,6 +1074,7 @@ def generate_observations_data(
     for field in unique_fields:
         if field not in final_df.columns:
             final_df[field] = np.nan
+    final_df = final_df.replace({np.nan: None})
     df = final_df[unique_fields]
     return df.reset_index(drop=True)
 
@@ -1502,6 +1503,7 @@ def generate_epic_encounters_data(
     for field in unique_fields:
         if field not in final_df.columns:
             final_df[field] = np.nan
+    final_df = final_df.replace({np.nan: None})
     return final_df[unique_fields]
 
 
@@ -1617,6 +1619,7 @@ def generate_epic_clinical_notes_data(
     for field in unique_fields:
         if field not in final_df.columns:
             final_df[field] = np.nan
+    final_df = final_df.replace({np.nan: None})
     return final_df[unique_fields]
 
 
@@ -1700,6 +1703,7 @@ def generate_epic_medical_history_data(
     for field in unique_fields:
         if field not in final_df.columns:
             final_df[field] = np.nan
+    final_df = final_df.replace({np.nan: None})
     return final_df[unique_fields]
 
 
@@ -1813,6 +1817,7 @@ def generate_epic_orders_data(
     for field in unique_fields:
         if field not in final_df.columns:
             final_df[field] = np.nan
+    final_df = final_df.replace({np.nan: None})
     return final_df[unique_fields]
 
 
@@ -1915,6 +1920,7 @@ def generate_epic_lab_results_data(
     for field in unique_fields:
         if field not in final_df.columns:
             final_df[field] = np.nan
+    final_df = final_df.replace({np.nan: None})
     return final_df[unique_fields]
 
 
@@ -2000,6 +2006,7 @@ def generate_epic_patients_data(
     for field in unique_fields:
         if field not in final_df.columns:
             final_df[field] = np.nan
+    final_df = final_df.replace({np.nan: None})
     return final_df[unique_fields]
 
 
@@ -2085,6 +2092,7 @@ def generate_epic_imaging_reports_data(
     for field in unique_fields:
         if field not in final_df.columns:
             final_df[field] = np.nan
+    final_df = final_df.replace({np.nan: None})
     return final_df[unique_fields]
 
 
@@ -2145,6 +2153,7 @@ def generate_epic_clinical_notes_appointments_data(
     for field in unique_fields:
         if field not in final_df.columns:
             final_df[field] = np.nan
+    final_df = final_df.replace({np.nan: None})
     return final_df[unique_fields]
 
 
@@ -3314,7 +3323,7 @@ def generate_hospital_site_data(
     for field in fields_list:
         if field not in final_df.columns:
             final_df[field] = np.nan
-
+    final_df = final_df.replace({np.nan: None})
     return final_df[fields_list]
 
 
@@ -3562,6 +3571,7 @@ def generate_bmi_data(
     for field in unique_fields:
         if field not in final_df.columns:
             final_df[field] = np.nan
+    final_df = final_df.replace({np.nan: None})
     return final_df[unique_fields]
 
 
@@ -4279,6 +4289,7 @@ def generate_bed_data(
     for field in fields_list:
         if field not in final_df.columns:
             final_df[field] = np.nan
+    final_df = final_df.replace({np.nan: None})
     return final_df[fields_list]
 
 
@@ -4356,6 +4367,7 @@ def generate_vte_data(
     for field in fields_list:
         if field not in final_df.columns:
             final_df[field] = np.nan
+    final_df = final_df.replace({np.nan: None})
     return final_df[fields_list]
 
 
@@ -4430,6 +4442,7 @@ def generate_smoking_data(
     for field in fields_list:
         if field not in final_df.columns:
             final_df[field] = np.nan
+    final_df = final_df.replace({np.nan: None})
     return final_df[fields_list]
 
 
@@ -4515,6 +4528,7 @@ def generate_core_o2_data(
     for field in fields_list:
         if field not in final_df.columns:
             final_df[field] = np.nan
+    final_df = final_df.replace({np.nan: None})
     return final_df[fields_list]
 
 
@@ -4705,6 +4719,7 @@ def generate_core_resus_data(
     for field in fields_list:
         if field not in final_df.columns:
             final_df[field] = np.nan
+    final_df = final_df.replace({np.nan: None})
     return final_df[fields_list]
 
 
@@ -4829,6 +4844,7 @@ def generate_problem_list_data(
     for field in fields_list:
         if field not in final_df.columns:
             final_df[field] = np.nan
+    final_df = final_df.replace({np.nan: None})
     return final_df[fields_list]
 
 

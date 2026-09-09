@@ -122,6 +122,77 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pip-${{ env.PYTHON_VERSION }}-
 
+      - name: Check requirements.txt is in sync
+        run: |
+          if [ ! -f requirements.txt ]; then
+            echo "❌ requirements.txt not found. Run: python scripts/generate_requirements.py"
+            exit 1
+          fi
+
+          # Extract dependencies from pyproject.toml and validate requirements.txt
+          python3 << 'EOF'
+          import re
+          import sys
+
+          with open('pyproject.toml', 'r') as f:
+              content = f.read()
+
+          def parse_deps_block(block):
+              packages = []
+              for line in block.split('\n'):
+                  stripped = line.strip()
+                  if not stripped or stripped.startswith('#'):
+                      continue
+                  m = re.match(r'["\']([^"\'=<>!~\[\],]+)[^"\']*["\']', stripped)
+                  if m:
+                      pkg = m.group(1).strip().lower()
+                      if pkg and pkg != '...':
+                          packages.append(pkg)
+              return set(packages)
+
+          # Core dependencies
+          m_deps = re.search(r'dependencies\s*=\s*\[(.*?)\]', content, re.DOTALL)
+          core_deps = parse_deps_block(m_deps.group(1)) if m_deps else set()
+
+          # Optional dependencies (all and dev)
+          m_opt = re.search(r'\[project\.optional-dependencies\](.*?)(?=\n\[|\Z)', content, re.DOTALL)
+          opt_deps = set()
+          if m_opt:
+              opt_section = m_opt.group(1)
+              for grp in ['all', 'dev']:
+                  m_grp = re.search(rf'{grp}\s*=\s*\[(.*?)\]', opt_section, re.DOTALL)
+                  if m_grp:
+                      opt_deps.update(parse_deps_block(m_grp.group(1)))
+
+          print(f"Core deps from pyproject.toml: {len(core_deps)}")
+          print(f"Optional deps from pyproject.toml: {len(opt_deps)}")
+
+          # Read requirements.txt (handles both pinned and versionless)
+          with open('requirements.txt', 'r') as f:
+              req_lines = [line.strip() for line in f if line.strip() and not line.strip().startswith('#')]
+
+          req_pkgs = set()
+          for line in req_lines:
+              m = re.match(r'([a-zA-Z0-9_-]+)', line)
+              if m:
+                  req_pkgs.add(m.group(1).lower())
+
+          print(f"Packages in requirements.txt: {len(req_pkgs)}")
+
+          # Check for missing packages
+          all_deps = core_deps | opt_deps
+          missing = all_deps - req_pkgs
+
+          if missing:
+              print(f"\n❌ Missing packages in requirements.txt: {len(missing)}")
+              for pkg in sorted(missing):
+                  print(f"  - {pkg}")
+              sys.exit(1)
+
+          print("\n✅ Requirements file is in sync with pyproject.toml!")
+          sys.exit(0)
+          EOF
+
       - name: Install dependencies
         env:
           GITEA_TOKEN: ${{ secrets.GITEA_TOKEN }}

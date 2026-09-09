@@ -317,6 +317,12 @@ def get_treatment_docs_by_iterative_multi_term_cohort_searcher_no_terms_fuzzy(
                 docs = config["searcher"](term_list, output_path, **search_kwargs)
 
             if not docs.empty:
+                # Remove Elasticsearch metadata columns that would cause duplicate columns later
+                cols_to_remove = ["_index", "_id", "_score"]
+                for col in cols_to_remove:
+                    if col in docs.columns:
+                        docs = docs.drop(columns=[col])
+
                 # Standardize column names for concatenation
                 col_map = {
                     "document_PatientDurableKey": "client_idcode",

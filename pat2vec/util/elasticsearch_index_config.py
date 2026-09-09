@@ -73,6 +73,7 @@ BMI_FIELDS = [
     "observation_valuetext_analysed",
     "observationdocument_recordeddtm",
     "clientvisit_visitidcode",
+    "obscatalogmasteritem_unitofmeasure",
 ]
 
 NEWS_FIELDS = BMI_FIELDS.copy()

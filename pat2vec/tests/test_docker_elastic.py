@@ -219,9 +219,9 @@ class TestElasticContainer(unittest.TestCase):
 
     def test_get_credentials(self):
         self.container.host = "localhost"
-        self.container.port = 9200
+        self.container.port = 19200
         url, user, pwd = self.container.get_credentials()
-        self.assertEqual(url, "http://localhost:9200")
+        self.assertEqual(url, "http://localhost:19200")
         self.assertEqual(user, "elastic")
         self.assertEqual(pwd, "test_password_123")
 

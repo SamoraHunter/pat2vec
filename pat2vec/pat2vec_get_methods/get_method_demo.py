@@ -1,3 +1,4 @@
+import logging
 import os
 from collections.abc import Callable
 
@@ -12,6 +13,8 @@ from pat2vec.util.ethnicity_abstractor import EthnicityAbstractor
 from pat2vec.util.get_start_end_year_month import get_start_end_year_month
 from pat2vec.util.parse_date import validate_input_dates
 from pat2vec.util.pre_processing import calculate_age_append, demo_to_latest
+
+logger = logging.getLogger(__name__)
 
 
 def search_demographics(
@@ -82,7 +85,7 @@ def search_demographics(
         )
 
     if output_filename and os.path.exists(output_filename) and not overwrite:
-        print(f"Loading existing demographics data from {output_filename}")
+        logger.debug(f"Loading existing demographics data from {output_filename}")
         return pd.read_csv(output_filename)
 
     if cohort_searcher_with_terms_and_search is None:
@@ -138,7 +141,7 @@ def search_demographics(
     if output_filename:
         if os.path.dirname(output_filename):
             os.makedirs(os.path.dirname(output_filename), exist_ok=True)
-        print(f"Saving demographics data to {output_filename}")
+        logger.debug(f"Saving demographics data to {output_filename}")
         results.to_csv(output_filename, index=False)
 
     return results
@@ -231,7 +234,7 @@ def process_demographics_data(
             # Use [[-1]] to keep DataFrame structure
             return demo_data.iloc[[-1]]
         except Exception as e:
-            print(f"Error processing demographics data: {e}")
+            logger.debug(f"Error processing demographics data: {e}")
             # Fallback: return DataFrame with patient IDs
             return pd.DataFrame({"client_idcode": patlist})
     elif len(demo_data) == 1:

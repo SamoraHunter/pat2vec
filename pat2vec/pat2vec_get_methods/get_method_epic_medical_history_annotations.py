@@ -1,3 +1,4 @@
+import logging
 from collections.abc import Callable
 
 import pandas as pd
@@ -6,6 +7,8 @@ from pat2vec.util.filter_dataframe_by_timestamp import filter_dataframe_by_times
 from pat2vec.util.get_start_end_year_month import get_start_end_year_month
 from pat2vec.util.methods_annotation import calculate_pretty_name_count_features
 from pat2vec.util.methods_get import update_pbar
+
+logger = logging.getLogger(__name__)
 
 
 def _extract_problem_list_annotations(
@@ -260,21 +263,23 @@ def get_current_pat_epic_medical_history_annotations(
         )
 
     if config_obj.verbosity >= 6:
-        print(
+        logger.debug(
             f"Processing epic_medical_history_annotations for patient {current_pat_client_id_code}",
         )
-        print(f"Input annotations shape: {epic_medical_history_annotations.shape}")
-        print(f"Time column used: {time_column}")
+        logger.debug(
+            f"Input annotations shape: {epic_medical_history_annotations.shape}",
+        )
+        logger.debug(f"Time column used: {time_column}")
 
         if config_obj.verbosity >= 7:
-            print("Filtering epic medical history annotations...")
-            print(
+            logger.debug("Filtering epic medical history annotations...")
+            logger.debug(
                 f"Start: {start_year}-{start_month}-{start_day}, End: {end_year}-{end_month}-{end_day}",
             )
 
         if processed_annotations is not None:
-            print(f"Processed annotations shape: {processed_annotations.shape}")
-            print(
+            logger.debug(f"Processed annotations shape: {processed_annotations.shape}")
+            logger.debug(
                 f"Processed columns (first 10): {processed_annotations.columns.tolist()[:10]}",
             )
 

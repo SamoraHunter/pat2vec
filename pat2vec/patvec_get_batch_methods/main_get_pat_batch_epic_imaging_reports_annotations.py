@@ -224,7 +224,7 @@ def get_pat_batch_epic_imaging_reports_annotations(
                     raise
 
         if config_obj.verbosity >= 6:
-            print(
+            _logger.debug(
                 f"DEBUG: Got {len(pat_batch)} rows from raw epic_imaging_reports source",
             )
 

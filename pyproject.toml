@@ -108,7 +108,7 @@ sigterm = true
 
 [tool.coverage.report]
 show_missing = true
-fail_under = 0
+fail_under = 70
 
 [tool.ruff]
 line-length = 88
@@ -138,8 +138,7 @@ ignore = [
     "EXE005", "G003", "PLW0127", "TRY203", "DTZ011",
 ]
 exclude = [
-    "**/__pycache__", "**/*.egg", "*.egg-info", "pat2vec/tests/",
-    ".ai/", ".skills/", "notebooks/", "test_files/", "legacy/", "docs/",
-    "test_*.py", "*_test.py", "test_isolation_fix.py",
-    "test_elastic_credentials_textual_obs_get.py", "*.ipynb",
+    "**/__pycache__", "**/*.egg", "*.egg-info",
+    ".ai/", ".skills/", "notebooks/", "legacy/", "docs/",
+    "*.ipynb",
 ]

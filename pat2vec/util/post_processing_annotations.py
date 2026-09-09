@@ -579,7 +579,6 @@ def filter_dataframe_by_cui(
     # Debug statement for verbosity
     if verbosity > 0:
         logger.debug(f"Filtered DataFrame based on {filter_column} codes:\n")
-        # display(filtered_df.head()) # Commented out as display is not available in all environments
 
     # Find the earliest or latest entry for each CUI code
     if mode == "earliest":
@@ -598,7 +597,6 @@ def filter_dataframe_by_cui(
     # Debug statement for verbosity
     if verbosity > 0:
         logger.debug(f"Result DataFrame based on {mode} mode:\n")
-        # display(result_df.head()) # Commented out as display is not available in all environments
 
     # Merge with the original DataFrame to get the full rows
     result_df = pd.merge(
@@ -624,7 +622,6 @@ def filter_dataframe_by_cui(
     # Debug statement for verbosity
     if verbosity > 0:
         logger.debug(f"Filtered original DataFrame based on {temporal} temporal:\n")
-        # display(filtered_original_df.head()) # Commented out as display is not available in all environments
 
     return filtered_original_df, filter_row, filtered_df
 

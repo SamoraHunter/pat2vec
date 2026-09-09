@@ -1,3 +1,4 @@
+import logging
 from collections.abc import Callable
 
 import numpy as np
@@ -12,6 +13,8 @@ from pat2vec.pat2vec_search.data_helper_functions import append_age_at_record_se
 from pat2vec.util.ethnicity_abstractor import EthnicityAbstractor
 from pat2vec.util.filter_dataframe_by_timestamp import filter_dataframe_by_timestamp
 from pat2vec.util.get_start_end_year_month import get_start_end_year_month
+
+logger = logging.getLogger(__name__)
 
 
 def get_demo(
@@ -54,7 +57,7 @@ def get_demo(
     )
     current_pat_demo = current_pat_demo.reset_index()
     if config_obj.verbosity >= 1:
-        print("Get demo: get_demographics3_batch:")
+        logger.debug("Get demo: get_demographics3_batch:")
 
     # If the demo data is not empty
     if not current_pat_demo.drop(columns="client_idcode").isna().all().all():
@@ -106,8 +109,8 @@ def get_demo(
         if config_obj and config_obj.verbosity >= 6:
             display(current_pat_demo)
     if config_obj.verbosity >= 1:
-        print("Get demo: get_demographics3_batch: Done.")
-        print(current_pat_demo)
+        logger.debug("Get demo: get_demographics3_batch: Done.")
+        logger.debug(current_pat_demo)
 
     if len(current_pat_demo) > 1:
         display("error")
@@ -232,7 +235,7 @@ def _process_ethnicity(demo_dataframe: pd.DataFrame) -> pd.DataFrame:
             processed_df[col] = demo_dataframe[col]
 
     if len(processed_df) > 1:
-        print("error")
+        logger.debug("error")
         msg = "more than one row process ethnicity"
         raise Exception(msg)
 
@@ -421,7 +424,7 @@ def get_demographics3_batch(
             return demo.tail(1)
             # return demo.iloc[-1].to_frame()
         except Exception as e:
-            print(e)
+            logger.debug(e)
 
     # if only one return it
     elif len(demo) == 1:

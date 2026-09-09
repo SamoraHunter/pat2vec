@@ -84,7 +84,7 @@ def search_bed_data(
         )
 
     if output_filename and os.path.exists(output_filename) and not overwrite:
-        print(f"Loading existing bed data from {output_filename}")
+        logger.debug(f"Loading existing bed data from {output_filename}")
         return pd.read_csv(output_filename)
 
     if cohort_searcher_with_terms_and_search is None:
@@ -137,7 +137,7 @@ def search_bed_data(
     if output_filename:
         if os.path.dirname(output_filename):
             os.makedirs(os.path.dirname(output_filename), exist_ok=True)
-        print(f"Saving bed data to {output_filename}")
+        logger.debug(f"Saving bed data to {output_filename}")
         results.to_csv(output_filename, index=False)
 
     return results

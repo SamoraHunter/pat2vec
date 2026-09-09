@@ -162,7 +162,7 @@ def ingest_data_to_elasticsearch(
 
     # Prepare documents for bulk indexing
     # Clean up DataFrame: replace NaN with None and drop metadata columns
-    temp_df = temp_df.where(pd.notnull(temp_df), None)
+    temp_df = temp_df.replace({np.nan: None})
     cols_to_drop = [c for c in ["_id", "_index", "_score"] if c in temp_df.columns]
     if cols_to_drop:
         temp_df = temp_df.drop(columns=cols_to_drop)

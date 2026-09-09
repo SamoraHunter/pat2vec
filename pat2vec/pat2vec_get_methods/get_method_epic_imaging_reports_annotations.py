@@ -123,7 +123,7 @@ def get_current_pat_epic_imaging_reports_annotations(
             config_obj.skipped_counter,
         )
     except Exception as e:
-        print(e)
+        logger.debug(e)
 
     start_year, start_month, end_year, end_month, start_day, end_day = (
         get_start_end_year_month(target_date_range, config_obj=config_obj)

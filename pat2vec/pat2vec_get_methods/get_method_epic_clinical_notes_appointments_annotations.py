@@ -1,3 +1,4 @@
+import logging
 from collections.abc import Callable
 
 import pandas as pd
@@ -7,6 +8,8 @@ from pat2vec.util.filter_dataframe_by_timestamp import filter_dataframe_by_times
 from pat2vec.util.get_start_end_year_month import get_start_end_year_month
 from pat2vec.util.methods_annotation import calculate_pretty_name_count_features
 from pat2vec.util.methods_get import update_pbar
+
+logger = logging.getLogger(__name__)
 
 
 def get_current_pat_epic_clinical_notes_appointments_annotations(
@@ -97,7 +100,7 @@ def get_current_pat_epic_clinical_notes_appointments_annotations(
             config_obj.skipped_counter,
         )
     except Exception as e:
-        print(e)
+        logger.debug(e)
 
     start_year, start_month, end_year, end_month, start_day, end_day = (
         get_start_end_year_month(target_date_range, config_obj=config_obj)

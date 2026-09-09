@@ -1,3 +1,4 @@
+import logging
 from typing import Any
 
 import pandas as pd
@@ -5,6 +6,8 @@ import pandas as pd
 from pat2vec.util.filter_dataframe_by_timestamp import filter_dataframe_by_timestamp
 from pat2vec.util.get_start_end_year_month import get_start_end_year_month
 from pat2vec.util.post_processing_dataframe import aggregate_dataframe_mean
+
+logger = logging.getLogger(__name__)
 
 
 def get_current_pat_obs(

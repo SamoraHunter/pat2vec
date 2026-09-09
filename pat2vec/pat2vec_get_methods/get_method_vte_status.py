@@ -1,3 +1,4 @@
+import logging
 import os
 from collections.abc import Callable
 
@@ -10,6 +11,7 @@ from pat2vec.util.filter_dataframe_by_timestamp import filter_dataframe_by_times
 from pat2vec.util.get_start_end_year_month import get_start_end_year_month
 from pat2vec.util.parse_date import validate_input_dates
 
+logger = logging.getLogger(__name__)
 SEARCH_TERM = "CORE_VTE_STATUS"
 VTE_TIME_FIELD = "observationdocument_recordeddtm"
 
@@ -86,7 +88,7 @@ def search_vte(
         )
 
     if output_filename and os.path.exists(output_filename) and not overwrite:
-        print(f"Loading existing VTE data from {output_filename}")
+        logger.debug(f"Loading existing VTE data from {output_filename}")
         return pd.read_csv(output_filename)
 
     if cohort_searcher_with_terms_and_search is None:
@@ -132,7 +134,7 @@ def search_vte(
     if output_filename:
         if os.path.dirname(output_filename):
             os.makedirs(os.path.dirname(output_filename), exist_ok=True)
-        print(f"Saving VTE data to {output_filename}")
+        logger.debug(f"Saving VTE data to {output_filename}")
         results.to_csv(output_filename, index=False)
 
     return results

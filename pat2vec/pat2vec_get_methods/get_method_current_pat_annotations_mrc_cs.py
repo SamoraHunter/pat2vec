@@ -1,3 +1,4 @@
+import logging
 from collections.abc import Callable
 
 import pandas as pd
@@ -9,6 +10,8 @@ from pat2vec.util.methods_annotation import (
     calculate_pretty_name_count_features,
 )
 from pat2vec.util.methods_get import update_pbar
+
+logger = logging.getLogger(__name__)
 
 
 def get_current_pat_annotations_mrc_cs(

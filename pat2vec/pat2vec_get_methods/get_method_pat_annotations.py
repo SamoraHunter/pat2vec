@@ -1,3 +1,4 @@
+import logging
 from collections.abc import Callable
 
 import pandas as pd
@@ -7,6 +8,8 @@ from pat2vec.util.filter_dataframe_by_timestamp import filter_dataframe_by_times
 from pat2vec.util.get_start_end_year_month import get_start_end_year_month
 from pat2vec.util.methods_annotation import calculate_pretty_name_count_features
 from pat2vec.util.methods_get import update_pbar
+
+logger = logging.getLogger(__name__)
 
 
 def get_current_pat_annotations(

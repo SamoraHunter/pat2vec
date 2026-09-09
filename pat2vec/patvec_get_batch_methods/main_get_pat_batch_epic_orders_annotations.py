@@ -61,7 +61,7 @@ def _fetch_epic_orders_from_elasticsearch(
         end_day = config_obj.global_end_day
 
         if config_obj.verbosity >= 5:
-            print(
+            _logger.debug(
                 f"_fetch_epic_orders_from_elasticsearch started for patient {current_pat_client_id_code}, date range: {start_year}-{start_month}-{start_day} to {end_year}-{end_month}-{end_day}",
             )
 
@@ -81,11 +81,11 @@ def _fetch_epic_orders_from_elasticsearch(
         )
 
         if results is not None and config_obj.verbosity >= 5:
-            print(
+            _logger.debug(
                 f"_fetch_epic_orders_from_elasticsearch returned {len(results) if results is not None else 'None'} rows from ES",
             )
         elif results is None and config_obj.verbosity >= 4:
-            print(
+            _logger.warning(
                 f"WARN: _fetch_epic_orders_from_elasticsearch returned None for patient {current_pat_client_id_code}",
             )
 
@@ -116,7 +116,7 @@ def _fetch_epic_orders_from_elasticsearch(
                     columns={"document_Name": "document_description"},
                 )
             if config_obj.verbosity >= 6:
-                print(
+                _logger.debug(
                     f"Renamed epic_orders columns: {original_cols} -> {list(results.columns)}",
                 )
 
@@ -190,7 +190,7 @@ def get_pat_batch_epic_orders_annotations(
         # First try to get from database
         if config_obj.storage_backend == "database":
             if config_obj.verbosity >= 5:
-                print(
+                _logger.debug(
                     f"Fetching raw epic_orders from DB for patient {current_pat_client_id_code}",
                 )
             pat_batch = get_df_from_db(
@@ -200,21 +200,25 @@ def get_pat_batch_epic_orders_annotations(
                 patient_ids=[current_pat_client_id_code],
             )
             if config_obj.verbosity >= 6:
-                print(f"Got {len(pat_batch)} rows from raw epic_orders DB table")
+                _logger.debug(
+                    f"Got {len(pat_batch)} rows from raw epic_orders DB table",
+                )
 
         # If not in DB, try from file
         if pat_batch.empty:
             if config_obj.verbosity >= 5:
-                print(
+                _logger.debug(
                     f"Trying to read raw epic_orders from file for patient {current_pat_client_id_code}",
                 )
             try:
                 pat_batch = pd.read_csv(batch_epic_orders_path)
                 if config_obj.verbosity >= 6:
-                    print(f"Got {len(pat_batch)} rows from raw epic_orders file")
+                    _logger.debug(
+                        f"Got {len(pat_batch)} rows from raw epic_orders file",
+                    )
             except (FileNotFoundError, pd.errors.EmptyDataError):
                 if config_obj.verbosity >= 5:
-                    print(
+                    _logger.debug(
                         f"File not found for raw epic_orders patient {current_pat_client_id_code}, will fetch from ES",
                     )
                 pat_batch = pd.DataFrame()
@@ -222,7 +226,7 @@ def get_pat_batch_epic_orders_annotations(
         # If still empty, fetch from Elasticsearch using provided search function
         if pat_batch.empty and cohort_searcher_with_terms_and_search is not None:
             if config_obj.verbosity >= 5:
-                print(
+                _logger.debug(
                     f"Fetching epic_orders from ES for patient {current_pat_client_id_code} with date range {config_obj.global_start_year}-{config_obj.global_start_month} to {config_obj.global_end_year}-{config_obj.global_end_month}",
                 )
             pat_batch = _fetch_epic_orders_from_elasticsearch(
@@ -232,7 +236,7 @@ def get_pat_batch_epic_orders_annotations(
                 t=t,
             )
             if config_obj.verbosity >= 5:
-                print(f"Got {len(pat_batch)} rows from ES for epic_orders")
+                _logger.debug(f"Got {len(pat_batch)} rows from ES for epic_orders")
 
             # Save raw batch to database after fetching from ES
             if not pat_batch.empty and config_obj.storage_backend == "database":
@@ -250,7 +254,7 @@ def get_pat_batch_epic_orders_annotations(
                     raise
 
         if config_obj.verbosity >= 6:
-            print(f"Got {len(pat_batch)} rows from raw epic_orders source")
+            _logger.debug(f"Got {len(pat_batch)} rows from raw epic_orders source")
 
         if pat_batch.empty:
             _logger.info(
@@ -328,7 +332,7 @@ def get_pat_batch_epic_orders_annotations(
                 f"Patient {current_pat_client_id_code} order note with annotations"
             )
             if config_obj.verbosity >= 6:
-                print(
+                _logger.debug(
                     f"Replaced {empty_mask.sum()} empty document_Content values",
                 )
 
@@ -341,11 +345,11 @@ def get_pat_batch_epic_orders_annotations(
                 t=t,
             )
             if config_obj.verbosity >= 6:
-                print(
+                _logger.debug(
                     f"Generated annotations batch with shape {batch_target.shape}",
                 )
         except Exception as e:
-            print(
+            _logger.error(
                 f"ERROR: Failed to generate annotations for epic_orders patient {current_pat_client_id_code}: {e}",
             )
             raise
@@ -400,7 +404,7 @@ def get_pat_batch_epic_orders_annotations(
                             )
 
                 if config_obj.verbosity >= 5:
-                    print(
+                    _logger.debug(
                         f"Writing epic_orders annotations for patient {current_pat_client_id_code}: {len(batch_to_save)} rows, cols={original_cols}",
                     )
 
@@ -421,10 +425,10 @@ def get_pat_batch_epic_orders_annotations(
                     if_exists="append",
                     index=False,
                 )
-                if config_obj.verbosity >= 5:
-                    print(
-                        f"Successfully wrote epic_orders annotations for patient {current_pat_client_id_code} to DB",
-                    )
+            if config_obj.verbosity >= 5:
+                _logger.debug(
+                    f"Trying to read raw epic_orders from file for patient {current_pat_client_id_code}",
+                )
         except Exception as e:
             _logger.error(
                 f"Could not write epic orders annotations to DB for patient {current_pat_client_id_code}: {e}",

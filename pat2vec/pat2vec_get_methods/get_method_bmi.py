@@ -1,3 +1,4 @@
+import logging
 import os
 
 import numpy as np
@@ -8,6 +9,8 @@ from pat2vec.util.elasticsearch_index_config import BMI_FIELDS
 from pat2vec.util.filter_dataframe_by_timestamp import filter_dataframe_by_timestamp
 from pat2vec.util.get_start_end_year_month import get_start_end_year_month
 from pat2vec.util.parse_date import validate_input_dates
+
+logger = logging.getLogger(__name__)
 
 
 def search_bmi_observations(
@@ -84,7 +87,7 @@ def search_bmi_observations(
         )
 
     if output_filename and os.path.exists(output_filename) and not overwrite:
-        print(f"Loading existing BMI data from {output_filename}")
+        logger.debug(f"Loading existing BMI data from {output_filename}")
         return pd.read_csv(output_filename)
 
     if cohort_searcher_with_terms_and_search is None:
@@ -144,7 +147,7 @@ def search_bmi_observations(
     if output_filename:
         if os.path.dirname(output_filename):
             os.makedirs(os.path.dirname(output_filename), exist_ok=True)
-        print(f"Saving BMI data to {output_filename}")
+        logger.debug(f"Saving BMI data to {output_filename}")
         results.to_csv(output_filename, index=False)
 
     return results

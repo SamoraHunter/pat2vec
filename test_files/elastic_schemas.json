@@ -61,7 +61,10 @@
                     "fields": {"keyword": {"type": "keyword"}}},
                 "observation_guid": {"type": "keyword"},
                 "observation_valuetext_analysed": {"type": "text"},
-                "observationdocument_recordeddtm": {"type": "date"}}},
+                "observationdocument_recordeddtm": {"type": "date"},
+                "obscatalogmasteritem_unitofmeasure": {
+                    "type": "text",
+                    "fields": {"keyword": {"type": "keyword"}}}}},
         "settings": {
             "index": {"refresh_interval": "5m", "routing_partition_size": "1"}}},
     "order": {

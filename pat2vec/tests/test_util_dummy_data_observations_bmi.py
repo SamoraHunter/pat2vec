@@ -33,6 +33,7 @@ class TestBMIFunctions(unittest.TestCase):
             "observation_valuetext_analysed",
             "observationdocument_recordeddtm",
             "clientvisit_visitidcode",
+            "obscatalogmasteritem_unitofmeasure",
         ]
         self.assertEqual(list(result.columns), expected_cols)
 
@@ -65,6 +66,7 @@ class TestBMIFunctions(unittest.TestCase):
             "observation_valuetext_analysed",
             "observationdocument_recordeddtm",
             "clientvisit_visitidcode",
+            "obscatalogmasteritem_unitofmeasure",
         ]
         self.assertEqual(list(result.columns), expected_cols)
         self.assertEqual(len(result), 0)
@@ -87,6 +89,7 @@ class TestBMIFunctions(unittest.TestCase):
             "observation_valuetext_analysed",
             "observationdocument_recordeddtm",
             "clientvisit_visitidcode",
+            "obscatalogmasteritem_unitofmeasure",
         ]
         self.assertEqual(list(result.columns), expected_cols)
 
@@ -105,9 +108,8 @@ class TestBMIFunctions(unittest.TestCase):
                 parts = val.split("-")
                 self.assertEqual(len(parts), 5)
                 self.assertTrue(
-                    all(len(p) in [8, 4] for p in parts[:4])
-                    and len(parts[4]) == 12
-                    or all(len(p) == 4 for p in parts[:3])
+                    (all(len(p) in [8, 4] for p in parts[:4]) and len(parts[4]) == 12)
+                    or all(len(p) == 4 for p in parts[:3]),
                 )
 
     def test_generate_bmi_data_clientvisit_visitidcode_format(self):

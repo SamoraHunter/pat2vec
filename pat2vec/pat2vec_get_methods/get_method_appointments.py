@@ -89,7 +89,7 @@ def search_appointments(
         )
 
     if output_filename and os.path.exists(output_filename) and not overwrite:
-        print(f"Loading existing appointment data from {output_filename}")
+        _logger.debug(f"Loading existing appointment data from {output_filename}")
         return pd.read_csv(output_filename)
 
     if cohort_searcher_with_terms_and_search is None:
@@ -142,7 +142,7 @@ def search_appointments(
     if output_filename:
         if os.path.dirname(output_filename):
             os.makedirs(os.path.dirname(output_filename), exist_ok=True)
-        print(f"Saving appointment data to {output_filename}")
+        _logger.debug(f"Saving appointment data to {output_filename}")
         results.to_csv(output_filename, index=False)
 
     return results
@@ -176,7 +176,7 @@ def get_appointments(
             specified patient. If no data is found, a DataFrame with only the
 
     """
-    print(
+    _logger.debug(
         f"DEBUG get_appointments CALLED: client={current_pat_client_id_code}, date_range={target_date_range}",
     )
 
@@ -195,14 +195,15 @@ def get_appointments(
 
     appointments_time_field = config_obj.appointments_time_field
 
-    print(
+    _logger.debug(
         f"DEBUG get_appointments: batch_mode={batch_mode}, pat_batch.empty={pat_batch.empty}",
     )
     if not pat_batch.empty:
-        print(
+        _logger.debug(
             f"DEBUG get_appointments: pat_batch.shape={pat_batch.shape}, columns={list(pat_batch.columns)}",
         )
-        print(
+
+        _logger.debug(
             f"DEBUG appointments search: {start_year}-{start_month}-{start_day} to {end_year}-{end_month}-{end_day}, time_field={appointments_time_field}",
         )
 

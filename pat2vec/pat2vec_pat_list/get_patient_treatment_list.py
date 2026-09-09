@@ -68,13 +68,16 @@ def extract_treatment_id_list_from_docs(config_obj: Any) -> list[str]:
     ):
         if os.path.exists(config_obj.test_data_path):
             if config_obj.verbosity > 0:
-                print(f"Info: Using test_data_path: {config_obj.test_data_path}")
+                _logger.debug(
+                    f"Info: Using test_data_path: {config_obj.test_data_path}",
+                )
             treatment_doc_path = config_obj.test_data_path
 
     if treatment_doc_path is None:
-        print(
-            f"Warning: Treatment document not found. Checked project root and CWD for '{config_obj.treatment_doc_filename}'. Returning empty list.",
-        )
+        if config_obj.verbosity > 0:
+            _logger.warning(
+                f"Warning: Treatment document not found. Checked project root and CWD for '{config_obj.treatment_doc_filename}'. Returning empty list.",
+            )
         return []
 
     # Determine the file format based on the file extension
@@ -106,7 +109,9 @@ def extract_treatment_id_list_from_docs(config_obj: Any) -> list[str]:
             if col in docs.columns:
                 config_obj.patient_id_column_name = col
                 if config_obj.verbosity > 0:
-                    print(f"Auto-detected patient ID column: {col} (exact match)")
+                    _logger.debug(
+                        f"Auto-detected patient ID column: {col} (exact match)",
+                    )
                 break
 
         if config_obj.patient_id_column_name == "auto":
@@ -126,12 +131,13 @@ def extract_treatment_id_list_from_docs(config_obj: Any) -> list[str]:
 
             if best_match_column is not None:
                 if config_obj.verbosity > 2:
-                    print("best_match_column:", best_match_column)
+                    _logger.debug("best_match_column: %s", best_match_column)
                 config_obj.patient_id_column_name = best_match_column
-            else:
-                if config_obj.verbosity > 2:
-                    print("best_match_column: None, attempting default client_idcode")
-                config_obj.patient_id_column_name = "client_idcode"
+            elif config_obj.verbosity > 2:
+                _logger.debug(
+                    "best_match_column: None, attempting default client_idcode",
+                )
+            config_obj.patient_id_column_name = "client_idcode"
 
     # Fallback: If patient_id_column_name is still not in docs.columns (e.g., when explicitly set but file has different column),
     # try auto-detection to find a matching column
@@ -149,7 +155,9 @@ def extract_treatment_id_list_from_docs(config_obj: Any) -> list[str]:
             if col in docs.columns:
                 config_obj.patient_id_column_name = col
                 if config_obj.verbosity > 0:
-                    print(f"Auto-detected patient ID column: {col} (fallback match)")
+                    _logger.debug(
+                        f"Auto-detected patient ID column: {col} (fallback match)",
+                    )
                 break
 
         # If still not found, try pattern matching
@@ -171,7 +179,7 @@ def extract_treatment_id_list_from_docs(config_obj: Any) -> list[str]:
             if best_match_column is not None:
                 config_obj.patient_id_column_name = best_match_column
                 if config_obj.verbosity > 2:
-                    print("best_match_column:", best_match_column)
+                    _logger.debug("best_match_column: %s", best_match_column)
 
     # drop the nan in column
     docs = docs.dropna(subset=[config_obj.patient_id_column_name])
@@ -182,8 +190,9 @@ def extract_treatment_id_list_from_docs(config_obj: Any) -> list[str]:
         n_samples = min(config_obj.sample_treatment_docs, len(docs))
 
         if config_obj.verbosity >= 1:
-            # The print statement now reflects the actual number of samples being taken.
-            print(f"Sampling {n_samples} of {len(docs)} available treatment docs.")
+            _logger.info(
+                f"Sampling {n_samples} of {len(docs)} available treatment docs.",
+            )
 
         # Safely sample the DataFrame.
         docs = docs.sample(n_samples)
@@ -234,9 +243,7 @@ def generate_control_list(
 
     n_treatments = len(treatment_client_id_list) * treatment_control_ratio_n
     if verbosity > 0:
-        print(
-            f"{n_treatments} selected as controls",
-        )  # Soft control selection, many treatments will be false positives
+        _logger.info(f"{n_treatments} selected as controls")
 
     treatment_control_sample = pd.DataFrame(full_control_client_id_list).sample(
         n_treatments,
@@ -248,7 +255,10 @@ def generate_control_list(
         pickle.dump(all_patient_list_control, f)
 
     if verbosity > 0:
-        print(all_patient_list_control[0:10])
+        _logger.debug(
+            "all_patient_list_control[:10]: %s",
+            all_patient_list_control[:10],
+        )
 
     return all_patient_list_control
 
@@ -291,7 +301,7 @@ def sanitize_hospital_ids(hospital_ids: list[str], config_obj: Any) -> list[str]
                 digit_warning_count += 1
 
     if config_obj.verbosity > 0:
-        print(
+        _logger.debug(
             f"Debug: Number of hospital IDs conforming to the format before sanitization: {valid_count}",
         )
 
@@ -299,12 +309,12 @@ def sanitize_hospital_ids(hospital_ids: list[str], config_obj: Any) -> list[str]
         config_obj.verbosity > 1
     ):  # Only print detailed warnings at a higher verbosity level
         if uppercase_warning_count > 0:
-            print(
+            _logger.warning(
                 f"Warning: Number of hospital IDs that do not start with an uppercase letter: {uppercase_warning_count}",
             )
 
         if digit_warning_count > 0:
-            print(
+            _logger.warning(
                 f"Warning: Number of hospital IDs that do not have exactly 6 digits following the letter: {digit_warning_count}",
             )
 
@@ -322,12 +332,14 @@ def sanitize_hospital_ids(hospital_ids: list[str], config_obj: Any) -> list[str]
 
         # After sanitization
         if config_obj.verbosity > 0:
-            print(f"Info: Number of hospital IDs changed to uppercase: {changes_made}")
+            _logger.info(
+                f"Info: Number of hospital IDs changed to uppercase: {changes_made}",
+            )
 
         # Warning on irregular number of digits after sanitization
         irregular_count = sum(len(hospital_id) != 7 for hospital_id in sanitized_list)
         if irregular_count > 0 and config_obj.verbosity > 1:
-            print(
+            _logger.warning(
                 f"Warning: Number of hospital IDs that do not have exactly 7 characters: {irregular_count}",
             )
 
@@ -373,7 +385,7 @@ def get_all_patients_list(config_obj: Any) -> list[str]:
 
     if config_obj.individual_patient_window:
         if config_obj.verbosity > 0:
-            print("Using patient list from individual_patient_window_df")
+            _logger.info("Using patient list from individual_patient_window_df")
 
         ipw_df = config_obj.individual_patient_window_df
         id_column = config_obj.individual_patient_id_column_name
@@ -410,7 +422,7 @@ def get_all_patients_list(config_obj: Any) -> list[str]:
                 fallback_path = "../test_files/treatment_docs.csv"
 
             if fallback_path:
-                print(
+                _logger.info(
                     f"Info: Treatment docs not found. Falling back to static test data: {fallback_path}",
                 )
                 test_df = read_test_data(fallback_path)
@@ -463,7 +475,7 @@ def get_all_patients_list(config_obj: Any) -> list[str]:
     )
     if is_live_or_elastic_test and should_check:
         if config_obj.verbosity > 0:
-            print(
+            _logger.info(
                 "Verifying patient existence in Elasticsearch based on enabled data sources...",
             )
 
@@ -548,13 +560,15 @@ def get_all_patients_list(config_obj: Any) -> list[str]:
         # Default fallback if nothing specific is enabled
         if not indices_to_check:
             if config_obj.verbosity > 0:
-                print(
+                _logger.info(
                     "No specific data sources enabled for existence check. Defaulting to epr_documents.",
                 )
             add_index("epr_documents", id_field_term)
 
         if config_obj.verbosity > 0:
-            print(f"Checking patient existence against indices: {indices_to_check}")
+            _logger.debug(
+                f"Checking patient existence against indices: {indices_to_check}",
+            )
 
         valid_patients = check_patients_existence(
             all_patient_list,
@@ -569,7 +583,7 @@ def get_all_patients_list(config_obj: Any) -> list[str]:
         ):
             fallback_field = id_field_term.replace(".keyword", "")
             if config_obj.verbosity > 0:
-                print(
+                _logger.warning(
                     f"Warning: No patients found with {id_field_term}. Retrying with fallback field: {fallback_field}",
                 )
 
@@ -584,11 +598,11 @@ def get_all_patients_list(config_obj: Any) -> list[str]:
 
         missing_count = len(all_patient_list) - len(valid_patients)
         if missing_count > 0:
-            print(
+            _logger.warning(
                 f"Warning: {missing_count} patients from the list were not found in Elasticsearch and will be skipped.",
             )
             if config_obj.verbosity > 1:
-                print(
+                _logger.debug(
                     f"Skipped IDs sample: {list(set(all_patient_list) - set(valid_patients))[:10]}",
                 )
 
@@ -597,8 +611,8 @@ def get_all_patients_list(config_obj: Any) -> list[str]:
     try:
         analyze_client_codes(all_patient_list)
     except Exception as e:
-        print("failed to analyze_client_codes")
-        print(e)
+        _logger.error("failed to analyze_client_codes")
+        _logger.exception(e)
 
     if config_obj.sample_treatment_docs > 0:
         random.seed(config_obj.random_seed_val)
@@ -607,15 +621,14 @@ def get_all_patients_list(config_obj: Any) -> list[str]:
         n_samples = min(config_obj.sample_treatment_docs, len(all_patient_list))
 
         if config_obj.verbosity >= 0:
-            # The print statement now reflects the actual number of samples being taken.
-            print(
+            _logger.info(
                 f"Sampling {n_samples} of {len(all_patient_list)} available treatment docs.",
             )
 
             # Safely sample the DataFrame.
             all_patient_list = pd.Series(all_patient_list).sample(n_samples).to_list()
 
-            print("all_patient_list size now:", len(all_patient_list))
+            _logger.debug("all_patient_list size now: %d", len(all_patient_list))
 
     return all_patient_list
 
@@ -652,13 +665,10 @@ def analyze_client_codes(
 
     # Display warnings for large numbers of invalid codes
     if len(invalid_codes) > len(client_idcode_list) * 0.0001:  # If >10% are invalid
-        print(
+        _logger.warning(
             f"Warning: invalid codes ({len(invalid_codes)} out of {len(client_idcode_list)})",
         )
-        print(
-            "Sample invalid codes:",
-            invalid_codes[:15],
-        )  # Show a sample of invalid codes
+        _logger.debug("Sample invalid codes: %s", invalid_codes[:15])
 
     # Step 2: Extract features for valid codes
     def extract_features(code):
@@ -689,13 +699,13 @@ def analyze_client_codes(
         # Check cluster sizes
         cluster_sizes = Counter(clusters)
 
-        print("\nDiscovered Clusters:")
+        _logger.info("\nDiscovered Clusters:")
         for cluster, codes in cluster_dict.items():
-            print(f"Cluster {cluster}: {codes}")
-        print("\nCluster sizes:", dict(cluster_sizes))
+            _logger.debug("Cluster %d: %s", cluster, codes)
+        _logger.debug("\nCluster sizes: %s", dict(cluster_sizes))
     else:
         cluster_dict = {0: valid_codes}
-        print(
+        _logger.info(
             "Insufficient valid codes for clustering. All valid codes grouped in a single cluster.",
         )
 

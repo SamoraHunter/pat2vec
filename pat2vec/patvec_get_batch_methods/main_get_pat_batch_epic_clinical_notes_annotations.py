@@ -161,16 +161,18 @@ def get_pat_batch_epic_clinical_notes_annotations(
 
     """
     if config_obj.verbosity > 3:
-        print("\n=== get_pat_batch_epic_clinical_notes_annotations START ===")
-        print(f"Patient: {current_pat_client_id_code}")
-        print(
+        _logger.info("\n=== get_pat_batch_epic_clinical_notes_annotations START ===")
+        _logger.info(f"Patient: {current_pat_client_id_code}")
+        _logger.info(
             f"Storage backend: {config_obj.storage_backend if config_obj else 'None'}",
         )
 
     if cat is None:
-        print("WARNING: cat (MedCAT) is None! Annotations cannot be generated.")
+        _logger.warning(
+            "WARNING: cat (MedCAT) is None! Annotations cannot be generated.",
+        )
     else:
-        print(f"MedCAT cat object available: {type(cat)}")
+        _logger.debug(f"MedCAT cat object available: {type(cat)}")
 
     if config_obj.storage_backend == "database":
         table_name = "ann_epic_clinical_notes"
@@ -408,9 +410,11 @@ def get_pat_batch_epic_clinical_notes_annotations(
             raise
     else:
         if config_obj.verbosity > 3:
-            print("Skipping database storage (should_store=False or empty batch)")
+            _logger.debug(
+                "Skipping database storage (should_store=False or empty batch)",
+            )
 
     if config_obj.verbosity > 3:
-        print("\n=== get_pat_batch_epic_clinical_notes_annotations END ===\n")
+        _logger.info("\n=== get_pat_batch_epic_clinical_notes_annotations END ===\n")
 
     return batch_target

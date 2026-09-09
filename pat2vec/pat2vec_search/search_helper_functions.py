@@ -1,6 +1,9 @@
+import logging
 import re
 from collections.abc import Iterable
 from typing import Any
+
+_logger = logging.getLogger(__name__)
 
 import pandas as pd
 
@@ -21,7 +24,7 @@ def stringlist2searchlist(string_list: str, output_name: str) -> None:
     textfile = open(output_name + ".txt", "w")
     textfile.write(f'"{list_string}"')
     textfile.close()
-    print("List processed!")
+    _logger.info("List processed!")
 
 
 def pylist2searchlist(list_name: list[str], output_name: str) -> None:
@@ -57,7 +60,7 @@ def stringlist2pylist(string_list: str, var_name: str) -> None:
 
     """
     globals()[var_name] = string_list.replace("\n", ",").split(",")
-    print("List generated!")
+    _logger.info("List generated!")
 
 
 def date_cleaner(df: pd.DataFrame, cols: list[str], date_format: str) -> None:
@@ -74,7 +77,7 @@ def date_cleaner(df: pd.DataFrame, cols: list[str], date_format: str) -> None:
     """
     for col in cols:
         df[col] = pd.to_datetime(df[col], utc=True).dt.strftime(date_format)
-    print("dates formatted!")
+    _logger.info("dates formatted!")
 
 
 def bulk_str_findall(
