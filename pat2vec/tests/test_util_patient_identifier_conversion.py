@@ -4,6 +4,7 @@ from unittest.mock import MagicMock
 import pandas as pd
 
 from pat2vec.util.patient_identifier_conversion import (
+    convert_client_idcode_to_nhs_number,
     convert_durable_key_to_hospital_numbers,
     convert_durable_key_to_mrn,
     convert_durable_key_to_nhs_numbers,
@@ -14,6 +15,7 @@ from pat2vec.util.patient_identifier_conversion import (
     convert_hospital_numbers_to_durable_keys,
     convert_mrn_to_durable_key,
     convert_mrns_to_durable_keys,
+    convert_nhs_number_to_client_idcode,
     convert_nhs_number_to_durable_key,
     convert_nhs_numbers_to_durable_keys,
     extract_hospital_numbers,
@@ -107,12 +109,13 @@ class TestConvertWithMockPat2Vec(unittest.TestCase):
                 {
                     "patient_HospitalNumber": ["123456"],
                     "patient_DurableKey": ["DURABLE123"],
-                }
+                },
             )
         )
 
         result, missing = convert_hospital_number_to_durable_key(
-            ["123456"], self.pat2vec_obj
+            ["123456"],
+            self.pat2vec_obj,
         )
 
         self.assertEqual(result, "DURABLE123")
@@ -125,7 +128,8 @@ class TestConvertWithMockPat2Vec(unittest.TestCase):
         )
 
         result, missing = convert_hospital_number_to_durable_key(
-            ["999999"], self.pat2vec_obj
+            ["999999"],
+            self.pat2vec_obj,
         )
 
         self.assertIsNone(result)
@@ -138,12 +142,13 @@ class TestConvertWithMockPat2Vec(unittest.TestCase):
                 {
                     "patient_HospitalNumber": ["123456", "789012"],
                     "patient_DurableKey": ["DURABLE123", "DURABLE123"],
-                }
+                },
             )
         )
 
         result, missing = convert_durable_key_to_hospital_numbers(
-            "DURABLE123", self.pat2vec_obj
+            "DURABLE123",
+            self.pat2vec_obj,
         )
 
         self.assertEqual(result, ["123456", "789012"])
@@ -156,12 +161,13 @@ class TestConvertWithMockPat2Vec(unittest.TestCase):
                 {
                     "patient_NhsNumber": ["NHS 123 456 7890"],
                     "patient_DurableKey": ["DURABLE123"],
-                }
+                },
             )
         )
 
         result, missing = convert_nhs_number_to_durable_key(
-            ["NHS 123 456 7890"], self.pat2vec_obj
+            ["NHS 123 456 7890"],
+            self.pat2vec_obj,
         )
 
         self.assertEqual(result, "DURABLE123")
@@ -174,7 +180,8 @@ class TestConvertWithMockPat2Vec(unittest.TestCase):
         )
 
         result, missing = convert_nhs_number_to_durable_key(
-            ["NHS 999 999 9999"], self.pat2vec_obj
+            ["NHS 999 999 9999"],
+            self.pat2vec_obj,
         )
 
         self.assertIsNone(result)
@@ -187,12 +194,13 @@ class TestConvertWithMockPat2Vec(unittest.TestCase):
                 {
                     "patient_NhsNumber": ["1234567890"],
                     "patient_DurableKey": ["DURABLE123"],
-                }
+                },
             )
         )
 
         result, missing = convert_durable_key_to_nhs_numbers(
-            "DURABLE123", self.pat2vec_obj
+            "DURABLE123",
+            self.pat2vec_obj,
         )
 
         self.assertEqual(result, ["1234567890"])
@@ -202,7 +210,7 @@ class TestConvertWithMockPat2Vec(unittest.TestCase):
         """Test converting MRN to durable key when found."""
         self.pat2vec_obj.cohort_searcher_with_terms_and_search.return_value = (
             pd.DataFrame(
-                {"Patient_MRN": ["ABC123"], "patient_DurableKey": ["DURABLE123"]}
+                {"Patient_MRN": ["ABC123"], "patient_DurableKey": ["DURABLE123"]},
             )
         )
 
@@ -215,7 +223,7 @@ class TestConvertWithMockPat2Vec(unittest.TestCase):
         """Test converting durable key to MRNs."""
         self.pat2vec_obj.cohort_searcher_with_terms_and_search.return_value = (
             pd.DataFrame(
-                {"Patient_MRN": ["ABC123"], "patient_DurableKey": ["DURABLE123"]}
+                {"Patient_MRN": ["ABC123"], "patient_DurableKey": ["DURABLE123"]},
             )
         )
 
@@ -231,12 +239,13 @@ class TestConvertWithMockPat2Vec(unittest.TestCase):
                 {
                     "patient_HospitalNumber": ["123456", "789012"],
                     "patient_DurableKey": ["DURABLE001", "DURABLE002"],
-                }
+                },
             )
         )
 
         result, missing = convert_hospital_numbers_to_durable_keys(
-            ["123456", "789012"], self.pat2vec_obj
+            ["123456", "789012"],
+            self.pat2vec_obj,
         )
 
         self.assertEqual(result, ["DURABLE001", "DURABLE002"])
@@ -249,12 +258,13 @@ class TestConvertWithMockPat2Vec(unittest.TestCase):
                 {
                     "patient_NhsNumber": ["NHS 123 456 7890", "NHS 098 765 4321"],
                     "patient_DurableKey": ["DURABLE001", "DURABLE002"],
-                }
+                },
             )
         )
 
         result, missing = convert_nhs_numbers_to_durable_keys(
-            ["NHS 123 456 7890", "NHS 098 765 4321"], self.pat2vec_obj
+            ["NHS 123 456 7890", "NHS 098 765 4321"],
+            self.pat2vec_obj,
         )
 
         self.assertEqual(result, ["DURABLE001", "DURABLE002"])
@@ -267,12 +277,13 @@ class TestConvertWithMockPat2Vec(unittest.TestCase):
                 {
                     "Patient_MRN": ["ABC123", "XYZ789"],
                     "patient_DurableKey": ["DURABLE001", "DURABLE002"],
-                }
+                },
             )
         )
 
         result, missing = convert_mrns_to_durable_keys(
-            ["ABC123", "XYZ789"], self.pat2vec_obj
+            ["ABC123", "XYZ789"],
+            self.pat2vec_obj,
         )
 
         self.assertEqual(result, ["DURABLE001", "DURABLE002"])
@@ -285,12 +296,13 @@ class TestConvertWithMockPat2Vec(unittest.TestCase):
                 {
                     "patient_HospitalNumber": ["123456", "789012"],
                     "patient_DurableKey": ["DURABLE001", "DURABLE001"],
-                }
+                },
             )
         )
 
         result, missing = convert_durable_keys_to_hospital_numbers(
-            ["DURABLE001"], self.pat2vec_obj
+            ["DURABLE001"],
+            self.pat2vec_obj,
         )
 
         self.assertEqual(result, ["123456", "789012"])
@@ -303,12 +315,13 @@ class TestConvertWithMockPat2Vec(unittest.TestCase):
                 {
                     "patient_NhsNumber": ["1234567890"],
                     "patient_DurableKey": ["DURABLE001"],
-                }
+                },
             )
         )
 
         result, missing = convert_durable_keys_to_nhs_numbers(
-            ["DURABLE001"], self.pat2vec_obj
+            ["DURABLE001"],
+            self.pat2vec_obj,
         )
 
         self.assertEqual(result, ["1234567890"])
@@ -321,7 +334,7 @@ class TestConvertWithMockPat2Vec(unittest.TestCase):
                 {
                     "Patient_MRN": ["ABC123"],
                     "patient_DurableKey": ["DURABLE001"],
-                }
+                },
             )
         )
 
@@ -329,6 +342,68 @@ class TestConvertWithMockPat2Vec(unittest.TestCase):
 
         self.assertEqual(result, ["ABC123"])
         self.assertEqual(missing, [])
+
+    def test_convert_client_idcode_to_nhs_number_found(self):
+        """Test converting client_idcode (hospital number) to NHS number when found."""
+        self.pat2vec_obj.cohort_searcher_with_terms_and_search.return_value = (
+            pd.DataFrame(
+                {
+                    "client_idcode": ["HOSP001"],
+                    "client_universalnumber": ["NHS123456789"],
+                },
+            )
+        )
+
+        result, missing = convert_client_idcode_to_nhs_number(
+            ["HOSP001"], self.pat2vec_obj
+        )
+
+        self.assertEqual(result, ["NHS123456789"])
+        self.assertEqual(missing, [])
+
+    def test_convert_client_idcode_to_nhs_number_not_found(self):
+        """Test converting client_idcode when no match is found."""
+        self.pat2vec_obj.cohort_searcher_with_terms_and_search.return_value = (
+            pd.DataFrame({"client_idcode": [], "client_universalnumber": []})
+        )
+
+        result, missing = convert_client_idcode_to_nhs_number(
+            ["NONEXISTENT"], self.pat2vec_obj
+        )
+
+        self.assertEqual(result, [])
+        self.assertEqual(missing, ["NONEXISTENT"])
+
+    def test_convert_nhs_number_to_client_idcode_found(self):
+        """Test converting NHS number to client_idcode (hospital number) when found."""
+        self.pat2vec_obj.cohort_searcher_with_terms_and_search.return_value = (
+            pd.DataFrame(
+                {
+                    "client_universalnumber": ["NHS123456789"],
+                    "client_idcode": ["HOSP001"],
+                },
+            )
+        )
+
+        result, missing = convert_nhs_number_to_client_idcode(
+            ["NHS123456789"], self.pat2vec_obj
+        )
+
+        self.assertEqual(result, ["HOSP001"])
+        self.assertEqual(missing, [])
+
+    def test_convert_nhs_number_to_client_idcode_not_found(self):
+        """Test converting NHS number when no match is found."""
+        self.pat2vec_obj.cohort_searcher_with_terms_and_search.return_value = (
+            pd.DataFrame({"client_universalnumber": [], "client_idcode": []})
+        )
+
+        result, missing = convert_nhs_number_to_client_idcode(
+            ["NONEXISTENT"], self.pat2vec_obj
+        )
+
+        self.assertEqual(result, [])
+        self.assertEqual(missing, ["NONEXISTENT"])
 
 
 if __name__ == "__main__":

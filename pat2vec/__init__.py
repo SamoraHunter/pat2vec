@@ -775,6 +775,7 @@ from .util.parse_date import (
     validate_input_dates,
 )
 from .util.patient_identifier_conversion import (
+    convert_client_idcode_to_nhs_number,
     convert_durable_key_to_hospital_numbers,
     convert_durable_key_to_mrn,
     convert_durable_key_to_nhs_numbers,
@@ -787,6 +788,7 @@ from .util.patient_identifier_conversion import (
     convert_hospital_numbers_to_durable_keys,
     convert_mrn_to_durable_key,
     convert_mrns_to_durable_keys,
+    convert_nhs_number_to_client_idcode,
     convert_nhs_number_to_durable_key,
     convert_nhs_numbers_to_durable_keys,
     convert_source_id_to_durable_key,
@@ -1100,6 +1102,7 @@ __all__ = [
     "compare_ipw_annotation_rows",
     "compute_feature_stats",
     "config_class",
+    "convert_client_idcode_to_nhs_number",
     "convert_date",
     "convert_durable_key_to_hospital_numbers",
     "convert_durable_key_to_mrn",
@@ -1113,6 +1116,7 @@ __all__ = [
     "convert_hospital_numbers_to_durable_keys",
     "convert_mrn_to_durable_key",
     "convert_mrns_to_durable_keys",
+    "convert_nhs_number_to_client_idcode",
     "convert_nhs_number_to_durable_key",
     "convert_nhs_numbers_to_durable_keys",
     "convert_source_id_to_durable_key",
