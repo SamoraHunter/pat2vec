@@ -456,6 +456,9 @@ class config_class:
         self.pre_appointments_batch_path = (
             f"current_pat_appointments_batches{self.suffix}/"
         )
+        self.pre_ascribe_translog_batch_path = (
+            f"current_pat_ascribe_translog_batches{self.suffix}/"
+        )
 
         #: If `True`, stores patient document batches.
         self.store_pat_batch_docs = store_pat_batch_docs
@@ -645,6 +648,7 @@ class config_class:
             "annotations_reports": False,
             "covid": False,
             "textual_obs": False,
+            "ascribe_translog": False,
             # Epic Options
             "epic_encounters": False,
             "epic_clinical_notes": False,
@@ -850,6 +854,10 @@ class config_class:
             self.pre_appointments_batch_path = os.path.join(
                 self.root_path,
                 f"current_pat_appointments_batches{self.suffix}/",
+            )
+            self.pre_ascribe_translog_batch_path = os.path.join(
+                self.root_path,
+                f"current_pat_ascribe_translog_batches{self.suffix}/",
             )
 
             # Epic Batch Paths

@@ -17,9 +17,9 @@ pat2vec_obj = main(config_obj=config_obj, cogstack=True)
 # Debug: Print config and authentication info
 print("\n=== Conversion Configuration ===")
 print(f"testing flag: {config_obj.testing}")
-print(f'Project name: {getattr(config_obj, "proj_name", "N/A")}')
-print(f'Credential path: {getattr(config_obj, "credentials_path", "N/A")}')
-print(f'Elasticsearch hosts (from config): {getattr(pat2vec_obj, "_hosts", "N/A")}')
+print(f"Project name: {getattr(config_obj, 'proj_name', 'N/A')}")
+print(f"Credential path: {getattr(config_obj, 'credentials_path', 'N/A')}")
+print(f"Elasticsearch hosts (from config): {getattr(pat2vec_obj, '_hosts', 'N/A')}")
 
 nhs_numbers, missing = convert_client_idcode_to_nhs_number(
     client_idcodes=client_idcodes,

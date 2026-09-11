@@ -31,6 +31,7 @@ from pat2vec.pat2vec_get_methods import (
     get_current_pat_epic_medical_history_annotations,
 )
 from pat2vec.pat2vec_get_methods.get_method_appointments import get_appointments
+from pat2vec.pat2vec_get_methods.get_method_ascribe_translog import get_ascribe_translog
 from pat2vec.pat2vec_get_methods.get_method_bed import get_bed
 from pat2vec.pat2vec_get_methods.get_method_bloods import get_current_pat_bloods
 from pat2vec.pat2vec_get_methods.get_method_bmi import get_bmi_features
@@ -290,6 +291,13 @@ def main_batch(
                         "func": get_bmi_features,
                         "batch_arg": "pat_batch",
                         "batch_key": "batch_bmi",
+                    },
+                    {
+                        "option": "ascribe_translog",
+                        "pbar": "ascribe_translog",
+                        "func": get_ascribe_translog,
+                        "batch_arg": "pat_batch",
+                        "batch_key": "batch_ascribe_translog",
                     },
                     {
                         "option": "bloods",

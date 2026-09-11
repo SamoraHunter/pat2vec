@@ -601,6 +601,158 @@ def generate_drug_orders_data(
     return df.reset_index(drop=True)
 
 
+def generate_ascribe_translog_data(
+    num_rows: int,
+    entered_list: list[str],
+    global_start_year: int,
+    global_start_month: int,
+    global_start_day: int = 1,
+    global_end_year: int = 2023,
+    global_end_month: int = 12,
+    global_end_day: int = 31,
+    fields_list: list[str] | None = None,
+) -> pd.DataFrame:
+    """Generates dummy data for the 'ascribe_translog' index.
+
+    Args:
+    ----
+        num_rows: Number of rows to generate per client.
+        entered_list: List of patient IDs (casenumber/client_idcode/hospital numbers)
+            to generate data for. These will be used as the casenumber field in Elasticsearch.
+        global_start_year: Start year for the random date range.
+        global_start_month: Start month for the random date range.
+        global_end_year: End year for the random date range.
+        global_end_month: End month for the random date range.
+        global_start_day: Start day for the random date range. Defaults to 1.
+        global_end_day: End day for the random date range. Defaults to 31.
+        fields_list: List of columns to include in the DataFrame.
+
+    Returns:
+    -------
+        A pandas DataFrame with generated dummy ascribe_translog data including
+        casenumber (hospital number), nhsnumber, and other translog fields.
+
+    Raises:
+    ------
+        None
+
+    """
+    if fields_list is None:
+        fields_list = [
+            "nhsnumber",
+            "casenumber",
+            "description",
+            "kind",
+            "logdatetime",
+            "ward",
+            "consultant",
+            "specialty",
+            "transtype",
+            "storesdescription",  # The actual drug name/description
+            "directioncode",  # Direction code for the medication
+            "pack_quantity",
+            "_id",
+            "_index",
+            "_score",
+        ]
+    df_holder_list = []
+
+    ward_names = ["WARD_A", "WARD_B", "WARD_C", "ICU", "CARDIO"]
+    consultant_names = [
+        "Dr Smith",
+        "Dr Johnson",
+        "Dr Williams",
+        "Brown",
+        "Dr Davis",
+    ]
+    specialty_names = ["Cardiology", "Neurology", "Orthopedics", "General Medicine"]
+    trans_type_names = ["INPATIENT", "OUTPATIENT", "EMERGENCY", "ROUTINE"]
+
+    # storesdescription: Actual medication/drug names for the storedescription field
+    storesdescription_names = [
+        "Amoxicillin 500mg Capsules",
+        "Metformin 850mg Tablets",
+        "Atorvastatin 20mg Tablets",
+        "Omeprazole 20mg Capsules",
+        "Amlodipine 5mg Tablets",
+        "Simvastatin 40mg Tablets",
+        "Levothyroxine 50mcg Tablets",
+        "Salbutamol Inhaler 100mcg",
+        "Ibuprofen 400mg Tablets",
+        "Aspirin 75mg Capsules",
+    ]
+
+    description_names = [
+        "Admission Summary",
+        "Discharge Summary",
+        "Consultation Note",
+        "Procedure Report",
+    ]
+
+    specialty_names = ["Cardiology", "Neurology", "Orthopedics", "General Medicine"]
+    trans_type_names = ["INPATIENT", "OUTPATIENT", "EMERGENCY", "ROUTINE"]
+    kind_names = ["MEDICATION", "TREATMENT", "PROCEDURE"]
+
+    for i in range(len(entered_list)):
+        current_pat_nhs_number = entered_list[i]
+
+        logdatetime_dates = [
+            create_random_date_from_globals(
+                global_start_year,
+                global_start_month,
+                global_end_year,
+                global_end_month,
+                global_start_day,
+                global_end_day,
+            ).strftime("%Y-%m-%dT%H:%M:%S")
+            for _ in range(num_rows)
+        ]
+
+        data = {
+            "nhsnumber": [current_pat_nhs_number for _ in range(num_rows)],
+            "casenumber": [
+                f"CASE_{random.randint(100000, 999999)}" for _ in range(num_rows)
+            ],
+            "description": [
+                faker.random_element(description_names) for _ in range(num_rows)
+            ],
+            "kind": [faker.random_element(kind_names) for _ in range(num_rows)],
+            "logdatetime": logdatetime_dates,
+            "ward": [faker.random_element(ward_names) for _ in range(num_rows)],
+            "consultant": [
+                faker.random_element(consultant_names) for _ in range(num_rows)
+            ],
+            "specialty": [
+                faker.random_element(specialty_names) for _ in range(num_rows)
+            ],
+            "transtype": [
+                faker.random_element(trans_type_names) for _ in range(num_rows)
+            ],
+            "storesdescription": [
+                faker.random_element(storesdescription_names) for _ in range(num_rows)
+            ],
+            "directioncode": [f"D{random.randint(100, 999)}" for _ in range(num_rows)],
+            "pack_quantity": [random.randint(1, 10) for _ in range(num_rows)],
+            "_id": [
+                f"{i}_{j}" for i in range(len(entered_list)) for j in range(num_rows)
+            ][i * num_rows : (i + 1) * num_rows],
+            "_index": ["ascribe_translog" for _ in range(num_rows)],
+            "_score": [None for _ in range(num_rows)],
+        }
+
+        df = pd.DataFrame(data)
+        df_holder_list.append(df)
+
+    df = pd.concat(df_holder_list)
+    unique_fields = list(dict.fromkeys([*fields_list, "_id", "_index", "_score"]))
+    for field in unique_fields:
+        if field not in df.columns:
+            df[field] = np.nan
+
+    df = df[unique_fields]
+    return df.reset_index(drop=True)
+
+
 def generate_observations_MRC_text_data(
     num_rows: int,
     entered_list: list[str],
@@ -2597,6 +2749,22 @@ def cohort_searcher_with_terms_and_search_dummy(
             fields_list=fields_list,
         )
 
+    elif index_name == "ascribe_translog":
+        if verbose:
+            logger.debug("Generating data for 'ascribe_translog'")
+        num_rows = random.randint(1, 10)
+        df = generate_ascribe_translog_data(
+            num_rows,
+            entered_list,
+            global_start_year,
+            global_start_month,
+            final_global_start_day,
+            global_end_year,
+            global_end_month,
+            final_global_end_day,
+            fields_list=fields_list,
+        )
+
     elif index_name == "epic_encounters":
         if verbose:
             logger.debug("Generating data for 'epic_encounters'")
@@ -4201,6 +4369,27 @@ def populate_elastic_with_dummy_data(
         es_client=cs.elastic,
     )
     cs.elastic.indices.refresh(index="problem_list")
+
+    # Ascribe Translog (legacy system, now uses casenumber/client_idcode by default)
+    df_ascribe_translog = generate_ascribe_translog_data(
+        num_rows=random.randint(1, 5),
+        entered_list=patient_ids,
+        global_start_year=global_start_year,
+        global_start_month=global_start_month,
+        global_end_year=global_end_year,
+        global_end_month=global_end_month,
+        global_end_day=global_end_day,
+    )
+    df_ascribe_translog = df_ascribe_translog.where(
+        pd.notnull(df_ascribe_translog),
+        None,
+    )
+    ingest_data_to_elasticsearch(
+        df_ascribe_translog,
+        "ascribe_translog",
+        es_client=cs.elastic,
+    )
+    cs.elastic.indices.refresh(index="ascribe_translog")
 
     logger.info("Successfully populated Elasticsearch with dummy data.")
     return patient_ids

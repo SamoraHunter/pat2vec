@@ -18,12 +18,11 @@ except ImportError:
 # from pat2vec.pat2vec_search.cogstack_search_methods import *
 from tqdm import trange
 
-from pat2vec.pat2vec_get_methods.get_method_covid import SEARCH_TERM_ES
-
 # epic_imaging_reports is now only available via annotations - commented out
 # from pat2vec.pat2vec_get_methods.get_method_epic_imaging_reports import (
 #     search_epic_imaging_reports,
 # )
+from pat2vec.pat2vec_get_methods.get_method_covid import SEARCH_TERM_ES
 from pat2vec.pat2vec_get_methods.get_method_epic_clinical_notes_appointments import (
     search_epic_clinical_notes_appointments,
 )
@@ -52,6 +51,9 @@ from pat2vec.pat2vec_search.cogstack_search_methods import (
 from pat2vec.patvec_get_batch_methods.get_prefetch_batches import prefetch_batches
 from pat2vec.patvec_get_batch_methods.main_get_pat_batch_appointments import (
     get_pat_batch_appointments,
+)
+from pat2vec.patvec_get_batch_methods.main_get_pat_batch_ascribe_translog import (
+    get_pat_batch_ascribe_translog,
 )
 from pat2vec.patvec_get_batch_methods.main_get_pat_batch_bloods import (
     get_pat_batch_bloods,
@@ -185,7 +187,8 @@ class main:
         config_obj: The configuration object that controls the pipeline. Can be an instance of
             config_class or None (will create a default instance internally).
         cs (CogStack): An instance of the CogStack client for data retrieval.
-        all_patient_list (list): The list of patient IDs to be processed.
+        all_patient_list (list): The list of patient IDs to be processed (reduced by resumption).
+        full_patient_list (list): The complete list of all patients from treatment docs.
         cat: MedCAT model instance for clinical text annotation if required. Set via
             `get_cat()` in `__init__`.
         t (tqdm.trange): Progress bar object for monitoring the process. Created via
@@ -289,6 +292,11 @@ class main:
             self.all_patient_list = self.config_obj.all_patient_list.copy()
         else:
             self.all_patient_list = get_all_patients_list(self.config_obj)
+
+        # Store full (unfiltered) patient list in config for use by builder functions during resumption
+        self.full_patient_list = self.all_patient_list.copy()
+        self.config_obj.full_patient_list = self.full_patient_list
+
         self.current_pat_lines_path = config_obj.current_pat_lines_path
         self.sftp_client = config_obj.sftp_obj
 
@@ -313,8 +321,12 @@ class main:
         set_best_gpu(config_obj.gpu_mem_threshold)
 
         random.seed(self.config_obj.random_seed_val)
+
+        # Store reduced list for progress bar (resumption filtering happens after shuffle)
         if config_obj.shuffle_pat_list:
-            random.shuffle(self.all_patient_list)
+            random.shuffle(self.full_patient_list)
+
+        self.all_patient_list = self.full_patient_list.copy()
 
         if self.config_obj.verbosity > 0:
             _logger.info(f"remote_dump: {self.remote_dump}")
@@ -695,6 +707,30 @@ class main:
         return retrieve_patient_data(
             patient_id,
             "bmi",
+            self.config_obj,
+            cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search,
+        )
+
+    def get_raw_ascribe_translog(self, patient_id: str) -> pd.DataFrame:
+        """Retrieves raw ascribe translog data for a specific patient.
+
+        Fetches clinical transcription logs from the ascribe legacy system.
+        Uses casenumber (hospital number) by default.
+
+        Args:
+        ----
+            patient_id: The unique identifier (casenumber/hospital number) for the patient.
+
+        Returns:
+        -------
+            A DataFrame containing translog records with columns such as casenumber,
+            nhsnumber, description, kind, logdatetime, ward, consultant, specialty,
+            and transtype.
+
+        """
+        return retrieve_patient_data(
+            patient_id,
+            "ascribe_translog",
             self.config_obj,
             cohort_searcher_with_terms_and_search=self.cohort_searcher_with_terms_and_search,
         )
@@ -1404,6 +1440,14 @@ class main:
                 "empty": empty_return,
             },
             {
+                "option": "ascribe_translog",
+                "var": "batch_ascribe_translog",
+                "func": get_pat_batch_ascribe_translog,
+                "args": {"search_term": None},
+                "empty": empty_return,
+                "id_arg": "current_pat_client_id_code",
+            },
+            {
                 "option": "epic_encounters",
                 "var": "batch_epic_encounters",
                 "func": search_epic_encounters,
@@ -1646,6 +1690,7 @@ class main:
             "batch_hospsite": ("raw_hospsite", "client_idcode"),
             "batch_resus": ("raw_resus", "client_idcode"),
             "batch_obs": ("raw_obs", "client_idcode"),
+            "batch_ascribe_translog": ("raw_ascribe_translog", "casenumber"),
             "batch_epic_encounters": ("raw_epic_encounters", "client_idcode"),
             "batch_epic_clinical_notes": ("raw_epic_clinical_notes", "client_idcode"),
             "batch_epic_medical_history": ("raw_epic_medical_history", "client_idcode"),
@@ -1680,6 +1725,7 @@ class main:
             "batch_hospsite": "hosp_site",
             "batch_resus": "core_resus",
             "batch_obs": "obs",
+            "batch_ascribe_translog": "ascribe_translog",
             "batch_epic_encounters": "epic_encounters",
             "batch_epic_clinical_notes": "epic_clinical_notes",
             "batch_epic_medical_history": "epic_medical_history",

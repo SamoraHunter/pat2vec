@@ -133,6 +133,21 @@ DRUG_FIELDS = [
     "order_createdwhen",
 ]
 
+ASCRIBE_TRANSGLOG_FIELDS = [
+    "nhsnumber",
+    "casenumber",
+    "description",
+    "kind",
+    "logdatetime",
+    "ward",
+    "consultant",
+    "specialty",
+    "transtype",
+    "storesdescription",  # The actual drug name/description
+    "directioncode",  # Direction code for the medication
+    "pack_quantity",  # Quantity of packs dispensed
+]
+
 EPIC_CLINICAL_NOTES_APPOINTMENTS_FIELDS = [
     "document_PatientDurableKey",
     "document_CreatedWhen",

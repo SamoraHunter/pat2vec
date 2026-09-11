@@ -130,6 +130,12 @@ DATA_TYPE_CONFIG: dict[str, dict[str, str]] = {
         "path_attr": "pre_appointments_batch_path",
         "id_column": "HospitalID",
     },
+    "ascribe_translog": {
+        "db_table": "raw_ascribe_translog",
+        "db_schema": "raw_data",
+        "path_attr": "pre_ascribe_translog_batch_path",
+        "id_column": "nhsnumber",
+    },
     "epr_annotations": {
         "db_table": "ann_epr_docs",
         "db_schema": "annotations",

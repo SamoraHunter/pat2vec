@@ -533,6 +533,11 @@ def get_all_patients_list(config_obj: Any) -> list[str]:
         if options.get("drugs", False) or options.get("diagnostics", False):
             add_index("order", id_field_term)
 
+        # Ascribe Translog - include in existence check when option is enabled
+        # NHS numbers are stored in 'nhsnumber' field in this index
+        if options.get("ascribe_translog", False):
+            add_index("ascribe_translog", "nhsnumber.keyword")
+
         # Epic Indices (standardize ID field to document_PatientDurableKey)
         epic_id_field = "document_PatientDurableKey"
         if id_field_term.endswith(".keyword"):

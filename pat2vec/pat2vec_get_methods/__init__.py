@@ -1,5 +1,6 @@
 # from .util.methods_get import convert_date
 from . import get_method_covid as get_method_covid
+from .get_method_ascribe_translog import get_ascribe_translog as get_ascribe_translog
 from .get_method_epic_clinical_notes_annotations import (
     get_current_pat_epic_clinical_notes_annotations as get_current_pat_epic_clinical_notes_annotations,
 )
