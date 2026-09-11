@@ -425,7 +425,27 @@ def demo_to_latest(demo_df: pd.DataFrame) -> pd.DataFrame:
         A DataFrame containing only the latest record for each patient.
 
     """
+    demo_df = demo_df.copy()
+    if "updatetime" not in demo_df.columns:
+        return pd.DataFrame(columns=demo_df.columns)
     demo_df["updatetime"] = pd.to_datetime(demo_df["updatetime"], utc=True)
+
+    # Check if all updatetime values are NaT
+    if demo_df["updatetime"].isna().all():
+        return pd.DataFrame(columns=demo_df.columns)
+
+    # Prioritize rows with valid client_dob when selecting the latest record
+    # Filter for rows that have DOB first, then take idxmax; if none have DOB, fall back to all rows
+    has_dob = (
+        demo_df["client_dob"].notna()
+        if "client_dob" in demo_df.columns
+        else pd.Series([False] * len(demo_df))
+    )
+
+    if has_dob.any():
+        # Only consider rows with valid DOB when selecting the latest
+        demo_df = demo_df[has_dob].copy()
+
     return demo_df.loc[demo_df.groupby("client_idcode")["updatetime"].idxmax()]
 
 
