@@ -21,7 +21,6 @@ import pytest
 from pat2vec.main_pat2vec import main
 from pat2vec.pat2vec_get_methods.get_method_bmi import get_bmi_features
 from pat2vec.util.config_pat2vec import config_class
-from pat2vec.util.docker_elastic import ElasticContainer
 from pat2vec.util.dummy_data_generation.observations.bmi import generate_bmi_data
 from pat2vec.util.filter_dataframe_by_timestamp import filter_dataframe_by_timestamp
 from pat2vec.util.get_start_end_year_month import get_start_end_year_month
@@ -33,14 +32,13 @@ from pat2vec.util.helper_functions import (
 from pat2vec.util.post_processing_build_methods import merge_bmi_csv
 
 
-def cleanup_test_artifacts(proj_name: str, creds_filename: str) -> None:
+def cleanup_test_artifacts(proj_name: str) -> None:
     """Clean up test artifacts including database and project files."""
     db_path = os.path.abspath(os.path.join(proj_name, "outputs", "temp_bmi_db.sqlite"))
 
     proj_dir = os.path.abspath(proj_name)
-    creds_abs = os.path.abspath(creds_filename)
 
-    for path in [db_path, proj_dir, creds_abs]:
+    for path in [db_path, proj_dir]:
         try:
             if os.path.exists(path):
                 if os.path.isdir(path):
@@ -51,42 +49,27 @@ def cleanup_test_artifacts(proj_name: str, creds_filename: str) -> None:
             pytest.fail(f"Failed to clean up '{path}': {e}")
 
 
+@pytest.fixture(scope="class")
+def shared_creds_path(elastic_container):
+    """Inject the shared elastic credentials path."""
+    return elastic_container
+
+
 class TestBMIIntegration:
     """Test class for BMI feature extraction pipeline."""
 
     def setup_class(self) -> None:
         """Setup once for all tests in the class."""
         self.proj_name = "bmi_test_integration"
-        self.creds_filename = "test_elastic_credentials_bmi_integration.py"
 
-        cleanup_test_artifacts(self.proj_name, self.creds_filename)
-
-        es_container = ElasticContainer()
-        es_container.stop()
-
-        result = es_container.start()
-        assert result, "Elasticsearch container failed to start"
-
-        host, username, password = es_container.get_credentials()
-
-        creds_content = f"""
-username = "{username}"
-password = "{password}"
-api_key = None
-hosts = ["{host}"]
-"""
-
-        with open(self.creds_filename, "w") as f:
-            f.write(creds_content)
-
-        assert os.path.exists(self.creds_filename), "Credentials file not created"
+        cleanup_test_artifacts(self.proj_name)
 
         self.base_date = pd.Timestamp("2023-06-15")
         self.patient_id = "P_BMI_TEST_001"
 
-    def teardown_class(self) -> None:
-        """Teardown after all tests in the class."""
-        cleanup_test_artifacts(self.proj_name, self.creds_filename)
+    @pytest.fixture(autouse=True)
+    def _provide_creds_path(self, shared_creds_path):
+        self.creds_filename = shared_creds_path
 
     def test_1_dummy_data_generation(self) -> None:
         """Test dummy BMI data generation."""
@@ -343,3 +326,7 @@ hosts = ["{host}"]
 
         merged_data = pd.read_csv(merged_path)
         assert not merged_data.empty, "Merged BMI data is empty"
+
+    def teardown_class(self) -> None:
+        """Teardown after all tests in the class."""
+        cleanup_test_artifacts(self.proj_name)

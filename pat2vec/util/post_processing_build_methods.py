@@ -458,7 +458,7 @@ def build_merged_bloods(
         overwrite=overwrite,
         float_format="%.6f",
         chunk_size=chunk_size,
-        patient_id_col="nhsnumber",
+        patient_id_col="client_idcode",
     )
 
 
@@ -1177,7 +1177,7 @@ def merge_textual_obs_csv(
         ),
         overwrite=overwrite,
         chunk_size=chunk_size,
-        patient_id_col="nhsnumber",
+        patient_id_col="client_idcode",
     )
 
 
@@ -1217,7 +1217,7 @@ def merge_reports_csv(
         ),
         overwrite=overwrite,
         chunk_size=chunk_size,
-        patient_id_col="nhsnumber",
+        patient_id_col="client_idcode",
     )
 
 
@@ -1256,7 +1256,7 @@ def merge_bmi_csv(
         ),
         overwrite=overwrite,
         chunk_size=chunk_size,
-        patient_id_col="nhsnumber",
+        patient_id_col="client_idcode",
     )
 
 
@@ -1292,7 +1292,7 @@ def merge_bloods_csv(
         overwrite=overwrite,
         float_format="%.6f",
         chunk_size=chunk_size,
-        patient_id_col="nhsnumber",
+        patient_id_col="client_idcode",
     )
 
 
@@ -1331,7 +1331,7 @@ def merge_news_csv(
         ),
         overwrite=overwrite,
         chunk_size=chunk_size,
-        patient_id_col="nhsnumber",
+        patient_id_col="client_idcode",
     )
 
 
@@ -1373,7 +1373,7 @@ def merge_diagnostics_csv(
         ),
         overwrite=overwrite,
         chunk_size=chunk_size,
-        patient_id_col="nhsnumber",
+        patient_id_col="client_idcode",
     )
 
 
@@ -1415,7 +1415,7 @@ def merge_drugs_csv(
         ),
         overwrite=overwrite,
         chunk_size=chunk_size,
-        patient_id_col="nhsnumber",
+        patient_id_col="client_idcode",
     )
 
 
@@ -1457,7 +1457,7 @@ def merge_epic_medical_history_csv(
         ),
         overwrite=overwrite,
         chunk_size=chunk_size,
-        patient_id_col="nhsnumber",
+        patient_id_col="client_idcode",
     )
 
 
@@ -1499,7 +1499,7 @@ def merge_epic_imaging_reports_csv(
         ),
         overwrite=overwrite,
         chunk_size=chunk_size,
-        patient_id_col="nhsnumber",
+        patient_id_col="client_idcode",
     )
 
 
@@ -1548,7 +1548,7 @@ def merge_epic_clinical_notes_appointments_csv(
         ),
         overwrite=overwrite,
         chunk_size=chunk_size,
-        patient_id_col="nhsnumber",
+        patient_id_col="client_idcode",
     )
 
 
@@ -1633,7 +1633,7 @@ def merge_epic_encounters_csv(
         ),
         overwrite=overwrite,
         chunk_size=chunk_size,
-        patient_id_col="nhsnumber",
+        patient_id_col="client_idcode",
     )
 
 
@@ -1676,7 +1676,7 @@ def merge_epic_lab_results_csv(
         ),
         overwrite=overwrite,
         chunk_size=chunk_size,
-        patient_id_col="nhsnumber",
+        patient_id_col="client_idcode",
     )
 
 
@@ -1716,7 +1716,7 @@ def merge_epic_orders_csv(
         ),
         overwrite=overwrite,
         chunk_size=chunk_size,
-        patient_id_col="nhsnumber",
+        patient_id_col="client_idcode",
     )
 
 
@@ -1759,7 +1759,7 @@ def merge_epic_clinical_notes_csv(
         ),
         overwrite=overwrite,
         chunk_size=chunk_size,
-        patient_id_col="nhsnumber",
+        patient_id_col="client_idcode",
     )
 
 
@@ -1800,7 +1800,7 @@ def merge_epic_patients_csv(
         ),
         overwrite=overwrite,
         chunk_size=chunk_size,
-        patient_id_col="nhsnumber",
+        patient_id_col="client_idcode",
     )
 
 
@@ -1839,7 +1839,7 @@ def merge_covid_csv(
         ),
         overwrite=overwrite,
         chunk_size=chunk_size,
-        patient_id_col="nhsnumber",
+        patient_id_col="client_idcode",
     )
 
 
@@ -1890,7 +1890,7 @@ def _merge_observation_sub_type(
         ),
         overwrite=overwrite,
         chunk_size=chunk_size,
-        patient_id_col="nhsnumber",
+        patient_id_col="client_idcode",
     )
 
 
@@ -2058,8 +2058,8 @@ def merge_ascribe_translog_csv(
         config_obj=config_obj,
         output_filename="merged_ascribe_translog.csv",
         standard_cols=[
-            "casenumber",
             "nhsnumber",
+            "casenumber",
             "description",
             "kind",
             "logdatetime",

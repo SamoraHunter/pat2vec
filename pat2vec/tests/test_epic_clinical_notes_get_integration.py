@@ -14,39 +14,20 @@ from pat2vec.pat2vec_get_methods.get_method_epic_clinical_notes_annotations impo
 )
 from pat2vec.pat2vec_search.cogstack_search_methods import initialize_cogstack_client
 from pat2vec.util.config_pat2vec import config_class
-from pat2vec.util.docker_elastic import ElasticContainer
 from pat2vec.util.get_dummy_data_cohort_searcher import populate_elastic_with_dummy_data
 from pat2vec.util.helper_functions import get_all_features, get_df_from_db
 from pat2vec.util.post_processing import extract_datetime_to_column
 
 
 @pytest.fixture(scope="module")
-def elastic_setup():
-    """Setup Elasticsearch container and credentials for all tests in this module."""
-    container = ElasticContainer()
-    if not container.start():
-        pytest.skip("Docker not available or failed to start Elasticsearch")
-
-    host, username, password = container.get_credentials()
-
-    creds_filename = "test_elastic_credentials.py"
-    creds_content = f"""username = "{username}"
-password = "{password}"
-api_key = None
-hosts = ["{host}"]
-"""
-
-    with open(creds_filename, "w") as f:
-        f.write(creds_content)
-
-    csm.cs = None
-
+def epic_workflow_setup(elastic_container):
+    """Setup using shared elastic container."""
     grandparent_dir = "/workspaces/pat2vec"
     schema_path = os.path.join(grandparent_dir, "test_files", "elastic_schemas.json")
 
     config_populate = config_class(
         proj_name="epic_clinical_notes_test_project",
-        credentials_path=creds_filename,
+        credentials_path=elastic_container,
         test_schema_path=schema_path,
         testing=True,
         testing_elastic=True,
@@ -67,24 +48,7 @@ hosts = ["{host}"]
 
     csm.cs = None
 
-    yield config_populate, patient_ids, container, creds_filename, schema_path
-
-    csm.cs = None
-    container.stop()
-    if os.path.exists(creds_filename):
-        os.remove(creds_filename)
-
-    # Clean up temp directories created during testing
-    temp_dirs_to_remove = [
-        "/tmp/epic_clinical_notes_test_project",
-        "epic_clinical_notes_test_project",
-    ]
-    for dir_path in temp_dirs_to_remove:
-        try:
-            if os.path.exists(dir_path):
-                shutil.rmtree(dir_path, ignore_errors=True)
-        except Exception:
-            pass
+    yield config_populate, patient_ids, schema_path
 
 
 @pytest.fixture
@@ -100,15 +64,13 @@ def cleanup_files():
             raise RuntimeError(msg) from e
 
 
-def test_epic_clinical_notes_get_workflow(elastic_setup, cleanup_files):
+def test_epic_clinical_notes_get_workflow(epic_workflow_setup, cleanup_files):
     """Test the full epic_clinical_notes workflow from the notebook."""
     random_seed_value = 42
     np.random.seed(random_seed_value)
     random.seed(random_seed_value)
 
-    config_populate, patient_ids, _container, creds_filename, _schema_path = (
-        elastic_setup
-    )
+    config_populate, patient_ids, schema_path = epic_workflow_setup
 
     cs = initialize_cogstack_client(config_populate)
 
@@ -138,7 +100,7 @@ def test_epic_clinical_notes_get_workflow(elastic_setup, cleanup_files):
 
     config_obj = config_class(
         proj_name=PROJ_NAME,
-        credentials_path=creds_filename,
+        credentials_path=config_populate.credentials_path,
         current_path_dir="",
         main_options={"epic_clinical_notes_annotations": True},
         batch_mode=True,
@@ -204,12 +166,8 @@ def test_epic_clinical_notes_get_workflow(elastic_setup, cleanup_files):
         patient_ids=all_pat_list,
     )
 
-    # Check that annotation extraction worked - we expect either raw annotations or processed features
     assert isinstance(db_ann_notes, pd.DataFrame), "db_ann_notes should be a DataFrame"
 
-    # After feature extraction in pat_maker, the ann_epic_clinical_notes table may contain
-    # merged/processed results. The test is verifying annotations were extracted,
-    # not necessarily checking raw annotation schema.
     if db_ann_notes.empty:
         pytest.fail(
             "No epic clinical notes annotations were extracted - check database tables"
