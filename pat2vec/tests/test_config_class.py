@@ -182,14 +182,14 @@ class TestConfigClass(unittest.TestCase):
             config = config_class(
                 remote_dump=True,
                 hostname="remote.server",
-                username="user",
-                password="pw",
+                username="test_user",
+                password="test_password_123",
                 testing=True,
             )
 
         mock_ssh_client.SSHClient.assert_called_once()
         mock_instance.connect.assert_called_once_with(
-            hostname="remote.server", username="user", password="pw"
+            hostname="remote.server", username="test_user", password="test_password_123"
         )
         mock_instance.open_sftp.assert_called_once()
         self.assertIsNotNone(config.sftp_obj)
@@ -218,9 +218,9 @@ class TestConfigClass(unittest.TestCase):
         ):
             config_class(
                 remote_dump=True,
-                hostname=None,  # Missing credential
-                username="user",
-                password="pw",
+                hostname=None,
+                username="test_user",
+                password="test_password_123",
                 testing=True,
             )
 

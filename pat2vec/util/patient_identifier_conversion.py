@@ -134,25 +134,19 @@ def convert_hospital_number_to_durable_key(
     )
 
     if df.empty:
-        print(f"Hospital Number size diff: input={len(hospital_numbers)}, output=0")
         return None, hospital_numbers.copy()
 
     found_hn = df["patient_HospitalNumber"].dropna().unique()
     missing_hn = [hn for hn in hospital_numbers if hn not in found_hn]
 
     if missing_hn:
-        print(
-            f"Hospital Number size diff: input={len(hospital_numbers)}, "
-            f"found={len(found_hn)}, missing={len(missing_hn)}",
-        )
+        pass
     else:
-        print(
-            f"Hospital Number size diff: input={len(hospital_numbers)}, output={len(found_hn)}",
-        )
+        pass
 
     durable_keys = df["patient_DurableKey"].dropna().unique()
 
-    if len(durable_keys) == 1 or len(durable_keys) > 1:
+    if len(durable_keys) >= 1:
         return durable_keys[0], missing_hn
 
     return None, missing_hn
@@ -187,21 +181,15 @@ def convert_hospital_numbers_to_durable_keys(
     )
 
     if df.empty:
-        print(f"Hospital Number size diff: input={len(hospital_numbers)}, output=0")
         return [], hospital_numbers.copy()
 
     found_hn = df["patient_HospitalNumber"].dropna().unique()
     missing_hn = [hn for hn in hospital_numbers if hn not in found_hn]
 
     if missing_hn:
-        print(
-            f"Hospital Number size diff: input={len(hospital_numbers)}, "
-            f"found={len(found_hn)}, missing={len(missing_hn)}",
-        )
+        pass
     else:
-        print(
-            f"Hospital Number size diff: input={len(hospital_numbers)}, output={len(found_hn)}",
-        )
+        pass
 
     durable_keys = df["patient_DurableKey"].dropna().unique().tolist()
     return list(dict.fromkeys(durable_keys)), missing_hn
@@ -236,7 +224,6 @@ def convert_durable_key_to_hospital_numbers(
     )
 
     if df.empty:
-        print("Durable key size diff: input=1, output=0")
         return [], [durable_key]
 
     hospital_numbers = df["patient_HospitalNumber"].dropna().tolist()
@@ -249,8 +236,6 @@ def convert_durable_key_to_hospital_numbers(
             result.extend([str(x) for x in hn])
 
     unique_result = list(dict.fromkeys(result))
-
-    print(f"Hospital Number size diff: input=1, output={len(unique_result)}")
 
     return unique_result, []
 
@@ -284,25 +269,19 @@ def convert_nhs_number_to_durable_key(
     )
 
     if df.empty:
-        print(f"NHS Number size diff: input={len(nhs_numbers)}, output=0")
         return None, nhs_numbers.copy()
 
     found_nhs = df["patient_NhsNumber"].dropna().unique()
     missing_nhs = [nhs for nhs in nhs_numbers if nhs not in found_nhs]
 
     if missing_nhs:
-        print(
-            f"NHS Number size diff: input={len(nhs_numbers)}, "
-            f"found={len(found_nhs)}, missing={len(missing_nhs)}",
-        )
+        pass
     else:
-        print(
-            f"NHS Number size diff: input={len(nhs_numbers)}, output={len(found_nhs)}",
-        )
+        pass
 
     durable_keys = df["patient_DurableKey"].dropna().unique()
 
-    if len(durable_keys) == 1 or len(durable_keys) > 1:
+    if len(durable_keys) >= 1:
         return durable_keys[0], missing_nhs
 
     return None, missing_nhs
@@ -337,7 +316,6 @@ def convert_durable_key_to_nhs_numbers(
     )
 
     if df.empty:
-        print("Durable key size diff: input=1, output=0")
         return [], [durable_key]
 
     nhs_numbers = df["patient_NhsNumber"].dropna().tolist()
@@ -349,8 +327,6 @@ def convert_durable_key_to_nhs_numbers(
             result.append(extracted)
 
     unique_result = list(dict.fromkeys(result))
-
-    print(f"NHS Number size diff: input=1, output={len(unique_result)}")
 
     return unique_result, []
 
@@ -383,23 +359,19 @@ def convert_mrn_to_durable_key(
     )
 
     if df.empty:
-        print(f"MRN size diff: input={len(mrns)}, output=0")
         return None, mrns.copy()
 
     found_mrn = _get_column_case_insensitive(df, "patient_MRN").dropna().unique()
     missing_mrn = [mrn for mrn in mrns if mrn not in found_mrn]
 
     if missing_mrn:
-        print(
-            f"MRN size diff: input={len(mrns)}, "
-            f"found={len(found_mrn)}, missing={len(missing_mrn)}",
-        )
+        pass
     else:
-        print(f"MRN size diff: input={len(mrns)}, output={len(found_mrn)}")
+        pass
 
     durable_keys = df["patient_DurableKey"].dropna().unique()
 
-    if len(durable_keys) == 1 or len(durable_keys) > 1:
+    if len(durable_keys) >= 1:
         return durable_keys[0], missing_mrn
 
     return None, missing_mrn
@@ -434,7 +406,6 @@ def convert_durable_key_to_mrn(
     )
 
     if df.empty:
-        print("Durable key size diff: input=1, output=0")
         return [], [durable_key]
 
     mrns = _get_column_case_insensitive(df, "patient_MRN").dropna().tolist()
@@ -446,8 +417,6 @@ def convert_durable_key_to_mrn(
             result.append(extracted)
 
     unique_result = list(dict.fromkeys(result))
-
-    print(f"MRN size diff: input=1, output={len(unique_result)}")
 
     return unique_result, []
 
@@ -479,9 +448,6 @@ def convert_durable_keys_to_hospital_numbers(
         all_hospital_numbers.extend(hns)
         if missing:
             missing_dk.extend(missing)
-    print(
-        f"Hospital Number size diff: input={len(durable_keys)}, output={len(all_hospital_numbers)}",
-    )
     return list(dict.fromkeys(all_hospital_numbers)), missing_dk
 
 
@@ -514,21 +480,15 @@ def convert_nhs_numbers_to_durable_keys(
     )
 
     if df.empty:
-        print(f"NHS Number size diff: input={len(nhs_numbers)}, output=0")
         return [], nhs_numbers.copy()
 
     found_nhs = df["patient_NhsNumber"].dropna().unique()
     missing_nhs = [nhs for nhs in nhs_numbers if nhs not in found_nhs]
 
     if missing_nhs:
-        print(
-            f"NHS Number size diff: input={len(nhs_numbers)}, "
-            f"found={len(found_nhs)}, missing={len(missing_nhs)}",
-        )
+        pass
     else:
-        print(
-            f"NHS Number size diff: input={len(nhs_numbers)}, output={len(found_nhs)}",
-        )
+        pass
 
     durable_keys = df["patient_DurableKey"].dropna().unique().tolist()
     return list(dict.fromkeys(durable_keys)), missing_nhs
@@ -561,9 +521,6 @@ def convert_durable_keys_to_nhs_numbers(
         all_nhs_numbers.extend(nhs)
         if missing:
             missing_dk.extend(missing)
-    print(
-        f"NHS Number size diff: input={len(durable_keys)}, output={len(all_nhs_numbers)}",
-    )
     return list(dict.fromkeys(all_nhs_numbers)), missing_dk
 
 
@@ -595,19 +552,15 @@ def convert_mrns_to_durable_keys(
     )
 
     if df.empty:
-        print(f"MRN size diff: input={len(mrns)}, output=0")
         return [], mrns.copy()
 
     found_mrn = _get_column_case_insensitive(df, "patient_MRN").dropna().unique()
     missing_mrn = [mrn for mrn in mrns if mrn not in found_mrn]
 
     if missing_mrn:
-        print(
-            f"MRN size diff: input={len(mrns)}, "
-            f"found={len(found_mrn)}, missing={len(missing_mrn)}",
-        )
+        pass
     else:
-        print(f"MRN size diff: input={len(mrns)}, output={len(found_mrn)}")
+        pass
 
     durable_keys = df["patient_DurableKey"].dropna().unique().tolist()
     return list(dict.fromkeys(durable_keys)), missing_mrn
@@ -640,7 +593,6 @@ def convert_durable_keys_to_mrns(
         all_mrns.extend(mrn_list)
         if missing:
             missing_dk.extend(missing)
-    print(f"MRN size diff: input={len(durable_keys)}, output={len(all_mrns)}")
     return list(dict.fromkeys(all_mrns)), missing_dk
 
 
@@ -696,21 +648,17 @@ def convert_source_id_to_durable_key(
     )
 
     if df.empty:
-        print(f"Source ID size diff: input={len(source_ids)}, output=0")
         return None, source_ids.copy()
 
     found_sid = _get_column_case_insensitive(df, "patient_SourceId").dropna().unique()
     missing_sid = [sid for sid in source_ids if sid not in found_sid]
 
     if missing_sid:
-        print(
-            f"Source ID size diff: input={len(source_ids)}, "
-            f"found={len(found_sid)}, missing={len(missing_sid)}",
-        )
+        pass
 
     durable_keys = df["patient_DurableKey"].dropna().unique()
 
-    if len(durable_keys) == 1 or len(durable_keys) > 1:
+    if len(durable_keys) >= 1:
         return durable_keys[0], missing_sid
 
     return None, missing_sid
@@ -745,7 +693,6 @@ def convert_durable_key_to_source_id(
     )
 
     if df.empty:
-        print("Durable key size diff: input=1, output=0")
         return [], [durable_key]
 
     source_ids = _get_column_case_insensitive(df, "patient_SourceId").dropna().tolist()
@@ -757,8 +704,6 @@ def convert_durable_key_to_source_id(
             result.append(extracted)
 
     unique_found = list(dict.fromkeys(result))
-
-    print(f"Source ID size diff: input=1, output={len(unique_found)}")
 
     return unique_found, []
 
@@ -792,17 +737,13 @@ def convert_source_ids_to_durable_keys(
     )
 
     if df.empty:
-        print(f"Source ID size diff: input={len(source_ids)}, output=0")
         return [], source_ids.copy()
 
     found_sid = _get_column_case_insensitive(df, "patient_SourceId").dropna().unique()
     missing_sid = [sid for sid in source_ids if sid not in found_sid]
 
     if missing_sid:
-        print(
-            f"Source ID size diff: input={len(source_ids)}, "
-            f"found={len(found_sid)}, missing={len(missing_sid)}",
-        )
+        pass
 
     durable_keys = df["patient_DurableKey"].dropna().unique().tolist()
     return list(dict.fromkeys(durable_keys)), missing_sid
@@ -835,9 +776,6 @@ def convert_durable_keys_to_source_ids(
         all_source_ids.extend(sid_list)
         if missing:
             missing_dk.extend(missing)
-    print(
-        f"Source ID size diff: input={len(durable_keys)}, output={len(all_source_ids)}",
-    )
     return list(dict.fromkeys(all_source_ids)), missing_dk
 
 
@@ -889,7 +827,6 @@ def convert_client_idcode_to_nhs_number(
     )
 
     if df.empty:
-        print(f"Client ID code size diff: input={len(client_idcodes)}, output=0")
         return [], client_idcodes.copy()
 
     if "updatetime" in df.columns and not df.empty:
@@ -913,10 +850,6 @@ def convert_client_idcode_to_nhs_number(
         "client_idcode"
     ].unique()
     missing_ids = [cid for cid in client_idcodes if cid not in found_ids_with_nhs]
-
-    print(
-        f"Client ID code size diff: input={len(client_idcodes)}, output={len(unique_nhs)}",
-    )
 
     return unique_nhs, missing_ids
 
@@ -969,7 +902,6 @@ def convert_nhs_number_to_client_idcode(
     )
 
     if df.empty:
-        print(f"NHS number size diff: input={len(nhs_numbers)}, output=0")
         return [], nhs_numbers.copy()
 
     if "updatetime" in df.columns and not df.empty:
@@ -992,8 +924,6 @@ def convert_nhs_number_to_client_idcode(
     found_nhs = df["client_universalnumber"].dropna().unique()
     found_nhs_str = [str(n).strip() for n in found_nhs if pd.notna(n)]
     missing_nhs = [nhs for nhs in nhs_numbers if str(nhs).strip() not in found_nhs_str]
-
-    print(f"NHS number size diff: input={len(nhs_numbers)}, output={len(unique_cid)}")
 
     return unique_cid, missing_nhs
 
