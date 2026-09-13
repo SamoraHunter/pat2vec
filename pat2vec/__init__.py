@@ -16,6 +16,10 @@ from .pat2vec_get_methods.get_method_appointments import (
     get_appointments_features,
     search_appointments,
 )
+from .pat2vec_get_methods.get_method_ascribe_translog import (
+    get_ascribe_translog,
+    search_ascribe_translog,
+)
 from .pat2vec_get_methods.get_method_bed import (
     get_bed,
     get_bed_features,
@@ -263,6 +267,9 @@ from .patvec_get_batch_methods.get_prefetch_batches import (
 from .patvec_get_batch_methods.main_get_pat_batch_appointments import (
     get_pat_batch_appointments,
 )
+from .patvec_get_batch_methods.main_get_pat_batch_ascribe_translog import (
+    get_pat_batch_ascribe_translog,
+)
 from .patvec_get_batch_methods.main_get_pat_batch_bloods import (
     get_pat_batch_bloods,
 )
@@ -358,6 +365,9 @@ from .util.config_pat2vec import (
     config_class,
     update_global_start_date,
     validate_and_fix_global_dates,
+)
+from .util.credentials import (
+    validate_credentials,
 )
 from .util.current_pat_batch_path_methods import (
     PathsClass,
@@ -545,6 +555,7 @@ from .util.dummy_data_generation.sequence_generators import (
 )
 from .util.elasticsearch_index_config import (
     APPOINTMENT_FIELDS,
+    ASCRIBE_TRANSGLOG_FIELDS,
     BED_FIELDS,
     BLOODS_FIELDS,
     BMI_FIELDS,
@@ -636,6 +647,7 @@ from .util.get_best_gpu import (
 )
 from .util.get_dummy_data_cohort_searcher import (
     dummy_CAT,
+    generate_ascribe_translog_data,
     generate_synthetic_clinical_note,
 )
 from .util.get_dummy_data_medcat_annotation import (
@@ -823,6 +835,7 @@ from .util.post_processing_build_methods import (
     join_docs_to_annots,
     load_merged_epr_mct_annots,
     merge_appointments_csv,
+    merge_ascribe_translog_csv,
     merge_bed_csv,
     merge_bloods_csv,
     merge_bmi_csv,
@@ -920,6 +933,7 @@ __all__ = [
     "APPOINTMENT_DISTRIBUTION",
     "APPOINTMENT_FIELDS",
     "APPOINTMENT_TYPES",
+    "ASCRIBE_TRANSGLOG_FIELDS",
     "AVPU_VALUES",
     "AVPU_WEIGHTS",
     "BED_FIELDS",
@@ -1185,6 +1199,7 @@ __all__ = [
     "generate_age_appropriate_conditions",
     "generate_age_with_demographic_weighting",
     "generate_appointments_data",
+    "generate_ascribe_translog_data",
     "generate_basic_observations_data",
     "generate_basic_observations_textual_obs_data",
     "generate_bed_data",
@@ -1245,6 +1260,7 @@ __all__ = [
     "get_annots_joined_to_docs",
     "get_appointments",
     "get_appointments_features",
+    "get_ascribe_translog",
     "get_bed",
     "get_bed_features",
     "get_bmi_features",
@@ -1304,6 +1320,7 @@ __all__ = [
     "get_note_template",
     "get_or_create_annotations_for_text",
     "get_pat_batch_appointments",
+    "get_pat_batch_ascribe_translog",
     "get_pat_batch_bloods",
     "get_pat_batch_bmi",
     "get_pat_batch_demo",
@@ -1384,6 +1401,7 @@ __all__ = [
     "mean_impute_dataframe",
     "medcat_trainer_export_to_df",
     "merge_appointments_csv",
+    "merge_ascribe_translog_csv",
     "merge_bed_csv",
     "merge_bloods_csv",
     "merge_bmi_csv",
@@ -1473,6 +1491,7 @@ __all__ = [
     "save_patient_features",
     "save_raw_patient_batch",
     "search_appointments",
+    "search_ascribe_translog",
     "search_bed_data",
     "search_bloods_data",
     "search_bmi_observations",
@@ -1517,6 +1536,7 @@ __all__ = [
     "update_pbar",
     "validate_and_fix_global_dates",
     "validate_configs_against_cluster",
+    "validate_credentials",
     "validate_input_dates",
     "verify_split_data_concatenated",
     "verify_split_data_individual",

@@ -25,6 +25,7 @@ flowchart TD
     O --> R[Get Textual Observations]
     O --> S[Get Reports]
     O --> T[Get Epic Clinical Data]
+    O --> ATR[Get Ascribe Translog]
 
     T --> U[Epic Clinical Notes]
     T --> V[Epic Medical History]
@@ -32,20 +33,20 @@ flowchart TD
     T --> X[Epic Orders]
     T --> Y[Epic Lab Results]
     T --> Z[Epic Patients]
-    T --> AA[Epic Encounters]
-    T --> AB[Smoking Status]
-    T --> AC[Core SpO2]
-    T --> AD[Bed Number]
-    T --> AE[VTE Status]
-    T --> AF[Hospital Site]
-    T --> AG[RESUS Status]
-    T --> AH[NEWS Scores]
-    T --> AI[BMI Data]
-    T --> AJ[Diagnostics]
-    T --> AK[Drugs/Medications]
-    T --> AL[Demographics]
-    T --> AM[Blood Results]
-    T --> AN[Appointments]
+    T --> AA[Smoking Status]
+    T --> AB[Core SpO2]
+    T --> AC[Bed Number]
+    T --> AD[VTE Status]
+    T --> AE[Hospital Site]
+    T --> AF[RESUS Status]
+    T --> AG[NEWS Scores]
+    T --> AH[BMI Data]
+    T --> AI[Diagnostics]
+    T --> AJ[Drugs/Medications]
+    T --> AK[Demographics]
+    T --> AL[Blood Results]
+    T --> AM[Appointments]
+    T --> AN[Ascribe Translog]
 
     P --> AO[NLP Annotation Phase]
     Q --> AO
@@ -84,6 +85,7 @@ flowchart TD
     AL --> AX
     AM --> AX
     AN --> AX
+    ATR --> AX
 
     AP --> AY[Data Cleaning Phase]
     AQ --> AY

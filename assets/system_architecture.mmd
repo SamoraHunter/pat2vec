@@ -19,6 +19,7 @@ graph TB
         ES --> EPI_IMAGING[Epic Imaging Reports]
         ES --> EPI_ORDERS[Epic Orders]
         ES --> EPI_LAB[Epic Lab Results]
+        ES --> ASCRIBE[Ascribe Translog]
     end
 
     subgraph "NLP Processing"
@@ -42,6 +43,7 @@ graph TB
         RETRIEVE --> DRUGS_GET[get_pat_batch_drugs]
         RETRIEVE --> BL_GET[get_pat_batch_bloods]
         RETRIEVE --> DEMO_GET[get_pat_batch_demo]
+        RETRIEVE --> ASCRIBE_GET[get_pat_batch_ascribe_translog]
 
         ANNOTATE --> EPR_ANNOT[get_pat_batch_epr_docs_annotations]
             ANNOTATE --> MCT_ANNOT[get_pat_batch_mct_docs_annotations]
